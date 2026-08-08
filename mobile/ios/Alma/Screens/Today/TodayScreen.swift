@@ -102,6 +102,26 @@ struct TodayScreen: View {
     // MARK: — the top of the page
 
     private var header: some View {
+        HStack(alignment: .top, spacing: 12) {
+            headerText
+            Spacer(minLength: 12)
+            // The seal of the day: tonight's actual moon, with a spark per
+            // contact perfecting today. New data every morning — the reason
+            // to open this screen is drawn in its corner.
+            if let moon = model?.moonNow {
+                MoonMedallion(
+                    illumination: moon.illumination,
+                    waxing: moon.waxing,
+                    sparks: model?.todaysSparks ?? []
+                )
+                .frame(width: 68, height: 68)
+                .padding(.top, 26)
+            }
+        }
+        .padding(.bottom, 4)
+    }
+
+    private var headerText: some View {
         VStack(alignment: .leading, spacing: 10) {
             // **The device's calendar day, not the server's window start.**
             //
@@ -135,7 +155,6 @@ struct TodayScreen: View {
                 }
             }
         }
-        .padding(.bottom, 4)
     }
 
     // MARK: — the day
@@ -519,12 +538,30 @@ final class TodayModel {
     /// translated here, where it becomes a sentence; the percentage is
     /// formatted by the system, so it reads as a percentage in every locale.
     var moonLine: String? {
-        guard let chart = natal.value?.data, let phase = ChartFacts.moonPhase(chart) else {
-            return nil
-        }
-        let name = L10nCabinet.moonPhase(phase.name).map { String(localized: $0) } ?? phase.name
-        guard let lit = phase.illumination else { return name }
-        return "\(name) · \(lit.formatted(.percent.precision(.fractionLength(0))))"
+        guard let moon = moonNow else { return nil }
+        let name = L10nCabinet.moonPhase(moon.name).map { String(localized: $0) } ?? moon.name
+        return "\(name) · \(moon.illumination.formatted(.percent.precision(.fractionLength(0))))"
+    }
+
+    /// Tonight's moon, from the transit payload's `sky_now` — the sky at the
+    /// moment the day was computed, never the natal chart. The natal moon
+    /// phase used to stand here, under today's date: the moon this person was
+    /// born under, presented as tonight's.
+    var moonNow: (name: String, illumination: Double, waxing: Bool)? {
+        guard let moon = sky.value?.data["sky_now"]?["moon_phase"],
+              let name = moon["phase"]?.stringValue,
+              let lit = moon["illumination"]?.doubleValue else { return nil }
+        return (name, lit, moon["waxing"]?.boolValue ?? true)
+    }
+
+    /// One flag per contact perfecting *today* — the medallion's sparks.
+    /// `true` is a tense aspect, which takes the red accent.
+    var todaysSparks: [Bool] {
+        dailyContacts
+            .filter { contact in
+                contact.exact.map { Calendar.current.isDateInToday($0) } == true
+            }
+            .map { ["square", "opposition"].contains($0.aspect) }
     }
 
     /// True whether or not the chart is locked — it is one of the preview

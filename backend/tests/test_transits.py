@@ -203,6 +203,41 @@ def test_a_finer_grid_finds_the_same_hits(chart, monkeypatch):
     assert not missed, f"the default grid missed {len(missed)} contacts: {sorted(missed)[:5]}"
 
 
+def test_the_moon_on_today_is_todays_moon_not_the_birth_moon(chart):
+    """`sky_now` is the sky at the window's start, never at the birth.
+
+    The Today screen prints a moon line under today's date, and it used to be
+    read from the natal chart — the moon this person was born under, presented
+    as tonight's. The transits result now carries `sky_now`, and this pins it
+    to the right instant: the phase recomputed from the window-start ephemeris
+    must match, and the birth moon (14 March 1998, a full-moon week) must not.
+    """
+    from datetime import date
+
+    from alma.calc.service import transits_result
+    from alma.calc.contract import BirthData
+    from alma.engine import zodiac
+
+    birth = BirthData(
+        date=date(1998, 3, 14), time="04:20",
+        latitude=45.4642, longitude=9.19, timezone="Europe/Rome",
+    )
+    start = datetime(2026, 8, 6, tzinfo=timezone.utc)
+    result = transits_result(birth, start=start, days=30)
+    sky_now = result.data["sky_now"]
+
+    now = ephemeris.positions(_julian_day(start), ("sun", "moon"))
+    expected = zodiac.moon_phase(now["sun"].longitude, now["moon"].longitude)
+    assert sky_now["moon_phase"] == expected
+    assert 1 <= sky_now["lunar_day"] <= 30
+
+    born_under = natal.compute(
+        moment=resolve(year=1998, month=3, day=14, hour=4, minute=20, tz_name="Europe/Rome"),
+        **MILAN,
+    ).moon_phase
+    assert sky_now["moon_phase"]["phase"] != born_under["phase"]
+
+
 def test_the_sun_returns_to_every_natal_point_once_a_year(chart):
     """A cheap completeness check the search cannot fake.
 

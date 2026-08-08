@@ -16,11 +16,13 @@ import ai.pazl.alma.notify.DailyContact
 import androidx.compose.ui.platform.LocalContext
 import ai.pazl.alma.notify.DailyRule
 import ai.pazl.alma.notify.DailyState
+import ai.pazl.alma.ui.components.MoonMedallion
 import ai.pazl.alma.ui.components.Overline
 import ai.pazl.alma.ui.components.QuietButton
 import ai.pazl.alma.ui.components.StateHost
 import ai.pazl.alma.ui.components.riseIn
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
 import ai.pazl.alma.ui.sky.NightSky
 import ai.pazl.alma.ui.sky.SkyConfig
 import ai.pazl.alma.ui.theme.AlmaPalette
@@ -361,39 +363,69 @@ private fun TodayBody(
         // the strictest rule in the brief, and a wrong date is the cheapest way
         // to lose a reader's trust in everything calculated below it.
         val day = dayAndMonth(LocalDate.now().toString())
-        if (day != null) Overline(day, wide = true, modifier = Modifier.riseIn(0))
 
-        // A guest has no name yet, and the greeting has to read without one. The
-        // comma goes with the name: every one of the six greetings ends in one,
-        // and "Good morning," alone reads as a line that failed to finish.
-        //
-        // Four greetings off the local hour rather than one hardcoded string.
-        // "Good morning" at two in the morning was the same class of untruth as
-        // the date above it, and from the same cause: a fact about the reader's
-        // day taken from somewhere that is not their day.
-        val name = today.greeting?.takeIf { it.isNotBlank() }
-        val greeting = stringResource(greetingFor(LocalTime.now().hour))
-        Text(
-            text = if (name != null) "$greeting $name" else greeting.trimEnd(',', ' '),
-            style = AlmaTheme.type.displayXl,
-            modifier = Modifier.padding(top = 8.dp).riseIn(0),
-        )
+        // Tonight's moon, from the transit payload's `sky_now` — the sky at
+        // the moment the day was computed, never the natal chart. The natal
+        // moon phase used to stand here, under today's date: the moon this
+        // person was born under, presented as tonight's.
+        val skyMoon = transits?.obj("sky_now")?.obj("moon_phase")
 
-        // "☽ full moon · 99%" under the greeting — the moon is a line now, not
-        // a medallion. The phase is an English enum from the engine and becomes
-        // a sentence here; a chart that failed carries nothing and the line
-        // simply is not drawn.
-        val phase = chart?.obj("moon_phase")
-        val phaseKey = phase?.text("phase")
-        if (phaseKey != null) {
-            val lit = phase.number("illumination")?.let { " · ${(it * 100).toInt()}%" }.orEmpty()
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 8.dp).riseIn(0),
-            ) {
-                Text(text = "☽", style = AlmaTheme.type.headingM, color = AlmaPalette.GoldBright)
-                Text(text = phaseName(phaseKey) + lit, style = AlmaTheme.type.meta)
+        Row(verticalAlignment = Alignment.Top) {
+            Column(Modifier.weight(1f)) {
+                if (day != null) Overline(day, wide = true, modifier = Modifier.riseIn(0))
+
+                // A guest has no name yet, and the greeting has to read without
+                // one. The comma goes with the name: every one of the six
+                // greetings ends in one, and "Good morning," alone reads as a
+                // line that failed to finish.
+                //
+                // Four greetings off the local hour rather than one hardcoded
+                // string. "Good morning" at two in the morning was the same
+                // class of untruth as the date above it, and from the same
+                // cause: a fact about the reader's day taken from somewhere
+                // that is not their day.
+                val name = today.greeting?.takeIf { it.isNotBlank() }
+                val greeting = stringResource(greetingFor(LocalTime.now().hour))
+                Text(
+                    text = if (name != null) "$greeting $name" else greeting.trimEnd(',', ' '),
+                    style = AlmaTheme.type.displayXl,
+                    modifier = Modifier.padding(top = 8.dp).riseIn(0),
+                )
+
+                val phaseKey = skyMoon?.text("phase")
+                if (phaseKey != null) {
+                    val lit = skyMoon.number("illumination")
+                        ?.let { " · ${(it * 100).toInt()}%" }.orEmpty()
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 8.dp).riseIn(0),
+                    ) {
+                        Text(text = "☽", style = AlmaTheme.type.headingM, color = AlmaPalette.GoldBright)
+                        Text(text = phaseName(phaseKey) + lit, style = AlmaTheme.type.meta)
+                    }
+                }
+            }
+
+            // The seal of the day: tonight's actual moon, with a spark per
+            // contact perfecting today. New data every morning — the reason to
+            // open this screen is drawn in its corner.
+            val litNow = skyMoon?.number("illumination")
+            if (litNow != null) {
+                val zone = remember { java.time.ZoneId.systemDefault() }
+                val todayDate = remember { LocalDate.now(zone) }
+                val sparks = DailyContact.all(transits)
+                    .filter { it.exact?.atZone(zone)?.toLocalDate() == todayDate }
+                    .map { it.aspect == "square" || it.aspect == "opposition" }
+                MoonMedallion(
+                    illumination = litNow,
+                    waxing = skyMoon.bool("waxing") ?: true,
+                    sparks = sparks,
+                    modifier = Modifier
+                        .padding(top = 24.dp, start = 12.dp)
+                        .size(68.dp)
+                        .riseIn(0),
+                )
             }
         }
 

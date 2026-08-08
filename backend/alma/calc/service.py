@@ -334,8 +334,22 @@ def transits_result(
     )
     live = transits.active(hits, start_jd)
 
+    # The sky at the moment this was asked for — not at the moment of birth.
+    # `Today` prints a moon line under today's date, and it used to read the
+    # *natal* chart's `moon_phase`: the moon this person was born under,
+    # presented as tonight's. Same class of untruth as yesterday's date on a
+    # screen called Today, and from the same cause — a fact about the reader's
+    # day taken from somewhere that is not their day.
+    now = ephemeris.positions(start_jd, ("sun", "moon"))
+    sun_now = now["sun"].longitude
+    moon_now = now["moon"].longitude
+
     data = {
         "window": {"from": begin.isoformat(timespec="minutes"), "days": days},
+        "sky_now": {
+            "moon_phase": zodiac.moon_phase(sun_now, moon_now),
+            "lunar_day": zodiac.lunar_day(sun_now, moon_now),
+        },
         "active": [_hit_dict(h) for h in live],
         "upcoming": [_hit_dict(h) for h in hits[:60]],
         "active_count": len(live),

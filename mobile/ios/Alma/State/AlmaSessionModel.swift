@@ -111,6 +111,26 @@ final class AlmaSessionModel {
     func start() async {
         bootstrap = .loading
 
+        #if DEBUG
+        // `-AlmaSeedBirth`: walk the journey's outcome without the journey.
+        // The same affordance as `-AlmaTab` — a state pre-arranged so a test
+        // harness can stand on a screen deep in the app — and it goes through
+        // the real client and the real API: the guest is minted by the save,
+        // exactly as a finished journey would have minted it. DEBUG only, and
+        // only when there is nothing yet, so it can never touch a real person.
+        if UserDefaults.standard.bool(forKey: "AlmaSeedBirth"), !client.hasAccount {
+            _ = try? await client.saveProfile(
+                BirthInput(
+                    birthDate: "1994-03-12", birthTime: "14:20",
+                    latitude: 55.7522, longitude: 37.6156,
+                    timezone: "Europe/Moscow", placeLabel: "Москва",
+                    placeId: nil, name: "Аня", onAmbiguous: nil
+                ),
+                isSelf: true
+            )
+        }
+        #endif
+
         guard client.hasAccount else {
             // Nothing to load and nothing to create. `account` stays `nil`,
             // which every screen already reads as "guest with no birth data" —
