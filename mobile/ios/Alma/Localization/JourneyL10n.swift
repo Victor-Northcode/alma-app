@@ -85,7 +85,7 @@ enum JourneyL10n {
     static let nameTitle = LocalizedStringResource(
         "journey.nameTitle", defaultValue: "What should I call you?", table: table)
     static let nameSub = LocalizedStringResource(
-        "journey.nameSub", defaultValue: "A name isn't an account. Nothing is saved yet.",
+        "journey.nameSub", defaultValue: "Nothing is saved yet.",
         table: table)
     static let namePlaceholder = LocalizedStringResource(
         "journey.namePlaceholder", defaultValue: "Sofia", table: table)
@@ -98,7 +98,7 @@ enum JourneyL10n {
         "journey.aboutTitle", defaultValue: "A little about you", table: table)
     static let aboutSub = LocalizedStringResource(
         "journey.aboutSub",
-        defaultValue: "So Alma can speak to you properly. You can skip this.",
+        defaultValue: "You can skip this.",
         table: table)
     static let genderFemale = LocalizedStringResource(
         "journey.genderFemale", defaultValue: "Female", table: table)
@@ -150,10 +150,6 @@ enum JourneyL10n {
 
     static let timeTitle = LocalizedStringResource(
         "journey.timeTitle", defaultValue: "What time were you born?", table: table)
-    static let timeSub = LocalizedStringResource(
-        "journey.timeSub",
-        defaultValue: "Time gives houses, the solar return and your map. Without it those stay locked — we won't invent them.",
-        table: table)
     static let hourLabel = LocalizedStringResource(
         "journey.hourLabel", defaultValue: "Hour", table: table)
     static let minuteLabel = LocalizedStringResource(
@@ -172,7 +168,7 @@ enum JourneyL10n {
         "journey.placeTitle", defaultValue: "Where were you born?", table: table)
     static let placeSub = LocalizedStringResource(
         "journey.placeSub",
-        defaultValue: "City is enough. We resolve the historical time zone ourselves.", table: table)
+        defaultValue: "City is enough.", table: table)
     static let placePlaceholder = LocalizedStringResource(
         "journey.placePlaceholder", defaultValue: "Milan", table: table)
     static let searchPlace = LocalizedStringResource(

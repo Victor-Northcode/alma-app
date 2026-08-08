@@ -7,43 +7,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Damit Alma richtig mit dir sprechen kann. Du kannst es überspringen."
+            "value": "Kannst du überspringen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "So Alma can speak to you properly. You can skip this."
+            "value": "You can skip this."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para que Alma te hable como corresponde. Puedes saltarlo."
+            "value": "Puedes saltarlo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour qu'Alma te parle comme il faut. Tu peux passer."
+            "value": "Tu peux passer."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Perché Alma possa parlarti come si deve. Puoi saltare."
+            "value": "Puoi saltarlo."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para a Alma falar com você do jeito certo. Você pode pular."
+            "value": "Você pode pular."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Чтобы Alma говорила с тобой правильно. Можно пропустить."
+            "value": "Можно пропустить."
           }
         }
       }
@@ -3554,43 +3554,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ein Name ist kein Konto. Noch wird nichts gespeichert."
+            "value": "Noch wird nichts gespeichert."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A name isn't an account. Nothing is saved yet."
+            "value": "Nothing is saved yet."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un nombre no es una cuenta. Todavía no se guarda nada."
+            "value": "Aún no se guarda nada."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un prénom n'est pas un compte. Rien n'est encore enregistré."
+            "value": "Rien n'est encore enregistré."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un nome non è un account. Non stiamo ancora salvando niente."
+            "value": "Non viene ancora salvato nulla."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Um nome não é uma conta. Ainda não estamos salvando nada."
+            "value": "Nada é salvo ainda."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Имя — это не аккаунт. Пока ничего не сохраняется."
+            "value": "Пока ничего не сохраняется."
           }
         }
       }
@@ -4466,43 +4466,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Stadt genügt. Die historische Zeitzone lösen wir selbst auf."
+            "value": "Die Stadt genügt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "City is enough. We resolve the historical time zone ourselves."
+            "value": "City is enough."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Con la ciudad basta. El huso horario histórico lo resolvemos nosotros."
+            "value": "Con la ciudad basta."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La ville suffit. Le fuseau horaire historique, on le résout nous-mêmes."
+            "value": "La ville suffit."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Basta la città. Il fuso orario storico lo risolviamo noi."
+            "value": "Basta la città."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A cidade basta. O fuso horário histórico a gente resolve."
+            "value": "A cidade basta."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Города достаточно. Исторический часовой пояс мы находим сами."
+            "value": "Города достаточно."
           }
         }
       }
@@ -5751,54 +5751,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Транзиты"
-          }
-        }
-      }
-    },
-    "journey.timeSub": {
-      "comment": "",
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Uhrzeit gibt Häuser, das Solar und deine Karte. Ohne sie bleiben die zu — erfinden werden wir sie nicht."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Time gives houses, the solar return and your map. Without it those stay locked — we won't invent them."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La hora da las casas, la revolución solar y tu mapa. Sin ella quedan cerrados — no los vamos a inventar."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L'heure donne les maisons, la révolution solaire et ta carte. Sans elle, elles restent fermées — on ne les inventera pas."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L'ora dà le case, la rivoluzione solare e la tua mappa. Senza restano chiuse — non le inventiamo."
-          }
-        },
-        "pt-BR": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A hora dá as casas, a revolução solar e o seu mapa. Sem ela, ficam fechados — e a gente não inventa."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Время даёт дома, соляр и твою карту мира. Без него они остаются закрытыми — мы не станем их выдумывать."
           }
         }
       }

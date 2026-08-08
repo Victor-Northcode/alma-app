@@ -40,7 +40,19 @@ final class JourneyModel {
     /// Which scene is showing. It lives here rather than in the view for the
     /// same reason the answers do — closing the cover on step V and reopening
     /// it should not start again at step I.
-    var step: JourneyStep = .name
+    ///
+    /// `-AlmaJourneyStep about|date|time|place` opens the journey on that
+    /// scene — the same harness the other `-Alma*` arguments serve: screenshot
+    /// verification of one step without driving the four before it.
+    var step: JourneyStep = {
+        switch UserDefaults.standard.string(forKey: "AlmaJourneyStep") {
+        case "about": .about
+        case "date": .date
+        case "time": .time
+        case "place": .place
+        default: .name
+        }
+    }()
 
     /// Whether the funnel has already been told this journey started. Opening
     /// and closing the cover is the same person on the same visit, and counting

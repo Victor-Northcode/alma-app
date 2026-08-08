@@ -221,7 +221,6 @@ internal fun ColumnScope.TimeStep(draft: JourneyDraft, vm: JourneyViewModel) {
         artHeight = 308.dp,
         art = { TimeArt() },
         title = stringResource(R.string.journey_time_title),
-        sub = stringResource(R.string.journey_time_sub),
         controls = {
             // The same wheels the date step spins, dimmed together when the
             // person declares the hour unknown.

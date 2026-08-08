@@ -27,6 +27,14 @@ struct JourneyScene<Art: View, Controls: View>: View {
     @ViewBuilder var art: Art
     @ViewBuilder var controls: Controls
 
+    /// How much of the stage the controls actually take, measured. The centred
+    /// block used to centre itself in 82% of the *whole* screen — which on the
+    /// steps with tall controls (the gender capsules, the wheels) pushed its
+    /// tail underneath them, and the transparent inset let the question show
+    /// through the buttons. Centring must happen in the space the controls
+    /// leave, and only a measurement knows what that is.
+    @State private var controlsHeight: CGFloat = 0
+
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -78,7 +86,9 @@ struct JourneyScene<Art: View, Controls: View>: View {
                 .frame(maxWidth: .infinity)
                 .almaPadding()
                 .padding(.bottom, 24)
-                .frame(minHeight: geometry.size.height * 0.82, alignment: .center)
+                .frame(
+                    minHeight: max(geometry.size.height - controlsHeight, geometry.size.height * 0.5),
+                    alignment: .center)
             }
             .scrollIndicators(.hidden)
             .scrollContentBackground(.hidden)
@@ -109,6 +119,9 @@ struct JourneyScene<Art: View, Controls: View>: View {
                 .almaPadding()
                 .padding(.top, 16)
                 .padding(.bottom, 12)
+                .onGeometryChange(for: CGFloat.self, of: \.size.height) {
+                    controlsHeight = $0
+                }
             }
         }
     }

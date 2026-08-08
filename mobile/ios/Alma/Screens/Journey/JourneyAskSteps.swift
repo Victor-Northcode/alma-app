@@ -161,7 +161,7 @@ struct StepTime: View {
     var body: some View {
         JourneyScene(
             title: JourneyL10n.timeTitle,
-            sub: JourneyL10n.timeSub
+            sub: nil
         ) {
             ClockArt()
         } controls: {

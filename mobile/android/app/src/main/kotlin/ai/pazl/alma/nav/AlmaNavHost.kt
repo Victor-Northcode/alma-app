@@ -177,7 +177,6 @@ fun AlmaNavHost(
                     }
                 ),
             ) { entry ->
-                val journeyContext = androidx.compose.ui.platform.LocalContext.current
                 JourneyScreen(
                     container = container,
                     startStep = entry.arguments?.getInt(Routes.ARG_STEP) ?: 1,
@@ -188,15 +187,6 @@ fun AlmaNavHost(
                         // the arrival.
                         navController.navigate(Routes.SYSTEMS) {
                             popUpTo(0) { inclusive = true }
-                        }
-                        // One assertive moment, once per install: the plans,
-                        // straight after the ceremony that computed everything
-                        // they cover.
-                        val prefs = journeyContext.getSharedPreferences(
-                            "ceremony_offer", android.content.Context.MODE_PRIVATE)
-                        if (!isSubscriber && !prefs.getBoolean("shown", false)) {
-                            prefs.edit().putBoolean("shown", true).apply()
-                            navController.navigate(Routes.offer(""))
                         }
                     },
                     onOffer = { system -> navController.navigate(Routes.offer(system)) },

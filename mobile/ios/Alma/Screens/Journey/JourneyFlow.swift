@@ -160,17 +160,9 @@ struct JourneyFlow: View {
         router.tab = .systems
         router.closeJourney()
         journey.reset()
-        // One assertive moment, once per install: the plans, straight after
-        // the ceremony that just computed everything they cover. Dismissible
-        // like any sheet; never repeated.
-        let key = "ceremonyOfferShown"
-        if !session.entitlements.isSubscriber, !UserDefaults.standard.bool(forKey: key) {
-            UserDefaults.standard.set(true, forKey: key)
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(600))
-                router.sheet = .offer(system: nil)
-            }
-        }
+        // No sales pitch here. The owner tried an offer sheet straight after
+        // the ceremony and hated meeting it — the arrival in My Systems is the
+        // moment, and the floating pill carries the invitation from here on.
     }
 }
 
