@@ -325,7 +325,7 @@ struct TodayScreen: View {
             if session.entitlements.isSubscriber, !answer.reading.body.isEmpty {
                 VStack(alignment: .leading, spacing: 14) {
                     ForEach(Array(answer.reading.body.enumerated()), id: \.offset) { _, paragraph in
-                        Text(verbatim: paragraph).almaVoice().almaReadingWidth()
+                        Text(verbatim: paragraph).almaDayVoice().almaReadingWidth()
                     }
                 }
                 .padding(.vertical, 6)
@@ -333,7 +333,7 @@ struct TodayScreen: View {
                 Text(verbatim: answer.reading.teaser.isEmpty
                      ? (answer.reading.body.first ?? "")
                      : answer.reading.teaser)
-                    .almaVoice()
+                    .almaDayVoice()
                     .almaReadingWidth()
                     .padding(.vertical, 6)
 

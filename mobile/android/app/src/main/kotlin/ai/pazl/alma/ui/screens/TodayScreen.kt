@@ -652,14 +652,14 @@ private fun DayVoice(
     if (line != null && isSubscriber && line.body.isNotEmpty()) {
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             line.body.forEach { paragraph ->
-                Text(text = paragraph, style = AlmaTheme.type.almaVoice)
+                Text(text = paragraph, style = AlmaTheme.type.dayVoice)
             }
         }
         return
     }
     val lead = line?.teaser?.takeIf { it.isNotBlank() } ?: line?.body?.firstOrNull()
     if (lead != null) {
-        Text(text = lead, style = AlmaTheme.type.almaVoice)
+        Text(text = lead, style = AlmaTheme.type.dayVoice)
         Spacer(Modifier.height(6.dp))
         CabinetRow(onClick = onReadWholeDay, rule = false) {
             Text(

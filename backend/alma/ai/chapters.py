@@ -135,8 +135,12 @@ BIRTH_CARD: tuple[Chapter, ...] = (
 )
 
 TRANSITS: tuple[Chapter, ...] = (
+    # A morning note, not an essay — the owner's verdict on the default
+    # length was «слишком длинно». This chapter is also the Today screen's
+    # day text, and a day text is read standing up.
     _c(1, "I", "active", "What is active now", "What is actually happening to me?",
-       ("transiting",), free=True, time_dependent=True),
+       ("transiting",), free=True, time_dependent=True,
+       words=(90, 150), paragraphs=(1, 2)),
     _c(2, "II", "ahead", "The months ahead", "What is coming and when?",
        ("transiting",), time_dependent=True),
     _c(3, "III", "long", "The long transits", "What is this whole chapter of my life about?",

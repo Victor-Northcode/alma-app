@@ -284,6 +284,17 @@ extension View {
             .foregroundStyle(Color.almaInkLight)
     }
 
+    /// The day text on Today — Alma's voice, but set for reading standing up:
+    /// smaller, lighter, and not italic. The owner's finding on the italic
+    /// serif at 21 points was «неудобно читать», and a morning note has no
+    /// business being hard work.
+    func almaDayVoice() -> some View {
+        self.font(AlmaFonts.display(17.5, relativeTo: .body))
+            .fontWeight(.light)
+            .lineSpacing(AlmaFonts.leading(17.5, ratio: 1.55, family: .display, relativeTo: .body))
+            .foregroundStyle(Color.almaInkLight.opacity(0.95))
+    }
+
     /// The reading — the thing that is sold. `line-height: 1.62`.
     func almaBody() -> some View {
         self.font(.almaBodyFont)

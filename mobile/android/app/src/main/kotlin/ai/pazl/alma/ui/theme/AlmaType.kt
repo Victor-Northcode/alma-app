@@ -62,6 +62,10 @@ data class AlmaTypeScale(
     val headingM: TextStyle,
     /** Alma, speaking. Italic serif. Never used for interface copy. */
     val almaVoice: TextStyle,
+    /** The day text on Today: Alma's voice set for reading standing up —
+     * smaller, lighter, not italic. The italic serif at 21 sp was the owner's
+     * «неудобно читать». */
+    val dayVoice: TextStyle,
     /** The line under a heading: 13 sp, muted. */
     val meta: TextStyle,
     /**
@@ -122,6 +126,13 @@ val AlmaTypography: AlmaTypeScale = AlmaTypeScale(
         lineHeight = 31.5.sp,
         fontWeight = FontWeight.Normal,
         color = AlmaPalette.InkLight,
+    ),
+    dayVoice = TextStyle(
+        fontFamily = AlmaFonts.Display,
+        fontSize = 17.5.sp,
+        lineHeight = 27.sp,
+        fontWeight = FontWeight.Light,
+        color = AlmaPalette.InkLight.copy(alpha = 0.95f),
     ),
     meta = TextStyle(
         fontFamily = AlmaFonts.Sans,
