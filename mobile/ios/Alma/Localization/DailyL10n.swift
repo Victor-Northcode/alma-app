@@ -85,6 +85,14 @@ enum DailyL10n {
         String(localized: "daily.your", defaultValue: "your", table: table)
     }
 
+    /// How one contact is said, per language. See `DailyContact.notation` for
+    /// why this is a template rather than four pieces glued together.
+    ///
+    /// `%1$@` transiting body · `%2$@` aspect · `%3$@` natal body.
+    static let contactPhrase = LocalizedStringResource(
+        "daily.contactPhrase", defaultValue: "%1$@ %2$@ your %3$@", table: table
+    )
+
     /// What the block says on a day with nothing exact **and** something live.
     ///
     /// The old pair — "Nothing is exact today / What is still in orb is below"
@@ -98,8 +106,23 @@ enum DailyL10n {
     /// carries a number instead of a shrug.
     static let runningTitle = LocalizedStringResource("daily.running.title", defaultValue: "Nothing perfects today", table: table)
 
-    static func runningBody(_ count: Int) -> LocalizedStringResource {
-        LocalizedStringResource("daily.running.body", defaultValue: "\(count) contacts are still running, listed below. Most days are like this — an exact aspect is the rare one, which is why it is worth telling you about.", table: table)
+    /// The quiet day, when we know when the nearest contact perfects.
+    ///
+    /// **This replaced a count.** The line used to read «38 влияний медленно
+    /// движутся; сильнейшие ниже» and the owner did not know what it meant —
+    /// fairly, because thirty-eight of anything is not a fact about a person,
+    /// it is a number from our own arithmetic. Naming the one contact that is
+    /// closest, and the day it is exact, is the same sentence made checkable.
+    ///
+    /// The wording avoids agreeing with the aspect's gender in Russian — a
+    /// «квадрат» is masculine and an «оппозиция» is feminine, and «точен» after
+    /// either one is a coin flip. A colon has no gender.
+    static func runningNearest(_ contact: String, _ date: String) -> LocalizedStringResource {
+        LocalizedStringResource("daily.running.nearest", defaultValue: "The closest is \(contact), exact on \(date). Everything else is moving slowly.", table: table)
+    }
+
+    static func runningBody(_ contact: String) -> LocalizedStringResource {
+        LocalizedStringResource("daily.running.body", defaultValue: "The closest is \(contact). Everything else is moving slowly.", table: table)
     }
 
     static let askTitle = LocalizedStringResource("daily.ask.title", defaultValue: "Tell me the morning it happens", table: table)

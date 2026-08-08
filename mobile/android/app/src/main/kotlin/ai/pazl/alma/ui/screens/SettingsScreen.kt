@@ -203,13 +203,10 @@ private fun SettingsBody(
             onOffer = onOffer,
         )
 
-        Spacer(Modifier.height(30.dp))
-        RuledLabel(stringResource(R.string.settings_letters))
-        Text(
-            text = stringResource(R.string.settings_letters_note),
-            style = AlmaTheme.type.meta,
-            modifier = Modifier.padding(top = 12.dp),
-        )
+        // The «Письма» section stood here and is gone on both platforms: it
+        // described our mail arrangements to somebody who opened Settings to
+        // change something, and there was nothing in it to change. See the
+        // longer note in the iOS `SettingsScreen`.
 
         Spacer(Modifier.height(30.dp))
         Language(settings, vm)
@@ -343,14 +340,9 @@ private fun Language(settings: SettingsView, vm: SettingsViewModel) {
             }
         }
     }
-    if (!switchesInterface) {
-        Text(
-            text = stringResource(R.string.settings_language_note),
-            style = AlmaTheme.type.meta,
-            color = AlmaPalette.Muted3,
-            modifier = Modifier.padding(top = 12.dp),
-        )
-    }
+    // «Я читаю и пишу на языке твоего телефона» is gone here too: the row above
+    // shows the language and changes it, and a paragraph saying that a language
+    // setting sets the language is a sentence written for its own sake.
 }
 
 /* ── the plan ──────────────────────────────────────────────────────────── */

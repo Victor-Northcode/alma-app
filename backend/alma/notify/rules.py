@@ -61,13 +61,26 @@ log = logging.getLogger("alma.notify.rules")
 QUIET_START = 22
 QUIET_END = 8
 
-#: When the daily arrives, in the person's own clock. Fixed, and deliberately
-#: not optimised. The outside evidence puts the click-through peak late in the
-#: evening, but that peak measures retail impulse, and a piece about today
-#: arriving at 22:00 is a piece about a day the person has already had. A fixed
-#: hour is a habit; a moving hour is a surprise, and surprise is the thing the
-#: owner asked twice to avoid.
-DEFAULT_HOUR = 8
+#: When the daily arrives, in the person's own clock, for somebody who has not
+#: chosen. Deliberately not optimised: the outside evidence puts the
+#: click-through peak late in the evening, but that peak measures retail
+#: impulse, and a piece about today arriving at 22:00 is a piece about a day the
+#: person has already had.
+#:
+#: **Ten, not eight** — the owner's call, and the reason is what 08:00 collides
+#: with. Eight in the morning is inside the commute, the school run and the
+#: first hour at a desk: the notification arrives while the phone is already
+#: being used for something urgent, and a piece about the shape of the day is
+#: read in the two seconds before it is dismissed. Ten is after that wave and
+#: before lunch. It is a default rather than a rule — the hour is editable in
+#: settings on both platforms, because "I get up at 05:30" is a real fact about
+#: a person that no default can know.
+#:
+#: This number is written in three places (here, `DailyStore.defaultHour` on
+#: iOS, `DailyStore.DEFAULT_HOUR` on Android) and they must agree: the phone
+#: schedules the local notification and the server picks whose morning has
+#: arrived, so a disagreement means two dailies or none.
+DEFAULT_HOUR = 10
 
 #: How long after their hour somebody may still be caught, if a run was missed.
 #: This is `renewals.py`'s discipline — "the window is a range and not an

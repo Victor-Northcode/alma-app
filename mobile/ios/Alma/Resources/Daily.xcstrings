@@ -343,7 +343,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Biquintil"
+            "value": "Biquintil"
           }
         },
         "en": {
@@ -361,25 +361,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— biquintile"
+            "value": "biquintile"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— biquintile"
+            "value": "biquintile"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— biquintil"
+            "value": "biquintil"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— биквинтиль"
+            "value": "биквинтиль"
           }
         }
       }
@@ -390,7 +390,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Konjunktion"
+            "value": "Konjunktion"
           }
         },
         "en": {
@@ -408,25 +408,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— conjonction"
+            "value": "conjonction"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— congiunzione"
+            "value": "congiunzione"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— conjunção"
+            "value": "conjunção"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— соединение"
+            "value": "соединение"
           }
         }
       }
@@ -437,7 +437,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Opposition"
+            "value": "Opposition"
           }
         },
         "en": {
@@ -455,25 +455,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— opposition"
+            "value": "opposition"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— opposizione"
+            "value": "opposizione"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— oposição"
+            "value": "oposição"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— оппозиция"
+            "value": "оппозиция"
           }
         }
       }
@@ -484,7 +484,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Quincunx"
+            "value": "Quincunx"
           }
         },
         "en": {
@@ -502,25 +502,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— quinconce"
+            "value": "quinconce"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— quinconce"
+            "value": "quinconce"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— quincúncio"
+            "value": "quincúncio"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— квиконс"
+            "value": "квиконс"
           }
         }
       }
@@ -531,7 +531,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Quintil"
+            "value": "Quintil"
           }
         },
         "en": {
@@ -549,25 +549,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— quintile"
+            "value": "quintile"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— quintile"
+            "value": "quintile"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— quintil"
+            "value": "quintil"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— квинтиль"
+            "value": "квинтиль"
           }
         }
       }
@@ -578,7 +578,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Halbsextil"
+            "value": "Halbsextil"
           }
         },
         "en": {
@@ -596,25 +596,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— semi-sextile"
+            "value": "semi-sextile"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— semisestile"
+            "value": "semisestile"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— semissextil"
+            "value": "semissextil"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— полусекстиль"
+            "value": "полусекстиль"
           }
         }
       }
@@ -625,7 +625,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Halbquadrat"
+            "value": "Halbquadrat"
           }
         },
         "en": {
@@ -643,25 +643,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— semi-carré"
+            "value": "semi-carré"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— semiquadrato"
+            "value": "semiquadrato"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— semiquadratura"
+            "value": "semiquadratura"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— полуквадрат"
+            "value": "полуквадрат"
           }
         }
       }
@@ -672,7 +672,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Anderthalbquadrat"
+            "value": "Anderthalbquadrat"
           }
         },
         "en": {
@@ -690,25 +690,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— sesqui-carré"
+            "value": "sesqui-carré"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— sesquiquadrato"
+            "value": "sesquiquadrato"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— sesquiquadratura"
+            "value": "sesquiquadratura"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— полутораквадрат"
+            "value": "полутораквадрат"
           }
         }
       }
@@ -719,7 +719,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Sextil"
+            "value": "Sextil"
           }
         },
         "en": {
@@ -737,25 +737,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— sextile"
+            "value": "sextile"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— sestile"
+            "value": "sestile"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— sextil"
+            "value": "sextil"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— секстиль"
+            "value": "секстиль"
           }
         }
       }
@@ -766,7 +766,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Quadrat"
+            "value": "Quadrat"
           }
         },
         "en": {
@@ -784,25 +784,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— carré"
+            "value": "carré"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— quadratura"
+            "value": "quadratura"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— quadratura"
+            "value": "quadratura"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— квадратура"
+            "value": "квадратура"
           }
         }
       }
@@ -813,7 +813,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "— Trigon"
+            "value": "Trigon"
           }
         },
         "en": {
@@ -831,25 +831,72 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "— trigone"
+            "value": "trigone"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "— trigono"
+            "value": "trigono"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "— trígono"
+            "value": "trígono"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "— трин"
+            "value": "трин"
+          }
+        }
+      }
+    },
+    "daily.contactPhrase": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ und %3$@: %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ your %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@ tu %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ et %3$@ : %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ e %3$@: %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ e %3$@: %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ и %3$@: %2$@"
           }
         }
       }
@@ -1003,43 +1050,90 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Heute erreicht nichts seinen exakten Punkt — die meisten Tage sind so. %lld Einflüsse bewegen sich langsam; die stärksten stehen unten."
+            "value": "Am nächsten steht %@. Alles andere bewegt sich langsam."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing reaches its exact point today — most days are like this. %lld influences are slowly moving; the strongest are below."
+            "value": "The closest is %@. Everything else is moving slowly."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hoy nada llega a su punto exacto — la mayoría de los días son así. %lld influencias avanzan despacio; las más fuertes están abajo."
+            "value": "Lo más cercano es %@. Lo demás avanza despacio."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rien n'atteint son point exact aujourd'hui — la plupart des jours sont ainsi. %lld influences avancent lentement ; les plus fortes sont ci-dessous."
+            "value": "Le plus proche est %@. Le reste avance lentement."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oggi niente arriva al suo punto esatto — la maggior parte dei giorni è così. %lld influenze si muovono piano; le più forti sono qui sotto."
+            "value": "Il più vicino è %@. Il resto si muove lentamente."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hoje nada chega ao seu ponto exato — a maioria dos dias é assim. %lld influências se movem devagar; as mais fortes estão abaixo."
+            "value": "O mais próximo é %@. O resto se move devagar."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сегодня ничто не доходит до точной отметки — таких дней большинство. %lld влияний медленно движутся; сильнейшие ниже."
+            "value": "Ближе всего %@. Остальное движется медленно."
+          }
+        }
+      }
+    },
+    "daily.running.nearest": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am nächsten steht %1$@, exakt am %2$@. Alles andere bewegt sich langsam."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The closest is %1$@, exact on %2$@. Everything else is moving slowly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo más cercano es %1$@, exacto el %2$@. Lo demás avanza despacio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le plus proche est %1$@, exact le %2$@. Le reste avance lentement."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il più vicino è %1$@, esatto il %2$@. Il resto si muove lentamente."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O mais próximo é %1$@, exato em %2$@. O resto se move devagar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ближе всего %1$@, %2$@. Остальное движется медленно."
           }
         }
       }
@@ -1050,43 +1144,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ein ruhiger Tag an deinem Himmel"
+            "value": "Heute nichts Exaktes"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A quiet day in your sky"
+            "value": "Nothing exact today"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un día tranquilo en tu cielo"
+            "value": "Hoy nada es exacto"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un jour calme dans ton ciel"
+            "value": "Rien d'exact aujourd'hui"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un giorno tranquillo nel tuo cielo"
+            "value": "Oggi niente di esatto"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Um dia tranquilo no seu céu"
+            "value": "Hoje nada exato"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Тихий день в твоём небе"
+            "value": "Сегодня ничего точного"
           }
         }
       }

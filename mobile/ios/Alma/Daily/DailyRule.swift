@@ -187,11 +187,28 @@ struct DailyContact: Identifiable, Equatable, Sendable {
     ///
     /// The names are translated now (`Cabinet.xcstrings`), so the original
     /// objection is answered rather than overruled.
+    /// **One template per language, because five of the seven cannot say this
+    /// the way English does.** The parts used to be concatenated —
+    /// body + aspect + "your" + body — and that shape only works in a language
+    /// whose possessive does not decline. German, French, Italian, Portuguese
+    /// and Russian all agree "your" with the gender of the noun after it, and
+    /// the string tables solved that by making the aspect word `— Konjunktion`
+    /// and the word for "your" a bare `—`. The result, on the front page, in
+    /// Russian: «Юпитер — соединение — Асцендент». Three words and two dashes,
+    /// none of it a sentence.
+    ///
+    /// A template moves the punctuation into the language that needs it. English
+    /// and Spanish keep their possessive ("conjunct your Ascendant"); the other
+    /// five name both ends and then the aspect, in the nominative, where nothing
+    /// has to agree with anything: «Юпитер и Асцендент: соединение».
     var notation: String {
         let mark = retrograde ? " \(DailyL10n.retrogradeWord)" : ""
-        return "\(L10nCabinet.bodyName(transiting))\(mark) "
-            + "\(DailyL10n.aspectWord(aspect)) "
-            + "\(DailyL10n.yourWord) \(L10nCabinet.bodyName(natal))"
+        return String(
+            format: String(localized: DailyL10n.contactPhrase),
+            L10nCabinet.bodyName(transiting) + mark,
+            DailyL10n.aspectWord(aspect),
+            L10nCabinet.bodyName(natal)
+        )
     }
 
     /// Which `push.daily.*` key the server would pick for this contact. Not

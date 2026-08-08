@@ -374,9 +374,11 @@
     
     <string name="daily_channel_name">The daily</string>
     
-    <string name="daily_empty_body">Nothing reaches its exact point today — most days are like this. %1$d influences are slowly moving; the strongest are below.</string>
+    <string name="daily_empty_body">The closest is %1$s. Everything else is moving slowly.</string>
     
-    <string name="daily_empty_title">A quiet day in your sky</string>
+    <string name="daily_empty_nearest">The closest is %1$s, exact on %2$s. Everything else is moving slowly.</string>
+    
+    <string name="daily_empty_title">Nothing exact today</string>
     
     <string name="daily_hour">Arrives at</string>
     
@@ -514,6 +516,7 @@
     <string name="settings_delete_confirm_guest">Type this code to confirm</string>
     <string name="settings_delete_guest_note">This account has no email attached. Its code is below — type it to confirm.</string>
     <string name="daily_your">your</string>
+    <string name="daily_contact_phrase">%1$s %2$s your %3$s</string>
     
     <string name="google_web_client_id" translatable="false" />
     <string name="signin_google">Continue with Google</string>

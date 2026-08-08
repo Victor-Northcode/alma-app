@@ -67,7 +67,14 @@ internal fun SystemHeroArt(slug: String, data: JsonObject, age: Int?, modifier: 
         AlmaSystem.TRANSITS -> ArtCanvas(modifier, aspect = 1f) { m, p -> drawTransitRing(data, m, p) }
         AlmaSystem.ASTROCARTOGRAPHY -> ArtCanvas(modifier, aspect = 1.9f) { m, p -> drawLinesMap(data, m, p) }
         AlmaSystem.NUMEROLOGY -> ArtCanvas(modifier, aspect = 1f) { m, p -> drawNumerologyRing(data, age, m, p) }
-        AlmaSystem.BIRTH_CARD -> ArtCanvas(modifier, aspect = 1.25f) { m, p -> drawBirthCard(data, m, p) }
+        AlmaSystem.BIRTH_CARD -> {
+            // The card's name is resolved here rather than inside the canvas:
+            // a `DrawScope` has no access to resources, and the arcana table is
+            // seven `<string>`s deep. Resolved once per composition, not per
+            // frame — the art redraws sixty times a second.
+            val cardName = data.obj("personality")?.text("name")?.let { arcanaWord(it) }
+            ArtCanvas(modifier, aspect = 1.25f) { m, p -> drawBirthCard(data, cardName, m, p) }
+        }
         AlmaSystem.SYNTHESIS -> ArtCanvas(modifier, aspect = 1f) { m, p -> drawSynthesisStar(data, m, p) }
     }
 }
@@ -452,7 +459,25 @@ private fun DrawScope.drawNumerologyRing(
 
 /* ── the birth card ─────────────────────────────────────────────────────── */
 
-private fun DrawScope.drawBirthCard(data: JsonObject, measurer: TextMeasurer, progress: Float) {
+/**
+ * Two removals here, matching iOS and made on the owner's reading of the screen.
+ *
+ * The **inner stroke** — a second rounded rectangle 5% inside the first — read
+ * at this size as brackets around the numeral rather than as a card's border.
+ * One line now.
+ *
+ * The **twenty-two dots** of the year cycle are gone, and the card's name in
+ * words stands where they were. A row of points with one lit explains nothing
+ * without a caption; «Умеренность» says what XIV is, which is what the picture
+ * was missing. The numeral is not repeated in it — it is drawn on the card
+ * directly above.
+ */
+private fun DrawScope.drawBirthCard(
+    data: JsonObject,
+    cardName: String?,
+    measurer: TextMeasurer,
+    progress: Float,
+) {
     val side = min(size.width, size.height)
     val centre = Offset(size.width / 2f, size.height / 2f - side * 0.04f)
     val cardW = side * 0.38f
@@ -472,15 +497,7 @@ private fun DrawScope.drawBirthCard(data: JsonObject, measurer: TextMeasurer, pr
             color = AlmaPalette.Gold.copy(alpha = alpha * trim),
             style = Stroke(width = 1.2f),
         )
-        val inner = Rect(
-            outer.left + w * 0.05f, outer.top + w * 0.05f,
-            outer.right - w * 0.05f, outer.bottom - w * 0.05f,
-        )
-        drawPath(
-            rounded(inner, w * 0.045f),
-            color = AlmaPalette.Gold.copy(alpha = alpha * 0.4f * trim),
-            style = Stroke(width = 0.6f),
-        )
+        // The inner stroke lived here and read as brackets. See the note above.
     }
 
     // The soul card first, behind and to the side — the quieter twin.
@@ -523,22 +540,16 @@ private fun DrawScope.drawBirthCard(data: JsonObject, measurer: TextMeasurer, pr
         }
     }
 
-    // The 22-year cycle, with this year lit.
-    val cycle = phase(progress, 0.7f, 1f)
-    if (cycle > 0f) {
-        val ringY = centre.y + cardH * 0.72f
-        val position = data.obj("year")?.int("position_in_cycle")
-        for (i in 0 until 22) {
-            if (i / 22f > cycle) continue
-            val x = centre.x + (i - 10.5f) * side * 0.032f
-            val current = position == i
-            val r = if (current) 3.4f else 1.6f
-            drawCircle(
-                color = if (current) AlmaPalette.GoldBright.copy(alpha = cycle)
-                else AlmaPalette.Gold.copy(alpha = 0.35f * cycle),
-                radius = r / 2f, center = Offset(x, ringY),
-            )
-        }
+    // The card's name, last, after the frame has closed and the numeral has
+    // seated — the picture finishes by saying what it is.
+    val said = phase(progress, 0.7f, 1f)
+    if (said > 0f && cardName != null) {
+        glyphAt(
+            measurer, cardName,
+            Offset(centre.x, centre.y + cardH * 0.72f),
+            sizeSp = side * 0.062f / density,
+            color = AlmaPalette.Gold.copy(alpha = 0.85f * said),
+        )
     }
 }
 

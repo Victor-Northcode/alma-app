@@ -515,8 +515,21 @@ private struct NumerologyRing: View {
 // MARK: — the birth card
 
 /// The card itself: the personality card's frame drawing itself closed around
-/// its numeral, the soul card standing quietly behind, and the 22-year cycle
-/// as a ring of points under both with this year's position lit.
+/// its numeral, the soul card standing quietly behind, and the card's name
+/// underneath in words.
+///
+/// **Two things were removed here, both on the owner's reading of his own
+/// screen.** The inner stroke — a second rounded rectangle 5% inside the first,
+/// meant as a card's border — read at this size as brackets around the numeral
+/// rather than as a frame, so the card now has one line and the numeral sits in
+/// clean space. And the twenty-two dots of the year cycle went: a row of points
+/// with one lit is a diagram that explains nothing without a caption, and the
+/// caption it needed is the thing that belongs there instead.
+///
+/// The name is what replaced them. «Умеренность» under the card says what XIV
+/// *is*, which the numeral alone never did — and it is the arcana's own
+/// translated name, so it costs no invention. The numeral is not repeated in
+/// it, because it is already drawn on the card two centimetres above.
 private struct BirthCardArt: View {
 
     let data: JSONValue
@@ -535,13 +548,8 @@ private struct BirthCardArt: View {
                 let frame = Path(roundedRect: rect, cornerRadius: w * 0.07)
                     .trimmedPath(from: 0, to: trim)
                 context.stroke(frame, with: .color(Color.almaGold.opacity(alpha)), lineWidth: 1.2)
-                let inner = CGRect(
-                    x: rect.minX + w * 0.05, y: rect.minY + w * 0.05,
-                    width: w * 0.9, height: h - w * 0.1)
-                context.stroke(
-                    Path(roundedRect: inner, cornerRadius: w * 0.045).trimmedPath(from: 0, to: trim),
-                    with: .color(Color.almaGold.opacity(alpha * 0.4)),
-                    lineWidth: 0.6)
+                // One line, not two. The inner stroke that used to sit here
+                // read as brackets rather than as a border — see the note above.
             }
 
             // The soul card first, behind and to the side — the quieter twin.
@@ -583,29 +591,34 @@ private struct BirthCardArt: View {
                 }
             }
 
-            // The 22-year cycle, with this year lit.
-            let cycle = phase(progress, 0.7, 1)
-            if cycle > 0 {
-                let ringY = centre.y + cardH * 0.72
-                let position = data["year"]?["position_in_cycle"]?.intValue
-                for i in 0..<22 {
-                    let lit = Double(i) / 22 <= cycle
-                    guard lit else { continue }
-                    let x = centre.x + (Double(i) - 10.5) * side * 0.032
-                    let current = position == i
-                    let r: Double = current ? 3.4 : 1.6
-                    context.fill(
-                        Path(ellipseIn: CGRect(x: x - r / 2, y: ringY - r / 2, width: r, height: r)),
-                        with: .color(
-                            current
-                                ? Color.almaGoldBright.opacity(cycle)
-                                : Color.almaGold.opacity(0.35 * cycle)))
+            // The card's name, where the twenty-two dots of the year cycle used
+            // to be. It arrives last, after the frame has closed and the
+            // numeral has seated, so the picture finishes by saying what it is.
+            if let name = cardName {
+                let said = phase(progress, 0.7, 1)
+                if said > 0 {
+                    context.draw(
+                        Text(verbatim: name)
+                            .font(AlmaFonts.display(side * 0.062, relativeTo: .headline))
+                            .foregroundStyle(Color.almaGold.opacity(0.85 * said)),
+                        at: CGPoint(x: centre.x, y: centre.y + cardH * 0.72))
                 }
             }
         }
         .aspectRatio(1.25, contentMode: .fit)
         .frame(maxWidth: .infinity)
         .accessibilityHidden(true)
+    }
+
+    /// The personality card's name in the reader's language — «Умеренность».
+    ///
+    /// The engine sends the arcana's English name because it is data rather
+    /// than copy, and `arcanaName` is the same table the facts list already
+    /// reads. A card we have no translation for prints its own English name
+    /// rather than nothing: a gap here would look like a drawing that failed.
+    private var cardName: String? {
+        guard let raw = data["personality"]?["name"]?.stringValue else { return nil }
+        return L10nCabinet.arcanaName(raw)
     }
 
     /// One gesture per element — arcs for air, waves for water, flames for

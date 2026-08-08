@@ -185,19 +185,17 @@ struct ChapterRow: View {
                         .opacity(entry.open ? 1 : 0.82)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
-                    if entry.free {
-                        // Gold, not `.agree`. Green and red are the only
-                        // non-gold accents in the product and `AgreementChip`'s
-                        // own comment reserves them for one meaning: whether the
-                        // systems agree. "Free" is not an agreement, it is the
-                        // one row on this list worth reaching for — which is
-                        // what gold means everywhere else.
-                        Text(L10nCabinet.freeTag).almaTag(.gold)
-                    } else if entry.open {
-                        Text(L10nCabinet.openTag).almaTag(.gold)
-                    } else {
-                        Text(L10nCabinet.locked).almaTag(.muted)
-                    }
+                    // **No tag.** «Бесплатно», «Разблокировано» and
+                    // «Заблокировано» stood at the end of every row and the
+                    // owner cut all three: a table of contents that labels its
+                    // own commerce reads as a price list, and a reader deciding
+                    // what to open next is not shopping — that decision was
+                    // already made at the door.
+                    //
+                    // What is open is still legible, and quietly: the title of
+                    // an unopened chapter is dimmer (below). Nothing replaces
+                    // the tags — no lock glyph, no chevron. The row is its
+                    // title, and the right-hand column is empty on purpose.
                 }
 
                 // The question subtitles are gone — the owner's verdict was

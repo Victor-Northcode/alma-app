@@ -407,14 +407,11 @@ private fun ChapterRow(chapter: ChapterEntryDto, last: Boolean, onClick: () -> U
             // The question subtitles are gone — the owner's verdict was that
             // half of them read as broken grammar and none of them helped.
         }
-        StatusTag(
-            text = if (chapter.`open`) {
-                stringResource(R.string.cabinet_open)
-            } else {
-                stringResource(R.string.state_locked)
-            },
-            ready = chapter.`open`,
-        )
+        // The status tag is gone too, on both platforms and for the same
+        // reason: «Бесплатно» / «Разблокировано» / «Заблокировано» at the end
+        // of every row turned a table of contents into a price list. What is
+        // open stays legible in the title's colour above, which is as loud as
+        // this distinction needs to be. Nothing replaces the tag.
     }
 }
 
@@ -591,34 +588,22 @@ private fun ColumnScope.FreeData(slug: String, result: CalcResultDto) {
     }
 }
 
+/**
+ * The tightest aspects, and nothing above them.
+ *
+ * Three pills — Sun, Moon, Ascendant — and a fourth for the dominant element
+ * used to open this block, which sits *below* the chapter list. The wheel draws
+ * all three at the top of the screen and `PlacementList` spells them out in
+ * words in between, so this was a third printing in the one place a reader has
+ * stopped looking for a summary. The owner's question about the element pill —
+ * «Огонь, что это, к чему оно тут?» — is the argument: a word alone in a
+ * capsule says nothing about what was counted or why it matters.
+ *
+ * iOS lost the same four pills in the same commit; see `NatalPanel`.
+ */
 @Composable
 private fun ColumnScope.NatalFreeData(chart: JsonObject) {
     val placements = chart.obj("placements")
-    val pills = listOfNotNull(
-        placements?.obj("sun")?.let { pill(it) },
-        placements?.obj("moon")?.let { pill(it) },
-        chart.obj("angles")?.obj("formatted")?.text("ascendant")?.let { "ASC $it" },
-        // Only the three signs survive a trim, so a locked chart falls back to
-        // naming them rather than showing nothing at all.
-        if (placements == null) signLabel(chart.text("sun_sign"))?.let { "☉ $it" } else null,
-        if (placements == null) signLabel(chart.text("moon_sign"))?.let { "☽ $it" } else null,
-    )
-
-    if (pills.isNotEmpty()) {
-        FlowRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            pills.forEach { Pill(it) }
-            // The element arrives from the engine in English in every locale, so
-            // it is translated here, where it becomes a word on screen.
-            chart.obj("balance")?.text("dominant_element")?.let { element ->
-                Pill(elementName(element))
-            }
-        }
-    }
-
     val aspects = chart.array("aspects").orEmpty().filterIsInstance<JsonObject>().take(3)
     if (aspects.isNotEmpty()) {
         Spacer(Modifier.height(22.dp))
@@ -845,13 +830,9 @@ private fun ColumnScope.ValueRows(rows: List<Pair<String, String?>>) {
     }
 }
 
-/** "☉ 23°14′ ♓︎ H8" — glyph, degree, sign, house, the way a chart prints it. */
-private fun pill(placement: JsonObject): String? {
-    val formatted = placement.text("formatted") ?: return null
-    val glyph = placement.text("glyph").orEmpty()
-    val house = placement.int("house")?.let { " H$it" }.orEmpty()
-    return "$glyph $formatted$house".trim()
-}
+// `pill()` lived here — "☉ 23°14′ ♓︎ H8" — and went with the three pills it
+// built. `PlacementList` says the same thing in the reader's own words and is
+// the only place that should.
 
 /** The angles are not bodies and have no placement to read a glyph from. */
 private fun glyphOf(placements: JsonObject?, name: String?): String? {

@@ -57,9 +57,10 @@ enum L10nCabinet {
     // MARK: — chapters and doors
 
     static let chapters = LocalizedStringResource("cab.chapters", defaultValue: "chapters", table: table)
-    static let locked = LocalizedStringResource("cab.locked", defaultValue: "Unlock to read", table: table)
-    static let openTag = LocalizedStringResource("cab.openTag", defaultValue: "open", table: table)
-    static let freeTag = LocalizedStringResource("cab.freeTag", defaultValue: "free", table: table)
+    // `cab.locked`, `cab.openTag` and `cab.freeTag` were the three tags at the
+    // end of a chapter row and are gone with it — see `ChapterRow`. The strings
+    // stay in the catalogues rather than being deleted from seven languages for
+    // a decision that could be revisited; nothing reads them.
     static let calculatedWord = LocalizedStringResource("cab.calculatedWord", defaultValue: "calculated", table: table)
     static let oneTimeNote = LocalizedStringResource("cab.oneTimeNote", defaultValue: "One payment. Yours permanently.", table: table)
     static let archiveNote = LocalizedStringResource("cab.archiveNote", defaultValue: "All eight systems, bought once.", table: table)

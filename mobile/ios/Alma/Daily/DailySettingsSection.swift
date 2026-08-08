@@ -140,7 +140,13 @@ struct DailySettingsSection: View {
             .padding(.top, 12)
 
         } else if !daily.deliverable {
-            Text(DailyL10n.notDelivering).almaMeta().almaReadingWidth().padding(.top, 12)
+            // Nothing. «Пока ничего не отправляется. Этот телефон не
+            // зарегистрирован для уведомлений…» stood here and the owner cut it:
+            // it explains our plumbing to somebody who asked for a switch. The
+            // switch works, the daily appears on Today either way, and a person
+            // who has not been told about a registration cannot be worried by
+            // one failing.
+            EmptyView()
 
         } else if daily.authorization == .provisional {
             VStack(alignment: .leading, spacing: 10) {
@@ -267,7 +273,10 @@ struct DailySettingsSection: View {
                 value: days.formatted(),
                 isPosition: true
             )
-            Text(DailyL10n.verifiedNote).almaMeta().almaReadingWidth()
+            // The sentence under it — «Посчитано из твоей собственной карты, на
+            // этом устройстве, по тому же правилу, что и уведомление» — is gone.
+            // It defended a number nobody had doubted, in the vocabulary of the
+            // people who wrote it. The row above says what it says.
         }
     }
 

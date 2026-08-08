@@ -117,7 +117,25 @@ struct DailyBlock: View {
         return VStack(alignment: .leading, spacing: 8) {
             if live > 0 {
                 Text(DailyL10n.runningTitle).almaHeadingM()
-                Text(DailyL10n.runningBody(live)).almaMeta().almaReadingWidth()
+                // The nearest one by name, not a count of them. `urgency` is
+                // weight discounted by how far out of orb a contact is today,
+                // which is exactly "the one closest to mattering" — the same
+                // ordering the section below already sorts by.
+                if let nearest = contacts.max(by: { $0.urgency < $1.urgency }) {
+                    if let exact = nearest.exact {
+                        // Day and month, no year: everything on this screen sits
+                        // inside a window of weeks, and "14 August 2026" reads
+                        // as a diary entry rather than as this week.
+                        Text(DailyL10n.runningNearest(
+                            nearest.notation,
+                            exact.formatted(.dateTime.day().month(.wide))
+                        ))
+                        .almaMeta().almaReadingWidth()
+                    } else {
+                        Text(DailyL10n.runningBody(nearest.notation))
+                            .almaMeta().almaReadingWidth()
+                    }
+                }
             } else {
                 Text(DailyL10n.emptyTitle).almaHeadingM()
                 Text(DailyL10n.emptyBody).almaMeta().almaReadingWidth()

@@ -356,8 +356,9 @@
     <string name="daily_ask_yes">Sí, avísame</string>
     <string name="daily_channel_description">Los días en que algo en tu carta es exacto. Aproximadamente una vez por semana.</string>
     <string name="daily_channel_name">Lo diario</string>
-    <string name="daily_empty_body">Hoy nada llega a su punto exacto — la mayoría de los días son así. %1$d influencias avanzan despacio; las más fuertes están abajo.</string>
-    <string name="daily_empty_title">Un día tranquilo en tu cielo</string>
+    <string name="daily_empty_body">Lo más cercano es %1$s. Lo demás avanza despacio.</string>
+    <string name="daily_empty_nearest">Lo más cercano es %1$s, exacto el %2$s. Lo demás avanza despacio.</string>
+    <string name="daily_empty_title">Hoy nada es exacto</string>
     <string name="daily_hour">Llega a las</string>
     <string name="daily_occasionally">De vez en cuando</string>
     <string name="daily_occasionally_detail">Aproximadamente una vez por semana, cuando algo en tu carta es exacto de verdad.</string>
@@ -458,6 +459,7 @@
     <string name="settings_delete_confirm_guest">Escribe este código para confirmar</string>
     <string name="settings_delete_guest_note">Esta cuenta no tiene correo. Su código está abajo — escríbelo para confirmar.</string>
     <string name="daily_your">tu</string>
+    <string name="daily_contact_phrase">%1$s %2$s tu %3$s</string>
     <string name="signin_google">Continuar con Google</string>
     <string name="cabinet_sky_event_body">Para días así existe la notificación de la mañana — llega a las 08:00 cuando algo en tu carta es exacto. Parte del plan.</string>
     <string name="chapter_preview_note">El capítulo está escrito. El resto se abre con el sistema.</string>

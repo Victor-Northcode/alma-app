@@ -201,6 +201,33 @@ internal fun aspectWord(name: String): String =
     AspectWords[name]?.let { stringResource(it) } ?: name
 
 /**
+ * One contact, said the way the reader's language says it.
+ *
+ * **One template per language, because five of the seven cannot say this the
+ * way English does.** The pieces used to be concatenated — body + aspect +
+ * "your" + body — and that only works where the possessive does not decline.
+ * German, French, Italian, Portuguese and Russian all agree "your" with the
+ * gender of the noun after it, and the string tables solved it by making the
+ * aspect word `— Konjunktion` and the word for "your" a bare `—`. On the front
+ * page, in Russian, that produced «Юпитер — соединение — Асцендент»: three
+ * words, two dashes, not a sentence.
+ *
+ * English and Spanish keep the possessive; the other five name both ends and
+ * then the aspect, in the nominative, where nothing agrees with anything:
+ * «Юпитер и Асцендент: соединение».
+ */
+@Composable
+internal fun contactPhrase(transiting: String, aspect: String, natal: String, retrograde: Boolean): String {
+    val mark = if (retrograde) " " + stringResource(R.string.daily_retrograde) else ""
+    return stringResource(
+        R.string.daily_contact_phrase,
+        bodyWord(transiting) + mark,
+        aspectWord(aspect),
+        bodyWord(natal),
+    )
+}
+
+/**
  * "23°14′ ♓︎" → "23°14′ Piscis" — the engine's formatted degree with the sign
  * glyph spelled out in the reader's language. The engine appends a variation
  * selector to some glyphs; the replacement leaves it behind, so it is swept.

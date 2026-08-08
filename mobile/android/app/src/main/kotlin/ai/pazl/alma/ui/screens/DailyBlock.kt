@@ -83,13 +83,34 @@ internal fun DailyBlock(
                 text = stringResource(R.string.daily_empty_title),
                 style = AlmaTheme.type.headingM,
             )
-            Text(
-                // The count is the consolation: a quiet day is not an empty
-                // chart, and the influences still running are the proof.
-                text = stringResource(R.string.daily_empty_body, contacts.size),
-                style = AlmaTheme.type.meta,
-                modifier = Modifier.padding(top = 6.dp),
-            )
+            // **The nearest contact by name, not a count of them.** The line
+            // used to read «38 влияний медленно движутся; сильнейшие ниже» and
+            // the owner did not know what it meant — fairly: thirty-eight of
+            // anything is a fact about our arithmetic, not about him. `urgency`
+            // is weight discounted by how far out of orb a contact is today,
+            // which is exactly "closest to mattering".
+            val nearest = contacts.maxByOrNull { it.urgency }
+            if (nearest != null) {
+                // In words, not in glyphs. `notation()` prints "♄ □ ☉", which
+                // is the notation the owner has already ruled out of the
+                // transit rows for the same reason: the people reading the
+                // front page do not know the glyphs.
+                val words = contactPhrase(
+                    nearest.transiting, nearest.aspect, nearest.natal, nearest.retrograde
+                )
+                val exact = nearest.exact?.let {
+                    dayAndMonth(it.atZone(zone).toLocalDate().toString())
+                }
+                Text(
+                    text = if (exact != null) {
+                        stringResource(R.string.daily_empty_nearest, words, exact)
+                    } else {
+                        stringResource(R.string.daily_empty_body, words)
+                    },
+                    style = AlmaTheme.type.meta,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
             if (missingBirthTime) {
                 // Not the same silence. Without a birth time there is no
                 // Ascendant and no Midheaven to be crossed, so some of these

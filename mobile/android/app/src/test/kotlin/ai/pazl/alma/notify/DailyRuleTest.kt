@@ -259,12 +259,21 @@ class DailyRuleTest {
      */
     @Test
     fun `the delivery hour cannot land inside quiet hours`() {
-        assertEquals(8, DailyStore.clamp(3))
-        assertEquals(8, DailyStore.clamp(23))
-        assertEquals(8, DailyStore.clamp(22))
+        // Asserted against `DEFAULT_HOUR` rather than against the literal it
+        // happens to hold. The default moved from 08:00 to 10:00 and this test
+        // failed on six lines that were only ever asserting "falls back to the
+        // default" in a spelling that also pinned which default it was.
+        val fallback = DailyStore.DEFAULT_HOUR
+        assertEquals(fallback, DailyStore.clamp(3))
+        assertEquals(fallback, DailyStore.clamp(23))
+        assertEquals(fallback, DailyStore.clamp(22))
         assertEquals(9, DailyStore.clamp(9))
         assertEquals(21, DailyStore.clamp(21))
-        assertEquals(8, DailyStore.clamp(-1))
+        assertEquals(fallback, DailyStore.clamp(-1))
+
+        // The default itself has to survive its own clamp, or every fallback
+        // above is a value the picker cannot show.
+        assertEquals(fallback, DailyStore.clamp(fallback))
 
         // **05:00 is refused, and this line is the resolution of a real tension
         // in `THE-DAILY.md §5.2`.** That section justifies an editable delivery
@@ -278,6 +287,6 @@ class DailyRuleTest {
         // The picker only offers 08:00–21:00, so nobody meets this through the
         // interface. It is pinned here because a future path that writes the
         // field directly must not be able to store 05:00 either.
-        assertEquals(8, DailyStore.clamp(5))
+        assertEquals(fallback, DailyStore.clamp(5))
     }
 }

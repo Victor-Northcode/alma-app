@@ -345,20 +345,26 @@ struct SystemScreen: View {
 
 // MARK: — the panels
 
-/// The natal chart: the positions everything else is read from, the dominant
-/// element, and the tightest aspects.
+/// The natal chart's tightest aspects.
+///
+/// **What used to be here and why it is not.** Three pills — Sun, Moon,
+/// Ascendant — and a fourth for the dominant element sat at the top of this
+/// panel, which is *below the sixteen chapters*. The owner found them there and
+/// asked what they were for, which is the whole answer: the wheel at the top of
+/// the screen draws all three, and `placementList` spells every one of them out
+/// in words twenty rows above. A summary printed after the thing it summarises
+/// is not a summary, it is a second copy in a place nobody was looking for one.
+///
+/// The element pill went with them for a stronger reason. «Огонь», alone in a
+/// capsule, is a word with no sentence around it: it does not say what a
+/// dominant element is, how it was counted, or what to do with knowing. The
+/// chapters say that.
 private struct NatalPanel: View {
 
     let result: CalcResult
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            PillWrap(items: pills)
-
-            if let element {
-                PillWrap(items: [element], tone: .plain)
-            }
-
             let aspects = ChartFacts.aspects(result.data, limit: 3)
             if !aspects.isEmpty {
                 CabinetSection(label: L10nCabinet.strongestAspects) {
@@ -377,26 +383,6 @@ private struct NatalPanel: View {
             }
         }
         .padding(.top, 6)
-    }
-
-    private var pills: [String] {
-        let chart = result.data
-        return [
-            ChartFacts.placement(chart, body: "sun")
-                ?? ChartFacts.signPill(mark: "☉", sign: chart["sun_sign"]?.stringValue),
-            ChartFacts.placement(chart, body: "moon")
-                ?? ChartFacts.signPill(mark: "☽", sign: chart["moon_sign"]?.stringValue),
-            ChartFacts.ascendant(chart)
-                ?? ChartFacts.signPill(mark: "ASC", sign: chart["rising_sign"]?.stringValue),
-        ].compactMap { $0 }
-    }
-
-    /// The element arrives from the engine in English in every locale — it is
-    /// data, not copy — so it is translated here, at the point it becomes a
-    /// word on screen, and an element nobody has a name for prints its own.
-    private var element: String? {
-        guard let raw = ChartFacts.dominantElement(result.data) else { return nil }
-        return L10nCabinet.element(raw).map { String(localized: $0) } ?? raw
     }
 
     /// The two semantic colours are reserved for agreement and disagreement,

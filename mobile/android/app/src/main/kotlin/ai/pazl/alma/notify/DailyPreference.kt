@@ -150,7 +150,18 @@ class DailyStore(context: Context) {
     }
 
     companion object {
-        const val DEFAULT_HOUR = 8
+        /**
+         * **Ten, not eight**, on the owner's call: 08:00 is the commute, the
+         * school run and the first hour at a desk, and a piece about the shape
+         * of the day is read there in the two seconds before it is dismissed.
+         * Still a default rather than a rule — the hour is editable below.
+         *
+         * The same number is in `alma/notify/rules.py` and iOS's
+         * `DailyStore.defaultHour`. All three must agree: the phone schedules
+         * the local notification and the server decides whose morning has
+         * arrived, so a disagreement is two dailies or none.
+         */
+        const val DEFAULT_HOUR = 10
         const val QUIET_FROM = 22
         const val QUIET_UNTIL = 8
 

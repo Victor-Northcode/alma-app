@@ -236,8 +236,15 @@ enum ChartFacts {
 
             return Transit(
                 id: "\(transiting)-\(entry["aspect"]?.stringValue ?? "")-\(natal)",
-                notation: "\(L10nCabinet.bodyName(transiting))\(retrograde) \(aspect) "
-                    + "\(DailyL10n.yourWord) \(L10nCabinet.bodyName(natal))",
+                // The same per-language template `DailyContact.notation` uses,
+                // and for the same reason: five of the seven languages cannot
+                // say "X square your Y" without agreeing "your" with a gender.
+                notation: String(
+                    format: String(localized: DailyL10n.contactPhrase),
+                    L10nCabinet.bodyName(transiting) + retrograde,
+                    aspect,
+                    L10nCabinet.bodyName(natal)
+                ),
                 meta: [dates, orbNow].filter { !$0.isEmpty }.joined(separator: " · "),
                 readAgainst: natal,
                 spoken: entry["text"]?.stringValue ?? "\(transiting) \(aspect) \(natal)"

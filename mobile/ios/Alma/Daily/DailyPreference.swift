@@ -124,14 +124,22 @@ struct DailyStore {
         }
     }
 
-    /// 08:00, and editable, because "I get up at 05:30" is a real fact about a
+    /// 10:00, and editable, because "I get up at 05:30" is a real fact about a
     /// person and the only one they can tell us that we cannot measure.
     var hour: Int {
         get { defaults.object(forKey: Key.hour) as? Int ?? DailyStore.defaultHour }
         nonmutating set { defaults.set(DailyStore.clamp(newValue), forKey: Key.hour) }
     }
 
-    static let defaultHour = 8
+    /// **Ten, not eight.** The owner moved it: 08:00 lands inside the commute,
+    /// the school run and the first hour at a desk, where a piece about the
+    /// shape of the day is read in the two seconds before it is dismissed.
+    ///
+    /// The same number lives in `alma/notify/rules.py` and Android's
+    /// `DailyStore.DEFAULT_HOUR`, and the three have to agree: this phone
+    /// schedules the local notification while the server decides whose morning
+    /// has arrived, so a disagreement is two dailies or none.
+    static let defaultHour = 10
     static let quietFrom = 22
     static let quietUntil = 8
 

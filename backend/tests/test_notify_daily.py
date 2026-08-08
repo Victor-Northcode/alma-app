@@ -20,10 +20,20 @@ import pytest
 from conftest import database_url, run_async
 
 from alma.db.models import Entitlement, UsageCounter, User, new_id, utcnow
-from alma.notify import daily, tokens
+from alma.notify import daily, rules, tokens
 from alma.notify.transport import PushUnavailable, Push, Receipt, Verdict
 
-WHEN = datetime(2026, 8, 7, 6, 0, tzinfo=timezone.utc)  # 08:00 in Warsaw
+#: The moment the whole file runs at: the default delivery hour, in Warsaw.
+#:
+#: Derived from `rules.DEFAULT_HOUR` rather than written as a literal. It used
+#: to be `datetime(2026, 8, 7, 6, 0)` with `# 08:00 in Warsaw` beside it, and
+#: when the owner moved the default to 10:00 twenty-one tests in this file
+#: failed at once — none of them about the hour, all of them about a run that
+#: no longer coincided with anybody's morning. A test that has to be edited
+#: when a preference changes was testing the preference by accident.
+#:
+#: Warsaw is UTC+2 in August, so this is `DEFAULT_HOUR - 2` in UTC.
+WHEN = datetime(2026, 8, 7, rules.DEFAULT_HOUR - 2, 0, tzinfo=timezone.utc)
 
 
 @dataclass(frozen=True)
@@ -253,20 +263,28 @@ def test_a_failed_send_does_not_start_the_three_day_clock(db):
 def test_quiet_hours_hold_across_the_date_line(db):
     """One UTC instant, two people, and only one of them is awake.
 
-    18:00 UTC is 08:00 tomorrow in Kiritimati and 07:00 today in Midway — a
-    different hour *and* a different date. A job that selected on a UTC hour
-    would reach both or neither, and reaching Midway means a notification
-    inside somebody's quiet hours.
+    One UTC instant: the delivery hour on the 8th in Kiritimati (UTC+14) is
+    22:00 on the 7th in Warsaw (UTC+2) — a different hour *and* a different
+    date, and Warsaw is inside quiet hours. A job that selected on a UTC hour
+    would reach both or neither, and reaching Warsaw means a notification at
+    ten at night.
+
+    **The pair used to be Kiritimati and Midway** and it stopped demonstrating
+    anything when the default hour moved to 10:00: the two are twenty-five
+    hours apart, so Midway lands at 09:00 — awake, and simply not due. The
+    property under test is that each person's clock is resolved before
+    anything else happens, and it needs a partner who is genuinely asleep.
     """
     vendor = Vendor()
 
     async def work():
         async with db.session_scope() as session:
             await subscriber(session, zone="Pacific/Kiritimati")
-            await subscriber(session, zone="Pacific/Midway")
+            await subscriber(session, zone="Europe/Warsaw")
             return await daily.run(
                 session,
-                now=datetime(2026, 8, 7, 18, 0, tzinfo=timezone.utc),
+                now=datetime(2026, 8, 8, rules.DEFAULT_HOUR, 0, tzinfo=timezone.utc)
+                - timedelta(hours=14),
                 transports={"ios": vendor},
                 candidates=one_contact, compose_piece=wrote,
             )
@@ -288,7 +306,10 @@ def test_the_counter_is_keyed_on_the_local_day_not_the_utc_one(db):
             user = await subscriber(session, zone="Pacific/Auckland")
             await daily.run(
                 session,
-                now=datetime(2026, 8, 7, 20, 0, tzinfo=timezone.utc),  # 08:00 on the 8th
+                # Auckland is UTC+12 in August, so its morning of the 8th falls
+                # on the 7th in UTC — which is the whole point of the test.
+                now=datetime(2026, 8, 8, rules.DEFAULT_HOUR, 0, tzinfo=timezone.utc)
+                - timedelta(hours=12),
                 transports={"ios": vendor},
                 candidates=one_contact, compose_piece=wrote,
             )
@@ -459,7 +480,9 @@ def test_the_arguments_arrive_in_the_language_of_the_phone(db):
             await session.flush()
             await daily.run(
                 session,
-                now=datetime(2026, 8, 7, 6, 0, tzinfo=timezone.utc),
+                # Rome keeps Warsaw's offset in August, so `WHEN` is this
+                # reader's morning as well.
+                now=WHEN,
                 transports={"ios": vendor},
                 candidates=one_contact, compose_piece=wrote,
             )

@@ -74,11 +74,18 @@ def test_quiet_hours_hold_on_both_sides_of_the_date_line():
     assert not rules.is_quiet(kiritimati)
     assert rules.is_quiet(midway), "07:00 is still inside quiet hours"
 
+    # **The hour under test is Kiritimati's own, not `DEFAULT_HOUR`.** This
+    # line used to read `hour=rules.DEFAULT_HOUR` and passed only because the
+    # default happened to be 08:00, which is the hour this instant produces
+    # there — so moving the default to 10:00 failed a test about the date line
+    # for a reason that has nothing to do with the date line. What is being
+    # asserted is that two clocks resolve independently from one instant; whose
+    # preferred hour it is belongs to the caller.
     common = dict(
         tier="subscriber",
         stored_preference="occasionally",
         last_seen=moment,
-        hour=rules.DEFAULT_HOUR,
+        hour=kiritimati.hour,
         history=[],
         candidates=[Contact()],
         now=moment,

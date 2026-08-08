@@ -179,7 +179,11 @@ private fun Status(state: DailyState, context: Context, onOffer: () -> Unit) {
             )
         }
 
-        !state.deliverable -> Note(stringResource(R.string.daily_status_not_delivering))
+        // «Пока ничего не отправляется. Этот телефон не зарегистрирован…» was
+        // here and is gone on both platforms: it explains our plumbing to
+        // somebody who came for a switch, and the daily appears on Today either
+        // way.
+        !state.deliverable -> Unit
 
         else -> Note(stringResource(R.string.daily_status_registered))
     }
@@ -297,11 +301,10 @@ private fun Verified(state: DailyState, contacts: List<DailyContact>) {
         )
         Text(text = days.toString(), style = AlmaTheme.type.positions)
     }
-    Text(
-        text = stringResource(R.string.daily_verified_note),
-        style = AlmaTheme.type.meta,
-        color = AlmaPalette.Muted3,
-    )
+    // The sentence under the number — «Посчитано из твоей собственной карты, на
+    // этом устройстве, по тому же правилу…» — is gone on both platforms. It
+    // defended a figure nobody had doubted, in the vocabulary of the people who
+    // wrote it.
 }
 
 /**

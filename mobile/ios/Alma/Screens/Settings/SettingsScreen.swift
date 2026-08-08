@@ -254,7 +254,11 @@ struct SettingsScreen: View {
             }
             .buttonStyle(.plain)
 
-            Text(L10nCabinet.languageNote).almaMeta().almaReadingWidth().padding(.top, 6)
+            // «Я читаю и пишу на языке твоего телефона. Поменяешь его —
+            // поменяюсь и я.» stood here and is gone. The row above already
+            // shows which language is in use and opens the picker; a paragraph
+            // explaining that a language setting sets the language is a
+            // sentence written for the pleasure of writing it.
         }
     }
 
@@ -262,20 +266,17 @@ struct SettingsScreen: View {
 
     @ViewBuilder
     private func dataAndLegal(_ model: AccountModel) -> some View {
-        // Which letters Alma actually sends, which is not the same list on a
-        // store as it is on the web.
+        // **The «Письма» section is gone**, on the owner's instruction, and the
+        // reasoning that built it is recorded here because it is worth keeping:
+        // the web promises three letters — a sign-in link, a receipt, and a
+        // warning three days before a plan renews — while in this app Apple
+        // sends the last two, so shipping the web's sentence would have been a
+        // written promise about a charge we neither make nor can see coming.
+        // `lettersNoteStore` was the narrowed version.
         //
-        // The web sentence promises three: a sign-in link, a receipt for
-        // anything you buy, and a warning three days before a plan renews. In
-        // this app Apple sends the second and the third — Apple took the money
-        // and Apple holds the payment method — so shipping the web sentence
-        // would be a written promise to warn somebody before a charge we neither
-        // make nor can see coming. That is the class of untruth this codebase
-        // has removed everywhere else, and under Guideline 3.1.2 it is also a
-        // rejection.
-        CabinetSection(label: L10nCabinet.settingsLetters) {
-            Text(L10nCabinet.lettersNoteStore).almaMeta().almaReadingWidth()
-        }
+        // None of that was a reason for the section to exist. It described our
+        // mail arrangements to somebody who opened Settings to change
+        // something, and there was nothing there to change.
 
         CabinetSection(label: L10nCabinet.dataAndLegal) {
             ActionRow(label: L10nCabinet.settingsExport) {

@@ -726,12 +726,6 @@ private fun ActiveRows(transits: JsonObject?) {
         // anything. The engine's aspect key names the word; the glyph is the
         // fallback for an aspect the table has not caught up with.
         val aspectKey = hit.text("aspect")
-        val aspect = aspectKey?.let { aspectWord(it) } ?: hit.text("glyph").orEmpty()
-        val retro = if (hit.bool("retrograde") == true) {
-            " " + stringResource(R.string.daily_retrograde)
-        } else {
-            ""
-        }
         val exact = dayAndMonth(hit.text("exact"))
         val leaves = dayAndMonth(hit.text("leaves"))
         val orb = hit.number("orb_now")?.let(::formatOrb)
@@ -745,8 +739,15 @@ private fun ActiveRows(transits: JsonObject?) {
         CabinetRow(rule = index < hits.lastIndex) {
             Column(Modifier.weight(1f)) {
                 Text(
-                    text = "${bodyWord(transiting)}$retro $aspect " +
-                        stringResource(R.string.daily_your) + " ${bodyWord(natal)}",
+                    // The per-language template — see `contactPhrase`. The
+                    // pieces used to be glued together here, which produced
+                    // «Сатурн — квадратура — Солнце» in five of seven languages.
+                    text = contactPhrase(
+                        transiting,
+                        aspectKey ?: hit.text("glyph").orEmpty(),
+                        natal,
+                        hit.bool("retrograde") == true,
+                    ),
                     style = AlmaTheme.type.headingM,
                 )
                 if (meta.isNotBlank()) {
@@ -793,8 +794,7 @@ private fun SkyEventCard(contacts: List<DailyContact>, onOpen: () -> Unit) {
     Spacer(Modifier.height(24.dp))
     Column {
         Text(
-            text = "${bodyWord(event.transiting)} ${aspectWord(event.aspect)} " +
-                stringResource(R.string.daily_your) + " ${bodyWord(event.natal)}",
+            text = contactPhrase(event.transiting, event.aspect, event.natal, event.retrograde),
             style = AlmaTheme.type.headingM,
         )
         Text(
