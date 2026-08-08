@@ -154,7 +154,7 @@ it is discovered by customers rather than by us.
 | Android signing | `:app:checkReleasePrerequisites` fails in 1s listing all four missing values | `mobile/RELEASE.md` |
 | Paddle / Dodo credentials | Service refuses to boot half-configured | Only if you ever sell outside the stores |
 | APNs / FCM | Refuses at boot rather than dropping notifications | Keys from the two accounts |
-| Cron | **Nothing runs on a schedule at all.** `python -m alma.billing.renewals` is written and never called | `docs/DEPLOYMENT.md` |
+| Cron | **Nothing runs on a schedule at all.** `python -m alma.billing.renewals` is written and never called | The three lines are in §1③ below |
 | Postgres | Installed and **run**; SQLite is still the default for a laptop | Set `ALMA_DATABASE_URL` |
 
 ### The database is no longer a stub — it is a setting
@@ -169,7 +169,7 @@ whatever the journal mode.
 This document previously said the Postgres path had never been run, and that was the most
 dangerous line in it. It has now been run: `asyncpg` is installed, and the whole suite passes
 against a real Postgres as well as against SQLite. Point `ALMA_DATABASE_URL` at the server and
-run the suite yourself before you believe this paragraph — the command is in `docs/DEPLOYMENT.md`,
+run the suite yourself before you believe this paragraph — `ALMA_DATABASE_URL=… .venv/bin/python -m pytest -q`,
 and a claim about somebody else's database is worth exactly what re-running it costs.
 
 ---
@@ -227,6 +227,7 @@ The test suite reads no `.env` on purpose. It used to, and the day a real key wa
 which had been passing because the key was absent rather than because the code was right. A
 test that changes its answer when somebody edits an untracked file is not a test.
 
-Then read [`docs/ARCHITECTURE.md`](ARCHITECTURE.md) before changing anything in
-`backend/alma/engine/` or `backend/alma/ai/`. Both carry decisions that look arbitrary and
-are not.
+Then read the module docstrings in `backend/alma/engine/` and `backend/alma/ai/` before
+changing anything in either. Both carry decisions that look arbitrary and are not, and the
+reasoning is in the files rather than in a document — `docs/ARCHITECTURE.md` was linked from
+three places and never written.

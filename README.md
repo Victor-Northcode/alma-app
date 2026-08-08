@@ -52,13 +52,22 @@ that single constraint shaped the entire astronomy stack.
 
 ## Where to go next
 
-- **Deploying it** → [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)
 - **Releasing the apps** → [`mobile/RELEASE.md`](mobile/RELEASE.md), then
   [`mobile/store/README.md`](mobile/store/README.md)
-- **Understanding it** → [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+- **Building them** → [`mobile/TOOLCHAIN.md`](mobile/TOOLCHAIN.md) — every line in it was run
+  on the machine it describes, and two of that machine's defaults are wrong for Android.
 - **Taking it over** → [`docs/HANDOVER.md`](docs/HANDOVER.md) — read this first if somebody
   has just handed you this repository. It lists what only the owner can supply, every stub
   waiting to be filled, and what is honestly not finished.
+- **The daily and its notifications** → [`docs/THE-DAILY.md`](docs/THE-DAILY.md) and
+  [`docs/PUSH.md`](docs/PUSH.md)
+
+**`docs/DEPLOYMENT.md` and `docs/ARCHITECTURE.md` were linked here and have never existed.**
+A link to a document nobody wrote is worse than no link: it costs the next reader the time
+it takes to discover the absence, and it makes the rest of this list less believable. The
+deployment half is genuinely missing and is worth writing the day there is a server to
+deploy to; the architecture half is, for now, the module docstrings, which are unusually
+long on purpose.
 
 ## The house rules
 
