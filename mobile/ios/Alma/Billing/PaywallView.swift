@@ -430,7 +430,7 @@ private struct ShelfPreview: View {
             $0.active && $0.scope == "all" && $0.kind == "one_time"
         }
         let hasPlan = held.entitlements.contains {
-            $0.active && ($0.kind == "monthly" || $0.kind == "annual")
+            $0.active && ($0.kind == "weekly" || $0.kind == "monthly" || $0.kind == "annual")
         }
         var keys: [LadderKey] = []
         if case .everything = intent, !hasPlan {

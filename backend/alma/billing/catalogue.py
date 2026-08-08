@@ -158,6 +158,7 @@ BANDS: tuple[str, ...] = (
     "archive",
     "archive-bump",
     "archive-upgrade",
+    "weekly",
     "monthly",
     "annual",
 )
@@ -206,6 +207,15 @@ PRODUCTS: dict[str, Product] = {
     ),
     # The only recurring things worth renting are the ones that move: transits,
     # the solar return, compatibility. Everything else stays a purchase.
+    #
+    # The week exists because the category's engine is the impatient buyer:
+    # the competitor set ships €6.99/week as its main plan. Ours is priced to
+    # be the honest version of the same impulse — try the living layer for
+    # one week, keep the plan if the mornings earn it.
+    "weekly": Product(
+        "*", "Everything live, weekly", "weekly", 499,
+        band="weekly", interval="week", scope="live",
+    ),
     "monthly": Product(
         "*", "Everything live, monthly", "monthly", 999,
         band="monthly", interval="month", scope="live",
@@ -227,12 +237,14 @@ REGIONAL_CENTS: dict[str, dict[str, int]] = {
     # of the US net, which is the definition of "the same price" rather than a
     # discount or a surcharge.
     "EUR": {
+        "weekly": 549,
         "door": 649, "archive": 4099, "archive-bump": 3149,
         "archive-upgrade": 3450, "monthly": 1049, "annual": 8299,
     },
     # UK consumers pay roughly 8% above the US for digital subscriptions and
     # the market is used to it.
     "GBP": {
+        "weekly": 499,
         "door": 599, "archive": 3999, "archive-bump": 3099,
         "archive-upgrade": 3400, "monthly": 999, "annual": 7999,
     },
@@ -242,22 +254,27 @@ REGIONAL_CENTS: dict[str, dict[str, int]] = {
     # digital subscriptions (Spotify CHF 15.95 against $11.99; Netflix
     # CHF 22.90 against $17.99). These points net about 135% of the US net.
     "CHF": {
+        "weekly": 590,
         "door": 690, "archive": 4590, "archive-bump": 3490,
         "archive-upgrade": 3900, "monthly": 1190, "annual": 9290,
     },
     "AUD": {
+        "weekly": 799,
         "door": 999, "archive": 5999, "archive-bump": 4499,
         "archive-upgrade": 5000, "monthly": 1599, "annual": 12499,
     },
     "CAD": {
+        "weekly": 749,
         "door": 899, "archive": 5499, "archive-bump": 4199,
         "archive-upgrade": 4600, "monthly": 1399, "annual": 10999,
     },
     "NOK": {
+        "weekly": 5900,
         "door": 7900, "archive": 44900, "archive-bump": 33900,
         "archive-upgrade": 37000, "monthly": 10900, "annual": 89900,
     },
     "DKK": {
+        "weekly": 3900,
         "door": 4900, "archive": 29900, "archive-bump": 22300,
         "archive-upgrade": 25000, "monthly": 7900, "annual": 61900,
     },

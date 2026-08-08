@@ -488,9 +488,9 @@ struct Storefront: Sendable, Equatable {
         // and it is done on Apple's own subscription screen — which is one tap
         // away through `manage_url`. A gold button that says "buy" and produces
         // a plan change is the kind of surprise a chargeback is made of.
-        // `EntitlementKind` in `alma/db/models.py`: one_time | monthly | annual.
+        // `EntitlementKind` in `alma/db/models.py`: one_time | weekly | monthly | annual.
         let hasPlan = held.entitlements.contains {
-            $0.active && ($0.kind == "monthly" || $0.kind == "annual")
+            $0.active && ($0.kind == "weekly" || $0.kind == "monthly" || $0.kind == "annual")
         }
 
         let onTheShelf = Set(shelf.items.filter(\.isOnTheShelf).compactMap(\.key))
@@ -508,7 +508,9 @@ struct Storefront: Sendable, Equatable {
         // stays first and pre-selected: selling what somebody reached for is
         // this ladder's own oldest law.
         if !hasPlan, case .everything = intent {
-            keys.append(contentsOf: [.annual, .monthly])
+            // The annual leads; the week sits directly under it — the honest
+            // version of the impulse the category's weekly plans monetise.
+            keys.append(contentsOf: [.annual, .weekly, .monthly])
         }
         if !ownsArchive {
             // Exactly one of the two, and `first(where:)` is what guarantees it.
@@ -530,7 +532,7 @@ struct Storefront: Sendable, Equatable {
             // archive: the archive is forty-one written chapters, and the living
             // layer is transits that move. They are not the same purchase.
             // Annual above monthly here too — same argument, subordinate spot.
-            keys.append(contentsOf: [.annual, .monthly])
+            keys.append(contentsOf: [.annual, .weekly, .monthly])
         }
 
         var seen = Set<LadderKey>()

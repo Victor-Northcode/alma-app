@@ -61,11 +61,12 @@ object StoreProducts {
     const val ARCHIVE: String = "archive"
     const val ARCHIVE_BUMP: String = "archive-bump"
     const val ARCHIVE_UPGRADE: String = "archive-upgrade"
+    const val WEEKLY: String = "weekly"
     const val MONTHLY: String = "monthly"
     const val ANNUAL: String = "annual"
 
     /** Play sells these as `SUBS`; everything else is `INAPP`. */
-    val SUBSCRIPTIONS: Set<String> = setOf(MONTHLY, ANNUAL)
+    val SUBSCRIPTIONS: Set<String> = setOf(WEEKLY, MONTHLY, ANNUAL)
 
     /**
      * The three systems that move, and therefore the only ones a monthly plan

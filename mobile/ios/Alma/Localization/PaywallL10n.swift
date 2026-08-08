@@ -80,6 +80,11 @@ enum PaywallL10n {
     static let upgradeNote = res(
         "paywall.upgradeNote", "The archive, less what you already paid for one system."
     )
+    static let weeklyTitle = res("paywall.weeklyTitle", "Everything live, weekly")
+    static let weeklyNote = res(
+        "paywall.weeklyNote",
+        "Try the living layer for one week. Renews weekly until you cancel."
+    )
     static let monthlyTitle = res("paywall.monthlyTitle", "Everything live, monthly")
     static let monthlyNote = res(
         "paywall.monthlyNote",

@@ -112,6 +112,7 @@ class EntitlementKind(str, enum.Enum):
     """
 
     one_time = "one_time"      # a single system or the archive, bought outright
+    weekly = "weekly"          # the living systems, rented by the week
     monthly = "monthly"        # the living systems, rented by the month
     annual = "annual"          # everything, for a year
     # There is deliberately no `trial`. Nothing in the product issues one, and

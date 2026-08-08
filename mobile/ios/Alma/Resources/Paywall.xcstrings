@@ -2584,6 +2584,100 @@
         }
       }
     },
+    "paywall.weeklyNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probiere die lebendige Ebene eine Woche. Verlängert sich wöchentlich bis zur Kündigung."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try the living layer for one week. Renews weekly until you cancel."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba la capa viva una semana. Se renueva cada semana hasta que canceles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essaie la couche vivante une semaine. Se renouvelle chaque semaine jusqu'à annulation."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prova lo strato vivo per una settimana. Si rinnova ogni settimana finché non annulli."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Experimente a camada viva por uma semana. Renova semanalmente até você cancelar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Попробуй живой слой одну неделю. Продлевается еженедельно, пока не отменишь."
+          }
+        }
+      }
+    },
+    "paywall.weeklyTitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles Lebendige, wöchentlich"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything live, weekly"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo lo vivo, semanal"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout le vivant, à la semaine"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutto il vivo, settimanale"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tudo ao vivo, semanal"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё живое — на неделю"
+          }
+        }
+      }
+    },
     "paywall.withdrawn": {
       "comment": "409 purchase_incomplete on Apple: the transaction was refunded or revoked.",
       "extractionState": "manual",

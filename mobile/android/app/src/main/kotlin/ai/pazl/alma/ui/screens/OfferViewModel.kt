@@ -123,7 +123,7 @@ class OfferViewModel(
                 billing = billing,
                 wanted = wanted,
                 owned = session.state.value.unlocked,
-                hasPlan = held.any { it.active && (it.kind == "monthly" || it.kind == "annual") },
+                hasPlan = held.any { it.active && (it.kind == "weekly" || it.kind == "monthly" || it.kind == "annual") },
                 ownsArchive = held.any { it.active && it.scope == "all" && it.kind == "one_time" },
             ).toScreenState()
         }

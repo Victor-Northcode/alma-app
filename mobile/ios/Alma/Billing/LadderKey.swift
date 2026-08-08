@@ -39,6 +39,7 @@ enum LadderKey: String, CaseIterable, Sendable, Hashable, Identifiable {
     /// never computes the discount.
     case archiveUpgrade = "archive-upgrade"
 
+    case weekly
     case monthly
     case annual
 
@@ -53,7 +54,7 @@ enum LadderKey: String, CaseIterable, Sendable, Hashable, Identifiable {
     /// statement to be adjacent to the payment action rather than in the terms.
     var isSubscription: Bool {
         switch self {
-        case .monthly, .annual: true
+        case .weekly, .monthly, .annual: true
         default: false
         }
     }
@@ -62,6 +63,7 @@ enum LadderKey: String, CaseIterable, Sendable, Hashable, Identifiable {
         switch self {
         case .archive: PaywallL10n.archiveTitle
         case .archiveUpgrade: PaywallL10n.upgradeTitle
+        case .weekly: PaywallL10n.weeklyTitle
         case .monthly: PaywallL10n.monthlyTitle
         case .annual: PaywallL10n.annualTitle
         default: PaywallL10n.systemName(system ?? .natal)
@@ -72,6 +74,7 @@ enum LadderKey: String, CaseIterable, Sendable, Hashable, Identifiable {
         switch self {
         case .archive: PaywallL10n.archiveNote
         case .archiveUpgrade: PaywallL10n.upgradeNote
+        case .weekly: PaywallL10n.weeklyNote
         case .monthly: PaywallL10n.monthlyNote
         case .annual: PaywallL10n.annualNote
         default: PaywallL10n.doorNote

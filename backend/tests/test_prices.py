@@ -23,15 +23,15 @@ from alma.calc import SYSTEMS
 #: Every published amount, written out by hand. If a change to the mechanism
 #: moves any of these, that is the test failing on purpose.
 GOLDEN: dict[str, dict[str, int]] = {
-    "USD": {"door": 599, "archive": 3899, "archive-bump": 2999,
+    "USD": {"weekly": 499, "door": 599, "archive": 3899, "archive-bump": 2999,
             "archive-upgrade": 3300, "monthly": 999, "annual": 7899},
-    "EUR": {"door": 649, "archive": 4099, "archive-bump": 3149, "archive-upgrade": 3450, "monthly": 1049, "annual": 8299},
-    "GBP": {"door": 599, "archive": 3999, "archive-bump": 3099, "archive-upgrade": 3400, "monthly": 999, "annual": 7999},
-    "CHF": {"door": 690, "archive": 4590, "archive-bump": 3490, "archive-upgrade": 3900, "monthly": 1190, "annual": 9290},
-    "AUD": {"door": 999, "archive": 5999, "archive-bump": 4499, "archive-upgrade": 5000, "monthly": 1599, "annual": 12499},
-    "CAD": {"door": 899, "archive": 5499, "archive-bump": 4199, "archive-upgrade": 4600, "monthly": 1399, "annual": 10999},
-    "NOK": {"door": 7900, "archive": 44900, "archive-bump": 33900, "archive-upgrade": 37000, "monthly": 10900, "annual": 89900},
-    "DKK": {"door": 4900, "archive": 29900, "archive-bump": 22300, "archive-upgrade": 25000, "monthly": 7900, "annual": 61900},
+    "EUR": {"weekly": 549, "door": 649, "archive": 4099, "archive-bump": 3149, "archive-upgrade": 3450, "monthly": 1049, "annual": 8299},
+    "GBP": {"weekly": 499, "door": 599, "archive": 3999, "archive-bump": 3099, "archive-upgrade": 3400, "monthly": 999, "annual": 7999},
+    "CHF": {"weekly": 590, "door": 690, "archive": 4590, "archive-bump": 3490, "archive-upgrade": 3900, "monthly": 1190, "annual": 9290},
+    "AUD": {"weekly": 799, "door": 999, "archive": 5999, "archive-bump": 4499, "archive-upgrade": 5000, "monthly": 1599, "annual": 12499},
+    "CAD": {"weekly": 749, "door": 899, "archive": 5499, "archive-bump": 4199, "archive-upgrade": 4600, "monthly": 1399, "annual": 10999},
+    "NOK": {"weekly": 5900, "door": 7900, "archive": 44900, "archive-bump": 33900, "archive-upgrade": 37000, "monthly": 10900, "annual": 89900},
+    "DKK": {"weekly": 3900, "door": 4900, "archive": 29900, "archive-bump": 22300, "archive-upgrade": 25000, "monthly": 7900, "annual": 61900},
     "BRL": {"archive": 9990, "annual": 21900},
     "MXN": {"archive": 42900, "annual": 86900},
     "PLN": {"archive": 8499, "annual": 17499},

@@ -272,7 +272,7 @@ class ChapterViewModel(
                     failure = failure,
                     systemUnlocked = system in account.unlocked,
                     isSubscriber = held.any {
-                        it.active && (it.kind == "monthly" || it.kind == "annual")
+                        it.active && (it.kind == "weekly" || it.kind == "monthly" || it.kind == "annual")
                     },
                     preview = (reading as? ApiResult.Ok)?.data?.preview == true,
                     // Asked for only when there is a door to price. A chapter

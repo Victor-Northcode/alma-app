@@ -854,6 +854,10 @@ def moment(value: object) -> datetime | None:
 #: accumulate. A month that granted twenty-eight would take access away from
 #: somebody who has paid, in the two days before the provider retries.
 PERIOD: dict[str, timedelta] = {
+    # Eight days for a week, one for a month: the buffer is the renewal
+    # webhook's arrival window, so a slow store notice never locks out
+    # somebody who has paid.
+    "week": timedelta(days=8),
     "month": timedelta(days=31),
     "year": timedelta(days=365),
 }
