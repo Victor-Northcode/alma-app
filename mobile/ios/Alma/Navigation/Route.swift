@@ -116,6 +116,19 @@ final class AppRouter {
         // stack can be photographed without a tap. Release builds ignore both.
         if let slug = UserDefaults.standard.string(forKey: "AlmaSystem"),
            let system = SystemSlug(rawValue: slug) {
+            // `-AlmaSystem numerology -AlmaChapter name` opens the chapter with
+            // the system beneath it, which is the stack a person would have.
+            //
+            // Added to verify the writing timeout: a chapter that has never
+            // been written takes about a minute to arrive, and there was no way
+            // to start that wait from the command line — so the one bug the
+            // owner photographed was the one bug this harness could not reach.
+            if let chapter = UserDefaults.standard.string(forKey: "AlmaChapter"), !chapter.isEmpty {
+                return [.systems: [
+                    Route.system(system),
+                    Route.chapter(system: system, chapter: chapter),
+                ]]
+            }
             return [.systems: [Route.system(system)]]
         }
         if UserDefaults.standard.bool(forKey: "AlmaOffer") {
@@ -180,6 +193,27 @@ final class AppRouter {
     func push(_ route: Route, on tab: CabinetTab) {
         self.tab = tab
         paths[tab, default: []].append(route)
+    }
+
+    /// Swap the screen on top for another, instead of stacking a second one.
+    ///
+    /// **What this is for: reading chapter after chapter.** Pushing the next
+    /// chapter meant back went to the previous chapter, so somebody who read
+    /// five in a row had to press back five times to reach the table of
+    /// contents — and the owner, reading his own product, landed in
+    /// «Жизненный путь» when he wanted the system he had come from. Nobody
+    /// reading a book expects the way out to be the page before.
+    ///
+    /// The chapter is *replaced*, so back always means "back to this system"
+    /// and the stack never grows past two while reading.
+    func replaceTop(with route: Route) {
+        var stack = paths[tab] ?? []
+        if stack.isEmpty {
+            stack.append(route)
+        } else {
+            stack[stack.count - 1] = route
+        }
+        paths[tab] = stack
     }
 
     func pop() {

@@ -196,6 +196,65 @@ def test_a_name_with_no_usable_letters_is_refused():
         N.name_numbers("...", life_path_value=1)
 
 
+# ── names that are not written in Latin ────────────────────────────────────
+#
+# The bug these cover shipped: `_letters("Анатолий")` was the empty string, so
+# `calculate` skipped the name block, so «Числа имени» — the fifth of five paid
+# numerology chapters — had no factors and Alma refused to write it. Every
+# Russian reader, every time.
+
+@pytest.mark.parametrize(
+    "written,counted",
+    [
+        ("Анатолий Михайлов", "ANATOLIYMIKHAYLOV"),
+        # Щ is four Latin letters, and each of them counts.
+        ("Игорь Щербаков", "IGORSHCHERBAKOV"),
+        # Ё reads as E, and the soft sign carries no sound and no value.
+        ("Анна Ковалёва", "ANNAKOVALEVA"),
+        # Ukrainian Ґ and the same soft sign.
+        ("Олена Ґудзь", "OLENAGUDZ"),
+        # Already Latin: romanisation must be a no-op, not a second pass.
+        ("Sofia Rossi", "SOFIAROSSI"),
+    ],
+)
+def test_a_cyrillic_name_is_counted_from_its_latin_spelling(written, counted):
+    assert N._letters(written) == counted
+
+
+def test_the_spelling_that_was_counted_is_reported():
+    """A number nobody can check is a number nobody should trust.
+
+    The reader typed «Анатолий Михайлов» and the sum was taken over letters they
+    never wrote, so the spelling travels with the numbers — into the payload as
+    `name.counted_as` and into the factor list the chapter must cite.
+    """
+    result = N.calculate(day=14, month=3, year=1996, full_name="Анатолий Михайлов")
+    assert result.name is not None
+    assert result.name.romanised == "ANATOLIYMIKHAYLOV"
+    assert "name counted as ANATOLIYMIKHAYLOV" in result.factors()
+
+
+def test_the_soul_urge_of_a_cyrillic_name_is_the_hand_sum():
+    """ANATOLIYMIKHAYLOV, vowels only: A,A,O,I,I,A,O.
+
+    1+1+6+9+9+1+6 = 33, a master number, which survives reduction.
+    """
+    result = N.name_numbers("Анатолий Михайлов", life_path_value=6)
+    assert result.soul_urge == 33
+
+
+def test_a_name_in_an_alphabet_we_cannot_romanise_is_still_refused():
+    """Greek, Hebrew, Chinese: no table, so no invented number.
+
+    `calculate` checks `_letters` before asking, so the chapter refuses honestly
+    instead of the engine raising — the same behaviour Cyrillic used to get and
+    the reason this bug was invisible.
+    """
+    with pytest.raises(ValueError):
+        N.name_numbers("Ελένη", life_path_value=3)
+    assert N.calculate(day=1, month=1, year=2000, full_name="Ελένη").name is None
+
+
 # ── arcana ─────────────────────────────────────────────────────────────────
 
 def test_birth_card_for_the_reference_date():

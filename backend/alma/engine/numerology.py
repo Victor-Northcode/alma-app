@@ -29,6 +29,57 @@ _LETTER_VALUES = {
 }
 _VOWELS = set("AEIOU")
 
+#: Cyrillic, romanised, because the table above is Latin-only and a Russian
+#: reader typing their own name got nothing at all.
+#:
+#: **This was a dead chapter, not a rough edge.** `_letters("Анатолий")`
+#: returned the empty string, `calculate` skipped the name block, and the fifth
+#: of five numerology chapters — «Числа имени» — had no factors to read, so Alma
+#: refused it: *"я не смогла прочитать это в твоей карте"*. Correct behaviour
+#: over missing data, and it happened to every reader whose alphabet is not
+#: ours, on a chapter they had paid for.
+#:
+#: **Why romanise rather than assign Cyrillic letters their own values.** There
+#: are Russian numerological tables that number А…Я directly, and adopting one
+#: would mean this product computes a different system depending on the reader's
+#: keyboard — the same person, two answers, and no way to say which is the
+#: product's. Pythagorean numerology is a system about the *Latin* alphabet;
+#: romanising the input keeps one system for everybody and keeps the arithmetic
+#: reproducible by hand, which is the whole reason this module is testable.
+#:
+#: **Why this particular scheme.** BGN/PCGN, the one a Russian passport and an
+#: airline ticket use — Й→Y, Ю→YU, Я→YA — because it is the spelling a person
+#: already recognises as their own name in Latin. ISO 9 (Â, Û, Š) is more
+#: reversible and nobody writes their name that way. The chapter says which
+#: spelling it counted, so the reader can check the sum by hand: see
+#: `NameNumbers.romanised`.
+#:
+#: Ukrainian and Belarusian letters are here because they cost one line each and
+#: their absence would be the same bug reported again by somebody else.
+_ROMANISED = {
+    "А": "A", "Б": "B", "В": "V", "Г": "G", "Д": "D", "Е": "E", "Ё": "E",
+    "Ж": "ZH", "З": "Z", "И": "I", "Й": "Y", "К": "K", "Л": "L", "М": "M",
+    "Н": "N", "О": "O", "П": "P", "Р": "R", "С": "S", "Т": "T", "У": "U",
+    "Ф": "F", "Х": "KH", "Ц": "TS", "Ч": "CH", "Ш": "SH", "Щ": "SHCH",
+    # The two signs carry no sound and therefore no value. Dropping them is the
+    # same decision every romanisation makes, and it is why «Игорь» and «Игор»
+    # count identically.
+    "Ъ": "", "Ы": "Y", "Ь": "",
+    "Э": "E", "Ю": "YU", "Я": "YA",
+    # Ukrainian and Belarusian.
+    "І": "I", "Ї": "YI", "Є": "YE", "Ґ": "G", "Ў": "U",
+}
+
+
+def romanise(full_name: str) -> str:
+    """The name as Latin letters, for a reader whose alphabet is not.
+
+    Idempotent on a name that was already Latin, which is what makes it safe to
+    run on every name rather than on the ones we detect as Cyrillic — detection
+    would have to guess at «Anna Ковалёва», and this does not have to guess.
+    """
+    return "".join(_ROMANISED.get(c, c) for c in full_name.upper())
+
 
 def digit_sum(value: int) -> int:
     return sum(int(d) for d in str(abs(value)))
@@ -95,6 +146,12 @@ class NameNumbers:
     missing_numbers: tuple[int, ...]
     karmic_lessons: tuple[int, ...]
     letter_counts: dict[int, int] = field(default_factory=dict)
+    #: The letters these numbers were actually counted from — «Анатолий» read as
+    #: ANATOLIY. Carried so the chapter can name the spelling instead of
+    #: producing a number out of nowhere: a reader who cannot see which letters
+    #: were added cannot check the sum, and this is the one system in the
+    #: product that a person can check with a pencil.
+    romanised: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -124,6 +181,13 @@ class NumerologyResult:
         items += [f"karmic debt {d}" for d in self.karmic_debts_present]
         items += [f"master number {m}" for m in self.master_numbers_present]
         if self.name:
+            # The letters, before the numbers read from them. A citable factor
+            # rather than prose the model composes, because it is the one line
+            # that lets a reader redo the sum — and because a Cyrillic name is
+            # now counted from a spelling nobody typed, which has to be said out
+            # loud rather than quietly assumed.
+            if self.name.romanised:
+                items.append(f"name counted as {self.name.romanised}")
             items += [
                 f"expression {self.name.expression}",
                 f"soul urge {self.name.soul_urge}",
@@ -231,7 +295,7 @@ def life_cycles(day: int, month: int, year: int, life_path_value: int) -> tuple[
 
 
 def _letters(full_name: str) -> str:
-    return "".join(c for c in full_name.upper() if c in _LETTER_VALUES)
+    return "".join(c for c in romanise(full_name) if c in _LETTER_VALUES)
 
 
 def name_numbers(full_name: str, life_path_value: int) -> NameNumbers:
@@ -260,6 +324,7 @@ def name_numbers(full_name: str, life_path_value: int) -> NameNumbers:
         missing_numbers=missing,
         karmic_lessons=missing,  # the lessons are exactly the absent values
         letter_counts=counts,
+        romanised=letters,
     )
 
 

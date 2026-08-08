@@ -241,6 +241,11 @@ def numerology_result(birth: BirthData, *, reference: date_type | None = None) -
             "personality": result.name.personality,
             "maturity": result.name.maturity,
             "karmic_lessons": list(result.name.karmic_lessons),
+            # The letters the four numbers above were counted from. A Cyrillic
+            # name is romanised before it is counted, so this is the only thing
+            # on the payload that lets a reader check the arithmetic — and the
+            # only place a client can show which spelling was used.
+            "counted_as": result.name.romanised,
         }
     else:
         unavailable.append(

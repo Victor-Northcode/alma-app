@@ -82,7 +82,13 @@ internal object AlmaHttp {
             // timeout would cancel a purchase the person has already paid for
             // and leave them looking at an error over a chapter that is being
             // written anyway.
-            .readTimeout(120, TimeUnit.SECONDS)
+            //
+            // 180 rather than 120, matching `AlmaClient.writingTimeout` on iOS:
+            // that platform had this exact bug — a chapter cancelled mid-write
+            // and reported as offline while the server finished and stored it —
+            // and the two clients disagreeing about how long a chapter may take
+            // is how the same report comes back on one phone and not the other.
+            .readTimeout(180, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(SessionInterceptor(tokens, measurement))
 

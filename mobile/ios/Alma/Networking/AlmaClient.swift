@@ -50,6 +50,24 @@ final class AlmaClient: Sendable {
     /// visitors.
     static let anonHeader = "X-Alma-Anon"
 
+    /// How long a request that makes a model write is allowed to stay silent.
+    ///
+    /// **This is the fix for the bug the owner photographed**: a chapter opened
+    /// on «Alma сейчас не отвечает» and then opened fine on the second tap.
+    /// `timeoutIntervalForRequest` is not a budget for the whole call — it is
+    /// the longest gap allowed *between bytes*, and a generation sends no bytes
+    /// at all until it is finished. Opus writes a chapter in 40–60 seconds
+    /// (STATUS.md measured 55.6 s against this backend), so the session-wide 30
+    /// seconds cancelled a request that was working. The server finished writing
+    /// anyway and stored the chapter — which is exactly why the retry was
+    /// instant, and why nothing about this looked like a timeout from the
+    /// outside.
+    ///
+    /// Applied per request rather than raised on the session, because 30 seconds
+    /// is the right answer everywhere else: it is what makes a dead network fail
+    /// fast on a hub, a catalogue or a place search.
+    static let writingTimeout: TimeInterval = 180
+
     /// The header this app sends to say what clock the phone is on. An IANA
     /// zone identifier — "Europe/Warsaw", never an offset, because an offset
     /// cannot survive a daylight-saving change and a daily is a thing about a
@@ -292,10 +310,10 @@ final class AlmaClient: Sendable {
 
     /// Fetch a chapter, writing it the first time it is asked for.
     ///
-    /// This is the only slow call in the app — the first read of a chapter is a
-    /// model generating three hundred words — and the only one that can take a
-    /// double-digit number of seconds. `URLSession.almaDefault` gives it room;
-    /// the screen shows `states.writing` while it waits, and says so honestly.
+    /// This is the slowest call in the app — the first read of a chapter is a
+    /// model generating three hundred words — and it carries `writingTimeout`
+    /// rather than the session's, for the reason spelled out there. The screen
+    /// shows `states.writing` while it waits, and says so honestly.
     func reading(
         system: SystemSlug,
         chapter: String,
@@ -313,7 +331,8 @@ final class AlmaClient: Sendable {
                 locale: locale.rawValue,
                 houseSystem: houseSystem,
                 partnerProfileId: partnerProfileId
-            )
+            ),
+            timeout: Self.writingTimeout
         )
     }
 
@@ -325,11 +344,14 @@ final class AlmaClient: Sendable {
         profileId: String? = nil,
         locale: AppLocale = .current
     ) async throws(AlmaError) -> ChatReply {
+        // An answer is a generation too — shorter than a chapter, and on the
+        // strong model it still thinks before it speaks past thirty seconds.
         try await post(
             "/v1/chat",
             body: ChatRequest(
                 message: message, threadId: threadId, profileId: profileId, locale: locale.rawValue
-            )
+            ),
+            timeout: Self.writingTimeout
         )
     }
 
@@ -489,18 +511,20 @@ final class AlmaClient: Sendable {
 
     private func post<Body: Encodable, Response: Decodable>(
         _ path: String,
-        body: Body
+        body: Body,
+        timeout: TimeInterval? = nil
     ) async throws(AlmaError) -> Response {
-        try await request(path, method: "POST", body: body)
+        try await request(path, method: "POST", body: body, timeout: timeout)
     }
 
     private func request<Body: Encodable, Response: Decodable>(
         _ path: String,
         method: String,
         query: [String: String] = [:],
-        body: Body?
+        body: Body?,
+        timeout: TimeInterval? = nil
     ) async throws(AlmaError) -> Response {
-        let data = try await perform(path, method: method, query: query, body: body)
+        let data = try await perform(path, method: method, query: query, body: body, timeout: timeout)
 
         // 204 and an empty body: the caller asked for `Void`-ish work and there
         // is nothing to decode. `JSONValue.null` is the honest stand-in.
@@ -532,7 +556,8 @@ final class AlmaClient: Sendable {
         _ path: String,
         method: String,
         query: [String: String],
-        body: Body?
+        body: Body?,
+        timeout: TimeInterval? = nil
     ) async throws(AlmaError) -> Data {
         guard var components = URLComponents(
             url: baseURL.appendingPathComponent(path),
@@ -549,6 +574,9 @@ final class AlmaClient: Sendable {
 
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = method
+        // A generation asks for its own clock. See `Self.writingTimeout` and the
+        // session below for why the session-wide one cannot be it.
+        if let timeout { urlRequest.timeoutInterval = timeout }
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
         if let token = tokens.read() {
@@ -815,16 +843,23 @@ extension URLSession {
 
     /// The session every request goes through.
     ///
-    /// The 120-second resource timeout is not generosity: the first read of a
-    /// chapter is a language model writing three hundred words from a chart,
-    /// and the default 60 seconds cuts a *successful* generation off at the
-    /// knees — the person is charged for a reading the app then reports as
-    /// offline. The 30-second request timeout still catches a dead network
-    /// quickly, because that one measures the gap between bytes.
+    /// **Two timeouts, and the difference between them cost a bug.**
+    /// `timeoutIntervalForRequest` is the longest gap allowed between bytes;
+    /// `timeoutIntervalForResource` is the ceiling on the whole transfer. This
+    /// comment used to say the 30-second request timeout was safe for a
+    /// generation "because that one measures the gap between bytes" — which is
+    /// true and is precisely why it was not safe: a chapter being written sends
+    /// no bytes for the better part of a minute, so 30 seconds cancelled the
+    /// successful call and the app reported it as offline.
+    ///
+    /// 30 seconds stays here, because it is right for the twenty-odd requests
+    /// that are not a generation. The three that are set their own — see
+    /// `AlmaClient.writingTimeout` — and the resource ceiling has to leave room
+    /// above the longest of them, or it becomes the cancel nobody expected.
     static let almaDefault: URLSession = {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 30
-        configuration.timeoutIntervalForResource = 120
+        configuration.timeoutIntervalForResource = 240
         configuration.waitsForConnectivity = false
         // Responses are per-account and already stored where they need to be
         // (a written chapter lives in the backend's database). A URL cache

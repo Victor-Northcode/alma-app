@@ -44,8 +44,14 @@ struct ChapterScreen: View {
                 content(model)
             }
         }
-        .task {
-            let model = model ?? ChapterModel(client: session.client, system: system, chapter: chapter)
+        // **Keyed on the chapter, not bare.** Reading on now *replaces* this
+        // screen rather than stacking a new one (`AppRouter.replaceTop`), so the
+        // view stays in the same place in the stack and SwiftUI keeps its
+        // `@State` — a bare `.task` would run once and leave the previous
+        // chapter's text under the new chapter's title. The id is what makes
+        // the swap reload.
+        .task(id: "\(system.rawValue)/\(chapter)") {
+            let model = ChapterModel(client: session.client, system: system, chapter: chapter)
             self.model = model
             await model.load(locale: session.locale)
         }
@@ -186,8 +192,10 @@ struct ChapterScreen: View {
     @ViewBuilder
     private func next(_ model: ChapterModel) -> some View {
         if let next = model.next {
+            // `replaceTop`, not `push`: see the comment there. Back from any
+            // chapter is back to the system, however many were read in a row.
             ActionRow(label: L10nCabinet.nextChapter) {
-                router.push(.chapter(system: system, chapter: next.slug))
+                router.replaceTop(with: .chapter(system: system, chapter: next.slug))
             }
             .padding(.top, AlmaMetrics.gapLarge)
 
@@ -361,6 +369,22 @@ final class ChapterModel {
 
         self.reading = await reading.value
         self.chapters = await chapters.value
+
+        // One automatic second try, and only for the faults a retry can change.
+        //
+        // The same guard `TodayModel` already carries, for the same reason and
+        // now for a second one: when a generation *does* fall over transport,
+        // the server has usually finished writing anyway and stored the chapter
+        // — so the retry returns instantly from the database rather than paying
+        // for a second write. The owner watched exactly that happen by hand,
+        // twice, and the button he had to press for it is the thing being
+        // removed here. A refusal or a lock is an answer, and is left alone.
+        if case .failed(let error) = self.reading, error.isTransient {
+            try? await Task.sleep(for: .seconds(2))
+            self.reading = await almaLoad {
+                try await client.reading(system: system, chapter: chapter, locale: locale)
+            }.value
+        }
     }
 
     var entry: ChapterEntry? {

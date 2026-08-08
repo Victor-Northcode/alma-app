@@ -13,6 +13,14 @@ backend/**/__pycache__/
 backend/*.egg-info/
 backend/.pytest_cache/
 backend/data/*.db
+# SQLite's own working files, and the snapshots a migration leaves behind.
+# `*.db` alone did not cover them: WAL mode writes `-wal` and `-shm` beside the
+# database, both of which are binary, both of which change on every request, and
+# one of which was tracked — so `git status` was never clean and every commit
+# carried a megabyte of somebody's local rows.
+backend/data/*.db-wal
+backend/data/*.db-shm
+backend/data/*.before-migration-*
 
 # verification builds — kept out of the dev server's way
 .next-verify/
