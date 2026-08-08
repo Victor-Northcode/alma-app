@@ -46,7 +46,7 @@ struct AlmaLaunch: View {
     /// The whole arrival, and the floor on how long this screen is shown.
     /// Grew from 2.8 with the second draft: the owner's verdict on the first
     /// was "слабенькая", and the fix was not speed but density — a zodiac
-    /// ring that draws itself, nine nodes instead of six, a second comet,
+    /// nine nodes instead of six, a second comet,
     /// and motes rising into the bloom all need the extra half-second.
     private static let runtime: Double = 3.4
 
@@ -121,7 +121,6 @@ struct AlmaLaunch: View {
 
         ZStack {
             StarChart(
-                ring: eased(0.10, 1.20, at: t),
                 lines: eased(0.35, 1.95, at: t),
                 nodes: eased(0.25, 1.80, at: t),
                 comet: eased(1.20, 2.20, at: t),
@@ -215,8 +214,8 @@ struct AlmaLaunch: View {
     }
 }
 
-/// Nine stars, three chains of lines, a zodiac ring drawing itself, and two
-/// comets — the second draft of the arrival.
+/// Nine stars, three chains of lines, and two comets — the sky connecting
+/// itself, nothing drawn around it.
 ///
 /// **Still not a real constellation, deliberately.** A recognisable Orion on
 /// the launch screen is a claim about the sky tonight, and this screen has no
@@ -225,8 +224,6 @@ struct AlmaLaunch: View {
 /// owner said so. Density, not speed, is what changed.
 private struct StarChart: View {
 
-    /// 0 → 1 as the zodiac ring draws itself and its ticks light.
-    var ring: Double
     /// 0 → 1 as the lines draw themselves.
     var lines: Double
     /// 0 → 1 as the nodes light, one after another.
@@ -247,29 +244,8 @@ private struct StarChart: View {
 
     var body: some View {
         ZStack {
-            // The zodiac ring, drawing itself from the top — the one circle
-            // this brand allows to move, because it is an instrument's dial
-            // and not the mark. Twelve ticks light along it as it closes.
-            Circle()
-                .trim(from: 0, to: ring)
-                .stroke(Color.almaGold.opacity(0.4), lineWidth: 1)
-                .rotationEffect(.degrees(-90))
-                .frame(width: 292, height: 292)
-            ForEach(0..<12, id: \.self) { i in
-                let share = Double(i) / 12
-                let lit = ring > share ? min((ring - share) * 8, 1) : 0
-                Rectangle()
-                    .fill(Color.almaGold.opacity(0.45 * lit))
-                    .frame(width: 1, height: 7)
-                    .offset(y: -146)
-                    .rotationEffect(.degrees(Double(i) * 30))
-            }
-            // A finer inner dial, counter-rotating very slowly — depth.
-            Circle()
-                .stroke(Color.almaGold.opacity(0.14 * ring), style: StrokeStyle(lineWidth: 1, dash: [1, 7]))
-                .frame(width: 258, height: 258)
-                .rotationEffect(.degrees(-time * 4))
-
+            // No dial and no ring — the owner's call: the arrival is the sky
+            // connecting itself, nothing drawn around it.
             spine.trim(from: 0, to: lines)
                 .stroke(Color.almaGold.opacity(0.5), lineWidth: 1)
             branch.trim(from: 0, to: max(0, lines * 1.3 - 0.3))
