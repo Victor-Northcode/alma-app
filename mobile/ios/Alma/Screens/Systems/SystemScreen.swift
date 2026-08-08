@@ -65,14 +65,17 @@ struct SystemScreen: View {
                     freeData(model)
                         .riseIn(5)
                 } else {
-                    // Every other system: what is sold leads, the free
-                    // calculations stay complete below.
-                    chapters(model)
+                    // Every other system opens the way the natal one does:
+                    // with its own picture drawing itself, honest to its own
+                    // payload — then what is sold, then the free calculations.
+                    heroArt(model)
                         .riseIn(0)
-                    door(model)
+                    chapters(model)
                         .riseIn(1)
-                    freeData(model)
+                    door(model)
                         .riseIn(2)
+                    freeData(model)
+                        .riseIn(3)
                 }
             }
         }
@@ -187,6 +190,33 @@ struct SystemScreen: View {
             NatalWheel(data: result.data)
                 .padding(.vertical, 6)
         }
+    }
+
+    /// The system's own diagram — see `SystemArt.swift` for the eight designs
+    /// and the honesty rule they all obey.
+    @ViewBuilder
+    private func heroArt(_ model: SystemModel) -> some View {
+        if case .loaded(let result) = model.result {
+            SystemHeroArt(
+                system: system,
+                data: result.data,
+                age: ageOfOwner
+            )
+            .padding(.vertical, 6)
+        }
+    }
+
+    /// Whole years since the owner's birth date, for the numerology ring's
+    /// "you are here" tick. Nil when the date cannot be parsed — the ring then
+    /// simply draws no tick rather than guessing one.
+    private var ageOfOwner: Int? {
+        guard let birth = session.profile?.birthDate else { return nil }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        guard let date = formatter.date(from: birth) else { return nil }
+        let years = Calendar.current.dateComponents([.year], from: date, to: .now).year
+        return years.flatMap { $0 >= 0 ? $0 : nil }
     }
 
     /// Every body, in words: "Sun — 21°13′ Virgo · 2nd house".

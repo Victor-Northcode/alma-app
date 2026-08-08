@@ -93,6 +93,15 @@ fun SystemDetailScreen(
     }
     val state by vm.state.collectAsStateWithLifecycle()
     val spheres by vm.spheres.collectAsStateWithLifecycle()
+    val sessionState by container.session.state.collectAsStateWithLifecycle()
+    // Whole years since the owner's birth date, for the numerology ring's
+    // "you are here" tick. Null when unparsable — the ring then simply draws
+    // no tick rather than guessing one.
+    val age = sessionState.profile?.birthDate?.let { birth ->
+        runCatching {
+            java.time.Period.between(java.time.LocalDate.parse(birth), java.time.LocalDate.now()).years
+        }.getOrNull()?.takeIf { it >= 0 }
+    }
 
     // A distinct sky per system, and a **non-negative** one: `FusedSky` derives
     // the comet's stagger from `seed % 5` and hands it to `tween` as a delay, so
@@ -103,6 +112,7 @@ fun SystemDetailScreen(
             SystemDetailBody(
                 detail,
                 spheres = spheres,
+                age = age,
                 onOpenChapter = onOpenChapter,
                 onOffer = onOffer,
                 onBack = onBack,
@@ -225,6 +235,7 @@ class SystemDetailViewModel(
 private fun SystemDetailBody(
     detail: SystemDetailView,
     spheres: ScreenState<List<SphereBlockDto>>,
+    age: Int?,
     onOpenChapter: (String) -> Unit,
     onOffer: () -> Unit,
     onBack: () -> Unit,
@@ -252,7 +263,12 @@ private fun SystemDetailBody(
             } else {
                 detail.result?.let { result ->
                     Spacer(Modifier.height(22.dp))
-                    Column(Modifier.riseIn(1)) {
+                    // The system's own diagram first — the picture the natal
+                    // reference opens with, honest to this system's payload.
+                    // See `SystemArt.kt` for the seven designs.
+                    SystemHeroArt(detail.slug, result.`data`, age, modifier = Modifier.riseIn(1))
+                    Spacer(Modifier.height(10.dp))
+                    Column(Modifier.riseIn(2)) {
                         RuledLabel(stringResource(R.string.cabinet_free_data))
                         Spacer(Modifier.height(14.dp))
                         FreeData(detail.slug, result)
