@@ -22,6 +22,21 @@ struct JourneyScene<Art: View, Controls: View>: View {
     /// How tall the art is allowed to be. The web fixes this per scene, because
     /// the constellation wants more room than the star on the offer does.
     var artHeight: CGFloat = 308
+    /// Whether the keyboard is up on this step.
+    ///
+    /// **The art shrinks instead of being run over.** With the keyboard open on
+    /// the place step the controls grow by a field and four suggestions, and
+    /// the pinned block — a `safeAreaInset`, so it rises with the keyboard —
+    /// climbed straight over the picture. The owner's screenshot showed the
+    /// globe with a list of cities across the middle of it, and his own
+    /// instruction was that everything should move together rather than one
+    /// thing sliding under another.
+    ///
+    /// So it does: the art collapses to a third of its height and dims, the
+    /// question follows it up, and the whole stage is one movement. Let the
+    /// keyboard go and it comes back. Nothing overlaps at any point in between,
+    /// because there is nothing left to overlap.
+    var keyboardUp: Bool = false
     var title: LocalizedStringResource?
     var sub: LocalizedStringResource?
     @ViewBuilder var art: Art
@@ -60,7 +75,17 @@ struct JourneyScene<Art: View, Controls: View>: View {
                         // art on a short phone is art that pushes the price off
                         // the bottom, and a control nobody can see is a control
                         // nobody uses.
-                        .frame(height: min(artHeight, geometry.size.height * 0.4))
+                        //
+                        // A third of that with the keyboard up — see
+                        // `keyboardUp`. Scaled rather than removed, so the
+                        // picture is still there when the field is being typed
+                        // into and the stage does not blink.
+                        .frame(
+                            height: min(artHeight, geometry.size.height * 0.4)
+                                * (keyboardUp ? 0.34 : 1)
+                        )
+                        .opacity(keyboardUp ? 0.55 : 1)
+                        .animation(AlmaMotion.ui, value: keyboardUp)
 
                     if let title {
                         Text(title)

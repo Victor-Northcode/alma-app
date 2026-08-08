@@ -40,6 +40,7 @@ struct StepPlace: View {
     var body: some View {
         JourneyScene(
             artHeight: 292,
+            keyboardUp: typing,
             title: JourneyL10n.placeTitle,
             sub: JourneyL10n.placeSub
         ) {

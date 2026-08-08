@@ -31,9 +31,14 @@ struct StepName: View {
     @Bindable var journey: JourneyModel
     let onNext: () -> Void
 
+    /// Whether the field holds the keyboard, so the art can move out of its way
+    /// rather than be climbed over. See `JourneyScene.keyboardUp`.
+    @FocusState private var typing: Bool
+
     var body: some View {
         JourneyScene(
             artHeight: 302,
+            keyboardUp: typing,
             title: JourneyL10n.nameTitle,
             sub: JourneyL10n.nameSub
         ) {
@@ -43,7 +48,8 @@ struct StepName: View {
                 text: $journey.name,
                 placeholder: nil,
                 label: JourneyL10n.nameAria,
-                onSubmit: onNext
+                onSubmit: onNext,
+                focus: $typing
             )
             .textContentType(.givenName)
 

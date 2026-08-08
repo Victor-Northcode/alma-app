@@ -36,6 +36,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -89,6 +92,7 @@ import java.time.Year
  * looks like an account and is not one is the same lie as a pre-filled birthday,
  * and sign-in on Android has its own screen once the ID token is wired up.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ColumnScope.NameStep(
     draft: JourneyDraft,
@@ -100,6 +104,10 @@ internal fun ColumnScope.NameStep(
         art = { NameArt() },
         title = stringResource(R.string.journey_name_title),
         sub = stringResource(R.string.journey_name_sub),
+        // Read from the window rather than from a focus flag: the keyboard is
+        // what the art is making room for, and the window is the only thing
+        // that knows whether it is actually up.
+        keyboardUp = WindowInsets.isImeVisible,
         controls = {
             AlmaTextField(
                 value = draft.name,
@@ -304,6 +312,7 @@ internal fun ColumnScope.TimeStep(draft: JourneyDraft, vm: JourneyViewModel) {
  * "Build my sky" stays disabled until a place has actually been *chosen* from
  * the list. Text that merely looks like a city is not a coordinate.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun ColumnScope.PlaceStep(vm: JourneyViewModel) {
     val query by vm.placeQuery.collectAsStateWithLifecycle()
@@ -315,6 +324,7 @@ internal fun ColumnScope.PlaceStep(vm: JourneyViewModel) {
         art = { PlaceArt() },
         title = stringResource(R.string.journey_place_title),
         sub = stringResource(R.string.journey_place_sub),
+        keyboardUp = WindowInsets.isImeVisible,
         controls = {
             AlmaTextField(
                 value = query,

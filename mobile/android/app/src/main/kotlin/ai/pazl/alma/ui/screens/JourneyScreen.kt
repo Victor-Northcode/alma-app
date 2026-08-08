@@ -31,6 +31,11 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.graphicsLayer
+import ai.pazl.alma.ui.theme.AlmaMotion
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -242,8 +247,24 @@ internal fun ColumnScope.JourneyScene(
     art: @Composable BoxScope.() -> Unit,
     title: String?,
     sub: String? = null,
+    /**
+     * Whether the keyboard is up on this step.
+     *
+     * **The art shrinks instead of being run over.** With the keyboard open on
+     * the place step the controls grow by a field and four suggestions, and the
+     * pinned block climbed over the picture: the owner's screenshot showed the
+     * globe with a list of cities across the middle of it, and his instruction
+     * was that everything should move together rather than one thing sliding
+     * under another. iOS carries the same flag and the same numbers.
+     */
+    keyboardUp: Boolean = false,
     controls: @Composable ColumnScope.() -> Unit,
 ) {
+    val artScale by animateFloatAsState(
+        if (keyboardUp) 0.34f else 1f,
+        animationSpec = tween(AlmaMotion.Ui, easing = AlmaMotion.UiEasing),
+        label = "journey-art",
+    )
     Column(
         modifier = Modifier
             .weight(1f)
@@ -256,7 +277,8 @@ internal fun ColumnScope.JourneyScene(
                 // share when its ideal height is less than the space left, which
                 // is the ordinary case on a tall phone.
                 .weight(1f, fill = false)
-                .heightIn(max = artHeight),
+                .heightIn(max = artHeight * artScale)
+                .graphicsLayer { alpha = 0.55f + 0.45f * ((artScale - 0.34f) / 0.66f) },
             contentAlignment = Alignment.Center,
             content = art,
         )
