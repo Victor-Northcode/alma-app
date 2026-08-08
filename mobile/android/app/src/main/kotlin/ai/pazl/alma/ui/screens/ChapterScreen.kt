@@ -37,7 +37,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
+import android.view.HapticFeedbackConstants
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -311,9 +322,27 @@ private fun ChapterBody(
 ) {
     val name = systemName(chapter.system)
 
+    // How far past the last line the reader has pulled, and whether that has
+    // already been honoured. See the note on `ChapterTail`.
+    var pull by remember { mutableFloatStateOf(0f) }
+    var advancing by remember(chapter.slug) { mutableStateOf(false) }
+    val view = LocalView.current
+    val threshold = with(LocalDensity.current) { 90.dp.toPx() }
+    val canAdvance = chapter.next != null && !chapter.locked
+
     // The one screen where text must not pass under the status bar; see the
     // parameter's own comment for what it looked like when it did.
-    CabinetPage(contentUnderStatusBar = false) {
+    CabinetPage(
+        contentUnderStatusBar = false,
+        onOverscroll = if (canAdvance) { distance ->
+            pull = distance
+            if (distance >= threshold && !advancing) {
+                advancing = true
+                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                chapter.next?.let { onOpenChapter(it.slug) }
+            }
+        } else null,
+    ) {
         ReaderBar(chapter, onBack)
 
         Spacer(Modifier.height(20.dp))
@@ -466,22 +495,23 @@ private fun ChapterBody(
                 }
             }
 
-            // The chapter after this one, then the list. Both, in that order,
-            // because reading straight on is what somebody who has just
-            // finished a chapter wants and going back to choose is what they
-            // want second.
+            // **There is no "next chapter" button here any more.** There was
+            // one, with the next chapter's title on it, and the owner cut it:
+            // somebody who has just finished reading is already scrolling, and
+            // the thing under their thumb should answer the scroll rather than
+            // ask for a tap. The model is Telegram's, and it was his
+            // comparison — reach the bottom of a channel, keep pulling, the
+            // next one opens. See `ChapterTail` and `CabinetPage`'s
+            // `onOverscroll`.
+            //
+            // Going back to the list stays a button: it is the second thing
+            // somebody wants and there is no gesture spare for it.
             Spacer(Modifier.height(26.dp))
-            chapter.next?.let { following ->
-                InkButton(
-                    text = stringResource(R.string.chapter_next, following.title),
-                    onClick = { onOpenChapter(following.slug) },
-                )
-                Spacer(Modifier.height(12.dp))
-            }
             InkButton(
                 text = stringResource(R.string.cabinet_back_to_chapters),
                 onClick = onBack,
             )
+            ChapterTail(chapter = chapter, pull = pull, threshold = threshold)
         }
 
         Spacer(Modifier.height(36.dp))
@@ -522,6 +552,55 @@ private fun ReaderBar(chapter: ChapterView, onBack: () -> Unit) {
  * A locked chapter is not one of those: the door at the foot of the sheet
  * already says it, and saying it twice would be saying it worse.
  */
+/**
+ * What the pull is doing, drawn.
+ *
+ * An arrow that fills and turns as the distance to the next chapter closes, the
+ * chapter's name under it, and at the end of a system a tick instead — nothing
+ * left to pull towards, said once and quietly.
+ *
+ * iOS draws the same two states from the same numbers; see `next(_:)` in its
+ * own `ChapterScreen`.
+ */
+@Composable
+private fun ChapterTail(chapter: ChapterView, pull: Float, threshold: Float) {
+    val progress = (pull / threshold).coerceIn(0f, 1f)
+    val eased by animateFloatAsState(progress, label = "chapter-tail")
+    Spacer(Modifier.height(28.dp))
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        val following = chapter.next
+        if (following != null && !chapter.locked) {
+            Text(
+                text = "\u2193",
+                style = AlmaTheme.type.headingM.copy(
+                    color = InkGold.copy(alpha = 0.35f + 0.65f * eased),
+                ),
+                modifier = Modifier.graphicsLayer {
+                    rotationZ = 180f * eased
+                    scaleX = 1f + 0.25f * eased
+                    scaleY = 1f + 0.25f * eased
+                },
+            )
+            Text(
+                text = following.title,
+                style = AlmaTheme.type.meta.copy(
+                    color = InkGold.copy(alpha = 0.5f + 0.5f * eased),
+                ),
+            )
+        } else if (following == null) {
+            Text(text = "\u2713", style = AlmaTheme.type.headingM.copy(color = InkGold))
+            Text(
+                text = stringResource(R.string.cabinet_system_finished),
+                style = AlmaTheme.type.meta.copy(color = InkGold),
+            )
+        }
+    }
+}
+
 @Composable
 private fun ChapterTrouble(chapter: ChapterView) {
     if (chapter.reading != null) return

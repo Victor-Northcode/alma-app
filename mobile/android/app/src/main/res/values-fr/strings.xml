@@ -48,6 +48,15 @@
     <string name="cabinet_active_now">actif maintenant</string>
     <string name="cabinet_strongest_aspects">ce qui s\'accorde et ce qui s\'oppose</string>
     <string name="cabinet_pair_join">%1$s et %2$s</string>
+    <string name="cabinet_system_finished">Tout est lu ici</string>
+    <string name="cabinet_horoscope_today">ton horoscope du jour</string>
+    <string name="cabinet_horoscope_locked">L\'horoscope est écrit chaque matin à partir de ta propre carte et vient avec l\'abonnement.</string>
+    <string name="cabinet_horoscope_open">Ouvrir l\'horoscope</string>
+    <string name="cabinet_area_quiet">Rien d\'exact ici aujourd\'hui.</string>
+    <string name="cabinet_area_work">Travail</string>
+    <string name="cabinet_area_love">Amour</string>
+    <string name="cabinet_area_money">Argent</string>
+    <string name="cabinet_area_body">Corps</string>
     <string name="aspect_meaning_conjunction">Au même point : ils agissent comme un seul et s\'amplifient.</string>
     <string name="aspect_meaning_opposition">Face à face : ils tirent en sens inverse, et il faut choisir chaque fois.</string>
     <string name="aspect_meaning_trine">Ils s\'accordent facilement — au point qu\'on s\'en sert rarement exprès.</string>

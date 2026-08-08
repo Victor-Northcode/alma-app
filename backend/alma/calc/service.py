@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 
 from ..engine import (
     arcana,
+    areas,
     astrocartography,
     ephemeris,
     natal,
@@ -338,6 +339,12 @@ def _hit_dict(hit: transits.Hit) -> dict:
         "retrograde": hit.retrograde,
         "weight": hit.weight,
         "urgency": hit.urgency,
+        # Which part of a life this one lands in — work, love, money, body — or
+        # absent when the natal point speaks for none of them. See
+        # `engine/areas.py` for why the mapping is by point rather than by
+        # house: half the readers have no houses, and the daily still has to
+        # work for them.
+        "area": areas.area_of(hit.natal),
         "text": hit.describe(),
     }
 

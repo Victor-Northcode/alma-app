@@ -351,10 +351,9 @@ private fun TodayBody(
     val transits: JsonObject? = today.sky?.data
     val chart: JsonObject? = today.chart?.data
 
-    // Whether the sky's raw facts are open. **Open by default** — the exact
-    // contact and the running influences are the most concrete thing on the
-    // screen; the fold stays so a person can put it away.
-    var skyDetails by remember { mutableStateOf(true) }
+    // `skyDetails` was the fold behind «Небо за словами» and is gone with it.
+    // The facts it hid are no longer behind anything: the areas under the
+    // horoscope name their own contacts and dates.
 
     CabinetPage {
         // **The device's calendar day, not the transit window's start.**
@@ -446,55 +445,51 @@ private fun TodayBody(
 
         Spacer(Modifier.height(26.dp))
 
-        // **One telling of the day, and it is prose.**
+        // **One telling of the day, under one name.**
         //
-        // This screen used to say the same sky three times — the daily block
-        // named the exact contact, the written line described it, and ACTIVE
-        // NOW listed it again — under headers no ordinary reader could parse.
-        // The owner's brief is the design: one connected text a person wants to
-        // open every morning, with the raw facts folded under it for whoever
-        // wants them, not spread across the front page.
-        RuledLabel(stringResource(R.string.cabinet_your_day), modifier = Modifier.riseIn(1))
+        // This screen used to say the same sky three times — a daily block
+        // naming the exact contact, a written line describing it, and ACTIVE
+        // NOW listing it again — under headers no ordinary reader could parse.
+        // Two rounds of cutting later it was still three: «Твой день», a fold
+        // called «Небо за словами», and «Точно сегодня». The owner asked what
+        // the middle one was for and the honest answer was "the order we built
+        // them in".
+        //
+        // Now one block called what people call it. A horoscope by sun sign is
+        // written for a twelfth of humanity and cites nothing; this is read
+        // from this person's own transits with the day each one perfects. The
+        // word is theirs, the content stays ours. See the longer note on iOS's
+        // `daySection`, and `engine/areas.py` for the mapping.
+        RuledLabel(
+            stringResource(R.string.cabinet_horoscope_today),
+            modifier = Modifier.riseIn(1),
+        )
         Spacer(Modifier.height(14.dp))
-        Box(Modifier.riseIn(1)) {
-            DayVoice(
-                today = today,
-                isSubscriber = daily.isSubscriber,
-                onReadWholeDay = {
-                    onOpenChapter(AlmaSystem.TRANSITS, TodayViewModel.TransitsFreeChapter)
-                },
-            )
-        }
-
-        // The facts the text was read from, folded away. A tap opens the day's
-        // exact contact (or its honest absence) and the strongest running
-        // influences — dates, orbs, everything the prose wove in.
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
-                .clickable { skyDetails = !skyDetails }
-                .padding(vertical = 10.dp),
-        ) {
-            Text(text = stringResource(R.string.cabinet_sky_behind), style = AlmaTheme.type.meta)
+        if (daily.isSubscriber) {
+            Box(Modifier.riseIn(1)) {
+                DayVoice(
+                    today = today,
+                    isSubscriber = true,
+                    onReadWholeDay = {
+                        onOpenChapter(AlmaSystem.TRANSITS, TodayViewModel.TransitsFreeChapter)
+                    },
+                )
+            }
+            Spacer(Modifier.height(14.dp))
+            HoroscopeAreas(transits)
+        } else {
+            // No opening paragraph, no blur, no empty card: the owner's call is
+            // that the horoscope belongs to the plan whole, and a one-time
+            // purchase does not open it either.
             Text(
-                text = if (skyDetails) "▴" else "▾",
-                style = AlmaTheme.type.meta,
-                color = AlmaPalette.Gold,
+                text = stringResource(R.string.cabinet_horoscope_locked),
+                style = AlmaTheme.type.dayVoice,
+                modifier = Modifier.padding(vertical = 6.dp),
             )
-        }
-
-        if (skyDetails) {
-            // It draws for everybody. `alma/api/routers/systems.py` returns the
-            // transits payload whole even when the system is locked, so the
-            // arithmetic is the same for a free reader as for a subscriber.
-            // What a subscription buys is the notification, not the day.
-            DailyBlock(
-                contacts = DailyContact.all(transits),
-                missingBirthTime = !today.birthTimeKnown,
+            QuietButton(
+                text = stringResource(R.string.cabinet_horoscope_open),
+                onClick = { onOffer("") },
             )
-            Spacer(Modifier.height(10.dp))
-            ActiveRows(transits)
         }
 
         // The one contextual nudge the product allows itself: a rare sky —
@@ -707,58 +702,60 @@ private fun DayVoice(
 }
 
 /**
- * The contacts in orb today, most pressing first — the engine sorts them by
- * urgency, so the first few *are* the day.
+ * The horoscope's four headings, each holding this person's own sky.
  *
- * Three of them. The count on the rule above stays the true one; this is the
- * strip, not the list.
+ * **The form is borrowed and the content is not.** Work, love, money, the body
+ * are the questions people arrive with, and every horoscope in the category
+ * answers them in that order — so the order is taken and the sentences under it
+ * are the reader's real transits, named, with the day each perfects. An area
+ * with nothing in it says so, which is the line no sun-sign horoscope can write
+ * and the clearest single proof that this one is computed.
+ *
+ * The mapping from a natal point to an area lives on the server
+ * (`engine/areas.py`): it is a judgement about astrology rather than about
+ * layout, and both apps have to agree on it.
  */
 @Composable
-private fun ActiveRows(transits: JsonObject?) {
-    val hits = transits?.array("active").orEmpty().filterIsInstance<JsonObject>().take(3)
-    hits.forEachIndexed { index, hit ->
-        val transiting = hit.text("transiting")
-        val natal = hit.text("natal")
-        if (transiting == null || natal == null) return@forEachIndexed
-
-        // Words rather than glyphs: this row is on the front page and
-        // "♇℞ ☌ ☊" asks a reader to know three notations before it says
-        // anything. The engine's aspect key names the word; the glyph is the
-        // fallback for an aspect the table has not caught up with.
-        val aspectKey = hit.text("aspect")
-        val exact = dayAndMonth(hit.text("exact"))
-        val leaves = dayAndMonth(hit.text("leaves"))
-        val orb = hit.number("orb_now")?.let(::formatOrb)
-
-        // Exact first, then the day it falls out of orb. The arrow carries
-        // "until" without a word for it, which is the only way to say it from a
-        // string table that has a key for neither.
-        val dates = listOfNotNull(exact, leaves).joinToString(" → ")
-        val meta = listOfNotNull(dates.ifBlank { null }, orb).joinToString(" · ")
-
-        CabinetRow(rule = index < hits.lastIndex) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    // The per-language template — see `contactPhrase`. The
-                    // pieces used to be glued together here, which produced
-                    // «Сатурн — квадратура — Солнце» in five of seven languages.
-                    text = contactPhrase(
-                        transiting,
-                        aspectKey ?: hit.text("glyph").orEmpty(),
-                        natal,
-                        hit.bool("retrograde") == true,
-                    ),
-                    style = AlmaTheme.type.headingM,
-                )
-                if (meta.isNotBlank()) {
-                    Text(text = meta, style = AlmaTheme.type.meta, modifier = Modifier.padding(top = 3.dp))
-                }
-            }
-            // The natal point this is read against, named — the citation, on
-            // the row rather than in a footnote.
+private fun HoroscopeAreas(transits: JsonObject?) {
+    val hits = transits?.array("active").orEmpty().filterIsInstance<JsonObject>()
+    // The order the server reads them in, mirrored so the two cannot silently
+    // disagree about which comes first.
+    for (area in listOf("work", "love", "money", "body")) {
+        val mine = hits
+            .filter { it.text("area") == area }
+            .sortedByDescending { it.number("urgency") ?: 0.0 }
+        Column(Modifier.padding(bottom = 14.dp)) {
             Text(
-                text = bodyWord(natal),
-                style = AlmaTheme.type.positions,
+                text = when (area) {
+                    "work" -> stringResource(R.string.cabinet_area_work)
+                    "love" -> stringResource(R.string.cabinet_area_love)
+                    "money" -> stringResource(R.string.cabinet_area_money)
+                    else -> stringResource(R.string.cabinet_area_body)
+                },
+                style = AlmaTheme.type.meta,
+                color = AlmaPalette.GoldBright,
+            )
+            val first = mine.firstOrNull()
+            val transiting = first?.text("transiting")
+            val natal = first?.text("natal")
+            Text(
+                text = if (first != null && transiting != null && natal != null) {
+                    val phrase = contactPhrase(
+                        transiting,
+                        first.text("aspect") ?: first.text("glyph").orEmpty(),
+                        natal,
+                        first.bool("retrograde") == true,
+                    )
+                    // A date only when the engine has one: a contact already
+                    // past exactness carries none, and inventing "today" for it
+                    // would be a small lie in the place least allowed one.
+                    val day = dayAndMonth(first.text("exact"))
+                    if (day != null) "$phrase, $day." else "$phrase."
+                } else {
+                    stringResource(R.string.cabinet_area_quiet)
+                },
+                style = AlmaTheme.type.meta,
+                modifier = Modifier.padding(top = 3.dp),
             )
         }
     }

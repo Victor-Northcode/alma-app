@@ -160,6 +160,20 @@ struct RootView: View {
         router.openJourney()
     }
 
+    /// Move one tab along, if there is one to move to.
+    ///
+    /// No wrapping: Settings does not lead back to Today. A carousel makes the
+    /// end of the bar invisible, and the bar is four items — a person can see
+    /// where they are and there is nothing to discover by looping.
+    private func step(_ direction: Int) {
+        let tabs = CabinetTab.allCases
+        guard let current = tabs.firstIndex(of: router.tab) else { return }
+        let next = current + direction
+        guard tabs.indices.contains(next) else { return }
+        AlmaHaptics.tick()
+        withAnimation(AlmaMotion.ui) { router.tab = tabs[next] }
+    }
+
     private var cabinet: some View {
         ZStack {
             ForEach(CabinetTab.allCases) { tab in
@@ -217,6 +231,27 @@ struct RootView: View {
                 .transition(.opacity)
             }
         }
+        // **Swiping between tabs, and the one rule that keeps it from fighting
+        // everything else.** The owner asked for it: sitting in Systems, swipe
+        // right and land on Today, swipe left and land on Alma.
+        //
+        // Only at the root of a stack. Inside one — a system, a chapter, the
+        // legal text — the same gesture is the platform's back, and a screen
+        // where sliding right sometimes goes back and sometimes changes tab is
+        // worse than one where it only ever does one of them.
+        //
+        // `minimumDistance: 30` and the height test are what keep it off the
+        // conversation's scroll view and off the natal wheel: a drag that is
+        // taller than it is wide belongs to whatever is underneath.
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 30)
+                .onEnded { value in
+                    guard router.paths[router.tab]?.isEmpty ?? true else { return }
+                    guard abs(value.translation.width) > abs(value.translation.height) * 1.6 else { return }
+                    guard abs(value.translation.width) > 60 else { return }
+                    step(value.translation.width < 0 ? 1 : -1)
+                }
+        )
         // The inset above is not enough on its own — see `cabinetBarHeight`.
         // A `NavigationStack` reads its safe area from the window, so the bar
         // this shell reserved was invisible to every scroll view inside it.

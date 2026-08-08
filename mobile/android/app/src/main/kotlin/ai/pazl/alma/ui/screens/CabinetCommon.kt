@@ -34,10 +34,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -595,12 +601,57 @@ internal fun CabinetPage(
      * keeping.
      */
     contentUnderStatusBar: Boolean = true,
+    /**
+     * How far the reader has pulled past the last line, in pixels. Null on
+     * every screen that does not ask — a page that wants nothing pays nothing.
+     *
+     * Here rather than in the one screen that wants it because this owns the
+     * scroll, and a chapter that built its own would have to re-derive the
+     * margins, the insets and the reading width. See `ChapterBody`: pulling
+     * past the end of a chapter opens the next one, the way a channel hands you
+     * to the next channel.
+     */
+    onOverscroll: ((Float) -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val inset = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+    // The drag the scroll could not use, accumulated. At the bottom of the
+    // content there is nowhere left to scroll, so everything the finger asks
+    // for arrives here unconsumed — which is exactly the distance past the end.
+    var pulled by remember { mutableFloatStateOf(0f) }
+    val overscroll = remember(onOverscroll) {
+        object : NestedScrollConnection {
+            override fun onPostScroll(
+                consumed: Offset,
+                available: Offset,
+                source: NestedScrollSource,
+            ): Offset {
+                val report = onOverscroll ?: return Offset.Zero
+                if (available.y < 0f) {
+                    pulled += -available.y
+                    report(pulled)
+                } else if (available.y > 0f && pulled > 0f) {
+                    pulled = 0f
+                    report(0f)
+                }
+                return Offset.Zero
+            }
+
+            override suspend fun onPreFling(available: Velocity): Velocity {
+                // Letting go resets it: the arrow should relax rather than stay
+                // fully drawn on a page nobody is touching.
+                if (pulled > 0f) {
+                    pulled = 0f
+                    onOverscroll?.invoke(0f)
+                }
+                return Velocity.Zero
+            }
+        }
+    }
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .then(if (onOverscroll != null) Modifier.nestedScroll(overscroll) else Modifier)
             // Modifier order *is* the behaviour here. Before `verticalScroll`
             // the inset shrinks the viewport; after it, the inset is part of
             // the scrolling content and scrolls away with it.

@@ -37,6 +37,13 @@ struct CabinetTabBar: View {
             .safeAreaInsets.bottom ?? 0
     }
 
+    /// Where the finger is while it is dragging along the bar, in points from
+    /// the bar's leading edge. Nil when nobody is dragging.
+    @State private var dragging: CGFloat?
+    /// The bar's own width, measured, because the drag has to be turned into a
+    /// tab index and only a measurement knows how wide a quarter is.
+    @State private var width: CGFloat = 0
+
     var body: some View {
         HStack(spacing: 0) {
             ForEach(CabinetTab.allCases) { tab in
@@ -76,6 +83,31 @@ struct CabinetTabBar: View {
         }
         .padding(.top, 9)
         .frame(height: AlmaMetrics.tabBarHeight)
+        .onGeometryChange(for: CGFloat.self, of: \.size.width) { width = $0 }
+        // **Hold and slide, the way Telegram's bar works.** The owner asked for
+        // it in those words: press Today, move without letting go, and the
+        // selection travels with the finger.
+        //
+        // A `minimumDistance` of 12 rather than 0, so an ordinary tap is still
+        // handled by the buttons above and never by this: at zero the gesture
+        // swallows every touch on the bar and the buttons stop firing, which is
+        // the obvious way to build this and is wrong.
+        //
+        // `simultaneously` is not used and would be a mistake here — the drag
+        // and the buttons want the same touches, and letting both win means a
+        // slide that also taps whatever it started on.
+        .gesture(
+            DragGesture(minimumDistance: 12)
+                .onChanged { value in
+                    dragging = value.location.x
+                    guard let tab = tab(at: value.location.x) else { return }
+                    if tab != router.tab {
+                        AlmaHaptics.tick()
+                        withAnimation(AlmaMotion.ui) { router.tab = tab }
+                    }
+                }
+                .onEnded { _ in dragging = nil }
+        )
         // **No bottom padding here, and that is the second attempt.**
         //
         // The first fix for the eaten line added `.padding(.bottom,
@@ -104,6 +136,20 @@ struct CabinetTabBar: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(L10n.cabinetSections))
+    }
+
+    /// Which tab the finger is over.
+    ///
+    /// The bar is four equal columns, so the index is the position divided by a
+    /// quarter of the width — clamped rather than wrapped, because dragging off
+    /// the end should stop at the end and not reappear at the other one.
+    /// Returns nil before the width has been measured, which is the first frame
+    /// and no drag can have started in it.
+    private func tab(at x: CGFloat) -> CabinetTab? {
+        guard width > 0 else { return nil }
+        let column = width / CGFloat(CabinetTab.allCases.count)
+        let index = min(CabinetTab.allCases.count - 1, max(0, Int(x / column)))
+        return CabinetTab.allCases[index]
     }
 }
 

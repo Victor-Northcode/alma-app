@@ -29,8 +29,17 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.layout.onSizeChanged
+import android.view.HapticFeedbackConstants
 
 /**
  * The bottom tabs.
@@ -69,11 +78,34 @@ fun CabinetBar(
                 strokeWidth = size.height,
             )
         }
+        // **Hold and slide, the way Telegram's bar works.** The owner asked for
+        // it in those words: press Today, move without letting go, and the
+        // selection travels with the finger.
+        //
+        // `detectHorizontalDragGestures` rather than a tap-aware gesture:
+        // the items keep their own `selectable`, so an ordinary tap is still
+        // theirs and this only ever sees a finger that has already moved.
+        var barWidth by remember { mutableFloatStateOf(0f) }
+        val view = LocalView.current
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 62.dp)
-                .padding(top = 9.dp, bottom = 12.dp),
+                .padding(top = 9.dp, bottom = 12.dp)
+                .onSizeChanged { barWidth = it.width.toFloat() }
+                .pointerInput(current) {
+                    detectHorizontalDragGestures { change, _ ->
+                        if (barWidth <= 0f) return@detectHorizontalDragGestures
+                        val column = barWidth / CabinetTab.entries.size
+                        val index = (change.position.x / column).toInt()
+                            .coerceIn(0, CabinetTab.entries.lastIndex)
+                        val tab = CabinetTab.entries[index]
+                        if (tab != current) {
+                            view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                            onSelect(tab)
+                        }
+                    }
+                },
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
         ) {

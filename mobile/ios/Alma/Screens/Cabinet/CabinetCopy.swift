@@ -176,6 +176,29 @@ enum L10nCabinet {
         return localised("cab.arcana.\(slug)", fallback: english)
     }
 
+    // MARK: — the horoscope
+
+    static let horoscopeToday = LocalizedStringResource(
+        "cab.horoscopeToday", defaultValue: "your horoscope today", table: table
+    )
+    static let horoscopeLocked = LocalizedStringResource(
+        "cab.horoscopeLocked",
+        defaultValue: "The horoscope is written from your own chart every morning, and it comes with the plan.",
+        table: table
+    )
+    static let horoscopeOpen = LocalizedStringResource(
+        "cab.horoscopeOpen", defaultValue: "Open the horoscope", table: table
+    )
+    static let areaQuiet = LocalizedStringResource(
+        "cab.areaQuiet", defaultValue: "Nothing exact here today.", table: table
+    )
+
+    /// Work, love, money, body. Runtime-keyed because the area arrives from the
+    /// server as a string, the same way a body name or a sign does.
+    static func areaName(_ area: String) -> String {
+        localised("cab.area.\(area)", fallback: area)
+    }
+
     /// "%1$@ and %2$@" — how a language joins two names.
     ///
     /// A template rather than a hard-coded " · ", because five of the seven
@@ -263,7 +286,15 @@ enum L10nCabinet {
         return found == key ? fallback : found
     }
     static let advice = LocalizedStringResource("cab.advice", defaultValue: "what to do with it", table: table)
-    static let nextChapter = LocalizedStringResource("cab.nextChapter", defaultValue: "next", table: table)
+    // `cab.nextChapter` was the label on the button at the end of a chapter.
+    // The button is gone — pulling past the last line is what opens the next
+    // one now — and the string stays in the catalogues rather than being
+    // deleted from seven languages for a decision that could be revisited.
+
+    /// The end of a system, where the arrow would otherwise be.
+    static let systemFinished = LocalizedStringResource(
+        "cab.systemFinished", defaultValue: "You have read all of this one", table: table
+    )
 
     static func chapterCount(_ count: Int) -> LocalizedStringResource {
         LocalizedStringResource("cab.chapterCount", defaultValue: "\(count) chapters", table: table)

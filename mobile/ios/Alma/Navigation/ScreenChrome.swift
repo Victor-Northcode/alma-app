@@ -24,6 +24,10 @@ private struct AlmaScreenChrome: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            // The swipe back, restored. See `SwipeBackKeeper`: hiding the
+            // system back item is what took it away, and every screen here
+            // hides it.
+            .background(SwipeBackKeeper().frame(width: 0, height: 0))
             // Inline, because a large title is a slab of UIKit type that
             // appears and disappears as you scroll — and every screen already
             // sets its own title in the serif, on the night, where the design
@@ -71,5 +75,65 @@ extension View {
     /// this itself, and does not need to know it happened.
     func almaScreenChrome() -> some View {
         modifier(AlmaScreenChrome())
+    }
+}
+
+/// Give the swipe-back gesture its delegate back.
+///
+/// **The comment above claims `NavigationStack` keeps the interactive pop when
+/// a custom back button replaces the default one. It does not.** UIKit's
+/// `interactivePopGestureRecognizer` takes its delegate from the navigation
+/// controller, and hiding the system back item leaves that delegate refusing to
+/// begin — which is why the owner asked for a gesture the app already believed
+/// it had. Every screen in this product replaces the back button, so every
+/// screen in this product lost it.
+///
+/// The fix is the standard one and it is small: claim the delegate, and allow
+/// the gesture whenever there is something to go back to. `viewControllers.count
+/// > 1` is the whole policy — at the root there is nothing behind, and letting
+/// it begin there is what makes a stack look frozen mid-swipe.
+///
+/// Claimed from the screen itself rather than swept for at launch: the
+/// navigation controller for a tab does not exist until that tab is first
+/// shown, so a one-time walk of the window at startup finds three of the four
+/// and silently misses whichever the reader opens later.
+extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
+    public func gestureRecognizerShouldBegin(_ recogniser: UIGestureRecognizer) -> Bool {
+        viewControllers.count > 1
+    }
+}
+
+/// An empty controller whose only job is to find the navigation controller it
+/// was pushed inside and give the pop gesture its delegate back.
+///
+/// Zero-sized and behind everything, so it changes no layout. It runs on every
+/// push, which is idempotent — assigning the same delegate twice costs nothing
+/// and means a stack rebuilt by SwiftUI is covered without anybody remembering.
+private struct SwipeBackKeeper: UIViewControllerRepresentable {
+
+    func makeUIViewController(context: Context) -> UIViewController { Keeper() }
+    func updateUIViewController(_ controller: UIViewController, context: Context) {}
+
+    final class Keeper: UIViewController {
+        override func didMove(toParent parent: UIViewController?) {
+            super.didMove(toParent: parent)
+            claim()
+        }
+
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            claim()
+        }
+
+        private func claim() {
+            var responder: UIResponder? = self
+            while let current = responder {
+                if let navigation = current as? UINavigationController {
+                    navigation.interactivePopGestureRecognizer?.delegate = navigation
+                    return
+                }
+                responder = current.next
+            }
+        }
     }
 }

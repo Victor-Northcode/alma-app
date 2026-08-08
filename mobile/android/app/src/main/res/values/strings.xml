@@ -54,6 +54,15 @@
     <string name="cabinet_active_now">active now</string>
     <string name="cabinet_strongest_aspects">what agrees and what argues</string>
     <string name="cabinet_pair_join">%1$s and %2$s</string>
+    <string name="cabinet_system_finished">You have read all of this one</string>
+    <string name="cabinet_horoscope_today">your horoscope today</string>
+    <string name="cabinet_horoscope_locked">The horoscope is written from your own chart every morning, and it comes with the plan.</string>
+    <string name="cabinet_horoscope_open">Open the horoscope</string>
+    <string name="cabinet_area_quiet">Nothing exact here today.</string>
+    <string name="cabinet_area_work">Work</string>
+    <string name="cabinet_area_love">Love</string>
+    <string name="cabinet_area_money">Money</string>
+    <string name="cabinet_area_body">Body</string>
     <string name="aspect_meaning_conjunction">In the same place: they work as one thing and amplify each other.</string>
     <string name="aspect_meaning_opposition">Facing each other: they pull opposite ways, and you choose every time.</string>
     <string name="aspect_meaning_trine">They fit together easily — so easily that it is rarely used on purpose.</string>

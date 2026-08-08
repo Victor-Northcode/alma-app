@@ -28,6 +28,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
@@ -138,7 +140,43 @@ fun AlmaNavHost(
         val isSubscriber = session.entitlements?.entitlements.orEmpty().any {
             it.active && (it.kind == "weekly" || it.kind == "monthly" || it.kind == "annual")
         }
-        androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
+        androidx.compose.foundation.layout.Box(
+            Modifier
+                .fillMaxSize()
+                // **Swiping between tabs, and the one rule that keeps it from
+                // fighting everything else.** The owner asked for it: sitting
+                // in Systems, swipe right and land on Today, swipe left and
+                // land on Alma.
+                //
+                // Only where a tab is lit and only at the root of it — `tab`
+                // is null inside the journey, sign-in and the offer, and
+                // `previousBackStackEntry` tells us whether there is a screen
+                // behind this one. Inside a stack the same gesture is the
+                // platform's back, and a screen where sliding right sometimes
+                // goes back and sometimes changes tab is worse than one where
+                // it only ever does one of them.
+                //
+                // No wrapping: Settings does not lead round to Today. Four
+                // items are visible at once and there is nothing to discover
+                // by looping.
+                .pointerInput(tab) {
+                    if (tab == null) return@pointerInput
+                    detectHorizontalDragGestures(
+                        onDragEnd = {},
+                    ) { change, dragAmount ->
+                        if (kotlin.math.abs(dragAmount) < 24f) return@detectHorizontalDragGestures
+                        if (navController.previousBackStackEntry != null) {
+                            return@detectHorizontalDragGestures
+                        }
+                        val order = CabinetTab.entries
+                        val here = order.indexOf(tab)
+                        val next = here + if (dragAmount < 0) 1 else -1
+                        if (next !in order.indices) return@detectHorizontalDragGestures
+                        change.consume()
+                        navController.switchTab(order[next])
+                    }
+                }
+        ) {
         NavHost(
             navController = navController,
             startDestination = startDestination,

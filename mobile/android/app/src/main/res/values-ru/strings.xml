@@ -42,6 +42,15 @@
     <string name="cabinet_active_now">активно сейчас</string>
     <string name="cabinet_strongest_aspects">что в карте соглашается, а что спорит</string>
     <string name="cabinet_pair_join">%1$s и %2$s</string>
+    <string name="cabinet_system_finished">Здесь всё прочитано</string>
+    <string name="cabinet_horoscope_today">гороскоп на сегодня</string>
+    <string name="cabinet_horoscope_locked">Гороскоп пишется каждое утро из твоей собственной карты и входит в подписку.</string>
+    <string name="cabinet_horoscope_open">Открыть гороскоп</string>
+    <string name="cabinet_area_quiet">Сегодня здесь ничего точного.</string>
+    <string name="cabinet_area_work">Работа</string>
+    <string name="cabinet_area_love">Отношения</string>
+    <string name="cabinet_area_money">Деньги</string>
+    <string name="cabinet_area_body">Тело</string>
     <string name="aspect_meaning_conjunction">Стоят в одной точке: работают как одно целое и усиливают друг друга.</string>
     <string name="aspect_meaning_opposition">Стоят напротив: тянут в разные стороны, и выбирать приходится каждый раз.</string>
     <string name="aspect_meaning_trine">Складываются легко — настолько, что этим редко пользуешься нарочно.</string>

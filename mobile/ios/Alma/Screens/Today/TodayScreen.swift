@@ -28,11 +28,9 @@ struct TodayScreen: View {
     @Environment(AppRouter.self) private var router
     @Environment(DailyModel.self) private var daily
 
-    /// Whether the sky's raw facts are open. **Open by default** — the exact
-    /// contact and the running influences are the most concrete thing on the
-    /// screen, and the owner's verdict on the folded version was that it hid
-    /// the most important part. The fold stays so a person can put it away.
-    @State private var skyDetails = true
+    // `skyDetails` was the fold behind «Небо за словами» and is gone with it.
+    // The facts it hid are no longer behind anything: the areas under the
+    // horoscope name their own contacts and dates.
 
     @State private var model: TodayModel?
 
@@ -170,19 +168,19 @@ struct TodayScreen: View {
         // what a reader meets, and the rest of the screen (the paragraph, what
         // is still in orb, the cross-system block) is what surrounds it.
         //
-        // It draws for everybody. `alma/api/routers/systems.py` returns the
-        // transits payload whole even when the system is locked, so the
-        // arithmetic is the same for a free reader as for a subscriber. What a
-        // subscription buys is the notification, not the day.
-        // **One telling of the day, and it is prose.**
+        // **One telling of the day, under one name.**
         //
-        // This screen used to say the same sky three times — the daily block
-        // named the exact contact, the written line described it, and ACTIVE
-        // NOW listed it again — under headers no ordinary reader could parse:
-        // EXACT TODAY, 49 contacts still running, READ FROM, an axis called
-        // Direction. The owner's brief is the design: one connected text a
-        // person wants to open every morning, with the raw facts folded under
-        // it for whoever wants them, not spread across the front page.
+        // This screen used to say the same sky three times — a daily block
+        // naming the exact contact, a written line describing it, and ACTIVE
+        // NOW listing it again — under headers no ordinary reader could parse.
+        // Two rounds of cutting later it was still three: «Твой день», a fold
+        // called «Небо за словами», and «Точно сегодня». The owner asked what
+        // the middle one was for and the honest answer was "the order we built
+        // them in".
+        //
+        // Now one block called what people call it, and the plan is what opens
+        // it — his decision, and the sharpest line the product has: the
+        // calculations stay free for ever, the writing is what is sold.
         daySection(model)
             .riseIn(1)
 
@@ -272,36 +270,44 @@ struct TodayScreen: View {
     /// already the offer, and an error panel on top of it would say the same
     /// thing twice, worse. Everything else is said out loud — a Today with no
     /// paragraph and no explanation reads as a day with nothing in it.
+    /// **«Гороскоп на сегодня».**
+    ///
+    /// Three blocks stood here — «Твой день», a fold-away «Небо за словами», and
+    /// «Точно сегодня» underneath — and the owner read all three and asked what
+    /// the middle one was for. Fairly: they were one subject cut into three by
+    /// the order they were built in.
+    ///
+    /// This is the one block, under the name a person actually uses for what
+    /// they came looking for. What is *inside* it is unchanged in kind and that
+    /// is the whole point of the compromise: a horoscope by sun sign is written
+    /// for one twelfth of humanity and cites nothing, and the day here is read
+    /// from this person's own transits, with the date each one perfects. The
+    /// word is theirs; the content stays ours.
+    ///
+    /// The areas below the prose are the shape borrowed from the category —
+    /// work, love, money, the body — filled with real contacts and honest about
+    /// the ones with nothing in them. See `engine/areas.py`.
+    ///
+    /// **Subscribers only**, on the owner's instruction: not the plan's opening
+    /// paragraph, not a taste. A one-time purchase does not open it either.
     @ViewBuilder
     private func daySection(_ model: TodayModel) -> some View {
-        CabinetSection(label: L10nCabinet.yourDay) {
-            voice(model)
-
-            // The facts the text was read from, folded away. A tap opens the
-            // day's exact contact (or its honest absence) and the strongest
-            // running influences — dates, orbs, everything the prose wove in.
-            Button {
-                withAnimation(AlmaMotion.ui) { skyDetails.toggle() }
-            } label: {
-                HStack(spacing: 8) {
-                    Text(L10nCabinet.skyBehind).almaMeta()
-                    Text(verbatim: skyDetails ? "▴" : "▾")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Color.almaGold)
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .padding(.top, 8)
-
-            if skyDetails {
-                DailyBlock(
-                    contacts: model.dailyContacts,
-                    missingBirthTime: !session.birthTimeKnown
-                )
+        CabinetSection(label: L10nCabinet.horoscopeToday) {
+            if session.entitlements.isSubscriber {
+                voice(model)
                 if case .loaded(let result) = model.sky {
-                    let rows = ChartFacts.transits(result.data, key: "active", limit: 3)
-                    ForEach(rows) { row in TransitRowView(row: row) }
+                    HoroscopeAreas(data: result.data)
+                        .padding(.top, 4)
+                }
+            } else {
+                // No first paragraph, no blur, no empty card. One sentence
+                // saying what this is and where it lives, and the door.
+                Text(L10nCabinet.horoscopeLocked)
+                    .almaBody()
+                    .almaReadingWidth()
+                    .padding(.vertical, 6)
+                ActionRow(label: L10nCabinet.horoscopeOpen) {
+                    router.push(.offer(system: nil))
                 }
             }
         }
@@ -447,6 +453,73 @@ private struct TransitRowView: View {
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: row.spoken))
+    }
+}
+
+/// The horoscope's four headings, each holding this person's own sky.
+///
+/// **The form is borrowed and the content is not.** Work, love, money, the body
+/// are the questions people arrive with, and every horoscope in the category
+/// answers them in that order — so the order is taken and the sentences under
+/// it are the reader's real transits, named, with the day each perfects. An
+/// area with nothing in it says so, which is the line no sun-sign horoscope can
+/// write and the clearest single proof that this one is computed.
+///
+/// The mapping from a natal point to an area lives on the server
+/// (`engine/areas.py`), because it is a judgement about astrology rather than
+/// about layout and both apps have to agree on it.
+private struct HoroscopeAreas: View {
+
+    let data: JSONValue
+
+    /// The order the server reads them in, mirrored here so the two cannot
+    /// silently disagree about which comes first.
+    private static let order = ["work", "love", "money", "body"]
+
+    var body: some View {
+        let hits = (data["active"]?.arrayValue ?? [])
+        VStack(alignment: .leading, spacing: 14) {
+            ForEach(Self.order, id: \.self) { area in
+                let mine = hits
+                    .filter { $0["area"]?.stringValue == area }
+                    .sorted { ($0["urgency"]?.doubleValue ?? 0) > ($1["urgency"]?.doubleValue ?? 0) }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10nCabinet.areaName(area))
+                        .font(AlmaFonts.ui(13, weight: .medium))
+                        .foregroundStyle(Color.almaGoldBright)
+                    if let first = mine.first {
+                        Text(verbatim: sentence(for: first))
+                            .almaMeta()
+                            .almaReadingWidth()
+                    } else {
+                        // Said plainly. An empty area filled with something
+                        // would be the exact failure this screen exists to
+                        // avoid.
+                        Text(L10nCabinet.areaQuiet).almaMeta()
+                    }
+                }
+            }
+        }
+    }
+
+    /// "Сатурн и Середина неба: соединение, 14 августа."
+    ///
+    /// The same phrase template the transit rows and the daily use — see
+    /// `DailyContact.notation` — so one contact reads identically wherever it
+    /// appears. A date only when the engine has one: a contact already past
+    /// exactness has none, and inventing "today" for it would be a small lie in
+    /// the place this screen is least allowed one.
+    private func sentence(for hit: JSONValue) -> String {
+        let phrase = String(
+            format: String(localized: DailyL10n.contactPhrase),
+            L10nCabinet.bodyName(hit["transiting"]?.stringValue ?? ""),
+            DailyL10n.aspectWord(hit["aspect"]?.stringValue ?? ""),
+            L10nCabinet.bodyName(hit["natal"]?.stringValue ?? "")
+        )
+        guard let day = AlmaDate.dayAndMonth(instant: hit["exact"]?.stringValue) else {
+            return phrase + "."
+        }
+        return "\(phrase), \(day)."
     }
 }
 

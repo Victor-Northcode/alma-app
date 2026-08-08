@@ -37,8 +37,43 @@ struct ChapterScreen: View {
 
     @State private var model: ChapterModel?
 
+    /// How far past the last line the reader has pulled, in points.
+    @State private var pull: CGFloat = 0
+    /// Set the moment a pull is honoured, so a finger still on the glass cannot
+    /// fire it twice — the second one would skip a chapter.
+    @State private var advancing = false
+    /// Whether the pull has already crossed the line, kept so the haptic on
+    /// crossing happens once rather than on every frame of the drag.
+    @State private var armed = false
+
+    /// How far past the end counts as "take me on".
+    ///
+    /// Ninety points, the same order as the system's own pull-to-refresh, so
+    /// the gesture feels borrowed rather than invented. Short enough to find by
+    /// accident once; long enough that finishing a chapter and letting go does
+    /// not throw you into the next one.
+    private static let pullThreshold: CGFloat = 90
+
     var body: some View {
-        ScreenScaffold(mood: .reading, seed: 0x4348_4150) {
+        ScreenScaffold(
+            mood: .reading,
+            seed: 0x4348_4150,
+            onOverscroll: { distance in
+                guard canAdvance else { return }
+                pull = distance
+                if distance >= Self.pullThreshold, !armed {
+                    armed = true
+                    AlmaHaptics.tick()
+                } else if distance < Self.pullThreshold * 0.4, armed {
+                    // Rearmed on the way back, so a reader who pulls, thinks
+                    // better of it and pulls again gets the same feedback.
+                    armed = false
+                }
+                if distance >= Self.pullThreshold, !advancing {
+                    advance()
+                }
+            }
+        ) {
             if let model {
                 heading(model)
                 content(model)
@@ -184,23 +219,73 @@ struct ChapterScreen: View {
         }
     }
 
-    /// Where to go after the last paragraph.
+    /// The end of a chapter, and the way through it.
     ///
-    /// Only after a chapter that was actually written: offering "next" under a
-    /// paywall would be inviting somebody deeper into a system they have not
-    /// bought, and the door above is the honest next step there.
+    /// **There is no button here any more.** There was one — a row saying "next
+    /// chapter" with the next chapter's title in grey underneath — and the
+    /// owner cut both. A person who has just finished reading is already
+    /// scrolling, and the thing under their thumb should answer the scroll
+    /// rather than ask for a tap. The model is Telegram's, and it was his
+    /// comparison: you reach the bottom of a channel, keep pulling, the next
+    /// one opens.
+    ///
+    /// So this draws what the pull is doing. An arrow that fills and turns as
+    /// the distance closes, the next chapter's name under it, and at the end of
+    /// a system a tick instead — nothing left to pull towards, said once and
+    /// quietly.
+    ///
+    /// Never towards a locked chapter: pulling somebody into a system they have
+    /// not bought is a worse invitation than the door above, which at least
+    /// names the price.
     @ViewBuilder
     private func next(_ model: ChapterModel) -> some View {
-        if let next = model.next {
-            // `replaceTop`, not `push`: see the comment there. Back from any
-            // chapter is back to the system, however many were read in a row.
-            ActionRow(label: L10nCabinet.nextChapter) {
-                router.replaceTop(with: .chapter(system: system, chapter: next.slug))
+        let progress = min(1, pull / Self.pullThreshold)
+        VStack(spacing: 10) {
+            if let next = model.next, canAdvance {
+                Image(systemName: "arrow.down")
+                    .font(.system(size: 15, weight: .light))
+                    .foregroundStyle(Color.almaGold.opacity(0.35 + 0.65 * progress))
+                    .rotationEffect(.degrees(180 * progress))
+                    .scaleEffect(1 + 0.25 * progress)
+                Text(verbatim: next.title)
+                    .almaMeta()
+                    .opacity(0.5 + 0.5 * progress)
+            } else if model.next == nil, model.chapters.value != nil {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 15, weight: .light))
+                    .foregroundStyle(Color.almaGold.opacity(0.7))
+                Text(L10nCabinet.systemFinished).almaMeta()
             }
-            .padding(.top, AlmaMetrics.gapLarge)
-
-            Text(verbatim: next.title).almaMeta()
         }
+        .frame(maxWidth: .infinity)
+        .padding(.top, AlmaMetrics.gapLarge)
+        .animation(AlmaMotion.ui, value: progress)
+    }
+
+    /// Whether pulling should carry the reader on at all.
+    ///
+    /// A chapter with nothing after it, or one whose next is locked, leaves the
+    /// gesture inert rather than bouncing somebody off an invitation they
+    /// cannot take.
+    private var canAdvance: Bool {
+        guard let model, let next = model.next else { return false }
+        return next.open || next.free || session.unlocked(system)
+    }
+
+    /// Hand the reader to the next chapter.
+    ///
+    /// `replaceTop`, so back from the fifth chapter in a row is still the
+    /// system rather than the fourth. The pull is reset first: the next screen
+    /// arrives at the top of its own text, and a stale `pull` would leave its
+    /// arrow half-drawn before a finger has touched it.
+    private func advance() {
+        guard let next = model?.next else { return }
+        advancing = true
+        pull = 0
+        armed = false
+        AlmaHaptics.arrival()
+        router.replaceTop(with: .chapter(system: system, chapter: next.slug))
+        Task { @MainActor in advancing = false }
     }
 
     /// One quiet row at the end of a finished chapter — the moment the writing
