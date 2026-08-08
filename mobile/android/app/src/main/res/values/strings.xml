@@ -547,4 +547,8 @@
     <string name="arcana_the_sun">The Sun</string>
     <string name="arcana_judgement">Judgement</string>
     <string name="arcana_the_world">The World</string>
+    <string name="save_account_title">Keep your chart</string>
+    <string name="save_account_body">Sign in once and your chart and purchases survive a new phone.</string>
+    <string name="save_account_cta">Sign in</string>
+    <string name="save_account_later">Not now</string>
 </resources>

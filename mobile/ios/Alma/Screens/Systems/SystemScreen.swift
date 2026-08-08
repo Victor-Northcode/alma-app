@@ -109,18 +109,24 @@ struct SystemScreen: View {
     private var partnerLine: some View {
         if let partner {
             VStack(alignment: .leading, spacing: 10) {
-                Text(ScreenL10n.comparedWith(
-                    partner.name?.isEmpty == false
-                        ? partner.name!
-                        : String(localized: ScreenL10n.unnamedPerson)
-                ))
-                .almaMeta()
+                HStack(spacing: 12) {
+                    Text(ScreenL10n.comparedWith(
+                        partner.name?.isEmpty == false
+                            ? partner.name!
+                            : String(localized: ScreenL10n.unnamedPerson)
+                    ))
+                    .almaMeta()
 
-                if session.people.count > 1 {
+                    // Always there, one person or five: the way to remove
+                    // somebody and add somebody else — the owner's ask. The
+                    // people screen holds the delete and the ladder holds the
+                    // maths (one free, two with the door, the plan unlimited).
                     Button { router.push(.people) } label: {
-                        Text(ScreenL10n.chooseSomebodyElse)
+                        Text(ScreenL10n.changePerson)
+                            .font(AlmaFonts.ui(13.5, weight: .medium))
+                            .foregroundStyle(Color.almaGoldBright)
                     }
-                    .buttonStyle(.alma(.veil, fills: false))
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.top, 4)
@@ -191,6 +197,7 @@ struct SystemScreen: View {
         if case .loaded(let result) = model.result {
             NatalWheel(data: result.data)
                 .padding(.vertical, 6)
+                .almaBreathing()
         }
     }
 
@@ -205,6 +212,7 @@ struct SystemScreen: View {
                 age: ageOfOwner
             )
             .padding(.vertical, 6)
+            .almaBreathing()
         }
     }
 

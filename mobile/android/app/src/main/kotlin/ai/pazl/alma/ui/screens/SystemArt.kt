@@ -1,6 +1,7 @@
 package ai.pazl.alma.ui.screens
 
 import ai.pazl.alma.data.AlmaSystem
+import ai.pazl.alma.ui.components.breathing
 import ai.pazl.alma.ui.theme.AlmaPalette
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
@@ -128,6 +129,7 @@ private fun ArtCanvas(
     }
     Canvas(
         modifier = modifier
+            .breathing()
             .fillMaxWidth()
             .aspectRatio(aspect)
             // Decoration over the rows below, which carry the same facts in

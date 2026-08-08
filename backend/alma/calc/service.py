@@ -393,11 +393,21 @@ def transits_result(
             "transits to the ascendant and midheaven: the birth time is unknown"
         )
 
+    # The citable set is the active contacts *and* the strongest of what is
+    # coming. It was the active list alone, and on a quiet day — most days —
+    # that list is empty, so the free day chapter refused with "the chart
+    # genuinely says nothing here" and the owner met an error on the screen
+    # he opens every morning. A quiet sky is not an empty chart: what is
+    # approaching is real, computed, and honestly citable.
+    citable = list(dict.fromkeys(
+        transits.factors(live) + transits.factors(hits[:12])
+    ))
+
     return build(
         system="transits",
         birth=birth,
         data=data,
-        factors=transits.factors(live),
+        factors=citable,
         unavailable=unavailable,
         notes=chart.notes,
         provenance=_provenance(chart, window_days=days),

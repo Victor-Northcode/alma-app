@@ -102,6 +102,7 @@ fun TodayScreen(
     onOpenChapter: (String, String) -> Unit = { _, _ -> },
     onAskAlma: () -> Unit = {},
     onOffer: (String) -> Unit = {},
+    onSignIn: () -> Unit = {},
 ) {
     val vm: TodayViewModel = viewModel { TodayViewModel(container.client, container.session) }
     val state by vm.state.collectAsStateWithLifecycle()
@@ -154,6 +155,8 @@ fun TodayScreen(
                     }
                 },
                 onDeclineDaily = container.daily::decline,
+                isGuest = container.session.state.collectAsStateWithLifecycle().value.isGuest,
+                onSignIn = onSignIn,
             )
         }
     }
@@ -342,6 +345,8 @@ private fun TodayBody(
     onOffer: (String) -> Unit,
     onAcceptDaily: () -> Unit,
     onDeclineDaily: () -> Unit,
+    isGuest: Boolean = false,
+    onSignIn: () -> Unit = {},
 ) {
     val transits: JsonObject? = today.sky?.data
     val chart: JsonObject? = today.chart?.data
@@ -517,6 +522,37 @@ private fun TodayBody(
         if (daily.shouldInvite(hasBirthData = true, previouslyDenied = !daily.permitted && daily.answeredTheAsk)) {
             Box(Modifier.riseIn(3)) {
                 DailyInvitation(onYes = onAcceptDaily, onNo = onDeclineDaily)
+            }
+        }
+
+        // Once, quietly: a guest with a chart worth keeping is invited to
+        // attach an identity to it — the owner's call. Second launch onward,
+        // dismissible for good.
+        val context = LocalContext.current
+        var nudgeDismissed by remember { mutableStateOf(!SaveAccountNudge.shouldShow(context, isGuest)) }
+        if (!nudgeDismissed) {
+            Column(Modifier.riseIn(3).padding(top = 20.dp)) {
+                Text(text = stringResource(R.string.save_account_title), style = AlmaTheme.type.headingM)
+                Text(
+                    text = stringResource(R.string.save_account_body),
+                    style = AlmaTheme.type.meta,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 10.dp),
+                ) {
+                    QuietButton(text = stringResource(R.string.save_account_cta), onClick = onSignIn)
+                    Text(
+                        text = stringResource(R.string.save_account_later),
+                        style = AlmaTheme.type.meta,
+                        modifier = Modifier.clickable {
+                            SaveAccountNudge.dismiss(context)
+                            nudgeDismissed = true
+                        },
+                    )
+                }
             }
         }
 
@@ -786,5 +822,30 @@ private fun SkyEventCard(contacts: List<DailyContact>, onOpen: () -> Unit) {
                 },
             )
         }
+    }
+}
+
+
+/**
+ * The one invitation to attach an identity to the guest account. Counted per
+ * cold start; put away for good with one tap — a card that keeps coming back
+ * is nagging, and nagging sells nothing.
+ */
+internal object SaveAccountNudge {
+    private const val PREFS = "save_account"
+    private var counted = false
+
+    fun shouldShow(context: android.content.Context, isGuest: Boolean): Boolean {
+        val prefs = context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE)
+        if (!counted) {
+            counted = true
+            prefs.edit().putInt("launches", prefs.getInt("launches", 0) + 1).apply()
+        }
+        return isGuest && !prefs.getBoolean("dismissed", false) && prefs.getInt("launches", 0) >= 2
+    }
+
+    fun dismiss(context: android.content.Context) {
+        context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE)
+            .edit().putBoolean("dismissed", true).apply()
     }
 }

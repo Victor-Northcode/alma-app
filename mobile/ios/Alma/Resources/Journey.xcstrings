@@ -4183,43 +4183,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Berlin"
+            "value": "Stadt"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Milan"
+            "value": "City"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Madrid"
+            "value": "Ciudad"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paris"
+            "value": "Ville"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Milano"
+            "value": "Città"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "São Paulo"
+            "value": "Cidade"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Милан"
+            "value": "Город"
           }
         }
       }

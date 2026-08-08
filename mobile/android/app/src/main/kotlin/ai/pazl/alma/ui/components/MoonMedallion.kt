@@ -41,7 +41,7 @@ fun MoonMedallion(
             animationSpec = tween(durationMillis = 1200, easing = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)),
         )
     }
-    Canvas(modifier = modifier.semantics { invisibleToUser() }) {
+    Canvas(modifier = modifier.breathing().semantics { invisibleToUser() }) {
         fun phase(from: Float, to: Float): Float =
             ((progress.value - from) / (to - from)).coerceIn(0f, 1f)
 

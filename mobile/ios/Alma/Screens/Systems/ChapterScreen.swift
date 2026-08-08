@@ -96,9 +96,8 @@ struct ChapterScreen: View {
                 Spacer(minLength: 0)
                 WritingArt(system: system)
                 Text(L10n.stateWriting).almaMeta()
-                Text(L10nCabinet.writingNote)
-                    .almaMeta()
-                    .multilineTextAlignment(.center)
+                // «Пишется один раз — и завтра скажет то же самое» stood here
+                // and the owner cut it from every page.
                 Spacer(minLength: 0)
             }
             // Centred in what is left of the screen under the title — the

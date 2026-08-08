@@ -120,12 +120,7 @@ fun ChapterScreen(
                         text = stringResource(R.string.state_writing),
                         style = AlmaTheme.type.meta,
                     )
-                    Text(
-                        text = stringResource(R.string.state_writing_note),
-                        style = AlmaTheme.type.meta,
-                        color = AlmaPalette.Muted3,
-                        modifier = Modifier.padding(top = 6.dp),
-                    )
+                    // «Пишется один раз…» stood here and the owner cut it.
                 }
             }
         } else {

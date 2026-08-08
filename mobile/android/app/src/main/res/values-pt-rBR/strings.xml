@@ -489,4 +489,8 @@
     <string name="arcana_the_sun">O Sol</string>
     <string name="arcana_judgement">O Julgamento</string>
     <string name="arcana_the_world">O Mundo</string>
+    <string name="save_account_title">Guarde o seu mapa</string>
+    <string name="save_account_body">Entre uma vez e o seu mapa e as suas compras sobrevivem a um telefone novo.</string>
+    <string name="save_account_cta">Entrar</string>
+    <string name="save_account_later">Agora não</string>
 </resources>

@@ -489,4 +489,8 @@
     <string name="arcana_the_sun">Die Sonne</string>
     <string name="arcana_judgement">Das Gericht</string>
     <string name="arcana_the_world">Die Welt</string>
+    <string name="save_account_title">Behalte dein Horoskop</string>
+    <string name="save_account_body">Einmal anmelden — dein Horoskop und deine Käufe überleben ein neues Handy.</string>
+    <string name="save_account_cta">Anmelden</string>
+    <string name="save_account_later">Nicht jetzt</string>
 </resources>

@@ -151,6 +151,13 @@ struct AddPersonScreen: View {
 
     @FocusState private var typingPlace: Bool
 
+    /// Whether this device writes hours 1–12 with AM/PM. The journey asks the
+    /// same question; a Russian phone shows a 24-hour pair and no meridiem
+    /// field at all — «АМ или РМ» on a Russian form was the owner's finding.
+    private let twelveHour = DateFormatter
+        .dateFormat(fromTemplate: "j", options: 0, locale: .current)?
+        .contains("a") ?? true
+
     /// The same 92 years the journey offers, and the same argument against a
     /// `DatePicker`: a wheel always has a value, so it opens on today and a
     /// person who taps past it has silently told us this person was born this
@@ -187,8 +194,7 @@ struct AddPersonScreen: View {
             .buttonStyle(.almaGold)
             .disabled(!isComplete || saving)
             .padding(.top, AlmaMetrics.gapLarge)
-
-            Text(ScreenL10n.peopleConsent).almaMeta().almaReadingWidth()
+            // The consent note stood here and the owner cut it.
         }
         .task(id: query) { await search() }
     }
@@ -228,20 +234,23 @@ struct AddPersonScreen: View {
             HStack(spacing: 9) {
                 JourneyMenuField(
                     placeholder: JourneyL10n.hourLabel, label: JourneyL10n.hourLabel,
-                    options: Array(1...12), title: { String(format: "%02d", $0) }, selection: $hour
+                    options: twelveHour ? Array(1...12) : Array(0...23),
+                    title: { String(format: "%02d", $0) }, selection: $hour
                 )
                 JourneyMenuField(
                     placeholder: JourneyL10n.minuteLabel, label: JourneyL10n.minuteLabel,
                     options: Array(0...59), title: { String(format: "%02d", $0) }, selection: $minute
                 )
-                JourneyMenuField(
-                    placeholder: JourneyL10n.meridiemLabel, label: JourneyL10n.meridiemLabel,
-                    options: [0, 1], title: { $0 == 0 ? "AM" : "PM" },
-                    selection: Binding(
-                        get: { meridiem.map { $0 == .am ? 0 : 1 } },
-                        set: { meridiem = $0.map { $0 == 0 ? .am : .pm } }
+                if twelveHour {
+                    JourneyMenuField(
+                        placeholder: JourneyL10n.meridiemLabel, label: JourneyL10n.meridiemLabel,
+                        options: [0, 1], title: { $0 == 0 ? "AM" : "PM" },
+                        selection: Binding(
+                            get: { meridiem.map { $0 == .am ? 0 : 1 } },
+                            set: { meridiem = $0.map { $0 == 0 ? .am : .pm } }
+                        )
                     )
-                )
+                }
             }
             .opacity(timeUnknown ? 0.4 : 1)
             .disabled(timeUnknown)
@@ -273,7 +282,8 @@ struct AddPersonScreen: View {
 
     private var isComplete: Bool {
         day != nil && month != nil && year != nil && place != nil
-            && (timeUnknown || (hour != nil && minute != nil && meridiem != nil))
+            && (timeUnknown
+                || (hour != nil && minute != nil && (!twelveHour || meridiem != nil)))
     }
 
     private func search() async {
@@ -305,8 +315,12 @@ struct AddPersonScreen: View {
         }
 
         var time: String?
-        if !timeUnknown, let hour, let minute, let meridiem {
-            time = String(format: "%02d:%02d", meridiem.hour24(from: hour), minute)
+        if !timeUnknown, let hour, let minute {
+            if twelveHour, let meridiem {
+                time = String(format: "%02d:%02d", meridiem.hour24(from: hour), minute)
+            } else if !twelveHour {
+                time = String(format: "%02d:%02d", hour, minute)
+            }
         }
 
         let birth = BirthInput(
@@ -325,7 +339,15 @@ struct AddPersonScreen: View {
                 birth,
                 relation: relation.trimmingCharacters(in: .whitespaces).isEmpty ? nil : relation
             )
-            dismiss()
+            // Straight back to where the comparison lives. `dismiss()` popped
+            // one screen and landed on the people list — a stop nobody asked
+            // for; the owner's report was «нажать назад и опять в
+            // совместимость». Both people screens come off the stack at once.
+            var path = router.paths[router.tab] ?? []
+            while let last = path.last, last == .addPerson || last == .people {
+                path.removeLast()
+            }
+            router.paths[router.tab] = path
         } catch {
             failure = error.serverMessage ?? String(localized: error.displayText)
         }

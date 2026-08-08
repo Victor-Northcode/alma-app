@@ -466,4 +466,8 @@
     <string name="arcana_the_sun">Солнце</string>
     <string name="arcana_judgement">Суд</string>
     <string name="arcana_the_world">Мир</string>
+    <string name="save_account_title">Сохрани свою карту</string>
+    <string name="save_account_body">Войди один раз — и карта с покупками переживут новый телефон.</string>
+    <string name="save_account_cta">Войти</string>
+    <string name="save_account_later">Не сейчас</string>
 </resources>

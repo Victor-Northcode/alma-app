@@ -70,6 +70,40 @@ extension View {
     }
 }
 
+/// The quiet life of a settled diagram.
+///
+/// Every hero drawing constructs itself once and then pauses its timeline —
+/// the right economy for a weak machine, and the owner's finding was that a
+/// paused diagram reads as *gone*: «анимация пропадает, она должна
+/// оставаться». This is the answer that costs nothing: a slow breath of
+/// scale and light, run by Core Animation on the settled frame, no canvas
+/// redraw involved. Reduce Motion keeps the diagram still.
+private struct Breathing: ViewModifier {
+
+    @State private var inhale = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(inhale ? 1.008 : 0.996)
+            .opacity(inhale ? 1.0 : 0.965)
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(.easeInOut(duration: 3.4).repeatForever(autoreverses: true)) {
+                    inhale = true
+                }
+            }
+    }
+}
+
+extension View {
+
+    /// The slow breath a settled diagram keeps. See `Breathing`.
+    func almaBreathing() -> some View {
+        modifier(Breathing())
+    }
+}
+
 /// A card acknowledging a finger.
 ///
 /// The gold button sinks by a point (`AlmaButtonStyle`) because it is a key.

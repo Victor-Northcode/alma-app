@@ -2,6 +2,11 @@ package ai.pazl.alma.ui.components
 
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -74,4 +79,28 @@ fun animatePressGive(pressed: Boolean): Float {
         label = "pressGive",
     )
     return give
+}
+
+
+/**
+ * The quiet life of a settled diagram — the owner's finding was that a paused
+ * canvas reads as *gone*. A slow breath of scale and light over the settled
+ * frame; the canvas itself never redraws.
+ */
+fun Modifier.breathing(): Modifier = composed {
+    val transition = rememberInfiniteTransition(label = "breath")
+    val t by transition.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            tween(durationMillis = 3400, easing = FastOutSlowInEasing),
+            RepeatMode.Reverse,
+        ),
+        label = "breath",
+    )
+    graphicsLayer {
+        val s = 0.996f + 0.012f * t
+        scaleX = s
+        scaleY = s
+        alpha = 0.965f + 0.035f * t
+    }
 }

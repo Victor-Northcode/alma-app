@@ -38,6 +38,10 @@ struct AlmaApp: App {
         // of the system serif. See `AlmaFonts`.
         AlmaFonts.registerBundledFonts()
 
+        // One cold launch, counted once — the save-account invitation waits
+        // for the second.
+        SaveAccountCard.noteLaunch()
+
         // Constructed in one place and handed down, because `DailyModel` needs
         // the same client the session uses — a second `AlmaClient` would be a
         // second token cache — and the same `PushService` the delegate forwards

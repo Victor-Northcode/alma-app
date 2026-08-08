@@ -238,6 +238,32 @@ def test_the_moon_on_today_is_todays_moon_not_the_birth_moon(chart):
     assert sky_now["moon_phase"]["phase"] != born_under["phase"]
 
 
+def test_a_quiet_day_still_has_factors_to_write_from(monkeypatch):
+    """No exact contact today must not mean no day text.
+
+    Most days are quiet — nothing perfects — and the factors used to be the
+    active list alone, so the free day chapter refused with "the chart says
+    nothing here" on the screen a person opens every morning. What is
+    approaching is computed and real, and it is citable.
+    """
+    from datetime import date
+
+    from alma.calc.service import transits_result
+    from alma.calc.contract import BirthData
+    from alma.engine import transits as transits_engine
+
+    monkeypatch.setattr(transits_engine, "active", lambda hits, jd, **kw: [])
+    birth = BirthData(
+        date=date(1998, 3, 14), time="04:20",
+        latitude=45.4642, longitude=9.19, timezone="Europe/Rome",
+    )
+    result = transits_result(
+        birth, start=datetime(2026, 8, 6, tzinfo=timezone.utc), days=365
+    )
+    assert result.data["active"] == []
+    assert result.factors, "a quiet day left the writer with nothing to cite"
+
+
 def test_the_sun_returns_to_every_natal_point_once_a_year(chart):
     """A cheap completeness check the search cannot fake.
 

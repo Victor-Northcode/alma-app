@@ -197,6 +197,7 @@ fun AlmaNavHost(
                     // screen.
                     onAskAlma = { navController.switchTab(CabinetTab.Alma) },
                     onOffer = { system -> navController.navigate(Routes.offer(system)) },
+                    onSignIn = { navController.navigate(Routes.SIGN_IN) },
                 )
             }
 

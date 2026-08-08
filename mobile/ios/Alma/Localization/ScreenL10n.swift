@@ -149,6 +149,17 @@ enum ScreenL10n {
     }
 
     static let chooseSomebodyElse = LocalizedStringResource("scr.compat.choose", defaultValue: "Compare with somebody else", table: table)
+    static let changePerson = LocalizedStringResource("scr.people.change", defaultValue: "Change", table: table)
+    static let saveAccountTitle = LocalizedStringResource(
+        "scr.saveAccount.title", defaultValue: "Keep your chart", table: table)
+    static let saveAccountBody = LocalizedStringResource(
+        "scr.saveAccount.body",
+        defaultValue: "Sign in once and your chart and purchases survive a new phone.",
+        table: table)
+    static let saveAccountCta = LocalizedStringResource(
+        "scr.saveAccount.cta", defaultValue: "Sign in", table: table)
+    static let saveAccountLater = LocalizedStringResource(
+        "scr.saveAccount.later", defaultValue: "Not now", table: table)
 
     // MARK: — the empty state that has to make the 4.3(b) argument
 

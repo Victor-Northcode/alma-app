@@ -489,4 +489,8 @@
     <string name="arcana_the_sun">Il Sole</string>
     <string name="arcana_judgement">Il Giudizio</string>
     <string name="arcana_the_world">Il Mondo</string>
+    <string name="save_account_title">Conserva il tuo tema</string>
+    <string name="save_account_body">Accedi una volta e il tuo tema e i tuoi acquisti sopravvivono a un telefono nuovo.</string>
+    <string name="save_account_cta">Accedi</string>
+    <string name="save_account_later">Non ora</string>
 </resources>

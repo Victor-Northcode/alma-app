@@ -489,4 +489,8 @@
     <string name="arcana_the_sun">El Sol</string>
     <string name="arcana_judgement">El Juicio</string>
     <string name="arcana_the_world">El Mundo</string>
+    <string name="save_account_title">Guarda tu carta</string>
+    <string name="save_account_body">Inicia sesión una vez y tu carta y tus compras sobreviven a un teléfono nuevo.</string>
+    <string name="save_account_cta">Iniciar sesión</string>
+    <string name="save_account_later">Ahora no</string>
 </resources>

@@ -116,6 +116,7 @@ struct TodayScreen: View {
                 )
                 .frame(width: 68, height: 68)
                 .padding(.top, 26)
+                .almaBreathing()
             }
         }
         .padding(.bottom, 4)
@@ -211,6 +212,18 @@ struct TodayScreen: View {
         if daily.shouldInvite(hasBirthData: session.hasBirthData) {
             DailyInvitation()
                 .riseIn(3)
+        }
+
+        // Once, quietly: a guest with a chart worth keeping is invited to
+        // attach an identity to it. The owner's call — «в какой-то момент
+        // предложить зарегистрировать аккаунт, это действительно важно» —
+        // and the second launch is the moment: the first is for the product.
+        if SaveAccountCard.shouldShow(signedIn: session.isSignedIn, hasBirthData: session.hasBirthData) {
+            SaveAccountCard(
+                onSave: { router.push(.signIn, on: .settings) },
+                onDismiss: {}
+            )
+            .riseIn(3)
         }
 
         Text(L10nCabinet.notPrediction)

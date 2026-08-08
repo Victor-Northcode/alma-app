@@ -1,5 +1,6 @@
 package ai.pazl.alma.ui.screens
 
+import ai.pazl.alma.ui.components.breathing
 import ai.pazl.alma.ui.theme.AlmaPalette
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.CubicBezierEasing
@@ -63,6 +64,7 @@ internal fun NatalWheel(data: JsonObject, modifier: Modifier = Modifier) {
     }
     Canvas(
         modifier = modifier
+            .breathing()
             .fillMaxWidth()
             .aspectRatio(1f)
             // The picture is decoration over the placement list below, which
