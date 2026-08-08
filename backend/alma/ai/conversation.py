@@ -898,6 +898,11 @@ async def answer(
                 model=model,
                 max_tokens=MAX_ANSWER_TOKENS,
                 schema=ANSWER_SCHEMA,
+                # The conversation rules are byte-identical on every turn of
+                # every conversation — the single most re-sent block in the
+                # product, and the one `config.py` names as the structural
+                # saving. Cached, it is read at a tenth of the input price.
+                cache_system=True,
             )
         except AnswerTruncated as exc:
             # **She wrote past the ceiling, and the reader got an error.**
@@ -933,7 +938,11 @@ async def answer(
                 raise
             continue
 
-        ledger.record(cost.cost(model, completion.input_tokens, completion.output_tokens))
+        ledger.record(cost.cost(
+            model, completion.input_tokens, completion.output_tokens,
+            cache_read_tokens=completion.cache_read_tokens,
+            cache_write_tokens=completion.cache_write_tokens,
+        ))
         ledger.check(paid=paid)
 
         try:
@@ -1055,11 +1064,11 @@ async def answer(
             kind=kind,
             remember=tuple(str(item).strip() for item in remember if str(item).strip())[:2],
             model=model,
-            spend=cost.cost(model, ledger.input_tokens, ledger.output_tokens),
+            spend=ledger.total(model),
         )
 
     raise AnswerRefused(
         "could not produce an answer that only cites real factors — refusing "
         "rather than replying with something invented",
-        spend=cost.cost(model, ledger.input_tokens, ledger.output_tokens),
+        spend=ledger.total(model),
     )

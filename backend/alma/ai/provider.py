@@ -53,6 +53,13 @@ class Completion:
     input_tokens: int
     output_tokens: int
     stop_reason: str = "end_turn"
+    #: Prompt-cache traffic, from the API's own usage block. `input_tokens`
+    #: above counts only the *uncached* part when caching is on, so the cost
+    #: arithmetic needs all three numbers or it under-reports a write and
+    #: over-reports a read. Zero when caching was off — the maths collapses
+    #: back to the old formula exactly.
+    cache_read_tokens: int = 0
+    cache_write_tokens: int = 0
 
     def json(self) -> Any:
         """Parse the body as JSON.
@@ -73,6 +80,7 @@ class Provider(Protocol):
         model: str,
         max_tokens: int = 4096,
         schema: dict | None = None,
+        cache_system: bool = False,
     ) -> Completion: ...
 
 
@@ -105,11 +113,24 @@ class AnthropicProvider:
         model: str,
         max_tokens: int = 4096,
         schema: dict | None = None,
+        cache_system: bool = False,
     ) -> Completion:
         request: dict[str, Any] = {
             "model": model,
             "max_tokens": max_tokens,
-            "system": system,
+            # `cache_system` marks the system block as a cacheable prefix. The
+            # callers that pass it send a system that is byte-identical across
+            # every user of a locale — Alma's voice, the conversation rules —
+            # so at any real traffic the block is read from cache at a tenth
+            # of the input price instead of being re-billed on every call.
+            # Below the API's minimum cacheable length the marker is silently
+            # ignored, which is the right failure: nothing breaks, nothing is
+            # billed differently.
+            "system": (
+                [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+                if cache_system
+                else system
+            ),
             "messages": [{"role": "user", "content": prompt}],
         }
         if schema is not None:
@@ -151,6 +172,8 @@ class AnthropicProvider:
             input_tokens=message.usage.input_tokens,
             output_tokens=message.usage.output_tokens,
             stop_reason=message.stop_reason or "end_turn",
+            cache_read_tokens=getattr(message.usage, "cache_read_input_tokens", 0) or 0,
+            cache_write_tokens=getattr(message.usage, "cache_creation_input_tokens", 0) or 0,
         )
 
 
@@ -180,6 +203,7 @@ class ScriptedProvider:
         model: str,
         max_tokens: int = 4096,
         schema: dict | None = None,
+        cache_system: bool = False,
     ) -> Completion:
         self.calls.append(
             {
@@ -188,6 +212,7 @@ class ScriptedProvider:
                 "model": model,
                 "max_tokens": max_tokens,
                 "schema": schema,
+                "cache_system": cache_system,
             }
         )
         if self.fail_with is not None:

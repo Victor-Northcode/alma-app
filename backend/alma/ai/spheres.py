@@ -164,6 +164,10 @@ async def write(
                 model=model,
                 max_tokens=max_tokens,
                 schema=SPHERES_SCHEMA,
+                # Alma's voice is identical for every reader of a locale; at
+                # any real traffic the system block is a cache read, not a
+                # fresh bill.
+                cache_system=True,
             )
         except AnswerTruncated as exc:
             complaint = (
@@ -175,7 +179,11 @@ async def write(
                 raise
             continue
 
-        tally.record(cost.cost(model, completion.input_tokens, completion.output_tokens))
+        tally.record(cost.cost(
+            model, completion.input_tokens, completion.output_tokens,
+            cache_read_tokens=completion.cache_read_tokens,
+            cache_write_tokens=completion.cache_write_tokens,
+        ))
         tally.check(paid=False, scale=script_scale)
 
         try:
@@ -271,5 +279,5 @@ async def write(
 
 
 def _spent(tally: cost.Ledger, model: str) -> cost.Spend:
-    """The whole run as one `Spend`, priced once from the summed tokens."""
-    return cost.cost(model, tally.input_tokens, tally.output_tokens)
+    """The whole run as one `Spend`, keeping the dollars already priced."""
+    return tally.total(model)

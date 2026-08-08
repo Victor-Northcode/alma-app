@@ -76,9 +76,28 @@ def price_of(model: str) -> tuple[float, float]:
     return PRICES.get(model, FALLBACK_PRICE)
 
 
-def cost(model: str, input_tokens: int, output_tokens: int) -> Spend:
+def cost(
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    *,
+    cache_read_tokens: int = 0,
+    cache_write_tokens: int = 0,
+) -> Spend:
+    """What a call actually cost, cache traffic included.
+
+    With prompt caching on, the API's `input_tokens` counts only the uncached
+    part; the cached prefix arrives as separate read/write counts, priced at
+    a tenth and five-fourths of the input rate respectively. Both default to
+    zero, so every existing call site prices exactly as it always did.
+    """
     per_input, per_output = price_of(model)
-    dollars = (input_tokens * per_input + output_tokens * per_output) / 1_000_000
+    dollars = (
+        input_tokens * per_input
+        + cache_write_tokens * per_input * 1.25
+        + cache_read_tokens * per_input * 0.10
+        + output_tokens * per_output
+    ) / 1_000_000
     return Spend(model, input_tokens, output_tokens, dollars)
 
 
@@ -150,6 +169,16 @@ class Ledger:
     @property
     def output_tokens(self) -> int:
         return sum(s.output_tokens for s in self.spends)
+
+    def total(self, model: str) -> Spend:
+        """The whole run as one `Spend`, keeping the dollars already priced.
+
+        Re-pricing from the summed tokens used to give the same answer, and
+        stopped the day cache traffic entered the arithmetic: a cached read
+        is billed at a tenth of the input rate, and a formula that only sees
+        token counts silently re-bills it at full price.
+        """
+        return Spend(model, self.input_tokens, self.output_tokens, self.dollars)
 
     def check(self, *, paid: bool, scale: float = 1.0) -> None:
         limit = ceiling(paid=paid) * scale

@@ -394,6 +394,39 @@ def test_cost_is_computed_from_the_price_table():
     assert spend.dollars == pytest.approx(30.0)
 
 
+def test_cache_traffic_is_priced_at_its_own_rates():
+    """A cached read costs a tenth of the input rate, a write five-fourths.
+
+    The API's `input_tokens` counts only the uncached part when caching is
+    on; pricing that number alone would report a cache-heavy call as nearly
+    free, and re-pricing token sums would bill a cached read in full. Both
+    mistakes existed for one commit each — this pins the arithmetic.
+    """
+    # Opus 5: $5/M in, $25/M out. 1M of each kind, priced separately.
+    spend = cost.cost(
+        "claude-opus-5", 1_000_000, 0,
+        cache_read_tokens=1_000_000, cache_write_tokens=1_000_000,
+    )
+    assert spend.dollars == pytest.approx(5.0 + 0.5 + 6.25)
+
+    plain = cost.cost("claude-opus-5", 1_000, 500)
+    cached = cost.cost("claude-opus-5", 1_000, 500,
+                       cache_read_tokens=0, cache_write_tokens=0)
+    assert plain.dollars == cached.dollars, "zero cache traffic must change nothing"
+
+
+def test_the_ledger_total_keeps_cache_priced_dollars():
+    """`total` sums dollars; re-pricing from token counts would lose the cache."""
+    ledger = cost.Ledger()
+    ledger.record(cost.cost("claude-opus-5", 1_000, 500, cache_read_tokens=100_000))
+    total = ledger.total("claude-opus-5")
+    assert total.dollars == pytest.approx(ledger.dollars)
+    repriced = cost.cost("claude-opus-5", total.input_tokens, total.output_tokens)
+    assert total.dollars > repriced.dollars, (
+        "the cached read's tenth-rate dollars must survive into the total"
+    )
+
+
 def test_an_unknown_model_is_priced_pessimistically():
     """An unknown model must trip a budget early, not run up a bill."""
     known = cost.cost("claude-haiku-4-5", 1000, 1000).dollars

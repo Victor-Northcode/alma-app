@@ -146,10 +146,13 @@ class Settings(BaseSettings):
     #: how to answer "hello" to save three cents of a worst case almost nobody
     #: reaches is not a saving, it is the bug the rules were written for.
     #:
-    #: The structural fix, when somebody wants the ten cents back: the system
-    #: block is byte-identical on every turn of every conversation, so prompt
-    #: caching would cut its input cost roughly tenfold. Nothing in
-    #: `ai/provider.py` or `ai/cost.py` models a cached read yet.
+    #: The structural fix, taken: the system block is byte-identical on every
+    #: turn of every conversation, so it is sent with `cache_control` and read
+    #: from cache at a tenth of the input price (`ai/provider.py`), and the
+    #: cost arithmetic prices cache reads and writes at their own rates
+    #: (`ai/cost.py`). The ceilings stay where they are — they are refusal
+    #: thresholds sized to the uncached worst case, and a cold cache is
+    #: exactly that case.
     free_month_budget: float = Field(default=1.10, alias="ALMA_FREE_MONTH_BUDGET")
     #: The owner ceiling recurs and the payment that earned it does not.
     #: `tier_of` answers "owner" for any in-force one-time purchase, and a

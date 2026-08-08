@@ -373,7 +373,11 @@ async def write(
                 raise
             continue
 
-        tally.record(cost.cost(model, completion.input_tokens, completion.output_tokens))
+        tally.record(cost.cost(
+            model, completion.input_tokens, completion.output_tokens,
+            cache_read_tokens=completion.cache_read_tokens,
+            cache_write_tokens=completion.cache_write_tokens,
+        ))
         tally.check(paid=paid, scale=script_scale)
 
         try:
@@ -505,10 +509,13 @@ def _spent_since(tally: cost.Ledger, opening: int, model: str) -> cost.Spend:
     slice this call added rather than the running total.
     """
     mine = tally.spends[opening:]
-    return cost.cost(
+    # Summed dollars, not re-priced tokens: a cached read is billed at a tenth
+    # of the input rate, and re-pricing from counts would re-bill it in full.
+    return cost.Spend(
         model,
         sum(s.input_tokens for s in mine),
         sum(s.output_tokens for s in mine),
+        sum(s.dollars for s in mine),
     )
 
 
@@ -528,6 +535,10 @@ async def _generate(
             model=model,
             max_tokens=max_tokens,
             schema=schema or CHAPTER_SCHEMA,
+            # Alma's voice is identical for every chapter of a locale; the
+            # marker costs nothing when the block is under the cacheable
+            # minimum and pays for itself the moment traffic exists.
+            cache_system=True,
         )
     except ModelUnavailable:
         raise
