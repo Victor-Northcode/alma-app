@@ -631,7 +631,24 @@ async def write(
             )
             continue
 
-        cited = tuple(dict.fromkeys(f for p in paragraphs for f in p.factors))
+        # **The workings are cited but not displayed**, and the difference
+        # matters on screen. `cited_factors` is what the clients render as the
+        # gold "read from" pills under the title, and those are placements: "life
+        # path 11", "☉ □ ♄ · 2°14′" — short, English by contract, and read as
+        # identifiers rather than as prose. A working is a whole sentence —
+        # "life path working: day 12 → 3, month 3 → 3, year 1994 → 5…" — and as
+        # a pill it is a paragraph of untranslated English running off the edge
+        # of a Russian screen. Photographed on the simulator the day it landed.
+        #
+        # It stays a factor for the validator, which is the whole point: the
+        # chapter must quote the arithmetic verbatim and is checked against it.
+        # The reader meets that arithmetic in the first paragraph, in their own
+        # language, which is where it belongs.
+        cited = tuple(
+            dict.fromkeys(
+                f for p in paragraphs for f in p.factors if "working:" not in f
+            )
+        )
         warnings = (
             (f"cites {len(verdict.off_topic)} factor(s) from outside this chapter",)
             if verdict.off_topic

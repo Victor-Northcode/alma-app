@@ -260,6 +260,34 @@ def test_the_working_behind_a_number_is_a_citable_factor():
     assert any("add to 33" in w and "folded to 6" in w for w in card_workings)
 
 
+async def test_the_working_is_cited_but_never_shown_as_a_pill(natal):
+    """Citable by the model, invisible to the reader.
+
+    `cited_factors` is what both apps render as the gold "read from" pills, and
+    a pill is a placement: short, English by contract, read as an identifier.
+    A working is a whole sentence, and as a pill it is a paragraph of
+    untranslated English running off the edge of a Russian screen — which is
+    what the simulator showed the day this landed.
+    """
+    # Numerology, because that is where the workings live.
+    result = compute("numerology", SOFIA)
+    chapter = chapters.find("numerology", "life-path")
+    offered = chapters.relevant_factors(chapter, result.factors)
+    working = next(f for f in result.factors if "working:" in f)
+    provider = ScriptedProvider(responses=[
+        _reply([("Первый абзац, спокойный.", [offered[0], working]),
+                ("Второй абзац, тоже.", [offered[0]])])
+    ])
+
+    written = await writer.write(
+        result=result, chapter=chapter, provider=provider,
+        model="claude-sonnet-5", locale="ru",
+    )
+
+    assert offered[0] in written.cited_factors
+    assert not [f for f in written.cited_factors if "working:" in f]
+
+
 def test_a_fold_that_did_not_happen_is_not_described():
     """A date summing to 21 or less reaches its card without folding.
 
