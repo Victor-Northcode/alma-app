@@ -1561,6 +1561,288 @@
         }
       }
     },
+    "cab.aspect.meaning.conjunction": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am selben Punkt: sie wirken als eines und verstärken einander."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In the same place: they work as one thing and amplify each other."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el mismo punto: funcionan como una sola cosa y se amplifican."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Au même point : ils agissent comme un seul et s'amplifient."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nello stesso punto: agiscono come una cosa sola e si amplificano."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No mesmo ponto: agem como uma coisa só e se amplificam."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стоят в одной точке: работают как одно целое и усиливают друг друга."
+          }
+        }
+      }
+    },
+    "cab.aspect.meaning.opposition": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einander gegenüber: sie ziehen in verschiedene Richtungen, jedes Mal neu."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Facing each other: they pull opposite ways, and you choose every time."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enfrentados: tiran en direcciones opuestas y hay que elegir cada vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Face à face : ils tirent en sens inverse, et il faut choisir chaque fois."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uno di fronte all'altro: tirano in direzioni opposte, e ogni volta si sceglie."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um de frente para o outro: puxam para lados opostos, e você escolhe toda vez."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Стоят напротив: тянут в разные стороны, и выбирать приходится каждый раз."
+          }
+        }
+      }
+    },
+    "cab.aspect.meaning.quincunx": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie sehen einander nicht: zwei Ansprüche, die sich nicht vereinen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They cannot see each other: two demands that do not reconcile."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ven: dos exigencias que no se concilian."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils ne se voient pas : deux exigences qui ne se concilient pas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non si vedono: due richieste che non si conciliano."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não se enxergam: duas exigências que não se conciliam."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не видят друг друга: два требования, которые не сводятся вместе."
+          }
+        }
+      }
+    },
+    "cab.aspect.meaning.sextile": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie helfen einander, wenn man etwas dafür tut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They help each other, if you put the effort in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se ayudan, si pones de tu parte."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils s'entraident, à condition d'y mettre du sien."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si aiutano, se ci si mette impegno."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajudam um ao outro, se você fizer a sua parte."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Помогают друг другу, если приложить усилие."
+          }
+        }
+      }
+    },
+    "cab.aspect.meaning.square": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie stehen einander im Weg: die Stelle, an der man zurechtkommen muss."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They get in each other's way: the place where you have to cope."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se estorban: el punto donde toca arreglárselas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils se gênent : l'endroit où il faut faire avec."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si intralciano: il punto in cui tocca cavarsela."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atrapalham um ao outro: o ponto em que você tem que dar conta."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Мешают друг другу: то место, где приходится справляться."
+          }
+        }
+      }
+    },
+    "cab.aspect.meaning.trine": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie passen leicht zusammen — so leicht, dass es selten bewusst genutzt wird."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "They fit together easily — so easily that it is rarely used on purpose."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encajan con facilidad, tanta que rara vez se usa a propósito."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ils s'accordent facilement — au point qu'on s'en sert rarement exprès."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si incastrano facilmente, tanto che di rado lo si usa apposta."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encaixam com facilidade — tanta que raramente se usa de propósito."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Складываются легко — настолько, что этим редко пользуешься нарочно."
+          }
+        }
+      }
+    },
     "cab.axis.Character": {
       "comment": "One of the nine axes.",
       "extractionState": "manual",
@@ -6855,6 +7137,53 @@
         }
       }
     },
+    "cab.pairJoin": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ und %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ and %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ y %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ et %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ e %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ e %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ и %2$@"
+          }
+        }
+      }
+    },
     "cab.phase.first-quarter": {
       "comment": "Moon phase.",
       "extractionState": "manual",
@@ -11189,49 +11518,48 @@
       }
     },
     "cab.strongestAspects": {
-      "comment": "Section label above the tightest natal aspects.",
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "stärkste Aspekte"
+            "value": "was übereinstimmt und was streitet"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "strongest aspects"
+            "value": "what agrees and what argues"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "aspectos más fuertes"
+            "value": "qué concuerda y qué discute"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "aspects les plus forts"
+            "value": "ce qui s'accorde et ce qui s'oppose"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "aspetti più forti"
+            "value": "cosa concorda e cosa discute"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "aspectos mais fortes"
+            "value": "o que concorda e o que discute"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "сильнейшие аспекты"
+            "value": "что в карте соглашается, а что спорит"
           }
         }
       }

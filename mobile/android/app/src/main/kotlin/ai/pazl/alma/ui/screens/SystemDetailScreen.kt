@@ -603,38 +603,82 @@ private fun ColumnScope.FreeData(slug: String, result: CalcResultDto) {
  */
 @Composable
 private fun ColumnScope.NatalFreeData(chart: JsonObject) {
-    val placements = chart.obj("placements")
     val aspects = chart.array("aspects").orEmpty().filterIsInstance<JsonObject>().take(3)
     if (aspects.isNotEmpty()) {
         Spacer(Modifier.height(22.dp))
         RuledLabel(stringResource(R.string.cabinet_strongest_aspects))
         aspects.forEachIndexed { index, aspect ->
             val orb = aspect.number("orb") ?: return@forEachIndexed
-            CabinetRow(rule = index < aspects.lastIndex) {
-                Text(
-                    text = listOfNotNull(
-                        glyphOf(placements, aspect.text("first")),
-                        aspect.text("glyph"),
-                        glyphOf(placements, aspect.text("second")),
-                    ).joinToString(" "),
-                    style = AlmaTheme.type.positions,
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    text = formatOrb(orb),
-                    style = AlmaTheme.type.positions,
-                    // Agreement green, disagreement red, gold for everything
-                    // between. A contradiction is material here rather than an
-                    // error, which is why the product has no other red.
-                    color = when (aspect.text("harmony")) {
-                        "harmonious" -> AlmaPalette.Agree
-                        "tense" -> AlmaPalette.Disagree
-                        else -> AlmaPalette.GoldBright
-                    },
-                )
+            val first = aspect.text("first")
+            val second = aspect.text("second")
+            val type = aspect.text("type").orEmpty()
+            Column(Modifier.padding(bottom = 6.dp)) {
+                CabinetRow(rule = index < aspects.lastIndex) {
+                    Text(
+                        // **"Солнце и Сатурн", not "☉ □ ♄".** The owner's word
+                        // for the glyphs was hieroglyphs: a person who has not
+                        // studied astrology cannot tell a trine from a square,
+                        // and three symbols with a number after them say
+                        // nothing about them. The transit rows lost the same
+                        // notation earlier for the same reason.
+                        text = if (first != null && second != null) {
+                            stringResource(
+                                R.string.cabinet_pair_join, bodyWord(first), bodyWord(second)
+                            )
+                        } else {
+                            aspect.text("glyph").orEmpty()
+                        },
+                        style = AlmaTheme.type.positions,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Text(
+                        text = "${aspectWord(type)} · ${formatOrb(orb)}",
+                        style = AlmaTheme.type.positions,
+                        // Agreement green, disagreement red, gold for everything
+                        // between. A contradiction is material here rather than an
+                        // error, which is why the product has no other red.
+                        color = when (aspect.text("harmony")) {
+                            "harmonious" -> AlmaPalette.Agree
+                            "tense" -> AlmaPalette.Disagree
+                            else -> AlmaPalette.GoldBright
+                        },
+                    )
+                }
+                aspectMeaning(type)?.let {
+                    Text(
+                        text = it,
+                        style = AlmaTheme.type.meta,
+                        color = AlmaPalette.Muted3,
+                        modifier = Modifier.padding(top = 5.dp),
+                    )
+                }
             }
         }
     }
+}
+
+/**
+ * What a kind of aspect does, in one line — **a definition, not a claim about
+ * this reader.**
+ *
+ * "A square is the place where you have to cope" is true of every square in
+ * every chart, which is why it may live in a string table at all: the product's
+ * rule is that nothing is said *about the reader* that was not computed, and
+ * this says nothing about the reader. Which two bodies are in it comes from the
+ * engine.
+ *
+ * Only the six a reader meets often have a line. The rest print none, which is
+ * better than a sentence written to fill a row.
+ */
+@Composable
+private fun aspectMeaning(type: String): String? = when (type) {
+    "conjunction" -> stringResource(R.string.aspect_meaning_conjunction)
+    "opposition" -> stringResource(R.string.aspect_meaning_opposition)
+    "trine" -> stringResource(R.string.aspect_meaning_trine)
+    "square" -> stringResource(R.string.aspect_meaning_square)
+    "sextile" -> stringResource(R.string.aspect_meaning_sextile)
+    "quincunx" -> stringResource(R.string.aspect_meaning_quincunx)
+    else -> null
 }
 
 @Composable

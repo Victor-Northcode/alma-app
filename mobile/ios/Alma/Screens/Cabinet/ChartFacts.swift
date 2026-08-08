@@ -151,8 +151,22 @@ enum ChartFacts {
     /// so the first few genuinely are the strongest.
     struct Aspect: Identifiable, Equatable {
         let id: String
-        /// "☉ △ ♂" — set as type, in the serif, like every other position.
+        /// "Солнце и Марс" — both ends, in the reader's language.
+        ///
+        /// **This was "☉ △ ♂".** The owner's verdict on it was that they are
+        /// hieroglyphs: a person who has not studied astrology cannot tell a
+        /// trine from a square, and a row of three glyphs and a number tells
+        /// them nothing about themselves. The same argument already retired
+        /// glyph notation from the transit rows; this is the last screen it
+        /// survived on.
         let notation: String
+        /// What kind of contact it is, spelled out — «трин», «квадратура».
+        let aspectWord: String
+        /// One line saying what this kind of contact does, in general. The
+        /// engine has no sentence for it, so it comes from the string table:
+        /// it is a definition rather than a claim about this person, and
+        /// definitions are copy.
+        let meaning: LocalizedStringResource?
         let orb: String
         let harmony: Harmony
     }
@@ -178,12 +192,19 @@ enum ChartFacts {
                   let second = entry["second"]?.stringValue,
                   let orbValue = entry["orb"]?.doubleValue
             else { return nil }
-            let glyph = entry["glyph"]?.stringValue ?? ""
+            let type = entry["type"]?.stringValue ?? ""
             return Aspect(
-                id: "\(first)-\(entry["type"]?.stringValue ?? "")-\(second)",
-                notation: [bodyGlyph(first), glyph, bodyGlyph(second)]
-                    .filter { !$0.isEmpty }
-                    .joined(separator: " "),
+                id: "\(first)-\(type)-\(second)",
+                // Both bodies, joined by the language's own word for "and" —
+                // nominative on both sides, so nothing has to agree with
+                // anything. The same shape `DailyContact.notation` settled on.
+                notation: String(
+                    format: String(localized: L10nCabinet.pairJoin),
+                    L10nCabinet.bodyName(first),
+                    L10nCabinet.bodyName(second)
+                ),
+                aspectWord: DailyL10n.aspectWord(type),
+                meaning: L10nCabinet.aspectMeaning(type),
                 orb: orb(orbValue),
                 harmony: Harmony(entry["harmony"]?.stringValue)
             )

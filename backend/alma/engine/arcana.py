@@ -73,6 +73,11 @@ class ArcanaResult:
     triad: tuple[Card, ...]
     life_path_link: int
     year: YearCard | None = None
+    #: The arithmetic, spelled out. Same reason as `NumerologyResult.workings`:
+    #: a card that appears from nowhere is a card the reader takes on faith, and
+    #: the chapter is supposed to open by saying where it came from. Computed
+    #: here so the model quotes it instead of doing the sum itself.
+    workings: tuple[str, ...] = ()
 
     def factors(self) -> list[str]:
         items = [
@@ -80,6 +85,7 @@ class ArcanaResult:
             f"Soul Card {self.soul.numeral} {self.soul.name}",
             f"{self.personality.name} is {self.personality.element}, ruled by {self.personality.ruler}",
         ]
+        items += list(self.workings)
         if self.is_same_card:
             items.append(f"Personality and Soul are the same card ({self.personality.name})")
         if self.year:
@@ -161,6 +167,22 @@ def calculate(
 ) -> ArcanaResult:
     personality = personality_card(day, month, year)
     soul = soul_card(personality)
+    raw = _sum_date_digits(day, month, year)
+    working = (
+        f"Personality Card working: the digits of {day:02d}.{month:02d}.{year} "
+        f"add to {raw}"
+    )
+    # The fold only happens above 21, and saying so when it did not happen
+    # would be describing a step that was never taken.
+    if raw > 21:
+        working += f", folded to {personality.number}"
+    working += f", which is arcanum {personality.numeral} {personality.name}"
+
+    workings = [
+        working,
+        f"Soul Card working: {personality.number} reduced to a single digit is "
+        f"{soul.number}, arcanum {soul.numeral} {soul.name}",
+    ]
     return ArcanaResult(
         personality=personality,
         soul=soul,
@@ -168,4 +190,5 @@ def calculate(
         triad=triad(personality, soul),
         life_path_link=life_path,
         year=year_card(day, month, year, today) if today else None,
+        workings=tuple(workings),
     )

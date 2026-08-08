@@ -167,6 +167,18 @@ class NumerologyResult:
     master_numbers_present: tuple[int, ...]
     karmic_debts_present: tuple[int, ...]
     name: NameNumbers | None = None
+    #: The arithmetic, spelled out — "14 + 3 + 1996 → 5 + 3 + 7 = 15 → 6".
+    #:
+    #: Carried so the chapter can open by saying where the number came from
+    #: instead of announcing it. The owner's complaint was exact: reading «твоя
+    #: карта души — 5», there is nothing that says how five was arrived at, and
+    #: a number a reader cannot check is a number they have to take on faith —
+    #: which is the one thing this product does not ask for.
+    #:
+    #: **Computed here rather than described by the model.** Asked to show its
+    #: working, a language model will produce working that looks right; this is
+    #: the same rule that keeps placements out of its hands.
+    workings: tuple[str, ...] = ()
 
     def factors(self) -> list[str]:
         """Citable factor strings — what the AI layer is allowed to reference."""
@@ -175,6 +187,7 @@ class NumerologyResult:
             f"birthday number {self.birthday_number}",
             f"destiny number {self.destiny_number}",
         ]
+        items += list(self.workings)
         items += [f"pinnacle {p.index} is {p.number} (ages {p.starts_age}–{p.ends_age or 'on'})"
                   for p in self.pinnacles]
         items += [f"challenge {c.index} is {c.number}" for c in self.challenges]
@@ -328,6 +341,62 @@ def name_numbers(full_name: str, life_path_value: int) -> NameNumbers:
     )
 
 
+def _workings(day: int, month: int, year: int, name: NameNumbers | None) -> tuple[str, ...]:
+    """The arithmetic behind each headline number, as sentences a model may cite.
+
+    Written in the shape a person would check it in — the reduced parts, then
+    the sum, then the fold — because that is what the chapter has to be able to
+    say. `life path = 6` is a claim; "14 → 5, 3 → 3, 1996 → 7, and 5 + 3 + 7 =
+    15 → 6" is the same claim with its receipt attached.
+
+    Every string here is a *factor*, which means the validator checks that the
+    prose citing it exists in this list character for character. That is the
+    point: the working travels under the same rule as a placement, so a chapter
+    cannot round it, restate it or quietly get it wrong.
+    """
+    out: list[str] = []
+
+    d, m, y = reduce_number(day), reduce_number(month), reduce_number(year)
+    total = d + m + y
+    folded = reduce_number(total)
+    out.append(
+        f"life path working: day {day} → {d}, month {month} → {m}, "
+        f"year {year} → {y}; {d} + {m} + {y} = {total} → {folded}"
+    )
+
+    bd_total = digit_sum(day) if day > 9 else day
+    out.append(
+        f"birthday number working: the day of the month is {day}"
+        + (f", and {day} → {bd_total}" if day > 9 else "")
+    )
+
+    digits = f"{day:02d}{month:02d}{year}"
+    out.append(
+        "destiny number working: every digit of the date "
+        f"{day:02d}.{month:02d}.{year} adds to {sum(int(c) for c in digits)} "
+        f"→ {destiny_from_date(day, month, year)}"
+    )
+
+    if name is not None and name.romanised:
+        vowels = [c for c in name.romanised if c in _VOWELS]
+        consonants = [c for c in name.romanised if c not in _VOWELS]
+        out.append(
+            f"expression working: every letter of {name.romanised} adds to "
+            f"{sum(_LETTER_VALUES[c] for c in name.romanised)} → {name.expression}"
+        )
+        if vowels:
+            out.append(
+                f"soul urge working: the vowels {' '.join(vowels)} add to "
+                f"{sum(_LETTER_VALUES[c] for c in vowels)} → {name.soul_urge}"
+            )
+        if consonants:
+            out.append(
+                f"personality working: the consonants add to "
+                f"{sum(_LETTER_VALUES[c] for c in consonants)} → {name.personality}"
+            )
+    return tuple(out)
+
+
 def calculate(
     *, day: int, month: int, year: int, full_name: str | None = None, reference_year: int | None = None
 ) -> NumerologyResult:
@@ -359,4 +428,5 @@ def calculate(
         master_numbers_present=masters,
         karmic_debts_present=debts,
         name=name_block,
+        workings=_workings(day, month, year, name_block),
     )

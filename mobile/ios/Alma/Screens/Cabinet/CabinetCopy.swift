@@ -176,6 +176,36 @@ enum L10nCabinet {
         return localised("cab.arcana.\(slug)", fallback: english)
     }
 
+    /// "%1$@ and %2$@" — how a language joins two names.
+    ///
+    /// A template rather than a hard-coded " · ", because five of the seven
+    /// languages needed one for `DailyContact.notation` and this is the same
+    /// problem one screen over.
+    static let pairJoin = LocalizedStringResource(
+        "cab.pairJoin", defaultValue: "%1$@ and %2$@", table: table
+    )
+
+    /// What a kind of aspect does, in one line.
+    ///
+    /// **A definition, not a claim about this person.** "A square is the place
+    /// where you have to cope" is true of every square in every chart, which is
+    /// why it may live in a string table at all — the product's rule is that
+    /// nothing is *said about the reader* that was not computed, and this says
+    /// nothing about the reader. What is theirs is which two bodies are in it,
+    /// and that comes from the engine.
+    ///
+    /// Only the six aspects a reader meets often have a line. The rest return
+    /// nil and print no explanation, which is better than a sentence written to
+    /// fill a row: a quintile shows up in one chart in twenty and nobody has to
+    /// pretend it is intuitive.
+    static func aspectMeaning(_ type: String) -> LocalizedStringResource? {
+        let known = ["conjunction", "opposition", "trine", "square", "sextile", "quincunx"]
+        guard known.contains(type) else { return nil }
+        return LocalizedStringResource(
+            String.LocalizationValue("cab.aspect.meaning.\(type)"), table: table
+        )
+    }
+
     static func bodyName(_ key: String) -> String {
         localised(
             "cab.body.\(key)",

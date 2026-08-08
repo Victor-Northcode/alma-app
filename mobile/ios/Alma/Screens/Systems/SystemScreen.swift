@@ -369,15 +369,25 @@ private struct NatalPanel: View {
             if !aspects.isEmpty {
                 CabinetSection(label: L10nCabinet.strongestAspects) {
                     ForEach(aspects) { aspect in
-                        AlmaRow {
-                            Text(verbatim: aspect.notation)
-                                .font(AlmaFonts.display(19, relativeTo: .headline))
-                                .foregroundStyle(Color.almaInkLight)
-                        } trailing: {
-                            Text(verbatim: aspect.orb)
-                                .font(.almaNumeral)
-                                .foregroundStyle(colour(of: aspect.harmony))
+                        VStack(alignment: .leading, spacing: 5) {
+                            AlmaRow {
+                                // "Солнце и Сатурн", not "☉ □ ♄".
+                                Text(verbatim: aspect.notation)
+                                    .font(AlmaFonts.display(19, relativeTo: .headline))
+                                    .foregroundStyle(Color.almaInkLight)
+                            } trailing: {
+                                // The orb keeps the colour, because green and
+                                // red already mean agreement and disagreement
+                                // everywhere else in the product.
+                                Text(verbatim: "\(aspect.aspectWord) · \(aspect.orb)")
+                                    .font(.almaNumeral)
+                                    .foregroundStyle(colour(of: aspect.harmony))
+                            }
+                            if let meaning = aspect.meaning {
+                                Text(meaning).almaMeta().almaReadingWidth()
+                            }
                         }
+                        .padding(.bottom, 6)
                     }
                 }
             }

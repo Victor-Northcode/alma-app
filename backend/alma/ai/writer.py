@@ -28,6 +28,17 @@ from .validator import Paragraph
 
 log = logging.getLogger("alma.ai.writer")
 
+#: Three, and it is the free tier's per-request budget that says so.
+#:
+#: A fourth attempt was tried when the plain-language gate joined the three
+#: existing rejections, because the densest natal chapter was spending attempt
+#: one on a truncation and attempts two and three on dashes. It does not fit:
+#: `cost.Tally.check` holds a whole request to `ceiling(paid=False)`, and four
+#: free-tier generations come to $0.064 against $0.05. Raising that ceiling is a
+#: pricing decision rather than a code one, so the answer here was to make each
+#: attempt land instead — the complaint now quotes the offending paragraph back
+#: rather than naming its index, which is the difference between "fix this
+#: sentence" and "rewrite everything and hope".
 MAX_ATTEMPTS = 3
 
 #: The line below which we regenerate rather than ship, for a piece that has
@@ -159,6 +170,29 @@ class Written:
             "attempts": self.attempts,
             "warnings": list(self.warnings),
         }
+
+
+def _can_try_again(attempt: int, tally: cost.Ledger, *, paid: bool, scale: float) -> bool:
+    """Whether another generation is both permitted and affordable.
+
+    Two limits, and only the first one is obvious. `MAX_ATTEMPTS` is the count;
+    `cost.Tally.check` is a ceiling on what one *request* may spend across all
+    of them, and on the free tier a dense Russian chapter reaches it after two.
+    A retry that would exceed it does not fail politely — it raises
+    `BudgetExceeded` out of the loop, which the router turns into a 503 over a
+    chapter that was already written and merely inelegant.
+
+    Only the prose gate asks this question. Citation, safety and geometry
+    failures refuse regardless of budget, because what they catch is untrue
+    rather than unlovely.
+    """
+    if attempt >= MAX_ATTEMPTS:
+        return False
+    if not tally.spends:
+        return True
+    limit = cost.ceiling(paid=paid) * scale
+    average = tally.dollars / len(tally.spends)
+    return tally.dollars + average <= limit
 
 
 def _words(system: str, chapter: chapter_defs.Chapter, locale: str) -> i18n.ChapterWords:
@@ -331,10 +365,27 @@ async def write(
     # exists to sell the system answered 503 in the owner's own hands. The
     # multiplier is per-script, not per-model: every current tokenizer treats
     # non-Latin scripts about the same way.
+    #
+    # **The Cyrillic multiplier was measured against the wrong thing and has
+    # been raised.** Six tokens a word covers Cyrillic *prose*; what is actually
+    # produced is a JSON envelope in which every paragraph repeats its factor
+    # strings verbatim, and the model reasons before it writes any of it. Read
+    # off the 53 Russian chapters this product has written: mean 2050 output
+    # tokens, maximum 4479, against a ceiling of 2520 — so roughly half of them
+    # were writing into a wall, and the reader met that as «Alma сейчас не
+    # отвечает» after three attempts and three real generations spent.
+    #
+    # Nine and 900 put a 320-word Russian chapter at 3780, which covers the mean
+    # comfortably and most of the tail; `AnswerTruncated.wrote_nothing` handles
+    # the rest by raising this call's own ceiling. It is a ceiling and not a
+    # spend — tokens are paid for when produced — so the only thing it moves is
+    # `cost.guard`'s estimate: $0.0659 for a free chapter on the mid model
+    # against a $0.10 Cyrillic-scaled ceiling, and $0.1098 for a paid one on the
+    # strong model against $1.00. Both fit.
     latin = i18n.resolve(locale) in ("en", "es", "de", "it", "fr", "pt-BR")
-    per_word = 3 if latin else 6
+    per_word = 3 if latin else 9
     script_scale = 1.0 if latin else 2.0
-    max_tokens = min(8192, chapter.words[1] * per_word + 600)
+    max_tokens = min(8192, chapter.words[1] * per_word + (600 if latin else 900))
     least_paragraphs = chapter.paragraphs[0]
     schema = schema_for(chapter)
 
@@ -351,6 +402,15 @@ async def write(
             prompt_chars=len(prompt) + len(system),
             max_output_tokens=max_tokens,
             paid=paid,
+            # **The script scale belongs here too, and was missing.** The month
+            # tally below has always been scaled — `tally.check(scale=…)` — and
+            # `guard`'s own comment says the ceiling scales with the writing
+            # system; this call site simply never passed it. A Russian chapter
+            # was therefore given a Cyrillic-sized token budget and judged
+            # against a Latin-sized price ceiling, which is a contradiction that
+            # only stayed invisible while the budget was too small to reach it.
+            # `spheres.py` had it right.
+            scale=script_scale,
         )
 
         try:
@@ -358,6 +418,22 @@ async def write(
                 provider, system, prompt, model, max_tokens, schema=schema
             )
         except AnswerTruncated as exc:
+            def afford(desired: int) -> int:
+                """As much of the raise as the per-call ceiling will pay for.
+
+                Without this, recovering from a truncation could walk straight
+                into `BudgetExceeded` on the next attempt — trading a failure
+                the loop knows how to fix for one it does not. The headroom is
+                for the complaint the next prompt carries and this one does not.
+                """
+                limit = cost.ceiling(paid=paid) * script_scale
+                projected = cost.estimate(
+                    model,
+                    prompt_chars=len(prompt) + len(system) + 400,
+                    max_output_tokens=desired,
+                )
+                return desired if projected <= limit else max_tokens
+
             # **The model wrote past the ceiling.** Retried rather than
             # surfaced, because the loop already exists for exactly this shape
             # of problem — unparseable JSON, an invented factor, a forbidden
@@ -379,16 +455,45 @@ async def write(
             # current ceiling is already close to. Raising it would trade a
             # visible failure for an invisible one: chapters that quietly stop
             # being written for anybody on the free tier.
-            complaint = (
-                "Your reply ran past the length limit and was cut off. Write "
-                f"noticeably shorter: at most {chapter.words[1]} words in total "
-                f"across {least_paragraphs} or {least_paragraphs + 1} paragraphs, "
-                "and cite only the factors each paragraph actually reads from."
-            )
-            log.warning(
-                "chapter %s/%s attempt %d was truncated: %s",
-                result.system, chapter.slug, attempt, exc,
-            )
+            if exc.wrote_nothing:
+                # **Nothing was written at all**, which means the allowance went
+                # on reasoning before a word of prose existed. Asking this one to
+                # be shorter is asking it to solve a problem it does not have,
+                # and it truncates again on the next attempt — two of three
+                # attempts lost that way, live, on 8 August 2026.
+                #
+                # So the ceiling moves instead, once, by half. The argument
+                # above against a *global* raise still holds — cost scales with
+                # the density of the chart and `cost.guard` refuses a free-tier
+                # generation over its budget — but this is not a global raise:
+                # it is one call that has already proven it needs the room, and
+                # the alternative is paying for the same generation three times
+                # and handing the reader a 503 at the end of it.
+                max_tokens = afford(min(8192, int(max_tokens * 1.5)))
+                complaint = None
+                log.warning(
+                    "chapter %s/%s attempt %d spent its whole allowance thinking; "
+                    "ceiling raised to %d: %s",
+                    result.system, chapter.slug, attempt, max_tokens, exc,
+                )
+            else:
+                # Cut off mid-sentence: the model went on too long, so it is
+                # asked for something shorter — *and* given more room, because
+                # the two are not alternatives. A retry that is only told to be
+                # brief writes into the same wall when the chart is dense, and
+                # the ceiling is an allowance rather than a bill: unused tokens
+                # cost nothing.
+                max_tokens = afford(min(8192, int(max_tokens * 1.3)))
+                complaint = (
+                    "Your reply ran past the length limit and was cut off. Write "
+                    f"noticeably shorter: at most {chapter.words[1]} words in total "
+                    f"across {least_paragraphs} or {least_paragraphs + 1} paragraphs, "
+                    "and cite only the factors each paragraph actually reads from."
+                )
+                log.warning(
+                    "chapter %s/%s attempt %d was truncated, ceiling now %d: %s",
+                    result.system, chapter.slug, attempt, max_tokens, exc,
+                )
             if attempt == MAX_ATTEMPTS:
                 raise
             continue
@@ -443,8 +548,49 @@ async def write(
             log.warning("chapter %s/%s safety: %s", result.system, chapter.slug, breaches)
             continue
 
+        # How it is written, on the same footing as what it says.
+        #
+        # The owner read his own chapters and the verdict was that they are
+        # ornate and machine-made — «многие люди, кто захочет с этим
+        # поработать, просто не смогут почитать». The voice was told to write
+        # plainly long before this and did not; an instruction nobody checks is
+        # a preference. This is the check. It costs a regeneration when it
+        # fires, which is the price of the rule being real.
+        ornate = validator.plain_language(body, i18n.resolve(locale))
+        if ornate and _can_try_again(attempt, tally, paid=paid, scale=script_scale):
+            complaint = (
+                "The writing has to change before this can be published: "
+                + "; ".join(ornate[:4])
+                + ". Say the same things the same way you would to one person "
+                "across a table."
+            )
+            log.warning(
+                "chapter %s/%s plain-language: %s",
+                result.system, chapter.slug, "; ".join(ornate[:2]),
+            )
+            continue
+        if ornate:
+            # **Out of attempts or out of budget, and this one publishes anyway.**
+            #
+            # The difference between this gate and the ones above it is the
+            # difference between wrong and ugly. An invented placement is a lie
+            # about a person and is refused however much it cost to get here; a
+            # paragraph with three dashes in it is worse writing than we want
+            # and better than the alternative, which is the reader meeting «Alma
+            # сейчас не отвечает» over a chapter that exists.
+            #
+            # It is not hypothetical. `natal/core` is the free sample of the
+            # natal system, and two Russian generations of it cost $0.148
+            # against the free tier's $0.10 — so the gate had budget for one
+            # attempt and, having spent it, was turning a working chapter into a
+            # 503. Measured on 9 August 2026.
+            log.info(
+                "chapter %s/%s published with prose warnings (no budget to retry): %s",
+                result.system, chapter.slug, "; ".join(ornate[:2]),
+            )
+
         if i18n.resolve(locale) == "ru":
-            leaked = validator.russian_latin_leak(body)
+            leaked = validator.russian_latin_leak(body, result.factors)
             if leaked:
                 complaint = (
                     "В русском тексте остались английские слова: "

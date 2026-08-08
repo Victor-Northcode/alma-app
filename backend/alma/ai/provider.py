@@ -43,7 +43,21 @@ class AnswerTruncated(ModelUnavailable):
     about an absent API key. It stays a `ModelUnavailable` so that every
     existing `except` clause keeps catching it and the behaviour of callers that
     do not care is unchanged.
+
+    **`wrote_nothing` separates the two truncations, and they need opposite
+    answers.** A reply cut off mid-sentence is a model that went on too long:
+    ask for something shorter. A reply with *no text at all* is a model that
+    spent the whole allowance reasoning before it wrote a word — asking that one
+    for something shorter is asking it to solve a problem it does not have, and
+    it will truncate again. Measured live on 8 August 2026: three chapters
+    requested, two of them lost attempts to this and one came back 503 to the
+    reader. The message string has always said "raise the ceiling for this call
+    rather than retrying it"; nothing read it.
     """
+
+    def __init__(self, message: str, *, wrote_nothing: bool = False) -> None:
+        super().__init__(message)
+        self.wrote_nothing = wrote_nothing
 
 
 @dataclass(frozen=True, slots=True)
@@ -164,7 +178,8 @@ class AnthropicProvider:
             spent = "the answer was cut off" if text else "nothing was written at all"
             raise AnswerTruncated(
                 f"{model} reached max_tokens={max_tokens} and {spent}"
-                " — raise the ceiling for this call rather than retrying it"
+                " — raise the ceiling for this call rather than retrying it",
+                wrote_nothing=not text,
             )
         return Completion(
             text=text,

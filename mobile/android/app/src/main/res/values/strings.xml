@@ -52,7 +52,14 @@
     <string name="group_all_of_it">all of it</string>
     <string name="cabinet_good_morning">Good morning,</string>
     <string name="cabinet_active_now">active now</string>
-    <string name="cabinet_strongest_aspects">strongest aspects</string>
+    <string name="cabinet_strongest_aspects">what agrees and what argues</string>
+    <string name="cabinet_pair_join">%1$s and %2$s</string>
+    <string name="aspect_meaning_conjunction">In the same place: they work as one thing and amplify each other.</string>
+    <string name="aspect_meaning_opposition">Facing each other: they pull opposite ways, and you choose every time.</string>
+    <string name="aspect_meaning_trine">They fit together easily — so easily that it is rarely used on purpose.</string>
+    <string name="aspect_meaning_square">They get in each other\'s way: the place where you have to cope.</string>
+    <string name="aspect_meaning_sextile">They help each other, if you put the effort in.</string>
+    <string name="aspect_meaning_quincunx">They cannot see each other: two demands that do not reconcile.</string>
     <string name="cabinet_calculated">calculated</string>
     <string name="cabinet_open">open</string>
     <string name="cabinet_needs_time">needs birth time</string>

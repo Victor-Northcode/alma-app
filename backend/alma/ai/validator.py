@@ -364,16 +364,155 @@ def russian_gendered(text: str) -> list[str]:
     return [b for b in RU_GENDERED if b in lowered]
 
 
-def russian_latin_leak(text: str) -> list[str]:
+#: Words that sound like meaning and carry none, per language.
+#:
+#: **Why this is a gate and not only an instruction.** The voice already asked
+#: for plain writing and the writing came back ornate anyway: measured over the
+#: 124 Russian paragraphs this product had actually written, there were 2.72
+#: dashes per paragraph, and the sentence the owner quoted back was «это ядро
+#: гораздо менее эффектное, чем маска Водолея». An instruction that is followed
+#: on Tuesday and not on Thursday is not a rule; `russian_gendered` and
+#: `russian_latin_leak` are here for the same reason and this joins them.
+#:
+#: Russian and English are the lists that have been read word by word — Russian
+#: because it is the owner's language and the one he judged, English because it
+#: is the source. The other five are the obvious cognates and are deliberately
+#: short: a banned-word list in a language nobody here has audited is a source
+#: of refusals rather than of quality, and it costs a real generation each time
+#: it is wrong. Widen them when somebody who reads that language has looked.
+_PURPLE: dict[str, tuple[str, ...]] = {
+    "ru": (
+        "ядро", "суть", "истинное я", "истинного я", "настоящий ты", "маска",
+        "энергия", "энергии", "путь души", "предназначение", "вселенная",
+        "сакральн", "вибрация", "вибрации",
+    ),
+    "en": (
+        "essence", "true self", "the real you", "life force", "energy",
+        "path of the soul", "the universe", "sacred", "vibration", "alignment",
+    ),
+    "es": ("esencia", "verdadero yo", "energía", "el universo", "sagrado", "vibración"),
+    "de": ("essenz", "wesenskern", "wahres selbst", "energie", "das universum", "schwingung"),
+    "fr": ("essence", "vrai soi", "énergie", "l'univers", "sacré", "vibration"),
+    "it": ("essenza", "vero sé", "energia", "l'universo", "sacro", "vibrazione"),
+    "pt-BR": ("essência", "verdadeiro eu", "energia", "o universo", "sagrado", "vibração"),
+}
+
+#: Dashes allowed in one paragraph, per language. One is punctuation; the next
+#: one is a tic — except where the language needs it.
+#:
+#: **Russian gets two, and that is linguistics rather than leniency.** Russian
+#: has no present-tense copula: «Сатурн — планета границ» is how the language
+#: says "Saturn is the planet of limits", and there is no way to write it
+#: without the dash. A budget of one was set here first and the model could not
+#: hold it — three live attempts in a row came back with two, three and four,
+#: which is what fighting a grammar looks like from the outside. Two still cuts
+#: the measured 2.78 a paragraph, and what the owner objected to was never the
+#: copula: it was «ядро», «маска» and «гораздо более настоящее», which the word
+#: list above refuses directly.
+_DASH_BUDGET: dict[str, int] = {"ru": 2}
+DASH_BUDGET = 1
+
+
+def dash_budget(locale: str) -> int:
+    return _DASH_BUDGET.get(locale, _DASH_BUDGET.get(locale.split("-")[0], DASH_BUDGET))
+
+#: Mean words per sentence above which a paragraph is sent back.
+#:
+#: Eighteen, not the fourteen the voice asks for. The prompt sets the target and
+#: this catches the failure — a gate at the target would reject writing that is
+#: merely a little long, and every rejection is a real generation spent. The
+#: measured mean before this landed was 16.2, so 18 is not a formality either.
+SENTENCE_CEILING = 18.0
+
+#: A single sentence longer than this is a paragraph pretending to be a
+#: sentence, whatever the mean says.
+LONGEST_SENTENCE = 45
+
+
+def plain_language(text: str, locale: str) -> list[str]:
+    """What is ornate, machine-made or unreadable in a piece of prose.
+
+    Returns complaints in English — they go into the model's retry, not to a
+    reader. Empty means the prose passed.
+
+    Checked per paragraph rather than over the whole reading: the dash budget is
+    a rule about a paragraph, and averaging it over a page would let one
+    dash-riddled paragraph hide behind four clean ones.
+    """
+    complaints: list[str] = []
+    base = locale if locale in _PURPLE else locale.split("-")[0]
+    banned = _PURPLE.get(base, ())
+
+    lowered = text.lower()
+    found = [w for w in banned if w in lowered]
+    if found:
+        complaints.append(
+            "These words sound like meaning and carry none; rewrite without "
+            "them: " + ", ".join(found[:6])
+        )
+
+    budget = dash_budget(base)
+    for index, paragraph in enumerate(p for p in text.split("\n\n") if p.strip()):
+        # The paragraph's own opening, quoted back. **A complaint that names an
+        # index is a complaint the model cannot act on**: it rewrites the whole
+        # chapter, puts the dashes somewhere else, and the second attempt fails
+        # for the same reason as the first — watched live, twice, on the densest
+        # natal chapter. Quoting it points at the sentence.
+        opening = " ".join(paragraph.split()[:9])
+
+        dashes = paragraph.count("—") + paragraph.count("–")
+        if dashes > budget:
+            allowed = "one" if budget == 1 else "two"
+            complaints.append(
+                f'The paragraph beginning "{opening}…" has {dashes} dashes. '
+                f"{allowed.capitalize()} at most: where you reached for the next "
+                "one, a full stop or a comma is what you meant. Change that "
+                "paragraph and leave the others as they are."
+            )
+
+        sentences = [s for s in re.split(r"[.!?…]+", paragraph) if s.strip()]
+        if not sentences:
+            continue
+        lengths = [len(s.split()) for s in sentences]
+        mean = sum(lengths) / len(lengths)
+        if mean > SENTENCE_CEILING:
+            complaints.append(
+                f'The paragraph beginning "{opening}…" averages {mean:.0f} words '
+                "a sentence. Aim for about fourteen: a long sentence explains, a "
+                "short one lands."
+            )
+        if max(lengths) > LONGEST_SENTENCE:
+            complaints.append(
+                f'The paragraph beginning "{opening}…" contains a sentence of '
+                f"{max(lengths)} words. Break it."
+            )
+
+    return complaints
+
+
+def russian_latin_leak(text: str, factors: tuple[str, ...] | list[str] = ()) -> list[str]:
     """Latin words stranded in Russian prose — «твой natal Уран», seen live.
 
     The factor identifiers are English and the model quotes them; most slips
     are a single untranslated word riding into the sentence. Only prose is
     checked — the `factors` arrays stay English by contract — and the one
-    Latin word Russian prose is allowed is the product's own name.
+    Latin word Russian prose is always allowed is the product's own name.
+
+    **`factors` is the second allowance, and it is not a loophole.** A Cyrillic
+    name is counted from a romanised spelling — «Анатолий Михайлов» as
+    ANATOLIYMIKHAYLOV — and the chapter is *required* to name that spelling, or
+    the reader cannot check the sum it produced. The engine puts it in the
+    factor list; quoting a factor verbatim is the one thing this whole module
+    exists to encourage. Caught the day the two rules met: the numerology name
+    chapter was refused for citing the letters it was told to cite.
+
+    Only whole Latin runs that appear inside a factor are allowed, so a real
+    leak — "natal", "square" — is still caught unless the engine itself said it.
     """
     import re
     allowed = {"alma"}
+    for factor in factors:
+        allowed.update(w.lower() for w in re.findall(r"[A-Za-z]{2,}", factor))
     roman = re.compile(r"^[IVXLCDM]+$")
     words = re.findall(r"[A-Za-z]{2,}", text)
     return sorted({

@@ -46,7 +46,14 @@
     <string name="group_all_of_it">tutto insieme</string>
     <string name="cabinet_good_morning">Buongiorno,</string>
     <string name="cabinet_active_now">attivo ora</string>
-    <string name="cabinet_strongest_aspects">aspetti più forti</string>
+    <string name="cabinet_strongest_aspects">cosa concorda e cosa discute</string>
+    <string name="cabinet_pair_join">%1$s e %2$s</string>
+    <string name="aspect_meaning_conjunction">Nello stesso punto: agiscono come una cosa sola e si amplificano.</string>
+    <string name="aspect_meaning_opposition">Uno di fronte all\'altro: tirano in direzioni opposte, e ogni volta si sceglie.</string>
+    <string name="aspect_meaning_trine">Si incastrano facilmente, tanto che di rado lo si usa apposta.</string>
+    <string name="aspect_meaning_square">Si intralciano: il punto in cui tocca cavarsela.</string>
+    <string name="aspect_meaning_sextile">Si aiutano, se ci si mette impegno.</string>
+    <string name="aspect_meaning_quincunx">Non si vedono: due richieste che non si conciliano.</string>
     <string name="cabinet_calculated">calcolato</string>
     <string name="cabinet_open">da aprire</string>
     <string name="cabinet_needs_time">manca l\'ora di nascita</string>

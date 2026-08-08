@@ -40,7 +40,14 @@
     <string name="group_all_of_it">всё сразу</string>
     <string name="cabinet_good_morning">Доброе утро,</string>
     <string name="cabinet_active_now">активно сейчас</string>
-    <string name="cabinet_strongest_aspects">сильнейшие аспекты</string>
+    <string name="cabinet_strongest_aspects">что в карте соглашается, а что спорит</string>
+    <string name="cabinet_pair_join">%1$s и %2$s</string>
+    <string name="aspect_meaning_conjunction">Стоят в одной точке: работают как одно целое и усиливают друг друга.</string>
+    <string name="aspect_meaning_opposition">Стоят напротив: тянут в разные стороны, и выбирать приходится каждый раз.</string>
+    <string name="aspect_meaning_trine">Складываются легко — настолько, что этим редко пользуешься нарочно.</string>
+    <string name="aspect_meaning_square">Мешают друг другу: то место, где приходится справляться.</string>
+    <string name="aspect_meaning_sextile">Помогают друг другу, если приложить усилие.</string>
+    <string name="aspect_meaning_quincunx">Не видят друг друга: два требования, которые не сводятся вместе.</string>
     <string name="cabinet_calculated">рассчитано</string>
     <string name="cabinet_open">открыто</string>
     <string name="cabinet_needs_time">нужно время рождения</string>

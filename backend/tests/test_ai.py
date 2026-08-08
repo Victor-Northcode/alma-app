@@ -158,6 +158,151 @@ def test_the_bare_assertion_is_still_caught_even_after_a_disclaimer():
     )
 
 
+# ── how it is written, not only what it says ───────────────────────────────
+#
+# The owner read his own chapters and the verdict was that they are ornate and
+# machine-made, and that a person without astrology would not get through them.
+# Measured over the 134 Russian paragraphs this product had written by then:
+# 2.78 dashes a paragraph, 111 of them over budget, «ядро» ten times. The voice
+# had already asked for plain writing — so the ask was not the missing part.
+
+
+def test_a_paragraph_of_dashes_is_sent_back():
+    """One dash is punctuation. The next one is the tic that gives a machine away."""
+    assert validator.plain_language(
+        "Твоё Солнце в Тельце — во втором доме — и это — не случайность.", "ru"
+    )
+    assert validator.plain_language(
+        "Your Sun is in Taurus — in the second house — and that is no accident.", "en"
+    )
+
+
+def test_russian_gets_two_dashes_because_it_has_no_copula():
+    """«Сатурн — планета границ» is how Russian says "Saturn is".
+
+    A budget of one was set here first, and three live attempts in a row came
+    back with two, three and four dashes: that is what fighting a grammar looks
+    like from the outside. English keeps the tighter budget, where the same
+    sentence has a verb in it.
+    """
+    russian = "Сатурн — планета границ, и второй дом — про то, что ты считаешь своим."
+    assert validator.plain_language(russian, "ru") == []
+    assert validator.dash_budget("ru") == 2
+    assert validator.dash_budget("en") == 1
+    assert validator.dash_budget("pt-BR") == 1
+
+
+def test_a_dash_budget_is_per_paragraph_and_not_averaged():
+    """Four clean paragraphs must not launder a fifth full of dashes.
+
+    Averaged over a reading this passes at 0.4 dashes a paragraph, which is why
+    the check walks paragraphs instead.
+    """
+    text = "\n\n".join(["Обычное предложение без тире."] * 4 + [
+        "Ядро — маска — слой — и то, что под всем этим."
+    ])
+    assert validator.plain_language(text, "ru")
+
+
+@pytest.mark.parametrize(
+    "text,locale",
+    [
+        ("Это ядро гораздо менее эффектное, чем маска Водолея.", "ru"),
+        ("Твоя энергия ищет выход.", "ru"),
+        ("This is the true self underneath the mask.", "en"),
+        ("Your essence is asking for something.", "en"),
+    ],
+)
+def test_words_that_sound_like_meaning_are_refused(text, locale):
+    """The exact sentence the owner quoted back is the first case here."""
+    assert validator.plain_language(text, locale)
+
+
+def test_plain_writing_passes():
+    plain = (
+        "Солнце в Тельце, во втором участке карты: в том, что ты считаешь "
+        "своим. Деньги, вещи, собственная цена. На обычной неделе это видно "
+        "по тому, как ты откладываешь разговор о деньгах до последнего."
+    )
+    assert validator.plain_language(plain, "ru") == []
+
+
+def test_a_sentence_nobody_can_read_is_refused():
+    """Fifty-six words was the longest sentence measured in the shipped prose."""
+    monster = " ".join(["слово"] * 50) + "."
+    assert validator.plain_language(monster, "ru")
+
+
+def test_an_unknown_locale_is_still_checked_for_shape():
+    """No word list for Japanese, but a paragraph of dashes is a paragraph of
+    dashes in every language."""
+    assert validator.plain_language("あ — い — う", "ja")
+
+
+def test_the_working_behind_a_number_is_a_citable_factor():
+    """«Твоя карта души — 5» is a claim; the sum behind it is the receipt.
+
+    The owner's note: entering a chapter, nothing says how the number was
+    arrived at. The arithmetic is computed by the engine and offered as a
+    factor, so the prose quoting it is checked character for character like any
+    placement — a model asked to show its working produces working that looks
+    right.
+    """
+    from alma.engine import arcana, numerology
+
+    result = numerology.calculate(day=14, month=3, year=1996, full_name="Sofia Rossi")
+    workings = [f for f in result.factors() if "working" in f]
+    assert any("life path working" in w for w in workings)
+    assert "day 14 → 5, month 3 → 3, year 1996 → 7; 5 + 3 + 7 = 15 → 6" in " ".join(workings)
+
+    cards = arcana.calculate(day=14, month=3, year=1996, life_path=6)
+    card_workings = [f for f in cards.factors() if "working" in f]
+    assert any("add to 33" in w and "folded to 6" in w for w in card_workings)
+
+
+def test_a_fold_that_did_not_happen_is_not_described():
+    """A date summing to 21 or less reaches its card without folding.
+
+    Saying "folded to" there would be narrating a step nobody took, which is
+    the same class of untruth as an invented placement — smaller, and the same.
+    """
+    from alma.engine import arcana
+
+    cards = arcana.calculate(day=1, month=1, year=2000, life_path=4)
+    working = next(f for f in cards.factors() if "Personality Card working" in f)
+    assert "folded" not in working
+
+
+async def test_ornate_prose_is_sent_back_once_and_then_published(natal):
+    """The prose gate yields where the citation gate never does.
+
+    An invented placement is a lie about a person and is refused whatever it
+    cost to get there. Three dashes in a paragraph is worse writing than we
+    want and better than what refusing produces, which is a reader meeting
+    "Alma is not answering" over a chapter that exists. Measured live: two
+    Russian generations of `natal/core` cost $0.148 against the free tier's
+    $0.10, so the gate had budget for one retry and was spending it to turn a
+    working chapter into a 503.
+    """
+    chapter = chapters.find("natal", "core")
+    offered = chapters.relevant_factors(chapter, natal.factors)
+    ornate = _reply([
+        ("Ядро — маска — слой — вот что под всем этим.", offered[:1]),
+        ("И это — тоже — важно.", offered[:1]),
+    ])
+    provider = ScriptedProvider(responses=[ornate, ornate, ornate])
+
+    written = await writer.write(
+        # The mid model, because that is what a free chapter is written on and
+        # the whole point of this test is the free tier's budget.
+        result=natal, chapter=chapter, provider=provider,
+        model="claude-sonnet-5", locale="ru",
+    )
+
+    assert written.attempts > 1, "the first ornate reply was sent back"
+    assert "Ядро" in written.text(), "and the last one was published rather than refused"
+
+
 def test_a_reading_may_carry_one_paragraph_that_claims_nothing():
     """The shape `CHAT_RULES` asks for and the validator used to forbid.
 

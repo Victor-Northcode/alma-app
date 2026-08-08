@@ -235,8 +235,22 @@ async def write(
             )
             log.warning("spheres attempt %d glyphs in prose: %s", attempt, leaked)
             continue
+        # The same plain-language gate the chapters carry — see `writer.py`.
+        # The spheres are the free taste, which makes ornate writing more
+        # expensive here than anywhere: it is the first prose most people read.
+        ornate = validator.plain_language(joined, locale)
+        if ornate:
+            complaint = (
+                "The writing has to change before this can be published: "
+                + "; ".join(ornate[:4])
+                + ". Say the same things the same way you would to one person "
+                "across a table."
+            )
+            log.warning("spheres attempt %d plain-language: %s", attempt, ornate[:2])
+            continue
+
         if locale == "ru":
-            leaked = validator.russian_latin_leak(joined)
+            leaked = validator.russian_latin_leak(joined, result.factors)
             if leaked:
                 complaint = (
                     "В русском тексте остались английские слова: "
