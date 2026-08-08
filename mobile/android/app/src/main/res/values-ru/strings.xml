@@ -475,4 +475,5 @@
     <string name="journey_gender_female">Женский</string>
     <string name="journey_gender_male">Мужской</string>
     <string name="journey_gender_skip">Не скажу</string>
+    <string name="all_alma_pill">Вся Alma</string>
 </resources>

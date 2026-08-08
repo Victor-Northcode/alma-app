@@ -268,6 +268,12 @@ private fun SystemDetailBody(
                     // reference opens with, honest to this system's payload.
                     // See `SystemArt.kt` for the seven designs.
                     SystemHeroArt(detail.slug, result.`data`, age, modifier = Modifier.riseIn(1))
+                    if (detail.slug == AlmaSystem.COMPATIBILITY) {
+                        Spacer(Modifier.height(14.dp))
+                        // The four axes as gauges — the number the category
+                        // sells with, honestly ours.
+                        CompatGauges(result.`data`, modifier = Modifier.riseIn(2))
+                    }
                     Spacer(Modifier.height(10.dp))
                     Column(Modifier.riseIn(2)) {
                         RuledLabel(stringResource(R.string.cabinet_free_data))

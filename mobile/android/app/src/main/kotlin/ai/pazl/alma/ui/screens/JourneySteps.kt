@@ -123,8 +123,6 @@ internal fun ColumnScope.NameStep(
 
 /* ══ II · a date ══════════════════════════════════════════════════════ */
 
-private enum class DateField { Day, Month, Year }
-
 /**
  * Three pickers, none of them pre-set.
  *
@@ -139,8 +137,6 @@ private enum class DateField { Day, Month, Year }
  */
 @Composable
 internal fun ColumnScope.DateStep(draft: JourneyDraft, vm: JourneyViewModel) {
-    var open by remember { mutableStateOf<DateField?>(null) }
-
     val months = stringArrayResource(R.array.months).toList()
     val days = remember { (1..31).map(Int::toString) }
     // Ninety-two years, newest first, starting ten back — the range the web app
@@ -155,51 +151,28 @@ internal fun ColumnScope.DateStep(draft: JourneyDraft, vm: JourneyViewModel) {
         title = stringResource(R.string.journey_date_title),
         sub = stringResource(R.string.journey_date_sub),
         controls = {
-            Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                PickerField(
-                    value = draft.day?.toString(),
-                    placeholder = stringResource(R.string.capture_day_short),
-                    label = stringResource(R.string.capture_day),
-                    open = open == DateField.Day,
-                    onClick = { open = if (open == DateField.Day) null else DateField.Day },
-                    weight = 1f,
+            // Wheels, not menus — the owner's reference: three spinning
+            // columns under a big title, a value always in the window.
+            Row {
+                WheelColumn(
+                    values = days,
+                    selectedIndex = draft.day?.minus(1),
+                    onSelect = { vm.setDay(it + 1) },
+                    modifier = Modifier.weight(1f),
                 )
-                PickerField(
-                    value = draft.month?.let { months.getOrNull(it - 1) },
-                    placeholder = stringResource(R.string.capture_month_short),
-                    label = stringResource(R.string.capture_month),
-                    open = open == DateField.Month,
-                    onClick = { open = if (open == DateField.Month) null else DateField.Month },
-                    weight = 1.6f,
+                WheelColumn(
+                    values = months,
+                    selectedIndex = draft.month?.minus(1),
+                    onSelect = { vm.setMonth(it + 1) },
+                    modifier = Modifier.weight(1.6f),
                 )
-                PickerField(
-                    value = draft.year?.toString(),
-                    placeholder = stringResource(R.string.capture_year_short),
-                    label = stringResource(R.string.capture_year),
-                    open = open == DateField.Year,
-                    onClick = { open = if (open == DateField.Year) null else DateField.Year },
-                    weight = 1.3f,
+                WheelColumn(
+                    values = years,
+                    selectedIndex = draft.year?.let { years.indexOf(it.toString()).takeIf { i -> i >= 0 } },
+                    onSelect = { vm.setYear(years[it].toInt()) },
+                    modifier = Modifier.weight(1.3f),
                 )
             }
-
-            AnimatedVisibility(visible = open != null) {
-                when (open) {
-                    DateField.Day -> OptionList(days, (draft.day ?: 0) - 1) {
-                        vm.setDay(it + 1)
-                        open = null
-                    }
-                    DateField.Month -> OptionList(months, (draft.month ?: 0) - 1) {
-                        vm.setMonth(it + 1)
-                        open = null
-                    }
-                    DateField.Year -> OptionList(years, years.indexOf(draft.year?.toString().orEmpty())) {
-                        vm.setYear(years[it].toInt())
-                        open = null
-                    }
-                    null -> Unit
-                }
-            }
-
             if (impossible) Problem(stringResource(R.string.capture_impossible_date))
 
             GoldButton(
@@ -213,8 +186,6 @@ internal fun ColumnScope.DateStep(draft: JourneyDraft, vm: JourneyViewModel) {
 }
 
 /* ══ IV · a time, honestly ═════════════════════════════════════════════ */
-
-private enum class TimeField { Hour, Minute, Meridiem }
 
 /**
  * The step "I don't know" is a first-class answer to.
@@ -230,8 +201,6 @@ private enum class TimeField { Hour, Minute, Meridiem }
  */
 @Composable
 internal fun ColumnScope.TimeStep(draft: JourneyDraft, vm: JourneyViewModel) {
-    var open by remember { mutableStateOf<TimeField?>(null) }
-
     // The system's own clock setting, not the locale: en-GB is English and
     // writes 24-hour, es-US is Spanish and writes 12-hour, and Android lets
     // the person choose either regardless. Told to the draft once so the
@@ -254,62 +223,31 @@ internal fun ColumnScope.TimeStep(draft: JourneyDraft, vm: JourneyViewModel) {
         title = stringResource(R.string.journey_time_title),
         sub = stringResource(R.string.journey_time_sub),
         controls = {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(9.dp),
-                modifier = Modifier.alpha(if (draft.timeUnknown) 0.4f else 1f),
-            ) {
-                PickerField(
-                    value = draft.hour?.let { "%02d".format(it) },
-                    placeholder = stringResource(R.string.journey_hour),
-                    label = stringResource(R.string.journey_hour),
-                    open = open == TimeField.Hour,
-                    onClick = { open = if (open == TimeField.Hour) null else TimeField.Hour },
-                    weight = 1f,
+            // The same wheels the date step spins, dimmed together when the
+            // person declares the hour unknown.
+            Row(modifier = Modifier.alpha(if (draft.timeUnknown) 0.4f else 1f)) {
+                WheelColumn(
+                    values = hours,
+                    selectedIndex = draft.hour?.let { if (twelveHour) it - 1 else it },
+                    onSelect = { vm.setHour(if (twelveHour) it + 1 else it) },
+                    modifier = Modifier.weight(1f),
                     enabled = !draft.timeUnknown,
                 )
-                PickerField(
-                    value = draft.minute?.let { "%02d".format(it) },
-                    placeholder = stringResource(R.string.journey_minute),
-                    label = stringResource(R.string.journey_minute),
-                    open = open == TimeField.Minute,
-                    onClick = { open = if (open == TimeField.Minute) null else TimeField.Minute },
-                    weight = 1f,
+                WheelColumn(
+                    values = minutes,
+                    selectedIndex = draft.minute,
+                    onSelect = vm::setMinute,
+                    modifier = Modifier.weight(1f),
                     enabled = !draft.timeUnknown,
                 )
                 if (twelveHour) {
-                    PickerField(
-                        // Always a value, never a placeholder. The two used to
-                        // look identical — "AM" either way — which is precisely
-                        // how an unset meridiem passed for a chosen one.
-                        value = if (draft.meridiem == Meridiem.Am) "AM" else "PM",
-                        placeholder = "AM",
-                        label = stringResource(R.string.journey_meridiem),
-                        open = open == TimeField.Meridiem,
-                        onClick = { open = if (open == TimeField.Meridiem) null else TimeField.Meridiem },
-                        weight = 1f,
+                    WheelColumn(
+                        values = meridiems,
+                        selectedIndex = draft.meridiem.ordinal,
+                        onSelect = { vm.setMeridiem(Meridiem.entries[it]) },
+                        modifier = Modifier.weight(1f),
                         enabled = !draft.timeUnknown,
                     )
-                }
-            }
-
-            AnimatedVisibility(visible = open != null) {
-                when (open) {
-                    TimeField.Hour -> OptionList(
-                        hours,
-                        draft.hour?.let { if (twelveHour) it - 1 else it } ?: -1,
-                    ) {
-                        vm.setHour(if (twelveHour) it + 1 else it)
-                        open = null
-                    }
-                    TimeField.Minute -> OptionList(minutes, draft.minute ?: -1) {
-                        vm.setMinute(it)
-                        open = null
-                    }
-                    TimeField.Meridiem -> OptionList(meridiems, draft.meridiem.ordinal) {
-                        vm.setMeridiem(Meridiem.entries[it])
-                        open = null
-                    }
-                    null -> Unit
                 }
             }
 
@@ -1025,4 +963,45 @@ private fun GenderCard(selected: Boolean, label: String, onTap: () -> Unit) {
             Text(text = "✦", color = AlmaPalette.GoldBright)
         }
     }
+}
+
+
+/* ── the wheels ─────────────────────────────────────────────────────────── */
+
+/**
+ * One spinning column — the picker the owner's reference uses. The platform's
+ * own `NumberPicker` wrapped for Compose: a value always in the window, the
+ * neighbours fading above and below, choosing by flick.
+ */
+@Composable
+internal fun WheelColumn(
+    values: List<String>,
+    selectedIndex: Int?,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    androidx.compose.ui.viewinterop.AndroidView(
+        modifier = modifier,
+        factory = { context ->
+            android.widget.NumberPicker(context).apply {
+                minValue = 0
+                maxValue = values.size - 1
+                displayedValues = values.toTypedArray()
+                wrapSelectorWheel = false
+                value = selectedIndex ?: 0
+                setOnValueChangedListener { _, _, new -> onSelect(new) }
+            }
+        },
+        update = { picker ->
+            if (picker.maxValue != values.size - 1 || !picker.displayedValues.contentEquals(values.toTypedArray())) {
+                picker.displayedValues = null
+                picker.maxValue = values.size - 1
+                picker.displayedValues = values.toTypedArray()
+            }
+            val want = selectedIndex ?: 0
+            if (picker.value != want) picker.value = want
+            picker.isEnabled = enabled
+        },
+    )
 }

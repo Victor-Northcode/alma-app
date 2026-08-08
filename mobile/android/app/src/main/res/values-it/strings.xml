@@ -498,4 +498,5 @@
     <string name="journey_gender_female">Donna</string>
     <string name="journey_gender_male">Uomo</string>
     <string name="journey_gender_skip">Preferisco non dirlo</string>
+    <string name="all_alma_pill">Tutta Alma</string>
 </resources>

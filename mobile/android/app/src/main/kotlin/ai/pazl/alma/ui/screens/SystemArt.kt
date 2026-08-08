@@ -9,6 +9,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Text
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -653,5 +656,78 @@ private fun DrawScope.drawSynthesisStar(data: JsonObject, measurer: TextMeasurer
             quadraticTo(centre.x, centre.y, centre.x, centre.y - r)
         }
         drawPath(star, AlmaPalette.GoldBright.copy(alpha = seated))
+    }
+}
+
+/* ── compatibility: the four scores as gauges ───────────────────────────── */
+
+/**
+ * The four synastry scores as dials — the number the category sells with,
+ * honestly ours: the arc *is* `score / 5`, friction keeps the red accent, a
+ * missing score has no gauge. Mirrors iOS `CompatGauges`.
+ */
+@Composable
+internal fun CompatGauges(data: JsonObject, modifier: Modifier = Modifier) {
+    val scores = listOf(
+        "attraction" to false, "warmth" to false, "friction" to true, "endurance" to false,
+    ).mapNotNull { (key, tense) ->
+        val value = data.obj("scores")?.number(key) ?: return@mapNotNull null
+        Triple(key, (value / 5.0).coerceIn(0.0, 1.0).toFloat(), tense)
+    }
+    if (scores.isEmpty()) return
+
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        progress.animateTo(1f, tween(1200, easing = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)))
+    }
+    val measurer = rememberTextMeasurer()
+
+    androidx.compose.foundation.layout.Row(modifier = modifier.breathing().fillMaxWidth()) {
+        scores.forEachIndexed { index, (key, fraction, tense) ->
+            androidx.compose.foundation.layout.Column(
+                horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+                modifier = Modifier.weight(1f),
+            ) {
+                val local = ((progress.value - index * 0.12f) / 0.6f).coerceIn(0f, 1f)
+                Canvas(Modifier.size(74.dp)) {
+                    val centre = Offset(size.width / 2f, size.height / 2f)
+                    val radius = size.minDimension * 0.42f
+                    drawArc(
+                        color = AlmaPalette.Body.copy(alpha = 0.14f),
+                        startAngle = 135f, sweepAngle = 270f, useCenter = false,
+                        topLeft = Offset(centre.x - radius, centre.y - radius),
+                        size = Size(radius * 2f, radius * 2f),
+                        style = Stroke(width = 3f, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                    )
+                    val swept = 270f * fraction * local
+                    if (swept > 0f) {
+                        drawArc(
+                            color = if (tense) AlmaPalette.Disagree else AlmaPalette.Gold,
+                            startAngle = 135f, sweepAngle = swept, useCenter = false,
+                            topLeft = Offset(centre.x - radius, centre.y - radius),
+                            size = Size(radius * 2f, radius * 2f),
+                            style = Stroke(width = 3f, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+                        )
+                    }
+                    val pct = "${(fraction * 100 * local).toInt()}%"
+                    val measured = measurer.measure(
+                        pct,
+                        TextStyle(fontSize = 15.sp, color = Color(0xFFF6F1E4).copy(alpha = 0.4f + 0.6f * local)),
+                    )
+                    drawText(
+                        measured,
+                        topLeft = Offset(
+                            centre.x - measured.size.width / 2f,
+                            centre.y - measured.size.height / 2f,
+                        ),
+                    )
+                }
+                Text(
+                    text = scoreName(key),
+                    style = ai.pazl.alma.ui.theme.AlmaTheme.type.meta,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                )
+            }
+        }
     }
 }

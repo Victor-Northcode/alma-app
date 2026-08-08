@@ -33,6 +33,16 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.semantics.Role
+import ai.pazl.alma.ui.theme.PillShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.res.stringResource
+import ai.pazl.alma.ui.theme.AlmaTheme
+import ai.pazl.alma.ui.theme.AlmaSpacing
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Alignment
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import androidx.navigation.navArgument
@@ -124,6 +134,11 @@ fun AlmaNavHost(
             }
         },
     ) { insets ->
+        val session by container.session.state.collectAsStateWithLifecycle()
+        val isSubscriber = session.entitlements?.entitlements.orEmpty().any {
+            it.active && (it.kind == "weekly" || it.kind == "monthly" || it.kind == "annual")
+        }
+        androidx.compose.foundation.layout.Box(Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
             startDestination = startDestination,
@@ -162,6 +177,7 @@ fun AlmaNavHost(
                     }
                 ),
             ) { entry ->
+                val journeyContext = androidx.compose.ui.platform.LocalContext.current
                 JourneyScreen(
                     container = container,
                     startStep = entry.arguments?.getInt(Routes.ARG_STEP) ?: 1,
@@ -172,6 +188,15 @@ fun AlmaNavHost(
                         // the arrival.
                         navController.navigate(Routes.SYSTEMS) {
                             popUpTo(0) { inclusive = true }
+                        }
+                        // One assertive moment, once per install: the plans,
+                        // straight after the ceremony that computed everything
+                        // they cover.
+                        val prefs = journeyContext.getSharedPreferences(
+                            "ceremony_offer", android.content.Context.MODE_PRIVATE)
+                        if (!isSubscriber && !prefs.getBoolean("shown", false)) {
+                            prefs.edit().putBoolean("shown", true).apply()
+                            navController.navigate(Routes.offer(""))
                         }
                     },
                     onOffer = { system -> navController.navigate(Routes.offer(system)) },
@@ -290,6 +315,31 @@ fun AlmaNavHost(
                     onClose = { navController.popBackStack() },
                 )
             }
+        }
+
+        // The one standing invitation — a small gold seal above the bar on
+        // the two content tabs, gone the moment a plan exists.
+        if (!isSubscriber && session.hasBirthData &&
+            (tab == CabinetTab.Today || tab == CabinetTab.Systems)
+        ) {
+            Surface(
+                color = AlmaPalette.Gold,
+                shape = PillShape,
+                shadowElevation = 6.dp,
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = AlmaSpacing.Pad, bottom = insets.calculateBottomPadding() + 18.dp)
+                    .clickable(role = Role.Button) {
+                        navController.navigate(Routes.offer(""))
+                    },
+            ) {
+                Text(
+                    text = "✦ " + stringResource(ai.pazl.alma.R.string.all_alma_pill),
+                    style = AlmaTheme.type.meta.copy(color = AlmaPalette.InkOnGold),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                )
+            }
+        }
         }
     }
 }
