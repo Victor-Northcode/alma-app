@@ -353,6 +353,17 @@
     <string name="signin_no_password">No hay contraseña. Nunca la hubo.</string>
     <string name="signin_invalid_email">Eso no parece un correo.</string>
     <string name="people_title">Personas</string>
+    <string name="people_none_yet">Todavía no hay nadie.</string>
+    <string name="people_time_unknown">hora desconocida</string>
+    <string name="people_lead">La compatibilidad lee dos cartas una frente a otra, así que necesita un segundo nacimiento.</string>
+    <string name="people_saved">guardados</string>
+    <string name="people_unnamed">Alguien</string>
+    <string name="people_remove">Quitar</string>
+    <string name="people_remove_confirm">Quitar, ¿seguro?</string>
+    <string name="people_birth_date">Fecha de nacimiento</string>
+    <string name="people_birth_time">Hora, si se sabe</string>
+    <string name="people_save">Guardar esta persona</string>
+    <string name="people_consent">Añade solo a alguien cuyos datos de nacimiento te hayan permitido usar.</string>
     <string name="people_not_built">Añadir a otra persona todavía no está hecho en Android. Puedes añadirla en la web y aparecerá aquí.</string>
     <string name="chapter_next">Siguiente: %1$s</string>
     <string name="state_nothing_today">Hoy no hay nada en tu cielo que pida atención. Es una respuesta de verdad, y no es lo mismo que no pase nada.</string>

@@ -360,6 +360,17 @@
     <string name="signin_no_password">There is no password. There never was one.</string>
     <string name="signin_invalid_email">That does not look like an email address.</string>
     <string name="people_title">People</string>
+    <string name="people_none_yet">Nobody saved yet.</string>
+    <string name="people_time_unknown">time unknown</string>
+    <string name="people_lead">Compatibility reads two charts against each other, so it needs a second birth.</string>
+    <string name="people_saved">saved</string>
+    <string name="people_unnamed">Someone</string>
+    <string name="people_remove">Remove</string>
+    <string name="people_remove_confirm">Remove — sure?</string>
+    <string name="people_birth_date">Date of birth</string>
+    <string name="people_birth_time">Time, if it is known</string>
+    <string name="people_save">Save this person</string>
+    <string name="people_consent">Only add somebody whose birth data you were given to use.</string>
     <string name="people_not_built">Adding a second person is not built on Android yet. You can add one on the web and it will be here.</string>
     <string name="chapter_next">Next: %1$s</string>
     <string name="state_nothing_today">Nothing in your sky is asking for attention today. That is a real answer, and it is not the same as nothing happening.</string>

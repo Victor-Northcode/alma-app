@@ -336,6 +336,17 @@
     <string name="signin_no_password">Пароля нет. Его никогда и не было.</string>
     <string name="signin_invalid_email">Это не похоже на адрес почты.</string>
     <string name="people_title">Люди</string>
+    <string name="people_none_yet">Пока никого нет.</string>
+    <string name="people_time_unknown">время неизвестно</string>
+    <string name="people_lead">Совместимость читает две карты друг против друга, поэтому нужна вторая дата рождения.</string>
+    <string name="people_saved">сохранены</string>
+    <string name="people_unnamed">Без имени</string>
+    <string name="people_remove">Убрать</string>
+    <string name="people_remove_confirm">Убрать — точно?</string>
+    <string name="people_birth_date">Дата рождения</string>
+    <string name="people_birth_time">Время, если известно</string>
+    <string name="people_save">Сохранить человека</string>
+    <string name="people_consent">Добавляй только того, чьи данные рождения тебе разрешили использовать.</string>
     <string name="people_not_built">Добавить второго человека на Android пока нельзя. Добавь на сайте — и он появится здесь.</string>
     <string name="chapter_next">Дальше: %1$s</string>
     <string name="state_nothing_today">Сегодня ничто в твоём небе не просит внимания. Это настоящий ответ, и это не то же самое, что «ничего не происходит».</string>

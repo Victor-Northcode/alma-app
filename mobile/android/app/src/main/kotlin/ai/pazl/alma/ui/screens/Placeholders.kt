@@ -86,11 +86,10 @@ import androidx.compose.ui.unit.dp
  * here, and a screen that invented a person to fill the space would break the
  * rule the whole product is built on.
  */
-@Composable
-fun PeopleScreen(
-    container: AppContainer,
-    onBack: () -> Unit,
-) = Stub(stringResource(R.string.people_title), seed = 9)
+// PeopleScreen's stub is gone — the screen is real and lives in
+// PeopleScreen.kt, with its state in the same file. Its signature is unchanged,
+// so the graph in nav/AlmaNavHost.kt calls it exactly as before. It was the
+// last stub in the app.
 
 // OfferScreen's stub is gone — the paywall is real and lives in OfferScreen.kt,
 // with its state in OfferViewModel.kt. Its signature is unchanged, so the graph

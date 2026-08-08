@@ -353,6 +353,17 @@
     <string name="signin_no_password">Es gibt kein Passwort. Es gab nie eins.</string>
     <string name="signin_invalid_email">Das sieht nicht nach einer E-Mail-Adresse aus.</string>
     <string name="people_title">Menschen</string>
+    <string name="people_none_yet">Noch niemand gespeichert.</string>
+    <string name="people_time_unknown">Uhrzeit unbekannt</string>
+    <string name="people_lead">Die Kompatibilität liest zwei Karten gegeneinander und braucht daher eine zweite Geburt.</string>
+    <string name="people_saved">gespeichert</string>
+    <string name="people_unnamed">Jemand</string>
+    <string name="people_remove">Entfernen</string>
+    <string name="people_remove_confirm">Entfernen — sicher?</string>
+    <string name="people_birth_date">Geburtsdatum</string>
+    <string name="people_birth_time">Uhrzeit, falls bekannt</string>
+    <string name="people_save">Person speichern</string>
+    <string name="people_consent">Füge nur jemanden hinzu, dessen Geburtsdaten du verwenden darfst.</string>
     <string name="people_not_built">Eine zweite Person hinzuzufügen gibt es auf Android noch nicht. Im Web geht es, und sie ist dann hier.</string>
     <string name="chapter_next">Weiter: %1$s</string>
     <string name="state_nothing_today">Heute verlangt nichts an deinem Himmel Aufmerksamkeit. Das ist eine echte Antwort, und nicht dasselbe wie: es passiert nichts.</string>
