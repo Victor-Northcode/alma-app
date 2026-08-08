@@ -344,13 +344,18 @@ def test_a_locked_natal_chart_is_a_whole_chart(api, auth_headers):
     assert body["factors"], "the factor list is what the writer reads from, not the writing"
 
 
-def test_locked_means_the_writing_is_withheld_and_nothing_else(api, auth_headers):
+def test_locked_means_the_writing_is_withheld_and_nothing_else(api, auth_headers, monkeypatch):
     """What the lock actually buys, stated once.
 
     A locked system answers with everything it computed. The 41 written
     chapters live behind `POST /v1/readings`, which checks the same
-    entitlement — so this asserts the two ends of the same rule.
+    entitlement — so this asserts the two ends of the same rule. The preview
+    allowance is zeroed here because this test is about the wall itself; the
+    previews that soften it have their own test in `test_readings_budget`.
     """
+    from alma.config import settings
+
+    monkeypatch.setattr(settings(), "preview_chapters", 0)
     for system in ("natal", "synthesis"):
         body = api.post(
             f"/v1/systems/{system}", json={"birth": SOFIA}, headers=auth_headers
@@ -358,6 +363,10 @@ def test_locked_means_the_writing_is_withheld_and_nothing_else(api, auth_headers
         assert body["locked"] is True
         assert body["factors"], f"{system} withheld arithmetic it does not sell"
 
+    # A profile on file, because the wall now stands *behind* the birth
+    # lookup: the preview flow needs the chart before it can decide whether
+    # this open is within the allowance.
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     refused = api.post(
         "/v1/readings", json={"system": "natal", "chapter": "love"}, headers=auth_headers
     )

@@ -63,7 +63,7 @@
     <string name="cabinet_ascendant">Ascendant</string>
     <string name="cabinet_lunar_day">Lunar day</string>
     <string name="cabinet_today_in_full">Today in full</string>
-    <string name="cabinet_one_time_note">One payment. Yours permanently.</string>
+    <string name="cabinet_one_time_note">One payment.</string>
     <string name="cabinet_archive_note">All eight systems, bought once.</string>
     <string name="cabinet_rebuilds">Rebuilds itself when a system is added</string>
     <string name="cabinet_back_to_chapters">Back to chapters</string>
@@ -213,7 +213,7 @@
     <string name="paywall_archive_upgrade_note">The rest of the archive. What you paid for the door has already come off.</string>
     <string name="paywall_everything_year">Everything, for a year</string>
     <string name="paywall_everything_month">Everything live, monthly</string>
-    <string name="paywall_one_time_note">One payment. Yours permanently.</string>
+    <string name="paywall_one_time_note">One payment.</string>
     <string name="paywall_renews_year">Renews every year until you cancel, in Google Play.</string>
     <string name="paywall_renews_month">Renews every month until you cancel, in Google Play.</string>
     <string name="paywall_then">then %1$s</string>
@@ -332,7 +332,7 @@
     <string name="chat_unavailable">Something on my side is not working. Your chart is untouched, and your question is still in the box.</string>
     <string name="chat_went_wrong">That did not go through. Nothing was lost — your question is still in the box.</string>
     <string name="chat_questions_left">%1$d questions left today</string>
-    <string name="chat_no_questions">That was your free conversation. The plan carries it on — with the morning notification and your day written out.</string>
+    <string name="chat_no_questions">From here the plan carries the conversation — with the morning notification and the text of your day.</string>
     <string name="chat_get_more">See the plans</string>
     <string name="chat_lead">Ask me anything. I answer from your own placements, and I say so when I cannot.</string>
     <string name="signin_title">Sign in</string>
@@ -519,4 +519,32 @@
     <string name="google_web_client_id" translatable="false" />
     <string name="signin_google">Continue with Google</string>
     <string name="cabinet_sky_event_body">Days like this are what the morning notification is for — it arrives at 08:00 when something in your chart is exact. Part of the plan.</string>
+    <string name="chapter_preview_note">The chapter is written. The rest opens with the system.</string>
+    <string name="chapter_unlock">Unlock</string>
+    <string name="sun_in_sign">Sun in %1$s</string>
+    <string name="body_south_node">South Node</string>
+    <string name="body_part_of_fortune">Part of Fortune</string>
+    <string name="body_vertex">Vertex</string>
+    <string name="arcana_the_fool">The Fool</string>
+    <string name="arcana_the_magician">The Magician</string>
+    <string name="arcana_the_high_priestess">The High Priestess</string>
+    <string name="arcana_the_empress">The Empress</string>
+    <string name="arcana_the_emperor">The Emperor</string>
+    <string name="arcana_the_hierophant">The Hierophant</string>
+    <string name="arcana_the_lovers">The Lovers</string>
+    <string name="arcana_the_chariot">The Chariot</string>
+    <string name="arcana_strength">Strength</string>
+    <string name="arcana_the_hermit">The Hermit</string>
+    <string name="arcana_wheel_of_fortune">Wheel of Fortune</string>
+    <string name="arcana_justice">Justice</string>
+    <string name="arcana_the_hanged_man">The Hanged Man</string>
+    <string name="arcana_death">Death</string>
+    <string name="arcana_temperance">Temperance</string>
+    <string name="arcana_the_devil">The Devil</string>
+    <string name="arcana_the_tower">The Tower</string>
+    <string name="arcana_the_star">The Star</string>
+    <string name="arcana_the_moon">The Moon</string>
+    <string name="arcana_the_sun">The Sun</string>
+    <string name="arcana_judgement">Judgement</string>
+    <string name="arcana_the_world">The World</string>
 </resources>

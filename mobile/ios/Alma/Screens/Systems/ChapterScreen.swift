@@ -106,12 +106,54 @@ struct ChapterScreen: View {
             .frame(maxWidth: .infinity, minHeight: 480)
 
         case .loaded(let answer):
-            written(answer.reading)
-            next(model)
-            chapterEndOffer
+            if answer.preview == true {
+                previewed(answer.reading)
+            } else {
+                written(answer.reading)
+                next(model)
+                chapterEndOffer
+            }
 
         case .failed(let error):
             failure(error, model: model)
+        }
+    }
+
+    /// The blurred preview: the real first paragraph in the clear, the real
+    /// rest under blur, the unlock button on top of it. Nothing here is a
+    /// placeholder — the prose exists and says what it says; the blur is the
+    /// only thing the purchase removes.
+    @ViewBuilder
+    private func previewed(_ reading: Reading) -> some View {
+        if let first = reading.body.first {
+            FadedRule().padding(.vertical, 14)
+            Text(verbatim: first).almaBody().almaReadingWidth()
+        }
+
+        VStack(alignment: .leading, spacing: 18) {
+            ForEach(Array(reading.body.dropFirst().enumerated()), id: \.offset) { _, paragraph in
+                Text(verbatim: paragraph).almaBody().almaReadingWidth()
+            }
+            if let advice = reading.advice, !advice.isEmpty {
+                AdviceBlock(text: advice)
+            }
+        }
+        .blur(radius: 7)
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
+        .overlay(alignment: .center) {
+            VStack(spacing: 14) {
+                Text(L10nCabinet.previewNote)
+                    .almaMeta()
+                    .multilineTextAlignment(.center)
+                Button {
+                    router.push(.offer(system: system))
+                } label: {
+                    Text(L10nCabinet.unlock)
+                }
+                .buttonStyle(AlmaButtonStyle(kind: .gold, fills: false))
+            }
+            .padding(20)
         }
     }
 
@@ -342,12 +384,13 @@ final class ChapterModel {
 
     /// The first line a chapter is allowed to show before it is paid for.
     ///
-    /// From the reading when there is one; otherwise from the chapter's own
-    /// question, which is what the system promises to answer and not something
-    /// generated about this person.
+    /// From the reading when there is one; otherwise the one standing line —
+    /// "written from your own positions". The question subtitles that stood
+    /// here were cut with the rest of them: half read as broken grammar and
+    /// none of them explained anything.
     var lead: String? {
         if let teaser = reading.value?.reading.teaser, !teaser.isEmpty { return teaser }
-        return entry?.question
+        return String(localized: L10nCabinet.fromYourPositions)
     }
 }
 

@@ -159,6 +159,38 @@ def natal_result(birth: BirthData, *, house_system: str = "placidus") -> CalcRes
         data["part_of_fortune"] = chart.part_of_fortune
         data["sect"] = chart.sect
 
+    # The derived points, dressed for display — raw floats above stay for
+    # anything already reading them. The south node is the north's antipode
+    # by definition and needs no birth time; the vertex, the MC and the Part
+    # of Fortune exist only when the horizon does. `house` is looked up
+    # against the same cusps as every planet, so the row under the wheel and
+    # the wheel itself can never disagree.
+    def _point(lon: float) -> dict:
+        house = None
+        if chart.house_cusps:
+            for index, cusp in enumerate(chart.house_cusps):
+                following = chart.house_cusps[(index + 1) % 12]
+                if (lon - cusp) % 360.0 <= (following - cusp) % 360.0:
+                    house = index + 1
+                    break
+        return {
+            "longitude": lon,
+            "sign": zodiac.sign_of(lon),
+            "formatted": zodiac.format_position(lon),
+            "house": house,
+        }
+
+    points: dict[str, dict] = {}
+    north = chart.placements.get("true_node")
+    if north is not None:
+        points["south_node"] = _point((north.longitude + 180.0) % 360.0)
+    if chart.angles:
+        points["midheaven"] = _point(chart.angles.midheaven)
+        points["vertex"] = _point(chart.angles.vertex)
+        if chart.part_of_fortune is not None:
+            points["part_of_fortune"] = _point(chart.part_of_fortune)
+    data["points"] = points
+
     return build(
         system="natal",
         birth=birth,

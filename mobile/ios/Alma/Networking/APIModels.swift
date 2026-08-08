@@ -265,7 +265,10 @@ struct ChapterEntry: Codable, Sendable, Equatable, Identifiable {
     /// "I", "II", "XVI" — set in the serif, as type.
     let numeral: String
     let index: Int
-    let title: String
+    /// `var`, not `let`: the free natal chapter is re-titled on the client to
+    /// name the person's own sun sign — "Sun in Aries" — which the server
+    /// cannot do without knowing whose list it is printing.
+    var title: String
     /// The question this chapter answers, in the person's own language.
     let question: String
     /// Whether this is the system's one free chapter.
@@ -311,6 +314,10 @@ struct ReadingResponse: Codable, Sendable, Equatable {
     /// Whether it came from storage. A chapter is written once and returned
     /// forever; `false` means the person just paid for the writing to happen.
     let cached: Bool
+    /// The chapter is real and unpaid: the first paragraph renders in the
+    /// clear, the rest under blur, with the unlock button on top. Absent on
+    /// older servers, which decodes as "not a preview".
+    let preview: Bool?
     let createdAt: String?
 }
 

@@ -121,20 +121,9 @@ fun JourneyScreen(
                 JourneyStep.Date -> DateStep(draft, vm)
                 JourneyStep.Time -> TimeStep(draft, vm)
                 JourneyStep.Place -> PlaceStep(vm)
-                JourneyStep.Ceremony -> CeremonyStep(onBegin = vm::beginCeremony, onDone = vm::next)
-                JourneyStep.Portrait -> PortraitStep(
-                    vm = vm,
-                    onKeep = {
-                        // The offer is its own destination, so coming back from
-                        // it lands on the handoff rather than on the portrait
-                        // again — the person has already been given the free
-                        // half and does not need it handed over twice.
-                        vm.next()
-                        onOffer(draft.system)
-                    },
-                    onLeave = onFinished,
-                )
-                JourneyStep.Handoff -> HandoffStep(onOpenToday = onFinished)
+                // The last step: the ceremony computes everything under its
+                // animation and lands straight in My Systems.
+                JourneyStep.Ceremony -> CeremonyStep(onBegin = vm::beginCeremony, onDone = onFinished)
             }
         }
     }
@@ -183,15 +172,6 @@ private fun JourneyHeader(step: JourneyStep, onBack: () -> Unit) {
         }
 
         when {
-            step == JourneyStep.Handoff -> Text(
-                text = stringResource(R.string.journey_done),
-                style = TextStyle(
-                    fontFamily = AlmaFonts.Sans,
-                    fontSize = 12.5.sp,
-                    color = AlmaPalette.Muted3,
-                ),
-            )
-
             step.canGoBack -> {
                 val label = stringResource(R.string.nav_back)
                 Box(

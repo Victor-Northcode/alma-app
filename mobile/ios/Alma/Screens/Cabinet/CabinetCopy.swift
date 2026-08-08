@@ -136,6 +136,19 @@ enum L10nCabinet {
     // the reader's language, because a citation nobody can read cites nothing.
 
     static let ascendant = LocalizedStringResource("cab.ascendant", defaultValue: "Ascendant", table: table)
+    /// "Sun in %@" — the free natal chapter's headline, naming the person's
+    /// own sign instead of an abstract title.
+    static let sunInSign = LocalizedStringResource("cab.sunInSign", defaultValue: "Sun in %@", table: table)
+    /// The one line under a chapter title — what replaced the question
+    /// subtitles the owner cut.
+    static let fromYourPositions = LocalizedStringResource(
+        "cab.fromYourPositions", defaultValue: "Written from your own positions", table: table)
+    /// Over the blurred preview: what the button under it opens.
+    static let previewNote = LocalizedStringResource(
+        "cab.previewNote", defaultValue: "The chapter is written. The rest opens with the system.",
+        table: table)
+    static let unlock = LocalizedStringResource(
+        "cab.unlock", defaultValue: "Unlock", table: table)
 
     // These three return `String` rather than `LocalizedStringResource`, and
     // it is the API's constraint rather than a choice: a `LocalizedStringResource`
@@ -148,6 +161,16 @@ enum L10nCabinet {
 
     static func signName(_ key: String) -> String {
         localised("cab.sign.\(key)", fallback: key)
+    }
+
+    /// The major arcana, translated for display. The engine speaks English —
+    /// "Justice", "The Star" — because factors are verbatim identifiers; a
+    /// Russian reader still meets «Справедливость» on the row. Unknown names
+    /// fall back to the engine's own word rather than to silence.
+    static func arcanaName(_ english: String) -> String {
+        let slug = english.lowercased()
+            .replacingOccurrences(of: " ", with: "_")
+        return localised("cab.arcana.\(slug)", fallback: english)
     }
 
     static func bodyName(_ key: String) -> String {

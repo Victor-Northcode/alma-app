@@ -242,97 +242,95 @@
       }
     },
     "paywall.doorNote": {
-      "comment": "Under a door row. cabinet.oneTimeNote.",
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einmalzahlung. Bleibt dauerhaft deins."
+            "value": "Eine Zahlung."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One payment. Yours permanently."
+            "value": "One payment."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un solo pago. Tuyo para siempre."
+            "value": "Un solo pago."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Paiement unique. À toi pour toujours."
+            "value": "Un seul paiement."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un solo pagamento. Tuo per sempre."
+            "value": "Un solo pagamento."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagamento único. Seu para sempre."
+            "value": "Um único pagamento."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Один платёж. Твоё навсегда."
+            "value": "Один платёж."
           }
         }
       }
     },
     "paywall.doorSub": {
-      "comment": "Under the title when one system is being sold. journey.offerSub.",
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Zahlen oben gehören dir und bleiben kostenlos. Das hier öffnet das ganze System — jedes Kapitel der Deutung, aus deinen Positionen geschrieben, keine Vorlage."
+            "value": "Die Zahlen oben sind deine. Das öffnet das ganze System — jedes Kapitel wird aus deinen eigenen Positionen geschrieben, nicht nach Schablone."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The numbers above are yours and stay free. This opens the whole system — every chapter of the reading, written from your positions, not a template."
+            "value": "The numbers above are yours. This opens the whole system — every chapter written from your own positions, not from a template."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los números de arriba son tuyos y siguen siendo gratis. Esto abre el sistema entero — cada capítulo de la lectura, escrito desde tus posiciones, no una plantilla."
+            "value": "Los números de arriba son tuyos. Esto abre todo el sistema: cada capítulo se escribe desde tus propias posiciones, no desde una plantilla."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les nombres ci-dessus sont à toi et restent gratuits. Ceci ouvre le système entier — chaque chapitre de la lecture, écrit à partir de tes positions, pas un modèle."
+            "value": "Les nombres ci-dessus sont les tiens. Ceci ouvre tout le système — chaque chapitre est écrit à partir de tes propres positions, pas d'un modèle."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I numeri qui sopra sono tuoi e restano gratis. Questo apre l'intero sistema — ogni capitolo della lettura, scritto dalle tue posizioni, non un modello."
+            "value": "I numeri sopra sono tuoi. Questo apre l'intero sistema: ogni capitolo è scritto dalle tue posizioni, non da un modello."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os números acima são seus e continuam de graça. Isto abre o sistema inteiro — cada capítulo da leitura, escrito a partir das suas posições, não um modelo."
+            "value": "Os números acima são seus. Isto abre o sistema inteiro — cada capítulo é escrito a partir das suas posições, não de um modelo."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Числа выше — твои, и они остаются бесплатными. Это открывает всю систему — каждую главу чтения, написанную из твоих позиций, а не по шаблону."
+            "value": "Числа выше — твои. Это открывает всю систему: каждая глава пишется из твоих собственных позиций, а не по шаблону."
           }
         }
       }
@@ -1348,43 +1346,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für immer deins — lies es jederzeit, in sieben Sprachen."
+            "value": "Lies es, wann du willst, in sieben Sprachen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yours permanently — read it any time, in seven languages."
+            "value": "Read it whenever you like, in seven languages."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tuyo para siempre — léelo cuando quieras, en siete idiomas."
+            "value": "Léelo cuando quieras, en siete idiomas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "À toi pour toujours — lis-le quand tu veux, en sept langues."
+            "value": "Lis-le quand tu veux, en sept langues."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tuo per sempre — leggilo quando vuoi, in sette lingue."
+            "value": "Leggilo quando vuoi, in sette lingue."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seu para sempre — leia quando quiser, em sete idiomas."
+            "value": "Leia quando quiser, em sete idiomas."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Твоё навсегда — читай когда угодно, на семи языках."
+            "value": "Читай когда угодно, на семи языках."
           }
         }
       }

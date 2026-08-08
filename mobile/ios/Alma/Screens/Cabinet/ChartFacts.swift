@@ -385,7 +385,7 @@ enum ChartFacts {
             let numeral = card["numeral"]?.stringValue.map { "\($0) · " } ?? ""
             facts.append(Fact(
                 label: L10nCabinet.factLabel("personalityCard", fallback: "personality card"),
-                value: "\(numeral)\(name)"))
+                value: "\(numeral)\(L10nCabinet.arcanaName(name))"))
         }
         if let element = card["element"]?.stringValue {
             let word = L10nCabinet.element(element.lowercased())

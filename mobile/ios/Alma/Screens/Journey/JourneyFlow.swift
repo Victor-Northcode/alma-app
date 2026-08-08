@@ -126,12 +126,6 @@ struct JourneyFlow: View {
             StepPlace(journey: journey, onNext: advance)
         case .ceremony:
             StepCeremony(journey: journey, onNext: advance)
-        case .portrait:
-            StepPortrait(journey: journey, onNext: advance, onOpenChapter: openChapter)
-        case .offer:
-            StepOffer(journey: journey, onBuy: openOffer, onSkip: advance)
-        case .handoff:
-            StepHandoff(onFinish: finish)
         }
     }
 
@@ -157,32 +151,11 @@ struct JourneyFlow: View {
         router.closeJourney()
     }
 
-    /// The handoff's own button, and the end of a completed journey. The
-    /// cabinet opens on Today, which is what the button says it will do.
+    /// The end of a completed journey: the ceremony's last beat lands the
+    /// person in My Systems, computed and waiting — the owner's design, and
+    /// the whole point of the ceremony doing real work under its animation.
     private func finish() {
-        router.tab = .today
-        router.closeJourney()
-        journey.reset()
-    }
-
-    /// Take the offer.
-    ///
-    /// The ladder is pushed onto the Systems stack rather than presented here,
-    /// because the offer screen is the app's one purchase surface: StoreKit's
-    /// localised price, the sheet, the restore path and the server-side
-    /// verification all live there and must not exist twice. Pushing before
-    /// dismissing means the screen is already behind the cover as it goes,
-    /// rather than appearing a beat later on an empty tab.
-    private func openOffer(_ system: SystemSlug) {
-        router.push(.offer(system: system), on: .systems)
-        router.closeJourney()
-        journey.reset()
-    }
-
-    /// Open the free chapter. The wait while it is written is long and has its
-    /// own honest screen; that screen is not this one.
-    private func openChapter(_ system: SystemSlug, _ chapter: String) {
-        router.push(.chapter(system: system, chapter: chapter), on: .systems)
+        router.tab = .systems
         router.closeJourney()
         journey.reset()
     }

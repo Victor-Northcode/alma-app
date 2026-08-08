@@ -261,41 +261,51 @@ final class JourneyModel {
     /// The in-flight save-and-read. See `begin(with:)` for why it lives here.
     @ObservationIgnored private var work: Task<Void, Never>?
 
-    /// The three free systems and the free chapter, fetched together.
+    /// Everything the cabinet opens onto, computed under the ceremony.
     ///
-    /// Four independent requests, run concurrently: they are answered by four
-    /// different engines and nothing about one informs another, so running them
-    /// in sequence would spend four round trips of the nine seconds available.
+    /// The journey now ends in My Systems, so the nine seconds of animation
+    /// cover the real work: every system that can be computed without a second
+    /// person, plus the hub and the profile list the tab reads on arrival.
+    /// Seven independent engines, run concurrently — in sequence they would
+    /// spend seven round trips of the nine seconds available.
     ///
-    /// Each is allowed to fail on its own and each failure removes exactly one
-    /// row from the portrait. That is the rule the whole screen is built on —
-    /// **a missing line is honest, a placeholder is not** — and it is why this
-    /// lands in `.loaded` with an incomplete `Portrait` rather than in
-    /// `.failed`. The only thing that fails the screen is the save, because
-    /// without a profile there is nothing to be incomplete about.
+    /// Each is allowed to fail on its own: My Systems already knows how to say
+    /// "not yet" per row, and **a missing line is honest, a placeholder is
+    /// not**. Only the save fails the journey, because without a profile there
+    /// is nothing to be incomplete about.
     func loadPortrait(with session: AlmaSessionModel) async {
         let client = session.client
-        let system = matchedSystem
         let locale = session.locale
 
         async let natal = client.compute(.natal, locale: locale)
         async let numerology = client.compute(.numerology, locale: locale)
         async let birthCard = client.compute(.birthCard, locale: locale)
-        // The session's locale rather than the device's: the account may have
-        // been switched in settings, and the free chapter this list names is
-        // the one whose prose is fetched in that same language a screen later.
-        async let chapters = client.chapters(of: system, locale: locale)
+        async let transits = client.compute(.transits, locale: locale, extra: ["days": .number(30)])
+        async let solar = client.compute(.solarReturn, locale: locale)
+        async let lines = client.compute(.astrocartography, locale: locale)
+        async let synthesis = client.compute(.synthesis, locale: locale)
+
+        let chart = try? await natal
+        _ = try? await numerology
+        _ = try? await birthCard
+        _ = try? await transits
+        _ = try? await solar
+        _ = try? await lines
+        _ = try? await synthesis
+
+        // The tab the ceremony lands on reads the hub and the profile list
+        // from the session — refreshed here, they are already on screen when
+        // the cover lifts.
+        await session.refreshHub()
+        await session.reloadProfiles()
 
         portrait = .loaded(
             Portrait(
-                system: system,
-                natal: try? await natal,
-                numerology: try? await numerology,
-                birthCard: try? await birthCard,
-                // The system's one free chapter. `first(where:)` and not
-                // `chapters.first`: which chapter is free is the backend's
-                // decision, and for compatibility it is not chapter I.
-                freeChapter: (try? await chapters)?.chapters.first(where: \.free)
+                system: matchedSystem,
+                natal: chart,
+                numerology: nil,
+                birthCard: nil,
+                freeChapter: nil
             )
         )
     }
@@ -381,9 +391,10 @@ enum JourneyStep: Int, CaseIterable, Sendable, Identifiable {
     case time
     case place
     case ceremony
-    case portrait
-    case offer
-    case handoff
+    // The portrait, the offer and the handoff stood after the ceremony and
+    // were cut whole — the owner's design: data in, one beautiful loading
+    // ceremony while everything computes, then straight into My Systems,
+    // where the portrait's three lines already live.
 
     var id: Int { rawValue }
 
@@ -393,7 +404,7 @@ enum JourneyStep: Int, CaseIterable, Sendable, Identifiable {
         ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"][rawValue]
     }
 
-    static var last: JourneyStep { .handoff }
+    static var last: JourneyStep { .ceremony }
 
     /// The screen behind this one, or nothing on the first.
     var previous: JourneyStep? { JourneyStep(rawValue: rawValue - 1) }

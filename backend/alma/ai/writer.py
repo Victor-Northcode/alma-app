@@ -210,6 +210,12 @@ def build_prompt(
         f"SYSTEM: {result.system}",
         f"CHAPTER: {words.title} — {words.question}",
         f"LENGTH: {chapter.words[0]}–{chapter.words[1]} words, {shape}.",
+        # The owner's plainness rule, stated where the model can obey it:
+        # the reader has never opened an astrology book, and a term used
+        # without its everyday meaning is a sentence they skip.
+        "PLAIN LANGUAGE: the reader knows nothing about astrology or "
+        "numerology. Any technical term you use, explain in everyday words "
+        "the first time — or don't use it. Short sentences beat ornate ones.",
         # The Russian rules ride in the first prompt rather than arriving as a
         # rejection: the owner watched three attempts burn on «ты был» because
         # the model only learned the rule from the complaint. Stated up front,

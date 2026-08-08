@@ -327,17 +327,16 @@ async def read(
     # simply stop accumulating siblings.
     language = i18n.resolve(payload.locale)
 
+    # A locked chapter is no longer an instant wall. The owner's design: the
+    # first few locked chapters a person opens are *really written* — the
+    # real first paragraph in the clear, the real rest blurred under the
+    # unlock button — because a blurred page of actual prose about you sells
+    # what sixteen locked titles never did. The allowance is small and
+    # config-owned (`ALMA_PREVIEW_CHAPTERS`); past it, the wall is the wall.
+    # Whether THIS request is within the allowance is decided inside the
+    # write lock, where the stored-copy lookup lives — a preview already
+    # written reopens freely forever, exactly like a bought chapter.
     access = await entitlements.check(session, user, payload.system, chapter=chapter.slug)
-    if not access.allowed:
-        raise HTTPException(
-            status.HTTP_402_PAYMENT_REQUIRED,
-            detail={
-                "error": "locked",
-                "message": access.reason,
-                "system": payload.system,
-                "chapter": chapter.slug,
-            },
-        )
 
     birth = await resolve_birth(
         session, user, profile_id=payload.profile_id, birth=payload.birth
@@ -367,10 +366,39 @@ async def read(
             return await _read_or_write(
                 payload, user, session, provider, chapter=chapter,
                 language=language, result=result, calc_key=calc_key,
-                lookup=_lookup,
+                lookup=_lookup, access=access,
             )
     finally:
         _prune_lock(lock_key)
+
+
+async def _previews_used(session, user) -> int:
+    """How many locked chapters this account has already had written.
+
+    Counted from the readings themselves rather than from a separate tally:
+    a reading of a non-free chapter in a system the account does not own *is*
+    a spent preview, and a purchase retroactively stops those readings
+    counting — which is the right direction to be generous in.
+    """
+    rows = (
+        await session.execute(
+            select(Reading.system, Reading.chapter)
+            .where(Reading.user_id == user.id)
+            .distinct()
+        )
+    ).all()
+    used = 0
+    for system, slug in rows:
+        try:
+            chapter = chapter_defs.find(system, slug)
+        except ValueError:
+            continue
+        if chapter.free:
+            continue
+        owned = await entitlements.check(session, user, system, chapter=slug)
+        if not owned.allowed:
+            used += 1
+    return used
 
 
 async def _read_or_write(
@@ -384,15 +412,36 @@ async def _read_or_write(
     result: CalcResult,
     calc_key: str,
     lookup,
+    access,
 ) -> dict:
     """The half of `read` that must run one-at-a-time per reading key."""
+    preview = not access.allowed and not chapter.free
     stored = await lookup()
     if stored is not None:
         # Written once, returned forever. The reading a person paid for must
         # say the same thing the second time they open it — and the request
         # that lost the race to the lock wakes up exactly here, having spent
-        # nothing.
-        return {"reading": stored.body, "cached": True, "created_at": stored.created_at.isoformat()}
+        # nothing. A stored preview reopens the same way: the words already
+        # exist and blurring them again costs nothing.
+        return {
+            "reading": stored.body,
+            "cached": True,
+            "preview": preview,
+            "created_at": stored.created_at.isoformat(),
+        }
+
+    if preview:
+        used = await _previews_used(session, user)
+        if used >= settings().preview_chapters:
+            raise HTTPException(
+                status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "error": "locked",
+                    "message": access.reason,
+                    "system": payload.system,
+                    "chapter": chapter.slug,
+                },
+            )
 
     # One fact — is this chapter the free sample? — chooses both the model and
     # the ceiling that model is spent against, so the two cannot disagree.
@@ -487,11 +536,17 @@ async def _read_or_write(
             return {
                 "reading": theirs.body,
                 "cached": True,
+                "preview": preview,
                 "created_at": theirs.created_at.isoformat(),
             }
         raise
 
-    return {"reading": written.as_dict(), "cached": False, "created_at": utcnow().isoformat()}
+    return {
+        "reading": written.as_dict(),
+        "cached": False,
+        "preview": preview,
+        "created_at": utcnow().isoformat(),
+    }
 
 
 def _reading_key(

@@ -200,12 +200,9 @@ struct ChapterRow: View {
                     }
                 }
 
-                // The question is the promise of the chapter and is free
-                // whether the chapter is or not.
-                Text(verbatim: entry.question)
-                    .almaMeta()
-                    .multilineTextAlignment(.leading)
-                    .padding(.leading, 38)
+                // The question subtitles are gone — the owner's verdict was
+                // that half of them read as broken grammar and none of them
+                // helped. A row is its title; the chapter speaks inside.
 
                 if needsBirthTime {
                     Text(L10nCabinet.needsBirthTime)

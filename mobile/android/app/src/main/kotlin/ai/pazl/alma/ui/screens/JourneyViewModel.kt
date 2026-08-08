@@ -291,12 +291,24 @@ class JourneyViewModel(
             // No `birth` in the request: these read the profile that was just
             // saved, which is the same thing every cabinet screen will do
             // tomorrow. Reading the chart back out of the server is also the
-            // only honest proof that it was stored at all.
+            // only honest proof that it was stored at all. The journey now
+            // lands in My Systems, so *everything* computable without a second
+            // person is warmed here, under the ceremony's cover — seven
+            // engines, concurrently.
             val natal = async { client.system(AlmaSystem.NATAL, CalcRequest()) }
             val numerology = async { client.system(AlmaSystem.NUMEROLOGY, CalcRequest()) }
             val card = async { client.system(AlmaSystem.BIRTH_CARD, CalcRequest()) }
+            val warm = listOf(
+                AlmaSystem.TRANSITS, AlmaSystem.SOLAR_RETURN,
+                AlmaSystem.ASTROCARTOGRAPHY, AlmaSystem.SYNTHESIS,
+            ).map { slug -> async { client.system(slug, CalcRequest()) } }
 
             val results = listOf(natal.await(), numerology.await(), card.await())
+            warm.forEach { it.await() }
+            // The tab the ceremony lands on reads the hub from the session —
+            // refreshed here, it is already on screen when the cover lifts.
+            session.refreshProfile()
+            session.refreshEntitlements()
             val firstFailure = results.filterIsInstance<ApiResult.Err>().firstOrNull()
 
             // A portrait with one row on it is still a portrait. Only when
@@ -350,7 +362,9 @@ enum class JourneyStep {
     // to offer; but all eight systems are computed for everybody from the same
     // four facts, so nothing downstream needed it. One whole screen between a
     // person and the thing they came for, buying one line of copy.
-    Name, Date, Time, Place, Ceremony, Portrait, Handoff;
+    // The portrait and the handoff stood after the ceremony and were cut
+    // whole — the ceremony computes everything and lands in My Systems.
+    Name, Date, Time, Place, Ceremony;
 
     /**
      * Where a back gesture is a step and not an exit.

@@ -42,6 +42,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -189,6 +191,9 @@ data class ChapterView(
      */
     val systemUnlocked: Boolean = false,
     val isSubscriber: Boolean = false,
+    /** The chapter is real and unpaid: first paragraph in the clear, the rest
+     * under blur with the unlock button on top. */
+    val preview: Boolean = false,
 )
 
 class ChapterViewModel(
@@ -274,6 +279,7 @@ class ChapterViewModel(
                     isSubscriber = held.any {
                         it.active && (it.kind == "monthly" || it.kind == "annual")
                     },
+                    preview = (reading as? ApiResult.Ok)?.data?.preview == true,
                     // Asked for only when there is a door to price. A chapter
                     // somebody already owns has nothing to sell them.
                     price = if (locked) {
@@ -360,30 +366,66 @@ private fun ChapterBody(
 
         ChapterTrouble(chapter)
 
-        chapter.reading?.body?.forEach { paragraph ->
-            Text(
-                text = paragraph,
-                style = AlmaTheme.type.almaVoice.copy(
-                    color = AlmaPalette.InkMuted,
-                    // Alma's italic serif is her *voice*; the body of a chapter
-                    // is the document, and setting six paragraphs in italic
-                    // would make a reading tiring to read.
-                    fontStyle = FontStyle.Normal,
-                    fontSize = 17.sp,
-                    lineHeight = 28.sp,
-                ),
-                modifier = Modifier.padding(top = 18.dp),
-            )
-        }
+        val bodyStyle = AlmaTheme.type.almaVoice.copy(
+            color = AlmaPalette.InkMuted,
+            // Alma's italic serif is her *voice*; the body of a chapter
+            // is the document, and setting six paragraphs in italic
+            // would make a reading tiring to read.
+            fontStyle = FontStyle.Normal,
+            fontSize = 17.sp,
+            lineHeight = 28.sp,
+        )
 
-        chapter.reading?.advice?.takeIf { it.isNotBlank() }?.let { advice ->
-            Row(modifier = Modifier.padding(top = 24.dp).height(IntrinsicSize.Min)) {
-                Box(Modifier.width(2.dp).fillMaxHeight().background(InkGold))
+        if (chapter.preview) {
+            // The blurred preview: the real first paragraph in the clear, the
+            // real rest under blur, the unlock button on top. Nothing here is
+            // a placeholder — the prose exists; the blur is the only thing
+            // the purchase removes.
+            chapter.reading?.body?.firstOrNull()?.let { first ->
+                Text(text = first, style = bodyStyle, modifier = Modifier.padding(top = 18.dp))
+            }
+            Box {
+                Column(Modifier.blur(7.dp)) {
+                    chapter.reading?.body?.drop(1)?.forEach { paragraph ->
+                        Text(
+                            text = paragraph, style = bodyStyle,
+                            modifier = Modifier.padding(top = 18.dp),
+                        )
+                    }
+                }
+                Column(
+                    modifier = Modifier.align(Alignment.Center).padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.chapter_preview_note),
+                        style = AlmaTheme.type.meta.copy(color = AlmaPalette.Ink),
+                        textAlign = TextAlign.Center,
+                    )
+                    GoldButton(
+                        text = stringResource(R.string.chapter_unlock),
+                        onClick = onOffer,
+                    )
+                }
+            }
+        } else {
+            chapter.reading?.body?.forEach { paragraph ->
                 Text(
-                    text = advice,
-                    style = AlmaTheme.type.almaVoice.copy(color = AlmaPalette.Ink),
-                    modifier = Modifier.padding(start = 16.dp),
+                    text = paragraph, style = bodyStyle,
+                    modifier = Modifier.padding(top = 18.dp),
                 )
+            }
+
+            chapter.reading?.advice?.takeIf { it.isNotBlank() }?.let { advice ->
+                Row(modifier = Modifier.padding(top = 24.dp).height(IntrinsicSize.Min)) {
+                    Box(Modifier.width(2.dp).fillMaxHeight().background(InkGold))
+                    Text(
+                        text = advice,
+                        style = AlmaTheme.type.almaVoice.copy(color = AlmaPalette.Ink),
+                        modifier = Modifier.padding(start = 16.dp),
+                    )
+                }
             }
         }
 

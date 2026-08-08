@@ -257,7 +257,8 @@ private fun SystemDetailBody(
                     NatalWheel(result.`data`, modifier = Modifier.riseIn(1))
                     Column(Modifier.riseIn(2)) {
                         PlacementList(result.`data`)
-                        SpheresSection(spheres, onOpenChapter)
+                        // The spheres block («что говорит карта») stood here
+                        // and was cut whole — the chapters follow directly.
                     }
                 }
             } else {
@@ -283,9 +284,17 @@ private fun SystemDetailBody(
                     trailing = "${detail.chapters.count { it.`open` }} " +
                         stringResource(R.string.cabinet_open),
                 )
+                val sunSign = detail.result?.`data`?.text("sun_sign")
                 detail.chapters.forEachIndexed { index, chapter ->
+                    // The free natal chapter carries the person's own headline
+                    // — «Солнце — Овен» — instead of an abstract title.
+                    val entry = if (natal && chapter.free && sunSign != null) {
+                        chapter.copy(
+                            title = stringResource(R.string.sun_in_sign, signWord(sunSign))
+                        )
+                    } else chapter
                     ChapterRow(
-                        chapter = chapter,
+                        chapter = entry,
                         last = index == detail.chapters.lastIndex,
                         onClick = { onOpenChapter(chapter.slug) },
                     )
@@ -389,14 +398,8 @@ private fun ChapterRow(chapter: ChapterEntryDto, last: Boolean, onClick: () -> U
                 style = AlmaTheme.type.headingM,
                 color = if (chapter.`open`) AlmaPalette.InkLight else AlmaPalette.Muted,
             )
-            Text(
-                // The question the chapter answers. Always readable, open or
-                // not: it is the promise of the chapter rather than any of its
-                // text.
-                text = chapter.question,
-                style = AlmaTheme.type.meta,
-                modifier = Modifier.padding(top = 4.dp),
-            )
+            // The question subtitles are gone — the owner's verdict was that
+            // half of them read as broken grammar and none of them helped.
         }
         StatusTag(
             text = if (chapter.`open`) {
@@ -426,7 +429,7 @@ private val PlacementOrder = listOf(
 @Composable
 private fun ColumnScope.PlacementList(chart: JsonObject) {
     val placements = chart.obj("placements") ?: return
-    val rows = PlacementOrder.mapNotNull { name ->
+    val planets = PlacementOrder.mapNotNull { name ->
         val placement = placements.obj(name) ?: return@mapNotNull null
         val formatted = placement.text("formatted") ?: return@mapNotNull null
         val retro = placement.bool("retrograde") == true
@@ -436,6 +439,23 @@ private fun ColumnScope.PlacementList(chart: JsonObject) {
             (placement.int("house")?.let { " · " + houseWord(it) } ?: "")
         label to value
     }
+    // The derived points after the planets — the Midheaven, the south node,
+    // the Part of Fortune, the Vertex — from the payload's `points` block. A
+    // point the engine could not compute (no birth time) simply has no row.
+    val points = chart.obj("points")
+    val derived = listOf(
+        "midheaven" to R.string.body_midheaven,
+        "south_node" to R.string.body_south_node,
+        "part_of_fortune" to R.string.body_part_of_fortune,
+        "vertex" to R.string.body_vertex,
+    ).mapNotNull { (name, labelRes) ->
+        val point = points?.obj(name) ?: return@mapNotNull null
+        val formatted = point.text("formatted") ?: return@mapNotNull null
+        val value = spellSigns(formatted) +
+            (point.int("house")?.let { " · " + houseWord(it) } ?: "")
+        stringResource(labelRes) to value
+    }
+    val rows = planets + derived
     if (rows.isEmpty()) return
 
     Spacer(Modifier.height(28.dp))
@@ -636,7 +656,9 @@ private fun ColumnScope.BirthCardFreeData(data: JsonObject) {
         style = AlmaTheme.type.meta,
     )
     Text(
-        text = listOfNotNull(numeral, cardName).joinToString(" · "),
+        // The engine speaks English — "Justice", "The Star" — because factors
+        // are verbatim identifiers; the reader meets their own language here.
+        text = listOfNotNull(numeral, arcanaWord(cardName)).joinToString(" · "),
         style = AlmaTheme.type.displayL,
         modifier = Modifier.padding(top = 6.dp),
     )
@@ -656,6 +678,38 @@ private fun ColumnScope.BirthCardFreeData(data: JsonObject) {
  */
 @Composable
 private fun elementNameOrSelf(element: String): String = elementName(element.lowercase())
+
+/** The major arcana, translated for display; an unknown name keeps the
+ * engine's own word rather than falling to silence. */
+@Composable
+internal fun arcanaWord(english: String): String {
+    val id = when (english) {
+        "The Fool" -> R.string.arcana_the_fool
+        "The Magician" -> R.string.arcana_the_magician
+        "The High Priestess" -> R.string.arcana_the_high_priestess
+        "The Empress" -> R.string.arcana_the_empress
+        "The Emperor" -> R.string.arcana_the_emperor
+        "The Hierophant" -> R.string.arcana_the_hierophant
+        "The Lovers" -> R.string.arcana_the_lovers
+        "The Chariot" -> R.string.arcana_the_chariot
+        "Strength" -> R.string.arcana_strength
+        "The Hermit" -> R.string.arcana_the_hermit
+        "Wheel of Fortune" -> R.string.arcana_wheel_of_fortune
+        "Justice" -> R.string.arcana_justice
+        "The Hanged Man" -> R.string.arcana_the_hanged_man
+        "Death" -> R.string.arcana_death
+        "Temperance" -> R.string.arcana_temperance
+        "The Devil" -> R.string.arcana_the_devil
+        "The Tower" -> R.string.arcana_the_tower
+        "The Star" -> R.string.arcana_the_star
+        "The Moon" -> R.string.arcana_the_moon
+        "The Sun" -> R.string.arcana_the_sun
+        "Judgement" -> R.string.arcana_judgement
+        "The World" -> R.string.arcana_the_world
+        else -> return english
+    }
+    return stringResource(id)
+}
 
 @Composable
 private fun ColumnScope.ScoreRows(scores: JsonObject?) {

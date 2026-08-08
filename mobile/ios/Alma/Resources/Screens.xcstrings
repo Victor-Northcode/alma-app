@@ -815,49 +815,48 @@
       }
     },
     "scr.chat.outOfQuestions": {
-      "comment": "Only when the server did not send its own sentence, which already says when they return.",
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das war dein freies Gespräch. Der Plan trägt es weiter — mit der Morgenbenachrichtigung und deinem ausgeschriebenen Tag."
+            "value": "Ab hier trägt der Plan das Gespräch — mit der Morgenbenachrichtigung und Almas tieferer Stimme."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "That was your free conversation. The plan carries it on — with the morning notification and your day written out."
+            "value": "From here the plan carries the conversation — with the morning notification and Alma's deeper voice."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esa fue tu conversación gratuita. El plan la continúa — con la notificación de la mañana y tu día escrito."
+            "value": "A partir de aquí el plan lleva la conversación — con la notificación matinal y la voz más profunda de Alma."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "C'était ta conversation gratuite. L'abonnement la poursuit — avec la notification du matin et ta journée écrite."
+            "value": "À partir d'ici, l'abonnement porte la conversation — avec la notification du matin et la voix plus profonde d'Alma."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa era la tua conversazione gratuita. Il piano la porta avanti — con la notifica del mattino e la tua giornata scritta."
+            "value": "Da qui in poi il piano porta la conversazione — con la notifica del mattino e la voce più profonda di Alma."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Essa foi sua conversa gratuita. O plano a leva adiante — com a notificação da manhã e seu dia escrito."
+            "value": "A partir daqui o plano leva a conversa — com a notificação da manhã e a voz mais profunda da Alma."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Это был бесплатный разговор. Дальше его ведёт план — с утренним уведомлением и днём, написанным целиком."
+            "value": "Дальше разговор ведёт план — с утренним уведомлением и более глубоким голосом Alma."
           }
         }
       }
@@ -2350,49 +2349,48 @@
       }
     },
     "scr.people.lead": {
-      "comment": "What the list is for.",
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Partnerschaftsanalyse vergleicht dein Horoskop mit dem einer anderen Person. Der Vergleich wird kostenlos berechnet, wie jede Berechnung."
+            "value": "Die Partnerschafts-Analyse vergleicht dein Horoskop mit dem eines anderen. Der Vergleich selbst wird immer vollständig berechnet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compatibility compares your chart against somebody else's. The comparison itself is calculated free, as every calculation is."
+            "value": "Compatibility compares your chart against somebody else's. The comparison itself is always calculated in full."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La compatibilidad compara tu carta con la de otra persona. La comparación se calcula gratis, como todos los cálculos."
+            "value": "La compatibilidad compara tu carta con la de otra persona. La comparación siempre se calcula completa."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La compatibilité compare ton thème à celui de quelqu'un d'autre. Le calcul est gratuit, comme tous les calculs."
+            "value": "La compatibilité compare ton thème à celui de quelqu'un d'autre. La comparaison est toujours calculée en entier."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'affinità confronta il tuo tema con quello di un'altra persona. Il confronto è calcolato gratis, come ogni calcolo."
+            "value": "L'affinità confronta il tuo tema con quello di un'altra persona. Il confronto è sempre calcolato per intero."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A compatibilidade compara seu mapa com o de outra pessoa. A comparação é calculada de graça, como todo cálculo."
+            "value": "A compatibilidade compara o seu mapa com o de outra pessoa. A comparação é sempre calculada por inteiro."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Совместимость сравнивает твою карту с чьей-то ещё. Само сравнение считается бесплатно, как каждый расчёт."
+            "value": "Совместимость сравнивает твою карту с чьей-то ещё. Само сравнение всегда рассчитывается целиком."
           }
         }
       }

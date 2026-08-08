@@ -2009,43 +2009,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Morgenbenachrichtigung gehört zum Plan. Dieser Bildschirm bleibt kostenlos, immer."
+            "value": "Die Morgenbenachrichtigung ist Teil des Plans."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The morning notification is part of the plan. This screen stays free, always."
+            "value": "The morning notification is part of the plan."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La notificación de la mañana es parte del plan. Esta pantalla sigue siendo gratis, siempre."
+            "value": "La notificación matinal es parte del plan."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La notification du matin fait partie de l'abonnement. Cet écran reste gratuit, toujours."
+            "value": "La notification du matin fait partie de l'abonnement."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La notifica del mattino fa parte del piano. Questa schermata resta gratuita, sempre."
+            "value": "La notifica del mattino fa parte del piano."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A notificação da manhã faz parte do plano. Esta tela continua gratuita, sempre."
+            "value": "A notificação da manhã faz parte do plano."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Утреннее уведомление — часть плана. Этот экран всегда бесплатный."
+            "value": "Утреннее уведомление — часть плана."
           }
         }
       }

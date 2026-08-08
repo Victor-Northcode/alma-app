@@ -166,10 +166,11 @@ fun AlmaNavHost(
                     container = container,
                     startStep = entry.arguments?.getInt(Routes.ARG_STEP) ?: 1,
                     onFinished = {
-                        // The journey is left behind entirely: it is not
-                        // somewhere a person should be able to back into once
-                        // their portrait exists.
-                        navController.navigate(Routes.TODAY) {
+                        // The journey is left behind entirely, and it lands in
+                        // My Systems — the owner's design: data in, the loading
+                        // ceremony computes everything, the tab of systems is
+                        // the arrival.
+                        navController.navigate(Routes.SYSTEMS) {
                             popUpTo(0) { inclusive = true }
                         }
                     },

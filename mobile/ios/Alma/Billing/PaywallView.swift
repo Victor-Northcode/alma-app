@@ -220,10 +220,16 @@ struct LadderView: View {
         // auto-renewal statement next to the payment action, and a person who
         // opened this by tapping one locked chapter must not discover a yearly
         // charge on a statement.
-        Text(selected.key.isSubscription ? PaywallL10n.autoRenewTerms : PaywallL10n.oneTimeFine)
-            .almaMeta()
-            .almaReadingWidth()
-            .padding(.top, 18)
+        // The auto-renewal statement stays — App Review requires it next to
+        // the payment action. The one-time counterpart («One payment. Yours
+        // permanently. No account needed.») was the line the owner cut: for a
+        // one-time purchase the button already says everything true.
+        if selected.key.isSubscription {
+            Text(PaywallL10n.autoRenewTerms)
+                .almaMeta()
+                .almaReadingWidth()
+                .padding(.top, 18)
+        }
 
         Button {
             Task { await buy(selected) }

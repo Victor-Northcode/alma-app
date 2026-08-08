@@ -293,6 +293,9 @@ data class ReadingEnvelope(
     val reading: ReadingDto,
     /** True when this chapter had already been written. It says the same thing tomorrow. */
     val cached: Boolean = false,
+    /** The chapter is real and unpaid: first paragraph in the clear, the rest
+     * rendered under blur with the unlock button on top. */
+    val preview: Boolean = false,
 )
 
 /* ── chat ──────────────────────────────────────────────────────────────── */

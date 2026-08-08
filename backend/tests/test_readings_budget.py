@@ -192,6 +192,51 @@ def test_a_paid_chapter_is_written_by_the_strong_model(api, auth_headers, script
     assert scripted.calls[0]["model"] == strong
 
 
+def test_locked_chapters_preview_for_real_until_the_allowance_runs_out(
+    api, auth_headers, scripted, monkeypatch
+):
+    """The blurred preview is real prose, capped, and reopens for free.
+
+    The owner's design: the first few locked chapters a person opens are
+    genuinely written — marked `preview` for the client to blur — and past
+    the allowance the wall is the wall. A preview already written reopens
+    without a second generation, exactly like a bought chapter.
+    """
+    from alma.config import settings
+
+    monkeypatch.setattr(settings(), "preview_chapters", 2)
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    factors = _natal_factors()
+    scripted.responses.extend([_reply(factors), _reply(factors)])
+
+    first = api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
+    )
+    assert first.status_code == 200, first.text
+    assert first.json()["preview"] is True
+    _cheap, _mid, strong = models()
+    assert scripted.calls[0]["model"] == strong, "a preview is the real chapter"
+
+    second = api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "love"}, headers=auth_headers
+    )
+    assert second.status_code == 200, second.text
+    assert second.json()["preview"] is True
+
+    wall = api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "shadow"}, headers=auth_headers
+    )
+    assert wall.status_code == 402, "past the allowance the wall stands"
+
+    reopened = api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
+    )
+    assert reopened.status_code == 200
+    assert reopened.json()["preview"] is True
+    assert reopened.json()["cached"] is True
+    assert len(scripted.calls) == 2, "a reopened preview writes nothing new"
+
+
 # ── which model and how many turns each tier gets ──────────────────────────
 
 @pytest.fixture

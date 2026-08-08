@@ -52,18 +52,20 @@ struct SystemScreen: View {
                     // the chapter list and the door. The free preview *is*
                     // the funnel here: it demonstrates the writing, which the
                     // sixteen titles alone never did.
+                    // The owner's order, and it is final: the picture, the
+                    // positions, then straight to the chapters. The spheres
+                    // block («Что говорит карта») stood between the reader
+                    // and the table of contents and was cut.
                     wheel(model)
                         .riseIn(0)
                     placementList(model)
                         .riseIn(1)
-                    spheresSection(model)
-                        .riseIn(2)
                     chapters(model)
-                        .riseIn(3)
+                        .riseIn(2)
                     door(model)
-                        .riseIn(4)
+                        .riseIn(3)
                     freeData(model)
-                        .riseIn(5)
+                        .riseIn(4)
                 } else {
                     // Every other system opens the way the natal one does:
                     // with its own picture drawing itself, honest to its own
@@ -220,6 +222,11 @@ struct SystemScreen: View {
     }
 
     /// Every body, in words: "Sun — 21°13′ Virgo · 2nd house".
+    ///
+    /// After the planets come the derived points — the Midheaven, both nodes,
+    /// the Part of Fortune, the Vertex — from the payload's `points` block.
+    /// A point the engine could not compute (no birth time) simply has no
+    /// row, which is the same honesty the wheel shows by omitting spokes.
     @ViewBuilder
     private func placementList(_ model: SystemModel) -> some View {
         if case .loaded(let result) = model.result,
@@ -242,48 +249,43 @@ struct SystemScreen: View {
                         )
                     }
                 }
+
+                let points = result.data["points"]?.objectValue ?? [:]
+                ForEach(["midheaven", "south_node", "part_of_fortune", "vertex"],
+                        id: \.self) { name in
+                    if let point = points[name],
+                       let formatted = point["formatted"]?.stringValue {
+                        let house = point["house"]?.intValue
+                        FactRow(
+                            label: L10nCabinet.bodyName(name),
+                            value: ChartFacts.spellSigns(in: formatted)
+                                + (house.map { " · " + L10nCabinet.houseName($0) } ?? ""),
+                            isPosition: true
+                        )
+                    }
+                }
             }
         }
     }
 
-    /// The free taste: five spheres, two sentences each, the full reading one
-    /// tap away. This is the screen's shop window and it is honestly free.
-    @ViewBuilder
-    private func spheresSection(_ model: SystemModel) -> some View {
-        if system == .natal {
-            switch model.spheres {
-            case .loading:
-                CabinetSection(label: L10nCabinet.spheresLabel) {
-                    HStack(spacing: 12) {
-                        AlmaPresence(size: 22, ring: false)
-                        Text(L10nCabinet.readingChart).almaMeta()
-                    }
-                    .padding(.vertical, 10)
-                }
+    // The spheres block lived here and was the screen's shop window; the
+    // owner's verdict was that it stood between the reader and the chapters,
+    // and it was cut whole. `SpheresResponse` stays in the client for the web,
+    // but this screen no longer asks for it.
 
-            case .failed:
-                // The preview is a bonus, not a wall: a screen that has the
-                // wheel, the placements and the chapters loses nothing it
-                // cannot live without. Silence over an error block here.
-                EmptyView()
-
-            case .loaded(let response):
-                CabinetSection(label: L10nCabinet.spheresLabel) {
-                    ForEach(response.spheres) { sphere in
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(verbatim: sphere.title).almaHeadingM()
-                            Text(verbatim: sphere.text)
-                                .almaBody()
-                                .almaReadingWidth()
-                            ActionRow(label: L10nCabinet.fullReading) {
-                                router.push(.chapter(system: .natal, chapter: sphere.chapter))
-                            }
-                        }
-                        .padding(.vertical, 8)
-                    }
-                }
-            }
-        }
+    /// The free natal chapter carries the person's own headline — "Sun in
+    /// Aries" — instead of an abstract title. Every other row keeps the
+    /// server's word.
+    private func retitled(_ entry: ChapterEntry, model: SystemModel) -> ChapterEntry {
+        guard system == .natal, entry.free,
+              case .loaded(let result) = model.result,
+              let sign = result.data["sun_sign"]?.stringValue else { return entry }
+        var renamed = entry
+        renamed.title = String(
+            format: String(localized: L10nCabinet.sunInSign),
+            L10nCabinet.signName(sign)
+        )
+        return renamed
     }
 
     @ViewBuilder
@@ -300,7 +302,7 @@ struct SystemScreen: View {
             case .loaded(let list):
                 ForEach(list.chapters) { entry in
                     ChapterRow(
-                        entry: entry,
+                        entry: retitled(entry, model: model),
                         needsBirthTime: entry.needsBirthTime && !session.birthTimeKnown
                     ) {
                         router.push(.chapter(system: system, chapter: entry.slug))
@@ -507,9 +509,6 @@ final class SystemModel {
 
     private(set) var result: ScreenState<CalcResult> = .loading
     private(set) var chapters: ScreenState<ChapterList> = .loading
-    /// The free natal preview. Loaded for the natal system only; every other
-    /// system leaves it `.loading` and never shows it.
-    private(set) var spheres: ScreenState<SpheresResponse> = .loading
 
     private let client: AlmaClient
     private let system: SystemSlug
@@ -540,20 +539,9 @@ final class SystemModel {
 
         self.result = await result.value
         self.chapters = await chapters.value
-
-        // After the fast pair, not beside them: the first ask writes five
-        // blocks with a model and takes seconds, and the wheel and chapter
-        // list must not wait behind it.
-        if system == .natal {
-            self.spheres = await almaLoad { try await client.natalSpheres(locale: locale) }.value
-            // One automatic second try, only for weather-class failures. The
-            // owner's report was that the section needed a manual retry to
-            // appear at all — a person should not be the retry loop.
-            if case .failed(let error) = self.spheres, error.isTransient {
-                try? await Task.sleep(for: .seconds(2))
-                self.spheres = await almaLoad { try await client.natalSpheres(locale: locale) }.value
-            }
-        }
+        // The spheres request lived here and is gone with its section — the
+        // screen it fed no longer draws it, and not asking is the cheaper
+        // half of not showing.
     }
 
     /// The per-system arguments. Loose JSON rather than a struct with every
