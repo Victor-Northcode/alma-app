@@ -80,6 +80,10 @@ class ProfileInput(BirthInput):
     #: still the minting default until the client's fire-and-forget locale
     #: PATCH happens to land — so the first refusal arrived in English.
     locale: str | None = Field(default=None, max_length=8)
+    #: The reader's grammatical gender, volunteered at the journey's "about
+    #: you" step. Only two values are meaningful to the writer; absence is a
+    #: first-class state, not a default.
+    gender: str | None = Field(default=None, pattern="^(female|male)$")
     #: Whose birth this is. `None` means "not said", which resolves to the
     #: first birth an account saves and to nobody after that — see
     #: `profiles.create_profile`. It used to default to `True`, and saving a
@@ -95,6 +99,7 @@ class ProfileOut(BaseModel):
     name: str | None
     relation: str | None
     is_self: bool
+    gender: str | None = None
     birth_date: date
     birth_time: str | None
     latitude: float

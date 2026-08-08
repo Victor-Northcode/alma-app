@@ -470,4 +470,9 @@
     <string name="save_account_body">Войди один раз — и карта с покупками переживут новый телефон.</string>
     <string name="save_account_cta">Войти</string>
     <string name="save_account_later">Не сейчас</string>
+    <string name="journey_about_title">Немного о тебе</string>
+    <string name="journey_about_sub">Чтобы Alma говорила с тобой правильно. Можно пропустить.</string>
+    <string name="journey_gender_female">Женский</string>
+    <string name="journey_gender_male">Мужской</string>
+    <string name="journey_gender_skip">Не скажу</string>
 </resources>

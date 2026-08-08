@@ -184,8 +184,8 @@ final class AlmaSessionModel {
     /// and a client that insists on `true` while adding a partner deletes the
     /// owner's own chart along with every reading keyed to it.
     @discardableResult
-    func saveOwnBirth(_ birth: BirthInput) async throws(AlmaError) -> Profile {
-        let saved = try await client.saveProfile(birth)
+    func saveOwnBirth(_ birth: BirthInput, gender: String? = nil) async throws(AlmaError) -> Profile {
+        let saved = try await client.saveProfile(birth, gender: gender)
         profile = saved
         await noteTheAccountThisJustCreated()
         await refreshHub()

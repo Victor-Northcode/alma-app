@@ -72,6 +72,12 @@ struct SystemScreen: View {
                     // payload — then what is sold, then the free calculations.
                     heroArt(model)
                         .riseIn(0)
+                    if system == .compatibility, case .loaded(let result) = model.result {
+                        // The four axes as gauges — the number the category
+                        // sells with, honestly ours.
+                        CompatGauges(data: result.data)
+                            .riseIn(1)
+                    }
                     chapters(model)
                         .riseIn(1)
                     door(model)

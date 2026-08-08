@@ -493,4 +493,9 @@
     <string name="save_account_body">Einmal anmelden — dein Horoskop und deine Käufe überleben ein neues Handy.</string>
     <string name="save_account_cta">Anmelden</string>
     <string name="save_account_later">Nicht jetzt</string>
+    <string name="journey_about_title">Ein wenig über dich</string>
+    <string name="journey_about_sub">Damit Alma richtig mit dir sprechen kann. Du kannst es überspringen.</string>
+    <string name="journey_gender_female">Weiblich</string>
+    <string name="journey_gender_male">Männlich</string>
+    <string name="journey_gender_skip">Sage ich nicht</string>
 </resources>

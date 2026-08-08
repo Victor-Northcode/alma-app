@@ -187,6 +187,36 @@ struct RootView: View {
             CabinetTabBar()
                 .ignoresSafeArea(.keyboard, edges: .bottom)
         }
+        // The one standing invitation — a small gold seal above the bar on
+        // the two content tabs, gone the moment a plan exists. The competitor
+        // set floats «Get Full Access» over every screen; this is the same
+        // door at a volume this product can say with a straight face.
+        .overlay(alignment: .bottomTrailing) {
+            if !session.entitlements.isSubscriber,
+               router.tab == .today || router.tab == .systems,
+               session.hasBirthData {
+                Button {
+                    router.sheet = .offer(system: nil)
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(verbatim: "✦")
+                            .font(.system(size: 12))
+                        Text(L10nCabinet.allAlmaPill)
+                            .font(AlmaFonts.ui(13, weight: .medium))
+                    }
+                    .foregroundStyle(Color.almaInkOnGold)
+                    .padding(.horizontal, 14)
+                    .frame(height: 34)
+                    .background(Capsule().fill(Color.almaGold))
+                    .shadow(color: AlmaShadow.button, radius: AlmaShadow.buttonRadius, y: 4)
+                }
+                .buttonStyle(AlmaCardPressStyle())
+                .padding(.trailing, AlmaMetrics.pad)
+                .padding(.bottom, AlmaMetrics.tabBarHeight + 18)
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+                .transition(.opacity)
+            }
+        }
         // The inset above is not enough on its own — see `cabinetBarHeight`.
         // A `NavigationStack` reads its safe area from the window, so the bar
         // this shell reserved was invisible to every scroll view inside it.

@@ -143,6 +143,8 @@ class JourneyViewModel(
 
     fun setName(name: String) = _draft.update { it.copy(name = name) }
 
+    fun setGender(gender: String?) = _draft.update { it.copy(gender = gender, aboutAnswered = true) }
+
     /** Told once by the screen, which is the only party holding a Context. */
     fun setTwelveHour(twelve: Boolean) = _draft.update { it.copy(twelveHour = twelve) }
 
@@ -280,7 +282,7 @@ class JourneyViewModel(
             // arrives in it — the account's stored locale may still be the
             // minting default at this point in a first run.
             val spoken = java.util.Locale.getDefault().toLanguageTag()
-            when (val saved = client.saveProfile(birth.copy(locale = spoken))) {
+            when (val saved = client.saveProfile(birth.copy(locale = spoken, gender = _draft.value.gender))) {
                 is ApiResult.Err -> {
                     _portrait.value = ScreenState.Failed(saved.failure)
                     return@launch
@@ -364,7 +366,7 @@ enum class JourneyStep {
     // person and the thing they came for, buying one line of copy.
     // The portrait and the handoff stood after the ceremony and were cut
     // whole — the ceremony computes everything and lands in My Systems.
-    Name, Date, Time, Place, Ceremony;
+    Name, About, Date, Time, Place, Ceremony;
 
     /**
      * Where a back gesture is a step and not an exit.
@@ -386,6 +388,9 @@ enum class JourneyStep {
  */
 @Immutable
 data class JourneyDraft(
+    /** "female" | "male" | null — volunteered, never required. */
+    val gender: String? = null,
+    val aboutAnswered: Boolean = false,
     /**
      * Whether this phone writes times as 1 PM or as 13:00.
      *

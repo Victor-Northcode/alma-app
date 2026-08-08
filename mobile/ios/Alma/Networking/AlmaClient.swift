@@ -209,7 +209,8 @@ final class AlmaClient: Sendable {
     func saveProfile(
         _ birth: BirthInput,
         isSelf: Bool? = nil,
-        relation: String? = nil
+        relation: String? = nil,
+        gender: String? = nil
     ) async throws(AlmaError) -> Profile {
         try await post(
             "/v1/profiles",
@@ -217,6 +218,7 @@ final class AlmaClient: Sendable {
                 birth: birth,
                 isSelf: isSelf,
                 relation: relation,
+                gender: gender,
                 locale: AppLocale.current.rawValue
             )
         )
@@ -759,6 +761,7 @@ private struct ProfileInput: Encodable {
     let birth: BirthInput
     let isSelf: Bool?
     let relation: String?
+    let gender: String?
     /// The language a refusal should arrive in — the partner-limit 402 answers
     /// from this rather than the account's stored locale, which on a fresh
     /// guest can still be the minting default.
@@ -771,6 +774,7 @@ private struct ProfileInput: Encodable {
         var container = encoder.container(keyedBy: Key.self)
         try container.encodeIfPresent(isSelf, forKey: .isSelf)
         try container.encodeIfPresent(relation, forKey: .relation)
+        try container.encodeIfPresent(gender, forKey: .gender)
         try container.encode(locale, forKey: .locale)
     }
 
@@ -779,6 +783,7 @@ private struct ProfileInput: Encodable {
     private enum Key: String, CodingKey {
         case isSelf = "is_self"
         case relation
+        case gender
         case locale
     }
 }

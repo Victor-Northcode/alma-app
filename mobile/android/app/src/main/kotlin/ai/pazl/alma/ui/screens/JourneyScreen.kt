@@ -118,6 +118,7 @@ fun JourneyScreen(
 
             when (step) {
                 JourneyStep.Name -> NameStep(draft, vm::setName, vm::next)
+                JourneyStep.About -> AboutStep(draft, vm::setGender, vm::next)
                 JourneyStep.Date -> DateStep(draft, vm)
                 JourneyStep.Time -> TimeStep(draft, vm)
                 JourneyStep.Place -> PlaceStep(vm)

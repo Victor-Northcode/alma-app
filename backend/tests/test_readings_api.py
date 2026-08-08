@@ -162,6 +162,40 @@ def test_a_locked_chapter_never_reaches_the_model(api, auth_headers, scripted, m
     assert scripted.calls == []
 
 
+def test_a_known_gender_reaches_the_writer_and_stands_down_the_gate(api, auth_headers, scripted):
+    """With a volunteered gender the Russian prompt asks for agreement.
+
+    The genderless register was a workaround for not knowing; once the person
+    says «женщина», «ты родилась» is correct Russian and the gate that used
+    to burn attempts on it stands down. The prompt is the observable: it must
+    name the agreement instead of the prohibition.
+    """
+    api.post("/v1/profiles", json={**SOFIA, "gender": "female"}, headers=auth_headers)
+    factors = _factors_for(api, auth_headers, "natal")
+    # A Russian body, because the Latin-leak gate reads the prose: an English
+    # scripted reply on a ru request is rejected and retried until the script
+    # runs dry, which is that gate doing its job on the wrong patient.
+    scripted.responses.append(json.dumps({
+        "title": "Заголовок",
+        "teaser": "Строка.",
+        "advice": "Скажи это раньше.",
+        "paragraphs": [
+            {"text": "Ты родилась с этим небом.", "factors": factors[:1]},
+            {"text": "И оно читается отсюда.", "factors": factors[:1]},
+        ],
+    }))
+
+    response = api.post(
+        "/v1/readings",
+        json={"system": "natal", "chapter": "core", "locale": "ru"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    prompt = scripted.calls[0]["prompt"]
+    assert "женщина" in prompt
+    assert "не выдавай пол" not in prompt
+
+
 def test_the_free_sample_chapter_of_a_paid_system_generates(api, auth_headers, scripted):
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     factors = _factors_for(api, auth_headers, "natal")

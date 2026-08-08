@@ -102,24 +102,23 @@ struct StepDate: View {
         ) {
             DialArt()
         } controls: {
-            HStack(spacing: 9) {
-                JourneyMenuField(
-                    placeholder: JourneyL10n.dayShort,
+            // Wheels, not menus — the owner's reference: three spinning
+            // columns under a big title, a value always in the window.
+            HStack(spacing: 0) {
+                JourneyWheel(
                     label: JourneyL10n.day,
                     options: Array(1...31),
                     title: { String($0) },
                     selection: $journey.day
                 )
-                JourneyMenuField(
-                    placeholder: JourneyL10n.monthShort,
+                JourneyWheel(
                     label: JourneyL10n.month,
                     options: Array(1...12),
                     title: { JourneyL10n.monthName($0) },
                     selection: $journey.month
                 )
                 .frame(maxWidth: .infinity)
-                JourneyMenuField(
-                    placeholder: JourneyL10n.yearShort,
+                JourneyWheel(
                     label: JourneyL10n.year,
                     options: Self.years,
                     title: { String($0) },
@@ -166,9 +165,8 @@ struct StepTime: View {
         ) {
             ClockArt()
         } controls: {
-            HStack(spacing: 9) {
-                JourneyMenuField(
-                    placeholder: JourneyL10n.hourLabel,
+            HStack(spacing: 0) {
+                JourneyWheel(
                     label: JourneyL10n.hourLabel,
                     // 1–12 with a meridiem beside it, or 0–23 with nothing.
                     // See `JourneyModel.usesTwelveHourClock`.
@@ -177,8 +175,7 @@ struct StepTime: View {
                     title: { String(format: "%02d", $0) },
                     selection: $journey.hour
                 )
-                JourneyMenuField(
-                    placeholder: JourneyL10n.minuteLabel,
+                JourneyWheel(
                     label: JourneyL10n.minuteLabel,
                     options: Array(0...59),
                     title: { String(format: "%02d", $0) },
@@ -186,6 +183,7 @@ struct StepTime: View {
                 )
                 if JourneyModel.usesTwelveHourClock {
                     MeridiemField(selection: $journey.meridiem)
+                        .frame(width: 110)
                 }
             }
             .opacity(journey.timeUnknown ? 0.4 : 1)
@@ -281,5 +279,105 @@ private struct MeridiemField: View {
             )
         }
         .accessibilityLabel(Text(JourneyL10n.meridiemLabel))
+    }
+}
+
+
+/// One spinning column — the pickers the owner's reference uses: a value is
+/// always in the window, the neighbours fade above and below, and choosing is
+/// a flick rather than a menu. `nil` shows the first option in the window
+/// without committing it; the first movement commits.
+struct JourneyWheel<Value: Hashable>: View {
+
+    let label: LocalizedStringResource
+    let options: [Value]
+    let title: (Value) -> String
+    @Binding var selection: Value?
+
+    var body: some View {
+        Picker(selection: Binding(
+            get: { selection ?? options[0] },
+            set: { selection = $0 }
+        )) {
+            ForEach(options, id: \.self) { option in
+                Text(verbatim: title(option))
+                    .font(AlmaFonts.display(19, relativeTo: .title3))
+                    .foregroundStyle(Color.almaInkLight)
+                    .tag(option)
+            }
+        } label: {
+            Text(label)
+        }
+        .pickerStyle(.wheel)
+        .frame(height: 148)
+        .clipped()
+        .accessibilityLabel(Text(label))
+    }
+}
+
+
+/// II · who this is for. Volunteered, never required — the option to say
+/// nothing is a first-class card, not a small grey link. With an answer,
+/// Alma's Russian agrees with the reader («ты родилась»); without one she
+/// keeps the genderless register she has always used.
+struct StepAbout: View {
+
+    @Bindable var journey: JourneyModel
+    let onNext: () -> Void
+
+    var body: some View {
+        JourneyScene(
+            artHeight: 260,
+            title: JourneyL10n.aboutTitle,
+            sub: JourneyL10n.aboutSub
+        ) {
+            DialArt()
+        } controls: {
+            VStack(spacing: 10) {
+                genderCard("female", label: JourneyL10n.genderFemale)
+                genderCard("male", label: JourneyL10n.genderMale)
+                genderCard(nil, label: JourneyL10n.genderSkip)
+            }
+
+            Button(action: onNext) {
+                Text(JourneyL10n.continueCta)
+            }
+            .buttonStyle(.almaGold)
+            .padding(.top, 12)
+        }
+    }
+
+    private func genderCard(_ value: String?, label: LocalizedStringResource) -> some View {
+        let selected = journey.gender == value && (value != nil || journey.aboutAnswered)
+        return Button {
+            journey.gender = value
+            journey.aboutAnswered = true
+            AlmaHaptics.tick()
+        } label: {
+            HStack {
+                Text(label)
+                    .font(.almaBodyFont)
+                    .foregroundStyle(Color.almaInkLight)
+                Spacer()
+                if selected {
+                    Text(verbatim: "✦")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.almaGoldBright)
+                }
+            }
+            .padding(.horizontal, 20)
+            .frame(minHeight: AlmaMetrics.fieldHeight)
+            .background(
+                Capsule().fill(selected ? Color.almaGold.opacity(0.18) : Color.almaVeil)
+            )
+            .overlay(
+                Capsule().strokeBorder(
+                    selected ? Color.almaGold.opacity(0.7) : Color.almaBody.opacity(0.12),
+                    lineWidth: 1
+                )
+            )
+            .contentShape(Capsule())
+        }
+        .buttonStyle(AlmaCardPressStyle())
     }
 }

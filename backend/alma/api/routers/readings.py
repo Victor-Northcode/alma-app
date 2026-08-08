@@ -372,6 +372,24 @@ async def read(
         _prune_lock(lock_key)
 
 
+async def _reader_gender(session, user, payload) -> str | None:
+    """The reader's grammatical gender, when they volunteered one.
+
+    From the requested profile when the request names one, from the self
+    profile otherwise. `None` keeps the genderless register — absence is a
+    first-class state, never a default.
+    """
+    from ...db.models import Profile
+
+    query = select(Profile).where(Profile.user_id == user.id)
+    if getattr(payload, "profile_id", None):
+        query = query.where(Profile.id == payload.profile_id)
+    else:
+        query = query.where(Profile.is_self.is_(True))
+    profile = (await session.execute(query)).scalars().first()
+    return profile.gender if profile is not None else None
+
+
 async def _previews_used(session, user) -> int:
     """How many locked chapters this account has already had written.
 
@@ -475,6 +493,7 @@ async def _read_or_write(
             locale=language,
             paid=not chapter.free,
             memory=memory,
+            reader_gender=await _reader_gender(session, user, payload),
         )
     except ReadingRefused as exc:
         # Charged before the refusal is raised. Three attempts really happened

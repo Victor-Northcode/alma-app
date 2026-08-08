@@ -493,4 +493,9 @@
     <string name="save_account_body">Connecte-toi une fois et ton thème et tes achats survivent à un nouveau téléphone.</string>
     <string name="save_account_cta">Se connecter</string>
     <string name="save_account_later">Pas maintenant</string>
+    <string name="journey_about_title">Un peu de toi</string>
+    <string name="journey_about_sub">Pour qu\'Alma te parle comme il faut. Tu peux passer.</string>
+    <string name="journey_gender_female">Femme</string>
+    <string name="journey_gender_male">Homme</string>
+    <string name="journey_gender_skip">Je préfère ne pas dire</string>
 </resources>

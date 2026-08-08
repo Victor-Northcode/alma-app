@@ -551,4 +551,9 @@
     <string name="save_account_body">Sign in once and your chart and purchases survive a new phone.</string>
     <string name="save_account_cta">Sign in</string>
     <string name="save_account_later">Not now</string>
+    <string name="journey_about_title">A little about you</string>
+    <string name="journey_about_sub">So Alma can speak to you properly. You can skip this.</string>
+    <string name="journey_gender_female">Female</string>
+    <string name="journey_gender_male">Male</string>
+    <string name="journey_gender_skip">Prefer not to say</string>
 </resources>

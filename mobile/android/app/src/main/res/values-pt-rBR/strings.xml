@@ -493,4 +493,9 @@
     <string name="save_account_body">Entre uma vez e o seu mapa e as suas compras sobrevivem a um telefone novo.</string>
     <string name="save_account_cta">Entrar</string>
     <string name="save_account_later">Agora não</string>
+    <string name="journey_about_title">Um pouco sobre você</string>
+    <string name="journey_about_sub">Para a Alma falar com você do jeito certo. Você pode pular.</string>
+    <string name="journey_gender_female">Feminino</string>
+    <string name="journey_gender_male">Masculino</string>
+    <string name="journey_gender_skip">Prefiro não dizer</string>
 </resources>

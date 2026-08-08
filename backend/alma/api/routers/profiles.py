@@ -19,6 +19,7 @@ def _out(profile: Profile) -> ProfileOut:
         name=profile.name,
         relation=profile.relation,
         is_self=profile.is_self,
+        gender=profile.gender,
         birth_date=profile.birth_date,
         birth_time=profile.birth_time,
         latitude=profile.latitude,
@@ -102,6 +103,7 @@ async def create_profile(
         name=payload.name,
         relation=payload.relation,
         is_self=is_self,
+        gender=payload.gender,
         birth_date=payload.birth_date,
         birth_time=payload.birth_time,
         latitude=payload.latitude,
@@ -128,6 +130,8 @@ async def update_profile(
     profile = await load_profile(session, user, profile_id)
     profile.name = payload.name
     profile.relation = payload.relation
+    if payload.gender is not None:
+        profile.gender = payload.gender
     profile.birth_date = payload.birth_date
     profile.birth_time = payload.birth_time
     profile.latitude = payload.latitude

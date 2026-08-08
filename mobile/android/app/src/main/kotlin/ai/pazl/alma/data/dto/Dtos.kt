@@ -121,6 +121,8 @@ data class BirthInput(
     /** The language a refusal should arrive in — the partner-limit 402 answers
      * from this rather than from the account's stored locale. */
     val locale: String? = null,
+    /** "female" | "male" | null — volunteered at the journey's about step. */
+    val gender: String? = null,
 )
 
 @Serializable

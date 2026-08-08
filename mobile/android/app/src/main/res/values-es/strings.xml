@@ -493,4 +493,9 @@
     <string name="save_account_body">Inicia sesión una vez y tu carta y tus compras sobreviven a un teléfono nuevo.</string>
     <string name="save_account_cta">Iniciar sesión</string>
     <string name="save_account_later">Ahora no</string>
+    <string name="journey_about_title">Un poco sobre ti</string>
+    <string name="journey_about_sub">Para que Alma te hable como corresponde. Puedes saltarlo.</string>
+    <string name="journey_gender_female">Mujer</string>
+    <string name="journey_gender_male">Hombre</string>
+    <string name="journey_gender_skip">Prefiero no decirlo</string>
 </resources>

@@ -61,6 +61,8 @@ final class JourneyModel {
         work = nil
         step = .name
         name = ""
+        gender = nil
+        aboutAnswered = false
         day = nil
         month = nil
         year = nil
@@ -84,6 +86,13 @@ final class JourneyModel {
     /// "Sun in Pisces" rather than "Sofia · Sun in Pisces", and that is all.
     var name: String = ""
 
+    /// "female" | "male" | nil — volunteered, never required. With it Alma's
+    /// Russian agrees («ты родилась»); without it the genderless register
+    /// stands, as it always did.
+    var gender: String?
+    /// Whether the "about you" step was answered at all — «не скажу» is an
+    /// answer and deserves its selected state, which a bare nil cannot carry.
+    var aboutAnswered: Bool = false
     var day: Int?
     /// 1…12. The *index*, never the word: "März" has to reach the backend as 3.
     var month: Int?
@@ -248,7 +257,7 @@ final class JourneyModel {
             }
 
             do {
-                savedProfile = try await session.saveOwnBirth(birth)
+                savedProfile = try await session.saveOwnBirth(birth, gender: gender)
             } catch {
                 portrait = .failed(error)
                 return
@@ -387,6 +396,7 @@ enum JourneyStep: Int, CaseIterable, Sendable, Identifiable {
     // `matchedSystem` now answers `natal` for everyone, which is what the
     // fallback already did for anybody who skipped.
     case name
+    case about
     case date
     case time
     case place

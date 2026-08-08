@@ -196,6 +196,11 @@ class Profile(Base):
     name: Mapped[str | None] = mapped_column(String(120))
     relation: Mapped[str | None] = mapped_column(String(40))   # "partner", "friend"
     is_self: Mapped[bool] = mapped_column(Boolean, default=False)
+    #: "female" | "male" | NULL. Not an astrological input — the chart does
+    #: not care — but Russian grammar does: with a known gender Alma writes
+    #: «ты родилась» instead of tiptoeing around the past tense, and the
+    #: genderless gate stands down. NULL keeps the old behaviour exactly.
+    gender: Mapped[str | None] = mapped_column(String(10))
 
     birth_date: Mapped[datetime] = mapped_column(Date)
     #: "HH:MM" or NULL. NULL is a real state, not a missing value: every

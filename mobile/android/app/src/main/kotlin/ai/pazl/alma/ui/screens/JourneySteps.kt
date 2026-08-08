@@ -14,9 +14,11 @@ import ai.pazl.alma.ui.components.QuietButton
 import ai.pazl.alma.ui.components.Waiting
 import ai.pazl.alma.ui.theme.AlmaFonts
 import ai.pazl.alma.ui.theme.AlmaPalette
+import ai.pazl.alma.ui.theme.AlmaTheme
 import ai.pazl.alma.ui.theme.PillShape
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -959,3 +961,68 @@ private val ZodiacGlyphs = listOf(
     "♈︎", "♉︎", "♊︎", "♋︎", "♌︎", "♍︎",
     "♎︎", "♏︎", "♐︎", "♑︎", "♒︎", "♓︎",
 )
+
+
+/**
+ * II · who this is for. Volunteered, never required — «не скажу» is a
+ * first-class card. With an answer Alma's Russian agrees with the reader;
+ * without one the genderless register stands, as it always did.
+ */
+@Composable
+internal fun ColumnScope.AboutStep(
+    draft: JourneyDraft,
+    onGender: (String?) -> Unit,
+    onNext: () -> Unit,
+) {
+    JourneyScene(
+        artHeight = 240.dp,
+        art = { NameArt() },
+        title = stringResource(R.string.journey_about_title),
+        sub = stringResource(R.string.journey_about_sub),
+        controls = {
+            GenderCard(
+                selected = draft.gender == "female" && draft.aboutAnswered,
+                label = stringResource(R.string.journey_gender_female),
+            ) { onGender("female") }
+            Spacer(Modifier.height(10.dp))
+            GenderCard(
+                selected = draft.gender == "male" && draft.aboutAnswered,
+                label = stringResource(R.string.journey_gender_male),
+            ) { onGender("male") }
+            Spacer(Modifier.height(10.dp))
+            GenderCard(
+                selected = draft.gender == null && draft.aboutAnswered,
+                label = stringResource(R.string.journey_gender_skip),
+            ) { onGender(null) }
+
+            Spacer(Modifier.height(22.dp))
+            GoldButton(text = stringResource(R.string.journey_continue_cta), onClick = onNext)
+        },
+    )
+}
+
+@Composable
+private fun GenderCard(selected: Boolean, label: String, onTap: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = if (selected) AlmaPalette.Gold.copy(alpha = 0.7f)
+                else AlmaPalette.Body.copy(alpha = 0.12f),
+                shape = PillShape,
+            )
+            .background(
+                if (selected) AlmaPalette.Gold.copy(alpha = 0.18f) else AlmaPalette.Veil,
+                PillShape,
+            )
+            .clickable(role = Role.Button, onClick = onTap)
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+    ) {
+        Text(text = label, style = AlmaTheme.type.almaVoice.copy(fontSize = 17.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Normal), modifier = Modifier.weight(1f))
+        if (selected) {
+            Text(text = "✦", color = AlmaPalette.GoldBright)
+        }
+    }
+}

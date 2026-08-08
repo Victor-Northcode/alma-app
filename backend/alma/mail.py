@@ -440,7 +440,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "synthesis": "Cross-synthesis", "archive": "The whole archive",
         "archive-bump": "The rest of the archive",
         "archive-upgrade": "The rest of the archive",
-        "monthly": "Everything that changes, monthly", "annual": "Everything, for a year",
+        "weekly": "Everything that changes, weekly", "monthly": "Everything that changes, monthly", "annual": "Everything, for a year",
     },
     "es": {
         "natal": "Carta natal", "numerology": "Numerología",
@@ -449,7 +449,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "astrocartography": "Astrocartografía", "synthesis": "Síntesis cruzada",
         "archive": "El archivo completo", "archive-bump": "El resto del archivo",
         "archive-upgrade": "El resto del archivo",
-        "monthly": "Todo lo que cambia, cada mes", "annual": "Todo, durante un año",
+        "weekly": "Todo lo que cambia, cada semana", "monthly": "Todo lo que cambia, cada mes", "annual": "Todo, durante un año",
     },
     "de": {
         "natal": "Geburtshoroskop", "numerology": "Numerologie",
@@ -458,7 +458,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "astrocartography": "Astrokartografie", "synthesis": "Quersynthese",
         "archive": "Das ganze Archiv", "archive-bump": "Der Rest des Archivs",
         "archive-upgrade": "Der Rest des Archivs",
-        "monthly": "Alles, was sich bewegt, monatlich", "annual": "Alles, für ein Jahr",
+        "weekly": "Alles, was sich bewegt, wöchentlich", "monthly": "Alles, was sich bewegt, monatlich", "annual": "Alles, für ein Jahr",
     },
     "it": {
         "natal": "Tema natale", "numerology": "Numerologia",
@@ -467,7 +467,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "astrocartography": "Astrocartografia", "synthesis": "Sintesi incrociata",
         "archive": "L'archivio intero", "archive-bump": "Il resto dell'archivio",
         "archive-upgrade": "Il resto dell'archivio",
-        "monthly": "Tutto ciò che cambia, ogni mese", "annual": "Tutto, per un anno",
+        "weekly": "Tutto ciò che cambia, ogni settimana", "monthly": "Tutto ciò che cambia, ogni mese", "annual": "Tutto, per un anno",
     },
     "fr": {
         "natal": "Thème natal", "numerology": "Numérologie",
@@ -476,7 +476,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "astrocartography": "Astrocartographie", "synthesis": "Synthèse croisée",
         "archive": "L'archive entière", "archive-bump": "Le reste de l'archive",
         "archive-upgrade": "Le reste de l'archive",
-        "monthly": "Tout ce qui change, chaque mois", "annual": "Tout, pendant un an",
+        "weekly": "Tout ce qui change, chaque semaine", "monthly": "Tout ce qui change, chaque mois", "annual": "Tout, pendant un an",
     },
     "pt-BR": {
         "natal": "Mapa natal", "numerology": "Numerologia",
@@ -485,7 +485,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "astrocartography": "Astrocartografia", "synthesis": "Síntese cruzada",
         "archive": "O arquivo inteiro", "archive-bump": "O resto do arquivo",
         "archive-upgrade": "O resto do arquivo",
-        "monthly": "Tudo que muda, todo mês", "annual": "Tudo, por um ano",
+        "weekly": "Tudo que muda, toda semana", "monthly": "Tudo que muda, todo mês", "annual": "Tudo, por um ano",
     },
     "ru": {
         "natal": "Натальная карта", "numerology": "Нумерология",
@@ -496,7 +496,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "astrocartography": "Астрокартография", "synthesis": "Перекрёстный синтез",
         "archive": "Весь архив", "archive-bump": "Остаток архива",
         "archive-upgrade": "Остаток архива",
-        "monthly": "Вся Alma — на месяц", "annual": "Вся Alma — на год",
+        "weekly": "Вся Alma — на неделю", "monthly": "Вся Alma — на месяц", "annual": "Вся Alma — на год",
     },
 }
 

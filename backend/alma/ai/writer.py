@@ -183,6 +183,7 @@ def build_prompt(
     offered: list[str],
     complaint: str | None = None,
     locale: str = "en",
+    reader_gender: str | None = None,
 ) -> str:
     """The user turn: this person, this chapter, these facts.
 
@@ -221,13 +222,24 @@ def build_prompt(
         # the model only learned the rule from the complaint. Stated up front,
         # the first answer passes and the screen never says she is silent.
         *(
-            [
-                "ПО-РУССКИ: обращайся на «ты»; не выдавай пол читателя — никаких "
-                "«ты родился», «ты был», «ты должен», «ты сама»: используй "
-                "настоящее время и безличные обороты («ты появляешься на свет», "
-                "«от тебя требуется»). Латиницей в тексте может быть только "
-                "слово Alma — все планеты и знаки пиши по-русски."
-            ]
+            (
+                [
+                    "ПО-РУССКИ: обращайся на «ты». Читатель — "
+                    + ("женщина: согласуй род («ты родилась», «ты сама», «готова»)."
+                       if reader_gender == "female"
+                       else "мужчина: согласуй род («ты родился», «ты сам», «готов»).")
+                    + " Латиницей в тексте может быть только слово Alma — все "
+                    "планеты и знаки пиши по-русски."
+                ]
+                if reader_gender in ("female", "male")
+                else [
+                    "ПО-РУССКИ: обращайся на «ты»; не выдавай пол читателя — никаких "
+                    "«ты родился», «ты был», «ты должен», «ты сама»: используй "
+                    "настоящее время и безличные обороты («ты появляешься на свет», "
+                    "«от тебя требуется»). Латиницей в тексте может быть только "
+                    "слово Alma — все планеты и знаки пиши по-русски."
+                ]
+            )
             if i18n.resolve(locale) == "ru"
             else []
         ),
@@ -281,6 +293,7 @@ async def write(
     memory: list[str] | None = None,
     ledger: cost.Ledger | None = None,
     register: str | None = None,
+    reader_gender: str | None = None,
 ) -> Written:
     """Generate one chapter, validating every claim it makes.
 
@@ -330,7 +343,8 @@ async def write(
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         prompt = build_prompt(
-            result, chapter, offered=offered, complaint=complaint, locale=locale
+            result, chapter, offered=offered, complaint=complaint, locale=locale,
+            reader_gender=reader_gender,
         )
         cost.guard(
             model,
@@ -439,7 +453,9 @@ async def write(
                 )
                 log.warning("chapter %s/%s latin leak: %s", result.system, chapter.slug, leaked[:5])
                 continue
-            gendered = validator.russian_gendered(body)
+            # With a known reader the grammar is *supposed* to agree — the
+            # gate only stands when the gender is unknown.
+            gendered = [] if reader_gender in ("female", "male") else validator.russian_gendered(body)
             if gendered:
                 complaint = (
                     "Эти обороты выдают пол читателя: "

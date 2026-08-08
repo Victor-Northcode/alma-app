@@ -99,6 +99,8 @@ enum L10nCabinet {
     static let plansTitle = LocalizedStringResource("cab.plans.title", defaultValue: "Everything open, every day", table: table)
     static let plansBody = LocalizedStringResource("cab.plans.body", defaultValue: "The plan keeps all eight systems open, sends the morning notification, rewrites your day as the sky moves — and Alma answers your questions in her deeper voice. Monthly or yearly.", table: table)
     static let plansCta = LocalizedStringResource("cab.plans.cta", defaultValue: "See the plans", table: table)
+    /// The floating seal above the tab bar.
+    static let allAlmaPill = LocalizedStringResource("cab.allAlmaPill", defaultValue: "All of Alma", table: table)
     static let skyEventBody = LocalizedStringResource(
         "cab.skyEvent.body",
         defaultValue: "Days like this are what the morning notification is for — it arrives at 08:00 when something in your chart is exact. Part of the plan.",

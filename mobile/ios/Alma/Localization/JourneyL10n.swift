@@ -94,6 +94,18 @@ enum JourneyL10n {
 
     // MARK: — III · the date
 
+    static let aboutTitle = LocalizedStringResource(
+        "journey.aboutTitle", defaultValue: "A little about you", table: table)
+    static let aboutSub = LocalizedStringResource(
+        "journey.aboutSub",
+        defaultValue: "So Alma can speak to you properly. You can skip this.",
+        table: table)
+    static let genderFemale = LocalizedStringResource(
+        "journey.genderFemale", defaultValue: "Female", table: table)
+    static let genderMale = LocalizedStringResource(
+        "journey.genderMale", defaultValue: "Male", table: table)
+    static let genderSkip = LocalizedStringResource(
+        "journey.genderSkip", defaultValue: "Prefer not to say", table: table)
     static let dateTitle = LocalizedStringResource(
         "journey.dateTitle", defaultValue: "When were you born?", table: table)
     static let dateSub = LocalizedStringResource(
