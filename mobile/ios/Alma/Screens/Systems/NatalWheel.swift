@@ -57,7 +57,11 @@ struct NatalWheel: View {
             wheel(progress: progress)
         }
         .task {
+            // Re-appearing resets the clock, so the pause must lift too —
+            // a paused timeline with a fresh `born` renders one frame of
+            // progress zero and the art is simply gone on every revisit.
             born = .now
+            settled = false
             guard !reduceMotion else { settled = true; return }
             try? await Task.sleep(nanoseconds: UInt64((Self.intro + 0.1) * 1_000_000_000))
             settled = true
