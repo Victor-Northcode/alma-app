@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nothing is backed up and nothing is transferred to a new device.
+
+  The one thing this app stores locally is the bearer token, and a token
+  restored onto a different device is a session handed to whoever is holding
+  that device. Signing in again is the recovery path, and it is a good one:
+  the account survives on the server, the credential does not travel.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="file" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="." />
+        <exclude domain="file" path="." />
+    </device-transfer>
+</data-extraction-rules>

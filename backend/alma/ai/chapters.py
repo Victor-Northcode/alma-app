@@ -1,0 +1,234 @@
+"""The chapter structure of each system.
+
+Chapters are a product decision, not an astrological one: they are how a
+reading is broken into things a person actually wants to know. "Money and
+resources" is a question people have; "the second house and its ruler" is the
+answer's mechanism.
+
+Each chapter declares which factors it is allowed to read from. That is what
+keeps the love chapter from wandering into career — and, more importantly, it
+is what makes the sensitivity test possible: change the birth time by two
+hours and the house-derived chapters must change, because their inputs did.
+
+The `title` and `question` on each chapter below are the English, and they are
+the reference the other five languages are written and checked against. They
+are not what a reader is served: `GET /v1/readings/{system}/chapters` takes a
+locale and looks the pair up through `alma/i18n/`, which keeps the words in
+one file per language and the structure — the factors, the budget, the flags
+— here, where changing it is an engineering decision rather than a piece of
+copy-editing. `i18n.chapter_words(system, slug, locale=…)` is the only way to
+ask for the reader's version; reading `chapter.title` directly gets you
+English, which is right for a log line and wrong for a screen.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class Chapter:
+    slug: str
+    numeral: str
+    index: int
+    title: str
+    question: str
+    #: Substrings that select this chapter's factors from the CalcResult.
+    #: A chapter with no matching factors is not written at all — silence
+    #: beats a paragraph assembled out of whatever was nearby.
+    reads: tuple[str, ...]
+    free: bool = False
+    #: True when the chapter depends on the houses, and therefore on a real
+    #: birth time. The sensitivity test asserts exactly this set moves.
+    time_dependent: bool = False
+    words: tuple[int, int] = (180, 320)
+    #: How many paragraphs this piece is asked for, and the floor below which
+    #: it is regenerated rather than shipped. The default is what every chapter
+    #: in this file has always been asked for and what `writer.MIN_PARAGRAPHS`
+    #: enforced as a constant; it is a field now because the daily is a
+    #: legitimately one-paragraph piece, and a one-paragraph *chapter* is still
+    #: not a chapter. Making it a field rather than a special case in the
+    #: writer keeps the rule where the rest of the piece's shape already lives,
+    #: next to the word budget it has to agree with.
+    paragraphs: tuple[int, int] = (2, 4)
+
+    #: Whether this piece ends with `advice` — "one concrete thing to do or
+    #: stop doing", rendered under "what to do with it".
+    #:
+    #: True for every chapter in this file and False for exactly one piece: the
+    #: daily. `voice.DAILY_TIER` spends a third of its length forbidding the
+    #: horoscope voice — *"no instructions for the day, no lists of things to
+    #: watch for, no 'this is a good time to'"* — and then the schema asked for
+    #: an instruction anyway. Seven of eight live generations filled it, every
+    #: time with the banned content: *"wait an hour before answering it"*,
+    #: *"track effort against actual output this week"*. The paragraphs were
+    #: not horoscope; that one line was, every single time, and it is the line
+    #: most likely to be screenshotted. It also collided with the product's own
+    #: legal copy, which promises this is not advice.
+    #:
+    #: A field rather than a special case in the writer, for the reason
+    #: `paragraphs` above is one: the shape of a piece belongs next to the rest
+    #: of its shape, and a chapter that wants no advice should be able to say
+    #: so without the writer knowing which chapter it is.
+    advice: bool = True
+
+
+def _c(index, numeral, slug, title, question, reads, **kwargs) -> Chapter:
+    return Chapter(slug, numeral, index, title, question, reads, **kwargs)
+
+
+NATAL: tuple[Chapter, ...] = (
+    _c(1, "I", "core", "Core", "What am I really like underneath?",
+       ("sun", "moon", "ascendant", "sect", "dominant"), free=True, time_dependent=True),
+    _c(2, "II", "portrait", "Portrait", "How do I come across before I speak?",
+       ("ascendant", "midheaven", "dominant", "element", "modality"), time_dependent=True),
+    _c(3, "III", "love", "Love and closeness", "How do I attach and what breaks it?",
+       ("venus", "moon", "house 7", "house 5", "descendant", "mars"), time_dependent=True),
+    _c(4, "IV", "money", "Money and resources", "How does money actually reach me?",
+       ("house 2", "house 8", "venus", "jupiter", "part of fortune"), time_dependent=True),
+    _c(5, "V", "career", "Career and calling", "What work will not wear me out?",
+       ("midheaven", "house 10", "house 6", "saturn", "sun"), time_dependent=True),
+    _c(6, "VI", "mind", "Mind and speech", "How do I think and how do I sound?",
+       ("mercury", "house 3", "house 9", "air"), time_dependent=True),
+    _c(7, "VII", "shadow", "Shadow and wound", "What do I keep repeating?",
+       ("chiron", "saturn", "pluto", "house 12", "house 8", "lilith"), time_dependent=True),
+    _c(8, "VIII", "roots", "Roots and family", "What did I inherit without choosing?",
+       ("imum coeli", "house 4", "moon", "saturn"), time_dependent=True),
+    _c(9, "IX", "karmic-axis", "Karmic axis", "What am I being moved toward?",
+       ("true_node", "north node", "house 12", "house 6"), time_dependent=True),
+    _c(10, "X", "work-rhythms", "Work and rhythms", "What pace can I sustain?",
+       ("house 6", "mars", "saturn", "modality", "moon phase"), time_dependent=True),
+    _c(11, "XI", "transformation", "Crises and transformation", "How do I fall apart and how do I rebuild?",
+       ("pluto", "house 8", "scorpio", "square", "opposition"), time_dependent=True),
+    _c(12, "XII", "freedom", "Freedom and uniqueness", "Where do I refuse to be like anyone else?",
+       ("uranus", "aquarius", "house 11", "house 1"), time_dependent=True),
+    _c(13, "XIII", "dreams", "Dreams and boundaries", "Where do I lose my edges?",
+       ("neptune", "pisces", "house 12", "moon"), time_dependent=True),
+    _c(14, "XIV", "circle", "Circle and allies", "Who am I actually built to be around?",
+       ("house 11", "jupiter", "venus", "air"), time_dependent=True),
+    _c(15, "XV", "worldview", "Worldview and growth", "What do I believe when nobody is watching?",
+       ("jupiter", "house 9", "sagittarius", "midheaven"), time_dependent=True),
+    _c(16, "XVI", "milestones", "Milestones by age", "When does the shape of my life change?",
+       ("saturn", "true_node", "configuration", "stellium"), time_dependent=True),
+)
+
+NUMEROLOGY: tuple[Chapter, ...] = (
+    _c(1, "I", "life-path", "Life path", "What was I built to spend my life on?",
+       ("life path", "destiny"), free=True),
+    _c(2, "II", "birthday-number", "Birthday number", "What comes easily that I overlook?",
+       ("birthday number", "karmic debt")),
+    _c(3, "III", "personal-year", "Personal year", "What season am I actually in?",
+       ("personal year", "personal month", "personal day")),
+    _c(4, "IV", "pinnacles", "Pinnacles and challenges", "What is being asked of me right now?",
+       ("pinnacle", "challenge", "master number")),
+    _c(5, "V", "name", "Name numbers", "What does the name I answer to carry?",
+       ("expression", "soul urge", "personality", "maturity", "karmic lesson")),
+)
+
+BIRTH_CARD: tuple[Chapter, ...] = (
+    _c(1, "I", "personality", "Personality card", "How do people read me?",
+       ("Personality Card",), free=True),
+    _c(2, "II", "soul", "Soul card", "What runs underneath that?",
+       ("Soul Card", "same card")),
+    _c(3, "III", "year-card", "Year card", "What is this particular year for?",
+       ("Year Card", "year", "of 9")),
+)
+
+TRANSITS: tuple[Chapter, ...] = (
+    _c(1, "I", "active", "What is active now", "What is actually happening to me?",
+       ("transiting",), free=True, time_dependent=True),
+    _c(2, "II", "ahead", "The months ahead", "What is coming and when?",
+       ("transiting",), time_dependent=True),
+    _c(3, "III", "long", "The long transits", "What is this whole chapter of my life about?",
+       ("pluto", "neptune", "uranus", "saturn"), time_dependent=True),
+)
+
+SOLAR_RETURN: tuple[Chapter, ...] = (
+    _c(1, "I", "year-shape", "The shape of the year", "What is this year for?",
+       ("return ascendant", "return midheaven", "ruler of the year"),
+       free=True, time_dependent=True),
+    _c(2, "II", "emphasis", "Where the year lands", "Which part of my life does it touch?",
+       ("angular", "return"), time_dependent=True),
+    _c(3, "III", "contacts", "Where it meets your chart", "How does it connect to who I already am?",
+       ("sits on natal", "opposes natal"), time_dependent=True),
+)
+
+COMPATIBILITY: tuple[Chapter, ...] = (
+    _c(1, "I", "attraction", "What pulls", "Why this person and not another?",
+       ("venus", "mars", "sun", "moon"), free=True),
+    _c(2, "II", "friction", "Where it catches", "What will we keep arguing about?",
+       ("square", "opposition", "saturn", "friction", "tension")),
+    _c(3, "III", "overlays", "Where we land in each other", "What part of my life does this person occupy?",
+       ("falls in", "house"), time_dependent=True),
+    _c(4, "IV", "together", "The two of you as one thing", "What is the relationship itself like?",
+       ("composite", "davison")),
+)
+
+ASTROCARTOGRAPHY: tuple[Chapter, ...] = (
+    _c(1, "I", "lines", "Your lines", "Which places amplify which part of me?",
+       ("line",), free=True, time_dependent=True),
+    _c(2, "II", "here", "Where you are now", "How does where I live affect me?",
+       ("at the birthplace", "line"), time_dependent=True),
+    _c(3, "III", "crossings", "Crossings", "Where do two things happen at once?",
+       ("crosses",), time_dependent=True),
+)
+
+SYNTHESIS: tuple[Chapter, ...] = (
+    _c(1, "I", "agreement", "Where the systems agree", "What is true from more than one direction?",
+       ("agree",), free=True),
+    _c(2, "II", "disagreement", "Where they disagree", "What contradiction do I actually live in?",
+       ("disagree",), words=(220, 400)),
+    _c(3, "III", "single", "What only one system sees", "What would I miss reading just one of these?",
+       ("seen by one",)),
+    _c(4, "IV", "whole", "All of it together", "So what does this add up to?",
+       ("Direction", "Character", "Mind", "Relationships", "Resources",
+        "Work", "Weak point", "Growth", "Rhythms"), words=(280, 500)),
+)
+
+BY_SYSTEM: dict[str, tuple[Chapter, ...]] = {
+    "natal": NATAL,
+    "numerology": NUMEROLOGY,
+    "birth-card": BIRTH_CARD,
+    "transits": TRANSITS,
+    "solar-return": SOLAR_RETURN,
+    "compatibility": COMPATIBILITY,
+    "astrocartography": ASTROCARTOGRAPHY,
+    "synthesis": SYNTHESIS,
+}
+
+
+def for_system(system: str) -> tuple[Chapter, ...]:
+    try:
+        return BY_SYSTEM[system]
+    except KeyError:
+        raise ValueError(f"no chapters defined for {system!r}") from None
+
+
+def find(system: str, slug: str) -> Chapter:
+    for chapter in for_system(system):
+        if chapter.slug == slug:
+            return chapter
+    raise ValueError(f"{system} has no chapter {slug!r}")
+
+
+def relevant_factors(chapter: Chapter, factors: list[str] | tuple[str, ...]) -> list[str]:
+    """The subset of a CalcResult's factors this chapter may read from.
+
+    Matching is by substring and deliberately generous — a chapter starved of
+    factors produces either nothing or something invented, and the first is
+    only acceptable when the chart genuinely has nothing to say.
+    """
+    needles = tuple(needle.lower() for needle in chapter.reads)
+    return [f for f in factors if any(needle in f.lower() for needle in needles)]
+
+
+def free_chapters(system: str) -> frozenset[str]:
+    """Which chapters of a paid system stay open.
+
+    The single source of truth for this. It used to live in the entitlements
+    module as a hand-written set of slugs, which drifted out of step with the
+    chapters themselves — the paywall was exempting a chapter named "sun" that
+    had been called "core" for some time, so the exemption never fired and the
+    sample chapter was silently locked.
+    """
+    return frozenset(chapter.slug for chapter in for_system(system) if chapter.free)

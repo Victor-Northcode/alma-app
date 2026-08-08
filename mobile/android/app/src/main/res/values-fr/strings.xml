@@ -1,0 +1,464 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Alma</string>
+
+    <string name="nav_today">Aujourd\'hui</string>
+    <string name="nav_systems">Mes systèmes</string>
+    <string name="nav_alma">Alma</string>
+    <string name="nav_settings">Réglages</string>
+    <string name="nav_sections">Sections</string>
+    <string name="nav_back">Retour</string>
+
+    <string name="state_loading">Je lis ton ciel…</string>
+    <string name="state_loading_short">Un instant</string>
+    <string name="state_retry">Réessayer</string>
+    <string name="state_offline">Alma ne répond pas. Ce que tu vois est un exemple, pas ton thème.</string>
+    <string name="state_no_birth_data">Ajoute ta date de naissance et je pourrai te lire.</string>
+    <string name="state_add_birth_data">Saisir mes données</string>
+    <string name="state_needs_birth_time">Celui-ci a besoin de ton heure de naissance.</string>
+    <string name="state_add_birth_time">Ajouter mon heure</string>
+    <string name="state_locked">Débloquer pour lire</string>
+
+    <string name="error_generic">Quelque chose n\'a pas fonctionné. Réessaie dans un instant.</string>
+    <string name="error_offline">Tu es hors ligne. La dernière chose que tu as lue est toujours là.</string>
+    <string name="error_ai_unavailable">Alma ne peut pas écrire pour le moment. Tes calculs n\'en sont pas affectés.</string>
+    <string name="error_question_limit">C\'est tout pour les questions d\'aujourd\'hui. Elles reviennent demain.</string>
+    <string name="error_needs_birth_time">Celui-ci a besoin d\'une vraie heure de naissance — un midi supposé placerait ton Ascendant dans le mauvais signe.</string>
+    <string name="error_billing_unavailable">Les paiements ne fonctionnent pas en ce moment. Rien n\'a été débité et rien n\'est perdu — écris-nous à hello@pazl.ai et on règle ça.</string>
+
+    <string name="cd_alma_mark">Alma</string>
+    <string name="cd_night_sky">Ciel nocturne</string>
+
+    
+    <string name="system_natal">Thème natal</string>
+    <string name="system_numerology">Numérologie</string>
+    <string name="system_birth_card">Carte de naissance</string>
+    <string name="system_transits">Transits</string>
+    <string name="system_solar_return">Révolution solaire</string>
+    <string name="system_compatibility">Compatibilité</string>
+    <string name="system_astrocartography">Astrocartographie</string>
+    <string name="system_synthesis">Synthèse croisée</string>
+    <string name="group_who_am_i">qui je suis</string>
+    <string name="group_right_now">en ce moment</string>
+    <string name="group_this_year">cette année</string>
+    <string name="group_how_we_match">comment on s\'accorde</string>
+    <string name="group_where_to_be">où être</string>
+    <string name="group_all_of_it">tout ensemble</string>
+    <string name="cabinet_good_morning">Bonjour,</string>
+    <string name="cabinet_active_now">actif maintenant</string>
+    <string name="cabinet_strongest_aspects">aspects les plus forts</string>
+    <string name="cabinet_calculated">calculé</string>
+    <string name="cabinet_open">à ouvrir</string>
+    <string name="cabinet_needs_time">heure de naissance manquante</string>
+    <string name="cabinet_add_person">ajouter quelqu\'un</string>
+    <string name="cabinet_not_yet">pas encore</string>
+    <string name="cabinet_sun">Soleil</string>
+    <string name="cabinet_moon">Lune</string>
+    <string name="cabinet_ascendant">Ascendant</string>
+    <string name="cabinet_lunar_day">Jour lunaire</string>
+    <string name="cabinet_today_in_full">Aujourd\'hui, en entier</string>
+    <string name="cabinet_one_time_note">Paiement unique. À toi pour toujours.</string>
+    <string name="cabinet_archive_note">Les huit systèmes, achetés une fois.</string>
+    <string name="cabinet_rebuilds">Se réécrit dès qu\'un système s\'ajoute</string>
+    <string name="cabinet_back_to_chapters">Retour aux chapitres</string>
+    <string name="cabinet_chapters">chapitres</string>
+    <string name="cabinet_chapter_count">%1$d chapitres</string>
+    <string name="cabinet_open_all_chapters">Ouvrir les %1$d chapitres · %2$s</string>
+    <string name="cabinet_open_all_chapters_no_price">Ouvrir les %1$d chapitres</string>
+    <string name="cabinet_open_system">Ouvrir %1$s · %2$s</string>
+    <string name="cabinet_open_system_no_price">Ouvrir : %1$s</string>
+    <string name="cabinet_eight_tail">Regroupés par ta question, pas par le nom de la tradition. Les huit sont calculés gratuitement.</string>
+    <string name="cabinet_free_data">calculé gratuitement</string>
+    <string name="state_reading_chart">Je lis ton thème</string>
+    <string name="state_writing">J'écris ce chapitre…</string>
+    <string name="state_writing_note">Il est écrit une fois, et il dira la même chose demain.</string>
+    <string name="state_locked_note">Rédigé à partir de tes propres positions la première fois que tu l\'ouvres — ton thème, jamais un modèle.</string>
+    <string name="synthesis_title">Là où huit traditions s\'accordent sur toi</string>
+    <string name="synthesis_lead">Trois qui s\'accordent, c\'est ce qui ressemble le plus à une preuve. Deux qui se contredisent, c\'est encore plus utile — c\'est le conflit que tu continues de vivre.</string>
+    <string name="synthesis_agree">%1$d s\'accordent</string>
+    <string name="synthesis_disagree">%1$d se contredisent</string>
+    <string name="synthesis_single">vu par un seul</string>
+    <string name="synthesis_single_count">%1$d vus par un seul</string>
+    <string name="axis_direction">Direction</string>
+    <string name="axis_character">Caractère</string>
+    <string name="axis_mind">Esprit</string>
+    <string name="axis_relationships">Relations</string>
+    <string name="axis_resources">Ressources</string>
+    <string name="axis_work">Travail</string>
+    <string name="axis_weak_point">Point faible</string>
+    <string name="axis_growth">Croissance</string>
+    <string name="axis_rhythms">Rythmes</string>
+    <string name="phase_new_moon">nouvelle lune</string>
+    <string name="phase_waxing_crescent">premier croissant</string>
+    <string name="phase_first_quarter">premier quartier</string>
+    <string name="phase_waxing_gibbous">gibbeuse croissante</string>
+    <string name="phase_full_moon">pleine lune</string>
+    <string name="phase_waning_gibbous">gibbeuse décroissante</string>
+    <string name="phase_last_quarter">dernier quartier</string>
+    <string name="phase_waning_crescent">dernier croissant</string>
+    <string name="element_fire">feu</string>
+    <string name="element_earth">terre</string>
+    <string name="element_air">air</string>
+    <string name="element_water">eau</string>
+    <string name="num_life_path">Chemin de vie</string>
+    <string name="num_birthday">Nombre du jour</string>
+    <string name="num_destiny">Nombre d\'expression</string>
+    <string name="card_personality">Carte de personnalité</string>
+    <string name="transits_days">%1$d jours</string>
+    <string name="sr_year">Année</string>
+    <string name="sr_return_at">Révolution</string>
+    <string name="sr_ruler">Maître de l\'année</string>
+    <string name="score_attraction">Attirance</string>
+    <string name="score_warmth">Chaleur</string>
+    <string name="score_friction">Friction</string>
+    <string name="score_endurance">Endurance</string>
+    <string name="geo_birthplace">Lieu de naissance</string>
+    <string name="settings_title">Réglages</string>
+    <string name="settings_birth_data">données de naissance</string>
+    <string name="settings_date">Date</string>
+    <string name="settings_time">Heure</string>
+    <string name="settings_place">Lieu</string>
+    <string name="settings_full_name">Nom complet de naissance</string>
+    <string name="settings_unknown_time">Je ne connais pas mon heure de naissance</string>
+    <string name="settings_language">langue</string>
+    <string name="settings_language_note">Alma écrit dans cette langue. L\'interface suit ton téléphone.</string>
+    <string name="settings_letters">lettres</string>
+    <string name="settings_letters_note">Alma en envoie trois : ton lien de connexion, un reçu pour ce que tu achètes, et un avertissement trois jours avant le renouvellement d\'un abonnement. Les trois portent sur quelque chose que tu as fait. Il n\'y a pas de newsletter et rien à désabonner.</string>
+    <string name="settings_plan">formule</string>
+    <string name="settings_everything_monthly">Tout, chaque mois</string>
+    <string name="settings_annual_plan">Tout, pendant un an</string>
+    <string name="settings_free_plan">Gratuit</string>
+    <string name="settings_free_note">Chaque calcul est gratuit. Tu paies les mots, une lecture à la fois.</string>
+    <string name="settings_owned_plan">Ce qui t\'appartient</string>
+    <string name="settings_renews">Renouvellement le %1$s · e-mail 3 jours avant</string>
+    <string name="settings_renews_no_email">Se renouvelle le %1$s · ajoute un e-mail pour être prévenu avant le prélèvement</string>
+    <string name="settings_runs_until">Actif jusqu\'au %1$s. Il ne se renouvellera pas.</string>
+    <string name="settings_plan_ended">Ton abonnement a pris fin le %1$s.</string>
+    <string name="settings_cancel_subscription">Résilier l\'abonnement</string>
+    <string name="settings_cancel_what">Le prochain prélèvement s\'arrête. Tout ce que tu as déjà payé reste ouvert jusqu\'à la fin de la période — résilier n\'est pas un remboursement, et nous ne reprenons rien.</string>
+    <string name="settings_cancelling">Arrêt du prochain prélèvement…</string>
+    <string name="settings_cancelled">Résilié. Ton abonnement reste ouvert jusqu\'au %1$s.</string>
+    <string name="settings_cancelled_no_date">Résilié. Plus rien ne sera prélevé.</string>
+    <string name="settings_cancel_failed">Nous n\'avons pas pu joindre le prestataire de paiement, rien n\'a donc été modifié. Réessaie dans un instant.</string>
+    <string name="settings_keep_plan">Garder mon abonnement</string>
+    <string name="settings_manage_in_play">Gérer dans Google Play</string>
+    <string name="settings_manage_note">Un abonnement acheté dans l\'app appartient à ton compte Google, et Google Play est le seul endroit où l\'arrêter.</string>
+    <string name="settings_data_legal">données &amp; légal</string>
+    <string name="settings_export">Exporter mes données</string>
+    <string name="settings_exporting">Préparation de ton fichier…</string>
+    <string name="settings_export_saved">Enregistré sous alma-export.json.</string>
+    <string name="settings_export_failed">Le fichier n\'a pas pu être créé. Réessaie dans un instant.</string>
+    <string name="settings_needs_account">Il faut un compte auquel nous puissions le rattacher.</string>
+    <string name="settings_delete_account">Supprimer le compte</string>
+    <string name="settings_delete_warning">Cela efface ton thème, tes lectures et tes questions. Les lectures que tu as payées ne peuvent pas être réécrites mot pour mot.</string>
+    <string name="settings_delete_confirm">Écris ton adresse e-mail pour confirmer</string>
+    <string name="settings_delete_forever">Tout supprimer, définitivement</string>
+    <string name="settings_deleting">Suppression…</string>
+    <string name="settings_delete_mismatch">Ce n\'est pas l\'adresse de ce compte.</string>
+    <string name="settings_delete_failed">Le compte n\'a pas pu être supprimé. Réessaie dans un instant.</string>
+    <string name="settings_keep_account">Garder mon compte</string>
+    <string name="settings_sign_out">Se déconnecter</string>
+    <string name="settings_guest_note">Ce compte n\'a pas encore d\'adresse e-mail. Il existe quand même sur le serveur d\'Alma, et tes données de naissance y sont enregistrées : se connecter lui attache une adresse au lieu d\'en créer un autre. Tu peux l\'exporter ou le supprimer ci-dessous dans tous les cas.</string>
+    <string name="settings_fine_print">Pazl LLC · 16+ · vendu via Google Play</string>
+    <string name="settings_disclaimer">Pour se connaître, rien de plus. Ce n\'est pas un avis médical, psychologique, juridique ou financier, et ce n\'est pas une prédiction.</string>
+    <string name="nav_sign_in">Se connecter</string>
+    <string name="legal_terms">Conditions</string>
+    <string name="legal_privacy">Confidentialité</string>
+    <string name="legal_refunds">Remboursements</string>
+    <string name="legal_subscription_terms">Conditions d\'abonnement</string>
+    <string name="legal_imprint">Mentions légales</string>
+    <string name="cd_moon">Lune</string>
+
+    
+    <string-array name="months">
+        <item>janvier</item>
+        <item>février</item>
+        <item>mars</item>
+        <item>avril</item>
+        <item>mai</item>
+        <item>juin</item>
+        <item>juillet</item>
+        <item>août</item>
+        <item>septembre</item>
+        <item>octobre</item>
+        <item>novembre</item>
+        <item>décembre</item>
+    </string-array>
+
+    
+    <string name="sign_aries">Bélier</string>
+    <string name="sign_taurus">Taureau</string>
+    <string name="sign_gemini">Gémeaux</string>
+    <string name="sign_cancer">Cancer</string>
+    <string name="sign_leo">Lion</string>
+    <string name="sign_virgo">Vierge</string>
+    <string name="sign_libra">Balance</string>
+    <string name="sign_scorpio">Scorpion</string>
+    <string name="sign_sagittarius">Sagittaire</string>
+    <string name="sign_capricorn">Capricorne</string>
+    <string name="sign_aquarius">Verseau</string>
+    <string name="sign_pisces">Poissons</string>
+
+    
+    <string name="paywall_title">Ouvrir le reste de ce que dit ton thème</string>
+    <string name="paywall_sub">Écrit à partir de tes propres positions la première fois que tu l\'ouvres — ton thème, jamais un modèle.</string>
+    <string name="paywall_archive">L\'archive entière</string>
+    <string name="paywall_archive_note">Les huit systèmes, achetés une fois.</string>
+    <string name="paywall_archive_upgrade_note">Le reste de l\'archive. Ce que tu as payé pour la porte est déjà déduit.</string>
+    <string name="paywall_everything_year">Tout, pendant un an</string>
+    <string name="paywall_everything_month">Tout ce qui bouge, chaque mois</string>
+    <string name="paywall_one_time_note">Paiement unique. À toi pour toujours.</string>
+    <string name="paywall_renews_year">Se renouvelle chaque année jusqu\'à résiliation, dans Google Play.</string>
+    <string name="paywall_renews_month">Se renouvelle chaque mois jusqu\'à résiliation, dans Google Play.</string>
+    <string name="paywall_then">puis %1$s</string>
+    <string name="paywall_buy">%1$s · %2$s</string>
+    <string name="paywall_not_now">Pas maintenant</string>
+    <string name="paywall_restore">Restaurer un achat</string>
+    <string name="paywall_restore_none">Google n\'a aucun achat sur ce compte. Si tu as acheté avec un autre compte Google, connecte-toi à Play avec celui-là et réessaie.</string>
+    <string name="paywall_all_open">Tout est déjà ouvert. Il ne nous reste rien à te vendre.</string>
+    <string name="paywall_working">Confirmation auprès de Google…</string>
+    <string name="paywall_pending">Ton paiement n\'est pas encore finalisé. Rien de plus ne sera prélevé — dès que Google le confirme, cela s\'ouvre tout seul.</string>
+    <string name="paywall_claimed">Cet achat est déjà rattaché à un autre compte Alma. Tu n\'as pas été prélevé deux fois — écris à hello@pazl.ai et on le déplace.</string>
+    <string name="paywall_honesty_once">un paiement unique reste unique</string>
+    <string name="paywall_honesty_free">chaque calcul reste gratuit</string>
+    <string name="paywall_honesty_cancel">résiliation dans Google Play, deux taps</string>
+
+    <string name="journey_continue_cta">Continuer</string>
+    <string name="journey_done">terminé</string>
+    <string name="journey_intent_title">Qu\'est-ce qui résonne le plus fort en toi maintenant ?</string>
+    <string name="journey_intent_skip">Passer — je sais ce que je veux</string>
+    <string name="journey_intent_self">Qui je suis, vraiment</string>
+    <string name="journey_intent_shifting">Quelque chose bouge et je ne sais pas pourquoi</string>
+    <string name="journey_intent_us">Nous — est-ce que ça va marcher</string>
+    <string name="journey_intent_where">Où je devrais vivre</string>
+    <string name="journey_name_title">Comment je t\'appelle ?</string>
+    <string name="journey_name_sub">Un prénom n\'est pas un compte. Rien n\'est encore enregistré.</string>
+    <string name="journey_name_placeholder">Camille</string>
+    <string name="journey_name_aria">Ton prénom</string>
+    <string name="journey_date_title">Quand tout a-t-il commencé ?</string>
+    <string name="journey_date_sub">La date seule donne déjà trois systèmes.</string>
+    <string name="journey_time_title">À quelle heure tout a-t-il commencé ?</string>
+    <string name="journey_time_sub">L\'heure donne les maisons, la révolution solaire et ta carte. Sans elle, elles restent fermées — on ne les inventera pas.</string>
+    <string name="journey_hour">Heure</string>
+    <string name="journey_minute">Min</string>
+    <string name="journey_meridiem">AM ou PM</string>
+    <string name="journey_locked_without_time">Maisons, révolution solaire et carte restent fermées</string>
+    <string name="journey_place_title">Ville de naissance</string>
+    <string name="journey_place_sub">La ville suffit. Le fuseau horaire historique, on le résout nous-mêmes.</string>
+    <string name="journey_place_placeholder">Paris</string>
+    <string name="journey_build_my_sky">Construire mon ciel</string>
+    <string name="journey_ceremony_skip">Passer la cérémonie</string>
+    <string name="journey_calculated">les huit systèmes · calculés</string>
+    <string name="journey_free_label">à toi, gratuit, pour toujours</string>
+    <string name="journey_free_note">Ces nombres ne coûtent jamais rien. Ils sont à toi, que tu lises la suite ou non.</string>
+    <string name="journey_needs_time_row">Révolution solaire · carte</string>
+    <string name="journey_keep_my_sky">Garder mon ciel</string>
+    <string name="journey_stays_free">Tout ce qui précède reste gratuit, pour toujours</string>
+    <string name="journey_handoff_title">Enregistré. Maintenant lis-toi lentement.</string>
+    <string name="journey_handoff_sub">Trois règles qui font tenir tout ça — la seule prise en main qu\'on te donnera.</string>
+    <string name="journey_open_today">Ouvrir mon Aujourd\'hui</string>
+    <string name="capture_day">Jour de naissance</string>
+    <string name="capture_month">Mois de naissance</string>
+    <string name="capture_year">Année de naissance</string>
+    <string name="capture_day_short">Jour</string>
+    <string name="capture_month_short">Mois</string>
+    <string name="capture_year_short">Année</string>
+    <string name="capture_unknown_time">Je ne connais pas mon heure de naissance</string>
+    <string name="capture_impossible_date">Cette date n\'existe pas. Vérifie le jour.</string>
+    <string name="capture_search_place">Ville de naissance</string>
+    <string name="capture_no_places">Aucun lieu de ce nom. Essaie la ville la plus proche.</string>
+    <string name="insight_sun">Soleil en %1$s</string>
+
+    
+    <string-array name="journey_ceremony_labels">
+        <item>lecture du système 1 sur 8 · thème natal</item>
+        <item>lecture du système 2 sur 8 · numérologie</item>
+        <item>lecture du système 3 sur 8 · carte de naissance</item>
+        <item>lecture du système 4 sur 8 · transits</item>
+        <item>lecture du système 5 sur 8 · compatibilité</item>
+        <item>lecture du système 6 sur 8 · révolution solaire</item>
+        <item>lecture du système 7 sur 8 · astrocartographie</item>
+        <item>lecture du système 8 sur 8 · synthèse croisée</item>
+    </string-array>
+    <string-array name="journey_ceremony_lines">
+        <item>Dix planètes, douze maisons — ton thème est tracé à partir d\'éphémérides réelles.</item>
+        <item>Ton chemin de vie se réduit à un nombre qui préfère les preuves aux croyances.</item>
+        <item>L\'un des vingt-deux arcanes, calculé à partir de la date seule.</item>
+        <item>Où le ciel est maintenant, face à où il était à ton départ.</item>
+        <item>Laissé ouvert jusqu\'à ce que tu ajoutes une deuxième personne — rien d\'inventé.</item>
+        <item>L\'année qui vient, lue à la minute où le Soleil revient à sa place.</item>
+        <item>Des lignes planétaires sur la carte, tracées depuis ta minute exacte.</item>
+        <item>Neuf axes. Là où trois traditions s\'accordent, ça part dans ton noyau.</item>
+    </string-array>
+
+    
+    <string-array name="journey_rules">
+        <item>Un chapitre à la fois. Seize d\'un coup, c\'est du bruit.</item>
+        <item>Quand deux systèmes se contredisent, ne choisis pas de gagnant. C\'est là qu\'est la matière.</item>
+        <item>Demande-moi avec tes mots. Trois questions sont gratuites.</item>
+    </string-array>
+    <string name="paywall_unverified">Google a prélevé le paiement et nous n\'avons pas encore pu le confirmer. Rien n\'est perdu — cela s\'ouvre tout seul dès que possible, et si nous n\'y arrivons jamais, Google te rembourse sous trois jours.</string>
+    <string name="cabinet_good_afternoon">Bon après-midi,</string>
+    <string name="cabinet_good_evening">Bonsoir,</string>
+    <string name="cabinet_good_night">Encore éveillé,</string>
+    <string name="paywall_restore_done">Restauré. C\'est de nouveau ouvert.</string>
+    <string name="settings_account_id">Identifiant du compte</string>
+    <string name="settings_delete_confirm_id">Écris l\'identifiant ci-dessus pour confirmer</string>
+    <string name="settings_delete_mismatch_id">Ce n\'est pas l\'identifiant de ce compte.</string>
+    <string name="settings_delete_help">Déjà désinstallée, ou tu préfères parler à quelqu\'un ? Écris à hello@pazl.ai, on le fait et on te répond.</string>
+    <string name="settings_delete_page">Comment fonctionne la suppression</string>
+    <string name="settings_measurement">Mesure</string>
+    <string name="settings_measurement_note">Alma note quelle étape de la première minute tu as atteinte — un mot d\'une liste fixe, rien d\'autre. Pas de publicité, pas de tiers, pas d\'identifiant d\'appareil. Désactivé, rien n\'est envoyé.</string>
+    <string name="chat_placeholder">Demande à Alma…</string>
+    <string name="chat_send">Envoyer</string>
+    <string name="chat_thinking">Je lis ton thème</string>
+    <string name="chat_example">Pourquoi est-ce que je quitte toujours ce qui est bon ?</string>
+    <string name="chat_read_from">Lu dans</string>
+    <string name="chat_silent">J\'ai répondu à celle-ci à partir de ce que je sais, pas de ton thème.</string>
+    <string name="chat_could_ask">tu peux demander</string>
+    <string name="chat_thinking_still">Je lis encore — je ne survole pas.</string>
+    <string name="chat_prompt_moon">Ma Lune est en %1$s. De quoi a-t-elle vraiment besoin ?</string>
+    <string name="chat_prompt_sun">Mon Soleil est en %1$s — qu\'est-ce que cela me demande ?</string>
+    <string name="chat_prompt_rising">Ascendant %1$s. Est-ce ce que les autres rencontrent en premier ?</string>
+    <string name="chat_refused">Je ne pouvais pas répondre sans inventer une position, alors je ne l\'ai pas fait. Reformule et je réessaie.</string>
+    <string name="chat_offline">Je n\'arrive pas à atteindre ton thème pour l\'instant. Ta question est toujours là — réessaie dans un moment.</string>
+    <string name="chat_unavailable">Quelque chose ne fonctionne pas de mon côté. Ton thème est intact, et ta question est toujours là.</string>
+    <string name="chat_went_wrong">Cela n\'est pas passé. Rien n\'est perdu — ta question est toujours là.</string>
+    <string name="chat_questions_left">Il te reste %1$d questions aujourd\'hui</string>
+    <string name="chat_no_questions">C\'était ta conversation gratuite. L\'abonnement la poursuit — avec la notification du matin et ta journée écrite.</string>
+    <string name="chat_get_more">Voir les formules</string>
+    <string name="chat_lead">Demande-moi ce que tu veux. Je réponds à partir de tes propres positions, et je le dis quand je ne peux pas.</string>
+    <string name="signin_title">Se connecter</string>
+    <string name="signin_lead">Se connecter attache une adresse au compte que tu as déjà. Rien de ce que tu as lu ou acheté ne bouge.</string>
+    <string name="signin_email">Ton adresse e-mail</string>
+    <string name="signin_send">Envoie-moi un lien</string>
+    <string name="signin_sent">Regarde tes e-mails. Le lien te connecte sur ce téléphone et expire bientôt.</string>
+    <string name="signin_failed">Ce lien n\'a pas pu être utilisé. Demandes-en un autre.</string>
+    <string name="signin_done">Connecté.</string>
+    <string name="signin_no_password">Il n\'y a pas de mot de passe. Il n\'y en a jamais eu.</string>
+    <string name="signin_invalid_email">Cela ne ressemble pas à une adresse e-mail.</string>
+    <string name="people_title">Personnes</string>
+    <string name="people_not_built">Ajouter une deuxième personne n\'existe pas encore sur Android. Tu peux le faire sur le web et elle sera ici.</string>
+    <string name="chapter_next">Suite : %1$s</string>
+    <string name="state_nothing_today">Aujourd\'hui rien dans ton ciel ne demande d\'attention. C\'est une vraie réponse, et ce n\'est pas la même chose que « rien ne se passe ».</string>
+
+    
+
+    
+
+    
+    <string name="daily_action_quieter">Moins souvent</string>
+    <string name="daily_action_quieter_done">Moins. Seulement les lents désormais — quelques fois par an.</string>
+    <string name="daily_action_turn_off">Désactiver</string>
+    <string name="daily_action_turned_off">Désactivé. Aujourd\'hui reste là chaque fois que tu l\'ouvres.</string>
+    <string name="daily_ask_body">Une notification, à 08h00, les jours où quelque chose dans ton thème est exact. Environ une fois par semaine. Jamais la nuit, et tu peux la désactiver depuis la notification elle-même.</string>
+    <string name="daily_ask_no">Pas maintenant</string>
+    <string name="daily_ask_title">Préviens-moi le matin où cela arrive</string>
+    <string name="daily_ask_yes">Oui, préviens-moi</string>
+    <string name="daily_channel_description">Les jours où quelque chose dans ton thème est exact. Environ une fois par semaine.</string>
+    <string name="daily_channel_name">Le quotidien</string>
+    <string name="daily_empty_body">Rien n\'atteint son point exact aujourd\'hui — la plupart des jours sont ainsi. %1$d influences avancent lentement ; les plus fortes sont ci-dessous.</string>
+    <string name="daily_empty_title">Un jour calme dans ton ciel</string>
+    <string name="daily_hour">Arrive à</string>
+    <string name="daily_occasionally">De temps en temps</string>
+    <string name="daily_occasionally_detail">Environ une fois par semaine, quand quelque chose dans ton thème devient vraiment exact.</string>
+    <string name="daily_off">Désactivé</string>
+    <string name="daily_off_detail">Aucune notification. Aujourd\'hui reste là chaque fois que tu l\'ouvres.</string>
+    <string name="daily_only_matters">Seulement l\'essentiel</string>
+    <string name="daily_only_matters_detail">Quelques fois par an. Seulement les lents — les transits qui durent des mois.</string>
+    <string name="daily_quiet">Jamais entre 22h00 et 08h00, à ton heure.</string>
+    <string name="daily_status_denied">Les notifications d\'Alma sont désactivées. Tu peux les activer dans les réglages de ton téléphone.</string>
+    <string name="daily_status_not_delivering">Rien n\'est encore envoyé. Ce téléphone n\'est pas enregistré pour les notifications, le quotidien vit donc ici, dans Aujourd\'hui.</string>
+    <string name="daily_status_open_settings">Ouvrir les réglages</string>
+    <string name="daily_status_registered">Ce téléphone est enregistré pour le quotidien.</string>
+    <string name="daily_subscriber_only">Le quotidien fait partie de l\'abonnement mensuel. Aujourd\'hui est gratuit, et le restera.</string>
+    <string name="daily_timezone">Ton heure</string>
+    <string name="daily_timezone_birth">depuis tes données de naissance</string>
+    <string name="daily_timezone_chosen">tu l\'as choisie</string>
+    <string name="daily_timezone_device">depuis ton appareil</string>
+    <string name="daily_title">Le quotidien</string>
+    <string name="daily_today_at">Exact à %1$s</string>
+    <string name="daily_today_label">Exact aujourd\'hui</string>
+    <string name="daily_today_since">Dans l\'orbe depuis le %1$s</string>
+    <string name="daily_today_until">dans l\'orbe jusqu\'au %1$s</string>
+    <string name="daily_verified_label">Jours exacts dans les 30 prochains</string>
+    <string name="daily_verified_note">Comptés depuis ton propre thème, sur cet appareil, avec la règle qu\'utilise la notification.</string>
+    <string name="push_daily_conjunction">%1$s et %2$s — conjonction exacte à %3$s.</string>
+    <string name="push_daily_entering_conjunction">%1$s et %2$s — conjonction, dans l'orbe dès aujourd'hui.</string>
+    <string name="push_daily_entering_opposition">%1$s et %2$s — opposition, dans l'orbe dès aujourd'hui.</string>
+    <string name="push_daily_entering_sextile">%1$s et %2$s — sextile, dans l'orbe dès aujourd'hui.</string>
+    <string name="push_daily_entering_square">%1$s et %2$s — carré, dans l'orbe dès aujourd'hui.</string>
+    <string name="push_daily_entering_trine">%1$s et %2$s — trigone, dans l'orbe dès aujourd'hui.</string>
+    <string name="push_daily_opposition">%1$s et %2$s — opposition exacte à %3$s.</string>
+    <string name="push_daily_sextile">%1$s et %2$s — sextile exact à %3$s.</string>
+    <string name="push_daily_square">%1$s et %2$s — carré exact à %3$s.</string>
+    <string name="push_daily_title">Exact aujourd\'hui</string>
+    <string name="push_daily_trine">%1$s et %2$s — trigone exact à %3$s.</string>
+    <string name="renewal_channel_description">Avant un prélèvement et quand un abonnement change. Ce n\'est pas du marketing et on ne peut pas s\'en désabonner.</string>
+    <string name="renewal_channel_name">Ton abonnement</string>
+    <string name="cabinet_your_day">Ta journée</string>
+    <string name="cabinet_sky_behind">Le ciel derrière</string>
+    <string name="cabinet_read_whole_day">Lire la journée entière</string>
+    <string name="cabinet_not_prediction">Rien ici n\'est une prédiction. Chaque ligne nomme la position dont elle est tirée.</string>
+    <string name="cabinet_ask_alma">Poser une question à Alma</string>
+    <string name="plans_title">Tout ouvert, chaque jour</string>
+    <string name="plans_body">L\'abonnement garde les huit systèmes ouverts, envoie la notification du matin, réécrit ta journée avec le ciel — et Alma répond à tes questions de sa voix la plus profonde. Mensuel ou annuel.</string>
+    <string name="plans_cta">Voir les formules</string>
+    <string name="cabinet_placements_label">tes positions</string>
+    <string name="cabinet_spheres_label">ce que dit la carte</string>
+    <string name="cabinet_full_reading">Lecture complète</string>
+    <string name="daily_retrograde">rétrograde</string>
+    <string name="body_sun">Soleil</string>
+    <string name="body_moon">Lune</string>
+    <string name="body_mercury">Mercure</string>
+    <string name="body_venus">Vénus</string>
+    <string name="body_mars">Mars</string>
+    <string name="body_jupiter">Jupiter</string>
+    <string name="body_saturn">Saturne</string>
+    <string name="body_uranus">Uranus</string>
+    <string name="body_neptune">Neptune</string>
+    <string name="body_pluto">Pluton</string>
+    <string name="body_true_node">Nœud Nord</string>
+    <string name="body_mean_node">Nœud Nord</string>
+    <string name="body_chiron">Chiron</string>
+    <string name="body_lilith">Lilith</string>
+    <string name="body_ascendant">Ascendant</string>
+    <string name="body_midheaven">Milieu du Ciel</string>
+    <string name="house_1">maison 1</string>
+    <string name="house_2">maison 2</string>
+    <string name="house_3">maison 3</string>
+    <string name="house_4">maison 4</string>
+    <string name="house_5">maison 5</string>
+    <string name="house_6">maison 6</string>
+    <string name="house_7">maison 7</string>
+    <string name="house_8">maison 8</string>
+    <string name="house_9">maison 9</string>
+    <string name="house_10">maison 10</string>
+    <string name="house_11">maison 11</string>
+    <string name="house_12">maison 12</string>
+    <string name="aspect_conjunction">— conjonction</string>
+    <string name="aspect_opposition">— opposition</string>
+    <string name="aspect_trine">— trigone</string>
+    <string name="aspect_square">— carré</string>
+    <string name="aspect_sextile">— sextile</string>
+    <string name="aspect_quincunx">— quinconce</string>
+    <string name="aspect_quintile">— quintile</string>
+    <string name="aspect_biquintile">— biquintile</string>
+    <string name="aspect_semisextile">— semi-sextile</string>
+    <string name="aspect_semisquare">— semi-carré</string>
+    <string name="aspect_sesquiquadrate">— sesqui-carré</string>
+    <string name="paywall_per_month_savings">%1$s par mois · %2$d%% d\'économie</string>
+    <string name="paywall_pitch_door_1">Un seul paiement ouvre tous les chapitres de ce système.</string>
+    <string name="paywall_pitch_door_2">Chaque chapitre est écrit depuis tes propres positions à la première ouverture.</string>
+    <string name="paywall_pitch_door_3">À toi pour toujours — lis-le quand tu veux, en sept langues.</string>
+    <string name="paywall_pitch_plan_1">Les huit systèmes restent ouverts tant que l\'abonnement court.</string>
+    <string name="paywall_pitch_plan_2">Les transits, la révolution solaire et la compatibilité se réécrivent avec le ciel.</string>
+    <string name="paywall_pitch_plan_3">Quarante questions par mois à Alma, avec la voix la plus profonde.</string>
+    <string name="chapter_end_door">Le reste de ce système est écrit de la même façon — depuis tes positions, à toi pour toujours.</string>
+    <string name="chapter_end_plan">Ce chapitre s\'écrit une fois. Les transits, l\'année et la compatibilité se réécrivent avec le ciel — c\'est ça, l\'abonnement.</string>
+    <string name="settings_delete_confirm_guest">Saisis ce code pour confirmer</string>
+    <string name="settings_delete_guest_note">Ce compte n\'a pas d\'adresse e-mail. Son code est ci-dessous — saisis-le pour confirmer.</string>
+    <string name="daily_your">—</string>
+    <string name="signin_google">Continuer avec Google</string>
+    <string name="cabinet_sky_event_body">C\'est pour des jours comme celui-ci qu\'existe la notification du matin — elle arrive à 08h00 quand quelque chose est exact dans ton thème. Ça fait partie de l\'abonnement.</string>
+</resources>

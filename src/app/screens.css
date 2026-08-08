@@ -1,0 +1,2838 @@
+/* ══════════════════════════════════════════════════════════════════
+   Screens — landing, journey, sign-in, legal.
+   Mobile is the original (<700). Tablet 700–1023. Desktop ≥1024.
+
+   The cabinet was the third of these and the largest: the bottom tabs,
+   the desktop sidebar, Today, the hub, a system's detail, the chapter
+   reader's parchment, the synthesis screen, the chat, settings, the
+   paywall sheet and the downsell — about seventeen hundred lines. It is
+   gone with the screens it dressed. What survives is the storefront: the
+   landing, the journey that rises over it, the page a sign-in link lands
+   on, and the six legal documents.
+   ══════════════════════════════════════════════════════════════════ */
+
+.only-mobile-block {
+  display: block;
+}
+.from-tablet-block {
+  display: none;
+}
+.from-tablet-flex {
+  display: none;
+}
+@media (min-width: 700px) {
+  .only-mobile-block {
+    display: none;
+  }
+  .from-tablet-block {
+    display: block;
+  }
+  .from-tablet-flex {
+    display: flex;
+  }
+}
+
+/* ══════════════════ LANDING ═══════════════════════════════════ */
+
+.landing {
+  position: relative;
+  overflow-x: clip;
+  background: var(--night-800);
+  transition:
+    transform var(--d-sheet) var(--e-sheet),
+    opacity var(--d-sheet) var(--e-sheet),
+    filter var(--d-sheet) var(--e-sheet);
+  transform-origin: 50% 0;
+}
+/* landing → journey: the overlay rises, the landing scales to .98 and dims */
+.landing[data-dim="true"] {
+  transform: scale(0.98);
+  opacity: 0.4;
+}
+
+/* ── nav — opaque, never translucent over content ─────────────── */
+.nav-inner {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 11px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+/* The wordmark's two sizes, switched at the bar's own breakpoint rather than
+   at the page-wide 700 — see the note in `Nav.tsx`. */
+.nav-mark-small {
+  display: initial;
+}
+.nav-mark-full {
+  display: none;
+}
+.nav-anchors {
+  display: none;
+  align-items: center;
+  gap: 32px;
+}
+.nav-anchors a {
+  font-size: 14.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.nav-signin {
+  display: none;
+  font-size: 14.5px;
+  color: var(--muted-3);
+}
+/**
+ * The gold pill, which is now a sentence and therefore no longer fits
+ * everywhere it used to.
+ *
+ * "Sign up" was twelve characters at the widest; "Mich lesen — kostenlos" is
+ * 197 px, and measured in a browser the old layout overflowed its own bar by
+ * 28 px at 760 and by 8 px on a 375 px phone — the pill silently clipped off
+ * the right-hand edge under `overflow-x: hidden`, which is the worst of the
+ * available failures because it looks fine in English and disappears in
+ * German. The label is not going back to a lie to save the layout, so the
+ * layout gives way instead, in two places:
+ *
+ * - the desktop row now needs 900 px rather than 700 px of window before it
+ *   will show four anchors, a sign-in link and this pill together;
+ * - below that the pill is not in the bar at all. It is the first row of the
+ *   nav sheet, where a full-width button has room for the whole promise, and
+ *   the top bar goes back to a wordmark and a burger. Nothing is lost by it:
+ *   the hero's own gold button is on screen at the top of the page, the sticky
+ *   bar takes over after 560 px of scroll, and `start("nav")` still fires from
+ *   the sheet, so the funnel keeps all five of its doors.
+ */
+.nav-cta {
+  display: none;
+  height: 38px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--gold-button);
+  color: var(--ink-on-gold);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  /* One line, always. A pill of fixed height that is allowed to wrap loses the
+     second half of its own sentence. */
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.nav-cta:hover {
+  background: var(--gold-button-hover);
+}
+/* The same door, in the sheet, for every width the bar cannot hold it at. */
+.nav-sheet-cta {
+  width: 100%;
+  margin-bottom: 6px;
+}
+/**
+ * The desktop counterpart of the burger: the language being read, in its own
+ * language, opening the sheet that holds the other five.
+ *
+ * Hidden below 900, where the burger does the same job and the sheet already
+ * carries the picker among its rows. Text rather than a chevron or a globe: a
+ * globe is a guess and a chevron is a promise about a popup that does not
+ * exist, while the word is the answer to the question somebody has.
+ */
+/*
+ * 44 tall, like the options it opens.
+ *
+ * It measured 62×29 at 1280. That passes WCAG 2.5.8 — both dimensions clear 24
+ * — so it is not a violation, and it was inconsistent with the argument written
+ * at length into `.lang-option` in this same file: that a near miss on the one
+ * control built for somebody who cannot read the page is expensive, and 44 is
+ * the number. The options behind this button are 44.9. The door to them was 29.
+ *
+ * `min-height` with `inline-flex` rather than more vertical padding, because
+ * this button has no background: the extra height is transparent either way,
+ * and stating the target as a number is the thing a later reader can check
+ * against the rule. The bar is laid out from `.nav-inner`'s own padding plus
+ * its tallest child, so this raises the bar by the difference between 44 and
+ * whatever `.nav-cta` measures — 2 px at 1280 — rather than by 15.
+ */
+.nav-lang-toggle {
+  display: none;
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 6px 2px;
+  min-height: 44px;
+  align-items: center;
+  font-family: inherit;
+  font-size: 14.5px;
+  color: var(--muted-3);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color var(--d-tap) var(--e-tap);
+}
+.nav-lang-toggle:hover,
+.nav-lang-toggle[aria-expanded="true"] {
+  color: var(--gold-bright);
+}
+.nav-burger {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  flex: 0 0 auto;
+}
+.nav-burger span {
+  position: absolute;
+  left: 50%;
+  width: 20px;
+  height: 1.5px;
+  margin-left: -10px;
+  border-radius: 2px;
+  background: var(--gold-bright);
+  transition:
+    transform var(--d-ui) var(--e-ui),
+    opacity 140ms var(--e-ui),
+    width var(--d-ui) var(--e-ui);
+}
+.nav-burger span:nth-child(1) {
+  top: 15px;
+}
+.nav-burger span:nth-child(2) {
+  top: 21px;
+  width: 14px;
+  margin-left: -10px;
+}
+.nav-burger span:nth-child(3) {
+  top: 27px;
+}
+.nav-burger[aria-expanded="true"] span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.nav-burger[aria-expanded="true"] span:nth-child(2) {
+  opacity: 0;
+  transform: translateX(8px);
+}
+.nav-burger[aria-expanded="true"] span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+.nav-sheet {
+  overflow: hidden;
+  border-top: 1px solid var(--hairline-gold);
+  background: var(--night-850);
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--d-sheet) var(--e-sheet);
+}
+.nav-sheet[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.nav-sheet-inner {
+  min-height: 0;
+  padding: 0 18px;
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner {
+  padding: 6px 18px 18px;
+}
+.nav-sheet a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 52px;
+  font-size: 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+.nav-sheet a:last-of-type {
+  border-bottom: 0;
+}
+/* The unrolling stagger hangs off every row rather than off the links alone.
+   It used to be `a:nth-child(n)`, which counted *all* siblings and so came
+   apart the moment the sheet gained a row that was not a link — the gold
+   button now sits first and the language picker last. */
+.nav-sheet-inner > * {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity var(--d-ui) var(--e-ui),
+    transform var(--d-ui) var(--e-ui);
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner > * {
+  opacity: 1;
+  transform: none;
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner > *:nth-child(1) {
+  transition-delay: 40ms;
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner > *:nth-child(2) {
+  transition-delay: 80ms;
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner > *:nth-child(3) {
+  transition-delay: 120ms;
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner > *:nth-child(4) {
+  transition-delay: 160ms;
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner > *:nth-child(5) {
+  transition-delay: 200ms;
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner > *:nth-child(6) {
+  transition-delay: 240ms;
+}
+.nav-sheet[data-open="true"] .nav-sheet-inner > *:nth-child(7) {
+  transition-delay: 280ms;
+}
+.nav-sheet-arrow {
+  color: var(--muted-3);
+  font-size: 15px;
+}
+.nav-sheet-lang {
+  padding-top: 14px;
+}
+
+/* ── the language picker ──────────────────────────────────────────
+   Six words on the night, one of them gold. No plate, no border, no
+   chevron — the house rule is no boxes, and a control that is already
+   showing all of its options has nothing to open. The current language
+   is marked in gold and by `aria-current`; the hairline rule above the
+   row in the footer is the only chrome it gets. */
+.lang {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 4px;
+  margin-left: -9px; /* pull the first option's padding back to the margin */
+}
+/**
+ * Padded to a real touch target.
+ *
+ * It was `5px 9px`, which measures 68 × 30 for "English" and 74 × 30 for
+ * "Deutsch". That clears WCAG 2.5.8's 24 × 24 and the contrast is fine — but
+ * 30 px of height with 4 px between neighbours is well under the 44 pt / 48 dp
+ * both platforms ask for, on the one control in the product that exists
+ * specifically for somebody who is already struggling and is tapping at words
+ * they cannot read around. A near miss here selects a language they did not
+ * want and leaves them further from where they started.
+ *
+ * `13px` vertical takes each option to 44.9 px, measured. `11px` was tried
+ * first and lands at 40.9 — the arithmetic is 13.5 px of type at a 1.4 line
+ * height, which is 18.9, and 44 minus 18.9 is 25.1 of padding, not 22. Three
+ * pixels short is still short, and this is the control where a near miss is
+ * expensive. The footer keeps the tighter horizontal rhythm; what mattered was
+ * the height and the gap.
+ *
+ * The width takes care of itself — the narrowest endonym, "English", measures
+ * 66 px — so only one axis ever needed padding.
+ */
+.lang-option {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 13px 9px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--muted-3);
+  cursor: pointer;
+  transition: color var(--d-tap) var(--e-tap);
+}
+.lang-option:hover {
+  color: var(--ink-light);
+}
+.lang-option[aria-current="true"] {
+  color: var(--gold-bright);
+}
+.footer-lang {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+}
+/* Under the sign-in panel, on the night, so the picker's own colours hold. */
+.signin-lang {
+  margin-top: 30px;
+  padding-top: 14px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  justify-content: center;
+}
+.signin-lang .lang {
+  justify-content: center;
+  margin-left: 0;
+}
+/**
+ * The same picker on parchment, which is the one surface where night colours
+ * are wrong.
+ *
+ * `--muted-3` is a pale grey for reading on ink; on paper it is nearly
+ * invisible. These are the two colours the rest of the legal pages already use
+ * for body text and for the gold accent, so the control belongs to the
+ * document rather than looking pasted onto it.
+ */
+.legal-lang {
+  margin-top: 38px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(143, 114, 51, 0.28);
+}
+.legal-lang .lang-option {
+  color: rgba(28, 26, 23, 0.62);
+}
+.legal-lang .lang-option:hover {
+  color: rgba(28, 26, 23, 0.92);
+}
+.legal-lang .lang-option[aria-current="true"] {
+  color: #7a6129;
+}
+@media (min-width: 1024px) {
+  .lang-option {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 700px) {
+  .nav-inner {
+    padding: 14px 28px;
+  }
+}
+/**
+ * 940, where it was 900, and 700 before that.
+ *
+ * The bar carries a wordmark, four section anchors, a sign-in link, the gold
+ * pill and — new — the language toggle. Each time it gains a control this
+ * number is re-measured rather than argued about, and each time the answer has
+ * been to move the layout rather than to shrink the content: at 700 the pill
+ * overflowed by 88 px in German and was clipped away entirely by
+ * `overflow-x: hidden`, which looks fine in English and is broken in German.
+ *
+ * Measured at 900 with the toggle in place, in all six languages, as slack
+ * remaining in the bar: en +50, es +88, de +23, it +82, pt-BR +19, **fr −2**.
+ * French is the locale that finds every overflow here, and two pixels is an
+ * overflow. At 940 the same six read en +90, es +128, de +63, it +122,
+ * pt-BR +59, fr +16 — the whole set positive, and the tightest of them is the
+ * language whose CTA is longest rather than the one whose own name is.
+ *
+ * The alternatives were all worse than moving one number, and they are the same
+ * ones that were rejected last time. Shrinking the pill until French fits means
+ * a different type size for one language; dropping the sign-in link takes away
+ * the only route to `/sign-in` at tablet width, and that is where every magic
+ * link lands; letting the anchors shrink clips "Was es ist" mid-word; and
+ * closing the gaps by four pixels to buy two is a fix that lasts until the next
+ * time a word changes. A hamburger on a portrait tablet is ordinary, and below
+ * this width the sheet carries both the gold call to action and the picker.
+ */
+@media (min-width: 940px) {
+  .nav-mark-small {
+    display: none;
+  }
+  .nav-mark-full {
+    display: initial;
+  }
+  .nav-anchors {
+    display: flex;
+    gap: 26px;
+  }
+  .nav-signin {
+    display: inline;
+  }
+  .nav-cta {
+    display: inline-block;
+    height: 40px;
+    padding: 0 20px;
+  }
+  .nav-burger {
+    display: none;
+  }
+  /**
+   * The sheet survives to desktop, carrying one row.
+   *
+   * It used to be `display: none` here, which left the ≥900 bar with no
+   * language affordance of any kind — the footer picker, 5.6 viewport heights
+   * down and the 31st of 39 tab stops, was the only one on the page. The bar
+   * cannot hold the six endonyms (518 px measured in German against 320 px of
+   * slack at 1280), so it holds the toggle and the sheet holds the row.
+   *
+   * Everything else in the sheet is already in the bar at this width, so it is
+   * hidden rather than repeated. `display: none` and not `visibility`, because
+   * a hidden-but-present control is still a tab stop, and the sheet's own rule
+   * is that a collapsed sheet holds nothing in the tab order.
+   */
+  .nav-sheet-cta,
+  .nav-sheet a {
+    display: none;
+  }
+  .nav-sheet-lang {
+    padding-top: 0;
+  }
+  /* One row needs no stagger — the delay was there to unroll five. */
+  .nav-sheet[data-open="true"] .nav-sheet-inner > * {
+    transition-delay: 0s;
+  }
+  /* `inline-flex`, not `inline-block`: the base rule sets `min-height: 44px`
+     and `align-items: center` to make the target reachable, and a block box
+     would grow to 44 with the word sitting at the top of it. */
+  .nav-lang-toggle {
+    display: inline-flex;
+  }
+}
+@media (min-width: 1024px) {
+  .nav-inner {
+    padding: 16px 24px;
+    gap: 24px;
+  }
+  .nav-anchors {
+    gap: 32px;
+  }
+  .nav-cta {
+    height: 42px;
+    padding: 0 22px;
+    font-size: 14.5px;
+  }
+}
+
+/* ── hero ─────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  overflow-x: clip;
+}
+.hero-inner {
+  position: relative;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 28px var(--pad) 0;
+}
+.hero-title {
+  font-size: 40px;
+  line-height: 0.99;
+  letter-spacing: -0.03em;
+  margin: 14px 0 0;
+  color: var(--ink-light);
+}
+.hero-sub {
+  margin: 12px 0 0;
+  font-size: 15.5px;
+  line-height: 1.52;
+  color: var(--muted);
+}
+.hero-capture {
+  margin-top: 18px;
+}
+.date-row {
+  display: flex;
+  gap: 8px;
+  /* Wraps rather than crushes. With the fields empty the placeholders are
+     words — "Month", "Year" — not two digits, and on a narrow desktop column
+     the un-wrapped row squeezed them to "M…" beside a button that refused to
+     shrink. The button drops to its own line instead. */
+  flex-wrap: wrap;
+}
+.date-row > .select-wrap {
+  min-width: 70px;
+}
+.date-inline-btn {
+  flex: 1 1 auto;
+  min-width: 224px;
+  height: 58px;
+  padding: 0 28px;
+}
+
+.hero-art {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.star-map {
+  position: relative;
+  width: 248px;
+  height: 248px;
+  display: grid;
+  place-items: center;
+  margin: 14px auto 0;
+}
+.hero-glyph {
+  font-size: 58px;
+  line-height: 1;
+  color: var(--gold-bright);
+  animation: glow 3.4s ease-in-out infinite alternate;
+}
+.hero-glyph-meta {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted-3);
+  margin-top: 2px;
+}
+.ripple-ring {
+  position: absolute;
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(228, 211, 162, 0.4);
+  animation: ripple 7s ease-out infinite;
+}
+.ripple-ring-sm {
+  width: 150px;
+  height: 150px;
+  aspect-ratio: auto;
+}
+.hero-quote {
+  margin: 6px 0 0;
+  padding: 0 var(--pad);
+  max-width: 34ch;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--ink-light);
+  align-self: flex-start;
+}
+.hero-quote-attr {
+  font-family: var(--sans);
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-left: 8px;
+}
+.hero-art .overline {
+  align-self: flex-start;
+  padding: 0 var(--pad);
+}
+
+@media (min-width: 700px) {
+  .hero-inner {
+    padding: 26px var(--pad) 0;
+    display: grid;
+    grid-template-columns: 1.06fr 0.94fr;
+    gap: 34px;
+    align-items: center;
+  }
+  .hero-title {
+    font-size: 52px;
+    line-height: 0.98;
+    margin: 16px 0 0;
+  }
+  .hero-break {
+    display: none;
+  }
+  .hero-sub {
+    margin: 16px 0 0;
+    font-size: 17px;
+    line-height: 1.56;
+  }
+  .hero-capture {
+    margin-top: 24px;
+  }
+  .date-row {
+    gap: 9px;
+  }
+  .star-map {
+    width: 100%;
+    max-width: 330px;
+    height: auto;
+    aspect-ratio: 1;
+    margin: 0 auto;
+  }
+  .hero-glyph {
+    font-size: 66px;
+  }
+  .hero-quote {
+    margin: 26px 0 0;
+    padding: 0;
+    max-width: 52ch;
+    font-size: 19px;
+    line-height: 1.48;
+    grid-column: 1 / -1;
+  }
+  .hero-art {
+    display: contents;
+  }
+}
+@media (min-width: 1024px) {
+  .hero-inner {
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: clamp(40px, 5vw, 80px);
+    padding: clamp(56px, 6vw, 104px) var(--pad) clamp(48px, 5vw, 88px);
+  }
+  .hero-title {
+    font-size: clamp(52px, 5.6vw, 80px);
+    margin: 0;
+  }
+  .hero-break {
+    display: initial;
+  }
+  .hero-sub {
+    margin: 22px 0 0;
+    max-width: 44ch;
+    font-size: 19px;
+    line-height: 1.6;
+  }
+  .hero-capture {
+    margin: 34px 0 0;
+    max-width: 520px;
+  }
+  .date-row {
+    gap: 10px;
+  }
+  .hero-art {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+  }
+  .star-map {
+    width: min(460px, 42vw);
+    max-width: none;
+  }
+  .hero-glyph {
+    font-size: clamp(64px, 7vw, 96px);
+  }
+  .hero-quote {
+    grid-column: auto;
+    margin: 0;
+    max-width: 34ch;
+    text-align: center;
+    font-size: 20px;
+    line-height: 1.5;
+    align-self: center;
+  }
+  .hero-quote-attr {
+    display: none;
+  }
+}
+
+/* ── marquee ──────────────────────────────────────────────────── */
+.marquee {
+  overflow: hidden;
+  padding: 16px 0;
+  margin-top: 34px;
+  position: relative;
+}
+.marquee::before,
+.marquee::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 174, 107, 0.34), transparent);
+}
+.marquee::before {
+  top: 0;
+}
+.marquee::after {
+  bottom: 0;
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+.marquee-strip {
+  display: flex;
+  gap: 24px;
+  width: max-content;
+  flex: 0 0 auto;
+  font-family: var(--serif);
+  font-size: 17px;
+  color: rgba(228, 211, 162, 0.78);
+  white-space: nowrap;
+  padding-right: 24px;
+}
+@media (min-width: 700px) {
+  .marquee {
+    border-top: 1px solid var(--hairline-gold);
+    border-bottom: 1px solid var(--hairline-gold);
+  }
+  .marquee::before,
+  .marquee::after {
+    display: none;
+  }
+  .marquee-track {
+    animation-duration: 34s;
+  }
+  .marquee-strip {
+    gap: 30px;
+    padding-right: 30px;
+    font-size: 19px;
+  }
+}
+@media (min-width: 1024px) {
+  .marquee {
+    padding: 18px 0;
+    margin-top: 0;
+  }
+  .marquee-track {
+    animation-duration: 46s;
+  }
+  .marquee-strip {
+    gap: 38px;
+    padding-right: 38px;
+    font-size: 21px;
+  }
+}
+
+/* ── shared section frame ─────────────────────────────────────── */
+.sec {
+  position: relative;
+  overflow-x: clip;
+  padding: 44px 0 0;
+}
+/* the hero owns the date dropdown, so it must not clip vertically */
+.sec-insight {
+  overflow: visible;
+}
+.sec-inner {
+  position: relative;
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.sec-title {
+  font-size: 27px;
+  line-height: 1.1;
+  margin: 0 0 20px;
+  color: var(--ink-light);
+}
+@media (min-width: 700px) {
+  .sec {
+    padding: 54px 0 0;
+  }
+  .sec-head {
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .sec-title {
+    font-size: 32px;
+    line-height: 1.08;
+    margin: 0 0 30px;
+  }
+}
+@media (min-width: 1024px) {
+  .sec {
+    padding: clamp(64px, 7vw, 120px) 0 0;
+  }
+  .sec-head {
+    margin-bottom: 22px;
+  }
+  .sec-title {
+    font-size: clamp(32px, 3.6vw, 50px);
+    margin: 0 0 clamp(36px, 4vw, 58px);
+  }
+}
+
+/* ── I · what it is ───────────────────────────────────────────── */
+.what-lead {
+  margin: 0 0 28px;
+  font-family: var(--serif);
+  font-size: 25px;
+  line-height: 1.16;
+  color: var(--ink-light);
+}
+.what-grid {
+  display: grid;
+  gap: 0;
+}
+.what-item {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.what-figure {
+  font-family: var(--serif);
+  font-size: 48px;
+  line-height: 0.85;
+  color: var(--gold-bright);
+  width: 58px;
+  flex: 0 0 auto;
+}
+.what-figure-sm {
+  font-size: 40px;
+  line-height: 1;
+}
+.what-title {
+  font-size: 20px;
+  margin: 0 0 6px;
+  color: var(--ink-light);
+}
+.what-body {
+  font-size: 15px;
+  line-height: 1.58;
+  color: var(--muted);
+}
+.what-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201, 174, 107, 0.28), transparent);
+  margin: 24px 0;
+}
+@media (min-width: 700px) {
+  .what-lead {
+    max-width: 26ch;
+    font-size: 36px;
+    line-height: 1.12;
+    margin-bottom: 32px;
+  }
+  .what-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 34px;
+  }
+  .what-figure {
+    font-size: 56px;
+    width: 70px;
+  }
+  .what-figure-sm {
+    font-size: 46px;
+  }
+  .what-title {
+    font-size: 21px;
+    margin-bottom: 7px;
+  }
+  .what-body {
+    font-size: 15.5px;
+  }
+}
+@media (min-width: 1024px) {
+  .what-lead {
+    max-width: 24ch;
+    font-size: clamp(34px, 3.8vw, 54px);
+    margin-bottom: clamp(40px, 4vw, 64px);
+  }
+  .what-grid {
+    gap: clamp(32px, 4vw, 72px);
+  }
+  .what-item {
+    gap: 26px;
+  }
+  .what-figure {
+    font-size: 72px;
+    width: 96px;
+  }
+  .what-figure-sm {
+    font-size: 60px;
+  }
+  .what-title {
+    font-size: 26px;
+    margin-bottom: 10px;
+  }
+  .what-body {
+    font-size: 17px;
+    line-height: 1.6;
+  }
+}
+
+/* ── III · first insight (in-page reveal) ─────────────────────── */
+.sec-insight {
+  padding-top: 46px;
+}
+.sec-insight[data-revealed="true"] .insight-glyph,
+.sec-insight[data-revealed="true"] .insight-sign,
+.sec-insight[data-revealed="true"] .insight-pills {
+  animation: bloomIn var(--d-reveal) var(--e-ui) both;
+}
+.sec-insight[data-revealed="true"] .insight-line {
+  animation: riseIn var(--d-reveal) var(--e-ui) 70ms both;
+}
+.insight-body {
+  text-align: center;
+}
+.insight-glyph {
+  font-size: 92px;
+  line-height: 1;
+  color: var(--gold-bright);
+  animation: glow 3.4s ease-in-out infinite alternate;
+}
+.insight-sign {
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--ink-light);
+  margin-top: 4px;
+}
+.insight-pills {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.insight-line {
+  margin: 24px 0 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 19px;
+  line-height: 1.48;
+  color: var(--ink-light);
+}
+.insight-cta {
+  margin-top: 20px;
+}
+.insight-hook {
+  margin: 12px 0 0;
+  font-size: 13.5px;
+  color: var(--muted-3);
+  text-align: center;
+}
+@media (min-width: 700px) {
+  .insight-line,
+  .insight-cta,
+  .insight-hook {
+    max-width: 46ch;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .insight-cta {
+    display: flex;
+  }
+  .insight-glyph {
+    font-size: 104px;
+  }
+}
+
+/* ── IV · the parchment band ──────────────────────────────────── */
+.parch-band {
+  position: relative;
+  overflow-x: clip;
+  margin-top: 64px;
+}
+.parch-cap {
+  position: absolute;
+  left: -8%;
+  width: 116%;
+  height: 82px;
+  background: var(--parchment);
+  border-radius: 50%;
+}
+.parch-cap-top {
+  top: -38px;
+}
+.parch-cap-bottom {
+  bottom: -38px;
+}
+.parch-cap-wide {
+  left: -4%;
+  width: 108%;
+  height: 120px;
+}
+.parch-cap-wide.parch-cap-top {
+  top: -56px;
+}
+.parch-cap-wide.parch-cap-bottom {
+  bottom: -56px;
+}
+.parch-body {
+  position: relative;
+  background: var(--parchment);
+  color: var(--ink);
+  padding: 16px var(--pad) 22px;
+  overflow: hidden;
+}
+.parch-title {
+  font-size: 26px;
+  line-height: 1.12;
+  margin: 0 0 8px;
+}
+.parch-rule {
+  height: 1px;
+  background: rgba(143, 114, 51, 0.26);
+  margin: 20px 0;
+}
+.parch-rule-row {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+.parch-numeral {
+  font-family: var(--serif);
+  font-size: 24px;
+  line-height: 1;
+  color: var(--gold-deep);
+  width: 32px;
+  flex: 0 0 auto;
+}
+.parch-rule-title {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 18px;
+  margin: 0 0 5px;
+}
+.parch-rule-body {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+.parch-note {
+  margin: 20px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: rgba(28, 26, 23, 0.64);
+}
+.parch-body-wide {
+  padding: clamp(18px, 3vw, 52px) var(--pad) clamp(24px, 3vw, 52px);
+}
+.parch-grid {
+  position: relative;
+  max-width: var(--shell);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(32px, 4vw, 64px);
+  align-items: center;
+}
+.parch-voice {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 23px;
+  line-height: 1.46;
+}
+.parch-side-title {
+  font-size: 21px;
+  line-height: 1.18;
+  margin: 0 0 12px;
+}
+.parch-side-body {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-muted);
+}
+.parch-band .sec-head .numeral {
+  color: var(--gold-deep);
+}
+@media (min-width: 700px) {
+  .parch-band {
+    margin: 62px 0 0;
+  }
+}
+@media (min-width: 1024px) {
+  .parch-band {
+    margin: clamp(64px, 7vw, 120px) 0 0;
+  }
+  .parch-voice {
+    font-size: clamp(22px, 2.4vw, 32px);
+    line-height: 1.44;
+  }
+  .parch-side-title {
+    font-size: 26px;
+    line-height: 1.16;
+    margin-bottom: 14px;
+  }
+  .parch-side-body {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+  .parch-note {
+    font-size: 13px;
+  }
+}
+
+/* ── V · the eight ────────────────────────────────────────────── */
+.sec-eight {
+  padding-top: 80px;
+}
+.eight-rail {
+  gap: 24px;
+  padding: 0 var(--pad) 6px;
+  align-items: stretch;
+}
+.eight-card {
+  width: min(58vw, 206px);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+/**
+ * The circle sizes itself off the card and is never given a width here.
+ *
+ * There used to be a `.eight-card > div:first-child` rule at each of the three
+ * breakpoints, setting the art to 206, then 140, then 100%. Two of the three
+ * were dead letters: `ArtCircle` writes `width:100%; aspect-ratio:1` as an
+ * inline style, and an inline style beats a stylesheet rule, so the only one of
+ * those declarations that ever applied was the `height`. On a phone and on a
+ * desktop the two happened to agree and nothing showed. Between 700 and 1023
+ * they did not: the rule asked for 140 × 140 beside the copy, the element took
+ * the card's full 320 px of width and the stylesheet's 140 px of height, and
+ * every one of the eight became a flattened ellipse lying across its own
+ * paragraph. Measured at 768: 319.86 × 140, with the name and the note printed
+ * on top of the art.
+ *
+ * So the width is left where it already lives — in the component — and the
+ * card's own column width is the only thing that decides how large the circle
+ * is. One number instead of four, and the shape cannot go oval again.
+ */
+.eight-copy {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.eight-group {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-top: 18px;
+}
+.eight-name {
+  font-size: 20px;
+  margin: 7px 0 0;
+  color: var(--ink-light);
+}
+.eight-note {
+  font-size: 13.5px;
+  color: var(--muted-3);
+  margin-top: auto;
+  padding-top: 5px;
+}
+.eight-tail {
+  margin: 28px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted-3);
+}
+/**
+ * Tablet: three across, because the groups are three, three and two.
+ *
+ * What was here hid half the section. `.eight-card[data-door="false"]
+ * { display: none }` removed Numerology, Birth Card, Solar return and
+ * Cross-synthesis at every width from 700 up, under a heading that counts to
+ * eight and above a tail sentence that says *every one of the eight is
+ * calculated free*. Measured at 768: four cards shown, four `display: none`.
+ * A visitor on a tablet was shown four and told eight, on the same screen, and
+ * the four that vanished are exactly the four that are not doors — so the
+ * section quietly became a list of things to buy while claiming to be a list of
+ * what is computed. That is the one thing this page is not allowed to do.
+ *
+ * Deleting the rule alone would have left eight cards in a two-column grid with
+ * nothing to organise them, so the columns count to the structure instead. The
+ * eight belong to six groups — *who am I* (3), *right now*, *this year*, *how
+ * we match*, *where to be*, *all of it* (1 each) — and `systems` is authored in
+ * that order, which is the order the mobile rail already reads in. At three
+ * columns the first row is *who am I* entire: natal chart, numerology, birth
+ * card, the three readings that need nothing but a date. The second row is the
+ * three that need a moment in time, and the third is where to stand and the
+ * synthesis of all of it. The grid is six columns and each card spans two so
+ * that the last row's two can sit centred under the three above rather than
+ * hanging off the left edge with a hole beside them.
+ *
+ * The card keeps the one shape it has at every other width — circle above,
+ * words below. The old tablet card was a third design, a horizontal row with
+ * the art beside the text, and it was the one that broke; the phone and the
+ * desktop share a vertical card and the tablet now does too.
+ *
+ * `grid-auto-rows: 1fr` is the height fix. The rows were free-standing, so two
+ * cards side by side measured 162.6 px and 140 px — a difference nobody can
+ * name and everybody reads as unfinished. Equal rows plus `margin-top: auto` on
+ * the note (which the base rule already sets) puts every note on the same
+ * baseline across the whole grid, so the ragged edge is gone in both axes.
+ */
+@media (min-width: 700px) {
+  .sec-eight {
+    padding-top: 56px;
+  }
+  .eight-rail {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 1fr;
+    gap: 34px 30px;
+    overflow: visible;
+    max-width: var(--shell);
+    margin: 0 auto;
+    padding: 0 var(--pad);
+  }
+  .eight-card {
+    width: auto;
+    grid-column: span 2;
+  }
+  /* The two that end the list, centred under the three that start the row
+     above. Written as "the last two" rather than as "the seventh and the
+     eighth" so it survives the section being renamed; `eight-layout.test.ts`
+     holds the arithmetic that makes centring the right answer — eight systems
+     over three columns leaves a last row of two. */
+  .eight-card:nth-last-child(2) {
+    grid-column: 2 / span 2;
+  }
+  .eight-card:last-child {
+    grid-column: 4 / span 2;
+  }
+  .eight-name {
+    font-size: 21px;
+  }
+}
+@media (min-width: 1024px) {
+  .eight-rail {
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(20px, 2.4vw, 38px);
+  }
+  /* Eight over four is two whole rows, so nothing needs centring and every
+     card goes back to one column of the four. */
+  .eight-card,
+  .eight-card:nth-last-child(2),
+  .eight-card:last-child {
+    grid-column: auto;
+  }
+  .eight-group {
+    font-size: 11.5px;
+    margin-top: 22px;
+  }
+  .eight-name {
+    font-size: 24px;
+    margin-top: 8px;
+  }
+  .eight-note {
+    font-size: 14.5px;
+  }
+  .eight-tail {
+    margin-top: 34px;
+    font-size: 16px;
+  }
+}
+
+/* ── VI · cross-synthesis ─────────────────────────────────────── */
+.sec-synth {
+  padding-top: 52px;
+}
+.synth-grid {
+  display: grid;
+  gap: 22px;
+}
+.synth-lead {
+  margin: 14px 0 22px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.synth-axis {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--ink-light);
+}
+/**
+ * Four slots per axis, none of them filled.
+ *
+ * `.lozenge-on` — which filled one in `--agree` green — stood below this rule
+ * and had exactly one caller: the landing's synthesis panel, lighting three of
+ * four for a visitor who had entered nothing. The class went with the claim.
+ * What is left is the instrument: four outlines, the number of systems that
+ * read a single axis, waiting.
+ *
+ * The row's flex used to be an inline style on the span. It is here because
+ * the panel now has three identical rows built from a list, and a shared shape
+ * belongs in the stylesheet where the sizes at 700 and 1024 already live.
+ */
+.lozenges {
+  display: flex;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+.lozenge {
+  width: 8px;
+  height: 8px;
+  border: 1px solid rgba(237, 231, 218, 0.28);
+  transform: rotate(45deg);
+  display: block;
+}
+@media (min-width: 700px) {
+  .sec-synth {
+    padding-top: 58px;
+  }
+  .synth-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+    align-items: center;
+  }
+  .synth-lead {
+    font-size: 16px;
+    line-height: 1.62;
+  }
+  .synth-axis {
+    font-size: 18px;
+  }
+  .lozenge {
+    width: 9px;
+    height: 9px;
+  }
+}
+@media (min-width: 1024px) {
+  .synth-grid {
+    gap: clamp(40px, 5vw, 80px);
+  }
+  .synth-lead {
+    margin: 22px 0 0;
+    max-width: 44ch;
+    font-size: 17.5px;
+    line-height: 1.65;
+  }
+  .synth-axis {
+    font-size: 20px;
+  }
+  .lozenge {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+/* ── VII · voice on the night (mobile) ────────────────────────── */
+.sec-voice {
+  padding-top: 46px;
+}
+
+/* ── VIII · pricing ───────────────────────────────────────────── */
+.sec-pricing {
+  padding-top: 52px;
+}
+.pricing-grid {
+  display: grid;
+  gap: 28px;
+}
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  gap: 12px;
+}
+.price-name {
+  font-family: var(--serif);
+  font-size: 19px;
+  color: var(--ink-light);
+}
+.price-name-lg {
+  font-size: 21px;
+}
+.price-figure {
+  font-family: var(--serif);
+  font-size: 26px;
+  color: var(--gold-bright);
+}
+.price-figure-lg {
+  font-size: 36px;
+  line-height: 1;
+}
+.price-note {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(237, 231, 218, 0.65);
+}
+.price-note-lg {
+  margin: 10px 0 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.price-rule {
+  height: 1px;
+  background: rgba(201, 174, 107, 0.22);
+  margin-bottom: 28px;
+}
+.price-cta {
+  width: 100%;
+  margin-top: 18px;
+  font-size: 16px;
+}
+.honesty {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: rgba(237, 231, 218, 0.65);
+}
+.honesty b {
+  color: var(--agree);
+}
+@media (min-width: 700px) {
+  .sec-pricing {
+    padding-top: 82px;
+  }
+  .pricing-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 38px;
+    align-items: start;
+  }
+  .price-name {
+    font-size: 21px;
+  }
+  .price-name-lg {
+    font-size: 22px;
+  }
+  .price-figure {
+    font-size: 30px;
+  }
+  .price-figure-lg {
+    font-size: 38px;
+  }
+  .price-note {
+    margin-bottom: 18px;
+    font-size: 15px;
+    line-height: 1.58;
+  }
+  .price-rule {
+    margin-bottom: 18px;
+  }
+  .price-cta {
+    margin-top: 20px;
+    height: 56px;
+  }
+}
+@media (min-width: 1024px) {
+  .pricing-grid {
+    gap: clamp(32px, 4vw, 72px);
+  }
+  .price-name {
+    font-size: 24px;
+  }
+  .price-name-lg {
+    font-size: 26px;
+  }
+  .price-figure {
+    font-size: 34px;
+  }
+  .price-figure-lg {
+    font-size: 46px;
+  }
+  .price-note {
+    margin-bottom: 20px;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  .price-note-lg {
+    margin-top: 12px;
+    font-size: 16.5px;
+  }
+  .price-rule {
+    margin-bottom: 20px;
+  }
+  .price-cta {
+    width: auto;
+    height: 58px;
+    padding: 0 34px;
+    margin-top: 24px;
+    font-size: 16.5px;
+  }
+  .honesty {
+    gap: 8px 22px;
+    margin-top: 18px;
+    font-size: 14.5px;
+  }
+}
+
+/* ── IX · FAQ ─────────────────────────────────────────────────── */
+.sec-faq {
+  padding-top: 48px;
+}
+.faq-inner {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+@media (min-width: 700px) {
+  .sec-faq {
+    padding-top: 58px;
+  }
+  .faq-inner {
+    max-width: 70ch;
+  }
+}
+@media (min-width: 1024px) {
+  .faq-inner {
+    max-width: 820px;
+  }
+}
+
+/* ── final ────────────────────────────────────────────────────── */
+.sec-final {
+  position: relative;
+  overflow-x: clip;
+  margin-top: 56px;
+  padding: 68px var(--pad) 52px;
+  overflow: hidden;
+}
+.final-inner {
+  position: relative;
+  max-width: 760px;
+  margin: 0 auto;
+}
+.final-title {
+  font-size: 31px;
+  line-height: 1.06;
+  margin: 0;
+  color: var(--ink-light);
+}
+.final-sub {
+  margin: 16px 0 0;
+  max-width: 28ch;
+  font-size: 15.5px;
+  line-height: 1.65;
+  color: rgba(237, 231, 218, 0.74);
+}
+.final-cta {
+  width: 100%;
+  margin-top: 24px;
+}
+@media (min-width: 700px) {
+  .sec-final {
+    margin-top: 62px;
+    padding: 70px var(--pad) 56px;
+    text-align: center;
+  }
+  .final-inner {
+    max-width: 52ch;
+  }
+  .final-title {
+    font-size: 40px;
+    line-height: 1.04;
+  }
+  .final-sub {
+    max-width: none;
+    margin: 16px auto 0;
+    font-size: 16.5px;
+  }
+  .final-cta {
+    width: auto;
+    height: 58px;
+    padding: 0 36px;
+    margin-top: 26px;
+  }
+}
+@media (min-width: 1024px) {
+  .sec-final {
+    margin-top: 0;
+    padding: clamp(64px, 7vw, 120px) var(--pad);
+  }
+  .final-inner {
+    max-width: 760px;
+  }
+  .final-title {
+    font-size: clamp(38px, 4.6vw, 64px);
+  }
+  .final-sub {
+    max-width: 44ch;
+    margin: 20px auto 0;
+    font-size: 18px;
+  }
+  .final-cta {
+    height: 60px;
+    padding: 0 38px;
+    margin-top: 32px;
+    font-size: 17px;
+  }
+}
+
+/* ── footer ───────────────────────────────────────────────────── */
+.footer {
+  overflow-x: clip;
+  padding: 40px 0 30px;
+}
+.footer-inner {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 var(--pad);
+}
+.footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 0;
+  border-top: 1px solid var(--hairline);
+}
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  font-size: 13.5px;
+  margin-bottom: 18px;
+}
+.footer-links a {
+  color: var(--muted-3);
+}
+.footer-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.footer-badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(237, 231, 218, 0.2);
+  font-size: 12px;
+  color: var(--muted-3);
+}
+.footer-fine {
+  margin-top: 22px;
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--muted-3);
+  max-width: 96ch;
+}
+@media (min-width: 700px) {
+  .footer {
+    padding: 36px 0 30px;
+    border-top: 1px solid var(--hairline-gold);
+  }
+}
+@media (min-width: 1024px) {
+  .footer {
+    padding: 44px 0 40px;
+  }
+  .footer-links {
+    gap: 12px 26px;
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+  .footer-badge {
+    padding: 6px 13px;
+    font-size: 12.5px;
+  }
+  .footer-fine {
+    font-size: 13px;
+  }
+}
+
+/* ── the CTA bar (mobile only) ────────────────────────────────── */
+.cta-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  padding: 12px var(--pad) calc(22px + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, rgba(9, 12, 26, 0), rgba(9, 12, 26, 0.9) 26%, rgba(9, 12, 26, 0.98));
+  backdrop-filter: blur(16px);
+  transform: translateY(120%);
+  opacity: 0;
+  /**
+   * One movement, so one duration and one curve.
+   *
+   * The travel ran for `--d-bar` (420 ms) on the sheet's ease-out-expo while
+   * the fade ran for 300 ms on `ease`. Nothing about either number is wrong on
+   * its own, and that is why the bar was hard to fault and easy to feel: it
+   * finished becoming opaque a fifth of a second before it finished arriving,
+   * so the last 120 ms were a fully solid bar still visibly sliding — two
+   * events where the eye expects one, which reads as a stutter at the end of
+   * the entrance rather than as anything anyone can name.
+   *
+   * Sharing the curve as well as the duration is the part that matters. With
+   * the same easing the opacity is a function of the position — the bar is
+   * exactly as visible as it is arrived, at every frame — and there is no
+   * moment at which one of the two has finished and the other has not. On the
+   * way out the same pair reverses, so it leaves the way it came.
+   */
+  transition:
+    transform var(--d-bar) var(--e-sheet),
+    opacity var(--d-bar) var(--e-sheet);
+  pointer-events: none;
+}
+.cta-bar[data-visible="true"] {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+.cta-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: var(--shell);
+  margin: 0 auto;
+}
+.cta-bar-copy {
+  flex: 1;
+  min-width: 0;
+}
+/**
+ * The status line wraps rather than being cut off.
+ *
+ * It was `nowrap` with an ellipsis, and measured at 360 px the copy column is
+ * 119 px wide while the German "8 Systeme · warten auf ein Datum" needs 217 —
+ * so it rendered as "…teme · war…". Every one of the six languages overflowed:
+ * en 204, es 216, de 217, it 194, fr 223, pt-BR 212, all against 119. The whole
+ * informational job of this bar is to say that three systems are ready and five
+ * are waiting, and on a phone it was unreadable in every language we ship.
+ *
+ * The change to `cta.read` made it about 38 px worse — "Continue free" left
+ * 160 px of copy and "Read myself — free" leaves 122 — which is a good trade for
+ * a label that is true, paid for here rather than by shortening the label.
+ *
+ * Wrapping rather than shrinking the type: the bar has vertical room (it is
+ * `position: fixed` against the bottom of the viewport with nothing under it),
+ * and a second line costs 18 px of a screen the person is scrolling anyway,
+ * where a smaller face costs legibility on the smallest screen it appears on.
+ */
+.cta-bar-copy > span {
+  display: block;
+  /* Two lines is the ceiling. Beyond that a translation nobody has written yet
+     would push the bar over the fold; `line-clamp` truncates the third line
+     instead of the first character, which fails in the readable direction. */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+/**
+ * The one button on the site whose label is allowed to wrap.
+ *
+ * `.btn` is `white-space: nowrap` everywhere, which is right for a control that
+ * can be as wide as it needs to be. This one cannot: it shares a 316 px row
+ * with the status column at 360, and the cap that leaves the status column
+ * enough to be read is 50% — 158 px, or 122 of usable width once the pill has
+ * its padding. Measured at 360, the six labels set at 136, 113.8, 167.8, 127.6,
+ * 161.5 and 125.7 px. Five of the six were wider than the pill, and with
+ * `nowrap` and no ellipsis none of them truncated: they ran out through both
+ * rounded ends of the gold and sat on the night either side of it. German
+ * overhung by 23 px each side and English by 7.
+ *
+ * It was reported as two languages because `scrollWidth` was the instrument.
+ * The pill is `justify-content: center`, and a centred overflow spills equally
+ * in both directions — `scrollWidth` counts the right-hand half and cannot see
+ * the left, so it read 163 for a label that is 167.8 wide in a 122 px box and
+ * read *no overflow at all* for English. Anything measured through it here is
+ * an undercount; the numbers above come from setting the string in the pill's
+ * own computed font and asking for its width.
+ *
+ * Everything that could be taken from the geometry was taken and none of it was
+ * enough. Padding went from the `.btn` default of 28 to 18 — correct anyway for
+ * a 50 px control on the narrowest screen we ship to — and 20 px of padding is
+ * no answer to a 46 px shortfall in type. Widening the cap far enough for
+ * German (about 64%) leaves the status column 106 px, where the German status
+ * needs three lines and `line-clamp: 2` eats the third: the status-line
+ * truncation this bar was just fixed for, reintroduced sideways to save a
+ * button. Dropping to 14 px rescues English and Italian and still leaves German
+ * and French outside, so it buys a smaller face on the smallest screen and does
+ * not even buy consistency.
+ *
+ * The remaining options were shortening the labels or letting them take two
+ * lines. Shortening was refused where the same question was answered for
+ * `cta.read`: this label is the only place the bar says the reading is free,
+ * and a language whose words are longer does not get told less. So it wraps —
+ * "Mich lesen —" over "kostenlos" — inside a pill that grows to meet it, and
+ * Spanish, which fits, still sets on one line and keeps its own width.
+ *
+ * The bar does not get taller for it. The copy column beside it is already
+ * 64 px (a 20 px date over a 44 px two-line status) and a two-line pill is 52,
+ * so the row's height is still set by the words, as it was: 98 px in all six,
+ * measured at 360 and at 390. `cta.test.ts` measures the label against the
+ * width this allows.
+ */
+.cta-bar-btn {
+  min-height: 50px;
+  height: auto;
+  padding: 8px 18px;
+  font-size: 15px;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  flex: 0 0 auto;
+  max-width: 50%;
+  box-shadow: var(--btn-shadow-sm);
+}
+/**
+ * The nav's breakpoint, not the page-wide tablet one.
+ *
+ * It hid at 700 while the gold pill only appears in the bar at the nav's own
+ * width, so the band between them had neither: no sticky bar and no pill,
+ * leaving the hero button, the nav sheet and the three in-page CTAs. Two
+ * numbers describing one decision — "is the gold call to action in the chrome
+ * or in the page" — and the band between them was the one width where the
+ * answer was "neither".
+ */
+@media (min-width: 940px) {
+  .cta-bar {
+    display: none;
+  }
+}
+
+/* ══════════════════ JOURNEY OVERLAY ═══════════════════════════ */
+
+.journey {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  background: radial-gradient(80% 50% at 50% 30%, rgba(58, 52, 132, 0.5), transparent 64%), var(--night-800);
+  /* short viewports scroll rather than clipping the controls */
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  animation: overlayRise var(--d-sheet) var(--e-sheet) both;
+}
+.journey::-webkit-scrollbar {
+  width: 0;
+}
+/**
+ * The one place on the site that takes focus and shows no ring.
+ *
+ * The dialog is given `tabIndex={-1}` and focused when it opens, so that a
+ * screen reader announces the dialog and its name before its contents. That
+ * makes it a focus target without making it a control: there is nothing to
+ * press here, and a 2 px gold rectangle around the whole viewport would point
+ * at the room rather than at anything in it. The next Tab moves to the ✕ and
+ * the ring appears there, on something that does something.
+ *
+ * Stated here rather than left to the fact that `inset: 0` puts the outline
+ * off-screen anyway — that is true today and stops being true the first time
+ * this element gets a margin.
+ */
+.journey:focus-visible {
+  outline: none;
+}
+.journey-scene {
+  position: relative;
+  min-height: 100dvh;
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0 22px calc(28px + env(safe-area-inset-bottom));
+}
+.journey-head {
+  position: relative;
+  z-index: 2;
+  padding: 20px 0 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex: 0 0 auto;
+  /* So the picker below can take a row of its own. */
+  flex-wrap: wrap;
+}
+/**
+ * The way out of the wrong language, on the one screen that is the whole
+ * viewport.
+ *
+ * A full-width row under the step counter rather than a third item beside it:
+ * the six endonyms measure about 430 px and the head is 328 px of content at
+ * 360, so squeezed in beside the counter and the close button they would wrap
+ * to three lines and push the art off the screen. On its own row they take two
+ * lines at 360 and one from 470 up.
+ *
+ * `margin-left` cancels `.lang`'s own negative pull so the first option lines
+ * up with the counter above it, and the hairline is the same one the footer
+ * picker gets — the only chrome the house style allows it.
+ */
+.journey-lang {
+  flex-basis: 100%;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--hairline);
+}
+.journey-count {
+  font-family: var(--serif);
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: rgba(201, 174, 107, 0.8);
+}
+.journey-close {
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.journey-art {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  max-height: 40vh;
+}
+.journey-copy {
+  position: relative;
+  z-index: 2;
+  padding: 0 4px;
+  flex: 0 0 auto;
+}
+.journey-title {
+  font-size: 30px;
+  line-height: 1.14;
+  margin: 0;
+  color: var(--ink-light);
+}
+.journey-sub {
+  margin: 12px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted-2);
+}
+.journey-controls {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  padding-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.journey-controls-static {
+  margin-top: 24px;
+}
+.journey-skip {
+  background: none;
+  border: 0;
+  margin-top: 8px;
+  text-align: center;
+  font-size: 13.5px;
+  color: rgba(237, 231, 218, 0.5);
+  cursor: pointer;
+}
+.journey-fine {
+  text-align: center;
+  margin-top: 12px;
+  font-size: 13px;
+  color: rgba(237, 231, 218, 0.5);
+}
+.journey-legal {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted-3);
+}
+.journey-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0;
+  font-size: 12.5px;
+  color: var(--muted-3);
+}
+.journey-or span:first-child,
+.journey-or span:last-child {
+  flex: 1;
+  height: 1px;
+  background: rgba(237, 231, 218, 0.14);
+}
+.journey-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 4px 6px;
+}
+.journey-scroll {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+}
+.journey-scroll::-webkit-scrollbar {
+  width: 0;
+}
+
+.choice {
+  height: 54px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: rgba(237, 231, 218, 0.06);
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  font-family: var(--sans);
+  font-size: 15.5px;
+  color: rgba(237, 231, 218, 0.85);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--d-tap) var(--e-tap);
+}
+.choice:hover {
+  background: rgba(237, 231, 218, 0.1);
+}
+.choice[data-selected="true"] {
+  border-color: rgba(201, 174, 107, 0.55);
+  background: rgba(201, 174, 107, 0.12);
+  color: var(--gold-bright);
+}
+
+.provider {
+  height: 56px;
+  border-radius: 999px;
+  border: 1px solid rgba(237, 231, 218, 0.22);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--sans);
+  font-size: 15.5px;
+  color: var(--ink-light);
+  cursor: pointer;
+}
+.provider-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ink-light);
+  color: var(--night-800);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 6px;
+}
+.suggestion {
+  padding: 13px 16px;
+  border-radius: 16px;
+  border: 0;
+  background: transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--sans);
+  font-size: 15.5px;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: left;
+}
+.suggestion[data-selected="true"] {
+  background: rgba(237, 231, 218, 0.05);
+  color: var(--ink-light);
+}
+.suggestion-tz {
+  font-size: 12.5px;
+  color: rgba(237, 231, 218, 0.5);
+  flex: 0 0 auto;
+}
+
+/* orbiting scene (name step) */
+.orbit-halo {
+  position: absolute;
+  width: 262px;
+  height: 262px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 231, 188, 0.14), transparent 68%);
+  animation: breathe 8s ease-in-out infinite;
+}
+.orbit-ring {
+  position: absolute;
+  width: 214px;
+  height: 214px;
+  border: 1px solid rgba(201, 174, 107, 0.4);
+  border-radius: 50%;
+  animation: spin 34s linear infinite;
+}
+.orbit-body {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--star-fill);
+  box-shadow: 0 0 12px rgba(246, 231, 188, 0.95);
+}
+.orbit-ring-dashed {
+  position: absolute;
+  width: 142px;
+  height: 142px;
+  border: 1px dashed rgba(201, 174, 107, 0.28);
+  border-radius: 50%;
+  animation: spinBack 24s linear infinite;
+}
+.auth-halo {
+  position: absolute;
+  width: 238px;
+  height: 238px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 231, 188, 0.14), transparent 68%);
+  animation: breathe 7s ease-in-out infinite;
+}
+
+/* ceremony */
+.ceremony-art {
+  height: 380px;
+  max-height: 44vh;
+}
+.ceremony-ring-outer {
+  position: absolute;
+  width: 372px;
+  height: 372px;
+  max-width: 92vw;
+  max-height: 92vw;
+  border: 1px solid rgba(201, 174, 107, 0.16);
+  border-radius: 50%;
+  animation: spinBack 44s linear infinite;
+}
+.ceremony-ring {
+  position: absolute;
+  width: 306px;
+  height: 306px;
+  max-width: 78vw;
+  max-height: 78vw;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 174, 107, 0.42);
+  animation: spin 36s linear infinite;
+}
+.ceremony-body-a {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--star-fill);
+  box-shadow: 0 0 12px rgba(246, 231, 188, 0.9);
+}
+.ceremony-body-b {
+  position: absolute;
+  bottom: 20px;
+  right: 14px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 9px rgba(201, 174, 107, 0.9);
+}
+.ceremony-line {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.48;
+  color: var(--ink-light);
+}
+.ceremony-bar {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 16px;
+}
+.ceremony-bar span {
+  flex: 1;
+  height: 2px;
+  background: rgba(237, 231, 218, 0.16);
+  transition: background var(--d-ui) var(--e-ui);
+}
+.ceremony-bar span[data-on="true"] {
+  background: var(--gold);
+}
+
+/* portrait */
+.portrait-head {
+  text-align: center;
+  padding: 24px 4px 0;
+}
+.portrait-glyph {
+  font-size: 96px;
+  line-height: 1;
+  color: var(--gold-bright);
+  margin: 10px 0 0;
+  animation: glow 3.4s ease-in-out infinite alternate;
+}
+.portrait-name {
+  font-family: var(--serif);
+  font-size: 25px;
+  color: var(--ink-light);
+  margin-top: 4px;
+}
+.portrait-pills {
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.portrait-body {
+  padding: 26px 4px 0;
+}
+.portrait-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+}
+
+/* handoff */
+.handoff {
+  padding: 40px 4px 0;
+}
+.handoff-rules {
+  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.handoff-rule {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(201, 174, 107, 0.26), transparent);
+  margin-bottom: 20px;
+}
+.handoff-row {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+.handoff-row p {
+  font-size: 15px;
+  line-height: 1.58;
+  color: rgba(237, 231, 218, 0.78);
+}
+.handoff-numeral {
+  font-family: var(--serif);
+  font-size: 24px;
+  color: var(--gold-deep);
+  width: 26px;
+  flex: 0 0 auto;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Visibility helpers, restated last so they always beat a component's
+   own `display` (screens.css loads after globals.css).
+   ══════════════════════════════════════════════════════════════════ */
+@media (max-width: 699px) {
+  .from-tablet,
+  .from-tablet-block,
+  .from-tablet-flex,
+  .only-desktop {
+    display: none;
+  }
+}
+@media (min-width: 700px) {
+  .only-mobile,
+  .only-mobile-block {
+    display: none;
+  }
+}
+@media (min-width: 700px) and (max-width: 1023px) {
+  .only-desktop {
+    display: none;
+  }
+}
+@media (min-width: 1024px) {
+  .to-tablet {
+    display: none;
+  }
+}
+
+/* the field the CTA is waiting on, and the line that says so */
+.field[data-missing="true"] {
+  border-color: rgba(201, 174, 107, 0.7);
+  box-shadow: 0 0 0 3px rgba(201, 174, 107, 0.18);
+}
+.date-nudge {
+  margin-top: 10px;
+  font-size: 13.5px;
+  color: var(--gold-bright);
+}
+
+/* The place step's empty state — "no such town" and "we cannot reach the
+   index" both land here, because to the person typing they are the same
+   problem. */
+.suggestion-empty {
+  padding: 14px 4px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted-2);
+}
+
+/* ══ WHAT CONTINUES ═══════════════════════════════════════════════
+   Three points at the end of the journey, above the stores. A label
+   and a sentence, no rules between them and no numerals — the three
+   rules underneath already use numerals, and two numbered lists on
+   one screen read as one list that restarts.                        */
+
+.continues {
+  margin: 30px 0 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  text-align: left;
+}
+.continues-row p {
+  margin-top: 7px;
+  font-size: 15px;
+  line-height: 1.58;
+  color: rgba(237, 231, 218, 0.78);
+}
+
+/* ══ THE HANDOFF ══════════════════════════════════════════════════
+   Two rows at the end of the journey, and the same two under a
+   consumed sign-in link.
+
+   The two states are different objects and are styled as such. A
+   "coming" plate is ours: a sentence at the weight of a sentence,
+   deliberately not a disabled button, because there is no control
+   here yet and nothing to disable. A live badge is the store's own
+   artwork, which both Apple and Google require to be used exactly as
+   supplied — so it gets no border, no fill and no hover tint, and it
+   keeps the clear space both guidelines ask for: a quarter of the
+   badge's own height, which at 52px is 13.                          */
+
+.stores {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  width: 100%;
+  margin: 26px 0 0;
+}
+.stores-note {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--muted-2);
+  margin: 0 0 6px;
+  text-align: left;
+}
+/* Why the plates cannot be tapped, and what a chart does when the
+   person leaves. Both are quieter than the rows above them: they
+   answer a question rather than ask for anything. */
+.stores-fine,
+.stores-carry {
+  font-size: 13.5px;
+  line-height: 1.62;
+  color: var(--muted-2);
+  text-align: left;
+  margin: 0;
+}
+.stores-fine {
+  margin-top: 3px;
+}
+.stores-carry {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(201, 174, 107, 0.16);
+}
+.store-badge {
+  display: block;
+  padding: 13px 0;
+  line-height: 0;
+}
+.store-badge img {
+  height: 52px;
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+.store-badge-soon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 1px dashed rgba(201, 174, 107, 0.45);
+  font-family: var(--sans);
+  font-size: 15px;
+  letter-spacing: 0.02em;
+  color: var(--muted-2);
+  cursor: default;
+}
+
+/* ══ SIGN IN ══════════════════════════════════════════════════════
+   The one screen with no chart on it. Centred, quiet, and short —
+   there is exactly one thing to do here.                            */
+
+.signin-page {
+  position: relative;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 40px var(--pad);
+  overflow-x: clip;
+}
+.signin-inner {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.signin-title {
+  font-family: var(--serif);
+  font-size: clamp(26px, 6vw, 34px);
+  font-weight: 400;
+  color: var(--ink-light);
+}
+.signin-lead {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted-2);
+  max-width: 32ch;
+}
+.signin {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 6px;
+}
+.signin-provider {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+.signin-or {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-3);
+  margin: 2px 0;
+}
+.signin-sent {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--ink-light);
+  max-width: 34ch;
+}
+.signin-error {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--disagree);
+}
+.signin-note {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--muted-3);
+  margin-top: 2px;
+}
+
+/* ══ LEGAL ════════════════════════════════════════════════════════
+   The five documents. Parchment, like the chapter reader — a document
+   is the one place this design allows ink on paper, and these pages
+   should print as well as they read. The reader's measurements, so a
+   policy and a chapter feel like the same hand.                     */
+
+.legal {
+  position: relative;
+  display: flex;
+  min-height: 100dvh;
+  overflow: hidden;
+}
+
+/* desktop: the standing column of all five */
+.legal-side {
+  width: 260px;
+  flex: 0 0 auto;
+  border-right: 1px solid rgba(143, 114, 51, 0.22);
+  padding: 26px 18px;
+  position: relative;
+  z-index: 2;
+}
+.legal-side-title {
+  font-size: 11.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #7a6129;
+  font-weight: 600;
+  padding: 0 14px 12px;
+}
+.legal-side-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.legal-side-item {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: rgba(28, 26, 23, 0.7);
+}
+.legal-side-item:hover {
+  color: var(--ink);
+}
+.legal-side-item[data-active="true"] {
+  background: rgba(143, 114, 51, 0.14);
+  color: var(--ink);
+  font-weight: 600;
+}
+.legal-side-foot {
+  margin-top: 24px;
+  padding: 0 14px;
+  font-size: 12.5px;
+}
+.legal-side-foot a {
+  color: #7a6129;
+}
+
+.legal-main {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* mobile & tablet: the five in a rail, above the document */
+.legal-bar {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px var(--pad);
+  background: rgba(246, 238, 219, 0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(143, 114, 51, 0.22);
+}
+.legal-home {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 19px;
+  color: #8f7233;
+}
+.legal-rail {
+  gap: 4px;
+  padding: 2px 0;
+}
+.legal-rail a {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  color: rgba(28, 26, 23, 0.7);
+  white-space: nowrap;
+}
+.legal-rail a[data-active="true"] {
+  background: rgba(143, 114, 51, 0.14);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ── the document itself ──────────────────────────────────────── */
+.legal-doc {
+  padding: 18px var(--pad) 44px;
+  width: 100%;
+  max-width: 660px;
+  margin: 0 auto;
+  flex: 1;
+}
+.legal-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #7a6129;
+  font-weight: 600;
+}
+.legal-title {
+  font-size: 33px;
+  line-height: 1.1;
+  margin: 12px 0 0;
+}
+.legal-updated {
+  margin-top: 8px;
+  font-size: 13px;
+  color: rgba(28, 26, 23, 0.58);
+}
+/* the "not final legal advice" admission — quoted, like Alma's advice */
+.legal-note {
+  margin: 18px 0 0;
+  padding-left: 18px;
+  border-left: 2px solid rgba(143, 114, 51, 0.4);
+  font-size: 14.5px;
+  line-height: 1.62;
+  color: rgba(28, 26, 23, 0.68);
+}
+.legal-rule {
+  height: 1px;
+  background: rgba(143, 114, 51, 0.28);
+  margin: 24px 0;
+}
+.legal-lead {
+  margin: 0;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 20px;
+  line-height: 1.5;
+}
+.legal-sec {
+  margin-top: 32px;
+}
+.legal-h {
+  font-size: 21px;
+  line-height: 1.22;
+  margin: 0;
+}
+.legal-para {
+  margin: 12px 0 0;
+  font-size: 16px;
+  line-height: 1.72;
+  color: rgba(28, 26, 23, 0.84);
+}
+.legal-points {
+  margin: 14px 0 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  font-size: 16px;
+  line-height: 1.66;
+  color: rgba(28, 26, 23, 0.84);
+}
+.legal-points li::marker {
+  color: #8f7233;
+}
+/* A link on a legal page may be a whole URL rather than a phrase, and a URL is
+   one unbreakable word. The refunds and support pages print the store addresses
+   in full — on purpose, because a person about to ask Apple for their money back
+   should be able to read where they are going before they tap — and
+   `https://play.google.com/store/account/orderhistory` is wider than the column
+   on a phone. Without this it pushes the document sideways and the whole page
+   scrolls horizontally. Scoped to anchors so ordinary prose keeps breaking at
+   spaces, which is what makes it readable. */
+.legal-doc a {
+  overflow-wrap: anywhere;
+}
+/* The model withdrawal form: six blocks a person copies out of, so each one has
+   to read as a quotable unit rather than as more of the page's prose. Ruled on
+   the left like a quotation, and monospaced-adjacent line height so the four
+   bracketed blanks are easy to find and fill. */
+.legal-form {
+  margin: 16px 0 0;
+  padding: 12px 0 12px 16px;
+  border-left: 2px solid rgba(143, 114, 51, 0.42);
+}
+.legal-form-lang {
+  margin: 0 0 6px;
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(28, 26, 23, 0.48);
+}
+.legal-form-body {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.78;
+  color: rgba(28, 26, 23, 0.86);
+}
+.legal-doc strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+.legal-doc code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: rgba(28, 26, 23, 0.07);
+}
+
+/* labelled facts — the imprint is mostly these */
+.legal-facts {
+  margin-top: 16px;
+  border-top: 1px solid rgba(143, 114, 51, 0.22);
+}
+.legal-fact {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 18px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(143, 114, 51, 0.22);
+  font-size: 15px;
+}
+.legal-fact-label {
+  flex: 0 0 auto;
+  color: rgba(28, 26, 23, 0.6);
+}
+.legal-fact-value {
+  min-width: 0;
+  text-align: right;
+  color: var(--ink);
+}
+
+/* a fact nobody has supplied yet — visible on purpose */
+.legal-blank {
+  padding: 1px 7px;
+  border-radius: 5px;
+  background: rgba(143, 114, 51, 0.16);
+  color: #6b5526;
+  font-size: 0.94em;
+  white-space: normal;
+}
+
+.legal-foot {
+  margin-top: 38px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(143, 114, 51, 0.28);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: rgba(28, 26, 23, 0.58);
+}
+
+/* a phone has no room for a label and a registered address on one line */
+@media (max-width: 699px) {
+  .legal-fact {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  .legal-fact-value {
+    text-align: left;
+  }
+}
+@media (min-width: 700px) {
+  .legal-doc {
+    padding: 26px var(--pad) 56px;
+  }
+}
+@media (min-width: 1024px) {
+  /* the column replaces the rail — hidden here rather than with .to-tablet,
+     which loses to this file's own display:flex on specificity ties */
+  .legal-bar {
+    display: none;
+  }
+  .legal-doc {
+    padding: 52px 0 72px;
+  }
+  .legal-title {
+    font-size: 42px;
+  }
+  .legal-lead {
+    font-size: 23px;
+  }
+  .legal-h {
+    font-size: 23px;
+  }
+  .legal-para,
+  .legal-points {
+    font-size: 16.5px;
+  }
+}
+
+/* a document should print like a document */
+@media print {
+  .legal-side,
+  .legal-bar,
+  .parchment-sweep {
+    display: none !important;
+  }
+  .legal-doc {
+    max-width: none;
+    padding: 0;
+  }
+}
+
+/* The field the save button is waiting on: a gold ring, never a red
+   error — in step with .field[data-missing] on the selects. */
+.text-input[data-missing="true"] {
+  border-color: rgba(201, 174, 107, 0.7);
+  box-shadow: 0 0 0 3px rgba(201, 174, 107, 0.14);
+}
+

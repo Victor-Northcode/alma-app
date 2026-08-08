@@ -1,0 +1,222 @@
+{
+  "identifier": "3BD1F133-B36E-5DE8-A2E5-2FBA95BC01CF",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "5.99",
+      "familyShareable": false,
+      "internalID": "A2901623-3403-54A5-A477-0467AC8849DA",
+      "localizations": [
+        {
+          "description": "All sixteen chapters of your natal chart, written from your own positions.",
+          "displayName": "Natal chart",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.natal",
+      "referenceName": "Natal chart",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "5.99",
+      "familyShareable": false,
+      "internalID": "DFABC140-C0E5-5EF4-9E29-412D3B10D9CC",
+      "localizations": [
+        {
+          "description": "All five numerology chapters, written from your own numbers.",
+          "displayName": "Numerology",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.numerology",
+      "referenceName": "Numerology",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "5.99",
+      "familyShareable": false,
+      "internalID": "4A266138-B516-59A8-94A4-5A1CB7042AE7",
+      "localizations": [
+        {
+          "description": "All three Birth Card chapters, written from your date.",
+          "displayName": "Birth Card",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.birth_card",
+      "referenceName": "Birth Card",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "5.99",
+      "familyShareable": false,
+      "internalID": "D6C4C243-290E-5E18-B2E8-82B060D63DF5",
+      "localizations": [
+        {
+          "description": "All three transit chapters, written from where the sky is now.",
+          "displayName": "Transits",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.transits",
+      "referenceName": "Transits",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "5.99",
+      "familyShareable": false,
+      "internalID": "5DC77F91-0A40-5E18-8C02-22AFC72B3C7D",
+      "localizations": [
+        {
+          "description": "All three solar return chapters, read from the minute the Sun returns.",
+          "displayName": "Solar return",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.solar_return",
+      "referenceName": "Solar return",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "5.99",
+      "familyShareable": false,
+      "internalID": "C7170409-2050-5820-94B6-C5B3DBD4FC00",
+      "localizations": [
+        {
+          "description": "All four compatibility chapters, read from two charts.",
+          "displayName": "Compatibility",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.compatibility",
+      "referenceName": "Compatibility",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "5.99",
+      "familyShareable": false,
+      "internalID": "B341BD2E-D5A0-5219-933D-1176F5E6128C",
+      "localizations": [
+        {
+          "description": "All three astrocartography chapters, read from your lines.",
+          "displayName": "Astrocartography",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.astrocartography",
+      "referenceName": "Astrocartography",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "5.99",
+      "familyShareable": false,
+      "internalID": "17E1FC2A-D32D-52F5-AB45-677D60D2C608",
+      "localizations": [
+        {
+          "description": "All four cross-synthesis chapters \u2014 where three systems agree about you and disagree.",
+          "displayName": "Cross-synthesis",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.synthesis",
+      "referenceName": "Cross-synthesis",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "38.99",
+      "familyShareable": false,
+      "internalID": "C631494E-B8D3-5614-A5AD-6DC459234F0E",
+      "localizations": [
+        {
+          "description": "All forty-one chapters across all eight systems, bought once and kept.",
+          "displayName": "The whole archive",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.archive",
+      "referenceName": "The whole archive",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "33.00",
+      "familyShareable": false,
+      "internalID": "51AEE528-2964-5DE8-B3EA-24A03F371C7B",
+      "localizations": [
+        {
+          "description": "The whole archive, less what you already paid for one system.",
+          "displayName": "The rest of the archive",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "alma.archive_upgrade",
+      "referenceName": "The rest of the archive",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_applicationInternalID": "0000000000",
+    "_developerTeamID": "0000000000",
+    "_failTransactionsEnabled": false,
+    "_lastSynchronizedDate": 0,
+    "_locale": "en_US",
+    "_storeKitErrors": [],
+    "_storefront": "USA"
+  },
+  "subscriptionGroups": [
+    {
+      "id": "95652208-E93F-545F-BCA9-A8F79F18BD10",
+      "localizations": [],
+      "name": "Alma",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "9.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "6EAE981E-111E-51BB-ACC7-CF0E6920FF53",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Transits, the solar return and compatibility while they move, plus forty questions a month.",
+              "displayName": "Everything live, monthly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "alma.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Everything live, monthly",
+          "subscriptionGroupID": "95652208-E93F-545F-BCA9-A8F79F18BD10",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "78.99",
+          "familyShareable": false,
+          "groupNumber": 1,
+          "internalID": "AC34DB03-D7A1-5409-93AB-2ED05E8A3203",
+          "introductoryOffer": null,
+          "localizations": [
+            {
+              "description": "Every system, every chapter, and the transits as they move.",
+              "displayName": "Everything, for a year",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "alma.annual",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Everything, for a year",
+          "subscriptionGroupID": "95652208-E93F-545F-BCA9-A8F79F18BD10",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

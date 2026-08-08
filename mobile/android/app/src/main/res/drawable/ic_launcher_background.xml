@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Night, with the faintest lift toward the top left so the mark does not sit on
+  a flat rectangle. Two stars and nothing else — a launcher icon is 48 dp on
+  most screens and anything more becomes texture.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path android:pathData="M0,0 h108 v108 h-108 z">
+        <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+            <gradient
+                android:type="radial"
+                android:centerX="34" android:centerY="28" android:gradientRadius="104">
+                <item android:offset="0" android:color="#131A38" />
+                <item android:offset="0.55" android:color="#0A0D1C" />
+                <item android:offset="1" android:color="#04060E" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path android:pathData="M22,74 m-1.1,0 a1.1,1.1 0 1,0 2.2,0 a1.1,1.1 0 1,0 -2.2,0 z" android:fillColor="#F6E7BC" android:fillAlpha="0.55" />
+    <path android:pathData="M84,30 m-0.8,0 a0.8,0.8 0 1,0 1.6,0 a0.8,0.8 0 1,0 -1.6,0 z" android:fillColor="#C9AE6B" android:fillAlpha="0.5" />
+</vector>

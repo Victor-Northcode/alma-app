@@ -1,0 +1,925 @@
+/* ══════════════════════════════════════════════════════════════════
+   ALMA — design tokens, lifted verbatim from the brand book (v2.0).
+   Night is the canvas · one gold, aged · no boxes · the sky moves,
+   the UI doesn't · mysterious, not mystical-cheap · honest before
+   beautiful.
+   ══════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* — night & indigo — */
+  --void: #04060e;
+  --night-900: #070a16;
+  --night-850: #090c1a;
+  --night-800: #0a0d1c;
+  --night-700: #101636;
+  --indigo: #3a3484;
+  --indigo-bright: #604ec4;
+  --indigo-deep: #1e3a96;
+
+  /* — gold — */
+  --gold: #c9ae6b;
+  --gold-deep: #a8873c;
+  --gold-bright: #e4d3a2;
+  --gold-button: linear-gradient(180deg, #dcc48a, #a8873c);
+  --gold-button-hover: linear-gradient(180deg, #f2e2b4, #c6a659);
+  --gold-button-active: #8f7233;
+  --gold-gradient: linear-gradient(135deg, #fbedc4, #e0c077 34%, #b3913f 70%, #8a6f2e);
+  --star-fill: #f6e7bc;
+
+  /* — light & ink — */
+  --ink-light: #f6f1e4;
+  --body: #ede7da;
+  --ink-on-gold: #141019;
+  --parchment: #f1e9d6;
+  --parchment-a: #f6eedb;
+  --parchment-b: #e8dbbe;
+  --ink: #1c1a17;
+
+  /* — semantic — */
+  --agree: #8fbf9a;
+  --disagree: #e0917f;
+
+  /* — surfaces — */
+  --veil: rgba(237, 231, 218, 0.07);
+  --veil-strong: rgba(237, 231, 218, 0.09);
+  --hairline: rgba(237, 231, 218, 0.1);
+  --hairline-gold: rgba(201, 174, 107, 0.16);
+  --panel: rgba(255, 255, 255, 0.04);
+
+  /* — muted ink · hard floor 62% — */
+  --muted: rgba(237, 231, 218, 0.72);
+  --muted-2: rgba(237, 231, 218, 0.68);
+  --muted-3: rgba(237, 231, 218, 0.62);
+  --ink-muted: rgba(28, 26, 23, 0.72);
+  --ink-muted-2: rgba(28, 26, 23, 0.62);
+
+  /* — depth is light, not shadow — */
+  --elev-2: 0 24px 60px rgba(0, 0, 0, 0.5);
+  --glow-gold: 0 0 40px rgba(201, 174, 107, 0.16);
+  --btn-shadow: 0 12px 30px rgba(180, 146, 63, 0.38);
+  --btn-shadow-sm: 0 10px 26px rgba(168, 135, 60, 0.34);
+
+  /* — motion — */
+  --d-tap: 120ms;
+  --e-tap: cubic-bezier(0.2, 0, 0.4, 1);
+  --d-ui: 240ms;
+  --e-ui: cubic-bezier(0.22, 1, 0.36, 1);
+  --d-sheet: 380ms;
+  --e-sheet: cubic-bezier(0.16, 1, 0.3, 1);
+  --d-bar: 420ms;
+  --d-reveal: 620ms;
+
+  /* — type — */
+  --serif: "Playfair Display", Georgia, serif;
+  --sans: "Golos Text", system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, Menlo, monospace;
+
+  /* — grid — */
+  /* `--tabs-h` and `--read` were here: the height of the cabinet's bottom tab
+     bar, which every screen that could be hidden underneath measured against,
+     and the reading column's ceiling. Both screens are gone. A token nothing
+     reads is a number somebody later builds a layout around, believing it
+     describes something on the page. */
+  --pad: 22px; /* mobile side padding */
+  --shell: 1140px;
+}
+
+@media (min-width: 700px) {
+  :root {
+    --pad: 34px;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --pad: 56px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--night-800);
+  color: var(--body);
+  font-family: var(--sans);
+  font-size: 15.5px;
+  line-height: 1.62;
+  font-variant-emoji: text;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
+}
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 16.5px;
+    line-height: 1.65;
+  }
+}
+
+a {
+  color: var(--gold-bright);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--star-fill);
+}
+
+button {
+  font-family: inherit;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--serif);
+  font-weight: 400;
+  margin: 0;
+}
+
+p {
+  margin: 0;
+}
+
+ul {
+  margin: 0;
+}
+
+/**
+ * Present to a screen reader, absent to everyone else.
+ *
+ * The 1×1 clipped box rather than `display: none` or `visibility: hidden`,
+ * because both of those remove the element from the accessibility tree as well
+ * as from the page, which is the opposite of the point. `white-space: nowrap`
+ * stops a long announcement being broken up by the 1 px width.
+ */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Astrological glyphs are type, not icons. */
+.glyph {
+  font-family: var(--serif);
+  font-variant-emoji: text;
+}
+
+/**
+ * The visible focus ring, on everything interactive — drawn with `outline`
+ * because `box-shadow` cannot survive contact with a design that uses shadow
+ * for depth.
+ *
+ * This rule was `box-shadow`, and `:where(...)` deliberately holds it at zero
+ * selector weight so a component can override it. The consequence was that
+ * every gold call to action on the site had no focus indicator at all: this
+ * computes to (0,1,0) — the weight comes from `:focus-visible` alone — and so
+ * does `.btn-gold`, which declares its own `box-shadow: var(--btn-shadow)` 350
+ * lines further down. Same specificity, later in the file, one property: the
+ * ambient drop shadow replaced the ring, and `outline: none` here meant there
+ * was nothing behind it. Measured on all six of them — the hero's two variants,
+ * the nav sheet, the pricing CTA, the final CTA and the sticky bar — a keyboard
+ * user tabbing the primary conversion path could not see where they were.
+ * WCAG 2.4.7. Text inputs lost it the same way, to `.text-input { outline: none }`.
+ *
+ * `outline` is the fix rather than a specificity bump because it ends the whole
+ * class of collision instead of winning one race. Nothing in this codebase uses
+ * `outline` decoratively — it cannot, it does not take part in layout and it
+ * cannot be offset per-side — so the ring and the shadows now live on separate
+ * properties and can never overwrite each other again. Bumping specificity
+ * (`.btn:focus-visible`, or `!important`) would have to be re-won by hand every
+ * time any component adds a shadow, which is how this one was lost.
+ *
+ * No `border-radius` here, which the shadow version needed: an outline follows
+ * the element's own corners. The old rule rounded every focused control to a
+ * pill for the duration of the focus — square controls visibly changed shape
+ * when tabbed to, which is the indicator moving the thing it is pointing at.
+ *
+ * Gold at 0.85 composites over `--night-800` to rgb(172,150,95) — 6.70:1, well
+ * past the 3:1 WCAG 1.4.11 asks of a focus indicator. (The same arithmetic puts
+ * the old ring at 3.42:1 and the date fields' 0.16 halo at 1.30:1, which is how
+ * the fields were found to be failing.) The 2 px offset keeps the ring off the
+ * gold of a filled button, so it reads against the night rather than against
+ * the fill it is drawn on.
+ */
+:where(a, button, input, select, textarea, [role="button"], [tabindex]):focus-visible {
+  outline: 2px solid rgba(201, 174, 107, 0.85);
+  outline-offset: 2px;
+}
+
+/* ══ ambient keyframes ═════════════════════════════════════════ */
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes spin {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spinBack {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0);
+  }
+}
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.86;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+@keyframes glow {
+  from {
+    text-shadow: 0 0 30px rgba(228, 211, 162, 0.4);
+  }
+  to {
+    text-shadow: 0 0 74px rgba(228, 211, 162, 0.85);
+  }
+}
+@keyframes dust {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.7;
+  }
+  80% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-120px);
+    opacity: 0;
+  }
+}
+@keyframes comet {
+  0% {
+    transform: translate(-60px, -40px);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.9;
+  }
+  42% {
+    opacity: 0.9;
+  }
+  60% {
+    transform: translate(420px, 300px);
+    opacity: 0;
+  }
+  100% {
+    transform: translate(420px, 300px);
+    opacity: 0;
+  }
+}
+@keyframes ripple {
+  0% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+  70% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+@keyframes sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-60%);
+  }
+  40% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(160%);
+  }
+}
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes auraA {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-3%, 4%) scale(1.07);
+  }
+}
+@keyframes auraB {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(4%, -3%) scale(1.05);
+  }
+}
+@keyframes dash {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes bloomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes overlayRise {
+  from {
+    opacity: 0;
+    transform: translateY(3%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/**
+ * What a calculated figure does when it arrives in a piece of art.
+ *
+ * The numerology dial and the birth card sit in the eight-systems row with
+ * nothing in their centre until a date is entered, and then they have the
+ * visitor's own life path and their own arcanum in them. That instant is the
+ * strongest argument the whole page makes — *it was empty because we had not
+ * met you, and now it isn't* — and an unannounced repaint throws it away: the
+ * figure is simply there, indistinguishable from a figure that was always
+ * there, which is precisely the impression the removed fixtures used to give.
+ *
+ * A bloom rather than a slide, and 520ms rather than the 240 the interface uses
+ * for taps: this is not a control responding, it is a reading resolving, and
+ * the house rule is that the sky moves while the UI doesn't. `transform-box`
+ * and `transform-origin` are for the SVG `<text>` — without them the scale
+ * pivots on the far corner of the user-space origin and the numeral swings in
+ * from off the card.
+ *
+ * The reduced-motion block at the foot of this file collapses the duration to
+ * nothing, so a reader who has asked for stillness gets the figure with no
+ * ceremony and no missing frame.
+ */
+@keyframes artArrives {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.art-arrives {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: artArrives 520ms var(--e-sheet) both;
+}
+
+/* ══ layout helpers ════════════════════════════════════════════ */
+.shell {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding-left: var(--pad);
+  padding-right: var(--pad);
+}
+
+.stack > * + * {
+  margin-top: var(--gap, 16px);
+}
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.26;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.starfield,
+.starfield-2 {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.starfield {
+  background-image:
+    radial-gradient(1.6px 1.6px at 10% 12%, #fff8e6 40%, transparent 41%),
+    radial-gradient(1px 1px at 32% 6%, #e6d9b4 40%, transparent 41%),
+    radial-gradient(1.4px 1.4px at 58% 16%, #fff8e6 40%, transparent 41%),
+    radial-gradient(1px 1px at 78% 9%, #c9ae6b 40%, transparent 41%),
+    radial-gradient(1.7px 1.7px at 90% 24%, #fff8e6 40%, transparent 41%),
+    radial-gradient(1.2px 1.2px at 18% 46%, #fff8e6 40%, transparent 41%),
+    radial-gradient(1px 1px at 66% 58%, #e6d9b4 40%, transparent 41%),
+    radial-gradient(1.4px 1.4px at 88% 72%, #fff8e6 40%, transparent 41%),
+    radial-gradient(1px 1px at 24% 82%, #c9ae6b 40%, transparent 41%);
+  animation: twinkle 6s ease-in-out infinite;
+}
+.starfield-2 {
+  background-image:
+    radial-gradient(1px 1px at 18% 22%, #fff8e6 40%, transparent 41%),
+    radial-gradient(1px 1px at 58% 18%, #e6d9b4 40%, transparent 41%),
+    radial-gradient(1px 1px at 76% 48%, #fff8e6 40%, transparent 41%),
+    radial-gradient(1px 1px at 30% 62%, #c9ae6b 40%, transparent 41%),
+    radial-gradient(1px 1px at 86% 74%, #fff8e6 40%, transparent 41%),
+    radial-gradient(1px 1px at 48% 42%, #e6d9b4 40%, transparent 41%);
+  opacity: 0.5;
+  animation: twinkle 9s ease-in-out 1.6s infinite;
+}
+
+.comet {
+  position: absolute;
+  width: 180px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(246, 231, 188, 0.8));
+  rotate: 34deg;
+  animation: comet 18s ease-in-out infinite;
+  pointer-events: none;
+}
+.mote {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--star-fill);
+  animation: dust 14s linear infinite;
+  pointer-events: none;
+}
+
+.aura {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(34px);
+  pointer-events: none;
+}
+
+/* ══ type scale ════════════════════════════════════════════════ */
+.overline {
+  font-size: 11.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+.overline-wide {
+  font-size: 11.5px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 600;
+}
+.alma-voice {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--ink-light);
+}
+.meta {
+  font-size: 13px;
+  color: var(--muted-2);
+}
+.positions {
+  font-family: var(--serif);
+  color: var(--gold-bright);
+}
+
+@media (min-width: 1024px) {
+  .alma-voice {
+    font-size: 26px;
+    line-height: 1.48;
+  }
+  .meta {
+    font-size: 13.5px;
+  }
+}
+
+/* ══ components ════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 28px;
+  border: 0;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 16.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--d-tap) var(--e-tap),
+    transform var(--d-tap) var(--e-tap);
+  white-space: nowrap;
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+  box-shadow: none;
+}
+.btn-gold {
+  background: var(--gold-button);
+  color: var(--ink-on-gold);
+  box-shadow: var(--btn-shadow);
+}
+.btn-gold:hover {
+  background: var(--gold-button-hover);
+}
+.btn-gold:active {
+  background: var(--gold-button-active);
+  transform: translateY(1px);
+}
+.btn-outline {
+  height: 54px;
+  border: 1px solid rgba(201, 174, 107, 0.5);
+  background: transparent;
+  color: var(--gold-bright);
+  font-size: 16px;
+  font-weight: 500;
+}
+.btn-outline:hover {
+  background: rgba(201, 174, 107, 0.14);
+}
+.btn-block {
+  width: 100%;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: rgba(201, 174, 107, 0.12);
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--gold-bright);
+  white-space: nowrap;
+}
+
+.tag {
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+/* `.tag-disagree` stood here. Its only user was the landing's "2 disagree"
+   tag — a count of disagreeing systems printed for a visitor who had entered
+   no birth data — and it went with the reading it labelled. `--disagree`
+   itself stays: the date field and the sign-in panel both use it to colour a
+   real error, which is a thing that has actually happened to the reader. */
+.tag-gold {
+  color: var(--gold);
+}
+/* rows are hairline-separated, never boxed */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--hairline);
+}
+/* the label yields before it can shove the value or the status off the edge */
+.row > *:first-child {
+  min-width: 0;
+}
+@media (min-width: 1024px) {
+  .row {
+    padding: 18px 0;
+  }
+}
+
+.rule {
+  height: 1px;
+  background: rgba(201, 174, 107, 0.28);
+  flex: 1;
+}
+.rule-fade {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201, 174, 107, 0.34), transparent);
+}
+
+.numeral {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--gold-deep);
+}
+@media (min-width: 1024px) {
+  .numeral {
+    font-size: 16px;
+  }
+}
+
+/* custom selects only — never native (locale format drift) */
+.field {
+  height: 54px;
+  border-radius: 999px;
+  background: var(--veil);
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font-family: var(--sans);
+  font-size: 16.5px;
+  color: var(--body);
+  cursor: pointer;
+  padding: 0 16px;
+  transition: border-color var(--d-tap) var(--e-tap);
+  position: relative;
+}
+.field:hover {
+  border-color: rgba(201, 174, 107, 0.28);
+}
+/**
+ * The open state, and only the open state.
+ *
+ * `:focus-visible` used to share this rule, and that was the three date fields
+ * — the first thing anybody touches on this page — overriding the site's focus
+ * ring with a 16%-alpha halo. Composited over the hero it is rgb(41,39,41)
+ * against rgb(10,13,28): 1.30:1, where WCAG 1.4.11 asks for 3. In a
+ * blurred-versus-focused diff of the computed styles this shadow was the only
+ * property that changed at all — `border-color` was identical either side, so
+ * it contributed nothing — which made the most important control on the page
+ * strictly the least visible when focused.
+ *
+ * The soft halo is right for *open*: the list below is what the eye should be
+ * on, and a bright ring around the closed control would compete with it. It is
+ * wrong for *focused*, which has one job. So they are separate rules now, and
+ * the field takes the same outline as everything else on the page.
+ */
+.field[data-open="true"] {
+  border-color: rgba(201, 174, 107, 0.5);
+  box-shadow: 0 0 0 3px rgba(201, 174, 107, 0.16);
+}
+.field[data-empty="true"] {
+  color: var(--muted-3);
+}
+.field-caret {
+  font-size: 9px;
+  color: var(--gold);
+}
+@media (min-width: 700px) {
+  .field {
+    height: 58px;
+    font-size: 17px;
+  }
+}
+
+.text-input {
+  height: 58px;
+  width: 100%;
+  border-radius: 999px;
+  background: var(--veil);
+  border: 1px solid rgba(201, 174, 107, 0.4);
+  padding: 0 22px;
+  font-family: var(--sans);
+  font-size: 17px;
+  color: var(--ink-light);
+  /* No `outline: none` here. It sat in this block with nothing put in its
+     place, so the journey's name field, its email field and the sign-in field
+     — every free-text control on the site — had no focus indicator of any
+     kind. The ring above is the whole answer; a control that wants a different
+     focus look has to say so where a reader can see it has been thought about. */
+}
+.text-input::placeholder {
+  color: var(--muted-3);
+}
+
+.toggle {
+  width: 52px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(237, 231, 218, 0.14);
+  position: relative;
+  flex: 0 0 auto;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--d-ui) var(--e-ui);
+}
+.toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--body);
+  transition: transform var(--d-ui) var(--e-ui);
+}
+.toggle[data-on="true"] {
+  background: var(--gold-deep);
+}
+.toggle[data-on="true"]::after {
+  transform: translateX(22px);
+  background: #0b0f1f;
+}
+
+/* horizontal rails (mobile lists of 4+) */
+.rail {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* keep the screen's side padding when a card snaps to the start */
+  scroll-padding-inline-start: var(--pad);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+/* the last card still snaps cleanly instead of being stranded */
+.rail > *:last-child {
+  scroll-snap-align: end;
+}
+.rail::-webkit-scrollbar {
+  height: 0;
+  width: 0;
+}
+.rail > * {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+}
+
+/**
+ * The eight-systems rail's only pointer control on a phone, sized to be hit.
+ *
+ * The painted dot was the whole button: 6×6, with 6 px of gap, so the targets
+ * were 6 px across and 12 px between centres. WCAG 2.5.8 asks for 24 px, or —
+ * if the target is smaller — 24 px between adjacent centres, and this failed
+ * both halves at once. Measured across all eight at 360, they were the only
+ * genuine hit-target failure among the 49 tabbable elements there: the language
+ * options are 44.9, the burger is 44×44, and the small controls that stay small
+ * (footer links at 21.1, "all six questions" at 17) each have 50 px or more of
+ * empty space around them and clear the spacing exception honestly.
+ *
+ * The dot a person sees is still 6 px. What changed is that the button around
+ * it is 24, drawn with padding and `background-clip: content-box` so the gold
+ * paints only the middle. `box-sizing` is `border-box` here, so the 24 is the
+ * whole button and the padding eats inwards to leave exactly the 6 px pill.
+ *
+ * The row's `gap` goes to zero to pay for it. It has to: 24 px between centres
+ * with a 6 px dot means 18 px of space between the painted dots, and any gap on
+ * top of the padding pushes the row wider than the phone it is for. So the
+ * spacing a reader sees does change — from 6 px to 18 — and there was no
+ * arrangement that kept both the old rhythm and a reachable target. Eight
+ * buttons now measure 204 px in total against 320 of usable width at 360, with
+ * the "swipe · all 8" note still beside them on the same line.
+ */
+.dots {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+.dot {
+  width: 24px;
+  height: 24px;
+  padding: 9px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(237, 231, 218, 0.22);
+  background-clip: content-box;
+  cursor: pointer;
+  transition:
+    width var(--d-ui) var(--e-ui),
+    background var(--d-ui) var(--e-ui);
+}
+.dot[data-active="true"] {
+  width: 36px;
+  background: var(--gold);
+  background-clip: content-box;
+}
+
+/* parchment — only where a document is earned */
+.parchment {
+  background:
+    radial-gradient(60% 50% at 18% 6%, rgba(255, 255, 255, 0.6), transparent 60%),
+    linear-gradient(160deg, #f6eedb, #efe3c9 60%, #e8dbbe);
+  color: var(--ink);
+}
+/* plain links only — styled controls keep their own ink */
+.parchment a:not([class]) {
+  color: #7a6129;
+}
+.parchment-sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  animation: sweep 13s ease-in-out infinite;
+}
+
+/* ── responsive visibility ─────────────────────────────────────── */
+.only-mobile {
+  display: initial;
+}
+.from-tablet {
+  display: none;
+}
+.only-desktop {
+  display: none;
+}
+.to-tablet {
+  display: initial;
+}
+@media (min-width: 700px) {
+  .only-mobile {
+    display: none;
+  }
+  .from-tablet {
+    display: initial;
+  }
+}
+@media (min-width: 1024px) {
+  .only-desktop {
+    display: initial;
+  }
+  .to-tablet {
+    display: none;
+  }
+}
+
+/* ══ prefers-reduced-motion ════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .starfield,
+  .starfield-2 {
+    opacity: 0.6;
+    animation: none !important;
+  }
+  .comet,
+  .mote,
+  .parchment-sweep {
+    display: none !important;
+  }
+}
+
+/* Flex children need this to shrink at all; .date-row raises it. */
+.select-wrap {
+  min-width: 0;
+}

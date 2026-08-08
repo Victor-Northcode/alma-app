@@ -1,0 +1,3456 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "scr.addPerson.birthTime": {
+      "comment": "Section label.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ihre Geburtszeit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "their birth time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "su hora de nacimiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son heure de naissance"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la loro ora di nascita"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a hora de nascimento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "время рождения"
+          }
+        }
+      }
+    },
+    "scr.addPerson.birthday": {
+      "comment": "Section label.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ihr Geburtstag"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "their birthday"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "su fecha de nacimiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sa date de naissance"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "la loro data di nascita"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a data de nascimento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "дата рождения"
+          }
+        }
+      }
+    },
+    "scr.addPerson.birthplace": {
+      "comment": "Section label.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ihr Geburtsort"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "their birthplace"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "su lugar de nacimiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son lieu de naissance"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "il loro luogo di nascita"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "o local de nascimento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "место рождения"
+          }
+        }
+      }
+    },
+    "scr.addPerson.eyebrow": {
+      "comment": "Eyebrow above the add-a-person form.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eine zweite Geburt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "a second birth"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un segundo nacimiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "une seconde naissance"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "una seconda nascita"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "um segundo nascimento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "второе рождение"
+          }
+        }
+      }
+    },
+    "scr.addPerson.lead": {
+      "comment": "What is being asked for and why.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieselben fünf Angaben, die dein eigenes Horoskop brauchte. Ohne die Geburtsminute läuft der Vergleich trotzdem, mit weniger Faktoren."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The same five things your own chart needed. Without the minute of birth the comparison still runs, on fewer factors."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las mismas cinco cosas que necesitó tu carta. Sin el minuto de nacimiento la comparación se hace igual, con menos factores."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les mêmes cinq choses qu'il fallait pour ton thème. Sans la minute de naissance la comparaison fonctionne quand même, sur moins de facteurs."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le stesse cinque cose che servivano al tuo tema. Senza il minuto di nascita il confronto funziona lo stesso, su meno fattori."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As mesmas cinco coisas que seu mapa precisou. Sem o minuto de nascimento a comparação ainda funciona, com menos fatores."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Те же пять вещей, что нужны были твоей карте. Без минуты рождения сравнение всё равно считается — на меньшем числе факторов."
+          }
+        }
+      }
+    },
+    "scr.addPerson.name": {
+      "comment": "Section label.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ihr Name"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "their name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "su nombre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "son nom"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "il loro nome"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "o nome"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "имя"
+          }
+        }
+      }
+    },
+    "scr.addPerson.namePlaceholder": {
+      "comment": "Name field placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nome"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имя"
+          }
+        }
+      }
+    },
+    "scr.addPerson.relationPlaceholder": {
+      "comment": "Relation field placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partner, Mutter, Freund… (optional)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partner, mother, friend… (optional)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pareja, madre, amistad… (opcional)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partenaire, mère, ami… (facultatif)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partner, madre, amico… (facoltativo)"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parceiro, mãe, amigo… (opcional)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Партнёр, мама, друг… (необязательно)"
+          }
+        }
+      }
+    },
+    "scr.addPerson.save": {
+      "comment": "The save button.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person speichern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save this person"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar esta persona"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer cette personne"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salva questa persona"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvar esta pessoa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохранить человека"
+          }
+        }
+      }
+    },
+    "scr.addPerson.saving": {
+      "comment": "While saving.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird gespeichert…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardando…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrement…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvataggio…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salvando…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сохраняю…"
+          }
+        }
+      }
+    },
+    "scr.addPerson.timeUnknown": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geburtszeit unbekannt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birth time unknown"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora de nacimiento desconocida"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heure de naissance inconnue"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ora di nascita sconosciuta"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hora de nascimento desconhecida"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Время рождения неизвестно"
+          }
+        }
+      }
+    },
+    "scr.addPerson.title": {
+      "comment": "Add-a-person title.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person hinzufügen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a person"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una persona"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter une personne"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi una persona"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionar uma pessoa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Добавить человека"
+          }
+        }
+      }
+    },
+    "scr.chat.couldAsk": {
+      "comment": "Overline above the three opening questions.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "du könntest fragen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "you could ask"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "podrías preguntar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tu peux demander"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "potresti chiedere"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "você pode perguntar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "можно спросить"
+          }
+        }
+      }
+    },
+    "scr.chat.moreQuestions": {
+      "comment": "Button under the question-limit refusal.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr Fragen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More questions"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Más preguntas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plus de questions"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Più domande"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mais perguntas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ещё вопросы"
+          }
+        }
+      }
+    },
+    "scr.chat.noChart": {
+      "comment": "The same, before any birth data exists.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich kann ohne dein Horoskop reden, aber ich würde nur raten. Gib mir deine Geburtsdaten, dann kann ich dich lesen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I can talk without your chart, but I would only be guessing. Give me your birth data and I can read you instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puedo hablar sin tu carta, pero solo estaría adivinando. Dame tus datos de nacimiento y podré leerte de verdad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je peux parler sans ton thème, mais je ne ferais que deviner. Donne-moi tes données de naissance et je pourrai te lire."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posso parlare senza il tuo tema, ma starei solo indovinando. Dammi i tuoi dati di nascita e potrò leggerti davvero."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posso conversar sem seu mapa, mas estaria só adivinhando. Me dê seus dados de nascimento e poderei ler você."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Я могу разговаривать и без твоей карты, но это было бы гаданием. Дай мне данные рождения — и я смогу тебя читать."
+          }
+        }
+      }
+    },
+    "scr.chat.offline": {
+      "comment": "No network, in Alma's voice rather than as a status.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich komme gerade nicht an dein Horoskop. Deine Frage steht noch da — versuch es gleich noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I cannot reach your chart just now. Your question is still in the box — try again in a moment."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora mismo no consigo llegar a tu carta. Tu pregunta sigue escrita: inténtalo en un momento."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je n'arrive pas à atteindre ton thème pour l'instant. Ta question est toujours là — réessaie dans un moment."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In questo momento non riesco a raggiungere il tuo tema. La tua domanda è ancora lì: riprova tra un istante."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não consigo chegar ao seu mapa agora. Sua pergunta continua aí — tente de novo em um instante."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Прямо сейчас я не дотягиваюсь до твоей карты. Твой вопрос на месте — попробуй ещё раз через минуту."
+          }
+        }
+      }
+    },
+    "scr.chat.opening": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frag mich alles über dein Horoskop. Ich antworte aus dem, was darin steht — und sage dir, wenn es keine Antwort hat."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask me anything about your chart. I answer from what is in it, and I tell you when it has no answer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pregúntame lo que quieras sobre tu carta. Respondo desde lo que hay en ella, y te digo cuando no tiene respuesta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demande-moi ce que tu veux sur ton thème. Je réponds à partir de ce qu'il contient, et je te dis quand il n'a pas de réponse."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiedimi qualsiasi cosa sul tuo tema. Rispondo da ciò che c'è dentro, e ti dico quando non ha una risposta."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pergunte o que quiser sobre o seu mapa. Respondo a partir do que está nele, e digo quando ele não tem resposta."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спроси меня о чём угодно в твоей карте. Я отвечаю из того, что в ней есть, и говорю, когда ответа там нет."
+          }
+        }
+      }
+    },
+    "scr.chat.outOfQuestions": {
+      "comment": "Only when the server did not send its own sentence, which already says when they return.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das war dein freies Gespräch. Der Plan trägt es weiter — mit der Morgenbenachrichtigung und deinem ausgeschriebenen Tag."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That was your free conversation. The plan carries it on — with the morning notification and your day written out."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esa fue tu conversación gratuita. El plan la continúa — con la notificación de la mañana y tu día escrito."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C'était ta conversation gratuite. L'abonnement la poursuit — avec la notification du matin et ta journée écrite."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa era la tua conversazione gratuita. Il piano la porta avanti — con la notifica del mattino e la tua giornata scritta."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essa foi sua conversa gratuita. O plano a leva adiante — com a notificação da manhã e seu dia escrito."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это был бесплатный разговор. Дальше его ведёт план — с утренним уведомлением и днём, написанным целиком."
+          }
+        }
+      }
+    },
+    "scr.chat.past": {
+      "comment": "Menu label listing earlier conversations.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "früher"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "earlier"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "anteriores"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "avant"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "precedenti"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "anteriores"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "раньше"
+          }
+        }
+      }
+    },
+    "scr.chat.placeholder": {
+      "comment": "The composer's placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frag Alma"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ask Alma"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pregunta a Alma"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demande à Alma"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiedi ad Alma"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pergunte a Alma"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спроси Alma"
+          }
+        }
+      }
+    },
+    "scr.chat.prompt1": {
+      "comment": "A suggested opening question.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie bin ich, wenn niemand hinsieht?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What am I like when nobody is watching?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cómo soy cuando nadie me mira?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment suis-je quand personne ne regarde ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Come sono quando nessuno guarda?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Como eu sou quando ninguém está olhando?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что от меня остаётся, когда никто не смотрит?"
+          }
+        }
+      }
+    },
+    "scr.chat.prompt2": {
+      "comment": "A suggested opening question.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was kreuzt diese Woche mein Horoskop?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is crossing my chart this week?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Qué está cruzando mi carta esta semana?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qu'est-ce qui traverse mon thème cette semaine ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Che cosa attraversa il mio tema questa settimana?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O que está cruzando meu mapa esta semana?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что проходит по моей карте на этой неделе?"
+          }
+        }
+      }
+    },
+    "scr.chat.prompt3": {
+      "comment": "A suggested opening question.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wo widersprechen sich meine Systeme über mich?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where do my systems disagree about me?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿En qué no coinciden mis sistemas sobre mí?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Où mes systèmes ne sont-ils pas d'accord sur moi ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dove i miei sistemi non concordano su di me?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onde meus sistemas discordam sobre mim?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Где мои системы расходятся насчёт меня?"
+          }
+        }
+      }
+    },
+    "scr.chat.promptMoon": {
+      "comment": "Opening question about this person's own moon sign. %@ is the sign.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mein Mond steht in %@. Was braucht er wirklich?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Moon is in %@. What does it actually need?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi Luna está en %@. ¿Qué necesita de verdad?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ma Lune est en %@. De quoi a-t-elle vraiment besoin ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La mia Luna è in %@. Di che cosa ha davvero bisogno?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minha Lua está em %@. Do que ela realmente precisa?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Луна у меня — %@. Что ей на самом деле нужно?"
+          }
+        }
+      }
+    },
+    "scr.chat.promptRising": {
+      "comment": "Opening question about this person's own rising sign. %@ is the sign.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aszendent %@. Ist das, was andere zuerst von mir sehen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ rising. Is that what people meet first?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascendente en %@. ¿Es lo primero que ven los demás?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascendant %@. Est-ce ce que les autres rencontrent en premier ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascendente %@. È questo che gli altri incontrano per primo?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ascendente em %@. É isso que as pessoas encontram primeiro?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Восходящий знак — %@. Это то, что люди встречают первым?"
+          }
+        }
+      }
+    },
+    "scr.chat.promptSun": {
+      "comment": "Opening question about this person's own sun sign. %@ is the sign.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meine Sonne steht in %@ — was verlangt das von mir?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Sun is in %@ — what does that ask of me?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mi Sol está en %@: ¿qué me pide eso?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mon Soleil est en %@ — qu'est-ce que cela me demande ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il mio Sole è in %@: che cosa mi chiede?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meu Sol está em %@ — o que isso me pede?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Моё Солнце — %@. Чего оно от меня просит?"
+          }
+        }
+      }
+    },
+    "scr.chat.readFromAll": {
+      "comment": "Accessibility label on the collapsed citation line.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Positionen zeigen, aus denen das gelesen wurde"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show every placement this was read from"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar todas las posiciones de las que se leyó esto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher toutes les positions dont ceci est tiré"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra tutte le posizioni da cui è stato letto"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar todas as posições de onde isto foi lido"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Показать все позиции, из которых это прочитано"
+          }
+        }
+      }
+    },
+    "scr.chat.refused": {
+      "comment": "Shown when Alma could not answer without inventing a placement.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich konnte das nicht beantworten, ohne eine Position zu erfinden — also habe ich es gelassen. Frag es anders, und ich versuche es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I could not answer that one without inventing a placement, so I did not. Ask it another way and I will try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No podía responder a esa sin inventar una posición, así que no lo hice. Pregúntamelo de otra forma y lo intento de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je ne pouvais pas répondre sans inventer une position, alors je ne l'ai pas fait. Reformule et je réessaie."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non potevo rispondere senza inventare una posizione, e non l'ho fatto. Chiedimelo in un altro modo e ci riprovo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eu não conseguia responder sem inventar uma posição, então não respondi. Pergunte de outro jeito e eu tento de novo."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Я не смогла ответить, не выдумав позицию, — и не стала. Спроси иначе, и я попробую снова."
+          }
+        }
+      }
+    },
+    "scr.chat.rule": {
+      "comment": "The method claim under the opening line. The 4.3(b) argument, in the chat.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede Antwort nennt die Positionen, aus denen sie gelesen wurde. Nichts davon ist eine Vorhersage."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every answer names the placements it was read from. Nothing here is a prediction."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada respuesta nombra las posiciones de las que se leyó. Nada de esto es una predicción."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque réponse nomme les positions dont elle est tirée. Rien ici n'est une prédiction."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni risposta nomina le posizioni da cui è stata letta. Niente qui è una previsione."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada resposta nomeia as posições de onde foi lida. Nada aqui é uma previsão."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждый ответ называет позиции, из которых он прочитан. Здесь нет предсказаний."
+          }
+        }
+      }
+    },
+    "scr.chat.send": {
+      "comment": "Accessibility label on the send button.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invia"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить"
+          }
+        }
+      }
+    },
+    "scr.chat.silent": {
+      "comment": "Footnote under an answer Alma gave without the chart, because the chart is silent on it.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese habe ich aus dem beantwortet, was ich weiß — nicht aus deinem Horoskop."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "I answered that one from what I know, not from your chart."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esa la respondí desde lo que sé, no desde tu carta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J'ai répondu à celle-ci à partir de ce que je sais, pas de ton thème."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A questa ho risposto da ciò che so, non dal tuo tema."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essa eu respondi a partir do que sei, não do seu mapa."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На это я ответила из того, что знаю сама, а не из твоей карты."
+          }
+        }
+      }
+    },
+    "scr.chat.thinking": {
+      "comment": "While an answer is being written.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich lese dein Horoskop"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading your chart"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estoy leyendo tu carta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je lis ton thème"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sto leggendo il tuo tema"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estou lendo seu mapa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Читаю твою карту"
+          }
+        }
+      }
+    },
+    "scr.chat.thinkingStill": {
+      "comment": "Replaces the line above after ten seconds, so a long wait still reads as progress.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich lese noch — ich überfliege nicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still reading — I don't skim."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sigo leyendo: no leo por encima."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je lis encore — je ne survole pas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sto ancora leggendo: non vado di fretta."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ainda estou lendo — não passo os olhos por cima."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё ещё читаю — я не пролистываю."
+          }
+        }
+      }
+    },
+    "scr.chat.unavailable": {
+      "comment": "Our fault, said as ours.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf meiner Seite funktioniert etwas nicht. Dein Horoskop ist unberührt, und deine Frage steht noch da."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something on my side is not working. Your chart is untouched, and your question is still in the box."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algo de mi lado no funciona. Tu carta está intacta y tu pregunta sigue escrita."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelque chose ne fonctionne pas de mon côté. Ton thème est intact, et ta question est toujours là."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qualcosa dalla mia parte non funziona. Il tuo tema è intatto e la tua domanda è ancora lì."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algo do meu lado não está funcionando. Seu mapa está intacto e sua pergunta continua aí."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что-то не работает на моей стороне. Твоя карта не тронута, и твой вопрос на месте."
+          }
+        }
+      }
+    },
+    "scr.chat.untitled": {
+      "comment": "A conversation the backend has not titled yet.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespräch ohne Titel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Untitled conversation"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversación sin título"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversation sans titre"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversazione senza titolo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conversa sem título"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Разговор без названия"
+          }
+        }
+      }
+    },
+    "scr.chat.wentWrong": {
+      "comment": "Anything else that stopped an answer.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist nicht durchgekommen. Nichts ist verloren — deine Frage steht noch da."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That did not go through. Nothing was lost — your question is still in the box."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eso no llegó. No se perdió nada: tu pregunta sigue escrita."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cela n'est pas passé. Rien n'est perdu — ta question est toujours là."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è passata. Non si è perso nulla: la tua domanda è ancora lì."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isso não passou. Nada se perdeu — sua pergunta continua aí."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это не отправилось. Ничего не потерялось — твой вопрос на месте."
+          }
+        }
+      }
+    },
+    "scr.compat.choose": {
+      "comment": "Button that opens the people list to change the partner.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit jemand anderem vergleichen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compare with somebody else"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar con otra persona"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparer avec quelqu'un d'autre"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confronta con qualcun altro"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comparar com outra pessoa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сравнить с кем-то другим"
+          }
+        }
+      }
+    },
+    "scr.compat.readAgainst": {
+      "comment": "Who a compatibility reading was computed against.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verglichen mit %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You and %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tú y %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toi et %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu e %@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você e %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ты и %@"
+          }
+        }
+      }
+    },
+    "scr.done": {
+      "comment": "A button that closes a screen.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fatto"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pronto"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Готово"
+          }
+        }
+      }
+    },
+    "scr.empty.chapters": {
+      "comment": "Chapter count beside a system in the empty state.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Kapitel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld chapters"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld capítulos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld chapitres"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld capitoli"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld capítulos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld глав"
+          }
+        }
+      }
+    },
+    "scr.empty.example": {
+      "comment": "Label above the worked example of a cited factor.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wie eine Zeile aussieht"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "what a line looks like"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cómo se ve una línea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "à quoi ressemble une ligne"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "com'è fatta una riga"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "como é uma linha"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "как выглядит строка"
+          }
+        }
+      }
+    },
+    "scr.empty.exampleNote": {
+      "comment": "The sentence under the worked example.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Satz, den Alma schreibt, nennt die Position, aus der er gelesen wurde — wie oben. Nichts ist eine Vorhersage, und nichts wird gezeigt, was nicht berechnet wurde."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every sentence Alma writes names the placement it was read from, like the one above. Nothing is a prediction, and nothing is shown that was not calculated."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada frase que escribe Alma nombra la posición de la que se leyó, como la de arriba. Nada es una predicción, y no se muestra nada que no se haya calculado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque phrase qu'Alma écrit nomme la position dont elle est tirée, comme celle ci-dessus. Rien n'est une prédiction, et rien n'est montré qui n'ait été calculé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni frase che Alma scrive nomina la posizione da cui è stata letta, come quella sopra. Niente è una previsione, e non si mostra nulla che non sia calcolato."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada frase que Alma escreve nomeia a posição de onde foi lida, como a de cima. Nada é previsão, e nada é mostrado sem ter sido calculado."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждое предложение Alma называет позицию, из которой оно прочитано, — как строка выше. Здесь нет предсказаний, и не показывается ничего, что не было рассчитано."
+          }
+        }
+      }
+    },
+    "scr.empty.exampleTag": {
+      "comment": "Marks the sample citation as a sample, not this person's chart.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispiel — nicht dein Horoskop"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "example — not your chart"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ejemplo — no es tu carta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "exemple — pas ton thème"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "esempio — non è il tuo tema"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "exemplo — não é o seu mapa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "пример — не твоя карта"
+          }
+        }
+      }
+    },
+    "scr.empty.lead": {
+      "comment": "What Alma does, before it has anything to do it with.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alma berechnet acht unabhängige Systeme aus einer echten JPL-Ephemeride — insgesamt einundvierzig Kapitel — und zeigt dir, wo sie über dich übereinstimmen und wo nicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alma computes eight independent systems from a real JPL ephemeris — forty-one chapters in all — and shows you where they agree about you and where they do not."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alma calcula ocho sistemas independientes desde una efeméride real del JPL — cuarenta y un capítulos en total — y te muestra dónde coinciden sobre ti y dónde no."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alma calcule huit systèmes indépendants à partir d'une éphéméride JPL réelle — quarante et un chapitres en tout — et te montre où ils s'accordent sur toi et où ils divergent."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alma calcola otto sistemi indipendenti da un'effemeride JPL reale — quarantuno capitoli in tutto — e ti mostra dove concordano su di te e dove no."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alma calcula oito sistemas independentes a partir de uma efeméride real do JPL — quarenta e um capítulos ao todo — e mostra onde eles concordam sobre você e onde não."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alma рассчитывает восемь независимых систем по настоящей эфемериде JPL — всего сорок одна глава — и показывает, где они сходятся насчёт тебя, а где расходятся."
+          }
+        }
+      }
+    },
+    "scr.empty.title": {
+      "comment": "Heading above the eight systems on an empty Today.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acht Systeme, ein Horoskop"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eight systems, one chart"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocho sistemas, una carta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Huit systèmes, un thème"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otto sistemi, un tema"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oito sistemas, um mapa"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Восемь систем, одна карта"
+          }
+        }
+      }
+    },
+    "scr.journey.freeNote": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles oben ist berechnet, und Berechnungen sind immer kostenlos. Es bleibt deins, ob du weiterliest oder nicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything above is calculated, and calculations are always free. It stays yours whether you read further or not."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo lo de arriba está calculado, y los cálculos son siempre gratis. Es tuyo, leas más o no."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout ce qui précède est calculé, et les calculs sont toujours gratuits. Ça reste à toi, que tu lises la suite ou non."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutto quello sopra è calcolato, e i calcoli sono sempre gratuiti. Resta tuo, che tu continui a leggere o no."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tudo acima é calculado, e os cálculos são sempre gratuitos. É seu, leia você mais ou não."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё выше — расчёты, а расчёты всегда бесплатны. Это остаётся твоим, читаешь ты дальше или нет."
+          }
+        }
+      }
+    },
+    "scr.keep": {
+      "comment": "The cancel side of a destructive confirmation.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behalten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantieni"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manter"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оставить"
+          }
+        }
+      }
+    },
+    "scr.people.consent": {
+      "comment": "Whose birth data this is. The terms ask; this says it at the point of entry.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es sind ihre Geburtsdaten, nicht deine. Frag sie vorher."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It is their birth data, not yours. Ask them first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son sus datos de nacimiento, no los tuyos. Pídeselo antes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce sont leurs données de naissance, pas les tiennes. Demande-leur d'abord."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sono i loro dati di nascita, non i tuoi. Chiedi prima."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os dados de nascimento são deles, não seus. Pergunte antes."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это их данные рождения, не твои. Сначала спроси у них разрешения."
+          }
+        }
+      }
+    },
+    "scr.people.eyebrow": {
+      "comment": "Eyebrow above the people list.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partnerschaft"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "compatibility"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "compatibilidad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "compatibilité"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "affinità"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "compatibilidade"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "совместимость"
+          }
+        }
+      }
+    },
+    "scr.people.lead": {
+      "comment": "What the list is for.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Partnerschaftsanalyse vergleicht dein Horoskop mit dem einer anderen Person. Der Vergleich wird kostenlos berechnet, wie jede Berechnung."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compatibility compares your chart against somebody else's. The comparison itself is calculated free, as every calculation is."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compatibilidad compara tu carta con la de otra persona. La comparación se calcula gratis, como todos los cálculos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La compatibilité compare ton thème à celui de quelqu'un d'autre. Le calcul est gratuit, comme tous les calculs."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'affinità confronta il tuo tema con quello di un'altra persona. Il confronto è calcolato gratis, come ogni calcolo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A compatibilidade compara seu mapa com o de outra pessoa. A comparação é calculada de graça, como todo cálculo."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Совместимость сравнивает твою карту с чьей-то ещё. Само сравнение считается бесплатно, как каждый расчёт."
+          }
+        }
+      }
+    },
+    "scr.people.remove": {
+      "comment": "The remove control on a row.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать"
+          }
+        }
+      }
+    },
+    "scr.people.removeTitle": {
+      "comment": "Confirmation dialog title.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Person entfernen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove this person?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitar a esta persona?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retirer cette personne ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovere questa persona?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover esta pessoa?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Убрать этого человека?"
+          }
+        }
+      }
+    },
+    "scr.people.removeWhat": {
+      "comment": "What removing actually costs.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Geburt wird gelöscht, und mit ihr jede daraus geschriebene Partnerschaftsdeutung. Bezahlte Deutungen lassen sich nicht Wort für Wort neu schreiben."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Their birth goes, and so does every compatibility reading written from it. Readings you paid for cannot be written again word for word."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su nacimiento se borra, y con él toda lectura de compatibilidad escrita a partir de él. Las lecturas que pagaste no pueden volver a escribirse palabra por palabra."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sa naissance disparaît, et avec elle chaque lecture de compatibilité qui en est issue. Les lectures payées ne peuvent pas être réécrites mot pour mot."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La loro nascita sparisce, e con essa ogni lettura di compatibilità scritta da lì. Le letture pagate non possono essere riscritte parola per parola."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O nascimento dessa pessoa some, e com ele toda leitura de compatibilidade escrita a partir dele. Leituras pagas não podem ser reescritas palavra por palavra."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Уйдут их данные рождения — и каждое чтение совместимости, написанное из них. Оплаченные чтения нельзя написать заново слово в слово."
+          }
+        }
+      }
+    },
+    "scr.people.saved": {
+      "comment": "Section label above the saved people.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "gespeichert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "saved"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "guardadas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "enregistrées"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "salvate"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "salvas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сохранено"
+          }
+        }
+      }
+    },
+    "scr.people.title": {
+      "comment": "People list title.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "People"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Personnes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persone"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pessoas"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Люди"
+          }
+        }
+      }
+    },
+    "scr.people.unnamed": {
+      "comment": "A saved person with no name.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Namen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unnamed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin nombre"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans nom"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senza nome"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem nome"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без имени"
+          }
+        }
+      }
+    },
+    "scr.signIn.already": {
+      "comment": "Shown when the screen is opened by somebody already signed in.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du bist bereits angemeldet. Dieses Konto folgt dir auf jedes Telefon."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are already signed in. This account follows you to any phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya has iniciado sesión. Esta cuenta te sigue a cualquier teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton compte est déjà ouvert. Il te suit sur n'importe quel téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hai già effettuato l'accesso. Questo account ti segue su qualsiasi telefono."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você já entrou. Esta conta acompanha você em qualquer telefone."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ты уже в аккаунте. Он следует за тобой на любой телефон."
+          }
+        }
+      }
+    },
+    "scr.signIn.done": {
+      "comment": "After a successful sign-in.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du bist angemeldet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are signed in."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Has iniciado sesión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te voilà dans ton compte."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hai effettuato l'accesso."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Você entrou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход выполнен."
+          }
+        }
+      }
+    },
+    "scr.signIn.emailPlaceholder": {
+      "comment": "Email field placeholder.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine E-Mail-Adresse"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your email address"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu correo electrónico"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton adresse e-mail"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo indirizzo email"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu e-mail"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Твой адрес почты"
+          }
+        }
+      }
+    },
+    "scr.signIn.eyebrow": {
+      "comment": "Eyebrow above the sign-in title.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dein Konto"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "your account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tu cuenta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ton compte"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "il tuo account"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sua conta"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "твой аккаунт"
+          }
+        }
+      }
+    },
+    "scr.signIn.failed": {
+      "comment": "A sign-in that did not work, with no server sentence behind it.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Damit wurdest du nicht angemeldet. An deinem Konto hat sich nichts geändert."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That did not sign you in. Nothing has changed on your account."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eso no te ha identificado. Nada ha cambiado en tu cuenta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La connexion n'a pas abouti. Rien n'a changé sur ton compte."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accesso non è riuscito. Nulla è cambiato nel tuo account."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isso não fez você entrar. Nada mudou na sua conta."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войти не получилось. В аккаунте ничего не изменилось."
+          }
+        }
+      }
+    },
+    "scr.signIn.google": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter mit Google"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue with Google"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar con Google"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer avec Google"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua con Google"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar com o Google"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить через Google"
+          }
+        }
+      }
+    },
+    "scr.signIn.lead": {
+      "comment": "What signing in actually does. It attaches; it does not replace.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anmeldung hängt einen Namen an das Konto, das du bereits hast. Nichts, was du gelesen oder gekauft hast, geht verloren — es ist dasselbe Konto, nur dauerhaft."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signing in attaches a name to the account you already have. Nothing you have read or bought is lost — it is the same account, made durable."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión añade un nombre a la cuenta que ya tienes. No se pierde nada de lo que has leído o comprado: es la misma cuenta, hecha duradera."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter attache un nom au compte que tu as déjà. Rien de ce que tu as lu ou acheté n'est perdu — c'est le même compte, rendu durable."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accedere aggiunge un nome all'account che hai già. Nulla di ciò che hai letto o comprato va perso: è lo stesso account, reso duraturo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrar anexa um nome à conta que você já tem. Nada do que você leu ou comprou se perde — é a mesma conta, tornada durável."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход привязывает имя к аккаунту, который у тебя уже есть. Ничего из прочитанного и купленного не теряется — это тот же аккаунт, просто теперь он никуда не денется."
+          }
+        }
+      }
+    },
+    "scr.signIn.linkSent": {
+      "comment": "After it has been sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sieh in deinem Posteingang nach. Der Link meldet dich an und läuft bald ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your inbox. The link signs you in and expires shortly."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa tu bandeja de entrada. El enlace te identifica y caduca pronto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regarde ta boîte de réception. Le lien te connecte et expire bientôt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Controlla la posta. Il link ti fa accedere e scade a breve."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifique sua caixa de entrada. O link faz você entrar e expira em breve."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Проверь почту. Ссылка выполнит вход сама и скоро погаснет."
+          }
+        }
+      }
+    },
+    "scr.signIn.orEmail": {
+      "comment": "Divider above the email field.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "oder per E-Mail"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "or by email"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "o por correo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ou par e-mail"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "o via email"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ou por e-mail"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "или по почте"
+          }
+        }
+      }
+    },
+    "scr.signIn.privacy": {
+      "comment": "What we do with the address.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir nutzen deine Adresse für den Anmeldelink und für nichts anderes. Es gibt keinen Newsletter."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We use your address for the sign-in link and nothing else. There is no newsletter."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usamos tu dirección para el enlace de acceso y nada más. No hay boletín."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nous utilisons ton adresse pour le lien de connexion et rien d'autre. Il n'y a pas de newsletter."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usiamo il tuo indirizzo per il link di accesso e nient'altro. Non c'è newsletter."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usamos seu endereço para o link de acesso e nada mais. Não há newsletter."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Адрес нужен только для ссылки на вход — больше ни для чего. Рассылки нет."
+          }
+        }
+      }
+    },
+    "scr.signIn.reason1": {
+      "comment": "Why to sign in.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Horoskop überlebt ein neues Telefon."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your chart survives a new phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu carta sobrevive a un teléfono nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton thème survit à un nouveau téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo tema sopravvive a un telefono nuovo."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seu mapa sobrevive a um telefone novo."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Твоя карта переживёт новый телефон."
+          }
+        }
+      }
+    },
+    "scr.signIn.reason2": {
+      "comment": "Why to sign in — the restore case, which is the one that costs money.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles Gekaufte lässt sich wiederherstellen. Ein Kauf gehört dem Konto, das ihn zuerst beansprucht hat — melde dich also vor einer Neuinstallation an."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anything you bought can be restored. A purchase belongs to the account that claimed it first, so sign in before you reinstall."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo lo que compraste se puede restaurar. Una compra pertenece a la cuenta que la reclamó primero, así que inicia sesión antes de reinstalar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout ce que tu as acheté peut être restauré. Un achat appartient au compte qui l'a réclamé en premier, alors connecte-toi avant de réinstaller."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tutto ciò che hai comprato può essere ripristinato. Un acquisto appartiene all'account che lo ha reclamato per primo, quindi accedi prima di reinstallare."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tudo o que você comprou pode ser restaurado. Uma compra pertence à conta que a reivindicou primeiro, então entre antes de reinstalar."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Всё купленное можно восстановить. Покупка принадлежит аккаунту, который забрал её первым, — войди до переустановки."
+          }
+        }
+      }
+    },
+    "scr.signIn.reason3": {
+      "comment": "Why to sign in.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es gibt kein Passwort. Und wird nie eines geben."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "There is no password. There never will be."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay contraseña. Nunca la habrá."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il n'y a pas de mot de passe. Il n'y en aura jamais."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non c'è password. Non ci sarà mai."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não há senha. Nunca haverá."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пароля нет. И не будет."
+          }
+        }
+      }
+    },
+    "scr.signIn.sendLink": {
+      "comment": "Button that sends the passwordless link.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schick mir einen Link"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send me a link"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envíame un enlace"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoie-moi un lien"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mandami un link"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me envie um link"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправить мне ссылку"
+          }
+        }
+      }
+    },
+    "scr.signIn.sending": {
+      "comment": "While it is being sent.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird gesendet…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sending…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviando…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoi…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invio…"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviando…"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отправляю…"
+          }
+        }
+      }
+    },
+    "scr.signIn.title": {
+      "comment": "Sign-in screen title.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmelden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accedi"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrar"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

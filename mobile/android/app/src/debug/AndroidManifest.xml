@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The debug build talks to a backend on the developer's own machine over plain
+  HTTP, which Android has refused by default since API 28.
+
+  The wrong fix is `android:usesCleartextTraffic="true"`, which switches the
+  platform's protection off for every host the app will ever contact — and it
+  is applied to the manifest, so it is one careless merge away from being in
+  the release build. What is here instead names 10.0.2.2 and nothing else, and
+  it lives in the debug source set, so the release manifest has no cleartext
+  policy at all.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- No `tools:replace` here: the main manifest declares no
+         networkSecurityConfig at all, so this one is merged in rather than
+         overriding anything, and asking to replace a declaration that does not
+         exist is a warning on every build. -->
+    <application android:networkSecurityConfig="@xml/network_security_config" />
+
+</manifest>

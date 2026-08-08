@@ -1,0 +1,56 @@
+[project]
+name = "alma-backend"
+version = "0.1.0"
+description = "Alma — calculation engine, AI layer, accounts and billing."
+requires-python = ">=3.12"
+license = "LicenseRef-Proprietary"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.4",
+    "sqlalchemy[asyncio]>=2.0",
+    "aiosqlite>=0.20",
+    # HTTP/2 is not a preference here: APNs speaks nothing else, and a plain
+    # httpx install cannot open the connection at all. The extra pulls in `h2`
+    # (MIT), which tools/license_gate.py permits. Without it the push transport
+    # raises at the first send rather than at boot, which is the wrong end of
+    # the day to find out.
+    "httpx[http2]>=0.27",
+    "pyjwt>=2.9",
+    # Store purchases are verified against Apple's and Google's own keys rather
+    # than against a shared secret, and neither check can be done with hmac:
+    # Apple's StoreKit transaction is an ES256 JWS behind an X.509 chain that
+    # has to be walked to a pinned root, and Google's service-account flow signs
+    # an RS256 assertion. PyJWT delegates every asymmetric algorithm to this
+    # package, so it is a hard dependency of billing rather than an extra —
+    # without it `pyjwt` raises at import of the algorithm, not at verification,
+    # which would be a boot failure on the day of the first purchase.
+    # BSD-3/Apache-2.0 dual licensed; tools/license_gate.py permits both.
+    "cryptography>=43",
+    "anthropic>=0.60",
+    "timezonefinder>=6.5",
+    # Astronomy: permissive licences only (§9). Skyfield/jplephem are MIT,
+    # pyerfa is BSD-3, and the JPL kernels are public data. Swiss Ephemeris,
+    # pyswisseph, libephemeris and Kerykeion are banned — AGPL §13 would force
+    # us to publish the whole service. tools/license_gate.py enforces this.
+    "skyfield>=1.49",
+    "jplephem>=2.21",
+    "pyerfa>=2.0.1",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+postgres = ["asyncpg>=0.29"]
+# No ephemeris oracle here by design: correctness is asserted against the
+# mathematical definitions instead (see tests/test_houses_definition.py and
+# tests/test_lunar_node.py).
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.setuptools.packages.find]
+include = ["alma*"]

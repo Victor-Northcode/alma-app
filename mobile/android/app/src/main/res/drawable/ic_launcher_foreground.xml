@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The mark: a four-pointed star with thick arms and short points, traced from
+  the same path as the web app's `components/brand/Star.tsx` so the two stores
+  and the site show one shape.
+
+  The 64-unit viewport of the source is mapped onto the 108 dp adaptive-icon
+  canvas and scaled to 44 units, which keeps the whole star inside the 66 dp
+  safe circle that every launcher mask leaves alone.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group android:translateX="32" android:translateY="32" android:scaleX="0.687" android:scaleY="0.687">
+        <path android:pathData="M32.4,6.4 Q35.6,22.8 41.2,26.6 Q47,30 57.8,31.9 Q47,34 41,37.4 Q35.4,41 32,57.6 Q28.6,41.2 23,37.6 Q17,34.2 6.2,32.1 Q17.2,29.8 23.2,26.4 Q28.8,22.6 32.4,6.4 Z">
+            <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="12.8" android:startY="0"
+                    android:endX="51.2" android:endY="64">
+                    <item android:offset="0" android:color="#FBEDC4" />
+                    <item android:offset="0.34" android:color="#E0C077" />
+                    <item android:offset="0.7" android:color="#B3913F" />
+                    <item android:offset="1" android:color="#8A6F2E" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <path
+            android:pathData="M32.2,13 Q34.4,26.6 37.6,29.8 Q34.2,34.8 32,51 Q29.8,34.8 26.6,30 Q30,26.8 32.2,13 Z"
+            android:fillColor="#8A6F2E"
+            android:fillAlpha="0.16" />
+    </group>
+</vector>

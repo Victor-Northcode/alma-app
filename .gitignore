@@ -1,0 +1,56 @@
+node_modules/
+.next/
+out/
+# Secrets. `.env.local` alone was not enough: the backend reads `.env` first,
+# which is where a real ANTHROPIC_API_KEY actually ends up, and an ignore rule
+# that covers only the second-choice filename protects nothing.
+.env
+.env.*
+!.env.example
+
+backend/.venv/
+backend/**/__pycache__/
+backend/*.egg-info/
+backend/.pytest_cache/
+backend/data/*.db
+
+# verification builds — kept out of the dev server's way
+.next-verify/
+
+# ── Mobile ──────────────────────────────────────────────────────────────────
+#
+# Gradle writes ~800 MB into these on a first build and none of it is source.
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/.kotlin/
+mobile/android/local.properties
+
+# Xcode's per-user state: window positions, breakpoints, and the scheme Xcode
+# autocreates. Committing it makes every developer's checkout dirty on open.
+mobile/ios/**/xcuserdata/
+mobile/ios/build/
+
+# Signing material, in the belt-and-braces sense. Nothing in this project ever
+# writes a keystore or a certificate inside the repository — the Android build
+# reads the path and the passwords from the environment or from
+# ~/.gradle/gradle.properties, and mobile/RELEASE.md says to keep the file in
+# ~/keys. These rules exist for the day somebody copies one here "just for a
+# minute" to get a build out. An upload key committed to a repository is a key
+# that has to be rotated through Play support.
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+*.cer
+*.certSigningRequest
+
+# macOS + editors + local agent config
+.DS_Store
+.claude/
+_reference/
+
+# runtime artefacts
+backend/nohup.out
+*.log
