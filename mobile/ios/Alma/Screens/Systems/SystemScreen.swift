@@ -53,17 +53,26 @@ struct SystemScreen: View {
                     // the funnel here: it demonstrates the writing, which the
                     // sixteen titles alone never did.
                     wheel(model)
+                        .riseIn(0)
                     placementList(model)
+                        .riseIn(1)
                     spheresSection(model)
+                        .riseIn(2)
                     chapters(model)
+                        .riseIn(3)
                     door(model)
+                        .riseIn(4)
                     freeData(model)
+                        .riseIn(5)
                 } else {
                     // Every other system: what is sold leads, the free
                     // calculations stay complete below.
                     chapters(model)
+                        .riseIn(0)
                     door(model)
+                        .riseIn(1)
                     freeData(model)
+                        .riseIn(2)
                 }
             }
         }

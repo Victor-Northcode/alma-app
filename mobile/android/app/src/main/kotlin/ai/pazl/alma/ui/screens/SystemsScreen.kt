@@ -11,6 +11,7 @@ import ai.pazl.alma.data.dto.CalcRequest
 import ai.pazl.alma.data.dto.HubEntryDto
 import ai.pazl.alma.ui.components.QuietButton
 import ai.pazl.alma.ui.components.StateHost
+import ai.pazl.alma.ui.components.riseIn
 import ai.pazl.alma.ui.sky.NightSky
 import ai.pazl.alma.ui.sky.SkyConfig
 import ai.pazl.alma.ui.theme.AlmaPalette
@@ -168,13 +169,13 @@ private fun SystemsBody(
             "$ready/${systems.entries.size} ${stringResource(R.string.cabinet_calculated)}"
         }
 
-        ScreenTitle(stringResource(R.string.nav_systems))
+        Box(Modifier.riseIn(0)) { ScreenTitle(stringResource(R.string.nav_systems)) }
         if (tally != null) {
             Text(
                 text = tally,
                 style = AlmaTheme.type.meta,
                 color = AlmaPalette.Gold,
-                modifier = Modifier.padding(top = 4.dp),
+                modifier = Modifier.padding(top = 4.dp).riseIn(0),
             )
         }
 
@@ -199,19 +200,21 @@ private fun SystemsBody(
         }
 
         Spacer(Modifier.height(22.dp))
-        Portrait(systems.chart)
+        Box(Modifier.riseIn(1)) { Portrait(systems.chart) }
         Spacer(Modifier.height(10.dp))
 
         // Synthesis has its own block at the bottom and never doubles up here.
         val listed = systems.entries.filter { it.slug != AlmaSystem.SYNTHESIS }
 
-        GroupOrder.forEach { group ->
+        GroupOrder.forEachIndexed { position, group ->
             val rows = listed.filter { SystemGroups[it.slug] == group && it.isReady() }
-            if (rows.isEmpty()) return@forEach
+            if (rows.isEmpty()) return@forEachIndexed
             Spacer(Modifier.height(22.dp))
-            RuledLabel(stringResource(group))
-            rows.forEachIndexed { index, entry ->
-                SystemRow(entry, last = index == rows.lastIndex, onOpenSystem, onAddPerson)
+            Column(Modifier.riseIn(2 + position)) {
+                RuledLabel(stringResource(group))
+                rows.forEachIndexed { index, entry ->
+                    SystemRow(entry, last = index == rows.lastIndex, onOpenSystem, onAddPerson)
+                }
             }
         }
 
@@ -221,16 +224,18 @@ private fun SystemsBody(
             // One heading covers a missing birth time, a missing person and a
             // system not reached yet alike — "not yet" is the one label true of
             // all three.
-            RuledLabel(stringResource(R.string.cabinet_not_yet))
-            pending.forEachIndexed { index, entry ->
-                SystemRow(entry, last = index == pending.lastIndex, onOpenSystem, onAddPerson)
+            Column(Modifier.riseIn(5)) {
+                RuledLabel(stringResource(R.string.cabinet_not_yet))
+                pending.forEachIndexed { index, entry ->
+                    SystemRow(entry, last = index == pending.lastIndex, onOpenSystem, onAddPerson)
+                }
             }
         }
 
         systems.entries.firstOrNull { it.slug == AlmaSystem.SYNTHESIS }?.let { synthesis ->
             Spacer(Modifier.height(22.dp))
-            RuledLabel(stringResource(R.string.group_all_of_it))
-            CabinetRow(onClick = { onOpenSystem(AlmaSystem.SYNTHESIS) }, rule = false) {
+            RuledLabel(stringResource(R.string.group_all_of_it), modifier = Modifier.riseIn(6))
+            CabinetRow(modifier = Modifier.riseIn(6), onClick = { onOpenSystem(AlmaSystem.SYNTHESIS) }, rule = false) {
                 Column(Modifier.weight(1f)) {
                     Text(text = systemName(synthesis.slug), style = AlmaTheme.type.headingM)
                 }

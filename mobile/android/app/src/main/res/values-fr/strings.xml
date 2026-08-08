@@ -70,7 +70,7 @@
     <string name="cabinet_eight_tail">Regroupés par ta question, pas par le nom de la tradition. Les huit sont calculés gratuitement.</string>
     <string name="cabinet_free_data">calculé gratuitement</string>
     <string name="state_reading_chart">Je lis ton thème</string>
-    <string name="state_writing">J'écris ce chapitre…</string>
+    <string name="state_writing">J\'écris ce chapitre…</string>
     <string name="state_writing_note">Il est écrit une fois, et il dira la même chose demain.</string>
     <string name="state_locked_note">Rédigé à partir de tes propres positions la première fois que tu l\'ouvres — ton thème, jamais un modèle.</string>
     <string name="synthesis_title">Là où huit traditions s\'accordent sur toi</string>
@@ -384,11 +384,11 @@
     <string name="daily_verified_label">Jours exacts dans les 30 prochains</string>
     <string name="daily_verified_note">Comptés depuis ton propre thème, sur cet appareil, avec la règle qu\'utilise la notification.</string>
     <string name="push_daily_conjunction">%1$s et %2$s — conjonction exacte à %3$s.</string>
-    <string name="push_daily_entering_conjunction">%1$s et %2$s — conjonction, dans l'orbe dès aujourd'hui.</string>
-    <string name="push_daily_entering_opposition">%1$s et %2$s — opposition, dans l'orbe dès aujourd'hui.</string>
-    <string name="push_daily_entering_sextile">%1$s et %2$s — sextile, dans l'orbe dès aujourd'hui.</string>
-    <string name="push_daily_entering_square">%1$s et %2$s — carré, dans l'orbe dès aujourd'hui.</string>
-    <string name="push_daily_entering_trine">%1$s et %2$s — trigone, dans l'orbe dès aujourd'hui.</string>
+    <string name="push_daily_entering_conjunction">%1$s et %2$s — conjonction, dans l\'orbe dès aujourd\'hui.</string>
+    <string name="push_daily_entering_opposition">%1$s et %2$s — opposition, dans l\'orbe dès aujourd\'hui.</string>
+    <string name="push_daily_entering_sextile">%1$s et %2$s — sextile, dans l\'orbe dès aujourd\'hui.</string>
+    <string name="push_daily_entering_square">%1$s et %2$s — carré, dans l\'orbe dès aujourd\'hui.</string>
+    <string name="push_daily_entering_trine">%1$s et %2$s — trigone, dans l\'orbe dès aujourd\'hui.</string>
     <string name="push_daily_opposition">%1$s et %2$s — opposition exacte à %3$s.</string>
     <string name="push_daily_sextile">%1$s et %2$s — sextile exact à %3$s.</string>
     <string name="push_daily_square">%1$s et %2$s — carré exact à %3$s.</string>

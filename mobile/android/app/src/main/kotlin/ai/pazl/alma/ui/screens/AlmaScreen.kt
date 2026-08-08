@@ -14,6 +14,7 @@ import ai.pazl.alma.ui.components.AlmaPresence
 import ai.pazl.alma.ui.components.Hairline
 import ai.pazl.alma.ui.components.Overline
 import ai.pazl.alma.ui.components.QuietButton
+import ai.pazl.alma.ui.components.riseIn
 import ai.pazl.alma.ui.sky.NightSky
 import ai.pazl.alma.ui.sky.SkyConfig
 import ai.pazl.alma.ui.theme.AlmaPalette
@@ -160,7 +161,12 @@ private fun BoxScope.ChatBody(
                 contentPadding = PaddingValues(horizontal = 22.dp, vertical = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(22.dp),
             ) {
-                items(chat.turns, key = { it.id }) { turn -> Turn(turn) }
+                // Each message settles in as it arrives — one at a time in a
+                // live conversation. In a lazy list a turn scrolled far away
+                // re-enters with the same quiet fade, which suits a chat.
+                items(chat.turns, key = { it.id }) { turn ->
+                    Box(Modifier.riseIn(0)) { Turn(turn) }
+                }
             }
         }
 
@@ -189,11 +195,11 @@ private fun Empty(openers: ChartOpeners?, onAsk: (String) -> Unit, modifier: Mod
         verticalArrangement = Arrangement.spacedBy(18.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AlmaPresence(size = 96.dp)
+        Box(Modifier.riseIn(0)) { AlmaPresence(size = 96.dp) }
         Text(
             text = stringResource(R.string.chat_lead),
             style = AlmaTheme.type.almaVoice,
-            modifier = Modifier.widthIn(max = 420.dp),
+            modifier = Modifier.widthIn(max = 420.dp).riseIn(1),
         )
 
         // Offered, not remembered. A question printed here as if it had been
@@ -202,9 +208,13 @@ private fun Empty(openers: ChartOpeners?, onAsk: (String) -> Unit, modifier: Mod
         // it is tapped.
         val questions = openerQuestions(openers)
         if (questions.isNotEmpty()) {
-            Overline(stringResource(R.string.chat_could_ask))
-            questions.forEach { question ->
-                QuietButton(text = question, onClick = { onAsk(question) })
+            Overline(stringResource(R.string.chat_could_ask), modifier = Modifier.riseIn(2))
+            questions.forEachIndexed { index, question ->
+                QuietButton(
+                    text = question,
+                    onClick = { onAsk(question) },
+                    modifier = Modifier.riseIn(3 + index),
+                )
             }
         }
     }

@@ -19,6 +19,8 @@ import ai.pazl.alma.notify.DailyState
 import ai.pazl.alma.ui.components.Overline
 import ai.pazl.alma.ui.components.QuietButton
 import ai.pazl.alma.ui.components.StateHost
+import ai.pazl.alma.ui.components.riseIn
+import androidx.compose.foundation.layout.Box
 import ai.pazl.alma.ui.sky.NightSky
 import ai.pazl.alma.ui.sky.SkyConfig
 import ai.pazl.alma.ui.theme.AlmaPalette
@@ -359,7 +361,7 @@ private fun TodayBody(
         // the strictest rule in the brief, and a wrong date is the cheapest way
         // to lose a reader's trust in everything calculated below it.
         val day = dayAndMonth(LocalDate.now().toString())
-        if (day != null) Overline(day, wide = true)
+        if (day != null) Overline(day, wide = true, modifier = Modifier.riseIn(0))
 
         // A guest has no name yet, and the greeting has to read without one. The
         // comma goes with the name: every one of the six greetings ends in one,
@@ -374,7 +376,7 @@ private fun TodayBody(
         Text(
             text = if (name != null) "$greeting $name" else greeting.trimEnd(',', ' '),
             style = AlmaTheme.type.displayXl,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 8.dp).riseIn(0),
         )
 
         // "☽ full moon · 99%" under the greeting — the moon is a line now, not
@@ -388,7 +390,7 @@ private fun TodayBody(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 8.dp),
+                modifier = Modifier.padding(top = 8.dp).riseIn(0),
             ) {
                 Text(text = "☽", style = AlmaTheme.type.headingM, color = AlmaPalette.GoldBright)
                 Text(text = phaseName(phaseKey) + lit, style = AlmaTheme.type.meta)
@@ -415,15 +417,17 @@ private fun TodayBody(
         // The owner's brief is the design: one connected text a person wants to
         // open every morning, with the raw facts folded under it for whoever
         // wants them, not spread across the front page.
-        RuledLabel(stringResource(R.string.cabinet_your_day))
+        RuledLabel(stringResource(R.string.cabinet_your_day), modifier = Modifier.riseIn(1))
         Spacer(Modifier.height(14.dp))
-        DayVoice(
-            today = today,
-            isSubscriber = daily.isSubscriber,
-            onReadWholeDay = {
-                onOpenChapter(AlmaSystem.TRANSITS, TodayViewModel.TransitsFreeChapter)
-            },
-        )
+        Box(Modifier.riseIn(1)) {
+            DayVoice(
+                today = today,
+                isSubscriber = daily.isSubscriber,
+                onReadWholeDay = {
+                    onOpenChapter(AlmaSystem.TRANSITS, TodayViewModel.TransitsFreeChapter)
+                },
+            )
+        }
 
         // The facts the text was read from, folded away. A tap opens the day's
         // exact contact (or its honest absence) and the strongest running
@@ -461,10 +465,12 @@ private fun TodayBody(
         // the notification that would have told them. At most once a week,
         // silent for thirty days after a dismissal, gone for subscribers.
         if (!daily.isSubscriber) {
-            SkyEventCard(
-                contacts = DailyContact.all(transits),
-                onOpen = { onOffer("") },
-            )
+            Box(Modifier.riseIn(2)) {
+                SkyEventCard(
+                    contacts = DailyContact.all(transits),
+                    onOpen = { onOffer("") },
+                )
+            }
         }
 
         // The second entrance to the setting, on the surface the content is on.
@@ -477,17 +483,20 @@ private fun TodayBody(
         // whether to be told about the next one, where a person who has read
         // nothing yet is being interrupted.
         if (daily.shouldInvite(hasBirthData = true, previouslyDenied = !daily.permitted && daily.answeredTheAsk)) {
-            DailyInvitation(onYes = onAcceptDaily, onNo = onDeclineDaily)
+            Box(Modifier.riseIn(3)) {
+                DailyInvitation(onYes = onAcceptDaily, onNo = onDeclineDaily)
+            }
         }
 
         Spacer(Modifier.height(24.dp))
         Text(
             text = stringResource(R.string.cabinet_not_prediction),
             style = AlmaTheme.type.meta,
+            modifier = Modifier.riseIn(4),
         )
 
         Spacer(Modifier.height(6.dp))
-        CabinetRow(onClick = onAskAlma, rule = false) {
+        CabinetRow(modifier = Modifier.riseIn(5), onClick = onAskAlma, rule = false) {
             Text(
                 text = stringResource(R.string.cabinet_ask_alma),
                 style = AlmaTheme.type.headingM,
@@ -504,7 +513,9 @@ private fun TodayBody(
         // the moment somebody subscribes, so it never sells what is owned.
         if (!daily.isSubscriber) {
             Spacer(Modifier.height(24.dp))
-            PlanInvitation(onOpen = { onOffer(AlmaSystem.NATAL) })
+            Box(Modifier.riseIn(6)) {
+                PlanInvitation(onOpen = { onOffer(AlmaSystem.NATAL) })
+            }
         }
 
         // The door, and only when there is one. A person who has already

@@ -14,6 +14,7 @@ import ai.pazl.alma.ui.components.Hairline
 import ai.pazl.alma.ui.components.QuietButton
 import ai.pazl.alma.ui.components.StarVariant
 import ai.pazl.alma.ui.components.StateHost
+import ai.pazl.alma.ui.components.riseIn
 import ai.pazl.alma.ui.sky.AuraTone
 import ai.pazl.alma.ui.sky.NightSky
 import ai.pazl.alma.ui.sky.SkyConfig
@@ -226,12 +227,14 @@ private fun OfferSheet(
         } else {
             Column(Modifier.fillMaxWidth().selectableGroup()) {
                 offer.rows.forEachIndexed { index, row ->
-                    OfferOption(
-                        row = row,
-                        selected = row.slug == offer.selected?.slug,
-                        onSelect = { onSelect(row.slug) },
-                    )
-                    if (index != offer.rows.lastIndex) Hairline()
+                    Column(Modifier.riseIn(index)) {
+                        OfferOption(
+                            row = row,
+                            selected = row.slug == offer.selected?.slug,
+                            onSelect = { onSelect(row.slug) },
+                        )
+                        if (index != offer.rows.lastIndex) Hairline()
+                    }
                 }
             }
 

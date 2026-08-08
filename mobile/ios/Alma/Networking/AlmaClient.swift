@@ -211,7 +211,15 @@ final class AlmaClient: Sendable {
         isSelf: Bool? = nil,
         relation: String? = nil
     ) async throws(AlmaError) -> Profile {
-        try await post("/v1/profiles", body: ProfileInput(birth: birth, isSelf: isSelf, relation: relation))
+        try await post(
+            "/v1/profiles",
+            body: ProfileInput(
+                birth: birth,
+                isSelf: isSelf,
+                relation: relation,
+                locale: AppLocale.current.rawValue
+            )
+        )
     }
 
     func deleteProfile(id: String) async throws(AlmaError) {
@@ -571,6 +579,13 @@ final class AlmaClient: Sendable {
         // because a person who travels re-registers nothing: the requests they
         // make are the only evidence the clock moved.
         urlRequest.setValue(TimeZone.current.identifier, forHTTPHeaderField: Self.timezoneHeader)
+        // The device's language, set explicitly rather than left to CFNetwork's
+        // automatic header. The server reads it in one place: the request that
+        // mints a guest, so `user.locale` starts as the phone's language
+        // instead of English-until-the-locale-PATCH-lands.
+        urlRequest.setValue(
+            Locale.preferredLanguages.first ?? "en", forHTTPHeaderField: "Accept-Language"
+        )
         if let body {
             do {
                 urlRequest.httpBody = try Self.encoder.encode(body)
@@ -744,6 +759,10 @@ private struct ProfileInput: Encodable {
     let birth: BirthInput
     let isSelf: Bool?
     let relation: String?
+    /// The language a refusal should arrive in — the partner-limit 402 answers
+    /// from this rather than the account's stored locale, which on a fresh
+    /// guest can still be the minting default.
+    let locale: String
 
     /// Flattened, because the route takes the birth fields at the top level
     /// alongside `is_self` and `relation` rather than nested under `birth`.
@@ -752,6 +771,7 @@ private struct ProfileInput: Encodable {
         var container = encoder.container(keyedBy: Key.self)
         try container.encodeIfPresent(isSelf, forKey: .isSelf)
         try container.encodeIfPresent(relation, forKey: .relation)
+        try container.encode(locale, forKey: .locale)
     }
 
     /// Written out because `.convertToSnakeCase` does not apply to a manual
@@ -759,6 +779,7 @@ private struct ProfileInput: Encodable {
     private enum Key: String, CodingKey {
         case isSelf = "is_self"
         case relation
+        case locale
     }
 }
 

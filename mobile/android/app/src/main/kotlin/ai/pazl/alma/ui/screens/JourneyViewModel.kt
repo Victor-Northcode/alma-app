@@ -276,7 +276,11 @@ class JourneyViewModel(
                 return@launch
             }
 
-            when (val saved = client.saveProfile(birth)) {
+            // The device's language rides along so any refusal on this save
+            // arrives in it — the account's stored locale may still be the
+            // minting default at this point in a first run.
+            val spoken = java.util.Locale.getDefault().toLanguageTag()
+            when (val saved = client.saveProfile(birth.copy(locale = spoken))) {
                 is ApiResult.Err -> {
                     _portrait.value = ScreenState.Failed(saved.failure)
                     return@launch

@@ -193,7 +193,7 @@ struct LadderView: View {
             let selected = offers.first { $0.key == chosen } ?? offers[0]
 
             VStack(spacing: 0) {
-                ForEach(offers) { offer in
+                ForEach(Array(offers.enumerated()), id: \.element.key) { index, offer in
                     LadderRowView(
                         offer: offer,
                         selected: offer.key == selected.key,
@@ -202,11 +202,13 @@ struct LadderView: View {
                         chosen = offer.key
                     }
                     .disabled(store.busy != nil)
+                    .riseIn(index)
                 }
             }
             .padding(.top, 4)
 
             buyArea(selected)
+                .riseIn(offers.count)
         }
     }
 

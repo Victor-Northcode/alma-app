@@ -4,10 +4,12 @@ import ai.pazl.alma.R
 import ai.pazl.alma.data.AlmaSystem
 import ai.pazl.alma.ui.components.Hairline
 import ai.pazl.alma.ui.components.Overline
+import ai.pazl.alma.ui.components.animatePressGive
 import ai.pazl.alma.ui.theme.AlmaPalette
 import ai.pazl.alma.ui.theme.AlmaSpacing
 import ai.pazl.alma.ui.theme.AlmaTheme
 import ai.pazl.alma.ui.theme.PillShape
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -25,10 +27,14 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -36,6 +42,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -454,12 +461,27 @@ internal fun CabinetRow(
     content: @Composable RowScope.() -> Unit,
 ) {
     val hairline = AlmaPalette.Hairline
+    // The give of paper under a finger — see `Arrival.kt`. The interaction
+    // source is watched here so the whole row (hairline included) gives,
+    // not only the ripple's bounds.
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val give = animatePressGive(pressed)
     Row(
         modifier = modifier
             .fillMaxWidth()
+            .graphicsLayer {
+                scaleX = give
+                scaleY = give
+            }
             .then(
                 if (onClick != null) {
-                    Modifier.clickable(role = Role.Button, onClick = onClick)
+                    Modifier.clickable(
+                        interactionSource = interaction,
+                        indication = LocalIndication.current,
+                        role = Role.Button,
+                        onClick = onClick,
+                    )
                 } else {
                     Modifier
                 }

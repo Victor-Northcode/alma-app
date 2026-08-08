@@ -74,6 +74,12 @@ class BirthInput(BaseModel):
 
 class ProfileInput(BirthInput):
     relation: str | None = Field(default=None, max_length=40)
+    #: The language of the *refusal*, not of the profile. Every other route
+    #: answers errors in the request's language; without this field the
+    #: partner-limit 402 fell back to `user.locale`, which on a fresh guest is
+    #: still the minting default until the client's fire-and-forget locale
+    #: PATCH happens to land — so the first refusal arrived in English.
+    locale: str | None = Field(default=None, max_length=8)
     #: Whose birth this is. `None` means "not said", which resolves to the
     #: first birth an account saves and to nobody after that — see
     #: `profiles.create_profile`. It used to default to `True`, and saving a

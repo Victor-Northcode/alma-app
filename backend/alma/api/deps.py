@@ -191,11 +191,35 @@ async def visitor(
 Visitor = Annotated[User | None, Depends(visitor)]
 
 
+def _minted_locale(accept_language: str | None) -> str:
+    """The language a brand-new guest starts life in.
+
+    `create_guest` used to default every row to English, and the default was
+    load-bearing in the worst way: `user.locale` feeds the partner-limit
+    refusal, the purchase receipt and the daily's fallback, and none of those
+    are preceded by the settings screen where a person would have said
+    otherwise. The clients do push the device language — fire-and-forget, on
+    some later launch — so the stored value was English exactly during the
+    first session, which is when a guest meets most of those sentences.
+
+    The first tag of `Accept-Language` is the phone saying the same thing on
+    the very request that mints the row. Resolved through `i18n.resolve` so
+    the column holds one of the locales we ship rather than `de-AT,de;q=0.9`.
+    """
+    from .. import i18n
+
+    if not accept_language:
+        return i18n.DEFAULT_LOCALE
+    first = accept_language.split(",", 1)[0].split(";", 1)[0].strip()
+    return i18n.resolve(first)
+
+
 async def current_user(
     response: Response,
     session: SessionDep,
     known: Visitor,
     anon: AnonymousId,
+    accept_language: Annotated[str | None, Header()] = None,
 ) -> User:
     """The user behind this request, creating a guest if there is none.
 
@@ -218,7 +242,7 @@ async def current_user(
     if known is not None:
         return known
 
-    user = await accounts.create_guest(session)
+    user = await accounts.create_guest(session, locale=_minted_locale(accept_language))
     await funnel.claim(session, anon_id=anon, user_id=user.id)
     response.headers[ISSUED_TOKEN_HEADER] = tokens.issue(user.id)
     return user

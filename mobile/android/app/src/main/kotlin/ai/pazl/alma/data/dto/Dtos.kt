@@ -118,6 +118,9 @@ data class BirthInput(
     @SerialName("on_ambiguous") val onAmbiguous: String? = null,
     @SerialName("is_self") val isSelf: Boolean? = null,
     val relation: String? = null,
+    /** The language a refusal should arrive in — the partner-limit 402 answers
+     * from this rather than from the account's stored locale. */
+    val locale: String? = null,
 )
 
 @Serializable

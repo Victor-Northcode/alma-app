@@ -39,6 +39,7 @@ struct TodayScreen: View {
     var body: some View {
         ScreenScaffold(seed: 0x544F_4441) {
             header
+                .riseIn(0)
 
             if session.hasBirthData {
                 if let model {
@@ -163,6 +164,7 @@ struct TodayScreen: View {
         // person wants to open every morning, with the raw facts folded under
         // it for whoever wants them, not spread across the front page.
         daySection(model)
+            .riseIn(1)
 
         // The one contextual nudge the product allows itself: a rare sky —
         // a slow planet exact today — shown to somebody who is not paying for
@@ -175,6 +177,7 @@ struct TodayScreen: View {
             SkyEventCard(contact: event) {
                 router.push(.offer(system: nil))
             }
+            .riseIn(2)
         }
 
         // The second entrance to the setting, on the surface the content is on.
@@ -188,16 +191,19 @@ struct TodayScreen: View {
         // person who has read nothing yet is being interrupted.
         if daily.shouldInvite(hasBirthData: session.hasBirthData) {
             DailyInvitation()
+                .riseIn(3)
         }
 
         Text(L10nCabinet.notPrediction)
             .almaMeta()
             .almaReadingWidth()
             .padding(.top, AlmaMetrics.gapLarge)
+            .riseIn(4)
 
         ActionRow(label: L10nCabinet.askAlma) {
             router.tab = .alma
         }
+        .riseIn(5)
 
         // **The plan, said in words, to somebody who does not have one.**
         //

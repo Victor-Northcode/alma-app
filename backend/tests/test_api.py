@@ -151,6 +151,54 @@ def test_a_second_person_can_be_added_and_removed(api, auth_headers):
     assert api.delete(f"/v1/profiles/{partner['id']}", headers=auth_headers).status_code == 204
 
 
+def test_a_guest_is_minted_speaking_the_phones_language(api):
+    """`Accept-Language` on the minting request decides `user.locale`.
+
+    Before this, every guest started life in English and stayed there until
+    the client's fire-and-forget locale PATCH landed — so the receipt, the
+    daily fallback and every refusal built on `user.locale` spoke English
+    during exactly the session in which a new reader meets them.
+    """
+    minted = api.get(
+        "/v1/auth/session", headers={"Accept-Language": "ru-RU,ru;q=0.9,en-US;q=0.8"}
+    ).json()
+    assert minted["locale"] == "ru"
+
+    bare = api.get("/v1/auth/session").json()
+    assert bare["locale"] == "en"
+
+
+def test_the_partner_ladder_refuses_in_the_language_of_the_request(api, auth_headers):
+    """The refusal speaks the request's language, not the account's.
+
+    A fresh guest's `user.locale` is the minting default until the client's
+    fire-and-forget locale PATCH lands, and the partner-limit 402 was the one
+    error built on `user.locale` alone — so a Russian reader adding their
+    second person could meet an English sentence at the exact moment they are
+    being sold to.
+    """
+    from alma.i18n import replies as i18n_replies
+
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    first = api.post(
+        "/v1/profiles",
+        json={**LUCAS, "is_self": False, "relation": "partner", "locale": "ru"},
+        headers=auth_headers,
+    )
+    assert first.status_code == 201, "the first saved comparison is free"
+
+    second = api.post(
+        "/v1/profiles",
+        json={**LUCAS, "name": "Second", "is_self": False, "locale": "ru"},
+        headers=auth_headers,
+    )
+    assert second.status_code == 402
+    detail = second.json()["detail"]
+    assert detail["error"] == "partner_limit"
+    assert detail["limit"] == 1
+    assert detail["message"] == i18n_replies.reply("partner_limit", "ru")
+
+
 # ── input validation ───────────────────────────────────────────────────────
 
 def test_an_unknown_timezone_is_refused(api, auth_headers):

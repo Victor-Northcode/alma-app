@@ -323,7 +323,7 @@
     <string name="chat_read_from">Read from</string>
     <string name="chat_silent">I answered that one from what I know, not from your chart.</string>
     <string name="chat_could_ask">you could ask</string>
-    <string name="chat_thinking_still">Still reading — I don't skim.</string>
+    <string name="chat_thinking_still">Still reading — I don\'t skim.</string>
     <string name="chat_prompt_moon">My Moon is in %1$s. What does it actually need?</string>
     <string name="chat_prompt_sun">My Sun is in %1$s — what does that ask of me?</string>
     <string name="chat_prompt_rising">%1$s rising. Is that what people meet first?</string>

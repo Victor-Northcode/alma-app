@@ -195,11 +195,16 @@ struct AlmaScreen: View {
                     ForEach(model.messages) { message in
                         ChatMessageView(message: message)
                             .id(message.id)
+                            // Each message settles in as it arrives — one at a
+                            // time in a live conversation, all together (as one
+                            // quiet fade) when a transcript is reopened.
+                            .riseIn(0)
                     }
 
                     if model.sending {
                         ThinkingLine()
                             .id(ChatModel.bottomAnchor)
+                            .riseIn(0)
                     }
 
                     if let refusal = model.refusal {
@@ -254,12 +259,15 @@ struct AlmaScreen: View {
             AlmaPresence(size: 56)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 8)
+                .riseIn(0)
 
             Text(session.hasBirthData ? ScreenL10n.chatOpening : ScreenL10n.chatNoChart)
                 .almaVoice()
                 .almaReadingWidth()
+                .riseIn(1)
 
             Text(ScreenL10n.chatRule).almaMeta().almaReadingWidth()
+                .riseIn(2)
 
             if session.hasBirthData {
                 VStack(alignment: .leading, spacing: 0) {
@@ -267,7 +275,7 @@ struct AlmaScreen: View {
                         .almaOverline()
                         .padding(.bottom, 10)
 
-                    ForEach(Array(model.openers.enumerated()), id: \.offset) { _, prompt in
+                    ForEach(Array(model.openers.enumerated()), id: \.offset) { index, prompt in
                         Button {
                             model.draft = prompt
                             composing = true
@@ -285,6 +293,7 @@ struct AlmaScreen: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .riseIn(3 + index)
                     }
                 }
                 .padding(.top, 4)

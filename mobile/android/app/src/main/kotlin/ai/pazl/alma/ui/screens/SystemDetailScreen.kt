@@ -14,6 +14,7 @@ import ai.pazl.alma.data.dto.ChapterEntryDto
 import ai.pazl.alma.data.dto.SphereBlockDto
 import ai.pazl.alma.ui.components.GoldButton
 import ai.pazl.alma.ui.components.StateHost
+import ai.pazl.alma.ui.components.riseIn
 import ai.pazl.alma.ui.sky.NightSky
 import ai.pazl.alma.ui.sky.SkyConfig
 import ai.pazl.alma.ui.theme.AlmaPalette
@@ -234,7 +235,7 @@ private fun SystemDetailBody(
 
     Box(Modifier.fillMaxSize()) {
         CabinetPage {
-            ScreenTitle(name, onBack = onBack)
+            Box(Modifier.riseIn(0)) { ScreenTitle(name, onBack = onBack) }
 
             // The natal screen opens the way the reference the owner chose
             // does: the wheel, then the placements in words, then short free
@@ -242,31 +243,37 @@ private fun SystemDetailBody(
             if (natal) {
                 detail.result?.let { result ->
                     Spacer(Modifier.height(22.dp))
-                    NatalWheel(result.`data`)
-                    PlacementList(result.`data`)
-                    SpheresSection(spheres, onOpenChapter)
+                    NatalWheel(result.`data`, modifier = Modifier.riseIn(1))
+                    Column(Modifier.riseIn(2)) {
+                        PlacementList(result.`data`)
+                        SpheresSection(spheres, onOpenChapter)
+                    }
                 }
             } else {
                 detail.result?.let { result ->
                     Spacer(Modifier.height(22.dp))
-                    RuledLabel(stringResource(R.string.cabinet_free_data))
-                    Spacer(Modifier.height(14.dp))
-                    FreeData(detail.slug, result)
+                    Column(Modifier.riseIn(1)) {
+                        RuledLabel(stringResource(R.string.cabinet_free_data))
+                        Spacer(Modifier.height(14.dp))
+                        FreeData(detail.slug, result)
+                    }
                 }
             }
 
             Spacer(Modifier.height(28.dp))
-            RuledLabel(
-                text = stringResource(R.string.cabinet_chapter_count, detail.total),
-                trailing = "${detail.chapters.count { it.`open` }} " +
-                    stringResource(R.string.cabinet_open),
-            )
-            detail.chapters.forEachIndexed { index, chapter ->
-                ChapterRow(
-                    chapter = chapter,
-                    last = index == detail.chapters.lastIndex,
-                    onClick = { onOpenChapter(chapter.slug) },
+            Column(Modifier.riseIn(3)) {
+                RuledLabel(
+                    text = stringResource(R.string.cabinet_chapter_count, detail.total),
+                    trailing = "${detail.chapters.count { it.`open` }} " +
+                        stringResource(R.string.cabinet_open),
                 )
+                detail.chapters.forEachIndexed { index, chapter ->
+                    ChapterRow(
+                        chapter = chapter,
+                        last = index == detail.chapters.lastIndex,
+                        onClick = { onOpenChapter(chapter.slug) },
+                    )
+                }
             }
 
             // The raw free data still closes the natal page — the pills and the
@@ -274,9 +281,11 @@ private fun SystemDetailBody(
             if (natal) {
                 detail.result?.let { result ->
                     Spacer(Modifier.height(28.dp))
-                    RuledLabel(stringResource(R.string.cabinet_free_data))
-                    Spacer(Modifier.height(14.dp))
-                    FreeData(detail.slug, result)
+                    Column(Modifier.riseIn(4)) {
+                        RuledLabel(stringResource(R.string.cabinet_free_data))
+                        Spacer(Modifier.height(14.dp))
+                        FreeData(detail.slug, result)
+                    }
                 }
             }
 

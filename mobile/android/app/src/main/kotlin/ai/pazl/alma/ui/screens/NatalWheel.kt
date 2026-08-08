@@ -1,12 +1,18 @@
 package ai.pazl.alma.ui.screens
 
 import ai.pazl.alma.ui.theme.AlmaPalette
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.invisibleToUser
@@ -37,10 +43,24 @@ import kotlin.math.sin
  * planets and signs out in words because a pill on the front page is read as
  * text. A wheel is a diagram: the glyph *is* the notation of the diagram, and
  * the words live in the placement list directly underneath.
+ *
+ * **It draws itself, once.** The first two seconds are the wheel being
+ * constructed in the order an astrologer would draw one — rings, signs,
+ * houses, planets, aspects — the same ceremony `AlmaLaunch` opens with. The
+ * `Animatable` settles at 1 and never runs again, so the settled wheel costs
+ * exactly what the static one did.
  */
 @Composable
 internal fun NatalWheel(data: JsonObject, modifier: Modifier = Modifier) {
     val measurer = rememberTextMeasurer()
+    val progress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        progress.animateTo(
+            targetValue = 1f,
+            // Ease-out cubic: the wheel arrives quickly and settles gently.
+            animationSpec = tween(durationMillis = 2000, easing = CubicBezierEasing(0.33f, 1f, 0.68f, 1f)),
+        )
+    }
     Canvas(
         modifier = modifier
             .fillMaxWidth()
@@ -49,7 +69,7 @@ internal fun NatalWheel(data: JsonObject, modifier: Modifier = Modifier) {
             // carries the same facts in words a reader can hear.
             .semantics { invisibleToUser() },
     ) {
-        drawWheel(data, measurer)
+        drawWheel(data, measurer, progress.value)
     }
 }
 
@@ -57,7 +77,11 @@ private val SignGlyphList = listOf(
     "♈︎", "♉︎", "♊︎", "♋︎", "♌︎", "♍︎", "♎︎", "♏︎", "♐︎", "♑︎", "♒︎", "♓︎",
 )
 
-private fun DrawScope.drawWheel(data: JsonObject, measurer: TextMeasurer) {
+private fun DrawScope.drawWheel(data: JsonObject, measurer: TextMeasurer, progress: Float) {
+    // Which stretch of the intro this element owns, as its own 0…1.
+    fun phase(from: Float, to: Float): Float =
+        ((progress - from) / (to - from)).coerceIn(0f, 1f)
+
     val side = min(size.width, size.height)
     val centre = Offset(size.width / 2f, size.height / 2f)
     val outer = side * 0.48f
@@ -91,27 +115,56 @@ private fun DrawScope.drawWheel(data: JsonObject, measurer: TextMeasurer) {
         )
     }
 
-    // ── the rings ──
+    // A line growing from its start toward its end as `grown` goes 0…1.
+    fun growingLine(
+        start: Offset,
+        end: Offset,
+        grown: Float,
+        color: androidx.compose.ui.graphics.Color,
+        strokeWidth: Float,
+    ) {
+        if (grown <= 0f) return
+        drawLine(
+            color = color,
+            start = start,
+            end = Offset(
+                start.x + (end.x - start.x) * grown,
+                start.y + (end.y - start.y) * grown,
+            ),
+            strokeWidth = strokeWidth,
+        )
+    }
+
+    // ── the rings — each sweeps itself closed ──
+    val ringSweep = phase(0f, 0.35f)
     for (radius in listOf(outer, signBand)) {
-        drawCircle(
+        drawArc(
             color = AlmaPalette.Gold.copy(alpha = 0.45f),
-            radius = radius,
-            center = centre,
+            startAngle = 180f,
+            sweepAngle = 360f * ringSweep,
+            useCenter = false,
+            topLeft = Offset(centre.x - radius, centre.y - radius),
+            size = Size(radius * 2f, radius * 2f),
             style = Stroke(width = 1f),
         )
     }
-    drawCircle(
+    drawArc(
         color = AlmaPalette.Gold.copy(alpha = 0.18f),
-        radius = aspectRing,
-        center = centre,
+        startAngle = 180f,
+        sweepAngle = 360f * ringSweep,
+        useCenter = false,
+        topLeft = Offset(centre.x - aspectRing, centre.y - aspectRing),
+        size = Size(aspectRing * 2f, aspectRing * 2f),
         style = Stroke(width = 1f),
     )
 
-    // ── the twelve signs ──
+    // ── the twelve signs, lighting up around the wheel ──
     for (index in 0 until 12) {
+        val lit = phase(0.20f + index * 0.02f, 0.40f + index * 0.02f)
+        if (lit <= 0f) continue
         val start = index * 30.0
         drawLine(
-            color = AlmaPalette.Gold.copy(alpha = 0.35f),
+            color = AlmaPalette.Gold.copy(alpha = 0.35f * lit),
             start = point(start, signBand),
             end = point(start, outer),
             strokeWidth = 1f,
@@ -120,42 +173,46 @@ private fun DrawScope.drawWheel(data: JsonObject, measurer: TextMeasurer) {
             SignGlyphList[index],
             point(start + 15.0, (outer + signBand) / 2f),
             sizeSp = side * 0.045f / density,
-            color = AlmaPalette.GoldBright.copy(alpha = 0.8f),
+            color = AlmaPalette.GoldBright.copy(alpha = 0.8f * lit),
         )
     }
 
-    // ── the houses, when the horizon exists ──
+    // ── the houses, when the horizon exists — spokes grow outward ──
     val houses = data.array("houses").orEmpty().filterIsInstance<JsonObject>()
     if (ascendant != null && houses.isNotEmpty()) {
-        for (house in houses) {
-            val cusp = house.number("cusp") ?: continue
-            val number = house.int("number") ?: continue
-            // The horizon and the meridian carry more weight than the
-            // intermediate cusps, exactly as a printed chart draws them.
-            val cardinal = number in listOf(1, 4, 7, 10)
-            drawLine(
-                color = AlmaPalette.Gold.copy(alpha = if (cardinal) 0.5f else 0.22f),
-                start = point(cusp, aspectRing),
-                end = point(cusp, signBand),
-                strokeWidth = if (cardinal) 1.4f else 1f,
-            )
-            // The house number, just inside its own cusp.
-            val next = houses.firstOrNull { it.int("number") == number % 12 + 1 }
-            val nextCusp = next?.number("cusp")
-            if (nextCusp != null) {
-                var span = nextCusp - cusp
-                if (span < 0) span += 360.0
-                glyphAt(
-                    number.toString(),
-                    point(cusp + span / 2, aspectRing * 0.9f),
-                    sizeSp = side * 0.028f / density,
-                    color = AlmaPalette.Muted3,
+        val grown = phase(0.40f, 0.65f)
+        if (grown > 0f) {
+            for (house in houses) {
+                val cusp = house.number("cusp") ?: continue
+                val number = house.int("number") ?: continue
+                // The horizon and the meridian carry more weight than the
+                // intermediate cusps, exactly as a printed chart draws them.
+                val cardinal = number in listOf(1, 4, 7, 10)
+                growingLine(
+                    start = point(cusp, aspectRing),
+                    end = point(cusp, signBand),
+                    grown = grown,
+                    color = AlmaPalette.Gold.copy(alpha = (if (cardinal) 0.5f else 0.22f) * grown),
+                    strokeWidth = if (cardinal) 1.4f else 1f,
                 )
+                // The house number, just inside its own cusp.
+                val next = houses.firstOrNull { it.int("number") == number % 12 + 1 }
+                val nextCusp = next?.number("cusp")
+                if (nextCusp != null) {
+                    var span = nextCusp - cusp
+                    if (span < 0) span += 360.0
+                    glyphAt(
+                        number.toString(),
+                        point(cusp + span / 2, aspectRing * 0.9f),
+                        sizeSp = side * 0.028f / density,
+                        color = AlmaPalette.Muted3.copy(alpha = grown),
+                    )
+                }
             }
         }
     }
 
-    // ── the bodies ──
+    // ── the bodies — each planet takes its seat in zodiac order ──
     data class Body(val name: String, val glyph: String, val longitude: Double)
     val placements = data.obj("placements")
     val bodies = placements?.keys.orEmpty().mapNotNull { name ->
@@ -169,15 +226,19 @@ private fun DrawScope.drawWheel(data: JsonObject, measurer: TextMeasurer) {
     // drawn honestly is a smudge, and a smudge reads as a rendering bug rather
     // than as three planets together.
     val drawn = mutableListOf<Double>()
-    for (body in bodies) {
+    val step = if (bodies.size > 1) 0.25f / (bodies.size - 1) else 0f
+    for ((order, body) in bodies.withIndex()) {
         val close = drawn.count {
             abs((it - body.longitude + 180.0).mod(360.0) - 180.0) < 6.0
         }
         drawn.add(body.longitude)
+
+        val seated = phase(0.55f + order * step, 0.70f + order * step)
+        if (seated <= 0f) continue
         val radius = planetRing - close * side * 0.045f
 
         drawLine(
-            color = AlmaPalette.StarFill.copy(alpha = 0.8f),
+            color = AlmaPalette.StarFill.copy(alpha = 0.8f * seated),
             start = point(body.longitude, signBand),
             end = point(body.longitude, signBand - side * 0.015f),
             strokeWidth = 1f,
@@ -185,27 +246,31 @@ private fun DrawScope.drawWheel(data: JsonObject, measurer: TextMeasurer) {
         glyphAt(
             body.glyph,
             point(body.longitude, radius),
-            sizeSp = side * 0.042f / density,
-            color = AlmaPalette.StarFill,
+            sizeSp = side * 0.042f * (0.6f + 0.4f * seated) / density,
+            color = AlmaPalette.StarFill.copy(alpha = seated),
         )
     }
 
-    // ── the aspects, major only ──
-    val positions = bodies.associate { it.name to it.longitude }
-    for (aspect in data.array("aspects").orEmpty().filterIsInstance<JsonObject>()) {
-        if (aspect.bool("major") != true) continue
-        val from = positions[aspect.text("first")] ?: continue
-        val to = positions[aspect.text("second")] ?: continue
-        val tense = aspect.text("harmony") == "tense"
-        drawLine(
-            color = if (tense) {
-                AlmaPalette.Disagree.copy(alpha = 0.35f)
-            } else {
-                AlmaPalette.Gold.copy(alpha = 0.30f)
-            },
-            start = point(from, aspectRing),
-            end = point(to, aspectRing),
-            strokeWidth = 1f,
-        )
+    // ── the aspects, major only — the web across the middle, last ──
+    val woven = phase(0.78f, 1f)
+    if (woven > 0f) {
+        val positions = bodies.associate { it.name to it.longitude }
+        for (aspect in data.array("aspects").orEmpty().filterIsInstance<JsonObject>()) {
+            if (aspect.bool("major") != true) continue
+            val from = positions[aspect.text("first")] ?: continue
+            val to = positions[aspect.text("second")] ?: continue
+            val tense = aspect.text("harmony") == "tense"
+            growingLine(
+                start = point(from, aspectRing),
+                end = point(to, aspectRing),
+                grown = woven,
+                color = if (tense) {
+                    AlmaPalette.Disagree.copy(alpha = 0.35f * woven)
+                } else {
+                    AlmaPalette.Gold.copy(alpha = 0.30f * woven)
+                },
+                strokeWidth = 1f,
+            )
+        }
     }
 }

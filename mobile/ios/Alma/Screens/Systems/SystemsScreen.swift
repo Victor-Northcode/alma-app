@@ -25,6 +25,7 @@ struct SystemsScreen: View {
     var body: some View {
         ScreenScaffold(eyebrow: nil, title: nil, seed: 0x5359_5354) {
             header
+                .riseIn(0)
 
             // The order of these three matters. "Has this person given us a
             // birth date" is asked first, off the session rather than off the
@@ -36,8 +37,10 @@ struct SystemsScreen: View {
                 EmptyArgument { router.openJourney() }
             } else if let hub = session.hub, hub.hasBirthData {
                 pills
+                    .riseIn(1)
                 groups(hub)
                 synthesisBlock
+                    .riseIn(6)
             } else {
                 // There is a birth date and the hub does not know about it: that
                 // load failed. Said, with a way to ask again — not an empty list
@@ -139,12 +142,13 @@ struct SystemsScreen: View {
         let ready = entries.filter { HubStatus.isReady($0.status) }
         let pending = entries.filter { !HubStatus.isReady($0.status) }
 
-        ForEach(SystemGroup.allCases) { group in
+        ForEach(Array(SystemGroup.allCases.enumerated()), id: \.element) { position, group in
             let rows = ready.filter { $0.slug.group == group }
             if !rows.isEmpty {
                 CabinetSection(label: group.title) {
                     ForEach(rows) { entry in row(entry) }
                 }
+                .riseIn(2 + position)
             }
         }
 
@@ -155,6 +159,7 @@ struct SystemsScreen: View {
             CabinetSection(label: L10nCabinet.statusNotYet) {
                 ForEach(pending) { entry in row(entry) }
             }
+            .riseIn(5)
         }
     }
 

@@ -86,7 +86,9 @@ async def create_profile(
                     status.HTTP_402_PAYMENT_REQUIRED,
                     detail={
                         "error": "partner_limit",
-                        "message": i18n_replies.reply("partner_limit", user.locale),
+                        "message": i18n_replies.reply(
+                            "partner_limit", payload.locale or user.locale
+                        ),
                         "limit": limit,
                     },
                 )

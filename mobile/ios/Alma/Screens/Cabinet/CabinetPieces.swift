@@ -145,7 +145,7 @@ struct SystemRow: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AlmaCardPressStyle())
         .accessibilityElement(children: .combine)
     }
 }
@@ -218,7 +218,7 @@ struct ChapterRow: View {
             .contentShape(Rectangle())
             .overlay(alignment: .bottom) { Hairline() }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AlmaCardPressStyle())
         .accessibilityElement(children: .combine)
     }
 }
@@ -295,7 +295,7 @@ struct ActionRow: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(AlmaCardPressStyle())
     }
 }
 

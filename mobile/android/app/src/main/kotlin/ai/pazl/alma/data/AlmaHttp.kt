@@ -164,6 +164,15 @@ internal object AlmaHttp {
                 // identifier — there are 38 distinct offsets and several
                 // hundred million people in the busiest zone.
                 .header(TIMEZONE_HEADER, java.util.TimeZone.getDefault().id)
+                // The device's language, on every request — OkHttp, unlike the
+                // platform HTTP stacks, sends no Accept-Language of its own.
+                // The server reads it in one place only: the request that mints
+                // a guest account, so a new reader's `user.locale` starts as
+                // the phone's language instead of English-until-the-settings-
+                // screen. Unconditional for the same reason the timezone is —
+                // a language is not a measurement, and it is even less of an
+                // identifier than 38 timezone offsets are.
+                .header("Accept-Language", java.util.Locale.getDefault().toLanguageTag())
                 .apply {
                     tokens.token?.let { header("Authorization", "Bearer $it") }
                     measurement?.anonId()?.let { header(ANON_HEADER, it) }
