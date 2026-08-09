@@ -1,121 +1,107 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
+import 'design/metrics.dart';
+import 'design/palette.dart';
+import 'design/sky/night_sky.dart';
+import 'design/tab_bar.dart';
+import 'l10n/alma_l10n.dart';
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+void main() => runApp(const AlmaApp());
 
-  // This widget is the root of your application.
+/// Корень.
+///
+/// Порт `mobile/ios/Alma/AlmaApp.swift` и `Navigation/RootView.swift`. Пока
+/// здесь только оболочка: небо, бар и четыре пустых места под экраны. Экраны
+/// приезжают следующими, по одному, в том порядке, в каком их встречает
+/// человек.
+class AlmaApp extends StatelessWidget {
+  const AlmaApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Alma',
+      debugShowCheckedModeBanner: false,
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: AlmaPalette.night,
+        // Продукт целиком на ночи. Единственная светлая поверхность — лист
+        // главы — рисуется сама, а не темой.
+        colorScheme: const ColorScheme.dark(
+          surface: AlmaPalette.night,
+          primary: AlmaPalette.gold,
+          onPrimary: AlmaPalette.inkOnGold,
+        ),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const CabinetShell(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+/// Кабинет: четыре вкладки под одним небом.
+class CabinetShell extends StatefulWidget {
+  const CabinetShell({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<CabinetShell> createState() => _CabinetShellState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class _CabinetShellState extends State<CabinetShell> {
+  CabinetTab _tab = CabinetTab.today;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      backgroundColor: AlmaPalette.night,
+      extendBody: true,
+      body: NightSky(
+        mood: SkyMood.cabinet,
+        // Своё зерно у каждой вкладки, чтобы переход между ними был видимым
+        // переходом, а не теми же звёздами дважды.
+        seed: 0x414C4D41 + _tab.index * 7919,
+        child: SafeArea(bottom: false, child: _Placeholder(tab: _tab)),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      bottomNavigationBar: CabinetTabBar(
+        current: _tab,
+        onSelect: (tab) => setState(() => _tab = tab),
+      ),
+    );
+  }
+}
+
+/// Временное место экрана.
+///
+/// Живёт ровно до того коммита, в котором приезжает настоящий экран, и не
+/// разрастается: это заглушка каркаса, а не «пока сойдёт». На Android такой
+/// файл однажды пережил все экраны и остался в дереве мёртвым грузом —
+/// повторять не будем.
+class _Placeholder extends StatelessWidget {
+  const _Placeholder({required this.tab});
+
+  final CabinetTab tab;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: AlmaMetrics.gapLarge),
+          Text(
+            tab.title(l),
+            style: const TextStyle(
+              fontSize: 34,
+              height: 1.1,
+              color: AlmaPalette.inkLight,
+              fontWeight: FontWeight.w400,
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
