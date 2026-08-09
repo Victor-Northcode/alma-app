@@ -69,6 +69,12 @@ struct ChapterScreen: View {
             onOverscroll: { distance in
                 guard canAdvance else { return }
                 pull = distance
+                // **Two beats, and they say different things.** The first is
+                // the moment the pull becomes enough — a soft tick under the
+                // finger, the same one the ceremony uses when a system lights
+                // up. The second, in `advance`, is the page actually turning.
+                // One buzz for both would make the threshold invisible, which
+                // is the thing a pull gesture most needs to communicate.
                 if distance >= Self.pullThreshold, !armed {
                     armed = true
                     AlmaHaptics.tick()
@@ -87,11 +93,22 @@ struct ChapterScreen: View {
                 content(model)
             }
         }
-        // **The chapter rises into place, the way a channel hands you the next
-        // one.** Keyed on the chapter so SwiftUI treats a swap as a different
-        // view rather than the same one with new words: without the id the text
-        // simply changes underneath a static title, which reads as a glitch
-        // rather than as a page turn.
+        // **What rises as you pull is the next chapter's name**, so the gesture
+        // shows where it goes before it goes there — the owner's "see part of
+        // it before you get there".
+        //
+        // **The page itself does not move, and that was tried.** Offsetting the
+        // whole scaffold by a fraction of the pull looked right on paper and
+        // broke the gesture outright: moving the view re-lays the scroll view
+        // inside it, the reported overscroll resets to zero, the offset goes
+        // with it, and the two chase each other without the pull ever reaching
+        // its threshold. Measured on the simulator — the swipe that had just
+        // been working stopped. The overlay moves; the page stays still.
+        .overlay(alignment: .bottom) { peek }
+        // Keyed on the chapter so SwiftUI treats a swap as a different view
+        // rather than the same one with new words: without the id the text
+        // changes underneath a static title, which reads as a glitch rather
+        // than as a page turn.
         //
         // Up and out, down and in — the direction the pull was going, so the
         // motion continues the gesture instead of answering it.
@@ -283,6 +300,43 @@ struct ChapterScreen: View {
         .frame(maxWidth: .infinity)
         .padding(.top, AlmaMetrics.gapLarge)
         .animation(AlmaMotion.ui, value: progress)
+    }
+
+    /// The next chapter, showing itself from under the page being lifted.
+    ///
+    /// **This is the part that makes the gesture readable.** Before it, pulling
+    /// moved nothing and then the screen changed: the owner's word was that it
+    /// felt thrown rather than turned. Now the page rises, and this comes up
+    /// behind it with the numeral and the title — you can see what you are
+    /// about to open while you decide whether to open it, and letting go early
+    /// puts everything back.
+    ///
+    /// It only exists while a pull is happening, so it costs nothing at rest.
+    @ViewBuilder
+    private var peek: some View {
+        if pull > 4, canAdvance, let next = model?.next {
+            let progress = min(1, pull / Self.pullThreshold)
+            VStack(spacing: 8) {
+                Capsule()
+                    .fill(Color.almaGold.opacity(0.25 + 0.45 * progress))
+                    .frame(width: 34 + 26 * progress, height: 2.5)
+                Text(verbatim: next.numeral)
+                    .almaOverline()
+                    .opacity(0.4 + 0.6 * progress)
+                Text(verbatim: next.title)
+                    .font(AlmaFonts.display(20 + 4 * progress, relativeTo: .title3))
+                    .foregroundStyle(Color.almaInkLight.opacity(0.35 + 0.65 * progress))
+                    .multilineTextAlignment(.center)
+                    .almaReadingWidth()
+            }
+            .padding(.bottom, 26)
+            // Rises from below the fold and settles as the pull completes, so
+            // the two movements — the page leaving and this arriving — are one.
+            .offset(y: 54 - 54 * progress)
+            .opacity(progress)
+            .allowsHitTesting(false)
+            .transition(.opacity)
+        }
     }
 
     /// Whether pulling should carry the reader on at all.

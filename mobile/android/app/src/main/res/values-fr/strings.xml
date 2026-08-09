@@ -377,7 +377,7 @@
     <string name="daily_action_quieter_done">Moins. Seulement les lents désormais — quelques fois par an.</string>
     <string name="daily_action_turn_off">Désactiver</string>
     <string name="daily_action_turned_off">Désactivé. Aujourd\'hui reste là chaque fois que tu l\'ouvres.</string>
-    <string name="daily_ask_body">Une notification, à 08h00, les jours où quelque chose dans ton thème est exact. Environ une fois par semaine. Jamais la nuit, et tu peux la désactiver depuis la notification elle-même.</string>
+    <string name="daily_ask_body">Une notification, à l\'heure que tu choisis, les jours où quelque chose est exact dans ta carte. Environ une fois par semaine. Jamais la nuit, et désactivable depuis la notification elle-même.</string>
     <string name="daily_ask_no">Pas maintenant</string>
     <string name="daily_ask_title">Préviens-moi le matin où cela arrive</string>
     <string name="daily_ask_yes">Oui, préviens-moi</string>

@@ -224,11 +224,16 @@ struct TodayScreen: View {
             .riseIn(3)
         }
 
-        Text(L10nCabinet.notPrediction)
-            .almaMeta()
-            .almaReadingWidth()
-            .padding(.top, AlmaMetrics.gapLarge)
-            .riseIn(4)
+        // «Здесь нет предсказаний. Каждая строка называет позицию, из которой
+        // она прочитана.» stood here and the owner cut it.
+        //
+        // It is true and it is the sentence the 4.3(b) argument rests on, and
+        // neither of those made it belong on the front page: it defends the
+        // product to somebody who has not accused it of anything, in the middle
+        // of the screen they came to read. The claim is not lost — the same
+        // sentence is in the legal text and in the store listing, where a
+        // reviewer looks — and the horoscope above it makes the point better by
+        // naming the transit and the date instead of promising to.
 
         ActionRow(label: L10nCabinet.askAlma) {
             router.tab = .alma
@@ -477,7 +482,19 @@ private struct HoroscopeAreas: View {
     private static let order = ["work", "love", "money", "body"]
 
     var body: some View {
-        let hits = (data["active"]?.arrayValue ?? [])
+        // **Both lists, and leaving one out is what emptied the screen.**
+        //
+        // `active` is what is in orb *right now* and `upcoming` is what is on
+        // its way; this read only the first, and the owner opened a horoscope
+        // where all four areas said "nothing exact here today". They were
+        // telling the truth about `active` — his chart had none — and there
+        // were forty contacts in `upcoming`, fourteen of them about work.
+        //
+        // A horoscope that only speaks on the days something perfects is silent
+        // most of the time, which is the opposite of what it is for. What is
+        // approaching is news; the date says how far off it is, so nothing is
+        // overstated by including it.
+        let hits = (data["active"]?.arrayValue ?? []) + (data["upcoming"]?.arrayValue ?? [])
         VStack(alignment: .leading, spacing: 14) {
             ForEach(Self.order, id: \.self) { area in
                 let mine = hits

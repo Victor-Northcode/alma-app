@@ -152,43 +152,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Mitteilung, um 08:00, an den Tagen, an denen in deinem Horoskop etwas exakt wird. Etwa einmal pro Woche. Nie nachts, und du kannst sie direkt aus der Mitteilung heraus abschalten."
+            "value": "Eine Mitteilung, zur Stunde deiner Wahl, an den Tagen, an denen etwas in deiner Karte exakt ist. Etwa einmal die Woche. Nie nachts, und aus der Mitteilung selbst abschaltbar."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One notification, at 08:00, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from inside the notification itself."
+            "value": "One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and it can be turned off from the notification itself."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Una notificación, a las 08:00, los días en que algo en tu carta sea exacto. Aproximadamente una vez por semana. Nunca de noche, y puedes desactivarla desde la propia notificación."
+            "value": "Una notificación, a la hora que elijas, los días en que algo en tu carta es exacto. Más o menos una vez por semana. Nunca de noche, y se puede desactivar desde la propia notificación."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une notification, à 08h00, les jours où quelque chose dans ton thème est exact. Environ une fois par semaine. Jamais la nuit, et tu peux la désactiver depuis la notification elle-même."
+            "value": "Une notification, à l'heure que tu choisis, les jours où quelque chose est exact dans ta carte. Environ une fois par semaine. Jamais la nuit, et désactivable depuis la notification elle-même."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Una notifica, alle 08:00, nei giorni in cui qualcosa nel tuo tema è esatto. Circa una volta a settimana. Mai di notte, e puoi disattivarla dalla notifica stessa."
+            "value": "Una notifica, all'ora che scegli, nei giorni in cui qualcosa nella tua carta è esatto. Circa una volta a settimana. Mai di notte, e si disattiva dalla notifica stessa."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uma notificação, às 08:00, nos dias em que algo no seu mapa estiver exato. Cerca de uma vez por semana. Nunca à noite, e você pode desligar pela própria notificação."
+            "value": "Uma notificação, na hora que você escolher, nos dias em que algo no seu mapa fica exato. Cerca de uma vez por semana. Nunca à noite, e dá para desligar pela própria notificação."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Одно уведомление, в 08:00, в те дни, когда что-то в твоей карте точно. Примерно раз в неделю. Никогда ночью, и выключить можно прямо из самого уведомления."
+            "value": "Одно уведомление, в выбранный тобой час, в те дни, когда что-то в твоей карте точно. Примерно раз в неделю. Никогда ночью, и выключить можно прямо из самого уведомления."
           }
         }
       }

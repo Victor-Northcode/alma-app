@@ -377,7 +377,7 @@
     <string name="daily_action_quieter_done">Menos. Ahora solo los lentos: unas pocas veces al año.</string>
     <string name="daily_action_turn_off">Desactivar esto</string>
     <string name="daily_action_turned_off">Desactivado. Hoy sigue aquí siempre que lo abras.</string>
-    <string name="daily_ask_body">Una notificación, a las 08:00, los días en que algo en tu carta sea exacto. Aproximadamente una vez por semana. Nunca de noche, y puedes desactivarla desde la propia notificación.</string>
+    <string name="daily_ask_body">Una notificación, a la hora que elijas, los días en que algo en tu carta es exacto. Más o menos una vez por semana. Nunca de noche, y se puede desactivar desde la propia notificación.</string>
     <string name="daily_ask_no">Ahora no</string>
     <string name="daily_ask_title">Avísame la mañana en que ocurra</string>
     <string name="daily_ask_yes">Sí, avísame</string>

@@ -244,7 +244,16 @@ struct RootView: View {
             }
             .frame(width: width * CGFloat(CabinetTab.allCases.count), alignment: .leading)
             .offset(x: -index * width + tabDrag)
-            .animation(dragging ? nil : AlmaMotion.page, value: router.tab)
+            // **One night behind all four, and it is why the swipe used to
+            // flash black.** Each screen paints its own sky, so a tab that has
+            // not been on screen yet has nothing behind it until it lays out —
+            // and what the owner saw dragging between tabs was that gap: a dark
+            // band, then a jump. A single static field underneath fills it,
+            // costs one draw, and is never seen once the pages are in place.
+            .background(Color.almaNight.ignoresSafeArea())
+            // Only while nothing is being dragged. During a drag the offset is
+            // the finger's, and an animation on a value a finger is already
+            // setting is the lag people call sluggish.
             .animation(dragging ? nil : AlmaMotion.page, value: tabDrag)
             .contentShape(Rectangle())
             // **The pager's own gesture, and the three things it must not do.**
@@ -270,15 +279,33 @@ struct RootView: View {
                         tabDrag = damped(value.translation.width, width: width)
                     }
                     .onEnded { value in
-                        defer { dragging = false; tabDrag = 0 }
                         guard dragging else { return }
                         let travelled = value.translation.width
                         let predicted = value.predictedEndTranslation.width
                         // A third of the screen, or a flick that would have got
                         // there. The flick is what makes it feel quick.
                         let far = abs(travelled) > width / 3 || abs(predicted) > width * 0.8
-                        guard far else { return }
-                        step(travelled < 0 ? 1 : -1)
+
+                        // **`dragging` goes false before the tab changes, and
+                        // that ordering is the whole animation.** It used to be
+                        // cleared in a `defer`, which runs *after* `step()` —
+                        // so the offset jumped to the new page with animation
+                        // suppressed, and what the owner saw was the page
+                        // snapping rather than sliding. The finger is off the
+                        // glass by now; the rest belongs to the curve.
+                        dragging = false
+                        withAnimation(AlmaMotion.page) {
+                            tabDrag = 0
+                            if far {
+                                let tabs = CabinetTab.allCases
+                                let here = position(of: router.tab)
+                                let next = here + (travelled < 0 ? 1 : -1)
+                                if tabs.indices.contains(next) {
+                                    AlmaHaptics.tick()
+                                    router.tab = tabs[next]
+                                }
+                            }
+                        }
                     }
             )
         }

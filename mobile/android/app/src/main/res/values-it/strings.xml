@@ -377,7 +377,7 @@
     <string name="daily_action_quieter_done">Meno. Ora solo i lenti: poche volte all\'anno.</string>
     <string name="daily_action_turn_off">Disattiva queste</string>
     <string name="daily_action_turned_off">Disattivato. Oggi resta qui ogni volta che lo apri.</string>
-    <string name="daily_ask_body">Una notifica, alle 08:00, nei giorni in cui qualcosa nel tuo tema è esatto. Circa una volta a settimana. Mai di notte, e puoi disattivarla dalla notifica stessa.</string>
+    <string name="daily_ask_body">Una notifica, all\'ora che scegli, nei giorni in cui qualcosa nella tua carta è esatto. Circa una volta a settimana. Mai di notte, e si disattiva dalla notifica stessa.</string>
     <string name="daily_ask_no">Non ora</string>
     <string name="daily_ask_title">Dimmelo la mattina in cui accade</string>
     <string name="daily_ask_yes">Sì, dimmelo</string>

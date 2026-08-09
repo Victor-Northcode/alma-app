@@ -377,7 +377,7 @@
     <string name="daily_action_quieter_done">Menos. Agora só os lentos — poucas vezes por ano.</string>
     <string name="daily_action_turn_off">Desligar isto</string>
     <string name="daily_action_turned_off">Desligado. Hoje continua aqui sempre que você abrir.</string>
-    <string name="daily_ask_body">Uma notificação, às 08:00, nos dias em que algo no seu mapa estiver exato. Cerca de uma vez por semana. Nunca à noite, e você pode desligar pela própria notificação.</string>
+    <string name="daily_ask_body">Uma notificação, na hora que você escolher, nos dias em que algo no seu mapa fica exato. Cerca de uma vez por semana. Nunca à noite, e dá para desligar pela própria notificação.</string>
     <string name="daily_ask_no">Agora não</string>
     <string name="daily_ask_title">Me avise na manhã em que acontecer</string>
     <string name="daily_ask_yes">Sim, me avise</string>

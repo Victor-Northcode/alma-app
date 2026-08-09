@@ -389,7 +389,7 @@
     
     <string name="daily_action_turned_off">Turned off. Today is still here whenever you open it.</string>
     
-    <string name="daily_ask_body">One notification, at 08:00, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from inside the notification itself.</string>
+    <string name="daily_ask_body">One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and it can be turned off from the notification itself.</string>
     
     <string name="daily_ask_no">Not now</string>
     

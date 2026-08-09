@@ -354,7 +354,7 @@
     <string name="daily_action_quieter_done">Реже. Теперь только медленные — несколько раз в год.</string>
     <string name="daily_action_turn_off">Выключить их</string>
     <string name="daily_action_turned_off">Выключено. «Сегодня» всегда на месте, когда ты открываешь приложение.</string>
-    <string name="daily_ask_body">Одно уведомление, в 08:00, в те дни, когда что-то в твоей карте точно. Примерно раз в неделю. Никогда ночью, и выключить можно прямо из самого уведомления.</string>
+    <string name="daily_ask_body">Одно уведомление, в выбранный тобой час, в те дни, когда что-то в твоей карте точно. Примерно раз в неделю. Никогда ночью, и выключить можно прямо из самого уведомления.</string>
     <string name="daily_ask_no">Не сейчас</string>
     <string name="daily_ask_title">Скажи мне утром, когда это случится</string>
     <string name="daily_ask_yes">Да, говори</string>

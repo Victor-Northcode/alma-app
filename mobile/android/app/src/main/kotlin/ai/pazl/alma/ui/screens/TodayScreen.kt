@@ -551,14 +551,15 @@ private fun TodayBody(
             }
         }
 
-        Spacer(Modifier.height(24.dp))
-        Text(
-            text = stringResource(R.string.cabinet_not_prediction),
-            style = AlmaTheme.type.meta,
-            modifier = Modifier.riseIn(4),
-        )
+        // «Здесь нет предсказаний…» stood here and the owner cut it on both
+        // platforms. True, and the sentence the 4.3(b) argument rests on, and
+        // neither of those made it belong on the front page: it defends the
+        // product to somebody who has not accused it of anything. The claim
+        // still lives in the legal text and the store listing, and the
+        // horoscope above makes the point better by naming a transit and a date
+        // than by promising to.
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(24.dp))
         CabinetRow(modifier = Modifier.riseIn(5), onClick = onAskAlma, rule = false) {
             Text(
                 text = stringResource(R.string.cabinet_ask_alma),
@@ -717,7 +718,14 @@ private fun DayVoice(
  */
 @Composable
 private fun HoroscopeAreas(transits: JsonObject?) {
-    val hits = transits?.array("active").orEmpty().filterIsInstance<JsonObject>()
+    // **Both lists, and leaving one out is what emptied the screen.** `active`
+    // is what is in orb right now and `upcoming` is what is on its way; this
+    // read only the first, and the owner opened a horoscope where all four
+    // areas said "nothing exact here today" — truthfully about `active`, with
+    // forty contacts waiting in `upcoming`. A horoscope that only speaks on the
+    // days something perfects is silent most of the time.
+    val hits = (transits?.array("active").orEmpty() + transits?.array("upcoming").orEmpty())
+        .filterIsInstance<JsonObject>()
     // The order the server reads them in, mirrored so the two cannot silently
     // disagree about which comes first.
     for (area in listOf("work", "love", "money", "body")) {

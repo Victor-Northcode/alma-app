@@ -377,7 +377,7 @@
     <string name="daily_action_quieter_done">Weniger. Jetzt nur noch die langsamen — ein paar Mal im Jahr.</string>
     <string name="daily_action_turn_off">Diese abschalten</string>
     <string name="daily_action_turned_off">Abgeschaltet. Heute ist trotzdem da, wann immer du es öffnest.</string>
-    <string name="daily_ask_body">Eine Mitteilung, um 08:00, an den Tagen, an denen in deinem Horoskop etwas exakt wird. Etwa einmal pro Woche. Nie nachts, und du kannst sie direkt aus der Mitteilung heraus abschalten.</string>
+    <string name="daily_ask_body">Eine Mitteilung, zur Stunde deiner Wahl, an den Tagen, an denen etwas in deiner Karte exakt ist. Etwa einmal die Woche. Nie nachts, und aus der Mitteilung selbst abschaltbar.</string>
     <string name="daily_ask_no">Jetzt nicht</string>
     <string name="daily_ask_title">Sag mir Bescheid an dem Morgen, an dem es passiert</string>
     <string name="daily_ask_yes">Ja, sag mir Bescheid</string>
