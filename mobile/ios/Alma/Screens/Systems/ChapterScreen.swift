@@ -59,11 +59,10 @@ struct ChapterScreen: View {
 
     /// How far past the last line the reader has pulled, in points.
     @State private var pull: CGFloat = 0
-    /// Set the moment a pull is honoured, so a finger still on the glass cannot
-    /// fire it twice — the second one would skip a chapter.
+    /// Set the moment a pull is honoured and cleared only when the next chapter
+    /// has actually arrived, so one flick cannot walk through a system.
     @State private var advancing = false
-    /// Whether the pull has already crossed the line, kept so the haptic on
-    /// crossing happens once rather than on every frame of the drag.
+    /// Whether the pull has crossed the line and is being held there.
     @State private var armed = false
 
     /// How far past the end counts as "take me on".
@@ -81,6 +80,29 @@ struct ChapterScreen: View {
     /// pull and still needs a deliberate one: letting go at the end of a
     /// chapter does not cross it.
     private static let pullThreshold: CGFloat = 56
+
+    /// How far the pull has to go before the page actually turns.
+    ///
+    /// **This is the confirmation the owner asked for, and it is distance
+    /// rather than time.** Crossing 56 used to turn the page immediately: one
+    /// hard swipe carried enough momentum to cross, turn, land on the next
+    /// chapter and cross again, so a single flick walked through a whole
+    /// system — "просто смахнёшь, и пролистнёт всё сразу".
+    ///
+    /// A timed hold was tried first and is the obvious answer: cross the line,
+    /// keep the finger there for a third of a second, and the page turns.
+    /// Measured on the simulator it sat right on the edge — one held pull
+    /// committed, the next one, a hundred milliseconds shorter, did not — and a
+    /// gesture that works four times in five is worse than one that never
+    /// works, because the reader stops trusting their own hand.
+    ///
+    /// Distance has no race in it. A firm flick reaches **86 points** of rubber
+    /// band, measured repeatedly; a deliberate pull that keeps going reaches
+    /// well past 150. 130 sits in the gap: it cannot be reached by accident and
+    /// it does not have to be held, only meant. The bar under the next
+    /// chapter's name fills across exactly this range, so the reader can see
+    /// how much further there is to go.
+    private static let commitThreshold: CGFloat = 130
 
     /// Whichever chapter is showing: the one the screen was opened on until a
     /// pull moves it on.
@@ -110,23 +132,40 @@ struct ChapterScreen: View {
         .task(id: "\(system.rawValue)/\(showing)") {
             let model = ChapterModel(client: session.client, system: system, chapter: showing)
             self.model = model
-            // Cleared here rather than on a timer: the new page is the proof
-            // the last turn finished, and until it exists a second pull would
-            // skip a chapter.
-            advancing = false
             pull = 0
             armed = false
             await model.load(locale: session.locale)
+            // **The guard lifts here — after the chapter has arrived, not when
+            // it was asked for.** It used to lift on the next runloop tick,
+            // which is instantly, so the momentum left over from a hard swipe
+            // went straight into the next page and turned it too. Waiting for
+            // the load means each turn costs a fresh, deliberate pull.
+            advancing = false
         }
     }
 
     private var page: some View {
-        ScreenScaffold(
+        // Which chapter this particular page is, fixed when it is built.
+        //
+        // **A page that is leaving must stop being listened to.** Both pages
+        // exist for the length of the transition, and the finger that started
+        // the turn is usually still down: the outgoing scroll view goes on
+        // reporting its own overscroll, still past the mark, and turned a
+        // second page. Measured — one deliberate pull jumped from chapter one
+        // to chapter three, skipping the one in between. Comparing against
+        // `showing` at report time is what makes the old page's voice stop
+        // counting the moment it is the old page.
+        let mine = showing
+        return ScreenScaffold(
             mood: .reading,
             seed: 0x4348_4150,
             onOverscroll: { distance in
-                guard canAdvance else { return }
+                guard mine == showing else { return }
+                // Nothing at all while a turn is in flight: the guard lifts
+                // when the next chapter has loaded, not when it was asked for.
+                guard canAdvance, !advancing else { return }
                 pull = distance
+
                 // **Two beats, and they say different things.** The first is
                 // the moment the pull becomes enough — a soft tick under the
                 // finger, the same one the ceremony uses when a system lights
@@ -136,12 +175,13 @@ struct ChapterScreen: View {
                 if distance >= Self.pullThreshold, !armed {
                     armed = true
                     AlmaHaptics.tick()
-                } else if distance < Self.pullThreshold * 0.4, armed {
-                    // Rearmed on the way back, so a reader who pulls, thinks
-                    // better of it and pulls again gets the same feedback.
+                } else if distance < Self.pullThreshold * 0.7, armed {
+                    // Eased off: nothing happened, and pulling again gets the
+                    // same tick and the same bar.
                     armed = false
                 }
-                if distance >= Self.pullThreshold, !advancing {
+                // The turn itself, at the far mark. See `commitThreshold`.
+                if distance >= Self.commitThreshold {
                     advance()
                 }
             }
@@ -349,10 +389,24 @@ struct ChapterScreen: View {
     private var peek: some View {
         if pull > 4, canAdvance, let next = model?.next {
             let progress = min(1, pull / Self.pullThreshold)
+            // How much of the way to the turn the pull has come. The bar is
+            // this, so "how much further" is a thing the reader can see rather
+            // than guess.
+            let commitProgress = min(1, pull / Self.commitThreshold)
             VStack(spacing: 8) {
-                Capsule()
-                    .fill(Color.almaGold.opacity(0.25 + 0.45 * progress))
-                    .frame(width: 34 + 26 * progress, height: 2.5)
+                // **The bar is how far there is left to pull.** Without it the
+                // gesture is a guess: the reader crossed a line they felt as a
+                // tick, and nothing on screen says whether one more centimetre
+                // or five will do it. Full means the next page is already on
+                // its way.
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.almaGold.opacity(0.18))
+                        .frame(width: 64, height: 2.5)
+                    Capsule()
+                        .fill(Color.almaGoldBright)
+                        .frame(width: 64 * commitProgress, height: 2.5)
+                }
                 Text(verbatim: next.numeral)
                     .almaOverline()
                     .opacity(0.4 + 0.6 * progress)
@@ -361,6 +415,9 @@ struct ChapterScreen: View {
                     .foregroundStyle(Color.almaInkLight.opacity(0.35 + 0.65 * progress))
                     .multilineTextAlignment(.center)
                     .almaReadingWidth()
+                Text(L10nCabinet.pullToTurn)
+                    .almaMeta()
+                    .opacity(0.5 + 0.5 * progress)
             }
             .padding(.bottom, 26)
             // Rises from below the fold and settles as the pull completes, so

@@ -221,12 +221,22 @@ enum L10nCabinet {
     /// nil and print no explanation, which is better than a sentence written to
     /// fill a row: a quintile shows up in one chart in twenty and nobody has to
     /// pretend it is intuitive.
-    static func aspectMeaning(_ type: String) -> LocalizedStringResource? {
+    /// **Resolved through `localised`, and returning a `String`.** It returned a
+    /// `LocalizedStringResource` built from a runtime key, which does not fall
+    /// back: a key the table has not got renders as *the key*, and
+    /// `cab.aspect.meaning.quincunx` appeared on the natal screen in plain
+    /// grey, under two real aspects, in a product whose whole argument is that
+    /// nothing on screen is unconsidered. Photographed on the simulator.
+    ///
+    /// `localised` compares the answer to the key and hands back the fallback
+    /// when they match, which is the same guard every other runtime-keyed
+    /// string here already uses. Nil means "no line", and no line is always
+    /// better than a line nobody wrote.
+    static func aspectMeaning(_ type: String) -> String? {
         let known = ["conjunction", "opposition", "trine", "square", "sextile", "quincunx"]
         guard known.contains(type) else { return nil }
-        return LocalizedStringResource(
-            String.LocalizationValue("cab.aspect.meaning.\(type)"), table: table
-        )
+        let found = localised("cab.aspect.meaning.\(type)", fallback: "")
+        return found.isEmpty ? nil : found
     }
 
     static func bodyName(_ key: String) -> String {
@@ -290,6 +300,14 @@ enum L10nCabinet {
     // The button is gone — pulling past the last line is what opens the next
     // one now — and the string stays in the catalogues rather than being
     // deleted from seven languages for a decision that could be revisited.
+
+    /// While the pull is short of the line, and once it is being held.
+    static let pullToTurn = LocalizedStringResource(
+        "cab.pullToTurn", defaultValue: "Keep pulling", table: table
+    )
+    static let holdToTurn = LocalizedStringResource(
+        "cab.holdToTurn", defaultValue: "Hold to open it", table: table
+    )
 
     /// The end of a system, where the arrow would otherwise be.
     static let systemFinished = LocalizedStringResource(

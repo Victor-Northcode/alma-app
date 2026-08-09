@@ -49,6 +49,8 @@
     <string name="cabinet_strongest_aspects">cosa concorda e cosa discute</string>
     <string name="cabinet_pair_join">%1$s e %2$s</string>
     <string name="cabinet_system_finished">Qui è tutto letto</string>
+    <string name="cabinet_pull_to_turn">Continua a tirare</string>
+    <string name="cabinet_hold_to_turn">Tieni premuto per aprirlo</string>
     <string name="cabinet_horoscope_today">il tuo oroscopo di oggi</string>
     <string name="cabinet_horoscope_locked">L\'oroscopo si scrive ogni mattina dalla tua carta e fa parte del piano.</string>
     <string name="cabinet_horoscope_open">Apri l\'oroscopo</string>

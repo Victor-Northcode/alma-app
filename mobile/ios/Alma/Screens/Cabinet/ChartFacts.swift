@@ -166,7 +166,7 @@ enum ChartFacts {
         /// engine has no sentence for it, so it comes from the string table:
         /// it is a definition rather than a claim about this person, and
         /// definitions are copy.
-        let meaning: LocalizedStringResource?
+        let meaning: String?
         let orb: String
         let harmony: Harmony
     }

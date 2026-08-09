@@ -384,7 +384,7 @@ private struct NatalPanel: View {
                                     .foregroundStyle(colour(of: aspect.harmony))
                             }
                             if let meaning = aspect.meaning {
-                                Text(meaning).almaMeta().almaReadingWidth()
+                                Text(verbatim: meaning).almaMeta().almaReadingWidth()
                             }
                         }
                         .padding(.bottom, 6)

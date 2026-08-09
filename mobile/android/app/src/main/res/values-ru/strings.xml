@@ -43,6 +43,8 @@
     <string name="cabinet_strongest_aspects">что в карте соглашается, а что спорит</string>
     <string name="cabinet_pair_join">%1$s и %2$s</string>
     <string name="cabinet_system_finished">Здесь всё прочитано</string>
+    <string name="cabinet_pull_to_turn">Тяни дальше</string>
+    <string name="cabinet_hold_to_turn">Держи, чтобы открыть</string>
     <string name="cabinet_horoscope_today">гороскоп на сегодня</string>
     <string name="cabinet_horoscope_locked">Гороскоп пишется каждое утро из твоей собственной карты и входит в подписку.</string>
     <string name="cabinet_horoscope_open">Открыть гороскоп</string>

@@ -150,8 +150,18 @@ private struct OverscrollReport: ViewModifier {
         if let report {
             if #available(iOS 18, *) {
                 content.onScrollGeometryChange(for: CGFloat.self) { geometry in
-                    let end = max(geometry.contentSize.height, geometry.containerSize.height)
-                    return geometry.contentOffset.y + geometry.containerSize.height - end
+                    // **A page with nothing to scroll has no end to pull past.**
+                    //
+                    // Without this a short page — a chapter still being written
+                    // is a title and a drawing — reported the top bounce as an
+                    // overscroll, so one flick could turn a page that had not
+                    // been read at all. Reported as zero rather than clamped,
+                    // because "there is nothing here to pull" and "you are at
+                    // the end and have not pulled" are the same answer.
+                    let content = geometry.contentSize.height
+                    let container = geometry.containerSize.height
+                    guard content > container + 1 else { return 0 }
+                    return geometry.contentOffset.y + container - content
                 } action: { _, new in
                     report(max(0, new))
                 }
