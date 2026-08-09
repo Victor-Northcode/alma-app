@@ -178,6 +178,31 @@ class SettingsViewModel(
         viewModelScope.launch {
             client.setLocale(code)
             session.start(force = true)
+            // **And say so on the screen, which it did not.**
+            //
+            // `reload()` runs once, in `init`, and reads the session with
+            // `first { it.ready }` — a single value, not a subscription. So the
+            // PATCH landed, the session refreshed, the server started writing
+            // in the new language, and the picker went on drawing the gold ring
+            // around the old one. Tapping your own language and watching
+            // nothing happen reads as a broken control; the natural next move
+            // is to tap it again. Seen on a device: the account was already
+            // `de` while «Русский» was still the selected chip.
+            //
+            // Patched in place rather than by calling `reload()`, which would
+            // drop the whole screen to its loading state — a settings page that
+            // blinks out and rebuilds itself is a heavy answer to a chip tap,
+            // and the two extra requests it makes have nothing to do with
+            // language.
+            val shown = _state.value
+            if (shown is ScreenState.Loaded) {
+                val account = shown.data.account
+                if (account != null) {
+                    _state.value = ScreenState.Loaded(
+                        shown.data.copy(account = account.copy(locale = code))
+                    )
+                }
+            }
         }
     }
 
