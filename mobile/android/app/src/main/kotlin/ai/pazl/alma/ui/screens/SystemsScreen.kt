@@ -163,10 +163,21 @@ private fun SystemsBody(
         val ready = systems.entries.count { it.isReady() }
         // "5/8" rather than "5 of 8": the total is however many systems the hub
         // lists, and the only translatable part is the word beside it.
+        //
+        // **A different word from the one on a row, and it has to be.** A row
+        // says «Mapa natal — calculado», agreeing with one masculine noun; this
+        // line counts several systems and needs the plural — *calculés*,
+        // *calculados*, *calcolati*. One string was doing both jobs, so French,
+        // Spanish, Italian and Portuguese all read "7/8 calculé", which is the
+        // kind of wrong that makes a product feel translated by a machine.
+        // German and Russian are unaffected: *berechnet* does not inflect here
+        // and «рассчитано» is impersonal. iOS already kept the two apart —
+        // `cab.calculatedWord` beside `cab.status.calculated` — and merely had
+        // the singular in both.
         val tally = if (systems.entries.isEmpty()) {
             null
         } else {
-            "$ready/${systems.entries.size} ${stringResource(R.string.cabinet_calculated)}"
+            "$ready/${systems.entries.size} ${stringResource(R.string.cabinet_calculated_count)}"
         }
 
         Box(Modifier.riseIn(0)) { ScreenTitle(stringResource(R.string.nav_systems)) }

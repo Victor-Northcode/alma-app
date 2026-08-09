@@ -66,6 +66,7 @@
     <string name="aspect_meaning_sextile">Sie helfen einander, wenn man etwas dafür tut.</string>
     <string name="aspect_meaning_quincunx">Sie sehen einander nicht: zwei Ansprüche, die sich nicht vereinen.</string>
     <string name="cabinet_calculated">berechnet</string>
+    <string name="cabinet_calculated_count">berechnet</string>
     <string name="cabinet_open">offen</string>
     <string name="cabinet_needs_time">Geburtszeit fehlt</string>
     <string name="cabinet_add_person">Person hinzufügen</string>

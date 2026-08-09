@@ -60,6 +60,7 @@
     <string name="aspect_meaning_sextile">Помогают друг другу, если приложить усилие.</string>
     <string name="aspect_meaning_quincunx">Не видят друг друга: два требования, которые не сводятся вместе.</string>
     <string name="cabinet_calculated">рассчитано</string>
+    <string name="cabinet_calculated_count">рассчитано</string>
     <string name="cabinet_open">открыто</string>
     <string name="cabinet_needs_time">нужно время рождения</string>
     <string name="cabinet_add_person">добавь человека</string>

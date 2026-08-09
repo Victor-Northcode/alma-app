@@ -66,6 +66,7 @@
     <string name="aspect_meaning_sextile">Ajudam um ao outro, se você fizer a sua parte.</string>
     <string name="aspect_meaning_quincunx">Não se enxergam: duas exigências que não se conciliam.</string>
     <string name="cabinet_calculated">calculado</string>
+    <string name="cabinet_calculated_count">calculados</string>
     <string name="cabinet_open">a abrir</string>
     <string name="cabinet_needs_time">falta a hora de nascimento</string>
     <string name="cabinet_add_person">adicione uma pessoa</string>

@@ -66,6 +66,7 @@
     <string name="aspect_meaning_sextile">Ils s\'entraident, à condition d\'y mettre du sien.</string>
     <string name="aspect_meaning_quincunx">Ils ne se voient pas : deux exigences qui ne se concilient pas.</string>
     <string name="cabinet_calculated">calculé</string>
+    <string name="cabinet_calculated_count">calculés</string>
     <string name="cabinet_open">à ouvrir</string>
     <string name="cabinet_needs_time">heure de naissance manquante</string>
     <string name="cabinet_add_person">ajouter quelqu\'un</string>
