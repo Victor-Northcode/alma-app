@@ -1,0 +1,10 @@
+# Один источник текста на оба приложения.
+#
+# Расхождение iOS и Android заводилось ровно здесь: 606 строк в одном
+# каталоге против 468 в другом, и ничто не могло об этом сообщить. Отсюда
+# генерируется один класс на семь языков, и разойтись физически негде.
+arb-dir: lib/l10n
+template-arb-file: app_en.arb
+output-localization-file: alma_l10n.dart
+output-class: L
+nullable-getter: false

@@ -62,3 +62,12 @@ _reference/
 # runtime artefacts
 backend/nohup.out
 *.log
+
+# Flutter
+mobile/flutter/alma/.dart_tool/
+mobile/flutter/alma/build/
+mobile/flutter/alma/.flutter-plugins*
+mobile/flutter/alma/ios/Pods/
+mobile/flutter/alma/ios/.symlinks/
+mobile/flutter/alma/android/.gradle/
+mobile/flutter/alma/android/local.properties
