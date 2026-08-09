@@ -48,11 +48,19 @@ struct ChapterScreen: View {
 
     /// How far past the end counts as "take me on".
     ///
-    /// Ninety points, the same order as the system's own pull-to-refresh, so
-    /// the gesture feels borrowed rather than invented. Short enough to find by
-    /// accident once; long enough that finishing a chapter and letting go does
-    /// not throw you into the next one.
-    private static let pullThreshold: CGFloat = 90
+    /// **Fifty-six, and the number was measured rather than chosen.** It was 90
+    /// first, on the reasoning that pull-to-refresh is about that — and the
+    /// owner reported the gesture simply not working. It was working: a firm
+    /// swipe from the bottom of the screen to the top produced a maximum of
+    /// **86 points**, four short of the line, every time.
+    ///
+    /// The mistake was reading 90 points of *rubber band* as 90 points of
+    /// finger. iOS damps overscroll hard — the last third of a long drag buys
+    /// almost no distance — so a threshold that sounds gentle in finger terms
+    /// is one an ordinary reader can never reach. 56 fires on a comfortable
+    /// pull and still needs a deliberate one: letting go at the end of a
+    /// chapter does not cross it.
+    private static let pullThreshold: CGFloat = 56
 
     var body: some View {
         ScreenScaffold(
@@ -79,6 +87,21 @@ struct ChapterScreen: View {
                 content(model)
             }
         }
+        // **The chapter rises into place, the way a channel hands you the next
+        // one.** Keyed on the chapter so SwiftUI treats a swap as a different
+        // view rather than the same one with new words: without the id the text
+        // simply changes underneath a static title, which reads as a glitch
+        // rather than as a page turn.
+        //
+        // Up and out, down and in — the direction the pull was going, so the
+        // motion continues the gesture instead of answering it.
+        .id("\(system.rawValue)/\(chapter)")
+        .transition(
+            .asymmetric(
+                insertion: .move(edge: .bottom).combined(with: .opacity),
+                removal: .move(edge: .top).combined(with: .opacity)
+            )
+        )
         // **Keyed on the chapter, not bare.** Reading on now *replaces* this
         // screen rather than stacking a new one (`AppRouter.replaceTop`), so the
         // view stays in the same place in the stack and SwiftUI keeps its
@@ -284,7 +307,12 @@ struct ChapterScreen: View {
         pull = 0
         armed = false
         AlmaHaptics.arrival()
-        router.replaceTop(with: .chapter(system: system, chapter: next.slug))
+        // Animated, so the next chapter rises into place instead of appearing.
+        // The transition itself is on the content — see `.transition` in
+        // `body` — and this is what tells SwiftUI the swap is worth animating.
+        withAnimation(AlmaMotion.page) {
+            router.replaceTop(with: .chapter(system: system, chapter: next.slug))
+        }
         Task { @MainActor in advancing = false }
     }
 

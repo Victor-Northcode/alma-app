@@ -110,24 +110,62 @@ struct ScreenScaffold<Content: View>: View {
             .scrollIndicators(.hidden)
             // Off, so the sky below is not covered by the scroll view's own fill.
             .scrollContentBackground(.hidden)
-            .onPreferenceChange(TailKey.self) { tail in
-                // **How far past the last line the content has been dragged.**
-                //
-                // `bottom` is where the content ends inside the visible window;
-                // at rest against the floor it equals the window's height, and
-                // pulling further lifts it. `GeometryReader` rather than
-                // `onScrollGeometryChange`, which is iOS 18 and this app ships
-                // to 17.
-                //
-                // The content-height test is what stops a short screen reading
-                // as a permanent pull: with nothing to scroll, the content ends
-                // well above the floor and the difference is large and constant.
-                guard let onOverscroll else { return }
-                guard tail.content > outer.size.height else { return onOverscroll(0) }
-                onOverscroll(max(0, outer.size.height - tail.bottom))
-            }
+            // **How far past the last line the content has been dragged.**
+            //
+            // Two readings of the same number, and the first one is the one
+            // that works. `onScrollGeometryChange` is iOS 18 and this app
+            // deploys to 17, so the older path stays — but it is a fallback and
+            // not the main road, because it does not actually fire during an
+            // overscroll on current iOS.
+            //
+            // **That was the bug the owner reported.** The tail drew, the arrow
+            // sat at rest, and pulling did nothing: the preference written from
+            // a `GeometryReader` in the content's background is the classic way
+            // to read a scroll offset and SwiftUI stopped delivering it inside
+            // the rubber band. The scroll view knows the number exactly; asking
+            // it is both shorter and true.
+            .modifier(
+                OverscrollReport(
+                    containerHeight: outer.size.height,
+                    report: onOverscroll
+                )
+            )
         }
         .nightSky(mood, seed: seed)
+    }
+}
+
+/// Reports how far the content has been dragged past its own end.
+///
+/// The number is `offset + container − content`: zero at rest against the
+/// floor, positive inside the rubber band, negative anywhere above it. Clamped
+/// at zero before the caller sees it, so a screen shorter than its container —
+/// which reads positive at rest — cannot be advanced by standing still.
+private struct OverscrollReport: ViewModifier {
+
+    let containerHeight: CGFloat
+    let report: ((CGFloat) -> Void)?
+
+    func body(content: Content) -> some View {
+        if let report {
+            if #available(iOS 18, *) {
+                content.onScrollGeometryChange(for: CGFloat.self) { geometry in
+                    let end = max(geometry.contentSize.height, geometry.containerSize.height)
+                    return geometry.contentOffset.y + geometry.containerSize.height - end
+                } action: { _, new in
+                    report(max(0, new))
+                }
+            } else {
+                // iOS 17 keeps the preference reading. It is less reliable
+                // inside the rubber band and it is what that OS has.
+                content.onPreferenceChange(TailKey.self) { tail in
+                    guard tail.content > containerHeight else { return report(0) }
+                    report(max(0, containerHeight - tail.bottom))
+                }
+            }
+        } else {
+            content
+        }
     }
 }
 

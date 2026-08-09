@@ -62,6 +62,18 @@ enum AlmaMotion {
     /// A chapter unblurring after a purchase. Deliberately the slowest thing
     /// in the app that is not the sky — it is the moment the product delivers.
     static let reveal = Animation.timingCurve(0.22, 1, 0.36, 1, duration: 0.62)
+
+    /// One page giving way to the next — a chapter pulled into, a tab swiped
+    /// to.
+    ///
+    /// **Faster than `sheet` and slower than `ui`, and that is the whole
+    /// brief.** A page change that takes as long as a sheet feels like the app
+    /// thinking; one as quick as a button feels like a glitch. 0.30 with a
+    /// strong ease-out is the range every reader already knows from the
+    /// messaging apps this gesture was borrowed from: the new page is most of
+    /// the way there in the first third of the time, and the rest is it
+    /// settling.
+    static let page = Animation.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.30)
 }
 
 extension View {

@@ -8,12 +8,11 @@ import SwiftUI
 /// is a case in `Route` plus a branch in `RouteDestination`; it is not a change
 /// here.
 ///
-/// **All four stacks stay alive.** They are in a `ZStack` with the inactive ones
-/// hidden rather than in a `switch`, because a `switch` destroys the view that
-/// leaves the screen: scroll position, a half-typed question to Alma, and a
-/// chapter's place in a long read all vanish on a tab switch. Four screens is a
-/// tolerable amount of memory; losing somebody's place in a chapter they paid
-/// for is not.
+/// **All four stacks stay alive.** They sit side by side in a pager rather than
+/// in a `switch`, because a `switch` destroys the view that leaves the screen:
+/// scroll position, a half-typed question to Alma, and a chapter's place in a
+/// long read all vanish on a tab switch. Four screens is a tolerable amount of
+/// memory; losing somebody's place in a chapter they paid for is not.
 struct RootView: View {
 
     @Environment(AlmaSessionModel.self) private var session
@@ -34,6 +33,13 @@ struct RootView: View {
     /// half-drawn, and the journey must not be presented over a screen the
     /// person has not seen yet.
     @State private var launched = false
+
+    /// How far the pager has been dragged, in points, while a finger is down.
+    @State private var tabDrag: CGFloat = 0
+    /// Whether that finger is still down. The offset animates when it is not,
+    /// and must not while it is — an animation on a value the finger is already
+    /// setting is the lag people call "sluggish".
+    @State private var dragging = false
 
     var body: some View {
         @Bindable var router = router
@@ -165,27 +171,116 @@ struct RootView: View {
     /// No wrapping: Settings does not lead back to Today. A carousel makes the
     /// end of the bar invisible, and the bar is four items — a person can see
     /// where they are and there is nothing to discover by looping.
+    /// Where a tab sits in the bar, left to right.
+    private func position(of tab: CabinetTab) -> Int {
+        CabinetTab.allCases.firstIndex(of: tab) ?? 0
+    }
+
+    /// Whether a drag starting here may page between tabs.
+    ///
+    /// Not inside a stack — there the gesture is back. Not from the left edge —
+    /// that is `AlmaScreenChrome`'s, and when both owned it one swipe popped a
+    /// screen *and* changed tab.
+    private func canPage(from startX: CGFloat) -> Bool {
+        guard router.paths[router.tab]?.isEmpty ?? true else { return false }
+        return startX > 28
+    }
+
+    /// The drag, with the ends made heavy.
+    ///
+    /// There is nothing to the left of Today or to the right of Settings, so
+    /// pulling that way moves a third as far — enough to say "this is the end"
+    /// without the wall a hard stop would be.
+    private func damped(_ translation: CGFloat, width: CGFloat) -> CGFloat {
+        let index = position(of: router.tab)
+        let atStart = index == 0 && translation > 0
+        let atEnd = index == CabinetTab.allCases.count - 1 && translation < 0
+        return (atStart || atEnd) ? translation * 0.32 : translation
+    }
+
     private func step(_ direction: Int) {
         let tabs = CabinetTab.allCases
         guard let current = tabs.firstIndex(of: router.tab) else { return }
         let next = current + direction
         guard tabs.indices.contains(next) else { return }
         AlmaHaptics.tick()
-        withAnimation(AlmaMotion.ui) { router.tab = tabs[next] }
+        withAnimation(AlmaMotion.page) { router.tab = tabs[next] }
     }
 
+    /// **Four stacks side by side, moved as one.**
+    ///
+    /// They used to be a `ZStack` with three of them at `opacity(0)` and no
+    /// animation at all: switching was instantaneous, which reads as a
+    /// screenshot being swapped rather than as moving through an app. A short
+    /// cross-fade with a nudge was tried next and it is the wrong shape — what
+    /// the eye wants here is the thing it already knows from every messaging
+    /// app, where the page follows the finger and the next one is visibly
+    /// arriving from the side.
+    ///
+    /// So this is a pager. The row is four screens wide, offset to the active
+    /// one, and the drag moves the offset directly — which is what makes it
+    /// feel like paper rather than like a decision being submitted.
+    ///
+    /// All four stay alive, which was the reason for the `ZStack` and has not
+    /// changed: a `switch` destroys the view that leaves, taking scroll
+    /// position, a half-typed question and somebody's place in a long chapter
+    /// with it.
     private var cabinet: some View {
-        ZStack {
-            ForEach(CabinetTab.allCases) { tab in
-                stack(for: tab)
-                    .opacity(router.tab == tab ? 1 : 0)
-                    // A hidden stack must not take taps, and must not be read
-                    // out by VoiceOver — an off-screen tab that is still in the
-                    // accessibility tree is four screens of duplicated content.
-                    .allowsHitTesting(router.tab == tab)
-                    .accessibilityHidden(router.tab != tab)
-                    .zIndex(router.tab == tab ? 1 : 0)
+        GeometryReader { screen in
+            let width = screen.size.width
+            let index = CGFloat(position(of: router.tab))
+            HStack(spacing: 0) {
+                ForEach(CabinetTab.allCases) { tab in
+                    let active = router.tab == tab
+                    stack(for: tab)
+                        .frame(width: width)
+                        // A stack that is not showing must not take taps, and
+                        // must not be read out by VoiceOver — three off-screen
+                        // tabs in the accessibility tree is three screens of
+                        // duplicated content.
+                        .allowsHitTesting(active)
+                        .accessibilityHidden(!active)
+                }
             }
+            .frame(width: width * CGFloat(CabinetTab.allCases.count), alignment: .leading)
+            .offset(x: -index * width + tabDrag)
+            .animation(dragging ? nil : AlmaMotion.page, value: router.tab)
+            .animation(dragging ? nil : AlmaMotion.page, value: tabDrag)
+            .contentShape(Rectangle())
+            // **The pager's own gesture, and the three things it must not do.**
+            //
+            // It must not fire inside a stack: there the same movement is back,
+            // and a screen where sliding right sometimes leaves and sometimes
+            // changes tab is worse than one that only ever does one of them.
+            //
+            // It must not fire from the left edge, because that *is* the back
+            // gesture — `AlmaScreenChrome` owns the first 24 points, and when
+            // both ran the owner's swipe popped a screen and changed tab in one
+            // movement. Found on the simulator, once the gesture existed to be
+            // found.
+            //
+            // And it must not fire on a drag that is taller than it is wide,
+            // which is how it stays off every scroll view underneath it.
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 18, coordinateSpace: .global)
+                    .onChanged { value in
+                        guard canPage(from: value.startLocation.x) else { return }
+                        guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                        dragging = true
+                        tabDrag = damped(value.translation.width, width: width)
+                    }
+                    .onEnded { value in
+                        defer { dragging = false; tabDrag = 0 }
+                        guard dragging else { return }
+                        let travelled = value.translation.width
+                        let predicted = value.predictedEndTranslation.width
+                        // A third of the screen, or a flick that would have got
+                        // there. The flick is what makes it feel quick.
+                        let far = abs(travelled) > width / 3 || abs(predicted) > width * 0.8
+                        guard far else { return }
+                        step(travelled < 0 ? 1 : -1)
+                    }
+            )
         }
         // **An overlay that ignores the keyboard, not an inset.** As a
         // `safeAreaInset` the bar joined the keyboard's safe area, so when a
@@ -231,27 +326,6 @@ struct RootView: View {
                 .transition(.opacity)
             }
         }
-        // **Swiping between tabs, and the one rule that keeps it from fighting
-        // everything else.** The owner asked for it: sitting in Systems, swipe
-        // right and land on Today, swipe left and land on Alma.
-        //
-        // Only at the root of a stack. Inside one — a system, a chapter, the
-        // legal text — the same gesture is the platform's back, and a screen
-        // where sliding right sometimes goes back and sometimes changes tab is
-        // worse than one where it only ever does one of them.
-        //
-        // `minimumDistance: 30` and the height test are what keep it off the
-        // conversation's scroll view and off the natal wheel: a drag that is
-        // taller than it is wide belongs to whatever is underneath.
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 30)
-                .onEnded { value in
-                    guard router.paths[router.tab]?.isEmpty ?? true else { return }
-                    guard abs(value.translation.width) > abs(value.translation.height) * 1.6 else { return }
-                    guard abs(value.translation.width) > 60 else { return }
-                    step(value.translation.width < 0 ? 1 : -1)
-                }
-        )
         // The inset above is not enough on its own — see `cabinetBarHeight`.
         // A `NavigationStack` reads its safe area from the window, so the bar
         // this shell reserved was invisible to every scroll view inside it.

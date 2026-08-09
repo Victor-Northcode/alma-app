@@ -14,20 +14,66 @@ import SwiftUI
 /// the bar itself transparent so the sky runs unbroken to the top of the screen.
 ///
 /// **What it deliberately does not do**: hide the navigation bar. Only the
-/// *button* is replaced. `NavigationStack` keeps the interactive swipe-back
-/// gesture when a custom back button replaces the default one, and hiding the
-/// bar outright is what takes that gesture away — a screen you can only leave by
-/// finding a small target in the corner is a worse screen than an ugly one.
+/// *button* is replaced.
+///
+/// This paragraph used to claim `NavigationStack` keeps the interactive
+/// swipe-back when a custom back button replaces the default one. It does not,
+/// and the owner found that out by trying to use his own app. The gesture below
+/// is what gives it back.
 private struct AlmaScreenChrome: ViewModifier {
 
     @Environment(\.dismiss) private var dismiss
 
+    /// How far the screen has been dragged out of the way, in points.
+    @State private var dragged: CGFloat = 0
+
+    /// Only a drag that *starts* at the very edge is a back gesture. 24 points
+    /// is the width UIKit uses for its own, and it is what keeps this off the
+    /// conversation's scroll view and off the natal wheel.
+    private static let edge: CGFloat = 24
+    /// Past this, letting go leaves.
+    private static let commit: CGFloat = 90
+
     func body(content: Content) -> some View {
         content
-            // The swipe back, restored. See `SwipeBackKeeper`: hiding the
-            // system back item is what took it away, and every screen here
-            // hides it.
-            .background(SwipeBackKeeper().frame(width: 0, height: 0))
+            // **The back swipe, written rather than restored.**
+            //
+            // The comment on this file used to say `NavigationStack` keeps the
+            // interactive pop when a custom back button replaces the default
+            // one, and the owner reported it did not work. It does not: hiding
+            // the system item is what disables UIKit's recogniser, and on this
+            // OS handing `interactivePopGestureRecognizer` its delegate back —
+            // the standard fix, tried first and tested on the simulator —
+            // changes nothing, because SwiftUI's stack is no longer that
+            // recogniser's owner.
+            //
+            // So the gesture is ours. It follows the finger, which is the part
+            // that makes it feel like the platform's rather than like a
+            // shortcut: the page moves as you pull, and past 90 points it
+            // leaves. Under that it springs back, and nothing has happened.
+            .offset(x: dragged)
+            .animation(AlmaMotion.page, value: dragged)
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 12, coordinateSpace: .global)
+                    .onChanged { value in
+                        guard value.startLocation.x <= Self.edge else { return }
+                        guard value.translation.width > 0 else { return }
+                        // Damped past the commit point: the page keeps moving
+                        // so the gesture never feels stuck, but slowly enough
+                        // that the threshold is felt rather than guessed.
+                        let raw = value.translation.width
+                        dragged = raw <= Self.commit ? raw : Self.commit + (raw - Self.commit) * 0.35
+                    }
+                    .onEnded { value in
+                        guard value.startLocation.x <= Self.edge else { return }
+                        let far = value.translation.width > Self.commit
+                        let fast = value.predictedEndTranslation.width > 220
+                        if far || fast {
+                            dismiss()
+                        }
+                        dragged = 0
+                    }
+            )
             // Inline, because a large title is a slab of UIKit type that
             // appears and disappears as you scroll — and every screen already
             // sets its own title in the serif, on the night, where the design
@@ -78,62 +124,11 @@ extension View {
     }
 }
 
-/// Give the swipe-back gesture its delegate back.
-///
-/// **The comment above claims `NavigationStack` keeps the interactive pop when
-/// a custom back button replaces the default one. It does not.** UIKit's
-/// `interactivePopGestureRecognizer` takes its delegate from the navigation
-/// controller, and hiding the system back item leaves that delegate refusing to
-/// begin — which is why the owner asked for a gesture the app already believed
-/// it had. Every screen in this product replaces the back button, so every
-/// screen in this product lost it.
-///
-/// The fix is the standard one and it is small: claim the delegate, and allow
-/// the gesture whenever there is something to go back to. `viewControllers.count
-/// > 1` is the whole policy — at the root there is nothing behind, and letting
-/// it begin there is what makes a stack look frozen mid-swipe.
-///
-/// Claimed from the screen itself rather than swept for at launch: the
-/// navigation controller for a tab does not exist until that tab is first
-/// shown, so a one-time walk of the window at startup finds three of the four
-/// and silently misses whichever the reader opens later.
-extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
-    public func gestureRecognizerShouldBegin(_ recogniser: UIGestureRecognizer) -> Bool {
-        viewControllers.count > 1
-    }
-}
-
-/// An empty controller whose only job is to find the navigation controller it
-/// was pushed inside and give the pop gesture its delegate back.
-///
-/// Zero-sized and behind everything, so it changes no layout. It runs on every
-/// push, which is idempotent — assigning the same delegate twice costs nothing
-/// and means a stack rebuilt by SwiftUI is covered without anybody remembering.
-private struct SwipeBackKeeper: UIViewControllerRepresentable {
-
-    func makeUIViewController(context: Context) -> UIViewController { Keeper() }
-    func updateUIViewController(_ controller: UIViewController, context: Context) {}
-
-    final class Keeper: UIViewController {
-        override func didMove(toParent parent: UIViewController?) {
-            super.didMove(toParent: parent)
-            claim()
-        }
-
-        override func viewDidAppear(_ animated: Bool) {
-            super.viewDidAppear(animated)
-            claim()
-        }
-
-        private func claim() {
-            var responder: UIResponder? = self
-            while let current = responder {
-                if let navigation = current as? UINavigationController {
-                    navigation.interactivePopGestureRecognizer?.delegate = navigation
-                    return
-                }
-                responder = current.next
-            }
-        }
-    }
-}
+// The UIKit route out of this is gone, and it is worth saying why rather than
+// leaving the next reader to rediscover it. `UINavigationController` conforming
+// to `UIGestureRecognizerDelegate` and taking `interactivePopGestureRecognizer`
+// back is the answer everywhere on the internet and the answer this file tried
+// first. It was swept from the window on every screen's appear — so the timing
+// excuse does not apply — and the swipe still did nothing, because SwiftUI's
+// `NavigationStack` on this OS does not pop through that recogniser. The
+// gesture in `AlmaScreenChrome` is what actually works, and it is ours.
