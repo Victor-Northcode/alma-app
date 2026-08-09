@@ -24,23 +24,41 @@ object AlmaHaptics {
 
     /** One soft tick — a system lighting up during the ceremony. */
     fun tick(context: Context) {
-        vibrator(context)?.vibrate(
-            VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
-        )
+        play(context, VibrationEffect.EFFECT_TICK)
     }
 
     /** The arrival — the portrait revealed, the journey saved. */
     fun arrival(context: Context) {
-        vibrator(context)?.vibrate(
-            VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
-        )
+        play(context, VibrationEffect.EFFECT_CLICK)
     }
 
     /** Something opened that was closed — a purchase confirmed by the server. */
     fun unlocked(context: Context) {
-        vibrator(context)?.vibrate(
-            VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
-        )
+        play(context, VibrationEffect.EFFECT_DOUBLE_CLICK)
+    }
+
+    /**
+     * Buzz, and never take the app down doing it.
+     *
+     * **Why a `try` around something this small.** `Vibrator.vibrate` is
+     * permission-checked on the far side of a Binder call, so a missing
+     * `VIBRATE` throws `SecurityException` on the caller's thread — and this is
+     * called from the ceremony, on the main thread, which means the app dies at
+     * the last step of onboarding. The manifest now declares the permission and
+     * that is the real fix; this is the belt, because the failure mode is so
+     * much worse than the feature. A device with a broken motor, a vendor that
+     * throws on an effect it does not know, a future policy that revokes a
+     * normal permission — none of those are worth a crash.
+     *
+     * Silent rather than logged: nothing here is actionable, and a decoration
+     * that failed should not become a line in a log the next person greps.
+     */
+    private fun play(context: Context, effect: Int) {
+        try {
+            vibrator(context)?.vibrate(VibrationEffect.createPredefined(effect))
+        } catch (_: SecurityException) {
+        } catch (_: RuntimeException) {
+        }
     }
 
     private fun vibrator(context: Context): Vibrator? {

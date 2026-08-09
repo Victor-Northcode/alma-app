@@ -67,10 +67,29 @@ SHARED: frozenset[str] = frozenset()
 CHAPTERS: dict[str, dict[str, ChapterWords]] = {
     "natal": {
         "core": ChapterWords(
-            title="Ядро",
-            # «Какой я» would gender the reader on the first screen. «Что во
-            # мне настоящее» asks the same thing of everybody.
-            question="Что во мне настоящее, под всем остальным?",
+            # **Our own copy was breaking our own rule.**
+            #
+            # This said «Ядро», and «ядро» is the first word on the banned list
+            # in `validator._PURPLE["ru"]` — the list the owner dictated, from
+            # the paragraph that angered him. The gate only ever reads what the
+            # model writes, so the catalogue walked straight past it and the
+            # very first free chapter greeted a Russian reader with the exact
+            # word we refuse to let Alma use. Seen on a phone, 9 August 2026.
+            #
+            # «Основа» says the same thing with a word people use about houses
+            # and arguments: what everything else stands on.
+            title="Основа",
+            # The question went the same way: «Что во мне настоящее, под всем
+            # остальным?» is verbatim the phrase the specification bans, and it
+            # promises a hidden real self underneath a false one — which is the
+            # horoscope move this product exists to avoid. What the chapter
+            # actually reads is the fixed part of the chart: Sun sign, dominant
+            # sign, element and modality, the stellium. So it asks about that,
+            # in words the reader can check against their own life.
+            #
+            # «Какой я» would gender the reader on the first screen. This asks
+            # the same thing of everybody.
+            question="Что во мне не меняется?",
         ),
         "portrait": ChapterWords(
             title="Портрет",

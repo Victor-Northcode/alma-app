@@ -391,6 +391,11 @@ async def write(
 
     complaint: str | None = None
     last: validator.Verdict | None = None
+    #: How hard the model may think before writing. `None` is "you decide",
+    #: which is what prose this careful deserves; it is turned down only after
+    #: a call has proven it deliberates until there is nothing left to write
+    #: with. See the `wrote_nothing` branch below.
+    effort: str | None = None
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         prompt = build_prompt(
@@ -415,7 +420,7 @@ async def write(
 
         try:
             completion = await _generate(
-                provider, system, prompt, model, max_tokens, schema=schema
+                provider, system, prompt, model, max_tokens, schema=schema, effort=effort
             )
         except AnswerTruncated as exc:
             def afford(desired: int) -> int:
@@ -469,12 +474,37 @@ async def write(
                 # it is one call that has already proven it needs the room, and
                 # the alternative is paying for the same generation three times
                 # and handing the reader a 503 at the end of it.
-                max_tokens = afford(min(8192, int(max_tokens * 1.5)))
+                raised = afford(min(8192, int(max_tokens * 1.5)))
+
+                # **A bigger ceiling is not always available, and a retry that
+                # changes nothing is a retry that fails identically.**
+                #
+                # `afford` returns the *current* ceiling when the raise would
+                # cost more than this call may spend, and a Cyrillic chapter on
+                # the free tier reaches that wall almost at once: $0.05 × 2 buys
+                # about 5670 output tokens of Sonnet, so the second raise is
+                # refused and the third attempt re-runs a call already proven to
+                # produce nothing. That is what happened to `natal/core` in
+                # Russian on 9 August 2026 — 3780, then 5670, then 5670 again,
+                # three paid generations, no chapter, and three minutes of
+                # "Alma пишет эту главу…" ending in an error.
+                #
+                # So when the room cannot grow, the deliberation shrinks
+                # instead. `effort` is the only other lever that changes the
+                # split between thinking and prose, and turning it down is
+                # strictly better than spending the same money on the same
+                # failure. Ordered rather than jumped: `medium` first, and
+                # `low` only if the model manages to think past even that.
+                if raised > max_tokens:
+                    max_tokens = raised
+                    reason = "ceiling raised to %d" % max_tokens
+                else:
+                    effort = "low" if effort == "medium" else "medium"
+                    reason = "no ceiling left to buy, thinking turned down to %s" % effort
                 complaint = None
                 log.warning(
-                    "chapter %s/%s attempt %d spent its whole allowance thinking; "
-                    "ceiling raised to %d: %s",
-                    result.system, chapter.slug, attempt, max_tokens, exc,
+                    "chapter %s/%s attempt %d spent its whole allowance thinking; %s: %s",
+                    result.system, chapter.slug, attempt, reason, exc,
                 )
             else:
                 # Cut off mid-sentence: the model went on too long, so it is
@@ -557,6 +587,22 @@ async def write(
         # a preference. This is the check. It costs a regeneration when it
         # fires, which is the price of the rule being real.
         ornate = validator.plain_language(body, i18n.resolve(locale))
+        # **And the title, which is the largest line on the page.**
+        #
+        # `body` is the paragraphs and only the paragraphs, so the model titled
+        # its own chapter outside every gate this file runs. It used that
+        # freedom: «Ядро — что во мне настоящее, под всем остальным?» went out
+        # as the heading of the free chapter that sells the other fifteen,
+        # carrying both the banned word and the banned phrase. The word list
+        # applies; the dash budget and the sentence ceiling do not, which is why
+        # this calls `purple_words` and not `plain_language`.
+        in_title = validator.purple_words(title or "", i18n.resolve(locale))
+        if in_title:
+            ornate = ornate + [
+                "The title uses words this product does not use: "
+                + ", ".join(in_title[:4])
+                + ". Title it with what the chapter actually says."
+            ]
         if ornate and _can_try_again(attempt, tally, paid=paid, scale=script_scale):
             complaint = (
                 "The writing has to change before this can be published: "
@@ -712,6 +758,7 @@ async def _generate(
     max_tokens: int,
     *,
     schema: dict | None = None,
+    effort: str | None = None,
 ) -> Completion:
     try:
         return await provider.complete(
@@ -720,6 +767,7 @@ async def _generate(
             model=model,
             max_tokens=max_tokens,
             schema=schema or CHAPTER_SCHEMA,
+            effort=effort,
             # Alma's voice is identical for every chapter of a locale; the
             # marker costs nothing when the block is under the cacheable
             # minimum and pays for itself the moment traffic exists.

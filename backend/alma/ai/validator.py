@@ -429,6 +429,25 @@ SENTENCE_CEILING = 18.0
 LONGEST_SENTENCE = 45
 
 
+def purple_words(text: str, locale: str) -> list[str]:
+    """Which of the banned words this text contains, in the reader's language.
+
+    Split out of `plain_language` so a **title** can be held to the word list
+    without also being held to the dash budget and the sentence-length ceiling,
+    neither of which means anything for a fragment of six words.
+
+    That gap was not theoretical. `plain_language` is handed the paragraphs and
+    nothing else, so the one line set largest on the page was never checked: the
+    first free chapter of a Russian natal chart was published under «Ядро — что
+    во мне настоящее, под всем остальным?» — the first word on the list, and
+    the exact phrase the owner quoted as what he did not want. Read off a phone
+    on 9 August 2026, four waves after the rule was written.
+    """
+    base = locale if locale in _PURPLE else locale.split("-")[0]
+    lowered = text.lower()
+    return [word for word in _PURPLE.get(base, ()) if word in lowered]
+
+
 def plain_language(text: str, locale: str) -> list[str]:
     """What is ornate, machine-made or unreadable in a piece of prose.
 
@@ -441,10 +460,8 @@ def plain_language(text: str, locale: str) -> list[str]:
     """
     complaints: list[str] = []
     base = locale if locale in _PURPLE else locale.split("-")[0]
-    banned = _PURPLE.get(base, ())
 
-    lowered = text.lower()
-    found = [w for w in banned if w in lowered]
+    found = purple_words(text, locale)
     if found:
         complaints.append(
             "These words sound like meaning and carry none; rewrite without "

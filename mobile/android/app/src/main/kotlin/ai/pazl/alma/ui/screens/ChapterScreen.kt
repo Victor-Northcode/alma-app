@@ -11,6 +11,7 @@ import ai.pazl.alma.data.dto.ChapterEntryDto
 import ai.pazl.alma.data.dto.ReadingDto
 import ai.pazl.alma.data.dto.ReadingRequest
 import ai.pazl.alma.ui.components.GoldButton
+import ai.pazl.alma.ui.components.Overline
 import ai.pazl.alma.ui.components.StateHost
 import ai.pazl.alma.ui.components.WritingArt
 import ai.pazl.alma.ui.components.Waiting
@@ -337,9 +338,16 @@ private fun ChapterBody(
     // owner's "просто смахнёшь, и пролистнёт всё сразу". The confirmation is
     // distance rather than a timed hold, because a timer sat on the edge of
     // the rubber band's own collapse and fired four times in five.
+    //
+    // **The numbers are iOS's, and they were not before.** 40 and 92 were
+    // picked against a raw, undamped pull; iOS commits at 130 points of a
+    // *resisted* one. Two different scales compared to two different marks
+    // meant the same hand movement turned the page here and did nothing there.
+    // `CabinetPage` now damps the pull with UIKit's own curve, so these can be
+    // — and have to be — the same two numbers.
     val density = LocalDensity.current
-    val nearMark = with(density) { 40.dp.toPx() }
-    val farMark = with(density) { 92.dp.toPx() }
+    val nearMark = with(density) { 56.dp.toPx() }
+    val farMark = with(density) { 130.dp.toPx() }
     val canAdvance = chapter.next != null && !chapter.locked
 
     // The one screen where text must not pass under the status bar; see the
@@ -381,6 +389,19 @@ private fun ChapterBody(
         // which is the one thing this product cannot do.
         val factors = chapter.reading?.citedFactors.orEmpty()
         if (factors.isNotEmpty()) {
+            // **The label is ours and translated; the factors are the engine's
+            // own words.** iOS has said this above its pills since they were
+            // built (`CabinetSection(label: L10nCabinet.readFrom)`); here they
+            // stood unlabelled, and the only thing naming them was the server's
+            // English "Read from: …" sentence at the foot of the page — which a
+            // Russian reader met as a line of English under their chapter.
+            //
+            // `chat_read_from` rather than a new key: the phrase is the same
+            // phrase, already translated into all seven languages for the
+            // conversation, and a second copy would be a second thing to keep
+            // in step.
+            Spacer(Modifier.height(16.dp))
+            Overline(stringResource(R.string.chat_read_from))
             FlowRow(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -475,12 +496,20 @@ private fun ChapterBody(
 
         InkRule(Modifier.padding(vertical = 22.dp))
 
-        // What the text was read from, in the server's own words — or, for a
-        // chapter nobody has opened yet, what is true about writing one.
-        val source = chapter.reading?.readFrom?.takeIf { it.isNotBlank() }
-            ?: if (chapter.locked) stringResource(R.string.state_locked_note) else null
-        if (source != null) {
-            Text(text = source, style = AlmaTheme.type.meta.copy(color = AlmaPalette.InkMuted2))
+        // For a chapter nobody has opened yet, what is true about writing one.
+        //
+        // **The server's `read_from` used to be printed here and is not any
+        // more.** It is a sentence the backend builds in English —
+        // `"Read from: " + " · ".join(...)` in `writer.py` — with no locale
+        // anywhere near it, so every non-English reader got a line of English
+        // under their chapter. It also said, worse, the same four factors the
+        // pills at the top of the page already show, now under a translated
+        // label. One citation, in the reader's language, at the top.
+        if (chapter.locked) {
+            Text(
+                text = stringResource(R.string.state_locked_note),
+                style = AlmaTheme.type.meta.copy(color = AlmaPalette.InkMuted2),
+            )
         }
 
         if (chapter.locked) {

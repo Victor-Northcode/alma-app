@@ -866,6 +866,9 @@ async def answer(
     )
     ledger = cost.Ledger()
     complaint: str | None = None
+    #: Turned down only after a turn spends its whole allowance thinking. See
+    #: the `wrote_nothing` branch below.
+    effort: str | None = None
 
     # The four fences in `_nudge` — repetition, a one-sided refusal, a reply
     # that brings no new placement, a dignity its citation does not carry — are
@@ -903,6 +906,7 @@ async def answer(
                 # product, and the one `config.py` names as the structural
                 # saving. Cached, it is read at a tenth of the input price.
                 cache_system=True,
+                effort=effort,
             )
         except AnswerTruncated as exc:
             # **She wrote past the ceiling, and the reader got an error.**
@@ -926,6 +930,24 @@ async def answer(
             # her to answer half the question well and drop the other half
             # silently, which is a worse reply than a long one; she is told to
             # keep both and compress instead.
+            #
+            # **Unless nothing was written at all**, which is a different
+            # failure wearing the same exception. Then the allowance went on
+            # deliberation and there is no reply to shorten — the complaint
+            # above would be answered honestly and truncate again, which is how
+            # a reader loses all three attempts and their turn. The lever that
+            # helps is the one that moves the split between thinking and words.
+            if exc.wrote_nothing:
+                effort = "low" if effort == "medium" else "medium"
+                complaint = None
+                log.warning(
+                    "chat attempt %d spent its whole allowance thinking; "
+                    "thinking turned down to %s: %s",
+                    attempt, effort, exc,
+                )
+                if attempt == MAX_ATTEMPTS:
+                    raise
+                continue
             complaint = (
                 "Your reply ran past the length limit and was cut off, so none "
                 "of it reached them. Write it again, noticeably shorter — three "

@@ -488,7 +488,7 @@
     <string name="settings_delete_confirm_guest">Digite este código para confirmar</string>
     <string name="settings_delete_guest_note">Esta conta não tem e-mail. O código dela está abaixo — digite-o para confirmar.</string>
     <string name="daily_your">—</string>
-    <string name="daily_contact_phrase">%1$s e %3$s: %2$s</string>
+    <string name="daily_contact_phrase">%1$s agora e %3$s no seu mapa: %2$s</string>
     <string name="signin_google">Continuar com o Google</string>
     <string name="cabinet_sky_event_body">Para dias assim existe a notificação da manhã — ela chega às 08:00 quando algo no seu mapa está exato. Parte do plano.</string>
     <string name="chapter_preview_note">O capítulo está escrito. O resto se abre com o sistema.</string>

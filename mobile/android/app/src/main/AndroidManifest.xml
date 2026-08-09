@@ -22,6 +22,20 @@
          that the compat library already handles. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Touch.
+
+         `AlmaHaptics` reaches the vibrator through `Vibrator.vibrate`, and that
+         call is permission-checked: without this line the system throws
+         `SecurityException` and the process dies. It killed the app at the last
+         step of onboarding — the ceremony ticks once per system as it lights
+         up — so the very first thing a new Android user did was watch Alma
+         vanish. Found on a device, not in a test: the unit tests never touch a
+         real vibrator, and the emulator was missing until today.
+
+         A normal permission: granted at install, no runtime prompt, no privacy
+         surface, nothing to disclose in either store questionnaire. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:name=".AlmaApplication"
         android:allowBackup="false"

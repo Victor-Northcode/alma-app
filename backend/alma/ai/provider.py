@@ -95,6 +95,7 @@ class Provider(Protocol):
         max_tokens: int = 4096,
         schema: dict | None = None,
         cache_system: bool = False,
+        effort: str | None = None,
     ) -> Completion: ...
 
 
@@ -128,6 +129,7 @@ class AnthropicProvider:
         max_tokens: int = 4096,
         schema: dict | None = None,
         cache_system: bool = False,
+        effort: str | None = None,
     ) -> Completion:
         request: dict[str, Any] = {
             "model": model,
@@ -149,6 +151,25 @@ class AnthropicProvider:
         }
         if schema is not None:
             request["output_config"] = {"format": {"type": "json_schema", "schema": schema}}
+
+        # **How hard the model is allowed to think before it writes.**
+        #
+        # Current models reason adaptively and the reasoning is billed out of
+        # `max_tokens`, so a model that deliberates long enough emits no prose
+        # at all and the caller gets `AnswerTruncated(wrote_nothing=True)` — a
+        # paid call that produced nothing. That is not hypothetical: a Russian
+        # natal chapter did it twice in a row on 9 August 2026, at 3780 tokens
+        # and again at 5670, and the reader watched "Alma пишет эту главу…" for
+        # three minutes before it failed.
+        #
+        # `output_config.effort` is the lever this model family exposes — the
+        # older `thinking.budget_tokens` is refused outright, and the API's own
+        # error names this as the replacement. Left `None` the model decides,
+        # which is the right default for prose that has to be good; the writer
+        # turns it down only on the retry after a call has already proven it
+        # over-deliberates on this chart.
+        if effort is not None:
+            request.setdefault("output_config", {})["effort"] = effort
 
         try:
             # Streaming throughout: a long chapter can exceed the non-streaming
@@ -219,6 +240,7 @@ class ScriptedProvider:
         max_tokens: int = 4096,
         schema: dict | None = None,
         cache_system: bool = False,
+        effort: str | None = None,
     ) -> Completion:
         self.calls.append(
             {
@@ -228,6 +250,9 @@ class ScriptedProvider:
                 "max_tokens": max_tokens,
                 "schema": schema,
                 "cache_system": cache_system,
+                # Recorded so a test can assert the writer turned thinking down
+                # on the attempt after one that wrote nothing at all.
+                "effort": effort,
             }
         )
         if self.fail_with is not None:

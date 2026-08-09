@@ -1463,6 +1463,55 @@ async def test_a_chapter_truncated_every_time_is_still_reported(natal):
     assert len(provider.calls) == writer.MAX_ATTEMPTS
 
 
+async def test_an_attempt_that_wrote_nothing_never_repeats_itself(natal):
+    """Every retry after a wordless attempt must differ from the one before it.
+
+    **The failure this exists for.** A model that reasons adaptively spends its
+    reasoning out of `max_tokens`, so a long enough deliberation emits no prose
+    and raises `AnswerTruncated(wrote_nothing=True)`. The recovery was to buy
+    more room — but `afford` refuses a raise the per-call ceiling cannot pay
+    for, and it refuses by returning the *current* ceiling. On a Cyrillic
+    chapter, where $0.05 × 2 buys about 5670 Sonnet tokens, the second raise was
+    always refused and the third attempt re-ran a call already proven to produce
+    nothing: three paid generations, no chapter, and three minutes of "Alma
+    пишет эту главу…" ending in an error. `natal/core` in Russian, 9 August
+    2026, on a phone.
+
+    So this asserts the property rather than the mechanism: *no two attempts may
+    be identical*. Whether the difference is a bigger ceiling or less
+    deliberation is the writer's business; repeating a known failure is not.
+    """
+    from alma.ai.provider import AnswerTruncated
+
+    chapter = chapters.find("natal", "core")
+    provider = ScriptedProvider(
+        responses=[
+            AnswerTruncated("nothing was written at all", wrote_nothing=True)
+            for _ in range(writer.MAX_ATTEMPTS)
+        ]
+    )
+
+    with pytest.raises(AnswerTruncated):
+        await writer.write(
+            result=natal,
+            chapter=chapter,
+            provider=provider,
+            # The model a free chapter is actually written with. Opus at the
+            # free-tier ceiling is refused by `cost.guard` before the first call
+            # is even made, which tests the wrong wall.
+            model="claude-sonnet-5",
+            # Russian, because that is where the ceiling is reached: the Latin
+            # path has room to keep raising and never exercises the wall.
+            locale="ru",
+        )
+
+    seen = [(call["max_tokens"], call["effort"]) for call in provider.calls]
+    assert len(seen) == writer.MAX_ATTEMPTS
+    assert len(set(seen)) == len(seen), (
+        f"two attempts asked for the same thing and failed the same way: {seen}"
+    )
+
+
 async def test_her_own_broken_sentences_are_not_read_back_to_her(natal):
     """A thread that already contains the bug must not keep producing it.
 

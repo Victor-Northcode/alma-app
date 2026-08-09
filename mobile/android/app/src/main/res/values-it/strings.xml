@@ -488,7 +488,7 @@
     <string name="settings_delete_confirm_guest">Digita questo codice per confermare</string>
     <string name="settings_delete_guest_note">Questo account non ha un\'email. Il suo codice è qui sotto — digitalo per confermare.</string>
     <string name="daily_your">—</string>
-    <string name="daily_contact_phrase">%1$s e %3$s: %2$s</string>
+    <string name="daily_contact_phrase">%1$s ora e %3$s nel tuo tema: %2$s</string>
     <string name="signin_google">Continua con Google</string>
     <string name="cabinet_sky_event_body">Per giorni così esiste la notifica del mattino — arriva alle 08:00 quando qualcosa nel tuo tema è esatto. Parte del piano.</string>
     <string name="chapter_preview_note">Il capitolo è scritto. Il resto si apre con il sistema.</string>

@@ -613,3 +613,42 @@ def test_no_server_written_sentence_is_about_our_internals():
             assert not any(word.lower() in lowered for word in forbidden), (
                 f"{locale} names our machinery: {sentence}"
             )
+
+
+def test_our_own_chapter_titles_pass_the_gate_we_hold_alma_to():
+    """The catalogue is copy too, and it was breaking its own rule.
+
+    `validator.plain_language` refuses a paragraph containing «ядро», «суть»,
+    "essence", "true self" and the rest — the list the owner dictated from the
+    paragraph that angered him. But the gate only ever reads what the *model*
+    writes. Chapter titles and questions are ours, they are shipped in seven
+    languages, and nothing checked them: the first free chapter of a Russian
+    natal chart was called «Ядро» and asked «Что во мне настоящее, под всем
+    остальным?» — the banned word and the banned phrase, printed at the top of
+    the screen that sells the other fifteen. Found by opening it on a phone.
+
+    Held here rather than in the writer's tests because it is not about a
+    generation: it is about the words we ship with the binary.
+    """
+    import importlib
+
+    from alma.ai.validator import _PURPLE
+
+    modules = {
+        "ru": "alma.i18n.ru", "es": "alma.i18n.es", "de": "alma.i18n.de",
+        "fr": "alma.i18n.fr", "it": "alma.i18n.it", "pt-BR": "alma.i18n.pt_BR",
+    }
+    offences: list[str] = []
+    for locale, name in modules.items():
+        banned = _PURPLE[locale]
+        for system, chapters_of in importlib.import_module(name).CHAPTERS.items():
+            for slug, words in chapters_of.items():
+                for field in ("title", "question"):
+                    text = (getattr(words, field, "") or "").lower()
+                    for word in banned:
+                        if word in text:
+                            offences.append(
+                                f"{locale} {system}/{slug} {field}: "
+                                f"«{getattr(words, field)}» contains «{word}»"
+                            )
+    assert not offences, "\n".join(offences)

@@ -488,7 +488,7 @@
     <string name="settings_delete_confirm_guest">Gib diesen Code zur Bestätigung ein</string>
     <string name="settings_delete_guest_note">Dieses Konto hat keine E-Mail. Sein Code steht unten — gib ihn zur Bestätigung ein.</string>
     <string name="daily_your">—</string>
-    <string name="daily_contact_phrase">%1$s und %3$s: %2$s</string>
+    <string name="daily_contact_phrase">%1$s jetzt und %3$s in deinem Horoskop: %2$s</string>
     <string name="signin_google">Weiter mit Google</string>
     <string name="cabinet_sky_event_body">Für Tage wie diesen gibt es die Morgenbenachrichtigung — sie kommt um 08:00, wenn etwas in deinem Chart exakt ist. Teil des Plans.</string>
     <string name="chapter_preview_note">Das Kapitel ist geschrieben. Der Rest öffnet sich mit dem System.</string>

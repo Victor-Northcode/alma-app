@@ -153,6 +153,9 @@ async def write(
     max_tokens = 2600 if latin else MAX_TOKENS
     tally = cost.Ledger()
     complaint: str | None = None
+    #: See the `wrote_nothing` branch: `None` until a call proves it thinks
+    #: until the allowance is gone, and turned down from there.
+    effort: str | None = None
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         prompt = build_prompt(result, locale=locale, complaint=complaint)
@@ -168,13 +171,32 @@ async def write(
                 # any real traffic the system block is a cache read, not a
                 # fresh bill.
                 cache_system=True,
+                effort=effort,
             )
         except AnswerTruncated as exc:
-            complaint = (
-                "Your reply ran past the length limit. Two sentences per "
-                "sphere, no more."
-            )
-            log.warning("spheres attempt %d truncated: %s", attempt, exc)
+            if exc.wrote_nothing:
+                # **Not a length problem, so "be shorter" is not an answer.**
+                #
+                # Nothing was written at all: the whole allowance went on
+                # deliberation before a word of prose existed. Asking that run
+                # to be brief is asking it to fix a problem it does not have,
+                # and it burns the remaining attempts writing nothing again —
+                # which is exactly how a Russian daily failed three times in a
+                # row. Turn the thinking down instead; that is the one lever
+                # that changes the split between reasoning and words.
+                effort = "low" if effort == "medium" else "medium"
+                complaint = None
+                log.warning(
+                    "spheres attempt %d spent its whole allowance thinking; "
+                    "thinking turned down to %s: %s",
+                    attempt, effort, exc,
+                )
+            else:
+                complaint = (
+                    "Your reply ran past the length limit. Two sentences per "
+                    "sphere, no more."
+                )
+                log.warning("spheres attempt %d truncated: %s", attempt, exc)
             if attempt == MAX_ATTEMPTS:
                 raise
             continue

@@ -35,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -620,6 +622,10 @@ internal fun CabinetPage(
     // content there is nowhere left to scroll, so everything the finger asks
     // for arrives here unconsumed — which is exactly the distance past the end.
     var pulled by remember { mutableFloatStateOf(0f) }
+    // How tall the window onto the content is, for the resistance curve below.
+    // Measured rather than assumed: the curve is relative to the viewport, the
+    // way a scroll view's own rubber band is.
+    var viewport by remember { mutableIntStateOf(0) }
     val overscroll = remember(onOverscroll, scroll) {
         object : NestedScrollConnection {
             override fun onPostScroll(
@@ -643,7 +649,7 @@ internal fun CabinetPage(
                 }
                 if (available.y < 0f) {
                     pulled += -available.y
-                    report(pulled)
+                    report(resisted(pulled, viewport))
                 } else if (available.y > 0f && pulled > 0f) {
                     pulled = 0f
                     report(0f)
@@ -670,12 +676,47 @@ internal fun CabinetPage(
             // the inset shrinks the viewport; after it, the inset is part of
             // the scrolling content and scrolls away with it.
             .then(if (contentUnderStatusBar) Modifier else inset)
+            // Before `verticalScroll`, so this is the size of the *window* onto
+            // the content rather than of the content itself. After it, it would
+            // report the full height of the chapter and the curve would barely
+            // bend.
+            .onSizeChanged { viewport = it.height }
             .verticalScroll(scroll)
             .then(if (contentUnderStatusBar) inset else Modifier)
             .padding(horizontal = horizontalPadding, vertical = 18.dp)
             .widthIn(max = AlmaSpacing.Reading),
         content = content,
     )
+}
+
+/**
+ * The finger's raw distance past the end, turned into the distance a page would
+ * actually have moved if it were on a rubber band.
+ *
+ * **Why this exists at all — the two platforms were not measuring the same
+ * thing.** iOS reads the scroll view's own overscroll offset, and that offset
+ * is already damped: UIKit resists a pull past the end, so dragging 500pt of
+ * finger moves the page maybe 200. Compose has no equivalent number to read, so
+ * `onPostScroll` accumulates the raw drag — undamped, unbounded, and roughly
+ * twice the iOS figure for the same hand movement. Two apps compared the same
+ * marks against numbers that meant different things, and the Android page
+ * turned on a gesture that would not have turned it on an iPhone. The owner's
+ * whole complaint about iOS — *«слишком легко перелистывается»* — was still
+ * true here after it had been fixed there.
+ *
+ * The curve is UIKit's, coefficient and all: `(1 − 1 / (x·c/d + 1)) · d` with
+ * `c = 0.55`, relative to the height of the window onto the content. Copied
+ * rather than invented because the point is to agree with iOS, and because the
+ * shape is right — the first millimetres move nearly one-for-one and it stiffens
+ * from there, which is what makes a deliberate pull feel deliberate.
+ *
+ * Falls back to the raw distance before the viewport has been measured: one
+ * frame of a slightly eager gesture is better than a gesture that cannot fire.
+ */
+private fun resisted(raw: Float, viewport: Int): Float {
+    if (viewport <= 0) return raw
+    val height = viewport.toFloat()
+    return (1f - 1f / (raw * 0.55f / height + 1f)) * height
 }
 
 /**

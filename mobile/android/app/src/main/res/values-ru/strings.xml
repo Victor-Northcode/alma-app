@@ -465,7 +465,7 @@
     <string name="settings_delete_confirm_guest">Введи этот код для подтверждения</string>
     <string name="settings_delete_guest_note">К этому аккаунту не привязана почта. Его код ниже — введи его для подтверждения.</string>
     <string name="daily_your">—</string>
-    <string name="daily_contact_phrase">%1$s и %3$s: %2$s</string>
+    <string name="daily_contact_phrase">%1$s сейчас и %3$s в твоей карте: %2$s</string>
     <string name="signin_google">Продолжить с Google</string>
     <string name="cabinet_sky_event_body">Для таких дней и существует утреннее уведомление — оно приходит в 08:00, когда что-то в твоей карте точно. Это часть подписки.</string>
     <string name="chapter_preview_note">Глава уже написана. Остальное откроется вместе с системой.</string>
