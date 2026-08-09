@@ -195,26 +195,13 @@ final class AppRouter {
         paths[tab, default: []].append(route)
     }
 
-    /// Swap the screen on top for another, instead of stacking a second one.
-    ///
-    /// **What this is for: reading chapter after chapter.** Pushing the next
-    /// chapter meant back went to the previous chapter, so somebody who read
-    /// five in a row had to press back five times to reach the table of
-    /// contents — and the owner, reading his own product, landed in
-    /// «Жизненный путь» when he wanted the system he had come from. Nobody
-    /// reading a book expects the way out to be the page before.
-    ///
-    /// The chapter is *replaced*, so back always means "back to this system"
-    /// and the stack never grows past two while reading.
-    func replaceTop(with route: Route) {
-        var stack = paths[tab] ?? []
-        if stack.isEmpty {
-            stack.append(route)
-        } else {
-            stack[stack.count - 1] = route
-        }
-        paths[tab] = stack
-    }
+    // `replaceTop` lived here and is gone with its one caller. It swapped the
+    // element on top of a stack so that reading chapter after chapter did not
+    // stack them — correct about the stack, and the reason the page turn had no
+    // animation: a `NavigationStack` owns how its destinations appear, so a
+    // `.transition` on the destination is never consulted. `ChapterScreen` now
+    // holds which chapter is showing itself, which is both smoother and one
+    // fewer way for a route to be somewhere the router did not put it.
 
     func pop() {
         _ = paths[tab]?.popLast()

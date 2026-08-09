@@ -30,10 +30,30 @@ import SwiftUI
 struct ChapterScreen: View {
 
     let system: SystemSlug
+    /// The chapter this screen was opened on. After that the screen owns which
+    /// one is showing — see `current`.
     let chapter: String
 
     @Environment(AlmaSessionModel.self) private var session
     @Environment(AppRouter.self) private var router
+
+    /// Which chapter is on screen.
+    ///
+    /// **Reading on is a change of state here, not a change of route, and that
+    /// is what makes the page turn visible.** It used to be
+    /// `router.replaceTop(with: .chapter(…))`, which swaps the element under a
+    /// `NavigationStack` — and a stack owns how its destinations appear, so the
+    /// `.transition` declared on this view was never consulted. The new chapter
+    /// simply took the old one's place between two frames. The owner said it
+    /// twice: still not smooth, and then that the animation went away
+    /// altogether after a few turns, which is the same thing seen from further
+    /// along.
+    ///
+    /// With the switch inside one screen, the transition is an ordinary
+    /// SwiftUI one and behaves like every other animation in the app. Back
+    /// still leaves for the system, because there is still exactly one chapter
+    /// screen on the stack however many were read.
+    @State private var current: String?
 
     @State private var model: ChapterModel?
 
@@ -62,7 +82,45 @@ struct ChapterScreen: View {
     /// chapter does not cross it.
     private static let pullThreshold: CGFloat = 56
 
+    /// Whichever chapter is showing: the one the screen was opened on until a
+    /// pull moves it on.
+    private var showing: String { current ?? chapter }
+
     var body: some View {
+        // A container the transition can happen *inside*. `.id` on the page
+        // makes each chapter a different view to SwiftUI, and the `ZStack` is
+        // what gives the outgoing and incoming pages somewhere to overlap while
+        // one leaves and the other arrives.
+        ZStack {
+            page
+                .id(showing)
+                // Up and out, down and in — the direction the pull was going,
+                // so the motion continues the gesture instead of answering it.
+                .transition(
+                    .asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .move(edge: .top).combined(with: .opacity)
+                    )
+                )
+        }
+        // **Keyed on the chapter, not bare.** The screen stays in the same
+        // place in the stack while the chapter under it changes, so a bare
+        // `.task` would run once and leave the previous chapter's text under
+        // the new chapter's title.
+        .task(id: "\(system.rawValue)/\(showing)") {
+            let model = ChapterModel(client: session.client, system: system, chapter: showing)
+            self.model = model
+            // Cleared here rather than on a timer: the new page is the proof
+            // the last turn finished, and until it exists a second pull would
+            // skip a chapter.
+            advancing = false
+            pull = 0
+            armed = false
+            await model.load(locale: session.locale)
+        }
+    }
+
+    private var page: some View {
         ScreenScaffold(
             mood: .reading,
             seed: 0x4348_4150,
@@ -105,31 +163,6 @@ struct ChapterScreen: View {
         // its threshold. Measured on the simulator — the swipe that had just
         // been working stopped. The overlay moves; the page stays still.
         .overlay(alignment: .bottom) { peek }
-        // Keyed on the chapter so SwiftUI treats a swap as a different view
-        // rather than the same one with new words: without the id the text
-        // changes underneath a static title, which reads as a glitch rather
-        // than as a page turn.
-        //
-        // Up and out, down and in — the direction the pull was going, so the
-        // motion continues the gesture instead of answering it.
-        .id("\(system.rawValue)/\(chapter)")
-        .transition(
-            .asymmetric(
-                insertion: .move(edge: .bottom).combined(with: .opacity),
-                removal: .move(edge: .top).combined(with: .opacity)
-            )
-        )
-        // **Keyed on the chapter, not bare.** Reading on now *replaces* this
-        // screen rather than stacking a new one (`AppRouter.replaceTop`), so the
-        // view stays in the same place in the stack and SwiftUI keeps its
-        // `@State` — a bare `.task` would run once and leave the previous
-        // chapter's text under the new chapter's title. The id is what makes
-        // the swap reload.
-        .task(id: "\(system.rawValue)/\(chapter)") {
-            let model = ChapterModel(client: session.client, system: system, chapter: chapter)
-            self.model = model
-            await model.load(locale: session.locale)
-        }
     }
 
     // MARK: — the top of the chapter
@@ -358,16 +391,18 @@ struct ChapterScreen: View {
     private func advance() {
         guard let next = model?.next else { return }
         advancing = true
-        pull = 0
-        armed = false
         AlmaHaptics.arrival()
-        // Animated, so the next chapter rises into place instead of appearing.
-        // The transition itself is on the content — see `.transition` in
-        // `body` — and this is what tells SwiftUI the swap is worth animating.
-        withAnimation(AlmaMotion.page) {
-            router.replaceTop(with: .chapter(system: system, chapter: next.slug))
+        // **A change of state, animated here.** The route does not move — see
+        // `current` for why that was the whole problem — so this is an ordinary
+        // SwiftUI transition and behaves like one every time rather than once.
+        //
+        // `pull` is deliberately *not* cleared before the animation: clearing
+        // it retracts the peek in the same frame the page starts leaving, and
+        // the two movements read as one interruption. The new page's `.task`
+        // resets it once there is something to reset it for.
+        withAnimation(AlmaMotion.turn) {
+            current = next.slug
         }
-        Task { @MainActor in advancing = false }
     }
 
     /// One quiet row at the end of a finished chapter — the moment the writing

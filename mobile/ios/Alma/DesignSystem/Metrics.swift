@@ -74,6 +74,16 @@ enum AlmaMotion {
     /// the way there in the first third of the time, and the rest is it
     /// settling.
     static let page = Animation.timingCurve(0.2, 0.9, 0.25, 1, duration: 0.30)
+
+    /// One chapter giving way to the next under a pull.
+    ///
+    /// Longer than `page` and softer at the end, because this one is *finished*
+    /// by the animation rather than begun by it: the finger has already done
+    /// the first half of the movement, and what is left should look like the
+    /// page settling rather than like a new screen arriving. 0.42 is where a
+    /// page turn stops reading as a jump and has not yet started reading as a
+    /// wait.
+    static let turn = Animation.timingCurve(0.16, 1, 0.28, 1, duration: 0.42)
 }
 
 extension View {
