@@ -615,11 +615,12 @@ internal fun CabinetPage(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val inset = Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+    val scroll = rememberScrollState()
     // The drag the scroll could not use, accumulated. At the bottom of the
     // content there is nowhere left to scroll, so everything the finger asks
     // for arrives here unconsumed — which is exactly the distance past the end.
     var pulled by remember { mutableFloatStateOf(0f) }
-    val overscroll = remember(onOverscroll) {
+    val overscroll = remember(onOverscroll, scroll) {
         object : NestedScrollConnection {
             override fun onPostScroll(
                 consumed: Offset,
@@ -627,6 +628,19 @@ internal fun CabinetPage(
                 source: NestedScrollSource,
             ): Offset {
                 val report = onOverscroll ?: return Offset.Zero
+                // **A page with nothing to scroll has no end to pull past, and
+                // a page not yet at its end is not being pulled past it.**
+                // Without both tests a chapter still being written — a title
+                // and a drawing, nothing to scroll — reported the top bounce as
+                // a pull, and one flick turned a page nobody had read. iOS
+                // carries the same guard; see `OverscrollReport`.
+                if (scroll.maxValue <= 0 || scroll.value < scroll.maxValue) {
+                    if (pulled > 0f) {
+                        pulled = 0f
+                        report(0f)
+                    }
+                    return Offset.Zero
+                }
                 if (available.y < 0f) {
                     pulled += -available.y
                     report(pulled)
@@ -656,7 +670,7 @@ internal fun CabinetPage(
             // the inset shrinks the viewport; after it, the inset is part of
             // the scrolling content and scrolls away with it.
             .then(if (contentUnderStatusBar) Modifier else inset)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scroll)
             .then(if (contentUnderStatusBar) inset else Modifier)
             .padding(horizontal = horizontalPadding, vertical = 18.dp)
             .widthIn(max = AlmaSpacing.Reading),

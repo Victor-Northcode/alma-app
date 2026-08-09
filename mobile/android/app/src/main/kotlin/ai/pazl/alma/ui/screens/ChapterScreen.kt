@@ -43,6 +43,9 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -325,9 +328,18 @@ private fun ChapterBody(
     // How far past the last line the reader has pulled, and whether that has
     // already been honoured. See the note on `ChapterTail`.
     var pull by remember { mutableFloatStateOf(0f) }
+    var armed by remember(chapter.slug) { mutableStateOf(false) }
     var advancing by remember(chapter.slug) { mutableStateOf(false) }
     val view = LocalView.current
-    val threshold = with(LocalDensity.current) { 90.dp.toPx() }
+    // **Two marks, the same two iOS has.** The near one shows the next
+    // chapter's name and ticks; the far one turns the page. One low mark meant
+    // a firm flick turned the page and its own momentum turned the next — the
+    // owner's "просто смахнёшь, и пролистнёт всё сразу". The confirmation is
+    // distance rather than a timed hold, because a timer sat on the edge of
+    // the rubber band's own collapse and fired four times in five.
+    val density = LocalDensity.current
+    val nearMark = with(density) { 40.dp.toPx() }
+    val farMark = with(density) { 92.dp.toPx() }
     val canAdvance = chapter.next != null && !chapter.locked
 
     // The one screen where text must not pass under the status bar; see the
@@ -335,11 +347,19 @@ private fun ChapterBody(
     CabinetPage(
         contentUnderStatusBar = false,
         onOverscroll = if (canAdvance) { distance ->
-            pull = distance
-            if (distance >= threshold && !advancing) {
-                advancing = true
-                view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
-                chapter.next?.let { onOpenChapter(it.slug) }
+            if (!advancing) {
+                pull = distance
+                if (distance >= nearMark && !armed) {
+                    armed = true
+                    view.performHapticFeedback(HapticFeedbackConstants.CLOCK_TICK)
+                } else if (distance < nearMark * 0.7f && armed) {
+                    armed = false
+                }
+                if (distance >= farMark) {
+                    advancing = true
+                    view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
+                    chapter.next?.let { onOpenChapter(it.slug) }
+                }
             }
         } else null,
     ) {
@@ -511,7 +531,7 @@ private fun ChapterBody(
                 text = stringResource(R.string.cabinet_back_to_chapters),
                 onClick = onBack,
             )
-            ChapterTail(chapter = chapter, pull = pull, threshold = threshold)
+            ChapterTail(chapter = chapter, pull = pull, farMark = farMark)
         }
 
         Spacer(Modifier.height(36.dp))
@@ -563,8 +583,8 @@ private fun ReaderBar(chapter: ChapterView, onBack: () -> Unit) {
  * own `ChapterScreen`.
  */
 @Composable
-private fun ChapterTail(chapter: ChapterView, pull: Float, threshold: Float) {
-    val progress = (pull / threshold).coerceIn(0f, 1f)
+private fun ChapterTail(chapter: ChapterView, pull: Float, farMark: Float) {
+    val progress = (pull / farMark).coerceIn(0f, 1f)
     val eased by animateFloatAsState(progress, label = "chapter-tail")
     Spacer(Modifier.height(28.dp))
     Column(
@@ -574,6 +594,23 @@ private fun ChapterTail(chapter: ChapterView, pull: Float, threshold: Float) {
     ) {
         val following = chapter.next
         if (following != null && !chapter.locked) {
+            // **The bar is how far there is left to pull.** Without it the
+            // gesture is a guess: the reader felt a tick and nothing on screen
+            // says whether one more centimetre or five will do it. Full means
+            // the next page is already on its way. iOS draws the same bar.
+            Box(
+                Modifier
+                    .width(64.dp)
+                    .height(2.5.dp)
+                    .background(InkGold.copy(alpha = 0.20f), CircleShape),
+            ) {
+                Box(
+                    Modifier
+                        .fillMaxWidth(eased)
+                        .height(2.5.dp)
+                        .background(InkGold, CircleShape),
+                )
+            }
             Text(
                 text = "\u2193",
                 style = AlmaTheme.type.headingM.copy(
@@ -589,6 +626,12 @@ private fun ChapterTail(chapter: ChapterView, pull: Float, threshold: Float) {
                 text = following.title,
                 style = AlmaTheme.type.meta.copy(
                     color = InkGold.copy(alpha = 0.5f + 0.5f * eased),
+                ),
+            )
+            Text(
+                text = stringResource(R.string.cabinet_pull_to_turn),
+                style = AlmaTheme.type.meta.copy(
+                    color = InkGold.copy(alpha = 0.4f + 0.4f * eased),
                 ),
             )
         } else if (following == null) {

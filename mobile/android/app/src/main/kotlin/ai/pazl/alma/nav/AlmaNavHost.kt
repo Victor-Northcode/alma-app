@@ -14,6 +14,8 @@ import ai.pazl.alma.ui.screens.SystemsScreen
 import ai.pazl.alma.ui.screens.TodayScreen
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -304,6 +306,25 @@ fun AlmaNavHost(
                     navArgument(Routes.ARG_SLUG) { type = NavType.StringType },
                     navArgument(Routes.ARG_CHAPTER) { type = NavType.StringType },
                 ),
+                // **A chapter arrives from below and leaves upwards**, which is
+                // the direction the pull was going: the motion continues the
+                // gesture instead of answering it. Everywhere else in the graph
+                // keeps the cross-fade, because everywhere else is reached by a
+                // tap and a tap has no direction.
+                //
+                // iOS gets the same movement a different way — there the screen
+                // owns which chapter is showing, because a `NavigationStack`
+                // ignores a `.transition` on its destination. This graph does
+                // animate its own routes, so the smaller change is the right
+                // one here.
+                enterTransition = {
+                    slideInVertically(tween(AlmaMotion.Page, easing = AlmaMotion.UiEasing)) { it / 3 } +
+                        fadeIn(tween(AlmaMotion.Page, easing = AlmaMotion.UiEasing))
+                },
+                exitTransition = {
+                    slideOutVertically(tween(AlmaMotion.Page, easing = AlmaMotion.UiEasing)) { -it / 3 } +
+                        fadeOut(tween(AlmaMotion.Page, easing = AlmaMotion.UiEasing))
+                },
             ) { entry ->
                 val slug = entry.arguments?.getString(Routes.ARG_SLUG).orEmpty()
                 ChapterScreen(

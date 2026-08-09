@@ -28,6 +28,17 @@ object AlmaMotion {
     const val Ui: Int = 240
     val UiEasing: Easing = CubicBezierEasing(0.22f, 1f, 0.36f, 1f)
 
+    /**
+     * One page giving way to the next — a chapter pulled into.
+     *
+     * Longer than [Ui] and softer at the end, because this one is *finished* by
+     * the animation rather than begun by it: the finger has already done the
+     * first half of the movement, and what is left should look like the page
+     * settling rather than like a new screen arriving. iOS carries the same
+     * number as `AlmaMotion.turn`.
+     */
+    const val Page: Int = 420
+
     /** A sheet or overlay arriving. */
     const val Sheet: Int = 380
     val SheetEasing: Easing = CubicBezierEasing(0.16f, 1f, 0.3f, 1f)
