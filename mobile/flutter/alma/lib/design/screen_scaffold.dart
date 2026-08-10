@@ -1,0 +1,132 @@
+import 'package:flutter/material.dart';
+
+import 'metrics.dart';
+import 'palette.dart';
+import 'sky/night_sky.dart';
+import 'typography.dart';
+
+/// Форма, которая есть у каждого экрана кабинета, чтобы ни один не открывал её
+/// заново.
+///
+/// Порт `mobile/ios/Alma/Screens/ScreenScaffold.swift`. Он улаживает три вещи,
+/// каждую из которых легко испортить по-своему на каждом экране и невозможно
+/// заметить, пока она не испорчена на четырёх по-разному:
+///
+/// * **прокрутку и боковое поле** — одно `pad`, приложенное один раз;
+/// * **верх страницы** — золотой надзаголовок и засечный заголовок, и заголовок
+///   никогда не в системной панели;
+/// * **низ** — столько места, чтобы последняя строка вышла из-под бара вкладок.
+///   Владелец нашёл это на мелком тексте в настройках, который обрывался на
+///   полуслове.
+///
+/// Экрану, которому нужна не прокручиваемая колонка, а что-то другое — карта,
+/// беседа, — этот каркас не подходит. **Тогда он обязан нарисовать себе небо
+/// сам**: экран без неба это экран плоско-чёрный, и повесить небо выше по
+/// дереву негде.
+class ScreenScaffold extends StatelessWidget {
+  const ScreenScaffold({
+    super.key,
+    this.eyebrow,
+    this.title,
+    this.mood = SkyMood.cabinet,
+    this.seed = 0x414C4D41,
+    this.onOverscroll,
+    this.onRefresh,
+    this.trailing,
+    required this.children,
+  });
+
+  /// Небольшая золотая строка над заголовком. Необязательна: у главы она есть,
+  /// у беседы нет.
+  final String? eyebrow;
+  final String? title;
+
+  /// Что делает небо на этом экране. Чтение его приглушает.
+  final SkyMood mood;
+
+  /// Какое небо достаётся экрану. Разные зёрна на двух экранах — это то, что
+  /// делает переход между ними видимым переходом; одно и то же зерно на одном
+  /// экране — то, что не даёт звёздам перетасоваться при появлении клавиатуры.
+  final int seed;
+
+  /// Насколько читатель протянул за последнюю строку, в логических точках.
+  /// Ноль везде, кроме одного экрана: тянуть за конец главы — значит открыть
+  /// следующую.
+  final ValueChanged<double>? onOverscroll;
+
+  final Future<void> Function()? onRefresh;
+
+  /// То, что стоит справа от заголовка, — медальон луны на «Сегодня».
+  final Widget? trailing;
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final barHeight = AlmaMetrics.tabBarHeight + MediaQuery.paddingOf(context).bottom;
+
+    Widget list = ListView(
+      padding: EdgeInsets.only(
+        left: AlmaMetrics.pad,
+        right: AlmaMetrics.pad,
+        top: 12,
+        // Полсекции над баром, а не целая: на скриншоте владельца под последней
+        // строкой каждого экрана стояла полоса пустой ночи выше самого бара.
+        bottom: AlmaMetrics.gapLarge / 2 + barHeight,
+      ),
+      children: [
+        if (eyebrow != null) ...[
+          const SizedBox(height: 8),
+          Text(eyebrow!.toUpperCase(), style: AlmaType.overline),
+        ],
+        if (title != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: trailing == null
+                ? Text(title!, style: AlmaType.displayXl)
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Text(title!, style: AlmaType.displayXl)),
+                      const SizedBox(width: 12),
+                      trailing!,
+                    ],
+                  ),
+          ),
+        ...children,
+      ],
+    );
+
+    if (onOverscroll != null) {
+      list = NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          final metrics = notification.metrics;
+          // **Страница, которой нечего прокручивать, не имеет конца, за
+          // который можно тянуть.** Без этой проверки глава, которая ещё
+          // пишется — заголовок и рисунок, — докладывала отскок сверху как
+          // протяжку снизу, и один смах переворачивал страницу, которую никто
+          // не читал. iOS и Android несут ту же защиту.
+          if (!metrics.hasContentDimensions || metrics.maxScrollExtent <= 0) {
+            onOverscroll!(0);
+            return false;
+          }
+          final past = metrics.pixels - metrics.maxScrollExtent;
+          onOverscroll!(past > 0 ? past : 0);
+          return false;
+        },
+        child: list,
+      );
+    }
+
+    if (onRefresh != null) {
+      list = RefreshIndicator(
+        onRefresh: onRefresh!,
+        color: AlmaPalette.gold,
+        backgroundColor: AlmaPalette.night700,
+        child: list,
+      );
+    }
+
+    return NightSky(mood: mood, seed: seed, child: SafeArea(bottom: false, child: list));
+  }
+}
