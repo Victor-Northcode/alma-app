@@ -107,19 +107,29 @@ class _CabinetShellState extends State<CabinetShell> {
     return Scaffold(
       backgroundColor: AlmaPalette.night,
       extendBody: true,
-      body: switch (_tab) {
-        CabinetTab.today => const TodayScreen(),
-        // Свой навигатор у вкладки, чтобы бар оставался на месте под
-        // открытыми экранами — как на iOS, где стек живёт внутри вкладки.
-        CabinetTab.systems => Navigator(
+      // **Все четыре вкладки живут одновременно, как на iOS.**
+      //
+      // `switch` пересоздавал экран при каждом переключении, и беседа с Alma
+      // стиралась: ушёл на «Мои системы», вернулся — лента пуста. Найдено на
+      // симуляторе. На нативе все четыре стека живут всю жизнь приложения —
+      // это записано там же, в комментарии к перезагрузке «Сегодня» по смене
+      // профиля. IndexedStack держит их так же.
+      body: IndexedStack(
+        index: _tab.index,
+        children: [
+          const TodayScreen(),
+          // Свой навигатор у вкладки, чтобы бар оставался на месте под
+          // открытыми экранами — как на iOS, где стек живёт внутри вкладки.
+          Navigator(
             key: _systemsNav,
             onGenerateRoute: (settings) => MaterialPageRoute(
               builder: (context) => SystemsScreen(onOpenSystem: _openSystem),
             ),
           ),
-        CabinetTab.alma => const AlmaScreen(),
-        CabinetTab.settings => const SettingsScreen(),
-      },
+          const AlmaScreen(),
+          const SettingsScreen(),
+        ],
+      ),
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
         onSelect: (tab) => setState(() => _tab = tab),
