@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../design/arrival.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
@@ -128,13 +129,17 @@ class _TodayScreenState extends State<TodayScreen> {
     if (moon == null) return null;
     return Padding(
       padding: const EdgeInsets.only(top: 26),
-      child: SizedBox(
-        width: 68,
-        height: 68,
-        child: CustomPaint(
-          painter: _MoonPainter(
-            illumination: ((moon['illumination'] as num?)?.toDouble() ?? 0),
-            waxing: moon['waxing'] as bool? ?? true,
+      // Дышит, как на iOS: осевший рисунок не замирает — иначе читается как
+      // пропавший. «Анимация пропадает, она должна оставаться».
+      child: Breathing(
+        child: SizedBox(
+          width: 68,
+          height: 68,
+          child: CustomPaint(
+            painter: _MoonPainter(
+              illumination: ((moon['illumination'] as num?)?.toDouble() ?? 0),
+              waxing: moon['waxing'] as bool? ?? true,
+            ),
           ),
         ),
       ),

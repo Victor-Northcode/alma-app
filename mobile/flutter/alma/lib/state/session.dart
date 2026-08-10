@@ -1,3 +1,5 @@
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/widgets.dart';
 
 import '../net/alma_client.dart';
@@ -48,6 +50,7 @@ class AlmaSession extends ChangeNotifier {
       // не было аккаунта, после — есть, и он ничего для этого не делал.
       if (!await client.hasAccount) await client.refresh();
       _account = await client.account();
+      _adoptLocaleFromDevice();
       final all = await client.profiles();
       _profile = all.where((p) => p.isSelf).firstOrNull;
       _people = all.where((p) => !p.isSelf).toList();
@@ -60,6 +63,35 @@ class AlmaSession extends ChangeNotifier {
       _ready = true;
     }
     notifyListeners();
+  }
+
+  /// **Устройство побеждает.** Порт `adoptLocaleFromDevice` с iOS: язык — это
+  /// язык телефона, и никакой второй ручки в приложении нет. Гостя сервер
+  /// заводит по заголовку первого запроса, и тот бывает чужим — живой гость в
+  /// браузере получил итальянский; человек, сменивший язык телефона после
+  /// установки, писался бы по-старому вечно. Расхождение выталкивается на том
+  /// запуске, который его заметил, и запись — предпочтение, не факт: не
+  /// ушла сейчас — уйдёт при следующем запуске.
+  void _adoptLocaleFromDevice() {
+    final device = _deviceLocale();
+    final current = _account;
+    if (current == null) return;
+    if (current.locale != device) {
+      _account = current.copyWith(locale: device);
+      // Не await: язык уже принят, сервер догонит.
+      client.setLocale(device).catchError((Object _) {});
+    }
+  }
+
+  /// Язык устройства, сведённый к семи, которые продукт умеет. pt любого
+  /// региона становится pt-BR — это код сервера; незнакомый язык падает в en.
+  static String _deviceLocale() {
+    final tag = PlatformDispatcher.instance.locale;
+    final code = tag.languageCode.toLowerCase();
+    const shipped = ['en', 'es', 'de', 'it', 'fr', 'ru'];
+    if (shipped.contains(code)) return code;
+    if (code == 'pt') return 'pt-BR';
+    return 'en';
   }
 
   /// Оптимистично: человек выбрал язык, и интерфейс обязан подчиниться сразу.

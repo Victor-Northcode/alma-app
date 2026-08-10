@@ -66,25 +66,16 @@ class SettingsScreen extends StatelessWidget {
             if (profile.name != null)
               _row(l.cabSettingsFullName, profile.name!),
           ]),
+        // Язык — это язык телефона, и переключателя здесь нет намеренно:
+        // финальный iOS показывает текущий эндоним и говорит «Я читаю и пишу
+        // на языке твоего телефона. Поменяй его там — поменяюсь и я».
+        // Переключатель-пилюли был андроидным обходом API 33 и ушёл вместе с
+        // Android.
         _section(l.cabSettingsLanguage, [
+          _row(l.cabSettingsLanguage, _endonym(session.locale)),
           Padding(
-            padding: const EdgeInsets.only(top: 14),
-            child: Wrap(spacing: 8, runSpacing: 8, children: [
-              for (final (code, endonym) in const [
-                ('en', 'English'),
-                ('es', 'Español'),
-                ('de', 'Deutsch'),
-                ('it', 'Italiano'),
-                ('fr', 'Français'),
-                ('pt-BR', 'Português'),
-                ('ru', 'Русский'),
-              ])
-                _LanguagePill(
-                  label: endonym,
-                  selected: session.locale == code,
-                  onTap: () => session.setLocale(code),
-                ),
-            ]),
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(l.cabLanguageNote, style: AlmaType.meta),
           ),
         ]),
       ],
@@ -140,38 +131,14 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-class _LanguagePill extends StatelessWidget {
-  const _LanguagePill(
-      {required this.label, required this.selected, required this.onTap});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    // Эндонимы и никогда не переводятся: переключателем, который переводит
-    // собственные пункты, не может пользоваться тот, кто не читает текущий
-    // язык. Оптимистичное выделение — session.setLocale меняет состояние до
-    // ответа сервера; ровно этого не хватало Android.
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: selected ? AlmaPalette.gold : AlmaPalette.hairline,
-          ),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: AlmaType.meta.copyWith(
-            color: selected ? AlmaPalette.goldBright : AlmaPalette.muted,
-          ),
-        ),
-      ),
-    );
-  }
-}
+/// Эндоним — имя языка на нём самом, и оно не переводится никогда.
+String _endonym(String code) => switch (code) {
+      'en' => 'English',
+      'es' => 'Español',
+      'de' => 'Deutsch',
+      'it' => 'Italiano',
+      'fr' => 'Français',
+      'pt-BR' => 'Português',
+      'ru' => 'Русский',
+      _ => code,
+    };

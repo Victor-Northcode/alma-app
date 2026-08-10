@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'arrival.dart';
 import 'metrics.dart';
 import 'palette.dart';
 import 'sky/night_sky.dart';
@@ -81,25 +82,36 @@ class ScreenScaffold extends StatelessWidget {
         bottom: AlmaMetrics.gapLarge / 2 + barHeight,
       ),
       children: [
-        if (eyebrow != null) ...[
-          const SizedBox(height: 8),
-          Text(eyebrow!.toUpperCase(), style: AlmaType.overline),
-        ],
-        if (title != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: trailing == null
-                ? Text(title!, style: titleStyle ?? AlmaType.displayL)
-                : Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: Text(title!, style: titleStyle ?? AlmaType.displayL)),
-                      const SizedBox(width: 12),
-                      trailing!,
-                    ],
-                  ),
-          ),
-        ...children,
+        // Каскад прихода: шапка — ступень 0, каждый следующий блок на 70 мс
+        // позже, подъёмом на 16 точек. Те же числа, что в Arrival.swift; вход
+        // одноразовый — обновление данных не переигрывает его.
+        RiseIn(
+          index: 0,
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            if (eyebrow != null) ...[
+              const SizedBox(height: 8),
+              Text(eyebrow!.toUpperCase(), style: AlmaType.overline),
+            ],
+            if (title != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: trailing == null
+                    ? Text(title!, style: titleStyle ?? AlmaType.displayL)
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                              child:
+                                  Text(title!, style: titleStyle ?? AlmaType.displayL)),
+                          const SizedBox(width: 12),
+                          trailing!,
+                        ],
+                      ),
+              ),
+          ]),
+        ),
+        for (final (i, child) in children.indexed)
+          RiseIn(index: i + 1, child: child),
       ],
     );
 

@@ -220,7 +220,7 @@ class AlmaClient {
         '/v1/chat',
         {
           'message': message,
-          if (threadId != null) 'thread_id': threadId,
+          'thread_id': ?threadId,
           'locale': locale,
         },
         timeout: writingTimeout,
