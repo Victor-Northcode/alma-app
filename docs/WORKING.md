@@ -1,0 +1,162 @@
+# Как здесь работают
+
+**11 августа 2026.** Всё, что нужно знать, чтобы продолжить с этого места, и чего нет
+в остальных документах, потому что оно про **работу**, а не про продукт.
+
+Написано после дня, в котором половина времени ушла на вещи, которые никто не записал.
+
+---
+
+## 1 · Правила владельца
+
+Не рекомендации. Он их сформулировал, и они держатся.
+
+**Никаких субагентов.** Всё делается и проверяется самому — руками и скриншотами.
+
+**После каждой волны правок:** проверка на секреты → коммит (сообщение по-русски) →
+push **отдельной командой**.
+
+**Никогда не коммитить:** `backend/.env` (там `ANTHROPIC_API_KEY`), keystore,
+`local.properties`. Разрешён только `.env.example`.
+
+```bash
+git status --porcelain | awk '{print $2}' \
+  | grep -iE "\.env$|keystore|local\.properties|\.jks|\.p8" && echo ОПАСНО || echo чисто
+```
+
+**Все креды вводит владелец сам.** Не подставлять свои, не просить прислать в чат.
+
+**Бесплатные функции никогда не прячутся за подписку. Никакого триала.**
+
+**Никаких GPL-зависимостей и Swiss Ephemeris.**
+
+**Правки на обеих платформах и на всех семи языках** (en, es, de, fr, it, pt-BR, ru).
+После перехода на Flutter это одна кодовая база, но семь языков остаются.
+
+---
+
+## 2 · Бэкенд
+
+```bash
+cd backend && nohup .venv/bin/python -m uvicorn alma.api.app:app --port 8018 &
+```
+
+**Перезапускать после любой правки бэкенда.** Это не совет: старый процесс держит
+старый код, и день уходит на отладку того, что уже починено. В этой сессии так и
+случилось — заголовок главы «не менялся», потому что сервер работал со старым
+каталогом.
+
+Для веб-круга нужен CORS с портом веба, и передаётся он переменной окружения, **не
+правкой `.env`**:
+
+```bash
+ALMA_CORS_ORIGINS="http://localhost:3000,http://127.0.0.1:3000,http://127.0.0.1:8080" \
+  nohup .venv/bin/python -m uvicorn alma.api.app:app --port 8018 &
+```
+
+---
+
+## 3 · Симулятор iOS
+
+**iPhone 17 Pro, UDID `7F30250B-C7D2-4C07-83E0-6256CD6C3939`.**
+
+**Pro Max трогать нельзя** — он занят другой сессией.
+
+Координаты тапов — в **точках**, 402×874. Нижний бар вкладок стоит примерно на
+`y = 815`; ниже, около 845, начинается зона домашнего индикатора, и тап туда не
+попадает никуда. На этом можно потерять двадцать минут, решив, что вкладки не
+переключаются.
+
+Обе Almы стоят рядом: натив `ai.pazl.alma`, порт `ai.pazl.alma.flutter`.
+
+---
+
+## 4 · Тестовый человек за две минуты
+
+Свежий гость приходит без карты, и половину экранов на нём не проверить. Токен гостя
+лежит в настройках приложения на симуляторе:
+
+```bash
+C=$(xcrun simctl get_app_container <UDID> ai.pazl.alma.flutter data)
+plutil -p "$C/Library/Preferences/ai.pazl.alma.flutter.plist" | grep token
+```
+
+Дальше — рождение и язык:
+
+```bash
+curl -s -X POST http://127.0.0.1:8018/v1/profiles \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"birth_date":"1992-05-11","birth_time":"11:26","latitude":55.7558,
+       "longitude":37.6173,"timezone":"Europe/Moscow",
+       "place_label":"Moscow, Russia","name":"Анатолий","is_self":true}'
+
+curl -s -X PATCH http://127.0.0.1:8018/v1/account \
+  -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"locale":"ru","display_name":"Анатолий"}'
+```
+
+**Полный доступ** (проверить платные экраны) — строка в `backend/data/alma.db`,
+таблица `entitlement`: `system='all'`, `kind='monthly'`, `source='owner-preview'`,
+`amount_cents=0`, `currency='USD'`, `status='active'`, `scope='all'`,
+`expires_at` = сегодня + 30 дней. Привязка по `user_id`, не по `profile_id`.
+
+**Ввод кириллицы на симуляторе не работает** — `simctl` печатает только ASCII. Имя
+проще выставить через `PATCH /v1/account`, чем бороться с клавиатурой.
+
+---
+
+## 5 · Android
+
+```bash
+export JAVA_HOME="/opt/homebrew/opt/openjdk@21"
+export ANDROID_HOME="$HOME/Library/Android/sdk"
+cd mobile/android && ./gradlew :app:assembleDebug
+```
+
+Идентификатор отладочной сборки — `ai.pazl.alma.debug`, не `ai.pazl.alma`. Язык
+приложения меняется без перезапуска эмулятора:
+
+```bash
+adb shell cmd locale set-app-locales ai.pazl.alma.debug --locales ru-RU
+```
+
+**Образ эмулятора однажды пропал из SDK** — `system-images/android-36/google_apis/arm64-v8a`.
+Вернуть:
+
+```bash
+sdkmanager --sdk_root="$HOME/Library/Android/sdk" "system-images;android-36;google_apis;arm64-v8a"
+```
+
+Это около 1,5 ГБ; `sdkmanager` ставится через brew, в самом SDK его может не быть.
+
+---
+
+## 6 · Что проверять перед коммитом
+
+```bash
+cd mobile/flutter/alma && flutter analyze && flutter test
+cd backend && .venv/bin/python -m pytest -q     # долго, около 10 минут
+```
+
+**Ни один экран не считается перенесённым, пока не поставлен рядом с нативным кадром.**
+Это правило появилось потому, что сверка с кодом даёт «структурно верно и криво по
+виду» — см. `docs/FLUTTER-PORT.md`, раздел про метод.
+
+---
+
+## 7 · Ловушки, стоившие времени
+
+**`SessionScope.of(context)` нельзя звать из `initState`** — исключение уходит в
+невозвращённое будущее, и экран молча стоит на «Секунду» вечно. Только
+`didChangeDependencies` с флагом «уже начали».
+
+**Вкладка в браузере держит связь с прежним dev-сервером** и зацикленно
+переподключается, когда сервер перезапущен. Выглядит как зависшее приложение.
+Лечится перезагрузкой вкладки.
+
+**`flutter run` на симуляторе iOS иногда не подключается** — «The log reader failed
+unexpectedly», отладочная сборка ждёт отладчика и рисует чёрный экран. Обход: собрать
+`flutter build ios --simulator --debug` и ставить через `simctl install` + `launch`.
+Release и profile для симулятора не собираются вовсе.
+
+**Глава пишется 40–90 секунд молча.** Это не зависание. Смотреть `backend/nohup.out`.

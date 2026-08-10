@@ -53,6 +53,9 @@ that single constraint shaped the entire astronomy stack.
 
 ## Where to go next
 
+- **Working here at all** → [`docs/WORKING.md`](docs/WORKING.md) — the owner's rules, the
+  simulator UDID, how to give a test guest a chart in two minutes, and the traps that cost
+  hours. Read it first.
 - **The Flutter port** → [`docs/FLUTTER-PORT.md`](docs/FLUTTER-PORT.md) — where it stands, every
   decision taken along the way, and what is honestly missing. The two native apps still work
   and are still the only thing shippable until the port catches up.
