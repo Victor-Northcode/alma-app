@@ -607,3 +607,41 @@ class ReadingResponse {
         createdAt: json['created_at'] as String?,
       );
 }
+
+/* ── беседа ────────────────────────────────────────────────────────────── */
+
+/// Ответ Alma на один вопрос. Форма снята с живого `/v1/chat`:
+/// `{thread_id, message: {id, role, body, cited_factors, turn_kind}, …}`.
+class ChatReply {
+  const ChatReply({
+    required this.threadId,
+    required this.body,
+    required this.citedFactors,
+    this.questionsLeft,
+  });
+
+  final String? threadId;
+  final String body;
+
+  /// Позиции, из которых прочитан ответ. Обещание продукта: каждый ответ их
+  /// называет, и лента обязана их показывать.
+  final List<String> citedFactors;
+
+  final int? questionsLeft;
+
+  /// Абзацы — тело, разрезанное по пустой строке.
+  List<String> get paragraphs =>
+      body.split('\n\n').where((p) => p.trim().isNotEmpty).toList();
+
+  factory ChatReply.fromJson(Map<String, dynamic> json) {
+    final message = (json['message'] as Map?)?.cast<String, dynamic>() ?? const {};
+    return ChatReply(
+      threadId: json['thread_id'] as String?,
+      body: message['body'] as String? ?? '',
+      citedFactors: (message['cited_factors'] as List? ?? const [])
+          .map((e) => e as String)
+          .toList(),
+      questionsLeft: (json['questions_left'] as num?)?.toInt(),
+    );
+  }
+}

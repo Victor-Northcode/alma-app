@@ -208,6 +208,21 @@ class AlmaClient {
         timeout: writingTimeout,
       ));
 
+  /* ── беседа ──────────────────────────────────────────────────────────── */
+
+  /// Вопрос Alma. Ответ — тоже генерация, короче главы, и несёт тот же
+  /// таймаут письма.
+  Future<ChatReply> ask(String message, {String? threadId, required String locale}) async =>
+      ChatReply.fromJson(await _post(
+        '/v1/chat',
+        {
+          'message': message,
+          if (threadId != null) 'thread_id': threadId,
+          'locale': locale,
+        },
+        timeout: writingTimeout,
+      ));
+
   /* ── внутреннее ──────────────────────────────────────────────────────── */
 
   Future<Map<String, dynamic>> _get(String path) =>

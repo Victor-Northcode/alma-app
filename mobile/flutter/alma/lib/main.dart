@@ -8,6 +8,7 @@ import 'design/typography.dart';
 import 'l10n/alma_l10n.dart';
 import 'net/alma_client.dart';
 import 'net/models.dart';
+import 'screens/alma/alma_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
@@ -110,6 +111,7 @@ class _CabinetShellState extends State<CabinetShell> {
               builder: (context) => SystemsScreen(onOpenSystem: _openSystem),
             ),
           ),
+        CabinetTab.alma => const AlmaScreen(),
         _ => _Placeholder(tab: _tab),
       },
       bottomNavigationBar: CabinetTabBar(
