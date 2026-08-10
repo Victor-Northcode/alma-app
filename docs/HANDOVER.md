@@ -9,6 +9,12 @@ does not come back.
 
 Entity: **Pazl LLC**. Both developer accounts exist — Apple Developer and Google Play Console.
 
+**Read `docs/FLUTTER-PORT.md` next.** On 10 August the owner decided to rewrite both apps
+in Flutter, porting from iOS; new work goes there. The two native apps still work and are
+still the only thing shippable until the port catches up, so everything in this file about
+them remains true. What only the owner can supply — domain, Google client ids, APNs key,
+store products — is unchanged by the decision and is still listed below.
+
 ---
 
 ## 1 · What only the owner can supply

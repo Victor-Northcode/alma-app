@@ -1,13 +1,20 @@
 # Alma — where it actually stands
 
-**9 August 2026.** Rewritten after five waves of the owner's own review of the shipped apps.
-Everything below was run on this machine; where something was not verified, it says so in
-those words, and there is a section for exactly that.
+**11 August 2026.** Everything below was run on this machine; where something was not
+verified, it says so in those words, and there is a section for exactly that.
 
-The previous version of this file was dated 7 August and was three waves stale — it said the
-product-id prefix was undecided, that an offer appeared after the ceremony, and that a guest
-got three free chat questions. None of those had been true for days. A status document that
-is not rewritten with the code is a document that lies confidently, so this one is short.
+> ## The direction changed on 10 August
+>
+> The owner decided to **rewrite both apps in Flutter, porting from iOS**. The count the
+> decision was made on is in `docs/PARITY.md`; the port's own diary — what is done, what
+> was decided along the way and what is honestly missing — is `docs/FLUTTER-PORT.md`.
+>
+> **The two native apps are not deleted and still work.** Until the port catches up they
+> are the only thing that can go to the stores, so everything below about them is still
+> the truth about what ships. What changed is where new work goes.
+>
+> Native iOS is the reference the port is measured against, frame by frame, both apps
+> installed on one simulator.
 
 ---
 

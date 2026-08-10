@@ -26,8 +26,9 @@ aspects with their orbs and all seventy-eight factors. What is sold is the writi
 |---|---|
 | `backend/` | FastAPI, Python 3.13. The engine, the writing layer, billing, the API. **1479 tests.** |
 | `src/` | Next.js storefront: the free reading, six legal pages, six languages. Sells nothing. |
-| `mobile/ios/` | SwiftUI. Payment through StoreKit. |
+| `mobile/ios/` | SwiftUI. Payment through StoreKit. **The reference the Flutter port is measured against.** |
 | `mobile/android/` | Jetpack Compose. Payment through Play Billing. |
+| `mobile/flutter/alma/` | The port, in progress. One codebase for both phones — see [`docs/FLUTTER-PORT.md`](docs/FLUTTER-PORT.md). |
 | `mobile/store/` | The completed App Store and Play submissions — twelve listings, privacy answers, review notes. |
 | `docs/` | How to deploy it, how to release it, and what is not finished. |
 
@@ -52,6 +53,9 @@ that single constraint shaped the entire astronomy stack.
 
 ## Where to go next
 
+- **The Flutter port** → [`docs/FLUTTER-PORT.md`](docs/FLUTTER-PORT.md) — where it stands, every
+  decision taken along the way, and what is honestly missing. The two native apps still work
+  and are still the only thing shippable until the port catches up.
 - **Releasing the apps** → [`mobile/RELEASE.md`](mobile/RELEASE.md), then
   [`mobile/store/README.md`](mobile/store/README.md)
 - **Building them** → [`mobile/TOOLCHAIN.md`](mobile/TOOLCHAIN.md) — every line in it was run
