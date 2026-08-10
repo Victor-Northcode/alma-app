@@ -8,6 +8,7 @@ import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
+import 'natal_wheel.dart';
 
 /// Одна система: её оглавление, дверь и бесплатные расчёты.
 ///
@@ -26,6 +27,7 @@ class SystemScreen extends StatefulWidget {
 
 class _SystemScreenState extends State<SystemScreen> {
   ChapterList? _chapters;
+  CalcResult? _result;
   AlmaError? _failure;
   bool _loading = true;
 
@@ -51,9 +53,18 @@ class _SystemScreenState extends State<SystemScreen> {
       _failure = null;
     });
     try {
-      final list = await session.client
-          .chapters(widget.system, locale: session.locale);
-      if (mounted) setState(() => _chapters = list);
+      // Расчёт и оглавление одновременно: рисунок системы и её главы — две
+      // независимые вещи, и ждать их по очереди значит удвоить пустой экран.
+      final both = await Future.wait([
+        session.client.chapters(widget.system, locale: session.locale),
+        session.client.compute(widget.system),
+      ]);
+      if (mounted) {
+        setState(() {
+          _chapters = both[0] as ChapterList;
+          _result = both[1] as CalcResult;
+        });
+      }
     } on AlmaError catch (error) {
       if (mounted) setState(() => _failure = error);
     } finally {
@@ -69,6 +80,13 @@ class _SystemScreenState extends State<SystemScreen> {
       title: CabinetWordsMore.system(l, widget.system),
       onRefresh: _load,
       children: [
+        // Рисунок системы, чертящий себя. Натальная и соляр — настоящее
+        // колесо; у остальных свои полотна, они приедут следующими.
+        if (_wheelData case final chart?)
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 10),
+            child: NatalWheel(data: chart),
+          ),
         const SizedBox(height: 10),
         _section(
           l.cabChapters,
@@ -97,6 +115,19 @@ class _SystemScreenState extends State<SystemScreen> {
         ),
       ],
     );
+  }
+
+  /// Данные для колеса. Натальная карта — она сама; соляр — карта возвращения:
+  /// то же колесо, небо этого года.
+  Map<String, dynamic>? get _wheelData {
+    final data = _result?.data;
+    if (data == null) return null;
+    if (widget.system == SystemSlug.natal) return data;
+    if (widget.system == SystemSlug.solarReturn) {
+      final chart = data['chart'];
+      return chart is Map ? chart.cast<String, dynamic>() : null;
+    }
+    return null;
   }
 
   Widget _section(String label, {String? trailing, required List<Widget> children}) {

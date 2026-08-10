@@ -211,6 +211,19 @@ class AlmaClient {
         timeout: writingTimeout,
       ));
 
+  /* ── утро и план ─────────────────────────────────────────────────────── */
+
+  Future<Map<String, dynamic>> dailySettings() async => _get('/v1/notifications');
+
+  Future<Map<String, dynamic>> setDaily({String? daily, int? hour}) async =>
+      _patch('/v1/notifications', {
+        'daily': ?daily,
+        'hour': ?hour,
+      });
+
+  Future<Map<String, dynamic>> entitlements() async =>
+      _get('/v1/billing/entitlements');
+
   /* ── беседа ──────────────────────────────────────────────────────────── */
 
   /// Вопрос Alma. Ответ — тоже генерация, короче главы, и несёт тот же
