@@ -188,7 +188,7 @@ class AlmaClient {
   }) async =>
       CalcResult.fromJson(await _post('/v1/systems/${system.path}', body));
 
-  Future<Hub> hub() async => Hub.fromJson(await _get('/v1/readings/hub'));
+  Future<Hub> hub() async => Hub.fromJson(await _get('/v1/systems/hub'));
 
   Future<ChapterList> chapters(SystemSlug system, {required String locale}) async =>
       ChapterList.fromJson(

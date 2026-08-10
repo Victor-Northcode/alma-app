@@ -19,12 +19,14 @@ class AlmaSession extends ChangeNotifier {
   AlmaAccount? _account;
   Profile? _profile;
   List<Profile> _people = const [];
+  Hub? _hub;
   bool _ready = false;
   AlmaError? _failure;
 
   AlmaAccount? get account => _account;
   Profile? get profile => _profile;
   List<Profile> get people => _people;
+  Hub? get hub => _hub;
   bool get ready => _ready;
   AlmaError? get failure => _failure;
 
@@ -49,6 +51,9 @@ class AlmaSession extends ChangeNotifier {
       final all = await client.profiles();
       _profile = all.where((p) => p.isSelf).firstOrNull;
       _people = all.where((p) => !p.isSelf).toList();
+      // Хаб — первой странице систем, одним запросом; без рождения его нет,
+      // и это состояние, а не ошибка.
+      _hub = _profile == null ? null : await client.hub();
       _ready = true;
     } on AlmaError catch (error) {
       _failure = error;

@@ -33,6 +33,7 @@ class ScreenScaffold extends StatelessWidget {
     this.onOverscroll,
     this.onRefresh,
     this.trailing,
+    this.titleStyle,
     required this.children,
   });
 
@@ -59,6 +60,11 @@ class ScreenScaffold extends StatelessWidget {
   /// То, что стоит справа от заголовка, — медальон луны на «Сегодня».
   final Widget? trailing;
 
+  /// Кегль заголовка. По умолчанию — заголовок экрана (29), как у каркаса на
+  /// iOS; «Сегодня» просит главный (39) сам, потому что там строка — имя
+  /// человека и единственный крупный элемент страницы.
+  final TextStyle? titleStyle;
+
   final List<Widget> children;
 
   @override
@@ -83,11 +89,11 @@ class ScreenScaffold extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 4),
             child: trailing == null
-                ? Text(title!, style: AlmaType.displayXl)
+                ? Text(title!, style: titleStyle ?? AlmaType.displayL)
                 : Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: Text(title!, style: AlmaType.displayXl)),
+                      Expanded(child: Text(title!, style: titleStyle ?? AlmaType.displayL)),
                       const SizedBox(width: 12),
                       trailing!,
                     ],

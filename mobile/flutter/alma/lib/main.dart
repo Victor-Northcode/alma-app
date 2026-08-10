@@ -7,6 +7,7 @@ import 'design/tab_bar.dart';
 import 'design/typography.dart';
 import 'l10n/alma_l10n.dart';
 import 'net/alma_client.dart';
+import 'screens/systems/systems_screen.dart';
 import 'screens/today/today_screen.dart';
 import 'state/session.dart';
 
@@ -85,6 +86,9 @@ class _CabinetShellState extends State<CabinetShell> {
       extendBody: true,
       body: switch (_tab) {
         CabinetTab.today => const TodayScreen(),
+        CabinetTab.systems => SystemsScreen(onOpenSystem: (slug) {
+            // Экран системы приедет следующим; пока нажатие никуда не ведёт.
+          }),
         _ => _Placeholder(tab: _tab),
       },
       bottomNavigationBar: CabinetTabBar(

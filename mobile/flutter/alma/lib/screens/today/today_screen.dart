@@ -58,6 +58,7 @@ class _TodayScreenState extends State<TodayScreen> {
       title: session.account?.displayName?.isNotEmpty == true
           ? session.account!.displayName!
           : l.tabToday,
+      titleStyle: AlmaType.displayXl,
       trailing: _moonSeal(model),
       onRefresh: () async {
         if (model != null && session.hasBirthData) {
