@@ -7,6 +7,9 @@ import 'design/tab_bar.dart';
 import 'design/typography.dart';
 import 'l10n/alma_l10n.dart';
 import 'net/alma_client.dart';
+import 'net/models.dart';
+import 'screens/systems/chapter_screen.dart';
+import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
 import 'screens/today/today_screen.dart';
 import 'state/session.dart';
@@ -78,6 +81,19 @@ class CabinetShell extends StatefulWidget {
 
 class _CabinetShellState extends State<CabinetShell> {
   CabinetTab _tab = CabinetTab.today;
+  final _systemsNav = GlobalKey<NavigatorState>();
+
+  void _openSystem(SystemSlug slug) {
+    _systemsNav.currentState?.push(MaterialPageRoute(
+      builder: (context) => SystemScreen(system: slug, onOpenChapter: _openChapter),
+    ));
+  }
+
+  void _openChapter(SystemSlug system, String chapter) {
+    _systemsNav.currentState?.push(MaterialPageRoute(
+      builder: (context) => ChapterScreen(system: system, chapter: chapter),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -86,9 +102,14 @@ class _CabinetShellState extends State<CabinetShell> {
       extendBody: true,
       body: switch (_tab) {
         CabinetTab.today => const TodayScreen(),
-        CabinetTab.systems => SystemsScreen(onOpenSystem: (slug) {
-            // Экран системы приедет следующим; пока нажатие никуда не ведёт.
-          }),
+        // Свой навигатор у вкладки, чтобы бар оставался на месте под
+        // открытыми экранами — как на iOS, где стек живёт внутри вкладки.
+        CabinetTab.systems => Navigator(
+            key: _systemsNav,
+            onGenerateRoute: (settings) => MaterialPageRoute(
+              builder: (context) => SystemsScreen(onOpenSystem: _openSystem),
+            ),
+          ),
         _ => _Placeholder(tab: _tab),
       },
       bottomNavigationBar: CabinetTabBar(

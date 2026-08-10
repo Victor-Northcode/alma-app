@@ -260,19 +260,36 @@ class AlmaClient {
 
     final text = await streamed.stream.bytesToString();
     if (streamed.statusCode >= 400) {
-      // **Предложение сервера показывается как есть.** Оно приходит на языке
-      // аккаунта из `alma/i18n/replies.py`, и подменять его своим значило бы
-      // говорить с человеком не на его языке в тот единственный момент, когда
-      // ему что-то объясняют.
+      // **Предложение сервера показывается как есть — когда оно для
+      // читателя.** FastAPI кладёт тело отказа в `detail`, и наш сервер шлёт
+      // там объект `{error, message}`. Первый разбор брал `detail` целиком и
+      // печатал словарь фигурными скобками прямо на экране —
+      // «{error: budget_exceeded, message: spent $0.1023…}» — найдено на
+      // живом отказе в браузере.
+      //
+      // Сообщения 4xx приходят из `alma/i18n/replies.py` на языке аккаунта и
+      // показываются дословно. Сообщения 5xx — внутренние английские строки
+      // для оператора («spent $0.1023 against a $0.10 ceiling»), читателю
+      // экран говорит свою переведённую фразу; так же поступает iOS, где
+      // AlmaFailure рисует displayText, а не серверное нутро.
       String message = '';
       String? code;
       try {
         final parsed = jsonDecode(text);
         if (parsed is Map) {
-          message = (parsed['message'] ?? parsed['detail'] ?? '').toString();
-          code = parsed['code'] as String?;
+          final detail = parsed['detail'];
+          if (detail is Map) {
+            message = (detail['message'] ?? '').toString();
+            code = detail['error'] as String?;
+          } else if (detail is String) {
+            message = detail;
+          } else {
+            message = (parsed['message'] ?? '').toString();
+            code = parsed['error'] as String? ?? parsed['code'] as String?;
+          }
         }
       } catch (_) {}
+      if (streamed.statusCode >= 500) message = '';
       throw ServerRefused(status: streamed.statusCode, message: message, code: code);
     }
 

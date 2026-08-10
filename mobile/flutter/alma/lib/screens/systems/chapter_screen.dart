@@ -1,0 +1,377 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../design/metrics.dart';
+import '../../design/palette.dart';
+import '../../design/typography.dart';
+import '../../l10n/alma_l10n.dart';
+import '../../net/alma_client.dart';
+import '../../net/models.dart';
+import '../../state/session.dart';
+
+/// Одна глава, на единственной светлой поверхности продукта.
+///
+/// Порт `mobile/ios/Alma/Screens/Systems/ChapterScreen.swift`. Пергамент
+/// заслужен буквально: лист появляется тогда же, когда глава. Пока Alma пишет,
+/// экран остаётся ночью — читать нечего, значит и документа нет.
+///
+/// **Жест перелистывания — два порога, как на iOS и Android.** На 56 логических
+/// точках дотягивания звучит тик и появляется имя следующей главы, на 130
+/// страница переворачивается. Подтверждение — расстояние, а не таймер: таймер
+/// на живом устройстве вставал ровно на грань схлопывания резинки и срабатывал
+/// четыре раза из пяти, а жест, которому нельзя доверять, хуже неработающего.
+///
+/// Физика прокрутки принудительно упругая ([BouncingScrollPhysics]): дотяжка за
+/// конец существует только у неё, и на iOS пороги мерились против такой же
+/// задемпфированной резинки. Android-порт в своё время сравнивал те же метки с
+/// сырой протяжкой — и то же движение руки листало там и не листало на iOS.
+class ChapterScreen extends StatefulWidget {
+  const ChapterScreen({super.key, required this.system, required this.chapter});
+
+  final SystemSlug system;
+  final String chapter;
+
+  @override
+  State<ChapterScreen> createState() => _ChapterScreenState();
+}
+
+class _ChapterScreenState extends State<ChapterScreen> {
+  static const _nearMark = 56.0;
+  static const _commitMark = 130.0;
+
+  /// Какая глава показывается. Начинается с запрошенной; протяжка за конец
+  /// заменяет её на следующую — **своим состоянием, не навигацией**: на iOS
+  /// переход через стек навигации молча съедал анимацию, потому что стек сам
+  /// владеет показом, и `transition` не спрашивался.
+  late String _showing = widget.chapter;
+
+  Reading? _reading;
+  ChapterList? _list;
+  AlmaError? _failure;
+  bool _loading = true;
+
+  double _pull = 0;
+  bool _armed = false;
+  bool _advancing = false;
+
+  bool _started = false;
+
+  // См. SystemScreen: SessionScope в initState недоступен.
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_started) {
+      _started = true;
+      _load();
+    }
+  }
+
+  Future<void> _load() async {
+    final session = SessionScope.of(context);
+    setState(() {
+      _loading = true;
+      _failure = null;
+      _pull = 0;
+      _armed = false;
+    });
+    try {
+      final list = _list ??
+          await session.client.chapters(widget.system, locale: session.locale);
+      final response = await session.client.reading(
+        system: widget.system,
+        chapter: _showing,
+        locale: session.locale,
+      );
+      if (mounted) {
+        setState(() {
+          _list = list;
+          _reading = response.reading;
+          _advancing = false;
+        });
+      }
+    } on AlmaError catch (error) {
+      if (mounted) setState(() => _failure = error);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  ChapterEntry? get _entry {
+    final list = _list;
+    if (list == null) return null;
+    for (final entry in list.chapters) {
+      if (entry.slug == _showing) return entry;
+    }
+    return null;
+  }
+
+  /// Следующая глава, когда она есть и открыта.
+  ChapterEntry? get _next {
+    final list = _list;
+    final current = _entry;
+    if (list == null || current == null) return null;
+    for (final entry in list.chapters) {
+      if (entry.index == current.index + 1) return entry;
+    }
+    return null;
+  }
+
+  /// [byHand] — палец на стекле, а не инерция.
+  ///
+  /// **Различие, которое ловит тест, и тот же баг, что жил на телефоне.**
+  /// Баллистика упругой прокрутки залетает за край глубже 130 точек, и резкий
+  /// смах переворачивал страницу — «слишком легко перелистывается» слово в
+  /// слово. На iOS это давил сам UIScrollView: его инерционный залёт мал, и
+  /// порога хватало. Во Flutter у уведомления прокрутки есть `dragDetails` —
+  /// прямой ответ, рука это или инерция, — поэтому подтверждение здесь
+  /// буквально то, чем оно всегда было по замыслу: рука, дотянувшая до метки.
+  /// Инерция рисует полосу, но не переворачивает.
+  void _onOverscroll(double distance, {required bool byHand}) {
+    if (_advancing || _next == null || _loading) return;
+    setState(() => _pull = distance);
+    if (!byHand) {
+      if (_armed && distance < _nearMark * 0.7) setState(() => _armed = false);
+      return;
+    }
+    if (distance >= _nearMark && !_armed) {
+      setState(() => _armed = true);
+      HapticFeedback.selectionClick();
+    } else if (distance < _nearMark * 0.7 && _armed) {
+      setState(() => _armed = false);
+    }
+    if (distance >= _commitMark) _advance();
+  }
+
+  void _advance() {
+    final next = _next;
+    if (next == null) return;
+    setState(() {
+      _advancing = true;
+      _showing = next.slug;
+      _reading = null;
+      _pull = 0;
+      _armed = false;
+    });
+    HapticFeedback.mediumImpact();
+    _load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final total = _list?.total ?? widget.system.chapterCount;
+    // Индекс сервера уже с единицы: на первой главе натива стоит «1 / 16».
+    // Прибавление единицы здесь печатало «2 / 16» на главе I — найдено
+    // сравнением с нативным экраном.
+    final index = _entry?.index ?? 1;
+
+    return Scaffold(
+      backgroundColor: AlmaPalette.night,
+      body: Container(
+        decoration: _reading == null
+            ? null
+            : const BoxDecoration(gradient: AlmaGradient.parchment),
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 10, AlmaMetrics.pad, 0),
+                child: Row(children: [
+                  IconButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    icon: Icon(Icons.arrow_back,
+                        color: _reading == null ? AlmaPalette.gold : AlmaPalette.inkMuted),
+                    padding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '$index / $total',
+                    style: AlmaType.numeral.copyWith(
+                      color: _reading == null ? AlmaPalette.gold : AlmaPalette.inkMuted,
+                    ),
+                  ),
+                ]),
+              ),
+              Expanded(
+                // Смена главы — снизу вверх с затуханием, той же кривой turn,
+                // что на iOS: анимация заканчивает движение, начатое пальцем,
+                // и должна выглядеть оседающей страницей, а не новым экраном.
+                child: AnimatedSwitcher(
+                  duration: AlmaMotion.turn,
+                  switchInCurve: AlmaMotion.turnCurve,
+                  switchOutCurve: AlmaMotion.turnCurve.flipped,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween(
+                        begin: const Offset(0, 0.12),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  ),
+                  child: KeyedSubtree(
+                    key: ValueKey(_showing),
+                    child: _page(l),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _page(L l) {
+    if (_loading && _reading == null) {
+      return Center(
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Text(l.stateWriting, style: AlmaType.meta),
+        ]),
+      );
+    }
+    final failure = _failure;
+    if (failure != null && _reading == null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(AlmaMetrics.pad),
+          child: Text(
+            failure is ServerRefused && failure.message.isNotEmpty
+                ? failure.message
+                : l.stateUnavailable,
+            style: AlmaType.meta,
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+    final reading = _reading;
+    if (reading == null) return const SizedBox.shrink();
+
+    final next = _next;
+
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) {
+        final metrics = notification.metrics;
+        if (!metrics.hasContentDimensions || metrics.maxScrollExtent <= 0) {
+          return false;
+        }
+        final past = metrics.pixels - metrics.maxScrollExtent;
+        final byHand = notification is ScrollUpdateNotification &&
+            notification.dragDetails != null;
+        _onOverscroll(past > 0 ? past : 0, byHand: byHand);
+        return false;
+      },
+      child: ListView(
+        physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics()),
+        padding: const EdgeInsets.fromLTRB(
+            AlmaMetrics.pad, 8, AlmaMetrics.pad, AlmaMetrics.gapSection),
+        children: [
+          Text(
+            '${_entry?.numeral ?? ''} · ${_systemName(l)}'.toLowerCase(),
+            style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep),
+          ),
+          const SizedBox(height: 10),
+          Text(reading.title,
+              style: AlmaType.displayL.copyWith(color: AlmaPalette.ink)),
+          if (reading.citedFactors.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Text(l.cabReadFrom.toUpperCase(),
+                style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final factor in reading.citedFactors)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                          color: AlmaPalette.goldDeep.withValues(alpha: 0.35)),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(factor,
+                        style: AlmaType.numeral
+                            .copyWith(color: AlmaPalette.goldDeep)),
+                  ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 18),
+          Container(
+            height: 1,
+            color: AlmaPalette.ink.withValues(alpha: 0.12),
+          ),
+          const SizedBox(height: 8),
+          for (final paragraph in reading.body)
+            Padding(
+              padding: const EdgeInsets.only(top: 14),
+              child: Text(paragraph,
+                  style: AlmaType.body.copyWith(
+                      color: AlmaPalette.ink, fontSize: 17, height: 1.6)),
+            ),
+          if (reading.advice != null) ...[
+            const SizedBox(height: 26),
+            Container(
+              padding: const EdgeInsets.only(left: 16),
+              decoration: const BoxDecoration(
+                border: Border(
+                    left: BorderSide(color: AlmaPalette.goldDeep, width: 2)),
+              ),
+              child: Text(
+                reading.advice!,
+                style: AlmaType.voice.copyWith(color: AlmaPalette.ink),
+              ),
+            ),
+          ],
+          const SizedBox(height: 34),
+          // Хвост: следующая глава и полоса подтверждения. Полоса наливается
+          // от 56 до 130 — сколько ещё тянуть, видно, а не угадывается.
+          if (next != null) _tail(l, next),
+        ],
+      ),
+    );
+  }
+
+  String _systemName(L l) => switch (widget.system) {
+        SystemSlug.natal => l.cabSystemNatal,
+        SystemSlug.numerology => l.cabSystemNumerology,
+        SystemSlug.birthCard => l.cabSystemBirthCard,
+        SystemSlug.transits => l.cabSystemTransits,
+        SystemSlug.solarReturn => l.cabSystemSolarReturn,
+        SystemSlug.compatibility => l.cabSystemCompatibility,
+        SystemSlug.astrocartography => l.cabSystemAstrocartography,
+        SystemSlug.synthesis => l.cabSystemSynthesis,
+      };
+
+  Widget _tail(L l, ChapterEntry next) {
+    final progress = (_pull / _commitMark).clamp(0.0, 1.0);
+    return Column(children: [
+      SizedBox(
+        width: 64,
+        child: Stack(children: [
+          Container(height: 2, color: AlmaPalette.ink.withValues(alpha: 0.15)),
+          FractionallySizedBox(
+            widthFactor: progress,
+            child: Container(height: 2, color: AlmaPalette.goldDeep),
+          ),
+        ]),
+      ),
+      const SizedBox(height: 12),
+      Text('↓', style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted2)),
+      const SizedBox(height: 6),
+      Text(next.title,
+          style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
+      const SizedBox(height: 4),
+      Text(l.cabPullToTurn,
+          style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted2)),
+      const SizedBox(height: 40),
+    ]);
+  }
+}
