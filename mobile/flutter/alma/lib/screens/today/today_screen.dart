@@ -73,9 +73,9 @@ class _TodayScreenState extends State<TodayScreen> {
               padding: const EdgeInsets.only(bottom: AlmaMetrics.gapLarge),
               child: Row(children: [
                 const Text('☽',
-                    style: TextStyle(fontSize: 19, color: AlmaPalette.goldBright)),
+                    style: TextStyle(fontSize: 17, color: AlmaPalette.goldBright)),
                 const SizedBox(width: 8),
-                Text(line, style: AlmaType.meta),
+                Text(line, style: AlmaType.meta.copyWith(fontSize: 12.5)),
               ]),
             ),
           _DaySection(model: model),
@@ -327,7 +327,10 @@ class _MoonPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final centre = Offset(size.width / 2, size.height / 2);
-    final radius = size.width * 0.36;
+    // Диск заметно меньше кольца — воздух между ними и есть «печать»; при
+    // 0.36 диск почти касался кольца, и медальон читался как кнопка. Сверено
+    // с нативным кадром бок о бок на одном симуляторе.
+    final radius = size.width * 0.30;
 
     // Кольцо вокруг — золотая волосяная линия.
     canvas.drawCircle(
@@ -363,7 +366,9 @@ class _MoonPainter extends CustomPainter {
       canvas.drawCircle(
         centre.translate(dx, 0),
         radius,
-        Paint()..color = AlmaPalette.night700.withValues(alpha: 0.92),
+        // Ночная сторона почти непрозрачна: серп при 7% должен быть нитью,
+        // а не широким бликом — как на нативном медальоне.
+        Paint()..color = AlmaPalette.night850.withValues(alpha: 0.97),
       );
       canvas.restore();
     }

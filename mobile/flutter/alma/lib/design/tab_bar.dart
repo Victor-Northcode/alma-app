@@ -108,21 +108,20 @@ class _TabButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              width: 24,
-              height: 24,
+              width: 22,
+              height: 22,
               child: CustomPaint(painter: _TabGlyph(tab: tab, active: active)),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
+            // Подпись тише, чем казалось по коду: на нативном баре она 10
+            // пунктов обычного веса, и активная не жирнеет — её выделяет
+            // золото. Сверено бок о бок; крупная жирная подпись делала бар
+            // тяжелее всего экрана.
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 11,
-                letterSpacing: 0.2,
-                color: colour,
-                fontWeight: active ? FontWeight.w500 : FontWeight.w400,
-              ),
+              style: TextStyle(fontSize: 10, letterSpacing: 0.2, color: colour),
             ),
           ],
         ),
