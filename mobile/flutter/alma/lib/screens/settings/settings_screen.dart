@@ -304,8 +304,20 @@ class _Row extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
       ),
-      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        Expanded(
+      // **Почему spaceBetween и разный вес.** У Expanded и Flexible по
+      // умолчанию один и тот же flex, и Row делит свободное место поровну:
+      // значение оказывалось заперто в своей половине, не доходило до правого
+      // края, а «11:26 · Europe/Moscow» переносилось на две строки, хотя на
+      // нативе стоит одной. Натив пишет HStack { подпись; Spacer; значение } —
+      // подпись слева, значение прижато вправо, и обоим достаётся столько,
+      // сколько нужно. spaceBetween делает то же самое, а вес 4/6 отдаёт
+      // значению больше, потому что подписи здесь короче.
+      child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+        Flexible(
+          flex: 4,
           child: Text(
             label,
             style: checked || onTap != null && value.isEmpty
@@ -316,6 +328,7 @@ class _Row extends StatelessWidget {
         const SizedBox(width: 16),
         if (value.isNotEmpty)
           Flexible(
+            flex: 6,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [

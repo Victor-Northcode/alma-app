@@ -280,19 +280,14 @@ class _AlmaScreenState extends State<AlmaScreen> {
               ),
             ]),
             const SizedBox(height: 10),
-            Text(turn.body, style: AlmaType.voice.copyWith(fontSize: 19)),
+            Text(turn.body, style: AlmaType.voice),
             if (turn.citedFactors.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              // Цитата под ответом — обещание продукта. На Android её не
-              // было вовсе, и это стояло в списке расхождений отдельной
-              // строкой; здесь она структурная часть ленты.
-              Wrap(spacing: 8, runSpacing: 4, children: [
-                Text('${l.cabReadFrom} ', style: AlmaType.meta),
-                for (final factor in turn.citedFactors.take(4))
-                  Text(factor,
-                      style:
-                          AlmaType.numeral.copyWith(color: AlmaPalette.gold)),
-              ]),
+              const SizedBox(height: 12),
+              // Цитата под ответом — обещание продукта, и она **одна строка**:
+              // подпись, первая позиция засечным золотом, «+N» о том, сколько
+              // ещё, и знак раскрытия справа. Первый порт вываливал все
+              // факторы переносом на три строки — цитата весила больше ответа.
+              _Citation(factors: turn.citedFactors),
             ],
           ]),
         );
@@ -301,19 +296,26 @@ class _AlmaScreenState extends State<AlmaScreen> {
   }
 
   Widget _composer(L l) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 8, AlmaMetrics.pad, 10),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 12, AlmaMetrics.pad, 10),
+      // Волосяная линия отделяет композер от ленты, как на нативе: без неё
+      // поле ввода висит в тексте, а не стоит на своей полке.
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: AlmaPalette.hairline)),
+      ),
       child: Row(children: [
         Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
+            height: 52,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              border: Border.all(color: AlmaPalette.hairlineGold),
-              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: AlmaPalette.hairline),
+              borderRadius: BorderRadius.circular(26),
             ),
             child: TextField(
               controller: _draft,
-              style: AlmaType.body,
+              style: AlmaType.body.copyWith(fontSize: 16),
               decoration: InputDecoration(
                 hintText: l.scrChatPlaceholder,
                 hintStyle: AlmaType.meta,
@@ -325,25 +327,88 @@ class _AlmaScreenState extends State<AlmaScreen> {
           ),
         ),
         const SizedBox(width: 10),
+        // Круг обведённый, а не залитый золотом: на нативе отправка — тихая
+        // кнопка рядом с полем, а золотая заливка принадлежит дверям покупки.
         InkResponse(
           onTap: () => _send(_draft.text),
           child: Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: AlmaGradient.goldButton,
+              border: Border.all(color: AlmaPalette.hairline),
             ),
-            child: const Center(
+            child: Center(
               child: Text('→',
                   style: TextStyle(
-                      color: AlmaPalette.inkOnGold,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600)),
+                      color: AlmaPalette.body.withValues(alpha: 0.85),
+                      fontSize: 19)),
             ),
           ),
         ),
       ]),
     );
+  }
+}
+
+/// Цитата под ответом: подпись, первая позиция и сколько ещё.
+///
+/// Раскрывается нажатием на «+» — тогда показываются все позиции, из которых
+/// прочитан ответ. Свёрнутая по умолчанию, потому что ответ читают, а цитату
+/// проверяют: она обязана быть на виду и не обязана занимать треть экрана.
+/// Первый порт вываливал все факторы переносом на три строки, и цитата весила
+/// больше самого ответа — найдено сравнением с нативным кадром.
+class _Citation extends StatefulWidget {
+  const _Citation({required this.factors});
+
+  final List<String> factors;
+
+  @override
+  State<_Citation> createState() => _CitationState();
+}
+
+class _CitationState extends State<_Citation> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final rest = widget.factors.length - 1;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Text(l.cabReadFrom.toUpperCase(), style: AlmaType.overline),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            widget.factors.first,
+            style: AlmaType.numeral.copyWith(color: AlmaPalette.gold),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (rest > 0 && !_open) ...[
+          const SizedBox(width: 8),
+          Text('+$rest',
+              style: AlmaType.numeral.copyWith(color: AlmaPalette.goldDeep)),
+        ],
+        const Spacer(),
+        if (rest > 0)
+          InkResponse(
+            onTap: () => setState(() => _open = !_open),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Text(_open ? '−' : '+',
+                  style: AlmaType.numeral
+                      .copyWith(color: AlmaPalette.gold, fontSize: 17)),
+            ),
+          ),
+      ]),
+      if (_open)
+        for (final factor in widget.factors.skip(1))
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(factor,
+                style: AlmaType.numeral.copyWith(color: AlmaPalette.gold)),
+          ),
+    ]);
   }
 }
