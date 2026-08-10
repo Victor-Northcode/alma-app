@@ -4,39 +4,65 @@ import 'design/metrics.dart';
 import 'design/palette.dart';
 import 'design/sky/night_sky.dart';
 import 'design/tab_bar.dart';
+import 'design/typography.dart';
 import 'l10n/alma_l10n.dart';
+import 'net/alma_client.dart';
+import 'screens/today/today_screen.dart';
+import 'state/session.dart';
 
-void main() => runApp(const AlmaApp());
+void main() => runApp(AlmaApp(
+      client: AlmaClient(
+        // База берётся из окружения сборки, как ALMA_API_BASE на нативных
+        // сборках; по умолчанию — локальный сервер разработки. Захардкоженного
+        // боевого адреса здесь нет и не будет: api.pazl.ai однажды уже уехал в
+        // прошивку несуществующим.
+        baseUrl: Uri.parse(const String.fromEnvironment(
+          'ALMA_API_BASE',
+          defaultValue: 'http://127.0.0.1:8018',
+        )),
+      ),
+    ));
 
-/// Корень.
-///
-/// Порт `mobile/ios/Alma/AlmaApp.swift` и `Navigation/RootView.swift`. Пока
-/// здесь только оболочка: небо, бар и четыре пустых места под экраны. Экраны
-/// приезжают следующими, по одному, в том порядке, в каком их встречает
-/// человек.
-class AlmaApp extends StatelessWidget {
-  const AlmaApp({super.key});
+/// Корень. Порт `AlmaApp.swift` + `RootView.swift`.
+class AlmaApp extends StatefulWidget {
+  const AlmaApp({super.key, required this.client});
+
+  final AlmaClient client;
+
+  @override
+  State<AlmaApp> createState() => _AlmaAppState();
+}
+
+class _AlmaAppState extends State<AlmaApp> {
+  late final AlmaSession _session = AlmaSession(widget.client);
+
+  @override
+  void initState() {
+    super.initState();
+    _session.start();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Alma',
-      debugShowCheckedModeBanner: false,
-      localizationsDelegates: L.localizationsDelegates,
-      supportedLocales: L.supportedLocales,
-      theme: ThemeData(
-        useMaterial3: true,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: AlmaPalette.night,
-        // Продукт целиком на ночи. Единственная светлая поверхность — лист
-        // главы — рисуется сама, а не темой.
-        colorScheme: const ColorScheme.dark(
-          surface: AlmaPalette.night,
-          primary: AlmaPalette.gold,
-          onPrimary: AlmaPalette.inkOnGold,
+    return SessionScope(
+      session: _session,
+      child: MaterialApp(
+        title: 'Alma',
+        debugShowCheckedModeBanner: false,
+        localizationsDelegates: L.localizationsDelegates,
+        supportedLocales: L.supportedLocales,
+        theme: ThemeData(
+          useMaterial3: true,
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: AlmaPalette.night,
+          colorScheme: const ColorScheme.dark(
+            surface: AlmaPalette.night,
+            primary: AlmaPalette.gold,
+            onPrimary: AlmaPalette.inkOnGold,
+          ),
         ),
+        home: const CabinetShell(),
       ),
-      home: const CabinetShell(),
     );
   }
 }
@@ -57,13 +83,10 @@ class _CabinetShellState extends State<CabinetShell> {
     return Scaffold(
       backgroundColor: AlmaPalette.night,
       extendBody: true,
-      body: NightSky(
-        mood: SkyMood.cabinet,
-        // Своё зерно у каждой вкладки, чтобы переход между ними был видимым
-        // переходом, а не теми же звёздами дважды.
-        seed: 0x414C4D41 + _tab.index * 7919,
-        child: SafeArea(bottom: false, child: _Placeholder(tab: _tab)),
-      ),
+      body: switch (_tab) {
+        CabinetTab.today => const TodayScreen(),
+        _ => _Placeholder(tab: _tab),
+      },
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
         onSelect: (tab) => setState(() => _tab = tab),
@@ -72,12 +95,8 @@ class _CabinetShellState extends State<CabinetShell> {
   }
 }
 
-/// Временное место экрана.
-///
-/// Живёт ровно до того коммита, в котором приезжает настоящий экран, и не
-/// разрастается: это заглушка каркаса, а не «пока сойдёт». На Android такой
-/// файл однажды пережил все экраны и остался в дереве мёртвым грузом —
-/// повторять не будем.
+/// Временное место экрана. Живёт ровно до коммита, в котором приезжает
+/// настоящий экран, и не разрастается.
 class _Placeholder extends StatelessWidget {
   const _Placeholder({required this.tab});
 
@@ -86,22 +105,21 @@ class _Placeholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: AlmaMetrics.gapLarge),
-          Text(
-            tab.title(l),
-            style: const TextStyle(
-              fontSize: 34,
-              height: 1.1,
-              color: AlmaPalette.inkLight,
-              fontWeight: FontWeight.w400,
-            ),
+    return NightSky(
+      mood: SkyMood.cabinet,
+      seed: 0x414C4D41 + tab.index * 7919,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: AlmaMetrics.gapLarge),
+              Text(tab.title(l), style: AlmaType.displayXl),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

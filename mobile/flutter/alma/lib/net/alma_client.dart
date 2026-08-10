@@ -146,19 +146,30 @@ class AlmaClient {
 
   Future<List<Place>> searchPlaces(String query) async {
     final body = await _get('/v1/places?q=${Uri.encodeQueryComponent(query)}');
-    return (body['places'] as List? ?? const [])
+    return _list(body, 'places')
         .map((e) => Place.fromJson((e as Map).cast<String, dynamic>()))
         .toList();
   }
 
   /* ── профили ─────────────────────────────────────────────────────────── */
 
+  /// **Сервер отдаёт голый список, не обёртку.** `GET /v1/profiles` отвечает
+  /// `[{…}, …]`, и iOS декодирует его прямо в `[Profile]`. Первый порт читал
+  /// `body['profiles']`, которого не существует, — и «Сегодня» молча решал,
+  /// что рождения нет: имя на экране было, а гороскопа не было. Найдено в
+  /// браузере на живом сервере; тест, который должен был это поймать, сам
+  /// выдумал форму с обёрткой — теперь его транспорт отвечает как сервер.
   Future<List<Profile>> profiles() async {
     final body = await _get('/v1/profiles');
-    return (body['profiles'] as List? ?? const [])
+    return _list(body, 'profiles')
         .map((e) => Profile.fromJson((e as Map).cast<String, dynamic>()))
         .toList();
   }
+
+  /// Список из ответа, какой бы формой он ни пришёл: голым (`_send` кладёт его
+  /// под 'value') или под собственным именем.
+  static List<dynamic> _list(Map<String, dynamic> body, String key) =>
+      (body['value'] as List?) ?? (body[key] as List?) ?? const [];
 
   Future<Profile> saveProfile(BirthInput birth, {bool isSelf = true, String? relation}) async {
     final body = await _post('/v1/profiles', {
