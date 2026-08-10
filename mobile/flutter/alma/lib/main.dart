@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
-import 'design/metrics.dart';
 import 'design/palette.dart';
-import 'design/sky/night_sky.dart';
 import 'design/tab_bar.dart';
-import 'design/typography.dart';
 import 'l10n/alma_l10n.dart';
 import 'net/alma_client.dart';
 import 'net/models.dart';
 import 'screens/alma/alma_screen.dart';
+import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
@@ -112,41 +110,11 @@ class _CabinetShellState extends State<CabinetShell> {
             ),
           ),
         CabinetTab.alma => const AlmaScreen(),
-        _ => _Placeholder(tab: _tab),
+        CabinetTab.settings => const SettingsScreen(),
       },
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
         onSelect: (tab) => setState(() => _tab = tab),
-      ),
-    );
-  }
-}
-
-/// Временное место экрана. Живёт ровно до коммита, в котором приезжает
-/// настоящий экран, и не разрастается.
-class _Placeholder extends StatelessWidget {
-  const _Placeholder({required this.tab});
-
-  final CabinetTab tab;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    return NightSky(
-      mood: SkyMood.cabinet,
-      seed: 0x414C4D41 + tab.index * 7919,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: AlmaMetrics.gapLarge),
-              Text(tab.title(l), style: AlmaType.displayXl),
-            ],
-          ),
-        ),
       ),
     );
   }
