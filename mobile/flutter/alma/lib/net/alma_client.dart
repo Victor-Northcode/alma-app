@@ -145,7 +145,10 @@ class AlmaClient {
   /* ── места ───────────────────────────────────────────────────────────── */
 
   Future<List<Place>> searchPlaces(String query) async {
-    final body = await _get('/v1/places?q=${Uri.encodeQueryComponent(query)}');
+    // /v1/places/search, как в AlmaClient.swift — третий выдуманный путь,
+    // пойманный живым сервером (после хаба и формы профилей).
+    final body =
+        await _get('/v1/places/search?q=${Uri.encodeQueryComponent(query)}&limit=8');
     return _list(body, 'places')
         .map((e) => Place.fromJson((e as Map).cast<String, dynamic>()))
         .toList();

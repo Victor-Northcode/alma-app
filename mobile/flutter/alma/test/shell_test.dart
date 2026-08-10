@@ -40,21 +40,15 @@ AlmaClient fakeClient() {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
-  testWidgets('оболочка строится и рисует все четыре вкладки', (tester) async {
+  testWidgets('гостя без рождения встречает путешествие, не пустой кабинет',
+      (tester) async {
     await tester.pumpWidget(AlmaApp(client: fakeClient()));
-    await tester.pump(const Duration(milliseconds: 50));
-
-    expect(find.text('Today'), findsWidgets);
-    expect(find.text('My systems'), findsWidgets);
-    expect(find.text('Alma'), findsWidgets);
-    expect(find.text('Settings'), findsWidgets);
-  });
-
-  testWidgets('переключение вкладки меняет заголовок', (tester) async {
-    await tester.pumpWidget(AlmaApp(client: fakeClient()));
-    await tester.pump(const Duration(milliseconds: 50));
-    await tester.tap(find.text('Settings').last);
-    await tester.pump(const Duration(milliseconds: 50));
-    expect(find.text('Settings'), findsWidgets);
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+    // Первый шаг путешествия — вопрос имени — и обещание, что ничего не
+    // сохраняется. Кабинет без рождения не рисуется вовсе.
+    expect(find.text('What should I call you?'), findsOneWidget);
+    expect(find.text('Today'), findsNothing);
   });
 }

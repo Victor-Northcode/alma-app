@@ -6,6 +6,7 @@ import 'l10n/alma_l10n.dart';
 import 'net/alma_client.dart';
 import 'net/models.dart';
 import 'screens/alma/alma_screen.dart';
+import 'screens/journey/journey_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
@@ -96,6 +97,13 @@ class _CabinetShellState extends State<CabinetShell> {
 
   @override
   Widget build(BuildContext context) {
+    final session = SessionScope.of(context);
+    // Без рождения кабинету нечего считать: новый человек попадает в
+    // путешествие, как на iOS его встречает полноэкранная обложка. Пока
+    // сессия не готова — ночь без всего, а не мигающий каркас.
+    if (session.ready && !session.hasBirthData) {
+      return JourneyScreen(onDone: () => setState(() {}));
+    }
     return Scaffold(
       backgroundColor: AlmaPalette.night,
       extendBody: true,

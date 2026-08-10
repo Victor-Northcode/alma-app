@@ -105,8 +105,10 @@ void main() {
       await tester.pump(const Duration(milliseconds: 60));
     }
 
-    // Имя владельца вместо «Today» — как на iOS.
+    // Имя владельца вместо «Today» — как на iOS. Профиль есть, значит
+    // вкладки на месте, а путешествие не показано.
     expect(find.text('Анатолий'), findsOneWidget);
+    expect(find.text('What should I call you?'), findsNothing);
 
     // Письмо дня.
     expect(find.textContaining('Нептун'), findsOneWidget);
