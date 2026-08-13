@@ -57,6 +57,40 @@ class _SystemScreenState extends State<SystemScreen> {
     }
   }
 
+
+  /// Карта отношений для колеса.
+  ///
+  /// Дэвисон несёт свои углы верхним уровнем, а колесо ждёт их под `angles`.
+  /// Без обоих времён рождения Дэвисона нет, и остаётся `composite` — голые
+  /// средние долготы, которым здесь выдаётся та же глифовая нотация, что
+  /// движок печатает везде: это правописание, а не выдумывание.
+  Map<String, dynamic>? _relationshipChart(Map<String, dynamic> data) {
+    final davison = data['davison'];
+    if (davison is Map && davison['placements'] is Map) {
+      return {
+        'placements': davison['placements'],
+        'angles': {
+          if (davison['ascendant'] != null) 'ascendant': davison['ascendant'],
+          if (davison['midheaven'] != null) 'midheaven': davison['midheaven'],
+        },
+      };
+    }
+    final composite = data['composite'];
+    if (composite is! Map) return null;
+    const glyphs = {
+      'sun': '☉', 'moon': '☽', 'mercury': '☿', 'venus': '♀', 'mars': '♂',
+      'jupiter': '♃', 'saturn': '♄', 'uranus': '♅', 'neptune': '♆',
+      'pluto': '♇', 'true_node': '☊', 'lilith': '⚸', 'chiron': '⚷',
+    };
+    final placements = <String, dynamic>{};
+    composite.forEach((name, value) {
+      final glyph = glyphs[name];
+      if (glyph == null || value is! num) return;
+      placements[name as String] = {'longitude': value.toDouble(), 'glyph': glyph};
+    });
+    return placements.isEmpty ? null : {'placements': placements};
+  }
+
   /// Сколько человеку лет сегодня — для засечки на кольце нумерологии.
   /// Неизвестен, пока профиль не пришёл: тогда засечки просто нет.
   int? _age(BuildContext context) {
@@ -156,6 +190,11 @@ class _SystemScreenState extends State<SystemScreen> {
               // а не внутри карты: словаря имён в каталоге ещё нет.
               SystemSlug.birthCard => BirthCardArt(data: payload),
               SystemSlug.synthesis => SynthesisStar(data: payload),
+              // Совместимость — это тоже карта: небо самих отношений.
+              SystemSlug.compatibility => switch (_relationshipChart(payload)) {
+                  final chart? => NatalWheel(data: chart),
+                  _ => const SizedBox.shrink(),
+                },
               _ => const SizedBox.shrink(),
             },
           ),
