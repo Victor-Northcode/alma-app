@@ -81,9 +81,36 @@ class CabinetShell extends StatefulWidget {
   State<CabinetShell> createState() => _CabinetShellState();
 }
 
-class _CabinetShellState extends State<CabinetShell> {
+class _CabinetShellState extends State<CabinetShell>
+    with SingleTickerProviderStateMixin {
   CabinetTab _tab = CabinetTab.today;
   final _systemsNav = GlobalKey<NavigatorState>();
+
+  /// Переход между вкладками. Мгновенная подмена читается как рывок, а на
+  /// нативе вкладки меняются движением: новая приходит с той стороны, куда
+  /// вёл палец, и проявляется. Держим стек живым — двигается только слой.
+  late final AnimationController _swap = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+    value: 1,
+  );
+
+  /// Куда ехать новой странице: −1 слева, +1 справа.
+  double _from = 1;
+
+  @override
+  void dispose() {
+    _swap.dispose();
+    super.dispose();
+  }
+
+  void _goTo(CabinetTab tab) {
+    if (tab == _tab) return;
+    _from = tab.index > _tab.index ? 1 : -1;
+    readingNow.value = false;
+    setState(() => _tab = tab);
+    _swap.forward(from: 0);
+  }
 
   void _openSystem(SystemSlug slug) {
     _systemsNav.currentState?.push(CupertinoPageRoute(
@@ -144,10 +171,21 @@ class _CabinetShellState extends State<CabinetShell> {
           if (v.abs() < 220) return;
           final next = v < 0 ? _tab.index + 1 : _tab.index - 1;
           if (next < 0 || next >= CabinetTab.values.length) return;
-          readingNow.value = false;
-          setState(() => _tab = CabinetTab.values[next]);
+          _goTo(CabinetTab.values[next]);
         },
-        child: IndexedStack(
+        child: AnimatedBuilder(
+          animation: _swap,
+          builder: (context, child) {
+            final t = Curves.easeOutCubic.transform(_swap.value);
+            return Opacity(
+              opacity: t,
+              child: Transform.translate(
+                offset: Offset(_from * 42 * (1 - t), 0),
+                child: child,
+              ),
+            );
+          },
+          child: IndexedStack(
         index: _tab.index,
         children: [
           const TodayScreen(),
@@ -166,16 +204,12 @@ class _CabinetShellState extends State<CabinetShell> {
           const SettingsScreen(),
         ],
         ),
+        ),
       ),
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
-        onSelect: (tab) {
-          // Уходя с вкладки систем, признак чтения снимается: экран главы
-          // остаётся живым в своём стеке и `dispose` не зовётся, поэтому бар
-          // оставался пергаментным поверх ночных экранов.
-          readingNow.value = false;
-          setState(() => _tab = tab);
-        },
+        // Нажатие идёт тем же путём, что смах: одно движение на оба способа.
+        onSelect: _goTo,
       ),
     );
   }
