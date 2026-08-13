@@ -9,6 +9,7 @@ import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 import 'natal_wheel.dart';
+import 'transit_ring.dart';
 
 /// Одна система: её оглавление, дверь и бесплатные расчёты.
 ///
@@ -104,6 +105,12 @@ class _SystemScreenState extends State<SystemScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 6, bottom: 10),
             child: NatalWheel(data: chart),
+          )
+        else if (widget.system == SystemSlug.transits && _result != null)
+          // Год кольцом — первая из пяти диаграмм, которых порту не хватало.
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 10),
+            child: TransitYearRing(data: _result!.data),
           ),
         if (_computeFailure case final error?)
           Padding(
