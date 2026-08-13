@@ -2007,4 +2007,7 @@ class LRu extends L {
 
   @override
   String get scrSignInTitle => 'Вход';
+
+  @override
+  String get cabCompatNeedsSecond => 'Совместимости нужен второй человек.';
 }

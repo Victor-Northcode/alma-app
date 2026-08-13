@@ -2012,4 +2012,8 @@ class LPt extends L {
 
   @override
   String get scrSignInTitle => 'Entrar';
+
+  @override
+  String get cabCompatNeedsSecond =>
+      'A compatibilidade precisa de uma segunda pessoa.';
 }

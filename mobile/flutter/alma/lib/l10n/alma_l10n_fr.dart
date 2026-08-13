@@ -2021,4 +2021,8 @@ class LFr extends L {
 
   @override
   String get scrSignInTitle => 'Se connecter';
+
+  @override
+  String get cabCompatNeedsSecond =>
+      'La compatibilité demande une deuxième personne.';
 }

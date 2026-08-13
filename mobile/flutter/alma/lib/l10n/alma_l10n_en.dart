@@ -2006,4 +2006,7 @@ class LEn extends L {
 
   @override
   String get scrSignInTitle => 'Sign in';
+
+  @override
+  String get cabCompatNeedsSecond => 'Compatibility needs a second person.';
 }

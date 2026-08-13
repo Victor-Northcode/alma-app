@@ -2015,4 +2015,8 @@ class LIt extends L {
 
   @override
   String get scrSignInTitle => 'Accedi';
+
+  @override
+  String get cabCompatNeedsSecond =>
+      'La compatibilità ha bisogno di una seconda persona.';
 }

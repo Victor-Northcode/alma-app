@@ -599,5 +599,6 @@
   "scrSignInReason3": "Il n'y a pas de mot de passe. Il n'y en aura jamais.",
   "scrSignInSendLink": "Envoie-moi un lien",
   "scrSignInSending": "Envoi…",
-  "scrSignInTitle": "Se connecter"
+  "scrSignInTitle": "Se connecter",
+  "cabCompatNeedsSecond": "La compatibilité demande une deuxième personne."
 }

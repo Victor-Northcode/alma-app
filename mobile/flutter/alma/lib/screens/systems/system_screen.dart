@@ -36,6 +36,9 @@ class _SystemScreenState extends State<SystemScreen> {
   /// второго человека, соляр без времени рождения. Он объясняет, почему нет
   /// рисунка, и не отменяет глав.
   AlmaError? _computeFailure;
+
+  /// Совместимость без второго человека — состояние, а не ошибка.
+  bool _needsPartner = false;
   bool _loading = true;
 
   bool _started = false;
@@ -88,8 +91,24 @@ class _SystemScreenState extends State<SystemScreen> {
         .chapters(widget.system, locale: session.locale)
         .then<Object?>((value) => value)
         .catchError((Object error) => error);
-    final computed = session.client
-        .compute(widget.system)
+    // **Совместимость считается против второго человека.**
+    //
+    // Сервер отвечает «compatibility needs a second person — send `other` or
+    // `other_profile_id`», и порт эту строку показывал как есть: экран просил
+    // какой-то id. Партнёр берётся из профилей аккаунта; когда его нет,
+    // запрос не отправляется вовсе — просить нечего.
+    final partner = widget.system == SystemSlug.compatibility
+        ? session.people.firstOrNull
+        : null;
+    final needsPartner =
+        widget.system == SystemSlug.compatibility && partner == null;
+    final computed = needsPartner
+        ? Future<Object?>.value(null)
+        : session.client
+            .compute(
+              widget.system,
+              body: partner == null ? const {} : {'other_profile_id': partner.id},
+            )
         .then<Object?>((value) => value)
         .catchError((Object error) => error);
     final both = await Future.wait([chapters, computed]);
@@ -103,6 +122,7 @@ class _SystemScreenState extends State<SystemScreen> {
           ? failures.first
           : null;
       _computeFailure = both[1] is AlmaError ? both[1] as AlmaError : null;
+      _needsPartner = needsPartner;
       _loading = false;
     });
   }
@@ -138,7 +158,13 @@ class _SystemScreenState extends State<SystemScreen> {
               _ => const SizedBox.shrink(),
             },
           ),
-        if (_computeFailure case final error?)
+        if (_needsPartner)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 6),
+            child: Text(L.of(context).cabCompatNeedsSecond,
+                style: AlmaType.meta),
+          )
+        else if (_computeFailure case final error?)
           Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 6),
             child: Text(

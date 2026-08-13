@@ -599,5 +599,6 @@
   "scrSignInReason3": "Пароля нет. И не будет.",
   "scrSignInSendLink": "Отправить мне ссылку",
   "scrSignInSending": "Отправляю…",
-  "scrSignInTitle": "Вход"
+  "scrSignInTitle": "Вход",
+  "cabCompatNeedsSecond": "Совместимости нужен второй человек."
 }

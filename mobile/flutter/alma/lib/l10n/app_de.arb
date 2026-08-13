@@ -599,5 +599,6 @@
   "scrSignInReason3": "Es gibt kein Passwort. Und wird nie eines geben.",
   "scrSignInSendLink": "Schick mir einen Link",
   "scrSignInSending": "Wird gesendet…",
-  "scrSignInTitle": "Anmelden"
+  "scrSignInTitle": "Anmelden",
+  "cabCompatNeedsSecond": "Für die Verbindung fehlt eine zweite Person."
 }

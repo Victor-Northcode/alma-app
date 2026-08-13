@@ -2009,4 +2009,8 @@ class LEs extends L {
 
   @override
   String get scrSignInTitle => 'Iniciar sesión';
+
+  @override
+  String get cabCompatNeedsSecond =>
+      'La compatibilidad necesita a otra persona.';
 }

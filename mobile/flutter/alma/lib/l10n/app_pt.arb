@@ -599,5 +599,6 @@
   "scrSignInReason3": "Não há senha. Nunca haverá.",
   "scrSignInSendLink": "Me envie um link",
   "scrSignInSending": "Enviando…",
-  "scrSignInTitle": "Entrar"
+  "scrSignInTitle": "Entrar",
+  "cabCompatNeedsSecond": "A compatibilidade precisa de uma segunda pessoa."
 }

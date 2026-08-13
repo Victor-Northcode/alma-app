@@ -3706,6 +3706,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Sign in'**
   String get scrSignInTitle;
+
+  /// No description provided for @cabCompatNeedsSecond.
+  ///
+  /// In en, this message translates to:
+  /// **'Compatibility needs a second person.'**
+  String get cabCompatNeedsSecond;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

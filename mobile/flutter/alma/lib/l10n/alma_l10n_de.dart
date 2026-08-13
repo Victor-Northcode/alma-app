@@ -2020,4 +2020,8 @@ class LDe extends L {
 
   @override
   String get scrSignInTitle => 'Anmelden';
+
+  @override
+  String get cabCompatNeedsSecond =>
+      'Für die Verbindung fehlt eine zweite Person.';
 }
