@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -47,6 +49,11 @@ class _ChapterScreenState extends State<ChapterScreen> {
   late String _showing = widget.chapter;
 
   Reading? _reading;
+
+  /// Глава пришла как **превью**: сервер написал её по-настоящему, но она
+  /// платная, и читателю положен только вкус. Порт этот флаг не читал вовсе —
+  /// платные главы показывались целиком и бесплатно.
+  bool _preview = false;
   ChapterList? _list;
   AlmaError? _failure;
   bool _loading = true;
@@ -108,6 +115,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
         setState(() {
           _list = list;
           _reading = response.reading;
+          _preview = response.preview ?? false;
           _advancing = false;
         });
       }
@@ -304,6 +312,11 @@ class _ChapterScreenState extends State<ChapterScreen> {
       );
     }
     final failure = _failure;
+    // **Стена говорит по-человечески.** Сервер отвечает «natal has not been
+    // unlocked yet» — это для разработчика; читателю нужна причина и путь.
+    if (failure is ServerRefused && failure.code == 'locked' && _reading == null) {
+      return _LockedWall(system: widget.system);
+    }
     if (failure != null && _reading == null) {
       return Center(
         child: Padding(
@@ -367,13 +380,34 @@ class _ChapterScreenState extends State<ChapterScreen> {
             color: AlmaPalette.ink.withValues(alpha: 0.12),
           ),
           const SizedBox(height: 8),
-          for (final paragraph in reading.body)
+          // **Превью: первый абзац читается, остальное под дымкой.**
+          //
+          // Глава написана целиком и настоящая — сервер её действительно
+          // сочинил из этой карты, — но она платная. Показывать всё значит
+          // отдавать товар даром; показывать заглушку значит не показывать
+          // ничего. Первый абзац открыт, дальше размытие и дверь.
+          for (final (i, paragraph) in reading.body.indexed)
             Padding(
               padding: const EdgeInsets.only(top: 14),
-              child: Text(paragraph,
-                  style: AlmaType.body.copyWith(
-                      color: AlmaPalette.ink, fontSize: 17, height: 1.6)),
+              child: _preview && i > 0
+                  ? ImageFiltered(
+                      imageFilter: ImageFilter.blur(sigmaX: 5.5, sigmaY: 5.5),
+                      child: Text(paragraph,
+                          style: AlmaType.body.copyWith(
+                              color: AlmaPalette.ink, fontSize: 17, height: 1.6)),
+                    )
+                  : Text(paragraph,
+                      style: AlmaType.body.copyWith(
+                          color: AlmaPalette.ink, fontSize: 17, height: 1.6)),
             ),
+          if (_preview) ...[
+            const SizedBox(height: 22),
+            Text(l.cabLockedNote,
+                textAlign: TextAlign.center,
+                style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
+            const SizedBox(height: 14),
+            Center(child: _GoldButton(label: l.cabUnlock, onTap: () {})),
+          ],
           if (reading.advice != null) ...[
             const SizedBox(height: 26),
             Container(
@@ -483,4 +517,70 @@ class _CitedLineState extends State<_CitedLine> {
       ]),
     );
   }
+}
+
+
+/// Стена: система не открыта. Причина словами и путь дальше.
+///
+/// Прежде здесь стояла служебная строка сервера — «natal has not been unlocked
+/// yet», по-английски и про внутренние понятия. Читателю нужно другое: что
+/// именно закрыто, почему это стоит открыть и одна кнопка.
+class _LockedWall extends StatelessWidget {
+  const _LockedWall({required this.system});
+
+  final SystemSlug system;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const WritingArt(size: 200),
+            const SizedBox(height: 28),
+            Text(l.cabLocked,
+                textAlign: TextAlign.center,
+                style: AlmaType.displayL.copyWith(fontSize: 24)),
+            const SizedBox(height: 12),
+            Text(l.cabLockedNote,
+                textAlign: TextAlign.center, style: AlmaType.meta),
+            const SizedBox(height: 24),
+            _GoldButton(label: l.cabUnlock, onTap: () {}),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Золотая дверь. Пока она никуда не ведёт: покупок в порте ещё нет, и
+/// рисовать её действующей значило бы врать. Кнопка стоит там, где ей быть,
+/// и ждёт `StoreKit`.
+class _GoldButton extends StatelessWidget {
+  const _GoldButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(28),
+        child: Container(
+          height: 54,
+          padding: const EdgeInsets.symmetric(horizontal: 34),
+          decoration: BoxDecoration(
+            color: AlmaPalette.gold,
+            borderRadius: BorderRadius.circular(28),
+          ),
+          child: Center(
+            widthFactor: 1,
+            child: Text(label,
+                style: AlmaType.button.copyWith(color: AlmaPalette.inkOnGold)),
+          ),
+        ),
+      );
 }
