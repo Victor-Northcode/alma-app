@@ -1593,3 +1593,49 @@ async def test_a_chat_turn_truncated_every_time_still_reaches_the_operator(natal
             provider=provider, model="claude-haiku-4-5",
         )
     assert len(provider.calls) == conversation.MAX_ATTEMPTS
+
+
+# ── the Latin gate, and the allowance that had swallowed it ────────────────
+
+
+def test_an_english_astro_term_in_russian_prose_is_caught() -> None:
+    """The gate exists for exactly this sentence, and it used to pass.
+
+    Every factor the engine emits is English — `transiting saturn ☌ natal
+    midheaven · orb 5.49°` — and the allowance used to license every word
+    appearing in one. That licensed the whole vocabulary the gate was written
+    to catch: the day text, generated live on 13 August 2026, opened «Сейчас
+    транзитный Сатурн стоит на твоём Midheaven» and no complaint was raised.
+    """
+    factors = (
+        "transiting saturn ☌ natal midheaven · orb 5.49°",
+        "transiting chiron retrograde ☌ natal mercury · orb 0.61°",
+    )
+    assert validator.russian_latin_leak(
+        "Транзитный Сатурн стоит на твоём Midheaven — верхней точке карты.", factors
+    ) == ["Midheaven"]
+    assert validator.russian_latin_leak(
+        "Твой natal Уран сейчас в orb, и это retrograde.", factors
+    ) == ["natal", "orb", "retrograde"]
+
+
+def test_the_romanised_name_is_still_allowed() -> None:
+    """The case the allowance was added for, and the reason it stays.
+
+    A Cyrillic name is counted from a romanised spelling, and the chapter is
+    required to name that spelling or the reader cannot check the sum. The
+    engine upper-cases it, which is what separates it from every lower-case
+    term above without a dictionary of either language.
+    """
+    factors = ("name counted as ANATOLIY MIKHAYLOV",)
+    assert validator.russian_latin_leak(
+        "Имя ANATOLIY MIKHAYLOV складывается в девятку.", factors
+    ) == []
+    # However the model happens to case it back.
+    assert validator.russian_latin_leak(
+        "Имя Anatoliy Mikhaylov складывается в девятку.", factors
+    ) == []
+
+
+def test_the_products_own_name_is_always_allowed() -> None:
+    assert validator.russian_latin_leak("Alma читает твою карту.", ()) == []

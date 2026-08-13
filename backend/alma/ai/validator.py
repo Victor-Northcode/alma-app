@@ -523,13 +523,26 @@ def russian_latin_leak(text: str, factors: tuple[str, ...] | list[str] = ()) -> 
     exists to encourage. Caught the day the two rules met: the numerology name
     chapter was refused for citing the letters it was told to cite.
 
-    Only whole Latin runs that appear inside a factor are allowed, so a real
-    leak — "natal", "square" — is still caught unless the engine itself said it.
+    **The allowance is the romanised name and nothing else.** It used to be
+    every Latin word appearing anywhere in the factor list, and that emptied the
+    gate on exactly the chapters it was written for: an astrological factor
+    reads `transiting saturn ☌ natal midheaven · orb 5.49°`, so *transiting*,
+    *saturn*, *natal*, *midheaven* and *orb* were all licensed, and a Russian
+    chapter opening «транзитный Сатурн стоит на твоём Midheaven» passed
+    without a complaint — seen on this machine on 13 August 2026, in the day
+    text, which is the one paragraph every reader sees.
+
+    The romanised name is distinguishable without a dictionary: `romanise`
+    upper-cases it, so it arrives as ANATOLIY MIKHAYLOV while every engine term
+    is lower-case. Matching only the upper-case runs keeps the numerology
+    chapter able to cite the spelling its arithmetic used — the case that
+    created this allowance — and lets go of the licence it accidentally granted
+    to the whole English astronomical vocabulary.
     """
     import re
     allowed = {"alma"}
     for factor in factors:
-        allowed.update(w.lower() for w in re.findall(r"[A-Za-z]{2,}", factor))
+        allowed.update(w.lower() for w in re.findall(r"\b[A-Z]{2,}\b", factor))
     roman = re.compile(r"^[IVXLCDM]+$")
     words = re.findall(r"[A-Za-z]{2,}", text)
     return sorted({

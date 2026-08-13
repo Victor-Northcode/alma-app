@@ -66,12 +66,20 @@ produced `REGIONAL_CENTS` therefore survives the move intact.
 | `archive` | Non-consumable | `ai.pazl.alma.archive` | `ai.pazl.alma.archive` | yes |
 | `archive-upgrade` | Non-consumable | `ai.pazl.alma.archive_upgrade` | `ai.pazl.alma.archive_upgrade` | no — after-door |
 | `archive-bump` | **none** | **do not create** | **do not create** | no — see §6 |
+| `weekly` | Auto-renewable, 1 week | `ai.pazl.alma.weekly` | `ai.pazl.alma.live`, base plan `weekly` | yes |
 | `monthly` | Auto-renewable, 1 month | `ai.pazl.alma.monthly` | `ai.pazl.alma.live`, base plan `monthly` | yes |
 | `annual` | Auto-renewable, 1 year | `ai.pazl.alma.annual` | `ai.pazl.alma.live`, base plan `annual` | yes |
 
-**Twelve products on Apple** — ten non-consumables and two auto-renewable subscriptions.
-**Eleven on Play** — the same ten one-time products, and one subscription carrying two base
+**Thirteen products on Apple** — ten non-consumables and three auto-renewable subscriptions.
+**Eleven on Play** — the same ten one-time products, and one subscription carrying three base
 plans. Apple's product-page ceiling is 20 items across both sections, so we are not near it.
+
+The weekly rung was added to the catalogue after this document was first written and spent a
+day missing from it — in `LadderKey`, in `catalogue.py` and in `StoreProducts.kt`, absent
+here and in `Alma.storekit`. A row missing from this table is a product nobody creates, and
+a subscription the binary asks for and the console does not have renders the paywall one row
+short with no error anywhere. `backend/tests/test_store_ids.py` now fails when the five
+places disagree, which is the only reason to trust this table.
 
 ### Why non-consumable and not consumable
 

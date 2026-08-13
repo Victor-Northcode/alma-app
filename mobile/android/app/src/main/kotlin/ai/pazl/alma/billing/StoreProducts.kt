@@ -88,9 +88,19 @@ object StoreProducts {
      */
     val NEVER_ALONE: Set<String> = setOf(ARCHIVE_BUMP)
 
-    /** Every key `backend/alma/billing/catalogue.py` knows. */
+    /**
+     * Every key `backend/alma/billing/catalogue.py` knows.
+     *
+     * `WEEKLY` was added to the catalogue and to [SUBSCRIPTIONS] and missed
+     * here, which is not cosmetic: [slugFor] answers null for anything outside
+     * this set, so a bought weekly subscription would have been read as
+     * somebody else's product, left unacknowledged, and refunded by Google
+     * three days later. `backend/tests/test_store_ids.py` now fails when this
+     * set and the catalogue disagree.
+     */
     val ALL: Set<String> =
-        AlmaSystem.ALL.toSet() + setOf(ARCHIVE, ARCHIVE_BUMP, ARCHIVE_UPGRADE, MONTHLY, ANNUAL)
+        AlmaSystem.ALL.toSet() +
+            setOf(ARCHIVE, ARCHIVE_BUMP, ARCHIVE_UPGRADE, WEEKLY, MONTHLY, ANNUAL)
 
     /* ── the id rule, both ways ────────────────────────────────────────── */
 

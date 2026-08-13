@@ -21,6 +21,7 @@ from dataclasses import dataclass
 
 from .. import i18n
 from ..calc import CalcResult
+from ..i18n import placements
 from . import chapters as chapter_defs
 from . import cost, geometry, validator, voice
 from .provider import AnswerTruncated, Completion, ModelUnavailable, Provider
@@ -290,6 +291,35 @@ def build_prompt(
     lines += ["", "FACTORS THIS CHAPTER IS READ FROM — cite these:"]
     lines += [f"- {factor}" for factor in offered] or ["- (none)"]
 
+    # **The factor list is English, and the chapter is not.**
+    #
+    # Every identifier the engine emits is English by contract, and the prose
+    # rule above says to write the planets and signs in the reader's language —
+    # but a rule is not a dictionary. `midheaven` has no obvious Russian form to
+    # guess at, and the model did what anybody would: «транзитный Сатурн стоит
+    # на твоём Midheaven», in the day text, which is the one paragraph every
+    # reader sees. Answering that with a rejection costs a whole generation and
+    # the account has budget for two.
+    #
+    # So the spellings ride in the first prompt, the same argument the Russian
+    # gender rules above are here for. Only the points this chapter actually
+    # cites are listed — fifteen rows would be noise on a chapter that names
+    # three — and `PLACEMENTS` is the table the notifications and both client
+    # apps already agree on, so there is no second vocabulary to keep in step.
+    if i18n.resolve(locale) != "en":
+        spellings = [
+            f"- {key.replace('_', ' ')} → {placements.placement(key, locale)}"
+            for key in placements.PLACEMENTS
+            if any(key in factor for factor in offered)
+        ]
+        if spellings:
+            lines += [
+                "",
+                "HOW TO SPELL THESE POINTS IN THE READER'S LANGUAGE — "
+                "use these words, never the English ones:",
+                *spellings,
+            ]
+
     other = [f for f in result.factors if f not in offered]
     if other:
         lines += [
@@ -382,10 +412,47 @@ async def write(
     # `cost.guard`'s estimate: $0.0659 for a free chapter on the mid model
     # against a $0.10 Cyrillic-scaled ceiling, and $0.1098 for a paid one on the
     # strong model against $1.00. Both fit.
+    #
+    # **The headroom is for thinking, and thinking does not get shorter when
+    # the chapter does.** The term after the multiplication was 600 and 900 —
+    # sized as slack around the prose — and that made the shortest chapter the
+    # one most likely to fail. `transits/active` is 150 words by the owner's
+    # own instruction («слишком длинно»), which bought it 2250 tokens; it is
+    # also the densest chart in the product, forty-six live influences to weigh
+    # before choosing the two worth a morning note. Measured on this machine on
+    # 13 August 2026: 28 of the 34 refusals this product has ever logged were
+    # this one chapter, thinking past 2250, past 3375 and once past 5062 with
+    # nothing written. The reader met that as «твой день» simply never arriving.
+    #
+    # Reasoning cost tracks the *chart*, not the word count, so it belongs in a
+    # term that does not scale with words. 1800 for Cyrillic puts this chapter
+    # at 3150 and a 320-word one at 4680 — $0.059 and $0.082 against the
+    # $0.10 Cyrillic-scaled free ceiling, so both still fit and both still leave
+    # room for `afford` to raise on a truncation.
+    #
+    # **The Latin term stays at 600, and that is arithmetic rather than
+    # neglect.** Latin gets no scale multiplier, so its ceiling is the bare
+    # $0.05, and a paid chapter is written by the strong model at five times
+    # the output price: 320 words at 1200 headroom projects $0.064 on
+    # `claude-opus-5` and `cost.guard` refuses the call outright. Every refusal
+    # this product has logged was Cyrillic, so this raises the term where the
+    # failures are and leaves the one that has never failed alone.
+    #
+    # **And a floor under the short ones.** With the headroom alone, the first
+    # attempt at this chapter stopped being "nothing was written" and became
+    # "the answer was cut off" — the model now reasons and starts writing, and
+    # runs out mid-prose at 3150. The retry at 4095 succeeded, measured live on
+    # 13 August 2026, so the floor is set just above where the successful
+    # attempt landed. It binds only on chapters short enough that words × 9
+    # cannot pay for the deliberation the chart demands; a 320-word chapter
+    # computes 4680 on its own and is untouched. 4100 projects $0.074 against
+    # the $0.10 Cyrillic ceiling, which still leaves `afford` a raise to make.
     latin = i18n.resolve(locale) in ("en", "es", "de", "it", "fr", "pt-BR")
     per_word = 3 if latin else 9
     script_scale = 1.0 if latin else 2.0
-    max_tokens = min(8192, chapter.words[1] * per_word + (600 if latin else 900))
+    max_tokens = min(8192, chapter.words[1] * per_word + (600 if latin else 1800))
+    if not latin:
+        max_tokens = max(max_tokens, 4100)
     least_paragraphs = chapter.paragraphs[0]
     schema = schema_for(chapter)
 
