@@ -7,6 +7,7 @@ import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
+import 'writing_art.dart';
 import '../../state/session.dart';
 
 /// Одна глава, на единственной светлой поверхности продукта.
@@ -235,8 +236,27 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   Widget _page(L l) {
     if (_loading && _reading == null) {
+      // Ожидание — это экран, а не строка. На нативе здесь надпись о том,
+      // откуда берётся текст, и рисунок, собирающий себя всё время письма
+      // (`WritingArt.swift`); в порте стояла одна серая строка посреди ночи,
+      // и минута ожидания читалась как зависшее приложение.
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
+            child: Text(
+              l.cabFromYourPositions,
+              textAlign: TextAlign.center,
+              style: AlmaType.displayL.copyWith(
+                fontSize: 26,
+                fontStyle: FontStyle.italic,
+                color: AlmaPalette.inkLight,
+              ),
+            ),
+          ),
+          const SizedBox(height: 36),
+          const WritingArt(),
+          const SizedBox(height: 24),
           Text(l.stateWriting, style: AlmaType.meta),
         ]),
       );
