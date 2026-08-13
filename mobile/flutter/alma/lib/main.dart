@@ -81,35 +81,27 @@ class CabinetShell extends StatefulWidget {
   State<CabinetShell> createState() => _CabinetShellState();
 }
 
-class _CabinetShellState extends State<CabinetShell>
-    with SingleTickerProviderStateMixin {
+class _CabinetShellState extends State<CabinetShell> {
   CabinetTab _tab = CabinetTab.today;
   final _systemsNav = GlobalKey<NavigatorState>();
 
   /// Переход между вкладками. Мгновенная подмена читается как рывок, а на
   /// нативе вкладки меняются движением: новая приходит с той стороны, куда
   /// вёл палец, и проявляется. Держим стек живым — двигается только слой.
-  late final AnimationController _swap = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 260),
-    value: 1,
-  );
-
-  /// Куда ехать новой странице: −1 слева, +1 справа.
-  double _from = 1;
+  late final PageController _pages = PageController(initialPage: _tab.index);
 
   @override
   void dispose() {
-    _swap.dispose();
+    _pages.dispose();
     super.dispose();
   }
 
+  /// Нажатие на бар — то же движение, что смах: страница доезжает сама.
   void _goTo(CabinetTab tab) {
     if (tab == _tab) return;
-    _from = tab.index > _tab.index ? 1 : -1;
     readingNow.value = false;
-    setState(() => _tab = tab);
-    _swap.forward(from: 0);
+    _pages.animateToPage(tab.index,
+        duration: const Duration(milliseconds: 320), curve: Curves.easeOutCubic);
   }
 
   void _openSystem(SystemSlug slug) {
@@ -158,53 +150,28 @@ class _CabinetShellState extends State<CabinetShell>
       // симуляторе. На нативе все четыре стека живут всю жизнь приложения —
       // это записано там же, в комментарии к перезагрузке «Сегодня» по смене
       // профиля. IndexedStack держит их так же.
-      // **Между вкладками листают пальцем, как между папками в мессенджере.**
+      // **Страница едет за пальцем.**
       //
-      // Не `PageView`: он держит живыми только соседние страницы, а здесь все
-      // четыре обязаны жить всю жизнь приложения — беседа не должна стираться
-      // при уходе на «Сегодня». Поэтому стек остаётся, а смах ловится поверх
-      // него: горизонтальный бросок меняет вкладку, вертикальные прокрутки
-      // внутри экранов его не задевают.
-      body: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          final v = details.primaryVelocity ?? 0;
-          if (v.abs() < 220) return;
-          final next = v < 0 ? _tab.index + 1 : _tab.index - 1;
-          if (next < 0 || next >= CabinetTab.values.length) return;
-          _goTo(CabinetTab.values[next]);
+      // Смах менял вкладку скачком, и это читалось как перелистывание кадра, а
+      // не как движение. `PageView` ведёт страницу вместе с пальцем и сам
+      // доводит её до края, когда его отпускают, — отсюда и плавность, и то,
+      // что промахнуться мимо соседней вкладки нельзя.
+      //
+      // Каждая вкладка обёрнута в `_Alive`: `PageView` держит живыми только
+      // соседние страницы, а здесь все четыре обязаны жить всю жизнь
+      // приложения — иначе беседа стирается при уходе на «Сегодня».
+      body: PageView(
+        controller: _pages,
+        onPageChanged: (index) {
+          readingNow.value = false;
+          setState(() => _tab = CabinetTab.values[index]);
         },
-        child: AnimatedBuilder(
-          animation: _swap,
-          builder: (context, child) {
-            final t = Curves.easeOutCubic.transform(_swap.value);
-            return Opacity(
-              opacity: t,
-              child: Transform.translate(
-                offset: Offset(_from * 42 * (1 - t), 0),
-                child: child,
-              ),
-            );
-          },
-          child: IndexedStack(
-        index: _tab.index,
-        children: [
-          const TodayScreen(),
-          // Свой навигатор у вкладки, чтобы бар оставался на месте под
-          // открытыми экранами — как на iOS, где стек живёт внутри вкладки.
-          Navigator(
-            key: _systemsNav,
-            // **Свайп назад от края.** `CupertinoPageRoute` несёт его сам —
-            // тот самый жест, которым на нативе выходят из главы обратно к
-            // системе; `MaterialPageRoute` на iOS его не даёт.
-            onGenerateRoute: (settings) => CupertinoPageRoute(
-              builder: (context) => SystemsScreen(onOpenSystem: _openSystem),
-            ),
-          ),
-          const AlmaScreen(),
-          const SettingsScreen(),
+        children: const [
+          _Alive(child: TodayScreen()),
+          _Alive(child: _SystemsTab()),
+          _Alive(child: AlmaScreen()),
+          _Alive(child: SettingsScreen()),
         ],
-        ),
-        ),
       ),
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
@@ -278,5 +245,44 @@ class _RetryButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+
+/// Вкладка «Мои системы» со своим стеком: бар остаётся на месте под открытыми
+/// экранами, как на нативе.
+class _SystemsTab extends StatelessWidget {
+  const _SystemsTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final shell = context.findAncestorStateOfType<_CabinetShellState>()!;
+    return Navigator(
+      key: shell._systemsNav,
+      onGenerateRoute: (settings) => CupertinoPageRoute(
+        builder: (context) => SystemsScreen(onOpenSystem: shell._openSystem),
+      ),
+    );
+  }
+}
+
+/// Страница, которую `PageView` не выбрасывает, уехав от неё.
+class _Alive extends StatefulWidget {
+  const _Alive({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_Alive> createState() => _AliveState();
+}
+
+class _AliveState extends State<_Alive> with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

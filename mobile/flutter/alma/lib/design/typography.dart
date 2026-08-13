@@ -84,11 +84,15 @@ class AlmaType {
   );
 
   /// Голос Alma. Курсив ставит вызывающая сторона.
+  /// Голос Alma. 21 читался как заголовок: ответ на пол-экрана выходил
+  /// плакатом, а это проза — «не очень красиво выглядит, текст очень крупный».
+  /// 18.5 с чуть большим интерлиньяжем оставляют курсив узнаваемым и дают
+  /// строке нормальную длину.
   static const voice = TextStyle(
     fontFamily: _display,
     fontFamilyFallback: _displayFallback,
-    fontSize: 21,
-    height: 1.42,
+    fontSize: 18.5,
+    height: 1.5,
     fontStyle: FontStyle.italic,
     color: AlmaPalette.inkLight,
   );

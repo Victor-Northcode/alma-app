@@ -221,7 +221,11 @@ class _AlmaScreenState extends State<AlmaScreen> {
                   // 58 + 16: высота бара и воздух над ним. Числа сняты
                   // измерением — на 58 композер уходил под бар, на 92
                   // (плюс безопасная зона) висел над ним полосой пустой ночи.
-                  : AlmaMetrics.tabBarHeight + 16),
+                  // Бар опустился до 52 точек, а под ним ещё домашний
+                  // индикатор: без него композер налезал на подписи вкладок.
+                  : AlmaMetrics.tabBarHeight +
+                      MediaQuery.paddingOf(context).bottom * 0.5 +
+                      16),
           child: Column(children: [
             Expanded(
               child: _turns.isEmpty
