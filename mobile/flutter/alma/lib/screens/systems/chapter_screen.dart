@@ -59,6 +59,14 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   // См. SystemScreen: SessionScope в initState недоступен.
   @override
+  void dispose() {
+    // Признак снимается вместе с экраном: бар возвращается к ночному, даже
+    // если ушли жестом назад, а не кнопкой.
+    readingNow.value = false;
+    super.dispose();
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (!_started) {
@@ -92,6 +100,8 @@ class _ChapterScreenState extends State<ChapterScreen> {
         locale: session.locale,
       );
       if (mounted) {
+        // Пергамент появляется вместе с текстом — и бар вместе с ним.
+        readingNow.value = true;
         setState(() {
           _list = list;
           _reading = response.reading;

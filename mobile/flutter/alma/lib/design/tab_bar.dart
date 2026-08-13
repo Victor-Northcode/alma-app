@@ -42,15 +42,27 @@ class CabinetTabBar extends StatelessWidget {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final hairline = 1 / MediaQuery.devicePixelRatioOf(context);
 
+    return ValueListenableBuilder<bool>(
+      valueListenable: readingNow,
+      builder: (context, reading, _) => _bar(context, l, bottomInset, hairline, reading),
+    );
+  }
+
+  Widget _bar(BuildContext context, L l, double bottomInset, double hairline,
+      bool reading) {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: AlmaPalette.night850.withValues(alpha: 0.94),
+            // На пергаменте бар пергаментный: иначе внизу светлой страницы
+            // висит синяя полоса без перехода.
+            color: reading
+                ? AlmaPalette.parchmentB.withValues(alpha: 0.94)
+                : AlmaPalette.night850.withValues(alpha: 0.94),
             border: Border(
               top: BorderSide(
-                color: AlmaPalette.gold.withValues(alpha: 0.14),
+                color: AlmaPalette.gold.withValues(alpha: reading ? 0.30 : 0.14),
                 width: hairline,
               ),
             ),
@@ -95,7 +107,12 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colour = active ? AlmaPalette.gold : AlmaPalette.muted3;
+    // На пергаменте золото читается, а бледно-серые подписи тонут: неактивные
+    // становятся чернилами страницы.
+    final reading = readingNow.value;
+    final colour = active
+        ? (reading ? AlmaPalette.goldDeep : AlmaPalette.gold)
+        : (reading ? AlmaPalette.inkMuted : AlmaPalette.muted3);
     return Semantics(
       selected: active,
       button: true,
@@ -145,7 +162,10 @@ class _TabGlyph extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final colour = active ? AlmaPalette.gold : AlmaPalette.body.withValues(alpha: 0.5);
+    final reading = readingNow.value;
+    final colour = active
+        ? (reading ? AlmaPalette.goldDeep : AlmaPalette.gold)
+        : (reading ? AlmaPalette.inkMuted : AlmaPalette.body.withValues(alpha: 0.5));
     final stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.25
