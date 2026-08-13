@@ -9,6 +9,7 @@ import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 import 'natal_wheel.dart';
+import 'system_art.dart';
 import 'transit_ring.dart';
 
 /// Одна система: её оглавление, дверь и бесплатные расчёты.
@@ -50,6 +51,21 @@ class _SystemScreenState extends State<SystemScreen> {
       _started = true;
       _load();
     }
+  }
+
+  /// Сколько человеку лет сегодня — для засечки на кольце нумерологии.
+  /// Неизвестен, пока профиль не пришёл: тогда засечки просто нет.
+  int? _age(BuildContext context) {
+    final born = DateTime.tryParse(
+        SessionScope.of(context).profile?.birthDate ?? '');
+    if (born == null) return null;
+    final now = DateTime.now();
+    var years = now.year - born.year;
+    if (now.month < born.month ||
+        (now.month == born.month && now.day < born.day)) {
+      years -= 1;
+    }
+    return years;
   }
 
   Future<void> _load() async {
@@ -106,11 +122,21 @@ class _SystemScreenState extends State<SystemScreen> {
             padding: const EdgeInsets.only(top: 6, bottom: 10),
             child: NatalWheel(data: chart),
           )
-        else if (widget.system == SystemSlug.transits && _result != null)
-          // Год кольцом — первая из пяти диаграмм, которых порту не хватало.
+        else if (_result?.data case final payload?)
+          // По диаграмме на систему: каждая читает свой payload и рисует
+          // только то, что в нём есть.
           Padding(
             padding: const EdgeInsets.only(top: 6, bottom: 10),
-            child: TransitYearRing(data: _result!.data),
+            child: switch (widget.system) {
+              SystemSlug.transits => TransitYearRing(data: payload),
+              SystemSlug.numerology => NumerologyRing(data: payload, age: _age(context)),
+              SystemSlug.astrocartography => LinesMapArt(data: payload),
+              // Имя аркана порт пока печатает строкой под рисунком экрана,
+              // а не внутри карты: словаря имён в каталоге ещё нет.
+              SystemSlug.birthCard => BirthCardArt(data: payload),
+              SystemSlug.synthesis => SynthesisStar(data: payload),
+              _ => const SizedBox.shrink(),
+            },
           ),
         if (_computeFailure case final error?)
           Padding(
