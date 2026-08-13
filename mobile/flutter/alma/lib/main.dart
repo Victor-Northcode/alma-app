@@ -148,7 +148,13 @@ class _CabinetShellState extends State<CabinetShell> {
       ),
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
-        onSelect: (tab) => setState(() => _tab = tab),
+        onSelect: (tab) {
+          // Уходя с вкладки систем, признак чтения снимается: экран главы
+          // остаётся живым в своём стеке и `dispose` не зовётся, поэтому бар
+          // оставался пергаментным поверх ночных экранов.
+          readingNow.value = false;
+          setState(() => _tab = tab);
+        },
       ),
     );
   }

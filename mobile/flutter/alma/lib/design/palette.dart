@@ -47,8 +47,10 @@ class AlmaPalette {
 
   // ── пергамент: единственная светлая поверхность ─────────────────────────
   static const parchment = Color(0xFFF1E9D6);
-  static const parchmentA = Color(0xFFF6EEDB);
-  static const parchmentB = Color(0xFFE8DBBE);
+  // Приглушён на шаг: «не все хотят читать на белом ярком экране». Это всё
+  // ещё бумага, а не серый лист — тон уходит в тёплую тень, не в цвет.
+  static const parchmentA = Color(0xFFEDE3CC);
+  static const parchmentB = Color(0xFFDFD0AF);
   static const ink = Color(0xFF1C1A17);
 
   // ── согласие и спор между системами ─────────────────────────────────────

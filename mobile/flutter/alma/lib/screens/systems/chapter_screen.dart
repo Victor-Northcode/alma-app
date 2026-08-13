@@ -53,6 +53,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   double _pull = 0;
   bool _armed = false;
+
+  /// Второй порог взят и ждёт, когда палец отпустят.
+  bool _committed = false;
   bool _advancing = false;
 
   bool _started = false;
@@ -149,6 +152,17 @@ class _ChapterScreenState extends State<ChapterScreen> {
     if (_advancing || _next == null || _loading) return;
     setState(() => _pull = distance);
     if (!byHand) {
+      // **Палец ушёл — вот тогда и переворачиваем.**
+      //
+      // Переворот срабатывал в момент пересечения порога, прямо под рукой:
+      // страница уходила посреди движения, и это читалось как «всё сразу
+      // пролистывается, если резко листнуть». Упор в том и состоит, что
+      // глава держится, пока держат её, а меняется на отпускании.
+      if (_committed) {
+        _committed = false;
+        _advance();
+        return;
+      }
       if (_armed && distance < _nearMark * 0.7) setState(() => _armed = false);
       return;
     }
@@ -156,9 +170,17 @@ class _ChapterScreenState extends State<ChapterScreen> {
       setState(() => _armed = true);
       HapticFeedback.selectionClick();
     } else if (distance < _nearMark * 0.7 && _armed) {
-      setState(() => _armed = false);
+      setState(() {
+        _armed = false;
+        _committed = false;
+      });
     }
-    if (distance >= _commitMark) _advance();
+    // Второй порог взят — тик тяжелее первого, чтобы рука почувствовала упор,
+    // и дальше ждём отпускания.
+    if (distance >= _commitMark && !_committed) {
+      _committed = true;
+      HapticFeedback.mediumImpact();
+    }
   }
 
   void _advance() {
@@ -170,13 +192,22 @@ class _ChapterScreenState extends State<ChapterScreen> {
       _reading = null;
       _pull = 0;
       _armed = false;
+      _committed = false;
     });
-    HapticFeedback.mediumImpact();
+    HapticFeedback.heavyImpact();
     _load();
   }
 
   @override
   Widget build(BuildContext context) {
+    // Возврат на вкладку не проходит через загрузку, поэтому признак
+    // восстанавливается здесь: пергамент на экране — бар пергаментный.
+    final onParchment = _reading != null;
+    if (readingNow.value != onParchment) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) readingNow.value = onParchment;
+      });
+    }
     final l = L.of(context);
     final total = _list?.total ?? widget.system.chapterCount;
     // Индекс сервера уже с единицы: на первой главе натива стоит «1 / 16».
