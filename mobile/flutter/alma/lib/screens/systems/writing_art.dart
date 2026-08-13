@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../design/palette.dart';
-import '../../design/self_drawing.dart';
+import '../../design/self_drawing.dart' show phase;
 
 /// Что человек видит те сорок-девяносто секунд, пока глава пишется.
 ///
@@ -26,14 +26,7 @@ class WritingArt extends StatelessWidget {
     return SizedBox(
       width: size,
       height: size,
-      child: SelfDrawing(
-        // Дольше вступления диаграмм: это ожидание, а не приход экрана.
-        intro: const Duration(seconds: 6),
-        builder: (context, progress) => CustomPaint(
-          painter: _WritingPainter(progress),
-          size: Size.square(size),
-        ),
-      ),
+      child: _Forever(size: size),
     );
   }
 }
@@ -116,4 +109,43 @@ class _WritingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _WritingPainter old) => old.progress != progress;
+}
+
+
+/// **Рисунок идёт, пока идёт письмо.**
+///
+/// `SelfDrawing` проигрывает вступление один раз и застывает — так устроены
+/// диаграммы, и для них это правильно: осевшая картина стоит столько же,
+/// сколько статичная. Здесь наоборот: минута неподвижности читается как
+/// зависшее приложение, а человек должен видеть, что главу действительно
+/// пишут. Цикл повторяется, и каждый круг начинается с чистого неба.
+class _Forever extends StatefulWidget {
+  const _Forever({required this.size});
+
+  final double size;
+
+  @override
+  State<_Forever> createState() => _ForeverState();
+}
+
+class _ForeverState extends State<_Forever> with SingleTickerProviderStateMixin {
+  late final AnimationController _clock = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 7),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _clock.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+        animation: _clock,
+        builder: (context, _) => CustomPaint(
+          painter: _WritingPainter(Curves.easeInOutCubic.transform(_clock.value)),
+          size: Size.square(widget.size),
+        ),
+      );
 }
