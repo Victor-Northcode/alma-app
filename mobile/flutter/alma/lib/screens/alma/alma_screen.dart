@@ -39,13 +39,60 @@ class _AlmaScreenState extends State<AlmaScreen> {
   String? _threadId;
   bool _sending = false;
   bool _openersLoaded = false;
+  bool _threadLoaded = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // **Вкладка живёт с самого запуска, а сессия к тому моменту ещё грузится.**
+    //
+    // `IndexedStack` создаёт все четыре экрана сразу, поэтому первый вызов
+    // приходит с пустым профилем: беседы у такого «человека» нет по
+    // определению, и загрузка молча не делалась. `SessionScope` — это
+    // `InheritedNotifier`, он позовёт сюда снова, когда данные придут, и вот
+    // тогда есть чему грузиться. Свой флаг, потому что вступительные вопросы
+    // и беседа готовы в разные моменты.
+    final session = SessionScope.of(context);
     if (!_openersLoaded) {
       _openersLoaded = true;
       _loadOpeners();
+    }
+    if (!_threadLoaded && session.hasBirthData) {
+      _threadLoaded = true;
+      _loadLastThread();
+    }
+  }
+
+  /// **Последняя беседа поднимается с сервера, а не начинается заново.**
+  ///
+  /// Реплики хранятся на сервере — `/v1/chat/threads` их отдаёт, и натив
+  /// открывает вкладку на том, что человек уже спросил. Порт эти эндпоинты не
+  /// звал вовсе: после перезапуска приложения вкладка Alma каждый раз
+  /// встречала вступлением, будто разговора не было, а ответы, за которые
+  /// заплачено, оставались лежать на сервере невидимыми. Сверено кадрами:
+  /// натив показывал переписку, порт — «Спроси меня о чём угодно».
+  Future<void> _loadLastThread() async {
+    final session = SessionScope.of(context);
+    if (!session.hasBirthData) return;
+    try {
+      final threads = await session.client.threads();
+      if (threads.isEmpty) return;
+      final turns = await session.client.thread(threads.first.id);
+      if (!mounted || turns.isEmpty) return;
+      setState(() {
+        _threadId = threads.first.id;
+        _turns
+          ..clear()
+          ..addAll(turns.map((t) => _Turn(
+                mine: t.mine,
+                body: t.body,
+                citedFactors: t.citedFactors,
+              )));
+      });
+      _scrollDown();
+    } on AlmaError {
+      // Молча: беседа — не то, ради чего экран обязан ругаться. Вступление
+      // остаётся на месте, вопрос можно задать заново.
     }
   }
 
@@ -378,10 +425,18 @@ class _CitationState extends State<_Citation> {
       Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
         Text(l.cabReadFrom.toUpperCase(), style: AlmaType.overline),
         const SizedBox(width: 12),
-        Flexible(
+        // **Позиция получает место, а не остаток от него.** `Flexible` рядом
+        // со `Spacer` уступал: распорка забирала всю свободную ширину, и
+        // «ascendant 12°03′ ♌» — строка, которая помещается целиком, —
+        // печаталась как «ascendant …». На нативе цитата читается полностью;
+        // она и есть обещание продукта, что ответ прочитан из карты.
+        Expanded(
           child: Text(
             widget.factors.first,
-            style: AlmaType.numeral.copyWith(color: AlmaPalette.gold),
+            style: AlmaType.numeral.copyWith(
+              color: AlmaPalette.gold,
+              fontFamilyFallback: AlmaType.glyphFallback,
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -390,7 +445,6 @@ class _CitationState extends State<_Citation> {
           Text('+$rest',
               style: AlmaType.numeral.copyWith(color: AlmaPalette.goldDeep)),
         ],
-        const Spacer(),
         if (rest > 0)
           InkResponse(
             onTap: () => setState(() => _open = !_open),
@@ -407,7 +461,10 @@ class _CitationState extends State<_Citation> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(factor,
-                style: AlmaType.numeral.copyWith(color: AlmaPalette.gold)),
+                style: AlmaType.numeral.copyWith(
+                  color: AlmaPalette.gold,
+                  fontFamilyFallback: AlmaType.glyphFallback,
+                )),
           ),
     ]);
   }

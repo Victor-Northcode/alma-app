@@ -252,6 +252,26 @@ class AlmaClient {
         timeout: writingTimeout,
       ));
 
+  /// Беседы этого человека, свежая первой. Форма снята с сервера, а не
+  /// придумана: `{"threads": [{id, title, updated_at}]}` —
+  /// `readings.py:/chat/threads`.
+  Future<List<ChatThreadRef>> threads() async {
+    final body = await _get('/v1/chat/threads');
+    final rows = (body['threads'] as List?) ?? const [];
+    return rows
+        .map((row) => ChatThreadRef.fromJson((row as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// Одна беседа целиком, реплика за репликой.
+  Future<List<ChatTurn>> thread(String id) async {
+    final body = await _get('/v1/chat/threads/$id');
+    final rows = (body['messages'] as List?) ?? const [];
+    return rows
+        .map((row) => ChatTurn.fromJson((row as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
   /* ── внутреннее ──────────────────────────────────────────────────────── */
 
   Future<Map<String, dynamic>> _get(String path) =>

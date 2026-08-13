@@ -645,3 +645,37 @@ class ChatReply {
     );
   }
 }
+
+
+/// Ссылка на беседу в списке: чем открыть и что показать в строке.
+class ChatThreadRef {
+  const ChatThreadRef({required this.id, this.title});
+
+  final String id;
+  final String? title;
+
+  factory ChatThreadRef.fromJson(Map<String, dynamic> json) => ChatThreadRef(
+        id: json['id'] as String? ?? '',
+        title: json['title'] as String?,
+      );
+}
+
+/// Одна реплика сохранённой беседы.
+///
+/// Роль сервер называет `user` и `alma` — не `assistant`; выдумывать второе
+/// значит рисовать все ответы Alma как реплики человека.
+class ChatTurn {
+  const ChatTurn({required this.mine, required this.body, required this.citedFactors});
+
+  final bool mine;
+  final String body;
+  final List<String> citedFactors;
+
+  factory ChatTurn.fromJson(Map<String, dynamic> json) => ChatTurn(
+        mine: (json['role'] as String?) == 'user',
+        body: json['body'] as String? ?? '',
+        citedFactors: ((json['cited_factors'] as List?) ?? const [])
+            .map((f) => f.toString())
+            .toList(),
+      );
+}
