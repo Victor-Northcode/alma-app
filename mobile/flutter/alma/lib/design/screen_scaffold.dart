@@ -107,6 +107,20 @@ class ScreenScaffold extends StatelessWidget {
     final barHeight = AlmaMetrics.tabBarHeight + MediaQuery.paddingOf(context).bottom;
 
     Widget list = ListView(
+      // **Страница не тянется в пустое небо.**
+      //
+      // С упругой физикой список уезжает за свой конец, и под ним открывается
+      // голая ночь — экран читается как пустой, хотя всё на месте. Отскок
+      // оставлен ровно там, где на нём держится жест: глава сообщает о
+      // протяжке через `onOverscroll`, и её тянуть можно. Везде остальное
+      // список упирается в край, как на нативе.
+      // `AlwaysScrollable` там, где есть обновление жестом: иначе короткая
+      // страница не даёт себя потянуть и обновить вовсе.
+      physics: onOverscroll == null
+          ? (onRefresh == null
+              ? const ClampingScrollPhysics()
+              : const AlwaysScrollableScrollPhysics(parent: ClampingScrollPhysics()))
+          : const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
       padding: EdgeInsets.only(
         left: AlmaMetrics.pad,
         right: AlmaMetrics.pad,
