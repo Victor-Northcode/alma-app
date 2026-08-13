@@ -41,7 +41,20 @@ class Chapter:
     #: True when the chapter depends on the houses, and therefore on a real
     #: birth time. The sensitivity test asserts exactly this set moves.
     time_dependent: bool = False
-    words: tuple[int, int] = (180, 320)
+    #: **Сколько это стоит читателю по времени, а не сколько влезает.**
+    #:
+    #: Было 180–320, и фактическая середина держалась около 260 слов —
+    #: минута чтения за платную главу. Владелец, пройдя все восемь систем:
+    #: «такое ощущение, что недостаточно». Верхняя граница поднята до 480,
+    #: нижняя до 300: глава становится разворотом, а не заметкой.
+    #:
+    #: Считано, а не прикинуто: 480 слов по-русски это 6120 токенов потолка,
+    #: $0.178 на сильной модели против $0.50 на платную главу — влезает с
+    #: запасом. Бесплатная глава на средней модели дала бы $0.107 против
+    #: $0.10, поэтому у неё бюджет остаётся прежним: ровно те главы, что
+    #: раздаются даром, и остаются короче — это цена бесплатного, а не
+    #: скупость. `free=True` ставит его обратно ниже.
+    words: tuple[int, int] = (300, 480)
     #: How many paragraphs this piece is asked for, and the floor below which
     #: it is regenerated rather than shipped. The default is what every chapter
     #: in this file has always been asked for and what `writer.MIN_PARAGRAPHS`
@@ -50,7 +63,7 @@ class Chapter:
     #: not a chapter. Making it a field rather than a special case in the
     #: writer keeps the rule where the rest of the piece's shape already lives,
     #: next to the word budget it has to agree with.
-    paragraphs: tuple[int, int] = (2, 4)
+    paragraphs: tuple[int, int] = (3, 5)
 
     #: Whether this piece ends with `advice` — "one concrete thing to do or
     #: stop doing", rendered under "what to do with it".
@@ -74,6 +87,12 @@ class Chapter:
 
 
 def _c(index, numeral, slug, title, question, reads, **kwargs) -> Chapter:
+    # Бесплатная глава пишется средней моделью в кириллический потолок $0.10,
+    # и 480 слов туда не помещаются ($0.107). Она остаётся прежней длины,
+    # если её собственный бюджет не задан явно.
+    if kwargs.get("free") and "words" not in kwargs:
+        kwargs["words"] = (180, 320)
+        kwargs.setdefault("paragraphs", (2, 4))
     return Chapter(slug, numeral, index, title, question, reads, **kwargs)
 
 

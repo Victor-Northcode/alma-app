@@ -65,9 +65,19 @@ def _reply(factors: list[str]) -> str:
             "title": "A title",
             "teaser": "A line.",
             "advice": "Say the thing sooner.",
+            # Длина заготовки держится выше нижней границы главы: у платной
+            # это триста слов, и абзац из шести отвергается валидатором,
+            # после чего сценарий кончается ответами и тест падает 503-й на
+            # ровном месте. Строка повторяется, потому что проверяется бюджет,
+            # а не проза.
             "paragraphs": [
-                {"text": "The first paragraph, read from the chart.", "factors": factors[:1]},
-                {"text": "The second, from the same place.", "factors": factors[:1]},
+                {"text": "The first paragraph, read from the chart. " * 30,
+                 "factors": factors[:1]},
+                {"text": "The second, from the same place. " * 30,
+                 "factors": factors[:1]},
+                # Третий абзац: у платной главы минимум теперь три.
+                {"text": "The third, still from the chart. " * 30,
+                 "factors": factors[:1]},
             ],
         }
     )

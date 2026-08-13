@@ -174,7 +174,10 @@ class Settings(BaseSettings):
     #: threshold at which we stop serving somebody who uses every question of
     #: every day and buys the whole archive in the same month.
     owner_month_budget: float = Field(default=3.25, alias="ALMA_OWNER_MONTH_BUDGET")
-    subscriber_month_budget: float = Field(default=3.50, alias="ALMA_SUBSCRIBER_MONTH_BUDGET")
+    #: Поднят с 3.50 вместе с длиной платных глав: сорок одна глава по
+    #: 480 слов плюс сорок вопросов в месяц дают $3.52, и прежний потолок
+    #: обещал больше, чем мог оплатить. Поймано `test_no_tier_is_promised_more_than_its_ceiling_can_fund`.
+    subscriber_month_budget: float = Field(default=4.50, alias="ALMA_SUBSCRIBER_MONTH_BUDGET")
 
     # ── billing ────────────────────────────────────────────────────────────
     #: Which processor takes the money. One knob, because being refused by a
