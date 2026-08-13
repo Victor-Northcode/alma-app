@@ -40,31 +40,41 @@ class CabinetTabBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final hairline = 1 / MediaQuery.devicePixelRatioOf(context);
 
     return ValueListenableBuilder<bool>(
       valueListenable: readingNow,
-      builder: (context, reading, _) => _bar(context, l, bottomInset, hairline, reading),
+      builder: (context, reading, _) => _bar(context, l, bottomInset, reading),
     );
   }
 
-  Widget _bar(BuildContext context, L l, double bottomInset, double hairline,
-      bool reading) {
+  Widget _bar(BuildContext context, L l, double bottomInset, bool reading) {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
         child: DecoratedBox(
+          // **Бар не блок, а край страницы.**
+          //
+          // Плотная заливка с золотой чертой поверху делала из него отдельную
+          // панель, приклеенную к низу каждого экрана — «как будто отделён, а
+          // нужно лаконичнее». Заливка стала прозрачной к верху и уходит в
+          // страницу, черты нет вовсе: размытие держит подписи читаемыми над
+          // любым текстом, а край растворяется.
           decoration: BoxDecoration(
-            // На пергаменте бар пергаментный: иначе внизу светлой страницы
-            // висит синяя полоса без перехода.
-            color: reading
-                ? AlmaPalette.parchmentB.withValues(alpha: 0.94)
-                : AlmaPalette.night850.withValues(alpha: 0.94),
-            border: Border(
-              top: BorderSide(
-                color: AlmaPalette.gold.withValues(alpha: reading ? 0.30 : 0.14),
-                width: hairline,
-              ),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: reading
+                  ? [
+                      AlmaPalette.parchmentB.withValues(alpha: 0),
+                      AlmaPalette.parchmentB.withValues(alpha: 0.82),
+                      AlmaPalette.parchmentB.withValues(alpha: 0.92),
+                    ]
+                  : [
+                      AlmaPalette.night850.withValues(alpha: 0),
+                      AlmaPalette.night850.withValues(alpha: 0.82),
+                      AlmaPalette.night850.withValues(alpha: 0.92),
+                    ],
+              stops: const [0, 0.55, 1],
             ),
           ),
           child: Padding(
