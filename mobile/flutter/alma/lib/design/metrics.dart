@@ -15,7 +15,9 @@ class AlmaMetrics {
   /// удерживает без потери строки, и планшет начинает читаться хуже телефона.
   static const readingWidth = 620.0;
 
-  static const tabBarHeight = 58.0;
+  // Бар стоял высоковато — 58 точек воздуха над домашним индикатором. 52
+  // сажают его ниже, ближе к краю, и подписи перестают висеть в середине.
+  static const tabBarHeight = 52.0;
 
   static const gap = 16.0;
   static const gapLarge = 28.0;

@@ -46,81 +46,164 @@ class _WritingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final centre = Offset(size.width / 2, size.height / 2);
-    final outer = size.width * 0.42;
-    final inner = size.width * 0.27;
+    final r = size.width * 0.40;
+    // **Форма у каждой системы своя, а не одна с другим сдвигом.** Владелец
+    // прошёл все восемь и сказал прямо: «практически одна и та же». Здесь
+    // восемь разных ожиданий; общий у них только материал — золото, тонкая
+    // линия и звёздная точка.
+    switch (seed % 8) {
+      case 0:
+        _orbits(canvas, centre, r, 3);
+      case 1:
+        _spiral(canvas, centre, r);
+      case 2:
+        _pulse(canvas, centre, r);
+      case 3:
+        _rays(canvas, centre, r, 12);
+      case 4:
+        _wave(canvas, centre, size);
+      case 5:
+        _lattice(canvas, centre, r);
+      case 6:
+        _comet(canvas, centre, r);
+      default:
+        _constellation(canvas, centre, r);
+    }
+  }
 
-    // Две орбиты замыкаются первыми, одна за другой.
-    // Число орбит и их радиусы — от системы: две у одной, четыре у другой.
-    final rings = 2 + seed % 3;
-    for (var r = 0; r < rings; r++) {
-      final radius = outer - (outer - inner) * r / (rings - 1).clamp(1, 9);
-      final from = 0.05 * r;
-      final to = 0.45 + 0.05 * r;
-      final swept = phase(progress, from, to);
-      if (swept <= 0) continue;
-      canvas.drawArc(
-        Rect.fromCircle(center: centre, radius: radius),
-        -math.pi / 2,
-        2 * math.pi * swept,
-        false,
+  Paint get _line => Paint()
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = 1
+    ..color = AlmaPalette.gold.withValues(alpha: 0.45);
+
+  Paint get _star => Paint()..color = AlmaPalette.starFill.withValues(alpha: 0.9);
+
+  /// Кольца, замыкающиеся одно за другим и снова расходящиеся.
+  void _orbits(Canvas canvas, Offset c, double r, int rings) {
+    for (var i = 0; i < rings; i++) {
+      final t = phase(progress, i * 0.1, 0.6 + i * 0.1);
+      if (t <= 0) continue;
+      canvas.drawArc(Rect.fromCircle(center: c, radius: r - i * r * 0.22),
+          -math.pi / 2, 2 * math.pi * t, false, _line);
+    }
+    canvas.drawCircle(c + Offset(0, -r), 3.5, _star);
+  }
+
+  /// Спираль, наматывающаяся к центру.
+  void _spiral(Canvas canvas, Offset c, double r) {
+    final path = Path();
+    final turns = 3.5;
+    final steps = (200 * progress).round();
+    for (var i = 0; i <= steps; i++) {
+      final t = i / 200;
+      final a = t * turns * 2 * math.pi - math.pi / 2;
+      final rad = r * (1 - t * 0.75);
+      final p = c + Offset(math.cos(a) * rad, math.sin(a) * rad);
+      i == 0 ? path.moveTo(p.dx, p.dy) : path.lineTo(p.dx, p.dy);
+    }
+    canvas.drawPath(path, _line);
+  }
+
+  /// Круги, расходящиеся от центра, как круги на воде.
+  void _pulse(Canvas canvas, Offset c, double r) {
+    for (var i = 0; i < 4; i++) {
+      final t = (progress + i / 4) % 1.0;
+      canvas.drawCircle(
+        c,
+        r * t,
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = 1
-          ..color = AlmaPalette.gold.withValues(alpha: 0.45),
+          ..color = AlmaPalette.gold.withValues(alpha: 0.5 * (1 - t)),
       );
     }
+    canvas.drawCircle(c, 3, _star);
+  }
 
-    // Засечки по внешнему краю — минуты на циферблате неба.
-    final ticks = 24 + (seed % 4) * 12;
-    for (var i = 0; i < ticks; i++) {
-      final lit = phase(progress, 0.25 + i * 0.006, 0.5 + i * 0.006);
+  /// Лучи, зажигающиеся по кругу и гаснущие следом.
+  void _rays(Canvas canvas, Offset c, double r, int count) {
+    for (var i = 0; i < count; i++) {
+      final own = (progress * count - i) % count / count;
+      final lit = own < 0.35 ? 1 - own / 0.35 : 0.0;
       if (lit <= 0) continue;
-      final a = i * 2 * math.pi / ticks - math.pi / 2;
-      final r1 = outer * 1.09;
-      final r2 = r1 + (i % 4 == 0 ? 7 : 4);
+      final a = i * 2 * math.pi / count - math.pi / 2;
       canvas.drawLine(
-        centre + Offset(math.cos(a) * r1, math.sin(a) * r1),
-        centre + Offset(math.cos(a) * r2, math.sin(a) * r2),
+        c + Offset(math.cos(a), math.sin(a)) * r * 0.35,
+        c + Offset(math.cos(a), math.sin(a)) * r,
         Paint()
-          ..strokeWidth = 1
-          ..color = AlmaPalette.gold.withValues(alpha: 0.3 * lit),
+          ..strokeWidth = 1.2
+          ..color = AlmaPalette.gold.withValues(alpha: 0.55 * lit),
       );
     }
+  }
 
-    // Точки на орбитах и нити между соседними — созвездие, которое строится.
-    // Свои места у точек: сдвиг по кругу зависит от системы.
-    final shift = (seed % 7) / 7;
-    final seats = [0.08, 0.2, 0.34, 0.52, 0.63, 0.78, 0.9]
-        .map((f) => (f + shift) % 1.0)
-        .toList();
-    Offset seat(int i) {
+  /// Волна, бегущая слева направо, — для карты линий.
+  void _wave(Canvas canvas, Offset c, Size size) {
+    for (var row = 0; row < 3; row++) {
+      final path = Path();
+      final y = c.dy + (row - 1) * size.height * 0.14;
+      for (var x = 0.0; x <= size.width; x += 4) {
+        final t = x / size.width;
+        final dy = math.sin((t * 3 + progress * 2 + row * 0.4) * math.pi * 2) *
+            size.height *
+            0.05;
+        x == 0 ? path.moveTo(x, y + dy) : path.lineTo(x, y + dy);
+      }
+      canvas.drawPath(path, _line);
+    }
+  }
+
+  /// Решётка, проявляющаяся клетками.
+  void _lattice(Canvas canvas, Offset c, double r) {
+    const n = 4;
+    for (var i = 0; i <= n; i++) {
+      final t = phase(progress, i * 0.08, 0.5 + i * 0.08);
+      if (t <= 0) continue;
+      final o = (i / n - 0.5) * 2 * r;
+      canvas.drawLine(c + Offset(o, -r), c + Offset(o, -r + 2 * r * t), _line);
+      canvas.drawLine(c + Offset(-r, o), c + Offset(-r + 2 * r * t, o), _line);
+    }
+  }
+
+  /// Комета, обходящая круг.
+  void _comet(Canvas canvas, Offset c, double r) {
+    canvas.drawCircle(
+      c,
+      r,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1
+        ..color = AlmaPalette.gold.withValues(alpha: 0.18),
+    );
+    for (var i = 0; i < 14; i++) {
+      final t = (progress - i * 0.012) % 1.0;
+      final a = t * 2 * math.pi - math.pi / 2;
+      canvas.drawCircle(
+        c + Offset(math.cos(a), math.sin(a)) * r,
+        3.2 * (1 - i / 14),
+        Paint()..color = AlmaPalette.starFill.withValues(alpha: 0.9 * (1 - i / 14)),
+      );
+    }
+  }
+
+  /// Созвездие: точки садятся и связываются нитями.
+  void _constellation(Canvas canvas, Offset c, double r) {
+    const seats = [0.05, 0.19, 0.33, 0.5, 0.62, 0.79, 0.91];
+    Offset at(int i) {
       final a = seats[i] * 2 * math.pi - math.pi / 2;
-      final r = i.isEven ? outer : inner;
-      return centre + Offset(math.cos(a) * r, math.sin(a) * r);
+      return c + Offset(math.cos(a), math.sin(a)) * (i.isEven ? r : r * 0.62);
     }
 
     for (var i = 0; i < seats.length; i++) {
-      final lit = phase(progress, 0.45 + i * 0.05, 0.7 + i * 0.05);
+      final lit = phase(progress, i * 0.09, 0.4 + i * 0.09);
       if (lit <= 0) continue;
       if (i > 0) {
-        final drawn = phase(progress, 0.5 + i * 0.05, 0.75 + i * 0.05);
-        if (drawn > 0) {
-          final a = seat(i - 1);
-          final b = seat(i);
-          canvas.drawLine(
-            a,
-            Offset(a.dx + (b.dx - a.dx) * drawn, a.dy + (b.dy - a.dy) * drawn),
-            Paint()
-              ..strokeWidth = 1
-              ..color = AlmaPalette.gold.withValues(alpha: 0.35),
-          );
-        }
+        final grown = phase(progress, 0.05 + i * 0.09, 0.45 + i * 0.09);
+        final a = at(i - 1);
+        final b = at(i);
+        canvas.drawLine(a, Offset(a.dx + (b.dx - a.dx) * grown, a.dy + (b.dy - a.dy) * grown), _line);
       }
-      canvas.drawCircle(
-        seat(i),
-        (i.isEven ? 4.5 : 3.0) * lit,
-        Paint()..color = AlmaPalette.starFill.withValues(alpha: 0.9 * lit),
-      );
+      canvas.drawCircle(at(i), 4 * lit, _star);
     }
   }
 
@@ -165,8 +248,9 @@ class _ForeverState extends State<_Forever> with SingleTickerProviderStateMixin 
   Widget build(BuildContext context) => AnimatedBuilder(
         animation: _clock,
         builder: (context, _) => CustomPaint(
-          painter: _WritingPainter(
-              Curves.easeInOutCubic.transform(_clock.value), widget.seed),
+          // Линейный ход, а не кривая с остановками на краях: иначе рисунок
+          // «шёл, пропадал и начинался сначала» — ровно то, что видно глазом.
+          painter: _WritingPainter(_clock.value, widget.seed),
           size: Size.square(widget.size),
         ),
       );

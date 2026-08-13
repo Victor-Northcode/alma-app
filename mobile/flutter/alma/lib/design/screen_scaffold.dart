@@ -104,6 +104,14 @@ class ScreenScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // **Ночной экран гасит признак чтения сам.**
+    //
+    // Глава снимала его в `dispose`, и этого не хватало: возврат к списку глав
+    // успевал нарисоваться раньше, и бар оставался пергаментным поверх ночи.
+    // Каркас есть у всех страниц, кроме главы, — ему и решать.
+    if (readingNow.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => readingNow.value = false);
+    }
     final barHeight = AlmaMetrics.tabBarHeight + MediaQuery.paddingOf(context).bottom;
 
     Widget list = ListView(
