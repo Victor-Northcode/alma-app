@@ -204,7 +204,7 @@ class _SystemScreenState extends State<SystemScreen> {
           // и выдумывать его нельзя. Но пустое небо над кнопкой читается как
           // недоделанный экран, поэтому здесь стоит рисунок, который ничего
           // не утверждает: две орбиты, которые ещё не встретились.
-          const Center(child: WritingArt(size: 220)),
+          Center(child: WritingArt(size: 220, seed: widget.system.index)),
           const SizedBox(height: 18),
           Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 10),

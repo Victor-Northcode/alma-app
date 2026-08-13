@@ -296,7 +296,8 @@ class _ChapterScreenState extends State<ChapterScreen> {
             ),
           ),
           const SizedBox(height: 36),
-          const WritingArt(),
+          // Зерно — сама система: у каждой своё ожидание.
+          WritingArt(seed: widget.system.index),
           const SizedBox(height: 24),
           Text(l.stateWriting, style: AlmaType.meta),
         ]),
