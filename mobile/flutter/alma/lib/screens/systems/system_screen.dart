@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
 import '../../design/palette.dart';
@@ -213,7 +214,7 @@ class _SystemScreenState extends State<SystemScreen> {
           ),
           InkWell(
             onTap: () async {
-              await Navigator.of(context).push(MaterialPageRoute(
+              await Navigator.of(context).push(CupertinoPageRoute(
                   builder: (context) => const PeopleScreen()));
               if (mounted) _load();
             },

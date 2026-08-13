@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
 import 'design/palette.dart';
@@ -85,13 +86,13 @@ class _CabinetShellState extends State<CabinetShell> {
   final _systemsNav = GlobalKey<NavigatorState>();
 
   void _openSystem(SystemSlug slug) {
-    _systemsNav.currentState?.push(MaterialPageRoute(
+    _systemsNav.currentState?.push(CupertinoPageRoute(
       builder: (context) => SystemScreen(system: slug, onOpenChapter: _openChapter),
     ));
   }
 
   void _openChapter(SystemSlug system, String chapter) {
-    _systemsNav.currentState?.push(MaterialPageRoute(
+    _systemsNav.currentState?.push(CupertinoPageRoute(
       builder: (context) => ChapterScreen(system: system, chapter: chapter),
     ));
   }
@@ -130,7 +131,23 @@ class _CabinetShellState extends State<CabinetShell> {
       // симуляторе. На нативе все четыре стека живут всю жизнь приложения —
       // это записано там же, в комментарии к перезагрузке «Сегодня» по смене
       // профиля. IndexedStack держит их так же.
-      body: IndexedStack(
+      // **Между вкладками листают пальцем, как между папками в мессенджере.**
+      //
+      // Не `PageView`: он держит живыми только соседние страницы, а здесь все
+      // четыре обязаны жить всю жизнь приложения — беседа не должна стираться
+      // при уходе на «Сегодня». Поэтому стек остаётся, а смах ловится поверх
+      // него: горизонтальный бросок меняет вкладку, вертикальные прокрутки
+      // внутри экранов его не задевают.
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          final v = details.primaryVelocity ?? 0;
+          if (v.abs() < 220) return;
+          final next = v < 0 ? _tab.index + 1 : _tab.index - 1;
+          if (next < 0 || next >= CabinetTab.values.length) return;
+          readingNow.value = false;
+          setState(() => _tab = CabinetTab.values[next]);
+        },
+        child: IndexedStack(
         index: _tab.index,
         children: [
           const TodayScreen(),
@@ -138,13 +155,17 @@ class _CabinetShellState extends State<CabinetShell> {
           // открытыми экранами — как на iOS, где стек живёт внутри вкладки.
           Navigator(
             key: _systemsNav,
-            onGenerateRoute: (settings) => MaterialPageRoute(
+            // **Свайп назад от края.** `CupertinoPageRoute` несёт его сам —
+            // тот самый жест, которым на нативе выходят из главы обратно к
+            // системе; `MaterialPageRoute` на iOS его не даёт.
+            onGenerateRoute: (settings) => CupertinoPageRoute(
               builder: (context) => SystemsScreen(onOpenSystem: _openSystem),
             ),
           ),
           const AlmaScreen(),
           const SettingsScreen(),
         ],
+        ),
       ),
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
