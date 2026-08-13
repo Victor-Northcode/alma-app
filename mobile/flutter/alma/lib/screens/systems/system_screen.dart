@@ -12,6 +12,7 @@ import 'natal_wheel.dart';
 import 'people_screen.dart';
 import 'system_art.dart';
 import 'transit_ring.dart';
+import 'writing_art.dart';
 
 /// Одна система: её оглавление, дверь и бесплатные расчёты.
 ///
@@ -199,6 +200,12 @@ class _SystemScreenState extends State<SystemScreen> {
             },
           ),
         if (_needsPartner) ...[
+          // Колесо отношений рисовать не из чего, пока второго человека нет,
+          // и выдумывать его нельзя. Но пустое небо над кнопкой читается как
+          // недоделанный экран, поэтому здесь стоит рисунок, который ничего
+          // не утверждает: две орбиты, которые ещё не встретились.
+          const Center(child: WritingArt(size: 220)),
+          const SizedBox(height: 18),
           Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 10),
             child: Text(L.of(context).cabCompatNeedsSecond,
