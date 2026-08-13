@@ -371,7 +371,26 @@ class Settings(BaseSettings):
     #: 62% margin on a product priced for 87%. Forty holds the margin at 78%
     #: and is still more conversation than anyone has in a month.
     subscriber_questions_per_month: int = Field(
-        default=40, alias="ALMA_SUBSCRIBER_QUESTIONS"
+        default=30, alias="ALMA_SUBSCRIBER_QUESTIONS"
+    )
+
+    #: То же для кириллицы, где тот же ответ стоит примерно вдвое.
+    #:
+    #: Русский текст токенизируется вдвое дороже латинского — это измерено и
+    #: записано в `writer.py`. Одна и та же цифра для всех языков означала бы,
+    #: что русский подписчик обходится дороже английского при той же цене.
+    #: Владелец выбрал равную маржу, а не равный счёт вопросов.
+    subscriber_questions_per_month_cyrillic: int = Field(
+        default=25, alias="ALMA_SUBSCRIBER_QUESTIONS_CYRILLIC"
+    )
+
+    #: Недельная подписка — вход, а не месяц со скидкой.
+    #:
+    #: Она давала ту же месячную порцию за €4.99 против €9.99, и на комиссии
+    #: 30% уходила в минус примерно на доллар с каждой. Десять вопросов на
+    #: неделю — та же плотность разговора, что у месячной, но по своему сроку.
+    weekly_questions_per_week: int = Field(
+        default=10, alias="ALMA_WEEKLY_QUESTIONS"
     )
 
     @model_validator(mode="after")

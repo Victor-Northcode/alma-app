@@ -137,6 +137,10 @@ def _prune_lock(key: str) -> None:
 #: name rather than sharing the daily one — see `_counter`.
 DAILY_QUESTIONS_METRIC = "questions"
 MONTHLY_QUESTIONS_METRIC = "questions_month"
+#: Своя метрика у недельной: считать её в месячном ведре значило бы дать
+#: четыре недели подряд по одной порции — или отнять порцию у того, кто
+#: продлился в середине месяца.
+WEEKLY_QUESTIONS_METRIC = "questions_week"
 #: The one-time bundle a purchase includes. Counted for the life of the
 #: account rather than per period, so it runs out once and stays out.
 BUNDLE_QUESTIONS_METRIC = "questions_bundle"
@@ -156,7 +160,7 @@ class Allowance:
     metric: str
 
 
-def _allowance(tier: str, *, mid: str) -> Allowance:
+def _allowance(tier: str, *, mid: str, locale: str = "en", weekly: bool = False) -> Allowance:
     """Which model answers this person, and how many turns they get.
 
     The ladder the owner set: one welcome question free, a small bundle on the
@@ -173,10 +177,28 @@ def _allowance(tier: str, *, mid: str) -> Allowance:
     """
     config = settings()
     if tier == "subscriber":
+        # **Недельная подписка получает порцию по своему сроку.**
+        #
+        # Она давала ту же месячную порцию за половину цены и на комиссии 30%
+        # уходила в минус. Плотность разговора та же, что у месячной, — просто
+        # неделя короче месяца.
+        if weekly:
+            return Allowance(
+                tier,
+                mid,
+                config.weekly_questions_per_week,
+                "week",
+                WEEKLY_QUESTIONS_METRIC,
+            )
+        # Кириллица стоит примерно вдвое за тот же ответ — это измерено и
+        # записано в `writer.py`. Равная маржа, а не равный счёт вопросов.
+        cyrillic = i18n.resolve(locale) == "ru"
         return Allowance(
             tier,
             mid,
-            config.subscriber_questions_per_month,
+            config.subscriber_questions_per_month_cyrillic
+            if cyrillic
+            else config.subscriber_questions_per_month,
             "month",
             MONTHLY_QUESTIONS_METRIC,
         )
@@ -1178,7 +1200,8 @@ async def chat(
     """One turn of conversation, answered only from the chart."""
     _cheap, mid, strong = models()
     tier = await entitlements.tier_of(session, user)
-    allowance = _allowance(tier, mid=mid)
+    weekly = await entitlements.has_kind(session, user, "weekly")
+    allowance = _allowance(tier, mid=mid, locale=payload.locale, weekly=weekly)
 
     # An owner spends the bundle their purchase included; when it is gone the
     # base allowance is the wall, and the wall's own sentence points at the

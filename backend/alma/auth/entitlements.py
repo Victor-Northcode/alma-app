@@ -291,6 +291,20 @@ async def tier_of(session: AsyncSession, user: User, *, at: datetime | None = No
     return tier
 
 
+async def has_kind(session: AsyncSession, user: User, kind: str) -> bool:
+    """Есть ли у человека живое право именно этого рода.
+
+    Нужно ровно для одного: недельная подписка получает порцию вопросов по
+    своему сроку, а `tier_of` намеренно не различает сроки — она отвечает на
+    вопрос «платит ли», а не «как часто».
+    """
+    moment = utcnow()
+    for entitlement in await for_user(session, user):
+        if is_in_force(entitlement, moment) and entitlement.kind == kind:
+            return True
+    return False
+
+
 async def may_be_offered(
     session: AsyncSession, user: User, key: str, *, at: datetime | None = None
 ) -> bool:
