@@ -197,8 +197,15 @@ class _AlmaScreenState extends State<AlmaScreen> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final session = SessionScope.of(context);
-    final barHeight =
-        AlmaMetrics.tabBarHeight + MediaQuery.paddingOf(context).bottom;
+    // **Композер стоит на баре, а не над ним в воздухе.**
+    //
+    // Отступ считался как высота бара плюс нижняя безопасная зона, и лишние
+    // 34 точки поднимали композер над баром полосой пустой ночи — «выглядит
+    // стрёмно, что он просто в воздухе». Натив в покое отступает ровно на
+    // `AlmaMetrics.tabBarHeight` и ничего к нему не прибавляет
+    // (`AlmaScreen.swift`: `.padding(.bottom, keyboard > 0 ? … : tabBarHeight)`),
+    // потому что домашний индикатор — это место самого бара, а не зазор перед
+    // ним.
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
 
     return NightSky(
@@ -209,7 +216,12 @@ class _AlmaScreenState extends State<AlmaScreen> {
         child: Padding(
           // Над клавиатурой, когда она есть; над баром, когда её нет.
           padding: EdgeInsets.only(
-              bottom: keyboard > 0 ? keyboard + 8 : barHeight),
+              bottom: keyboard > 0
+                  ? keyboard - MediaQuery.paddingOf(context).bottom + 8
+                  // 58 + 16: высота бара и воздух над ним. Числа сняты
+                  // измерением — на 58 композер уходил под бар, на 92
+                  // (плюс безопасная зона) висел над ним полосой пустой ночи.
+                  : AlmaMetrics.tabBarHeight + 16),
           child: Column(children: [
             Expanded(
               child: _turns.isEmpty
