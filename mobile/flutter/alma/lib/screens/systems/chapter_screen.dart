@@ -306,30 +306,18 @@ class _ChapterScreenState extends State<ChapterScreen> {
           const SizedBox(height: 10),
           Text(reading.title,
               style: AlmaType.displayL.copyWith(color: AlmaPalette.ink)),
+          // **Позиции — подпись под главой, а не двенадцать плашек над ней.**
+          //
+          // Список цитат печатался капсулами во всю ширину: на плотной карте
+          // это дюжина английских строк вроде «transiting uranus retrograde □
+          // natal saturn · orb 0.25°» между заголовком и первым абзацем, и
+          // текст, ради которого главу открыли, уезжал за нижний край.
+          // «Реально странное количество блоков, и непонятно, что это всё
+          // значит». Первая позиция остаётся видимой — обещание продукта в
+          // том, что глава прочитана из карты, — остальные прячутся за счёт.
           if (reading.citedFactors.isNotEmpty) ...[
-            const SizedBox(height: 16),
-            Text(l.cabReadFrom.toUpperCase(),
-                style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final factor in reading.citedFactors)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                          color: AlmaPalette.goldDeep.withValues(alpha: 0.35)),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(factor,
-                        style: AlmaType.numeral
-                            .copyWith(color: AlmaPalette.goldDeep)),
-                  ),
-              ],
-            ),
+            const SizedBox(height: 14),
+            _CitedLine(factors: reading.citedFactors, label: l.cabReadFrom),
           ],
           const SizedBox(height: 18),
           Container(
@@ -401,5 +389,56 @@ class _ChapterScreenState extends State<ChapterScreen> {
           style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted2)),
       const SizedBox(height: 40),
     ]);
+  }
+}
+
+
+/// Строка цитат под заголовком главы: первая позиция и счёт остальных,
+/// раскрывающийся по нажатию. Сестра такой же строки в беседе с Alma.
+class _CitedLine extends StatefulWidget {
+  const _CitedLine({required this.factors, required this.label});
+
+  final List<String> factors;
+  final String label;
+
+  @override
+  State<_CitedLine> createState() => _CitedLineState();
+}
+
+class _CitedLineState extends State<_CitedLine> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final rest = widget.factors.length - 1;
+    final style = AlmaType.numeral.copyWith(
+      color: AlmaPalette.goldDeep,
+      fontFamilyFallback: AlmaType.glyphFallback,
+    );
+    return GestureDetector(
+      onTap: rest > 0 ? () => setState(() => _open = !_open) : null,
+      behavior: HitTestBehavior.opaque,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Text(widget.label.toUpperCase(),
+              style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(widget.factors.first,
+                style: style, overflow: TextOverflow.ellipsis),
+          ),
+          if (rest > 0 && !_open) ...[
+            const SizedBox(width: 8),
+            Text('+$rest', style: style),
+          ],
+        ]),
+        if (_open)
+          for (final factor in widget.factors.skip(1))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(factor, style: style),
+            ),
+      ]),
+    );
   }
 }
