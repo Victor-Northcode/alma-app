@@ -2010,4 +2010,13 @@ class LRu extends L {
 
   @override
   String get cabCompatNeedsSecond => 'Совместимости нужен второй человек.';
+
+  @override
+  String get cabPeopleTitle => 'Люди';
+
+  @override
+  String get cabPeopleAdd => 'Добавить человека';
+
+  @override
+  String get cabPeopleRemove => 'Убрать';
 }

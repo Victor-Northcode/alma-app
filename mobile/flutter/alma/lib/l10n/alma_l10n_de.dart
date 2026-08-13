@@ -2024,4 +2024,13 @@ class LDe extends L {
   @override
   String get cabCompatNeedsSecond =>
       'Für die Verbindung fehlt eine zweite Person.';
+
+  @override
+  String get cabPeopleTitle => 'Menschen';
+
+  @override
+  String get cabPeopleAdd => 'Person hinzufügen';
+
+  @override
+  String get cabPeopleRemove => 'Entfernen';
 }

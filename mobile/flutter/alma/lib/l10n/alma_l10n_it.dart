@@ -2019,4 +2019,13 @@ class LIt extends L {
   @override
   String get cabCompatNeedsSecond =>
       'La compatibilità ha bisogno di una seconda persona.';
+
+  @override
+  String get cabPeopleTitle => 'Persone';
+
+  @override
+  String get cabPeopleAdd => 'Aggiungi persona';
+
+  @override
+  String get cabPeopleRemove => 'Rimuovi';
 }

@@ -600,5 +600,8 @@
   "scrSignInSendLink": "Mandami un link",
   "scrSignInSending": "Invio…",
   "scrSignInTitle": "Accedi",
-  "cabCompatNeedsSecond": "La compatibilità ha bisogno di una seconda persona."
+  "cabCompatNeedsSecond": "La compatibilità ha bisogno di una seconda persona.",
+  "cabPeopleTitle": "Persone",
+  "cabPeopleAdd": "Aggiungi persona",
+  "cabPeopleRemove": "Rimuovi"
 }

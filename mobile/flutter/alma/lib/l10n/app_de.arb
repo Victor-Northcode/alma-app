@@ -600,5 +600,8 @@
   "scrSignInSendLink": "Schick mir einen Link",
   "scrSignInSending": "Wird gesendet…",
   "scrSignInTitle": "Anmelden",
-  "cabCompatNeedsSecond": "Für die Verbindung fehlt eine zweite Person."
+  "cabCompatNeedsSecond": "Für die Verbindung fehlt eine zweite Person.",
+  "cabPeopleTitle": "Menschen",
+  "cabPeopleAdd": "Person hinzufügen",
+  "cabPeopleRemove": "Entfernen"
 }

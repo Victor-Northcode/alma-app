@@ -3712,6 +3712,24 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Compatibility needs a second person.'**
   String get cabCompatNeedsSecond;
+
+  /// No description provided for @cabPeopleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'People'**
+  String get cabPeopleTitle;
+
+  /// No description provided for @cabPeopleAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a person'**
+  String get cabPeopleAdd;
+
+  /// No description provided for @cabPeopleRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get cabPeopleRemove;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

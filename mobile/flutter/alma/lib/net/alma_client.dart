@@ -196,6 +196,10 @@ class AlmaClient {
     return Profile.fromJson(body);
   }
 
+  /// Убрать человека. Своё рождение удалить нельзя — это делает удаление
+  /// аккаунта; сервер отвечает 404 на чужой профиль.
+  Future<void> deleteProfile(String id) => _send('DELETE', '/v1/profiles/$id', null, normalTimeout);
+
   /* ── расчёт ──────────────────────────────────────────────────────────── */
 
   Future<CalcResult> compute(

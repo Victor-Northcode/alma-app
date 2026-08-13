@@ -9,6 +9,7 @@ import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 import 'natal_wheel.dart';
+import 'people_screen.dart';
 import 'system_art.dart';
 import 'transit_ring.dart';
 
@@ -158,12 +159,31 @@ class _SystemScreenState extends State<SystemScreen> {
               _ => const SizedBox.shrink(),
             },
           ),
-        if (_needsPartner)
+        if (_needsPartner) ...[
           Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 6),
+            padding: const EdgeInsets.only(top: 4, bottom: 10),
             child: Text(L.of(context).cabCompatNeedsSecond,
                 style: AlmaType.meta),
-          )
+          ),
+          InkWell(
+            onTap: () async {
+              await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const PeopleScreen()));
+              if (mounted) _load();
+            },
+            child: Container(
+              height: 54,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border:
+                    Border.all(color: AlmaPalette.gold.withValues(alpha: 0.55)),
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: Text(L.of(context).cabPeopleAdd,
+                  style: AlmaType.button.copyWith(color: AlmaPalette.goldBright)),
+            ),
+          ),
+        ]
         else if (_computeFailure case final error?)
           Padding(
             padding: const EdgeInsets.only(top: 4, bottom: 6),

@@ -600,5 +600,8 @@
   "scrSignInSendLink": "Отправить мне ссылку",
   "scrSignInSending": "Отправляю…",
   "scrSignInTitle": "Вход",
-  "cabCompatNeedsSecond": "Совместимости нужен второй человек."
+  "cabCompatNeedsSecond": "Совместимости нужен второй человек.",
+  "cabPeopleTitle": "Люди",
+  "cabPeopleAdd": "Добавить человека",
+  "cabPeopleRemove": "Убрать"
 }

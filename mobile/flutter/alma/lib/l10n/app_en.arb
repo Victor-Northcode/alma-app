@@ -2656,5 +2656,8 @@
   "@scrSignInTitle": {
     "description": "from Screens/scr.signIn.title"
   },
-  "cabCompatNeedsSecond": "Compatibility needs a second person."
+  "cabCompatNeedsSecond": "Compatibility needs a second person.",
+  "cabPeopleTitle": "People",
+  "cabPeopleAdd": "Add a person",
+  "cabPeopleRemove": "Remove"
 }

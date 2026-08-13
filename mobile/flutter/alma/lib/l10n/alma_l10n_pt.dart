@@ -2016,4 +2016,13 @@ class LPt extends L {
   @override
   String get cabCompatNeedsSecond =>
       'A compatibilidade precisa de uma segunda pessoa.';
+
+  @override
+  String get cabPeopleTitle => 'Pessoas';
+
+  @override
+  String get cabPeopleAdd => 'Adicionar pessoa';
+
+  @override
+  String get cabPeopleRemove => 'Remover';
 }

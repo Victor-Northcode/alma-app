@@ -2013,4 +2013,13 @@ class LEs extends L {
   @override
   String get cabCompatNeedsSecond =>
       'La compatibilidad necesita a otra persona.';
+
+  @override
+  String get cabPeopleTitle => 'Personas';
+
+  @override
+  String get cabPeopleAdd => 'Añadir persona';
+
+  @override
+  String get cabPeopleRemove => 'Quitar';
 }

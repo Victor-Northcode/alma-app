@@ -2025,4 +2025,13 @@ class LFr extends L {
   @override
   String get cabCompatNeedsSecond =>
       'La compatibilité demande une deuxième personne.';
+
+  @override
+  String get cabPeopleTitle => 'Personnes';
+
+  @override
+  String get cabPeopleAdd => 'Ajouter une personne';
+
+  @override
+  String get cabPeopleRemove => 'Retirer';
 }

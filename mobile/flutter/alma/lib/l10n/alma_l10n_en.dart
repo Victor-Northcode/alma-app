@@ -2009,4 +2009,13 @@ class LEn extends L {
 
   @override
   String get cabCompatNeedsSecond => 'Compatibility needs a second person.';
+
+  @override
+  String get cabPeopleTitle => 'People';
+
+  @override
+  String get cabPeopleAdd => 'Add a person';
+
+  @override
+  String get cabPeopleRemove => 'Remove';
 }
