@@ -361,11 +361,11 @@ class _AlmaScreenState extends State<AlmaScreen> {
   Widget _composer(L l) {
     return Container(
       padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 12, AlmaMetrics.pad, 10),
-      // Волосяная линия отделяет композер от ленты, как на нативе: без неё
-      // поле ввода висит в тексте, а не стоит на своей полке.
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: AlmaPalette.hairline)),
-      ),
+      // **Композер парит, а не стоит на полке.**
+      //
+      // Волосяная линия сверху отрезала его от ленты, и поле читалось как блок
+      // на подставке — «должен быть в невесомости». Разделителя нет: беседа
+      // просто уходит под поле, а само поле держится на своей обводке.
       child: Row(children: [
         Expanded(
           child: Container(
