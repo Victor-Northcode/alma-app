@@ -112,7 +112,6 @@ class ScreenScaffold extends StatelessWidget {
     if (readingNow.value) {
       WidgetsBinding.instance.addPostFrameCallback((_) => readingNow.value = false);
     }
-    final barHeight = AlmaMetrics.tabBarHeight + MediaQuery.paddingOf(context).bottom;
 
     Widget list = ListView(
       // **Страница не тянется в пустое небо.**
@@ -133,9 +132,13 @@ class ScreenScaffold extends StatelessWidget {
         left: AlmaMetrics.pad,
         right: AlmaMetrics.pad,
         top: 12,
-        // Полсекции над баром, а не целая: на скриншоте владельца под последней
-        // строкой каждого экрана стояла полоса пустой ночи выше самого бара.
-        bottom: AlmaMetrics.gapLarge / 2 + barHeight,
+        // **Ровно столько, чтобы последняя строка вышла из-под подписей.**
+        //
+        // Было «полсекции над баром» поверх полной его высоты вместе с
+        // домашним индикатором: под последней строкой оставалась ладонь пустой
+        // ночи на каждом экране. Бар теперь растворяется кверху, содержимое
+        // уходит под него — и хватает высоты подписей с небольшим воздухом.
+        bottom: AlmaMetrics.tabBarHeight + 26,
       ),
       children: [
         // Каскад прихода: шапка — ступень 0, каждый следующий блок на 70 мс
