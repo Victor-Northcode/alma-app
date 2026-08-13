@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../design/arrival.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
+import '../../design/section_label.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
@@ -61,6 +62,9 @@ class _TodayScreenState extends State<TodayScreen> {
           : l.tabToday,
       titleStyle: AlmaType.displayXl,
       trailing: _moonSeal(model),
+      // Фаза — часть заголовочного блока, как `headerText` на нативе: она
+      // стоит под именем, слева от медальона, а не под ним.
+      underTitle: _moonHeaderLine(l, model),
       onRefresh: () async {
         if (model != null && session.hasBirthData) {
           await model.load(locale: session.locale);
@@ -68,16 +72,7 @@ class _TodayScreenState extends State<TodayScreen> {
       },
       children: [
         if (model != null) ...[
-          if (_moonLine(l, model) case final line?)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AlmaMetrics.gapLarge),
-              child: Row(children: [
-                const Text('☽',
-                    style: TextStyle(fontSize: 17, color: AlmaPalette.goldBright)),
-                const SizedBox(width: 8),
-                Text(line, style: AlmaType.meta.copyWith(fontSize: 12.5)),
-              ]),
-            ),
+          const SizedBox(height: AlmaMetrics.gapLarge),
           _DaySection(model: model),
         ],
       ],
@@ -91,6 +86,22 @@ class _TodayScreenState extends State<TodayScreen> {
   /// заслуживающими доверия.
   String _deviceDate(String locale) =>
       DateFormat.MMMMd(locale).format(DateTime.now());
+
+  /// Строка фазы для заголовочного блока, или `null`, когда фазы ещё нет.
+  Widget? _moonHeaderLine(L l, TodayModel? model) {
+    if (model == null) return null;
+    final line = _moonLine(l, model);
+    if (line == null) return null;
+    return Row(children: [
+      // Глиф засечным и 19-м кеглем — на нативе это `AlmaFonts.display(19)`,
+      // а не строка обычного текста.
+      Text('☽',
+          style: AlmaType.displayL
+              .copyWith(fontSize: 19, color: AlmaPalette.goldBright)),
+      const SizedBox(width: 8),
+      Text(line, style: AlmaType.meta.copyWith(color: AlmaPalette.muted2)),
+    ]);
+  }
 
   String? _moonLine(L l, TodayModel model) {
     final moon = _moonPhase(model);
@@ -163,17 +174,7 @@ class _DaySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Линейка раздела: подпись и волосяная линия, гаснущая вправо.
-        Row(children: [
-          Text(l.cabHoroscopeToday.toUpperCase(), style: AlmaType.overline),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Container(
-              height: 1,
-              decoration: BoxDecoration(gradient: AlmaGradient.fadedRule),
-            ),
-          ),
-        ]),
+        SectionLabel(l.cabHoroscopeToday),
         const SizedBox(height: 14),
         ..._voice(l),
         const SizedBox(height: 4),
@@ -335,40 +336,58 @@ class _MoonPainter extends CustomPainter {
     // Кольцо вокруг — золотая волосяная линия.
     canvas.drawCircle(
       centre,
-      size.width * 0.48,
+      size.width * 0.47,
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1
-        ..color = AlmaPalette.gold.withValues(alpha: 0.4),
+        ..color = AlmaPalette.gold.withValues(alpha: 0.35),
     );
 
-    // Освещённый диск.
+    // **Ночная сторона и обводка рисуются всегда, свет ложится поверх.**
+    //
+    // Порядок был обратный — светлый диск, а сверху тень, — и в новолуние от
+    // медальона не оставалось ничего: чёрный кружок без края. На нативе в ту же
+    // ночь виден тёмно-синий диск в тонкой золотой обводке, потому что там
+    // ночная сторона это заливка, а не то, чем закрашивают свет
+    // (`MoonMedallion.swift`: fill Night700 0.9, stroke Gold 0.3 шириной 0.7).
     canvas.drawCircle(
       centre,
       radius,
-      Paint()..color = AlmaPalette.starFill.withValues(alpha: 0.9),
+      Paint()..color = AlmaPalette.night700.withValues(alpha: 0.9),
+    );
+    canvas.drawCircle(
+      centre,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.7
+        ..color = AlmaPalette.gold.withValues(alpha: 0.3),
     );
 
-    // Ночная сторона: второй круг, сдвинутый по горизонтали и **обрезанный по
-    // диску**. Сдвиг растёт с освещённостью — в новолуние тень концентрична и
-    // накрывает всё, в полнолуние ушла на два радиуса и не видна. Первый порт
-    // перепутал направление роста: при серпе в 7% тень почти полностью уезжала
-    // с диска, луна рисовалась полной, а сам сдвинутый круг торчал из-за края
-    // медальона. Найдено на экране, рядом со строкой «убывающий серп · 7 %» —
-    // медальон противоречил собственной подписи.
-    if (illumination < 0.995) {
+    // Освещённая доля: диск света, из которого вырезан сдвинутый круг тени.
+    // Сдвиг растёт с освещённостью — в новолуние тень концентрична и съедает
+    // весь свет, в полнолуние ушла на два радиуса. Первый порт перепутал
+    // направление роста: при серпе в 7% луна рисовалась полной. Найдено на
+    // экране, рядом со строкой «убывающий серп · 7 %».
+    if (illumination > 0.005) {
+      // Сдвиг растёт **с** освещённостью: в новолуние тень концентрична и
+      // съедает весь свет, в полнолуние ушла на два радиуса. Написанное
+      // наоборот давало полную луну в новолуние — поймано на кадре рядом с
+      // подписью «новолуние · 1 %».
       final shift = illumination.clamp(0.0, 1.0) * radius * 2;
-      // Убывающая луна освещена слева: тень уходит вправо, оставляя серп с
-      // левого края, — как на медальоне нативного экрана. Растущая наоборот.
+      // Убывающая луна освещена слева: тень уходит вправо. Растущая наоборот.
       final dx = waxing ? -shift : shift;
-      canvas.save();
-      canvas.clipPath(Path()..addOval(Rect.fromCircle(center: centre, radius: radius)));
+      final bounds = Rect.fromCircle(center: centre, radius: radius + 1);
+      canvas.saveLayer(bounds, Paint());
+      canvas.drawCircle(
+        centre,
+        radius,
+        Paint()..color = AlmaPalette.starFill.withValues(alpha: 0.92),
+      );
       canvas.drawCircle(
         centre.translate(dx, 0),
         radius,
-        // Ночная сторона почти непрозрачна: серп при 7% должен быть нитью,
-        // а не широким бликом — как на нативном медальоне.
-        Paint()..color = AlmaPalette.night850.withValues(alpha: 0.97),
+        Paint()..blendMode = BlendMode.clear,
       );
       canvas.restore();
     }

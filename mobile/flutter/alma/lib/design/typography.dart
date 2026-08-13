@@ -139,11 +139,19 @@ class AlmaType {
   );
 
   /// Голос дня — тот же засечный, чуть мельче голоса Alma.
-  static const dayVoice = TextStyle(
+  /// Голос дня. Значение в значение с `almaDayVoice()`: 17.5 светлым
+  /// начертанием, интерлиньяж 1.55, чернила приглушены до 0.95.
+  ///
+  /// Здесь стояли 19 обычным весом и 1.5 — на кадре рядом с нативом текст дня
+  /// был заметно крупнее и жирнее, и на экран помещалось на треть меньше.
+  /// «Твой день слишком длинным текстом описывается, нужно короче и тоньше
+  /// шрифт» — правка, ради которой этот стиль и появился на нативе.
+  static final dayVoice = TextStyle(
     fontFamily: _display,
     fontFamilyFallback: _displayFallback,
-    fontSize: 19,
-    height: 1.5,
-    color: AlmaPalette.inkLight,
+    fontSize: 17.5,
+    fontWeight: FontWeight.w300,
+    height: 1.55,
+    color: AlmaPalette.inkLight.withValues(alpha: 0.95),
   );
 }

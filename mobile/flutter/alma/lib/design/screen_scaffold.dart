@@ -35,6 +35,7 @@ class ScreenScaffold extends StatelessWidget {
     this.onRefresh,
     this.trailing,
     this.titleStyle,
+    this.underTitle,
     required this.children,
   });
 
@@ -61,12 +62,45 @@ class ScreenScaffold extends StatelessWidget {
   /// То, что стоит справа от заголовка, — медальон луны на «Сегодня».
   final Widget? trailing;
 
+  /// Строка, живущая **внутри** заголовочного блока, под самим заголовком и
+  /// слева от [trailing].
+  ///
+  /// На «Сегодня» это фаза луны, и место у неё не декоративное: на нативе она
+  /// стоит в той же колонке, что заголовок, в десяти точках под ним
+  /// (`TodayScreen.headerText`). Отданная в `children`, она уезжала под
+  /// медальон — а медальон высотой 94 точки, — и вместо десяти точек между
+  /// заголовком и фазой зияла половина экрана. Найдено сравнением кадров.
+  final Widget? underTitle;
+
   /// Кегль заголовка. По умолчанию — заголовок экрана (29), как у каркаса на
   /// iOS; «Сегодня» просит главный (39) сам, потому что там строка — имя
   /// человека и единственный крупный элемент страницы.
   final TextStyle? titleStyle;
 
   final List<Widget> children;
+
+  /// Надзаголовок, заголовок и строка под ним — одной колонкой: расстояния
+  /// между ними принадлежат им, а не высоте соседнего медальона.
+  Widget _headerColumn(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (eyebrow != null) ...[
+          const SizedBox(height: 8),
+          Text(eyebrow!.toUpperCase(), style: AlmaType.overline),
+        ],
+        if (title != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Text(title!, style: titleStyle ?? AlmaType.displayL),
+          ),
+        if (underTitle != null) ...[
+          const SizedBox(height: 6),
+          underTitle!,
+        ],
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,28 +121,22 @@ class ScreenScaffold extends StatelessWidget {
         // одноразовый — обновление данных не переигрывает его.
         RiseIn(
           index: 0,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            if (eyebrow != null) ...[
-              const SizedBox(height: 8),
-              Text(eyebrow!.toUpperCase(), style: AlmaType.overline),
-            ],
-            if (title != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4),
-                child: trailing == null
-                    ? Text(title!, style: titleStyle ?? AlmaType.displayL)
-                    : Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                              child:
-                                  Text(title!, style: titleStyle ?? AlmaType.displayL)),
-                          const SizedBox(width: 12),
-                          trailing!,
-                        ],
-                      ),
-              ),
-          ]),
+          // **Медальон стоит рядом со всей шапкой, а не рядом с заголовком.**
+          //
+          // На нативе `header` — это `HStack { headerText; medallion }`, где
+          // `headerText` держит и надзаголовок, и имя, и фазу. Здесь надзаголовок
+          // сначала жил выше строки с медальоном, и печать съезжала вниз на его
+          // высоту: рядом два кадра, и на порте луна висела заметно ниже.
+          child: trailing == null
+              ? _headerColumn(context)
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _headerColumn(context)),
+                    const SizedBox(width: 12),
+                    trailing!,
+                  ],
+                ),
         ),
         for (final (i, child) in children.indexed)
           RiseIn(index: i + 1, child: child),
