@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Platform;
+import 'dart:io' show Link, Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
@@ -174,11 +174,24 @@ class AlmaClient {
   static List<dynamic> _list(Map<String, dynamic> body, String key) =>
       (body['value'] as List?) ?? (body[key] as List?) ?? const [];
 
-  Future<Profile> saveProfile(BirthInput birth, {bool isSelf = true, String? relation}) async {
+  /// Сохранить рождение.
+  ///
+  /// [gender] — «female» или «male», и это грамматика, а не анкетный вопрос:
+  /// русское письмо согласует род («ты родилась»), а без ответа переходит на
+  /// безличные обороты. Анкета спрашивает об этом вторым шагом и до этой
+  /// правки никуда не отправляла — человек отвечал, а письмо всё равно
+  /// обходило его пол стороной.
+  Future<Profile> saveProfile(
+    BirthInput birth, {
+    bool isSelf = true,
+    String? relation,
+    String? gender,
+  }) async {
     final body = await _post('/v1/profiles', {
       ...birth.toJson(),
       'is_self': isSelf,
       'relation': ?relation,
+      'gender': ?gender,
     });
     return Profile.fromJson(body);
   }
@@ -334,10 +347,28 @@ class AlmaClient {
     }
   }
 
+  /// Зона устройства **именем IANA**, потому что сервер знает только их.
+  ///
+  /// `DateTime.now().timeZoneName` отдаёт короткое имя — «MSK», «CET», «+03» —
+  /// и сервер такую зону молча игнорирует, ровно как обещает комментарий у
+  /// заголовка. Тихо: единственное, что от неё зависит, — час утреннего
+  /// уведомления, и промах виден не в приложении, а тем, что письмо приходит
+  /// не утром. `DateTime.now().timeZoneName` заменён на имя из окружения,
+  /// которое Dart отдаёт в форме IANA.
   static String _deviceTimezone() {
     if (kIsWeb) return 'UTC';
     try {
-      return Platform.localeName.isEmpty ? 'UTC' : DateTime.now().timeZoneName;
+      final zone = Platform.environment['TZ'];
+      if (zone != null && zone.contains('/')) return zone;
+      // iOS и Android отдают IANA через локальную зону как символическую
+      // ссылку /etc/localtime → /var/db/timezone/zoneinfo/Europe/Moscow.
+      final link = Link('/etc/localtime');
+      if (link.existsSync()) {
+        final target = link.targetSync();
+        final parts = target.split('zoneinfo/');
+        if (parts.length == 2 && parts[1].contains('/')) return parts[1];
+      }
+      return 'UTC';
     } catch (_) {
       return 'UTC';
     }

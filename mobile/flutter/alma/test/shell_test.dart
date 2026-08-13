@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:alma/main.dart';
 import 'package:alma/net/alma_client.dart';
@@ -37,6 +38,14 @@ AlmaClient fakeClient() {
   return AlmaClient(baseUrl: Uri.parse('http://test.local'), http: transport);
 }
 
+/// Тот же клиент, но сеть лежит: каждый запрос падает, как в метро.
+AlmaClient deadNetworkClient() {
+  final http.Client transport = MockClient((request) async {
+    throw const SocketException('сеть недоступна');
+  });
+  return AlmaClient(baseUrl: Uri.parse('http://test.local'), http: transport);
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -50,5 +59,20 @@ void main() {
     // сохраняется. Кабинет без рождения не рисуется вовсе.
     expect(find.text('What should I call you?'), findsOneWidget);
     expect(find.text('Today'), findsNothing);
+  });
+
+  testWidgets('упавшая сеть показывает отказ с повтором, а не анкету заново',
+      (tester) async {
+    // Профиль не пришёл не потому, что его нет, а потому что спросить не
+    // удалось. Прежде оболочка читала пустой профиль как нового человека и
+    // встречала анкетой того, у кого карта построена и оплачена, — приложение
+    // выглядело так, будто стёрло всё. Натив в этом месте показывает отказ с
+    // кнопкой, и здесь теперь то же самое.
+    await tester.pumpWidget(AlmaApp(client: deadNetworkClient()));
+    for (var i = 0; i < 6; i++) {
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+    expect(find.text('What should I call you?'), findsNothing);
+    expect(find.text('Try again'), findsOneWidget);
   });
 }

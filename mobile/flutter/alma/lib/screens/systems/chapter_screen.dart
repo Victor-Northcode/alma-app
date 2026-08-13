@@ -77,6 +77,14 @@ class _ChapterScreenState extends State<ChapterScreen> {
     try {
       final list = _list ??
           await session.client.chapters(widget.system, locale: session.locale);
+      // **Оглавление показывается, как только пришло, а не вместе с текстом.**
+      //
+      // Список глав — обычный GET и отвечает мгновенно; глава пишется 40–90
+      // секунд. Пока оба ждали одного `setState`, `_entry` оставался пустым всю
+      // эту минуту, и счётчик печатал запасную единицу: открытая седьмая глава
+      // весь показ «Пишу эту главу…» держала в шапке «1 / 16». Снято на
+      // симуляторе 13 августа 2026.
+      if (mounted && _list == null) setState(() => _list = list);
       final response = await session.client.reading(
         system: widget.system,
         chapter: _showing,

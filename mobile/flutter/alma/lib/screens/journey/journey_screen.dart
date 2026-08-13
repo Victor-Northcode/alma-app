@@ -81,7 +81,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
         placeLabel: place.label,
         placeId: place.id,
         name: _name.text.trim().isEmpty ? null : _name.text.trim(),
-      ));
+      ), gender: _gender);
       if (_name.text.trim().isNotEmpty) {
         await session.client.setDisplayName(_name.text.trim());
       }
@@ -113,9 +113,13 @@ class _JourneyScreenState extends State<JourneyScreen> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               const SizedBox(height: 12),
               Row(children: [
-                // «I / VI» — римскими, как на нативных экранах.
+                // «I / V» — римскими, как на нативных экранах. Знаменатель
+                // считается по самому перечислению: жёсткая «VI» обещала
+                // шестой шаг, которого в порте нет — церемония ещё не
+                // перенесена, — и последний экран анкеты объявлял себя «V / VI»,
+                // то есть предпоследним.
                 Text(
-                  '${_roman(_step.index + 1)} / VI',
+                  '${_roman(_step.index + 1)} / ${_roman(_Step.values.length)}',
                   style: AlmaType.numeral.copyWith(color: AlmaPalette.gold),
                 ),
                 const Spacer(),

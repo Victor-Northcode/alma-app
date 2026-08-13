@@ -29,6 +29,11 @@ class _SystemScreenState extends State<SystemScreen> {
   ChapterList? _chapters;
   CalcResult? _result;
   AlmaError? _failure;
+
+  /// Отказ **расчёта**, когда оглавление всё же пришло: совместимость без
+  /// второго человека, соляр без времени рождения. Он объясняет, почему нет
+  /// рисунка, и не отменяет глав.
+  AlmaError? _computeFailure;
   bool _loading = true;
 
   bool _started = false;
@@ -51,25 +56,38 @@ class _SystemScreenState extends State<SystemScreen> {
     setState(() {
       _loading = true;
       _failure = null;
+      _computeFailure = null;
     });
-    try {
-      // Расчёт и оглавление одновременно: рисунок системы и её главы — две
-      // независимые вещи, и ждать их по очереди значит удвоить пустой экран.
-      final both = await Future.wait([
-        session.client.chapters(widget.system, locale: session.locale),
-        session.client.compute(widget.system),
-      ]);
-      if (mounted) {
-        setState(() {
-          _chapters = both[0] as ChapterList;
-          _result = both[1] as CalcResult;
-        });
-      }
-    } on AlmaError catch (error) {
-      if (mounted) setState(() => _failure = error);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    // Расчёт и оглавление одновременно: рисунок системы и её главы — две
+    // независимые вещи, и ждать их по очереди значит удвоить пустой экран.
+    //
+    // **И падают они тоже порознь.** Раньше оба стояли в одном `Future.wait`
+    // внутри одного `try`, а отказ расчёта — вещь совершенно обычная:
+    // совместимость без второго человека, соляр и дома без времени рождения.
+    // Одна такая ошибка забирала с собой и оглавление, и человек видел пустой
+    // экран с сообщением вместо списка глав, которые прекрасно существуют и
+    // читаются. Ошибка расчёта теперь остаётся ошибкой расчёта.
+    final chapters = session.client
+        .chapters(widget.system, locale: session.locale)
+        .then<Object?>((value) => value)
+        .catchError((Object error) => error);
+    final computed = session.client
+        .compute(widget.system)
+        .then<Object?>((value) => value)
+        .catchError((Object error) => error);
+    final both = await Future.wait([chapters, computed]);
+    if (!mounted) return;
+    setState(() {
+      if (both[0] case final ChapterList list) _chapters = list;
+      if (both[1] case final CalcResult result) _result = result;
+      // Экран целиком отказывает, только если не пришло вообще ничего.
+      final failures = both.whereType<AlmaError>();
+      _failure = _chapters == null && _result == null && failures.isNotEmpty
+          ? failures.first
+          : null;
+      _computeFailure = both[1] is AlmaError ? both[1] as AlmaError : null;
+      _loading = false;
+    });
   }
 
   @override
@@ -86,6 +104,16 @@ class _SystemScreenState extends State<SystemScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 6, bottom: 10),
             child: NatalWheel(data: chart),
+          ),
+        if (_computeFailure case final error?)
+          Padding(
+            padding: const EdgeInsets.only(top: 4, bottom: 6),
+            child: Text(
+              error is ServerRefused && error.message.isNotEmpty
+                  ? error.message
+                  : l.stateUnavailable,
+              style: AlmaType.meta,
+            ),
           ),
         const SizedBox(height: 10),
         _section(
