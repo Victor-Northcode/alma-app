@@ -822,7 +822,7 @@ class LEs extends L {
   String get cabSystemAstrocartography => 'Astrocartografía';
 
   @override
-  String get cabSystemBirthCard => 'Arcano de nacimiento';
+  String get cabSystemBirthCard => 'Carta de nacimiento';
 
   @override
   String get cabSystemCompatibility => 'Compatibilidad';
@@ -1414,7 +1414,7 @@ class LEs extends L {
   String get journeySystemAstrocartography => 'Astrocartografía';
 
   @override
-  String get journeySystemBirthCard => 'Arcano de nacimiento';
+  String get journeySystemBirthCard => 'Carta de nacimiento';
 
   @override
   String get journeySystemCompatibility => 'Compatibilidad';
@@ -1700,7 +1700,7 @@ class LEs extends L {
   String get paywallSystemAstrocartography => 'Astrocartografía';
 
   @override
-  String get paywallSystemBirthCard => 'Arcano de nacimiento';
+  String get paywallSystemBirthCard => 'Carta de nacimiento';
 
   @override
   String get paywallSystemCompatibility => 'Compatibilidad';

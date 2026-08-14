@@ -825,7 +825,7 @@ class LRu extends L {
   String get cabSystemAstrocartography => 'Астрокартография';
 
   @override
-  String get cabSystemBirthCard => 'Аркан рождения';
+  String get cabSystemBirthCard => 'Карта рождения';
 
   @override
   String get cabSystemCompatibility => 'Совместимость';
@@ -1411,7 +1411,7 @@ class LRu extends L {
   String get journeySystemAstrocartography => 'Астрокартография';
 
   @override
-  String get journeySystemBirthCard => 'Аркан рождения';
+  String get journeySystemBirthCard => 'Карта рождения';
 
   @override
   String get journeySystemCompatibility => 'Совместимость';
@@ -1695,7 +1695,7 @@ class LRu extends L {
   String get paywallSystemAstrocartography => 'Астрокартография';
 
   @override
-  String get paywallSystemBirthCard => 'Аркан рождения';
+  String get paywallSystemBirthCard => 'Карта рождения';
 
   @override
   String get paywallSystemCompatibility => 'Совместимость';

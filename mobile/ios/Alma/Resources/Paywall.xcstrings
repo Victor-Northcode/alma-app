@@ -2063,7 +2063,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tarot-Geburtskarte"
+            "value": "Geburtskarte"
           }
         },
         "en": {
@@ -2075,13 +2075,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Arcano de nacimiento"
+            "value": "Carta de nacimiento"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Arcane de naissance (tarot)"
+            "value": "Carte de naissance"
           }
         },
         "it": {
@@ -2099,7 +2099,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Аркан рождения"
+            "value": "Карта рождения"
           }
         }
       }
@@ -2321,7 +2321,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Synthèse des systèmes"
+            "value": "Synthèse croisée"
           }
         },
         "it": {

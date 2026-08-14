@@ -829,7 +829,7 @@ class LDe extends L {
   String get cabSystemAstrocartography => 'Astrokartografie';
 
   @override
-  String get cabSystemBirthCard => 'Tarot-Geburtskarte';
+  String get cabSystemBirthCard => 'Geburtskarte';
 
   @override
   String get cabSystemCompatibility => 'Partnerschaft';
@@ -1423,7 +1423,7 @@ class LDe extends L {
   String get journeySystemAstrocartography => 'Astrokartografie';
 
   @override
-  String get journeySystemBirthCard => 'Tarot-Geburtskarte';
+  String get journeySystemBirthCard => 'Geburtskarte';
 
   @override
   String get journeySystemCompatibility => 'Partnerschaft';
@@ -1709,7 +1709,7 @@ class LDe extends L {
   String get paywallSystemAstrocartography => 'Astrokartografie';
 
   @override
-  String get paywallSystemBirthCard => 'Tarot-Geburtskarte';
+  String get paywallSystemBirthCard => 'Geburtskarte';
 
   @override
   String get paywallSystemCompatibility => 'Partnerschaft';

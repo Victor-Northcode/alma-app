@@ -32,7 +32,7 @@
     
     <string name="system_natal">Geburtshoroskop</string>
     <string name="system_numerology">Numerologie</string>
-    <string name="system_birth_card">Tarot-Geburtskarte</string>
+    <string name="system_birth_card">Geburtskarte</string>
     <string name="system_transits">Transite</string>
     <string name="system_solar_return">Solarhoroskop</string>
     <string name="system_compatibility">Partnerschaft</string>

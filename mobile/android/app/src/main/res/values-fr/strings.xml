@@ -32,12 +32,12 @@
     
     <string name="system_natal">Thème natal</string>
     <string name="system_numerology">Numérologie</string>
-    <string name="system_birth_card">Arcane de naissance (tarot)</string>
+    <string name="system_birth_card">Carte de naissance</string>
     <string name="system_transits">Transits</string>
     <string name="system_solar_return">Révolution solaire</string>
     <string name="system_compatibility">Compatibilité</string>
     <string name="system_astrocartography">Astrocartographie</string>
-    <string name="system_synthesis">Synthèse des systèmes</string>
+    <string name="system_synthesis">Synthèse croisée</string>
     <string name="group_who_am_i">qui je suis</string>
     <string name="group_right_now">en ce moment</string>
     <string name="group_this_year">cette année</string>

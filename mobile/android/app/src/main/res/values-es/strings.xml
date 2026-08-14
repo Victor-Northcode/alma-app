@@ -32,7 +32,7 @@
     
     <string name="system_natal">Carta natal</string>
     <string name="system_numerology">Numerología</string>
-    <string name="system_birth_card">Arcano de nacimiento</string>
+    <string name="system_birth_card">Carta de nacimiento</string>
     <string name="system_transits">Tránsitos</string>
     <string name="system_solar_return">Revolución solar</string>
     <string name="system_compatibility">Compatibilidad</string>

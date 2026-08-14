@@ -825,7 +825,7 @@ class LFr extends L {
   String get cabSystemAstrocartography => 'Astrocartographie';
 
   @override
-  String get cabSystemBirthCard => 'Arcane de naissance (tarot)';
+  String get cabSystemBirthCard => 'Carte de naissance';
 
   @override
   String get cabSystemCompatibility => 'Compatibilité';
@@ -840,7 +840,7 @@ class LFr extends L {
   String get cabSystemSolarReturn => 'Révolution solaire';
 
   @override
-  String get cabSystemSynthesis => 'Synthèse des systèmes';
+  String get cabSystemSynthesis => 'Synthèse croisée';
 
   @override
   String get cabSystemTransits => 'Transits';
@@ -1423,7 +1423,7 @@ class LFr extends L {
   String get journeySystemAstrocartography => 'Astrocartographie';
 
   @override
-  String get journeySystemBirthCard => 'Arcane de naissance (tarot)';
+  String get journeySystemBirthCard => 'Carte de naissance';
 
   @override
   String get journeySystemCompatibility => 'Compatibilité';
@@ -1438,7 +1438,7 @@ class LFr extends L {
   String get journeySystemSolarReturn => 'Révolution solaire';
 
   @override
-  String get journeySystemSynthesis => 'Synthèse des systèmes';
+  String get journeySystemSynthesis => 'Synthèse croisée';
 
   @override
   String get journeySystemTransits => 'Transits';
@@ -1709,7 +1709,7 @@ class LFr extends L {
   String get paywallSystemAstrocartography => 'Astrocartographie';
 
   @override
-  String get paywallSystemBirthCard => 'Arcane de naissance (tarot)';
+  String get paywallSystemBirthCard => 'Carte de naissance';
 
   @override
   String get paywallSystemCompatibility => 'Compatibilité';
@@ -1724,7 +1724,7 @@ class LFr extends L {
   String get paywallSystemSolarReturn => 'Révolution solaire';
 
   @override
-  String get paywallSystemSynthesis => 'Synthèse des systèmes';
+  String get paywallSystemSynthesis => 'Synthèse croisée';
 
   @override
   String get paywallSystemTransits => 'Transits';
