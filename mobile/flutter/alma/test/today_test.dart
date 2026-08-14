@@ -7,10 +7,21 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Сколько раз спросили письмо дня. Проверяется отдельно: неподписчику его
+/// не показывают, и **просить его у сервера тоже незачем** — это деньги за
+/// генерацию, потраченные в пустоту, и месячный потолок, сгорающий на тексте,
+/// которого никто не прочтёт.
+int readingCalls = 0;
+
 /// «Сегодня» с настоящими формами ответов: профиль есть, транзиты несут
 /// области и фазу луны, письмо дня написано. Формы сняты с живого сервера,
 /// а не выдуманы — сломается договор, сломается и тест.
-AlmaClient richClient() {
+///
+/// [subscriber] решает, что отвечает `/v1/billing/entitlements`: гороскоп —
+/// функция подписки по решению владельца, и оба состояния экрана обязаны быть
+/// закреплены, иначе однажды он снова начнёт раздаваться даром.
+AlmaClient richClient({bool subscriber = true}) {
+  readingCalls = 0;
   final http.Client transport = MockClient((request) async {
     final path = request.url.path;
     Map<String, dynamic> body;
@@ -72,7 +83,21 @@ AlmaClient richClient() {
         'provenance': <String, dynamic>{},
         'access': {'allowed': true, 'reason': ''},
       };
+    } else if (path == '/v1/billing/entitlements') {
+      body = {
+        'unlocked': subscriber
+            ? ['natal', 'numerology', 'birth-card', 'transits', 'solar-return',
+               'compatibility', 'astrocartography', 'synthesis']
+            : <String>[],
+        'entitlements': subscriber
+            ? [
+                {'active': true, 'kind': 'monthly', 'scope': 'all', 'system': '*'}
+              ]
+            : <Map<String, dynamic>>[],
+        'currency': 'USD',
+      };
     } else if (path == '/v1/readings') {
+      readingCalls += 1;
       body = {
         'reading': {
           'system': 'transits',
@@ -120,5 +145,32 @@ void main() {
     // Пустые области говорят это словами, а не молчат: три из четырёх пустые,
     // и каждая несёт строку каталога — «Nothing exact here today.»
     expect(find.text('Nothing exact here today.'), findsNWidgets(3));
+  });
+
+  testWidgets('без плана гороскоп закрыт, и письмо дня даже не запрашивается',
+      (tester) async {
+    await tester.pumpWidget(AlmaApp(client: richClient(subscriber: false)));
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+
+    // Ни абзаца дня, ни блюра, ни пустой карточки: одна фраза о том, что это
+    // такое и где живёт, и дверь.
+    expect(find.textContaining('Нептун'), findsNothing);
+    expect(
+      find.text(
+          'The horoscope is written from your own chart every morning, and it comes with the plan.'),
+      findsOneWidget,
+    );
+    expect(find.text('Open the horoscope'), findsOneWidget);
+
+    // И приглашение к плану — на экране, которым подписчик пользовался бы
+    // каждый день, а не одним тапом в настройках, куда никто не заходит,
+    // чтобы ему что-нибудь продали.
+    expect(find.text('Everything open, every day'), findsOneWidget);
+    expect(find.text('See the plans'), findsOneWidget);
+
+    // Главное: за письмо дня никто не заплатил.
+    expect(readingCalls, 0);
   });
 }
