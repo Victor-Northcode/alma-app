@@ -11,6 +11,7 @@ import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
+import '../cabinet_words.dart';
 import '../offer_screen.dart';
 import 'writing_art.dart';
 import '../../state/session.dart';
@@ -321,15 +322,38 @@ class _ChapterScreenState extends State<ChapterScreen> {
       return _LockedWall(system: widget.system);
     }
     if (failure != null && _reading == null) {
+      // **Отказ по потолку сам называет выход — значит, выход обязан быть на
+      // экране.** Фраза кончается словами «или прямо сейчас, с подпиской», а
+      // под ней не было ничего: ни двери, ни кнопки. Предложение, названное
+      // текстом и не показанное, хуже отсутствующего — оно выглядит как
+      // издёвка. Остальные отказы двери не получают: сеть и отказ письма
+      // подпиской не лечатся.
+      final capped = failure is ServerRefused &&
+          const ['month_budget', 'budget_exceeded'].contains(failure.code) &&
+          !SessionScope.of(context).isSubscriber;
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(AlmaMetrics.pad),
-          child: Text(
-            failure is ServerRefused && failure.message.isNotEmpty
-                ? failure.message
-                : l.stateUnavailable,
-            style: AlmaType.meta,
-            textAlign: TextAlign.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                failure is ServerRefused && failure.message.isNotEmpty
+                    ? failure.message
+                    : l.stateUnavailable,
+                style: AlmaType.meta,
+                textAlign: TextAlign.center,
+              ),
+              if (capped) ...[
+                const SizedBox(height: 20),
+                AlmaButton(
+                  kind: AlmaButtonKind.outline,
+                  fills: false,
+                  label: l.cabPlansCta,
+                  onTap: () => _openOffer(context, null),
+                ),
+              ],
+            ],
           ),
         ),
       );
@@ -459,9 +483,12 @@ class _ChapterScreenState extends State<ChapterScreen> {
           Text(opened ? l.cabChapterEndPlan : l.cabChapterEndDoor,
               style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
           const SizedBox(height: 12),
+          // **Золотая, а не обводкой.** У обводки надпись цвета `goldBright`,
+          // и на пергаменте её почти не видно — снято на кадре: «Открыть:
+          // Натальная карта» читалась как водяной знак. На нативе дверь в
+          // конце главы тоже золотая (`DoorButton`), и здесь это единственное
+          // действие страницы, так что второго акцента не возникает.
           AlmaButton(
-            kind: AlmaButtonKind.outline,
-            fills: false,
             label: opened
                 ? l.cabPlansCta
                 : l.cabOpenSystemNamed(_systemName(l)),
@@ -527,6 +554,7 @@ class _CitedLineState extends State<_CitedLine> {
 
   @override
   Widget build(BuildContext context) {
+    final l = L.of(context);
     final rest = widget.factors.length - 1;
     final style = AlmaType.numeral.copyWith(
       color: AlmaPalette.goldDeep,
@@ -541,7 +569,7 @@ class _CitedLineState extends State<_CitedLine> {
               style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(widget.factors.first,
+            child: Text(CabinetWordsMore.factor(l, widget.factors.first),
                 style: style, overflow: TextOverflow.ellipsis),
           ),
           if (rest > 0 && !_open) ...[
@@ -553,7 +581,7 @@ class _CitedLineState extends State<_CitedLine> {
           for (final factor in widget.factors.skip(1))
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(factor, style: style),
+              child: Text(CabinetWordsMore.factor(l, factor), style: style),
             ),
       ]),
     );

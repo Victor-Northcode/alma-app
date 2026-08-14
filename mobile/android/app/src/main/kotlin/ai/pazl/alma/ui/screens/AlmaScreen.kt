@@ -334,7 +334,7 @@ private fun Citations(factors: List<String>) {
         ) {
             Overline(stringResource(R.string.chat_read_from))
             Text(
-                text = if (more > 0) "${factors.first()}  +$more" else factors.first(),
+                text = localizedFactor(factors.first()).let { if (more > 0) "$it  +$more" else it },
                 style = AlmaTheme.type.positions.copy(fontSize = 13.sp),
                 color = AlmaPalette.GoldBright,
                 maxLines = 1,
@@ -360,7 +360,10 @@ private fun Citations(factors: List<String>) {
                             .background(AlmaPalette.Gold.copy(alpha = 0.10f), PillShape)
                             .padding(horizontal = 11.dp, vertical = 5.dp),
                     ) {
-                        Text(text = factor, style = AlmaTheme.type.positions.copy(fontSize = 13.sp))
+                        Text(
+                            text = localizedFactor(factor),
+                            style = AlmaTheme.type.positions.copy(fontSize = 13.sp),
+                        )
                     }
                 }
             }

@@ -492,7 +492,7 @@ class _CitationState extends State<_Citation> {
         // она и есть обещание продукта, что ответ прочитан из карты.
         Expanded(
           child: Text(
-            widget.factors.first,
+            CabinetWordsMore.factor(l, widget.factors.first),
             style: AlmaType.numeral.copyWith(
               color: AlmaPalette.gold,
               fontFamilyFallback: AlmaType.glyphFallback,
@@ -520,7 +520,7 @@ class _CitationState extends State<_Citation> {
         for (final factor in widget.factors.skip(1))
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: Text(factor,
+            child: Text(CabinetWordsMore.factor(l, factor),
                 style: AlmaType.numeral.copyWith(
                   color: AlmaPalette.gold,
                   fontFamilyFallback: AlmaType.glyphFallback,

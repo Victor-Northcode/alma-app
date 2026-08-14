@@ -413,7 +413,10 @@ private fun ChapterBody(
                             .border(1.dp, InkGold.copy(alpha = 0.35f), PillShape)
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                     ) {
-                        Text(text = factor, style = AlmaTheme.type.positions.copy(color = InkGold))
+                        Text(
+                            text = localizedFactor(factor),
+                            style = AlmaTheme.type.positions.copy(color = InkGold),
+                        )
                     }
                 }
             }

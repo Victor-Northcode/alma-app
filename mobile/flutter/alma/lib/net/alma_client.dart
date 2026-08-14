@@ -396,7 +396,22 @@ class AlmaClient {
           }
         }
       } catch (_) {}
-      if (streamed.statusCode >= 500) message = '';
+      // **Кроме тех кодов, у которых фраза заведомо переведена.**
+      //
+      // `alma/i18n/replies.py` — единственный источник этих сообщений, и они
+      // приходят на языке аккаунта независимо от статуса. Отказ по потолку
+      // отвечает 503, и правило выше стирало готовую человеческую фразу,
+      // подменяя её общим «что-то не работает» — то есть теряло единственное
+      // объяснение, которое у читателя было.
+      const translated = {
+        'budget_exceeded',
+        'month_budget',
+        'question_limit.day',
+        'question_limit.month',
+        'partner_limit',
+        'answer_refused',
+      };
+      if (streamed.statusCode >= 500 && !translated.contains(code)) message = '';
       throw ServerRefused(status: streamed.statusCode, message: message, code: code);
     }
 

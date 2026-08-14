@@ -261,6 +261,52 @@ enum L10nCabinet {
     /// moment before the screen, so the data underneath never drifts.
     static func localizedFactor(_ raw: String) -> String {
         var out = raw
+
+        // **The astro half, which this function used to walk straight past.**
+        //
+        // A Russian chapter cited «sun 21°39′ ♓ · house 9» — the body and the
+        // house in English under a page that has no other English on it. The
+        // citation exists to let somebody *check* the reading against their
+        // own chart, and a line they cannot read checks nothing. Photographed
+        // on the simulator, 14 August 2026.
+        //
+        // Substitution, never reformatting: the degrees and minutes stay
+        // exactly the characters the engine printed, so this layer never
+        // becomes a second opinion about a number.
+        // Twelve literal passes rather than one capturing regex: `\b` after the
+        // digit is what keeps "house 1" from eating the "1" of "house 12".
+        for number in 1...12 {
+            out = out.replacingOccurrences(
+                of: "\\bhouse \(number)\\b",
+                with: houseName(number),
+                options: .regularExpression)
+        }
+        for key in ["north_node", "south_node", "true_node", "mean_node",
+                    "part_of_fortune", "vertex", "ascendant", "midheaven",
+                    "chiron", "lilith", "sun", "moon", "mercury", "venus",
+                    "mars", "jupiter", "saturn", "uranus", "neptune", "pluto"] {
+            out = out.replacingOccurrences(
+                of: "\\b\(key)\\b", with: bodyName(key), options: .regularExpression)
+        }
+        for key in ["conjunction", "opposition", "trine", "square",
+                    "sextile", "quincunx"] {
+            out = out.replacingOccurrences(
+                of: "\\b\(key)\\b",
+                with: DailyL10n.aspectWord(key),
+                options: .regularExpression)
+        }
+        // The glyph is the one thing a reader cannot decode. The variation
+        // selector the engine appends to some of them is dropped with it.
+        for (name, glyph) in [
+            ("Aries", "♈︎"), ("Taurus", "♉︎"), ("Gemini", "♊︎"), ("Cancer", "♋︎"),
+            ("Leo", "♌︎"), ("Virgo", "♍︎"), ("Libra", "♎︎"), ("Scorpio", "♏︎"),
+            ("Sagittarius", "♐︎"), ("Capricorn", "♑︎"), ("Aquarius", "♒︎"),
+            ("Pisces", "♓︎"),
+        ] {
+            out = out.replacingOccurrences(of: glyph, with: signName(name))
+        }
+        out = out.replacingOccurrences(of: "\u{FE0E}", with: "")
+
         let axes = ["Direction", "Character", "Mind", "Relationships",
                     "Resources", "Work", "Weak point", "Growth", "Rhythms"]
         for name in axes {

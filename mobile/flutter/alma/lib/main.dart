@@ -191,17 +191,29 @@ class _CabinetShellState extends State<CabinetShell> {
       // баннер и не всплывающее окно, а маленькая печать, которая ждёт. Она
       // исчезает в ту секунду, когда план появляется, — звать заплатившего
       // значит показывать, что мы не знаем, кто перед нами.
-      floatingActionButton: (!session.isSubscriber &&
+      // **Над пергаментом её нет.**
+      //
+      // Пилюля висела поверх открытой главы и налезала на строки: вкладка всё
+      // ещё «Мои системы», а экран уже документ. Продавать поверх того, за что
+      // человек только что заплатил вниманием, — худший момент из возможных, и
+      // признак чтения у нас уже есть, тот самый, что перекрашивает бар.
+      floatingActionButton: ValueListenableBuilder<bool>(
+        valueListenable: readingNow,
+        builder: (context, reading, _) {
+          final invited = !session.isSubscriber &&
               session.hasBirthData &&
-              (_tab == CabinetTab.today || _tab == CabinetTab.systems))
-          ? Padding(
-              padding: EdgeInsets.only(bottom: AlmaMetrics.tabBarHeight - 8),
-              child: _AllAlmaPill(onTap: () {
-                Navigator.of(context).push(CupertinoPageRoute(
-                    builder: (context) => const OfferScreen()));
-              }),
-            )
-          : null,
+              !reading &&
+              (_tab == CabinetTab.today || _tab == CabinetTab.systems);
+          if (!invited) return const SizedBox.shrink();
+          return Padding(
+            padding: EdgeInsets.only(bottom: AlmaMetrics.tabBarHeight - 8),
+            child: _AllAlmaPill(onTap: () {
+              Navigator.of(context).push(CupertinoPageRoute(
+                  builder: (context) => const OfferScreen()));
+            }),
+          );
+        },
+      ),
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
         // Нажатие идёт тем же путём, что смах: одно движение на оба способа.

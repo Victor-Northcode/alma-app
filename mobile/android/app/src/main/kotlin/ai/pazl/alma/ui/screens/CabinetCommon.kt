@@ -253,6 +253,36 @@ internal fun spellSigns(formatted: String): String {
     return out.replace("︎", "").trim()
 }
 
+/**
+ * A citation, spoken in the reader's language at display time.
+ *
+ * **The data stays English and the screen does not.** Factors are identifiers:
+ * the validator checks them against the text character by character, so
+ * translating them in the response would break the one check that catches an
+ * invented placement. The substitution happens here, at the last moment before
+ * the screen.
+ *
+ * Found on a frame: under a Russian chapter stood "sun 21°39′ ♓ · house 9". To
+ * a reader with no English that line confirms nothing — and confirming is the
+ * only reason it exists.
+ */
+@Composable
+internal fun localizedFactor(raw: String): String {
+    var out = raw
+    // Twelve literal passes rather than one capturing regex: the word boundary
+    // after the digit is what keeps "house 1" from eating the "1" of "house 12".
+    for (number in 1..12) {
+        out = out.replace(Regex("""\bhouse $number\b"""), houseWord(number))
+    }
+    for (key in BodyWords.keys + listOf("north_node", "south_node", "part_of_fortune", "vertex")) {
+        out = out.replace(Regex("""\b$key\b"""), bodyWord(key))
+    }
+    for (key in AspectWords.keys) {
+        out = out.replace(Regex("""\b$key\b"""), aspectWord(key))
+    }
+    return spellSigns(out)
+}
+
 /** Sign name to glyph. Design metadata about the zodiac, not about a person. */
 internal val SignGlyphs: Map<String, String> = mapOf(
     "Aries" to "♈︎", "Taurus" to "♉︎", "Gemini" to "♊︎", "Cancer" to "♋︎",

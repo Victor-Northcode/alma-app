@@ -155,4 +155,46 @@ extension CabinetWordsMore on CabinetWords {
     // оставляет его позади.
     return out.replaceAll('︎', '').trim();
   }
+
+  /// Цитата под текстом, сказанная на языке читателя.
+  ///
+  /// **Данные остаются английскими, а экран — нет.** Факторы — это
+  /// идентификаторы: валидатор сверяет их с текстом посимвольно, и переводить
+  /// их в ответе значило бы сломать единственную проверку, которая ловит
+  /// выдуманную позицию. Поэтому подстановка происходит здесь, в последний
+  /// момент перед экраном.
+  ///
+  /// Найдено на кадре: под русской главой стояло «sun 21°39′ ♓ · house 9».
+  /// Читателю, который не знает английского, эта строка не подтверждает
+  /// ничего — а она существует ровно для подтверждения.
+  static String factor(L l, String raw) {
+    var out = raw;
+
+    // Дом: «house 9» → «9-й дом». Регистр числа — до имени тела, иначе
+    // «house» успевает уехать в другую замену.
+    out = out.replaceAllMapped(RegExp(r'\bhouse (\d{1,2})\b'), (match) {
+      final number = int.tryParse(match.group(1)!);
+      return number == null ? match.group(0)! : CabinetWordsMore.house(l, number);
+    });
+
+    // Тела и точки: слово целиком, чтобы `sun` внутри `sun_sign` не поймалось
+    // половиной.
+    for (final key in const [
+      'true_node', 'mean_node', 'north_node', 'south_node',
+      'part_of_fortune', 'vertex',
+      'ascendant', 'midheaven', 'chiron', 'lilith',
+      'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
+      'uranus', 'neptune', 'pluto',
+    ]) {
+      out = out.replaceAll(RegExp('\\b$key\\b'), CabinetWords.body(l, key));
+    }
+
+    // Аспекты словами и знаки глифами — тем же способом, что и везде.
+    for (final key in const [
+      'conjunction', 'opposition', 'trine', 'square', 'sextile', 'quincunx',
+    ]) {
+      out = out.replaceAll(RegExp('\\b$key\\b'), CabinetWords.aspect(l, key));
+    }
+    return spellSigns(l, out);
+  }
 }
