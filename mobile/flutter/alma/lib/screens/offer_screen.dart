@@ -73,6 +73,13 @@ class _OfferScreenState extends State<OfferScreen> {
     // открытая заново после мёртвой сети, обязана работать.
     if (_store.state != StoreState.ready) _store.load();
     _load();
+    // Ступень воронки: витрину открыли. С системой в мете, когда пришли за
+    // дверью, — иначе отчёт не отличит «показали лестницу» от «показали
+    // конкретную дверь».
+    SessionScope.of(context).client.track(
+      FunnelStage.offerView,
+      meta: widget.system == null ? null : {'product': widget.system!.slug},
+    );
   }
 
   @override
@@ -192,7 +199,13 @@ class _OfferScreenState extends State<OfferScreen> {
                 chosen: chosen,
                 store: _store,
                 intent: intent,
-                onDone: () => Navigator.of(context).maybePop(),
+                onDecline: () {
+                  session.client.track(
+                    FunnelStage.offerDeclined,
+                    meta: door == null ? null : {'product': door.slug},
+                  );
+                  Navigator.of(context).maybePop();
+                },
               ),
           ],
         ],
@@ -334,13 +347,16 @@ class _BuyArea extends StatelessWidget {
     required this.chosen,
     required this.store,
     required this.intent,
-    required this.onDone,
+    required this.onDecline,
   });
 
   final LadderKey chosen;
   final AlmaStore store;
   final PaywallIntent intent;
-  final VoidCallback onDone;
+
+  /// «Не сейчас». Отдельная ступень воронки, а не просто выход: человек,
+  /// закрывший витрину, и человек, ушедший с неё назад, — разные события.
+  final VoidCallback onDecline;
 
   @override
   Widget build(BuildContext context) {
@@ -449,7 +465,7 @@ class _BuyArea extends StatelessWidget {
             kind: AlmaButtonKind.outline,
             fills: false,
             label: intent.isDoor ? l.paywallSkip : l.paywallNotNow,
-            onTap: onDone,
+            onTap: onDecline,
           ),
         ),
         const SizedBox(height: 8),

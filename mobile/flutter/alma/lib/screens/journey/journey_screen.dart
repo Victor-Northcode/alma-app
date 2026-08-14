@@ -41,6 +41,17 @@ class _JourneyScreenState extends State<JourneyScreen> {
   bool _saving = false;
   String? _failure;
 
+  /// Начало анкеты сообщается один раз за приход, а не на каждый кадр.
+  bool _announced = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_announced) return;
+    _announced = true;
+    SessionScope.of(context).client.track(FunnelStage.quizStart);
+  }
+
   @override
   void dispose() {
     _name.dispose();
@@ -69,6 +80,11 @@ class _JourneyScreenState extends State<JourneyScreen> {
       _failure = null;
     });
     try {
+      // **Анкета завершается здесь, а не на портрете.** К этой минуте отвечено
+      // на каждый вопрос; портрет — награда, и путать «ответил на всё» с
+      // «увидел результат» значит спрятать ровно тех людей, у кого сохранение
+      // не прошло.
+      await session.client.track(FunnelStage.quizComplete);
       await session.client.saveProfile(BirthInput(
         birthDate:
             '${_year.toString().padLeft(4, '0')}-${_month.toString().padLeft(2, '0')}-${_day.toString().padLeft(2, '0')}',

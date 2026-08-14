@@ -767,3 +767,24 @@ class Plan {
         offered: json['offered'] as String? ?? '',
       );
 }
+
+/// Ступени воронки, которые шлёт приложение.
+///
+/// Порт `FunnelStage` из `APIModels.swift`, и список **короче** серверного
+/// намеренно. `landing_view` и `portrait_view` принадлежат вебу; `purchase` и
+/// `daily_sent` сервер помечает `server_known` и отвечает на них 422 — они
+/// пишутся из платёжной записи и из отправки уведомления, а не из телефона.
+/// Слать их отсюда значило бы измерять собственное намерение вместо факта.
+enum FunnelStage {
+  quizStart('quiz_start'),
+  quizComplete('quiz_complete'),
+  offerView('offer_view'),
+  checkoutOpened('checkout_opened'),
+  purchaseCompleted('purchase_completed'),
+  offerDeclined('offer_declined');
+
+  const FunnelStage(this.wire);
+
+  /// Имя, которое знает сервер (`alma/funnel.py`).
+  final String wire;
+}

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 import '../net/alma_client.dart';
+import '../net/models.dart';
 import '../state/session.dart';
 import 'ladder.dart';
 
@@ -107,6 +108,10 @@ class AlmaStore extends ChangeNotifier {
     _busy = key;
     _notice = null;
     notifyListeners();
+    // Ступень воронки: лист покупки открыт. До неё — «посмотрел витрину»,
+    // после — «заплатил»; без этой ступени между ними провал, который читается
+    // как потеря конверсии там, где её нет.
+    _session?.client.track(FunnelStage.checkoutOpened, meta: {'product': key.slug});
 
     final purchase = PurchaseParam(productDetails: product);
     try {
@@ -245,6 +250,13 @@ class AlmaStore extends ChangeNotifier {
       // человеку, который только что заплатил.
       final unlocked = ((answer['unlocked'] as List?) ?? const []).isNotEmpty ||
           session.entitlements.hasPlan;
+      if (unlocked) {
+        // **Только когда сервер действительно выдал.** Ступень «куплено»,
+        // отправленная по факту ответа 200, считала бы и те покупки, под
+        // которыми ничего не открылось.
+        session.client.track(FunnelStage.purchaseCompleted,
+            meta: {'product': key.slug});
+      }
       _notice = unlocked
           ? StoreNotice(
               StoreTone.good,
