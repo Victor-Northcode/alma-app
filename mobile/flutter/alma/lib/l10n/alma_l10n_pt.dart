@@ -1611,7 +1611,7 @@ class LPt extends L {
       'Trânsitos, revolução solar e compatibilidade enquanto se movem, mais 30 perguntas por mês. Renova até você cancelar.';
 
   @override
-  String get paywallMonthlyTitle => 'Alma completa, mês a mês';
+  String get paywallMonthlyTitle => 'Tudo o que se move, mês a mês';
 
   @override
   String get paywallNotNow => 'Agora não';
@@ -1744,7 +1744,7 @@ class LPt extends L {
       'Leituras atualizadas e perguntas por uma semana. Renova toda semana até você cancelar.';
 
   @override
-  String get paywallWeeklyTitle => 'Alma completa, semana a semana';
+  String get paywallWeeklyTitle => 'Tudo o que se move, semana a semana';
 
   @override
   String get paywallWithdrawn =>

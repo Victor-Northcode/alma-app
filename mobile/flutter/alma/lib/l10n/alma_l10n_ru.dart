@@ -1603,7 +1603,7 @@ class LRu extends L {
       'Транзиты, соляр и совместимость, пока они движутся, плюс 25 вопросов в месяц. Продлевается, пока не отменишь.';
 
   @override
-  String get paywallMonthlyTitle => 'Вся Alma — на месяц';
+  String get paywallMonthlyTitle => 'Всё живое — на месяц';
 
   @override
   String get paywallNotNow => 'Не сейчас';

@@ -852,13 +852,13 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma completa, mês a mês"
+            "value": "Tudo o que se move, mês a mês"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вся Alma — на месяц"
+            "value": "Всё живое — на месяц"
           }
         }
       }
@@ -2667,7 +2667,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma completa, semana a semana"
+            "value": "Tudo o que se move, semana a semana"
           }
         },
         "ru": {
