@@ -238,6 +238,17 @@ class AlmaClient {
         'hour': ?hour,
       });
 
+  /// Полка: что вообще продаётся и почём. Цена приходит с сервера — здесь
+  /// её не считают и не переводят в валюту, иначе на витрине и в чеке
+  /// оказались бы два разных числа.
+  Future<List<Plan>> catalogue({required String locale}) async {
+    final body = await _get('/v1/billing/catalogue?locale=$locale');
+    final rows = (body['items'] as List?) ?? const [];
+    return rows
+        .map((row) => Plan.fromJson((row as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
   Future<Map<String, dynamic>> entitlements() async =>
       _get('/v1/billing/entitlements');
 

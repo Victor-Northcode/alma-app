@@ -679,3 +679,48 @@ class ChatTurn {
             .toList(),
       );
 }
+
+
+/// Строка полки: чем это называется, сколько стоит и что открывает.
+class Plan {
+  const Plan({
+    required this.slug,
+    required this.name,
+    required this.kind,
+    required this.display,
+    required this.interval,
+    required this.scope,
+    required this.offered,
+  });
+
+  final String slug;
+  final String name;
+
+  /// `one_time`, `weekly`, `monthly`, `annual`.
+  final String kind;
+
+  /// Цена словами, как её напечатал сервер: «$78.99». Своего форматирования
+  /// здесь нет намеренно — витрина и чек обязаны показывать одно число.
+  final String display;
+
+  final String interval;
+
+  /// `system` — одна система, `all` — всё сразу.
+  final String scope;
+
+  /// `shelf` — лежит на полке; иное значение означает условную цену, которую
+  /// нельзя предлагать просто так.
+  final String offered;
+
+  bool get isSubscription => kind != 'one_time';
+
+  factory Plan.fromJson(Map<String, dynamic> json) => Plan(
+        slug: json['slug'] as String? ?? '',
+        name: json['name'] as String? ?? '',
+        kind: json['kind'] as String? ?? 'one_time',
+        display: json['display'] as String? ?? '',
+        interval: json['interval'] as String? ?? '',
+        scope: json['scope'] as String? ?? 'system',
+        offered: json['offered'] as String? ?? '',
+      );
+}

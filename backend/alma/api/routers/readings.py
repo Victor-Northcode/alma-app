@@ -501,6 +501,7 @@ async def _read_or_write(
         session,
         user,
         tier=tier,
+        locale=language,
         projected=_chapter_projection(
             result, chapter, model=model, locale=language, memory=memory
         ),
@@ -527,10 +528,16 @@ async def _read_or_write(
             422, detail={"error": "reading_refused", "message": str(exc)}
         ) from exc
     except cost.BudgetExceeded as exc:
+        # Цифры — в лог, читателю — фраза. Текст исключения называет
+        # себестоимость и потолок; он писался для того, кто чинит, и на экране
+        # не объясняет ничего.
         log.error("budget exceeded for %s/%s: %s", payload.system, chapter.slug, exc)
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"error": "budget_exceeded", "message": str(exc)},
+            detail={
+                "error": "budget_exceeded",
+                "message": i18n_replies.reply("budget_exceeded", payload.locale),
+            },
         ) from exc
     except ModelUnavailable as exc:
         raise HTTPException(
@@ -900,7 +907,9 @@ async def _asked(session, user, allowance: Allowance) -> int:
     return (row.count or 0) if row else 0
 
 
-async def _guard_month(session, user, *, tier: str, projected: float) -> None:
+async def _guard_month(
+    session, user, *, tier: str, projected: float, locale: str = "en"
+) -> None:
     """Refuse a generation this account can no longer afford this month.
 
     Deliberately a different error from the question counter even though both
@@ -916,7 +925,12 @@ async def _guard_month(session, user, *, tier: str, projected: float) -> None:
         log.error("month ledger refused %s (%s tier): %s", user.id, tier, exc)
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
-            detail={"error": "month_budget", "message": str(exc), "tier": tier},
+            # Ни себестоимости, ни потолка наружу: они для лога выше.
+            detail={
+                "error": "month_budget",
+                "message": i18n_replies.reply("budget_exceeded", locale),
+                "tier": tier,
+            },
         ) from exc
 
 
@@ -1380,6 +1394,7 @@ async def chat(
         session,
         user,
         tier=tier,
+        locale=payload.locale,
         projected=_chat_projection(
             question=payload.message,
             results=results,
@@ -1405,9 +1420,13 @@ async def chat(
             already_cited=already_cited,
         )
     except cost.BudgetExceeded as exc:
+        log.error("budget exceeded in chat for %s: %s", user.id, exc)
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"error": "budget_exceeded", "message": str(exc)},
+            detail={
+                "error": "budget_exceeded",
+                "message": i18n_replies.reply("budget_exceeded", payload.locale),
+            },
         ) from exc
     except ModelUnavailable as exc:
         # `str(exc)` here was the provider's own error object, forwarded whole:

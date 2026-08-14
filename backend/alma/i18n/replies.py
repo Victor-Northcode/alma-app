@@ -139,12 +139,38 @@ PARTNER_LIMIT: dict[str, str] = {
 #: Every table in this module, by the machine code the clients classify on.
 #: Named so the test that checks all six languages are present can iterate
 #: rather than list — a table added without its translations is the failure.
+#: Расходы этого аккаунта упёрлись в потолок.
+#:
+#: **Наружу не уходит ни одна цифра.** Раньше клиент показывал текст самого
+#: исключения — «this account has cost $1.3612 so far this month and this call
+#: would add about $0.0217, against a $1.10 ceiling for the free tier», —
+#: по-английски и с нашей себестоимостью. Читателю это не объясняет ничего, а
+#: конкуренту объясняет слишком много. Подробности остаются в логе, где им и
+#: место.
+BUDGET: dict[str, str] = {
+    "en": "Alma has written a lot for you today. The next piece opens tomorrow "
+          "— or right away with a plan.",
+    "es": "Alma ha escrito mucho para ti hoy. Lo siguiente se abre mañana, o "
+          "ahora mismo con un plan.",
+    "de": "Alma hat heute viel für dich geschrieben. Das Nächste öffnet sich "
+          "morgen — oder sofort mit einem Plan.",
+    "it": "Alma ha scritto molto per te oggi. Il resto si apre domani, o "
+          "subito con un piano.",
+    "fr": "Alma a beaucoup écrit pour toi aujourd'hui. La suite s'ouvre "
+          "demain — ou tout de suite avec un abonnement.",
+    "pt-BR": "Alma escreveu muito para você hoje. O próximo abre amanhã — ou "
+             "agora mesmo com um plano.",
+    "ru": "Alma сегодня много для тебя написала. Следующее откроется завтра — "
+          "или прямо сейчас, с подпиской.",
+}
+
 BY_ERROR: dict[str, dict[str, str]] = {
     "answer_refused": REFUSED,
     "ai_unavailable": UNAVAILABLE,
     "question_limit.day": LIMIT_DAY,
     "question_limit.month": LIMIT_MONTH,
     "partner_limit": PARTNER_LIMIT,
+    "budget_exceeded": BUDGET,
 }
 
 

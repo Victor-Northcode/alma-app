@@ -10,6 +10,7 @@ import 'net/alma_client.dart';
 import 'net/models.dart';
 import 'screens/alma/alma_screen.dart';
 import 'screens/journey/journey_screen.dart';
+import 'screens/offer_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
@@ -186,9 +187,8 @@ class _CabinetShellState extends State<CabinetShell> {
           ? Padding(
               padding: EdgeInsets.only(bottom: AlmaMetrics.tabBarHeight - 8),
               child: _AllAlmaPill(onTap: () {
-                _pages.animateToPage(CabinetTab.systems.index,
-                    duration: const Duration(milliseconds: 320),
-                    curve: Curves.easeOutCubic);
+                Navigator.of(context).push(CupertinoPageRoute(
+                    builder: (context) => const OfferScreen()));
               }),
             )
           : null,
