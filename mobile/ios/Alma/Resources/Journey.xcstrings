@@ -221,7 +221,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Costruisci il mio cielo"
+            "value": "Crea il mio tema"
           }
         },
         "pt-BR": {
@@ -233,7 +233,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Построить моё небо"
+            "value": "Рассчитать мою карту"
           }
         }
       }
@@ -281,7 +281,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "все восемь систем · рассчитаны"
+            "value": "все восемь систем · рассчитаны бесплатно"
           }
         }
       }
@@ -827,7 +827,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ten planets, twelve houses — your chart is drawn from real ephemeris data."
+            "value": "Your birth chart maps the planets and key points across twelve houses using astronomical ephemeris data."
           }
         },
         "es": {
@@ -845,7 +845,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieci pianeti, dodici case — il tuo tema nasce da effemeridi vere."
+            "value": "Il tuo tema colloca pianeti e punti principali nelle dodici case usando dati astronomici delle effemeridi."
           }
         },
         "pt-BR": {
@@ -917,43 +917,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Lebensweg wird zu einer Zahl, die Beweise lieber mag als Glauben."
+            "value": "Die Numerologie berechnet aus deinem Geburtsdatum deine Lebenswegzahl."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your life path reduces to a number that prefers proof over belief."
+            "value": "Numerology turns your birth date into your life-path number."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu sendero de vida se reduce a un número que prefiere pruebas a creencias."
+            "value": "La numerología convierte tu fecha de nacimiento en el número de tu camino de vida."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ton chemin de vie se réduit à un nombre qui préfère les preuves aux croyances."
+            "value": "La numérologie transforme ta date de naissance en ton nombre de chemin de vie."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo sentiero di vita si riduce a un numero che preferisce le prove alla fede."
+            "value": "La numerologia trasforma la tua data di nascita nel numero del percorso di vita."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seu caminho de vida se reduz a um número que prefere prova a crença."
+            "value": "A numerologia transforma sua data de nascimento no número do seu caminho de vida."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Твой жизненный путь сводится к числу, которое предпочитает доказательства вере."
+            "value": "Число жизненного пути рассчитывается по дате рождения."
           }
         }
       }
@@ -965,7 +965,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "System 3 von 8 wird gelesen · Geburtskarte"
+            "value": "System 3 von 8 wird gelesen · Tarot-Geburtskarte"
           }
         },
         "en": {
@@ -983,7 +983,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "lecture du système 3 sur 8 · carte de naissance"
+            "value": "lecture du système 3 sur 8 · arcane de naissance"
           }
         },
         "it": {
@@ -1001,7 +1001,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "читаю систему 3 из 8 · карта рождения"
+            "value": "читаю систему 3 из 8 · аркан рождения"
           }
         }
       }
@@ -1019,7 +1019,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One of twenty-two arcana, calculated from the date alone."
+            "value": "Your birth date is matched with one of the twenty-two Major Arcana."
           }
         },
         "es": {
@@ -1037,7 +1037,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uno dei ventidue arcani, calcolato solo dalla data."
+            "value": "La tua data di nascita viene associata a uno dei ventidue Arcani Maggiori."
           }
         },
         "pt-BR": {
@@ -1049,7 +1049,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Один из двадцати двух арканов, рассчитанный по одной только дате."
+            "value": "Аркан рождения — один из 22 старших арканов Таро; он рассчитывается по дате рождения."
           }
         }
       }
@@ -1109,43 +1109,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wo der Himmel jetzt steht, gegen den Stand von damals."
+            "value": "Wo der Himmel heute steht — im Vergleich zu deinem Geburtshoroskop."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Where the sky is now, against where it was when you started."
+            "value": "Current transits compare today’s planet positions with your birth chart."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dónde está el cielo ahora, frente a dónde estaba cuando empezaste."
+            "value": "Los tránsitos actuales comparan el cielo de ahora con el del momento en que naciste."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Où le ciel est maintenant, face à où il était à ton départ."
+            "value": "La position du ciel aujourd'hui, comparée à ton thème de naissance."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dov'è il cielo adesso, contro dov'era quando hai iniziato."
+            "value": "I transiti attuali confrontano le posizioni dei pianeti di oggi con il tuo tema natale."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onde o céu está agora, contra onde ele estava quando você começou."
+            "value": "Os trânsitos atuais comparam o céu de agora com o do momento em que você nasceu."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Где небо сейчас — против того, где оно было, когда началась твоя история."
+            "value": "Транзиты сравнивают положение планет сейчас и в момент твоего рождения."
           }
         }
       }
@@ -1205,43 +1205,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bleibt offen, bis du eine zweite Person hinzufügst — nichts erfunden."
+            "value": "Wird berechnet, sobald du eine zweite Person hinzufügst — ohne erfundene Daten."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Held open until you add a second person — nothing invented."
+            "value": "Add another person to compare your two birth charts."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Queda abierto hasta que añadas a otra persona — nada inventado."
+            "value": "La compatibilidad se completa cuando añades a otra persona; no inventamos ningún dato."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Laissé ouvert jusqu'à ce que tu ajoutes une deuxième personne — rien d'inventé."
+            "value": "Calculée dès que tu ajoutes une deuxième personne — sans données inventées."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Resta aperto finché non aggiungi una seconda persona — niente di inventato."
+            "value": "Aggiungi un’altra persona per confrontare i vostri temi natali."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fica aberto até você adicionar uma segunda pessoa — nada inventado."
+            "value": "A compatibilidade fica completa quando você adiciona outra pessoa; nenhum dado é inventado."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Останется открытой, пока не добавишь второго человека, — ничего не выдумано."
+            "value": "Для совместимости нужны данные рождения второго человека; время можно не указывать."
           }
         }
       }
@@ -1307,13 +1307,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The year ahead, read from the minute the Sun comes back to its place."
+            "value": "A yearly chart based on the moment the Sun returns to its birth position."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El año que viene, leído desde el minuto en que el Sol vuelve a su sitio."
+            "value": "Tu próximo año personal, calculado desde el momento en que el Sol vuelve a su posición natal."
           }
         },
         "fr": {
@@ -1325,19 +1325,19 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'anno che viene, letto dal minuto in cui il Sole torna al suo posto."
+            "value": "Un tema annuale basato sul momento in cui il Sole torna alla posizione che occupava alla tua nascita."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O ano que vem, lido a partir do minuto em que o Sol volta ao lugar."
+            "value": "Seu próximo ano pessoal, calculado a partir do momento em que o Sol volta à posição natal."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Год впереди, прочитанный с минуты, когда Солнце возвращается на своё место."
+            "value": "Соляр строится на момент ежегодного возвращения Солнца в положение при рождении."
           }
         }
       }
@@ -1397,43 +1397,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Planetenlinien über der Karte, aus deiner genauen Minute gezogen."
+            "value": "Planetenlinien auf der Weltkarte, berechnet aus deiner genauen Geburtszeit."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Planetary lines across the map, drawn from your exact minute."
+            "value": "A world map of planetary lines calculated from your birth time and place."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Líneas planetarias sobre el mapa, trazadas con tu minuto exacto."
+            "value": "Líneas planetarias en el mapa, calculadas con tu hora exacta de nacimiento."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Des lignes planétaires sur la carte, tracées depuis ta minute exacte."
+            "value": "Des lignes planétaires sur la carte du monde, tracées à partir de ton heure de naissance exacte."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Linee planetarie sulla mappa, tracciate dal tuo minuto esatto."
+            "value": "Una mappa del mondo con linee planetarie calcolate dall’ora e dal luogo di nascita."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Linhas planetárias no mapa, traçadas do seu minuto exato."
+            "value": "Linhas planetárias no mapa, calculadas com seu horário exato de nascimento."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Планетные линии поверх карты мира, проведённые из твоей точной минуты."
+            "value": "Планетные линии на карте мира рассчитываются по дате, месту и времени рождения."
           }
         }
       }
@@ -1463,7 +1463,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "lecture du système 8 sur 8 · synthèse croisée"
+            "value": "lecture du système 8 sur 8 · synthèse des systèmes"
           }
         },
         "it": {
@@ -1493,43 +1493,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neun Achsen. Wo drei Traditionen übereinstimmen, geht das in deinen Kern."
+            "value": "Neun Achsen. Wo drei Systeme übereinstimmen, zeigt sich, was dich im Kern prägt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nine axes. Where three traditions agree, that goes to your core."
+            "value": "Nine life areas compared across your birth chart, numerology and Tarot Birth Card."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nueve ejes. Donde tres tradiciones coinciden, eso va a tu núcleo."
+            "value": "Nueve ejes. Cuando tres sistemas coinciden, aparece un patrón central."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neuf axes. Là où trois traditions s'accordent, ça part dans ton noyau."
+            "value": "Neuf axes. Là où trois systèmes s’accordent, cela révèle ce qui est au cœur de ta personnalité."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nove assi. Dove tre tradizioni concordano, quello va nel tuo nucleo."
+            "value": "Nove aree della vita confrontate tra tema natale, numerologia e Carta dei tarocchi di nascita."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nove eixos. Onde três tradições concordam, aquilo vai para o seu núcleo."
+            "value": "Nove eixos. Quando três sistemas concordam, aparece um padrão central."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Девять осей. Где три традиции согласны — это идёт в твоё ядро."
+            "value": "Девять осей. Где три традиции согласны — это идёт в твою основу."
           }
         }
       }
@@ -1751,13 +1751,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand tout a-t-il commencé ?"
+            "value": "Quelle est ta date de naissance ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando è cominciato tutto?"
+            "value": "Qual è la tua data di nascita?"
           }
         },
         "pt-BR": {
@@ -1931,37 +1931,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "These two systems never cost anything. They are yours whether you read further or not."
+            "value": "The results above stay free, whether or not you continue."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Estos dos sistemas nunca cuestan nada. Son tuyos, sigas leyendo o no."
+            "value": "Los resultados de arriba siguen siendo gratis, decidas continuar o no."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ces deux systèmes ne coûtent jamais rien. Ils sont à toi, que tu lises la suite ou non."
+            "value": "Les résultats ci-dessus restent gratuits, que tu continues ou non."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questi due sistemi non costano mai nulla. Sono tuoi, che tu legga oltre o no."
+            "value": "I risultati qui sopra restano gratuiti, anche se decidi di non continuare."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esses dois sistemas nunca custam nada. São seus, você lendo mais ou não."
+            "value": "Os resultados acima continuam grátis, mesmo que você não continue."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эти две системы не стоят ничего и никогда. Они твои, читаешь ты дальше или нет."
+            "value": "Результаты выше останутся бесплатными, даже если ты не продолжишь."
           }
         }
       }
@@ -2138,7 +2138,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tre regole che fanno funzionare tutto — l'unica introduzione che ti daremo."
+            "value": "Tre consigli semplici per usare Alma al meglio."
           }
         },
         "pt-BR": {
@@ -2150,7 +2150,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Три правила, на которых это работает, — единственный онбординг, который у нас будет."
+            "value": "Три коротких правила помогут разобраться в Alma."
           }
         }
       }
@@ -2174,25 +2174,25 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Guardado. Ahora léete despacio."
+            "value": "Guardado. Ahora descubre tu carta con calma."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enregistré. Maintenant lis-toi lentement."
+            "value": "Enregistré. Prends maintenant le temps de te découvrir."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Salvato. Adesso leggiti con calma."
+            "value": "Il tuo tema è pronto. Esploralo al tuo ritmo."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Salvo. Agora se leia devagar."
+            "value": "Salvo. Agora descubra seu mapa com calma."
           }
         },
         "ru": {
@@ -2378,7 +2378,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chi sono davvero"
+            "value": "Capire meglio chi sono"
           }
         },
         "pt-BR": {
@@ -2390,7 +2390,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Кто я на самом деле"
+            "value": "Лучше понять себя"
           }
         }
       }
@@ -2426,7 +2426,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Qualcosa si sta spostando e non so perché"
+            "value": "Capire cosa mi sembra diverso ultimamente"
           }
         },
         "pt-BR": {
@@ -2438,7 +2438,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Что-то сдвигается, и я не понимаю почему"
+            "value": "Разобраться в переменах"
           }
         }
       }
@@ -2456,7 +2456,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Us — will this work"
+            "value": "Explore a relationship"
           }
         },
         "es": {
@@ -2474,7 +2474,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noi — funzionerà"
+            "value": "Esplorare una relazione"
           }
         },
         "pt-BR": {
@@ -2486,7 +2486,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Мы — получится ли"
+            "value": "Разобраться в отношениях"
           }
         }
       }
@@ -2522,7 +2522,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dove dovrei vivere"
+            "value": "Esplorare il mio legame con luoghi diversi"
           }
         },
         "pt-BR": {
@@ -2534,7 +2534,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Где мне жить"
+            "value": "Исследовать разные места"
           }
         }
       }
@@ -2606,7 +2606,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Qué suena más fuerte en ti ahora mismo?"
+            "value": "¿Qué tema te importa más ahora mismo?"
           }
         },
         "fr": {
@@ -2618,19 +2618,19 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cosa ti risuona più forte adesso?"
+            "value": "Cosa vorresti esplorare per prima cosa?"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O que está mais alto em você agora?"
+            "value": "Qual tema mais importa para você agora?"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Что сейчас громче всего в тебе?"
+            "value": "Что ты хочешь узнать в первую очередь?"
           }
         }
       }
@@ -2666,7 +2666,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tieni il mio cielo"
+            "value": "Salva il mio tema"
           }
         },
         "pt-BR": {
@@ -2678,7 +2678,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Оставить моё небо"
+            "value": "Сохранить мою карту"
           }
         }
       }
@@ -2690,7 +2690,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Häuser, Solar und Karte bleiben zu"
+            "value": "Häuser, Solarhoroskop und Astrokartografie bleiben gesperrt"
           }
         },
         "en": {
@@ -2708,7 +2708,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maisons, révolution solaire et carte restent fermées"
+            "value": "Maisons, révolution solaire et astrocartographie restent indisponibles"
           }
         },
         "it": {
@@ -2726,7 +2726,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дома, соляр и карта мира остаются закрытыми"
+            "value": "Без времени рождения недоступны дома, соляр и астрокартография."
           }
         }
       }
@@ -3698,7 +3698,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solarhoroskop · Karte"
+            "value": "Solarhoroskop · Astrokartografie"
           }
         },
         "en": {
@@ -3716,7 +3716,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Révolution solaire · carte"
+            "value": "Révolution solaire · astrocartographie"
           }
         },
         "it": {
@@ -3842,37 +3842,37 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jetzt nicht — bring mich rein"
+            "value": "Nicht jetzt — weiter zur App"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not now — take me in"
+            "value": "Skip for now"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ahora no — llévame dentro"
+            "value": "Ahora no — continuar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pas maintenant — fais-moi entrer"
+            "value": "Pas maintenant — continuer dans l'app"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non ora — portami dentro"
+            "value": "Salta per ora"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agora não — me leva para dentro"
+            "value": "Agora não — continuar"
           }
         },
         "ru": {
@@ -3896,7 +3896,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The numbers above are yours and stay free. This opens the whole system — every chapter of the reading, written from your positions, not a template."
+            "value": "The insights above stay free. This unlocks the full personalised reading for this system."
           }
         },
         "es": {
@@ -3914,7 +3914,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I numeri qui sopra sono tuoi e restano gratis. Questo apre l'intero sistema — ogni capitolo della lettura, scritto dalle tue posizioni, non un modello."
+            "value": "Le informazioni qui sopra restano gratuite. Questo sblocca la lettura completa e personalizzata del sistema."
           }
         },
         "pt-BR": {
@@ -3992,7 +3992,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Open my Today"
+            "value": "Open Today"
           }
         },
         "es": {
@@ -4010,7 +4010,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Apri il mio Oggi"
+            "value": "Apri Oggi"
           }
         },
         "pt-BR": {
@@ -4022,7 +4022,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Открыть моё «Сегодня»"
+            "value": "Открыть раздел «Сегодня»"
           }
         }
       }
@@ -4502,7 +4502,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Города достаточно."
+            "value": "Достаточно указать город."
           }
         }
       }
@@ -4532,13 +4532,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Où tout a-t-il commencé ?"
+            "value": "Quel est ton lieu de naissance ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dove è cominciato tutto?"
+            "value": "Qual è il tuo luogo di nascita?"
           }
         },
         "pt-BR": {
@@ -4568,7 +4568,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "One chapter at a time. Sixteen at once is noise."
+            "value": "Start with one chapter. Explore the rest whenever you’re ready."
           }
         },
         "es": {
@@ -4586,7 +4586,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un capitolo alla volta. Sedici insieme sono rumore."
+            "value": "Inizia da un capitolo. Esplora gli altri quando vuoi."
           }
         },
         "pt-BR": {
@@ -4598,7 +4598,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "По одной главе за раз. Шестнадцать сразу — это шум."
+            "value": "Открывай главы по одной — так в них проще разобраться."
           }
         }
       }
@@ -4616,37 +4616,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When two systems disagree, don't pick a winner. That's the material."
+            "value": "When two systems differ, notice the tension: they may describe different sides of you."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando dos sistemas no coinciden, no elijas ganador. Ahí está el material."
+            "value": "Cuando dos sistemas no coinciden, no elijas uno. Ahí está lo que vale la pena explorar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand deux systèmes se contredisent, ne choisis pas de gagnant. C'est là qu'est la matière."
+            "value": "Quand deux systèmes se contredisent, ne choisis pas de gagnant. C'est justement là que ça devient intéressant."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando due sistemi litigano, non scegliere un vincitore. È lì il materiale."
+            "value": "Quando due sistemi differiscono, osserva la tensione: possono descrivere lati diversi di te."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando dois sistemas discordam, não escolha um vencedor. O material está aí."
+            "value": "Quando dois sistemas discordam, não escolha um vencedor. É aí que vale a pena prestar atenção."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Когда две системы расходятся, не выбирай победителя. Это и есть материал."
+            "value": "Сравнивай интерпретации: расхождения помогают увидеть тему с разных сторон."
           }
         }
       }
@@ -4658,43 +4658,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Frag mich mit deinen eigenen Worten. Drei Fragen sind gratis."
+            "value": "Frag mit deinen eigenen Worten. Die erste Frage ist kostenlos."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ask me in your own words. Three questions are free."
+            "value": "Ask in your own words. Your first question is free."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pregúntame con tus palabras. Tres preguntas son gratis."
+            "value": "Pregunta con tus palabras. La primera pregunta es gratis."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Demande-moi avec tes mots. Trois questions sont gratuites."
+            "value": "Pose tes questions avec tes propres mots. La première est offerte."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chiedimi con parole tue. Tre domande sono gratis."
+            "value": "Chiedi con parole tue. La prima domanda è gratis."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Me pergunte com suas palavras. Três perguntas são de graça."
+            "value": "Pergunte com suas palavras. A primeira pergunta é grátis."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Спрашивай меня своими словами. Три вопроса бесплатно."
+            "value": "Спрашивай своими словами. Первый вопрос — бесплатно."
           }
         }
       }
@@ -5300,25 +5300,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout ce qui précède reste gratuit, pour toujours"
+            "value": "Les résultats ci-dessus restent gratuits, que tu continues ou non."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutto quello sopra resta gratis, per sempre"
+            "value": "I risultati qui sopra restano gratuiti, anche se decidi di non continuare."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo acima fica de graça, para sempre"
+            "value": "Os resultados acima continuam grátis, mesmo que você não continue."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Всё выше остаётся бесплатным, навсегда"
+            "value": "Результаты выше останутся бесплатными, даже если ты не продолжишь."
           }
         }
       }
@@ -5426,7 +5426,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geburtskarte"
+            "value": "Tarot-Geburtskarte"
           }
         },
         "en": {
@@ -5438,13 +5438,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carta de nacimiento"
+            "value": "Arcano de nacimiento"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carte de naissance"
+            "value": "Arcane de naissance (tarot)"
           }
         },
         "it": {
@@ -5462,7 +5462,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Карта рождения"
+            "value": "Аркан рождения"
           }
         }
       }
@@ -5684,7 +5684,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Synthèse croisée"
+            "value": "Synthèse des systèmes"
           }
         },
         "it": {
@@ -5780,13 +5780,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "À quelle heure tout a-t-il commencé ?"
+            "value": "Quelle est ton heure de naissance ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "A che ora è cominciato tutto?"
+            "value": "Qual è la tua ora di nascita?"
           }
         },
         "pt-BR": {

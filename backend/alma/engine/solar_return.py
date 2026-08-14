@@ -15,6 +15,7 @@ answer — it is a different person's year.
 
 from __future__ import annotations
 
+import calendar
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
@@ -79,8 +80,19 @@ def return_moment(natal_sun: float, birthday: datetime, year: int) -> float:
     Bracketed around the anniversary rather than searched blindly: the Sun
     passes a given degree exactly once a year, so a bracket around the
     birthday contains the one crossing and no other.
+
+    **29 February has no anniversary in three years out of four**, and
+    `replace(year=…)` answered that with `ValueError: day is out of range for
+    month` — so everybody born on a leap day lost their year chart in every
+    common year. The day is only the *centre of a ±5-day bracket*; the crossing
+    it brackets is the Sun's, and the Sun does not care which square of the
+    calendar we started counting from. Falling back to the 28th keeps the
+    bracket within a day of where it was and changes no other birthday's answer.
     """
-    anniversary = birthday.replace(year=year, tzinfo=timezone.utc)
+    day = birthday.day
+    if day == 29 and birthday.month == 2 and not calendar.isleap(year):
+        day = 28
+    anniversary = birthday.replace(year=year, day=day, tzinfo=timezone.utc)
     from .timeutil import _julian_day
 
     centre = _julian_day(anniversary)

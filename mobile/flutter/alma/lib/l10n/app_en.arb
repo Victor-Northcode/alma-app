@@ -152,27 +152,27 @@
   "@cabAskAlma": {
     "description": "from Cabinet/cab.askAlma"
   },
-  "cabAspectMeaningConjunction": "In the same place: they work as one thing and amplify each other.",
+  "cabAspectMeaningConjunction": "Very close together: their themes blend and become stronger.",
   "@cabAspectMeaningConjunction": {
     "description": "from Cabinet/cab.aspect.meaning.conjunction"
   },
-  "cabAspectMeaningOpposition": "Facing each other: they pull opposite ways, and you choose every time.",
+  "cabAspectMeaningOpposition": "Across from each other: their needs can pull in different directions.",
   "@cabAspectMeaningOpposition": {
     "description": "from Cabinet/cab.aspect.meaning.opposition"
   },
-  "cabAspectMeaningQuincunx": "They cannot see each other: two demands that do not reconcile.",
+  "cabAspectMeaningQuincunx": "An awkward angle: their needs often require adjustment.",
   "@cabAspectMeaningQuincunx": {
     "description": "from Cabinet/cab.aspect.meaning.quincunx"
   },
-  "cabAspectMeaningSextile": "They help each other, if you put the effort in.",
+  "cabAspectMeaningSextile": "A supportive connection that becomes stronger when you act on it.",
   "@cabAspectMeaningSextile": {
     "description": "from Cabinet/cab.aspect.meaning.sextile"
   },
-  "cabAspectMeaningSquare": "They get in each other's way: the place where you have to cope.",
+  "cabAspectMeaningSquare": "A tense connection that can create pressure and motivate change.",
   "@cabAspectMeaningSquare": {
     "description": "from Cabinet/cab.aspect.meaning.square"
   },
-  "cabAspectMeaningTrine": "They fit together easily — so easily that it is rarely used on purpose.",
+  "cabAspectMeaningTrine": "An easy, natural connection that may feel effortless.",
   "@cabAspectMeaningTrine": {
     "description": "from Cabinet/cab.aspect.meaning.trine"
   },
@@ -320,7 +320,7 @@
   "@cabChapters": {
     "description": "from Cabinet/cab.chapters"
   },
-  "cabCompatNeedsPerson": "Compatibility needs a second birth. Add somebody and the whole comparison is calculated free.",
+  "cabCompatNeedsPerson": "Compatibility needs a second birth. Add someone and the whole comparison is calculated free.",
   "@cabCompatNeedsPerson": {
     "description": "from Cabinet/cab.compatNeedsPerson"
   },
@@ -601,7 +601,7 @@
   "@cabNoBirthData": {
     "description": "from Cabinet/cab.noBirthData"
   },
-  "cabNoneActive": "Nothing is in orb today. That is an answer, not an empty screen.",
+  "cabNoneActive": "No transit is active today. That is a real result, not an empty screen.",
   "@cabNoneActive": {
     "description": "from Cabinet/cab.noneActive"
   },
@@ -743,7 +743,7 @@
   "@cabPlanExporting": {
     "description": "from Cabinet/cab.plan.exporting"
   },
-  "cabPlanFreeNote": "Every calculation is free. You pay for the words, one reading at a time.",
+  "cabPlanFreeNote": "Every calculation stays free — all eight systems. You pay only for the written chapters.",
   "@cabPlanFreeNote": {
     "description": "from Cabinet/cab.plan.freeNote"
   },
@@ -820,7 +820,7 @@
       }
     }
   },
-  "cabPlansBody": "The plan keeps all eight systems open, sends the morning notification, rewrites your day as the sky moves — and Alma answers your questions in her deeper voice. Monthly or yearly.",
+  "cabPlansBody": "The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The yearly plan opens all eight systems.",
   "@cabPlansBody": {
     "description": "from Cabinet/cab.plans.body"
   },
@@ -840,7 +840,7 @@
   "@cabPullToTurn": {
     "description": "from Cabinet/cab.pullToTurn"
   },
-  "cabQuestionsLeft": "Questions left today: {p1}",
+  "cabQuestionsLeft": "Questions available: {p1}",
   "@cabQuestionsLeft": {
     "description": "from Cabinet/cab.questionsLeft",
     "placeholders": {
@@ -1213,11 +1213,11 @@
       }
     }
   },
-  "dailyEmptyBody": "What is still in orb is below. Nothing perfects today.",
+  "dailyEmptyBody": "Active transits are shown below. None reaches its exact point today.",
   "@dailyEmptyBody": {
     "description": "from Daily/daily.empty.body"
   },
-  "dailyEmptyTitle": "Nothing is exact today",
+  "dailyEmptyTitle": "No transit is exact today",
   "@dailyEmptyTitle": {
     "description": "from Daily/daily.empty.title"
   },
@@ -1274,15 +1274,15 @@
   "@dailySettingOnlyMattersDetail": {
     "description": "from Daily/daily.setting.onlyMatters.detail"
   },
-  "dailySettingOnlyWhatMatters": "Only what matters",
+  "dailySettingOnlyWhatMatters": "Long-term transits only",
   "@dailySettingOnlyWhatMatters": {
     "description": "from Daily/daily.setting.onlyWhatMatters"
   },
-  "dailySettingQuiet": "Never between 22:00 and 08:00, in your time.",
+  "dailySettingQuiet": "Never between 22:00 and 08:00 in your local time zone.",
   "@dailySettingQuiet": {
     "description": "from Daily/daily.setting.quiet"
   },
-  "dailySettingTimezone": "Your time",
+  "dailySettingTimezone": "Time zone",
   "@dailySettingTimezone": {
     "description": "from Daily/daily.setting.timezone"
   },
@@ -1298,7 +1298,7 @@
   "@dailySettingTimezoneDevice": {
     "description": "from Daily/daily.setting.timezone.device"
   },
-  "dailySettingTitle": "The daily",
+  "dailySettingTitle": "Daily updates",
   "@dailySettingTitle": {
     "description": "from Daily/daily.setting.title"
   },
@@ -1306,7 +1306,7 @@
   "@dailyStatusDenied": {
     "description": "from Daily/daily.status.denied"
   },
-  "dailyStatusNotDelivering": "Nothing is being sent yet. This phone is not registered for notifications, so the daily lives here, on Today.",
+  "dailyStatusNotDelivering": "Notifications aren’t set up on this phone yet. You can still see Today in the app.",
   "@dailyStatusNotDelivering": {
     "description": "from Daily/daily.status.notDelivering"
   },
@@ -1322,11 +1322,11 @@
   "@dailyStatusRegistered": {
     "description": "from Daily/daily.status.registered"
   },
-  "dailyStatusUpgrade": "Let them arrive properly",
+  "dailyStatusUpgrade": "Choose how notifications appear",
   "@dailyStatusUpgrade": {
     "description": "from Daily/daily.status.upgrade"
   },
-  "dailySubscriberOnly": "The morning notification is part of the plan.",
+  "dailySubscriberOnly": "Daily updates are included with an active subscription. Today remains free.",
   "@dailySubscriberOnly": {
     "description": "from Daily/daily.subscriberOnly"
   },
@@ -1343,7 +1343,7 @@
   "@dailyTodayLabel": {
     "description": "from Daily/daily.today.label"
   },
-  "dailyTodaySince": "In orb since {p1}",
+  "dailyTodaySince": "Active since {p1}",
   "@dailyTodaySince": {
     "description": "from Daily/daily.today.since",
     "placeholders": {
@@ -1352,7 +1352,7 @@
       }
     }
   },
-  "dailyTodayUntil": "in orb until {p1}",
+  "dailyTodayUntil": "active until {p1}",
   "@dailyTodayUntil": {
     "description": "from Daily/daily.today.until",
     "placeholders": {
@@ -1361,7 +1361,7 @@
       }
     }
   },
-  "dailyVerifiedLabel": "Exact days in the next 30",
+  "dailyVerifiedLabel": "Exact transit dates in the next 30 days",
   "@dailyVerifiedLabel": {
     "description": "from Daily/daily.verified.label"
   },
@@ -1441,7 +1441,7 @@
   "@journeyCeremony1Label": {
     "description": "from Journey/journey.ceremony.1.label"
   },
-  "journeyCeremony1Line": "Ten planets, twelve houses — your chart is drawn from real ephemeris data.",
+  "journeyCeremony1Line": "Your birth chart maps the planets and key points across twelve houses using astronomical ephemeris data.",
   "@journeyCeremony1Line": {
     "description": "from Journey/journey.ceremony.1.line"
   },
@@ -1449,7 +1449,7 @@
   "@journeyCeremony2Label": {
     "description": "from Journey/journey.ceremony.2.label"
   },
-  "journeyCeremony2Line": "Your life path reduces to a number that prefers proof over belief.",
+  "journeyCeremony2Line": "Numerology turns your birth date into your life-path number.",
   "@journeyCeremony2Line": {
     "description": "from Journey/journey.ceremony.2.line"
   },
@@ -1457,7 +1457,7 @@
   "@journeyCeremony3Label": {
     "description": "from Journey/journey.ceremony.3.label"
   },
-  "journeyCeremony3Line": "One of twenty-two arcana, calculated from the date alone.",
+  "journeyCeremony3Line": "Your birth date is matched with one of the twenty-two Major Arcana.",
   "@journeyCeremony3Line": {
     "description": "from Journey/journey.ceremony.3.line"
   },
@@ -1465,7 +1465,7 @@
   "@journeyCeremony4Label": {
     "description": "from Journey/journey.ceremony.4.label"
   },
-  "journeyCeremony4Line": "Where the sky is now, against where it was when you started.",
+  "journeyCeremony4Line": "Current transits compare today’s planet positions with your birth chart.",
   "@journeyCeremony4Line": {
     "description": "from Journey/journey.ceremony.4.line"
   },
@@ -1473,7 +1473,7 @@
   "@journeyCeremony5Label": {
     "description": "from Journey/journey.ceremony.5.label"
   },
-  "journeyCeremony5Line": "Held open until you add a second person — nothing invented.",
+  "journeyCeremony5Line": "Add another person to compare your two birth charts.",
   "@journeyCeremony5Line": {
     "description": "from Journey/journey.ceremony.5.line"
   },
@@ -1481,7 +1481,7 @@
   "@journeyCeremony6Label": {
     "description": "from Journey/journey.ceremony.6.label"
   },
-  "journeyCeremony6Line": "The year ahead, read from the minute the Sun comes back to its place.",
+  "journeyCeremony6Line": "A yearly chart based on the moment the Sun returns to its birth position.",
   "@journeyCeremony6Line": {
     "description": "from Journey/journey.ceremony.6.line"
   },
@@ -1489,7 +1489,7 @@
   "@journeyCeremony7Label": {
     "description": "from Journey/journey.ceremony.7.label"
   },
-  "journeyCeremony7Line": "Planetary lines across the map, drawn from your exact minute.",
+  "journeyCeremony7Line": "A world map of planetary lines calculated from your birth time and place.",
   "@journeyCeremony7Line": {
     "description": "from Journey/journey.ceremony.7.line"
   },
@@ -1497,7 +1497,7 @@
   "@journeyCeremony8Label": {
     "description": "from Journey/journey.ceremony.8.label"
   },
-  "journeyCeremony8Line": "Nine axes. Where three traditions agree, that goes to your core.",
+  "journeyCeremony8Line": "Nine life areas compared across your birth chart, numerology and Tarot Birth Card.",
   "@journeyCeremony8Line": {
     "description": "from Journey/journey.ceremony.8.line"
   },
@@ -1533,7 +1533,7 @@
   "@journeyFreeLabel": {
     "description": "from Journey/journey.freeLabel"
   },
-  "journeyFreeNote": "These two systems never cost anything. They are yours whether you read further or not.",
+  "journeyFreeNote": "The results above stay free, whether or not you continue.",
   "@journeyFreeNote": {
     "description": "from Journey/journey.freeNote"
   },
@@ -1587,7 +1587,7 @@
   "@journeyIntentShifting": {
     "description": "from Journey/journey.intent.shifting"
   },
-  "journeyIntentUs": "Us — will this work",
+  "journeyIntentUs": "Explore a relationship",
   "@journeyIntentUs": {
     "description": "from Journey/journey.intent.us"
   },
@@ -1703,11 +1703,11 @@
   "@journeyOfferFine": {
     "description": "from Journey/journey.offerFine"
   },
-  "journeyOfferSkip": "Not now — take me in",
+  "journeyOfferSkip": "Skip for now",
   "@journeyOfferSkip": {
     "description": "from Journey/journey.offerSkip"
   },
-  "journeyOfferSub": "The numbers above are yours and stay free. This opens the whole system — every chapter of the reading, written from your positions, not a template.",
+  "journeyOfferSub": "The insights above stay free. This unlocks the full personalised reading for this system.",
   "@journeyOfferSub": {
     "description": "from Journey/journey.offerSub"
   },
@@ -1720,7 +1720,7 @@
       }
     }
   },
-  "journeyOpenToday": "Open my Today",
+  "journeyOpenToday": "Open Today",
   "@journeyOpenToday": {
     "description": "from Journey/journey.openToday"
   },
@@ -1768,15 +1768,15 @@
   "@journeyPlaceTitle": {
     "description": "from Journey/journey.placeTitle"
   },
-  "journeyRule1": "One chapter at a time. Sixteen at once is noise.",
+  "journeyRule1": "Start with one chapter. Explore the rest whenever you’re ready.",
   "@journeyRule1": {
     "description": "from Journey/journey.rule.1"
   },
-  "journeyRule2": "When two systems disagree, don't pick a winner. That's the material.",
+  "journeyRule2": "When two systems differ, notice the tension: they may describe different sides of you.",
   "@journeyRule2": {
     "description": "from Journey/journey.rule.2"
   },
-  "journeyRule3": "Ask me in your own words. Three questions are free.",
+  "journeyRule3": "Ask in your own words. Your first question is free.",
   "@journeyRule3": {
     "description": "from Journey/journey.rule.3"
   },
@@ -2099,7 +2099,7 @@
   "@paywallArchiveNote": {
     "description": "from Paywall/paywall.archiveNote"
   },
-  "paywallArchiveTitle": "The whole archive",
+  "paywallArchiveTitle": "All eight systems",
   "@paywallArchiveTitle": {
     "description": "from Paywall/paywall.archiveTitle"
   },
@@ -2123,7 +2123,7 @@
   "@paywallEverythingTitle": {
     "description": "from Paywall/paywall.everythingTitle"
   },
-  "paywallFreeNote": "Every calculation stays free, always. What has a price is the writing.",
+  "paywallFreeNote": "Every calculation stays free — all eight systems. You pay only for the written chapters.",
   "@paywallFreeNote": {
     "description": "from Paywall/paywall.freeNote"
   },
@@ -2131,7 +2131,7 @@
   "@paywallHonestyCancel": {
     "description": "from Paywall/paywall.honestyCancel"
   },
-  "paywallHonestyOnce": "one-time is one-time",
+  "paywallHonestyOnce": "one-time purchases do not renew",
   "@paywallHonestyOnce": {
     "description": "from Paywall/paywall.honestyOnce"
   },
@@ -2151,7 +2151,7 @@
   "@paywallManageNote": {
     "description": "from Paywall/paywall.manageNote"
   },
-  "paywallMonthlyNote": "Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel.",
+  "paywallMonthlyNote": "Transits, Solar Return and compatibility while they move, plus 30 questions a month. Renews until you cancel.",
   "@paywallMonthlyNote": {
     "description": "from Paywall/paywall.monthlyNote"
   },
@@ -2211,15 +2211,15 @@
   "@paywallPitchDoor3": {
     "description": "from Paywall/paywall.pitchDoor3"
   },
-  "paywallPitchPlan1": "All eight systems stay open while the plan runs.",
+  "paywallPitchPlan1": "The yearly plan and the archive open all eight systems; weekly and monthly keep the three that move.",
   "@paywallPitchPlan1": {
     "description": "from Paywall/paywall.pitchPlan1"
   },
-  "paywallPitchPlan2": "Transits, the solar return and compatibility are rewritten as the sky moves.",
+  "paywallPitchPlan2": "Transits and Solar Return update as the sky changes; compatibility updates when you compare another person.",
   "@paywallPitchPlan2": {
     "description": "from Paywall/paywall.pitchPlan2"
   },
-  "paywallPitchPlan3": "Thirty questions a month to Alma, on the deeper voice.",
+  "paywallPitchPlan3": "30 questions for Alma each month.",
   "@paywallPitchPlan3": {
     "description": "from Paywall/paywall.pitchPlan3"
   },
@@ -2251,7 +2251,7 @@
   "@paywallRestoring": {
     "description": "from Paywall/paywall.restoring"
   },
-  "paywallSkip": "Not now — take me in",
+  "paywallSkip": "Skip for now",
   "@paywallSkip": {
     "description": "from Paywall/paywall.skip"
   },
@@ -2299,7 +2299,7 @@
   "@paywallTerms": {
     "description": "from Paywall/paywall.terms"
   },
-  "paywallUpgradeNote": "The archive, less what you already paid for one system.",
+  "paywallUpgradeNote": "The price already includes credit for the system you bought.",
   "@paywallUpgradeNote": {
     "description": "from Paywall/paywall.upgradeNote"
   },
@@ -2311,11 +2311,11 @@
   "@paywallVerifyLater": {
     "description": "from Paywall/paywall.verifyLater"
   },
-  "paywallWeeklyNote": "Try the living layer for one week. Renews weekly until you cancel.",
+  "paywallWeeklyNote": "Live readings and questions for one week. Renews weekly until you cancel.",
   "@paywallWeeklyNote": {
     "description": "from Paywall/paywall.weeklyNote"
   },
-  "paywallWeeklyTitle": "Everything live, weekly",
+  "paywallWeeklyTitle": "All live features, weekly",
   "@paywallWeeklyTitle": {
     "description": "from Paywall/paywall.weeklyTitle"
   },
@@ -2339,7 +2339,7 @@
   "@scrAddPersonEyebrow": {
     "description": "from Screens/scr.addPerson.eyebrow"
   },
-  "scrAddPersonLead": "The same five things your own chart needed. Without the minute of birth the comparison still runs, on fewer factors.",
+  "scrAddPersonLead": "Add their name, birth date, birthplace and birth time if known. Without an exact time, Alma can still compare fewer chart factors.",
   "@scrAddPersonLead": {
     "description": "from Screens/scr.addPerson.lead"
   },
@@ -2391,7 +2391,7 @@
   "@scrChatOpening": {
     "description": "from Screens/scr.chat.opening"
   },
-  "scrChatOutOfQuestions": "From here the plan carries the conversation — with the morning notification and Alma's deeper voice.",
+  "scrChatOutOfQuestions": "You’ve used the questions available for now. With an active subscription, you can continue; it includes 30 questions each month.",
   "@scrChatOutOfQuestions": {
     "description": "from Screens/scr.chat.outOfQuestions"
   },
@@ -2424,7 +2424,7 @@
       }
     }
   },
-  "scrChatPromptRising": "{p1} rising. Is that what people meet first?",
+  "scrChatPromptRising": "{p1} rising. Is that the first impression I give?",
   "@scrChatPromptRising": {
     "description": "from Screens/scr.chat.promptRising",
     "placeholders": {
@@ -2442,7 +2442,7 @@
       }
     }
   },
-  "scrChatReadFromAll": "Show every placement this was read from",
+  "scrChatReadFromAll": "Show the chart placements used for this answer",
   "@scrChatReadFromAll": {
     "description": "from Screens/scr.chat.readFromAll"
   },
@@ -2520,7 +2520,7 @@
   "@scrEmptyExampleTag": {
     "description": "from Screens/scr.empty.exampleTag"
   },
-  "scrEmptyLead": "Alma computes eight independent systems from a real JPL ephemeris — forty-one chapters in all — and shows you where they agree about you and where they do not.",
+  "scrEmptyLead": "Alma brings eight astrology and self-reflection systems together in 41 chapters. Combined Insights compares three of them: your birth chart, numerology and Tarot Birth Card.",
   "@scrEmptyLead": {
     "description": "from Screens/scr.empty.lead"
   },
@@ -2576,7 +2576,7 @@
   "@scrPeopleUnnamed": {
     "description": "from Screens/scr.people.unnamed"
   },
-  "scrSaveAccountBody": "Sign in once and your chart and purchases survive a new phone.",
+  "scrSaveAccountBody": "Sign in to keep your chart and restore your purchases on a new phone.",
   "@scrSaveAccountBody": {
     "description": "from Screens/scr.saveAccount.body"
   },
@@ -2616,7 +2616,7 @@
   "@scrSignInGoogle": {
     "description": "from Screens/scr.signIn.google"
   },
-  "scrSignInLead": "Signing in attaches a name to the account you already have. Nothing you have read or bought is lost — it is the same account, made durable.",
+  "scrSignInLead": "Signing in links your email address to your existing account. Nothing you’ve read or bought is lost.",
   "@scrSignInLead": {
     "description": "from Screens/scr.signIn.lead"
   },

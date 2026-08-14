@@ -338,37 +338,37 @@ abstract class L {
   /// from Cabinet/cab.aspect.meaning.conjunction
   ///
   /// In en, this message translates to:
-  /// **'In the same place: they work as one thing and amplify each other.'**
+  /// **'Very close together: their themes blend and become stronger.'**
   String get cabAspectMeaningConjunction;
 
   /// from Cabinet/cab.aspect.meaning.opposition
   ///
   /// In en, this message translates to:
-  /// **'Facing each other: they pull opposite ways, and you choose every time.'**
+  /// **'Across from each other: their needs can pull in different directions.'**
   String get cabAspectMeaningOpposition;
 
   /// from Cabinet/cab.aspect.meaning.quincunx
   ///
   /// In en, this message translates to:
-  /// **'They cannot see each other: two demands that do not reconcile.'**
+  /// **'An awkward angle: their needs often require adjustment.'**
   String get cabAspectMeaningQuincunx;
 
   /// from Cabinet/cab.aspect.meaning.sextile
   ///
   /// In en, this message translates to:
-  /// **'They help each other, if you put the effort in.'**
+  /// **'A supportive connection that becomes stronger when you act on it.'**
   String get cabAspectMeaningSextile;
 
   /// from Cabinet/cab.aspect.meaning.square
   ///
   /// In en, this message translates to:
-  /// **'They get in each other\'s way: the place where you have to cope.'**
+  /// **'A tense connection that can create pressure and motivate change.'**
   String get cabAspectMeaningSquare;
 
   /// from Cabinet/cab.aspect.meaning.trine
   ///
   /// In en, this message translates to:
-  /// **'They fit together easily — so easily that it is rarely used on purpose.'**
+  /// **'An easy, natural connection that may feel effortless.'**
   String get cabAspectMeaningTrine;
 
   /// from Cabinet/cab.axis.Character
@@ -578,7 +578,7 @@ abstract class L {
   /// from Cabinet/cab.compatNeedsPerson
   ///
   /// In en, this message translates to:
-  /// **'Compatibility needs a second birth. Add somebody and the whole comparison is calculated free.'**
+  /// **'Compatibility needs a second birth. Add someone and the whole comparison is calculated free.'**
   String get cabCompatNeedsPerson;
 
   /// from Cabinet/cab.dataAndLegal
@@ -992,7 +992,7 @@ abstract class L {
   /// from Cabinet/cab.noneActive
   ///
   /// In en, this message translates to:
-  /// **'Nothing is in orb today. That is an answer, not an empty screen.'**
+  /// **'No transit is active today. That is a real result, not an empty screen.'**
   String get cabNoneActive;
 
   /// from Cabinet/cab.notCalculated
@@ -1178,7 +1178,7 @@ abstract class L {
   /// from Cabinet/cab.plan.freeNote
   ///
   /// In en, this message translates to:
-  /// **'Every calculation is free. You pay for the words, one reading at a time.'**
+  /// **'Every calculation stays free — all eight systems. You pay only for the written chapters.'**
   String get cabPlanFreeNote;
 
   /// from Cabinet/cab.plan.freePlan
@@ -1256,7 +1256,7 @@ abstract class L {
   /// from Cabinet/cab.plans.body
   ///
   /// In en, this message translates to:
-  /// **'The plan keeps all eight systems open, sends the morning notification, rewrites your day as the sky moves — and Alma answers your questions in her deeper voice. Monthly or yearly.'**
+  /// **'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The yearly plan opens all eight systems.'**
   String get cabPlansBody;
 
   /// from Cabinet/cab.plans.cta
@@ -1286,7 +1286,7 @@ abstract class L {
   /// from Cabinet/cab.questionsLeft
   ///
   /// In en, this message translates to:
-  /// **'Questions left today: {p1}'**
+  /// **'Questions available: {p1}'**
   String cabQuestionsLeft(int p1);
 
   /// from Cabinet/cab.readFrom
@@ -1814,13 +1814,13 @@ abstract class L {
   /// from Daily/daily.empty.body
   ///
   /// In en, this message translates to:
-  /// **'What is still in orb is below. Nothing perfects today.'**
+  /// **'Active transits are shown below. None reaches its exact point today.'**
   String get dailyEmptyBody;
 
   /// from Daily/daily.empty.title
   ///
   /// In en, this message translates to:
-  /// **'Nothing is exact today'**
+  /// **'No transit is exact today'**
   String get dailyEmptyTitle;
 
   /// from Daily/daily.retrograde
@@ -1886,19 +1886,19 @@ abstract class L {
   /// from Daily/daily.setting.onlyWhatMatters
   ///
   /// In en, this message translates to:
-  /// **'Only what matters'**
+  /// **'Long-term transits only'**
   String get dailySettingOnlyWhatMatters;
 
   /// from Daily/daily.setting.quiet
   ///
   /// In en, this message translates to:
-  /// **'Never between 22:00 and 08:00, in your time.'**
+  /// **'Never between 22:00 and 08:00 in your local time zone.'**
   String get dailySettingQuiet;
 
   /// from Daily/daily.setting.timezone
   ///
   /// In en, this message translates to:
-  /// **'Your time'**
+  /// **'Time zone'**
   String get dailySettingTimezone;
 
   /// from Daily/daily.setting.timezone.birth
@@ -1922,7 +1922,7 @@ abstract class L {
   /// from Daily/daily.setting.title
   ///
   /// In en, this message translates to:
-  /// **'The daily'**
+  /// **'Daily updates'**
   String get dailySettingTitle;
 
   /// from Daily/daily.status.denied
@@ -1934,7 +1934,7 @@ abstract class L {
   /// from Daily/daily.status.notDelivering
   ///
   /// In en, this message translates to:
-  /// **'Nothing is being sent yet. This phone is not registered for notifications, so the daily lives here, on Today.'**
+  /// **'Notifications aren’t set up on this phone yet. You can still see Today in the app.'**
   String get dailyStatusNotDelivering;
 
   /// from Daily/daily.status.openSettings
@@ -1958,13 +1958,13 @@ abstract class L {
   /// from Daily/daily.status.upgrade
   ///
   /// In en, this message translates to:
-  /// **'Let them arrive properly'**
+  /// **'Choose how notifications appear'**
   String get dailyStatusUpgrade;
 
   /// from Daily/daily.subscriberOnly
   ///
   /// In en, this message translates to:
-  /// **'The morning notification is part of the plan.'**
+  /// **'Daily updates are included with an active subscription. Today remains free.'**
   String get dailySubscriberOnly;
 
   /// from Daily/daily.today.at
@@ -1982,19 +1982,19 @@ abstract class L {
   /// from Daily/daily.today.since
   ///
   /// In en, this message translates to:
-  /// **'In orb since {p1}'**
+  /// **'Active since {p1}'**
   String dailyTodaySince(String p1);
 
   /// from Daily/daily.today.until
   ///
   /// In en, this message translates to:
-  /// **'in orb until {p1}'**
+  /// **'active until {p1}'**
   String dailyTodayUntil(String p1);
 
   /// from Daily/daily.verified.label
   ///
   /// In en, this message translates to:
-  /// **'Exact days in the next 30'**
+  /// **'Exact transit dates in the next 30 days'**
   String get dailyVerifiedLabel;
 
   /// from Daily/daily.verified.note
@@ -2114,7 +2114,7 @@ abstract class L {
   /// from Journey/journey.ceremony.1.line
   ///
   /// In en, this message translates to:
-  /// **'Ten planets, twelve houses — your chart is drawn from real ephemeris data.'**
+  /// **'Your birth chart maps the planets and key points across twelve houses using astronomical ephemeris data.'**
   String get journeyCeremony1Line;
 
   /// from Journey/journey.ceremony.2.label
@@ -2126,7 +2126,7 @@ abstract class L {
   /// from Journey/journey.ceremony.2.line
   ///
   /// In en, this message translates to:
-  /// **'Your life path reduces to a number that prefers proof over belief.'**
+  /// **'Numerology turns your birth date into your life-path number.'**
   String get journeyCeremony2Line;
 
   /// from Journey/journey.ceremony.3.label
@@ -2138,7 +2138,7 @@ abstract class L {
   /// from Journey/journey.ceremony.3.line
   ///
   /// In en, this message translates to:
-  /// **'One of twenty-two arcana, calculated from the date alone.'**
+  /// **'Your birth date is matched with one of the twenty-two Major Arcana.'**
   String get journeyCeremony3Line;
 
   /// from Journey/journey.ceremony.4.label
@@ -2150,7 +2150,7 @@ abstract class L {
   /// from Journey/journey.ceremony.4.line
   ///
   /// In en, this message translates to:
-  /// **'Where the sky is now, against where it was when you started.'**
+  /// **'Current transits compare today’s planet positions with your birth chart.'**
   String get journeyCeremony4Line;
 
   /// from Journey/journey.ceremony.5.label
@@ -2162,7 +2162,7 @@ abstract class L {
   /// from Journey/journey.ceremony.5.line
   ///
   /// In en, this message translates to:
-  /// **'Held open until you add a second person — nothing invented.'**
+  /// **'Add another person to compare your two birth charts.'**
   String get journeyCeremony5Line;
 
   /// from Journey/journey.ceremony.6.label
@@ -2174,7 +2174,7 @@ abstract class L {
   /// from Journey/journey.ceremony.6.line
   ///
   /// In en, this message translates to:
-  /// **'The year ahead, read from the minute the Sun comes back to its place.'**
+  /// **'A yearly chart based on the moment the Sun returns to its birth position.'**
   String get journeyCeremony6Line;
 
   /// from Journey/journey.ceremony.7.label
@@ -2186,7 +2186,7 @@ abstract class L {
   /// from Journey/journey.ceremony.7.line
   ///
   /// In en, this message translates to:
-  /// **'Planetary lines across the map, drawn from your exact minute.'**
+  /// **'A world map of planetary lines calculated from your birth time and place.'**
   String get journeyCeremony7Line;
 
   /// from Journey/journey.ceremony.8.label
@@ -2198,7 +2198,7 @@ abstract class L {
   /// from Journey/journey.ceremony.8.line
   ///
   /// In en, this message translates to:
-  /// **'Nine axes. Where three traditions agree, that goes to your core.'**
+  /// **'Nine life areas compared across your birth chart, numerology and Tarot Birth Card.'**
   String get journeyCeremony8Line;
 
   /// from Journey/journey.ceremonySkip
@@ -2252,7 +2252,7 @@ abstract class L {
   /// from Journey/journey.freeNote
   ///
   /// In en, this message translates to:
-  /// **'These two systems never cost anything. They are yours whether you read further or not.'**
+  /// **'The results above stay free, whether or not you continue.'**
   String get journeyFreeNote;
 
   /// from Journey/journey.genderFemale
@@ -2318,7 +2318,7 @@ abstract class L {
   /// from Journey/journey.intent.us
   ///
   /// In en, this message translates to:
-  /// **'Us — will this work'**
+  /// **'Explore a relationship'**
   String get journeyIntentUs;
 
   /// from Journey/journey.intent.where
@@ -2492,13 +2492,13 @@ abstract class L {
   /// from Journey/journey.offerSkip
   ///
   /// In en, this message translates to:
-  /// **'Not now — take me in'**
+  /// **'Skip for now'**
   String get journeyOfferSkip;
 
   /// from Journey/journey.offerSub
   ///
   /// In en, this message translates to:
-  /// **'The numbers above are yours and stay free. This opens the whole system — every chapter of the reading, written from your positions, not a template.'**
+  /// **'The insights above stay free. This unlocks the full personalised reading for this system.'**
   String get journeyOfferSub;
 
   /// from Journey/journey.offerTitle
@@ -2510,7 +2510,7 @@ abstract class L {
   /// from Journey/journey.openToday
   ///
   /// In en, this message translates to:
-  /// **'Open my Today'**
+  /// **'Open Today'**
   String get journeyOpenToday;
 
   /// from Journey/journey.phase.firstQuarter
@@ -2582,19 +2582,19 @@ abstract class L {
   /// from Journey/journey.rule.1
   ///
   /// In en, this message translates to:
-  /// **'One chapter at a time. Sixteen at once is noise.'**
+  /// **'Start with one chapter. Explore the rest whenever you’re ready.'**
   String get journeyRule1;
 
   /// from Journey/journey.rule.2
   ///
   /// In en, this message translates to:
-  /// **'When two systems disagree, don\'t pick a winner. That\'s the material.'**
+  /// **'When two systems differ, notice the tension: they may describe different sides of you.'**
   String get journeyRule2;
 
   /// from Journey/journey.rule.3
   ///
   /// In en, this message translates to:
-  /// **'Ask me in your own words. Three questions are free.'**
+  /// **'Ask in your own words. Your first question is free.'**
   String get journeyRule3;
 
   /// from Journey/journey.sign.Aquarius
@@ -2924,7 +2924,7 @@ abstract class L {
   /// from Paywall/paywall.archiveTitle
   ///
   /// In en, this message translates to:
-  /// **'The whole archive'**
+  /// **'All eight systems'**
   String get paywallArchiveTitle;
 
   /// from Paywall/paywall.autoRenewTerms
@@ -2960,7 +2960,7 @@ abstract class L {
   /// from Paywall/paywall.freeNote
   ///
   /// In en, this message translates to:
-  /// **'Every calculation stays free, always. What has a price is the writing.'**
+  /// **'Every calculation stays free — all eight systems. You pay only for the written chapters.'**
   String get paywallFreeNote;
 
   /// from Paywall/paywall.honestyCancel
@@ -2972,7 +2972,7 @@ abstract class L {
   /// from Paywall/paywall.honestyOnce
   ///
   /// In en, this message translates to:
-  /// **'one-time is one-time'**
+  /// **'one-time purchases do not renew'**
   String get paywallHonestyOnce;
 
   /// from Paywall/paywall.honestySeller
@@ -3002,7 +3002,7 @@ abstract class L {
   /// from Paywall/paywall.monthlyNote
   ///
   /// In en, this message translates to:
-  /// **'Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel.'**
+  /// **'Transits, Solar Return and compatibility while they move, plus 30 questions a month. Renews until you cancel.'**
   String get paywallMonthlyNote;
 
   /// from Paywall/paywall.monthlyTitle
@@ -3080,19 +3080,19 @@ abstract class L {
   /// from Paywall/paywall.pitchPlan1
   ///
   /// In en, this message translates to:
-  /// **'All eight systems stay open while the plan runs.'**
+  /// **'The yearly plan and the archive open all eight systems; weekly and monthly keep the three that move.'**
   String get paywallPitchPlan1;
 
   /// from Paywall/paywall.pitchPlan2
   ///
   /// In en, this message translates to:
-  /// **'Transits, the solar return and compatibility are rewritten as the sky moves.'**
+  /// **'Transits and Solar Return update as the sky changes; compatibility updates when you compare another person.'**
   String get paywallPitchPlan2;
 
   /// from Paywall/paywall.pitchPlan3
   ///
   /// In en, this message translates to:
-  /// **'Thirty questions a month to Alma, on the deeper voice.'**
+  /// **'30 questions for Alma each month.'**
   String get paywallPitchPlan3;
 
   /// from Paywall/paywall.privacy
@@ -3140,7 +3140,7 @@ abstract class L {
   /// from Paywall/paywall.skip
   ///
   /// In en, this message translates to:
-  /// **'Not now — take me in'**
+  /// **'Skip for now'**
   String get paywallSkip;
 
   /// from Paywall/paywall.storeUnavailable
@@ -3212,7 +3212,7 @@ abstract class L {
   /// from Paywall/paywall.upgradeNote
   ///
   /// In en, this message translates to:
-  /// **'The archive, less what you already paid for one system.'**
+  /// **'The price already includes credit for the system you bought.'**
   String get paywallUpgradeNote;
 
   /// from Paywall/paywall.upgradeTitle
@@ -3230,13 +3230,13 @@ abstract class L {
   /// from Paywall/paywall.weeklyNote
   ///
   /// In en, this message translates to:
-  /// **'Try the living layer for one week. Renews weekly until you cancel.'**
+  /// **'Live readings and questions for one week. Renews weekly until you cancel.'**
   String get paywallWeeklyNote;
 
   /// from Paywall/paywall.weeklyTitle
   ///
   /// In en, this message translates to:
-  /// **'Everything live, weekly'**
+  /// **'All live features, weekly'**
   String get paywallWeeklyTitle;
 
   /// from Paywall/paywall.withdrawn
@@ -3272,7 +3272,7 @@ abstract class L {
   /// from Screens/scr.addPerson.lead
   ///
   /// In en, this message translates to:
-  /// **'The same five things your own chart needed. Without the minute of birth the comparison still runs, on fewer factors.'**
+  /// **'Add their name, birth date, birthplace and birth time if known. Without an exact time, Alma can still compare fewer chart factors.'**
   String get scrAddPersonLead;
 
   /// from Screens/scr.addPerson.name
@@ -3350,7 +3350,7 @@ abstract class L {
   /// from Screens/scr.chat.outOfQuestions
   ///
   /// In en, this message translates to:
-  /// **'From here the plan carries the conversation — with the morning notification and Alma\'s deeper voice.'**
+  /// **'You’ve used the questions available for now. With an active subscription, you can continue; it includes 30 questions each month.'**
   String get scrChatOutOfQuestions;
 
   /// from Screens/scr.chat.past
@@ -3392,7 +3392,7 @@ abstract class L {
   /// from Screens/scr.chat.promptRising
   ///
   /// In en, this message translates to:
-  /// **'{p1} rising. Is that what people meet first?'**
+  /// **'{p1} rising. Is that the first impression I give?'**
   String scrChatPromptRising(String p1);
 
   /// from Screens/scr.chat.promptSun
@@ -3404,7 +3404,7 @@ abstract class L {
   /// from Screens/scr.chat.readFromAll
   ///
   /// In en, this message translates to:
-  /// **'Show every placement this was read from'**
+  /// **'Show the chart placements used for this answer'**
   String get scrChatReadFromAll;
 
   /// from Screens/scr.chat.refused
@@ -3506,7 +3506,7 @@ abstract class L {
   /// from Screens/scr.empty.lead
   ///
   /// In en, this message translates to:
-  /// **'Alma computes eight independent systems from a real JPL ephemeris — forty-one chapters in all — and shows you where they agree about you and where they do not.'**
+  /// **'Alma brings eight astrology and self-reflection systems together in 41 chapters. Combined Insights compares three of them: your birth chart, numerology and Tarot Birth Card.'**
   String get scrEmptyLead;
 
   /// from Screens/scr.empty.title
@@ -3590,7 +3590,7 @@ abstract class L {
   /// from Screens/scr.saveAccount.body
   ///
   /// In en, this message translates to:
-  /// **'Sign in once and your chart and purchases survive a new phone.'**
+  /// **'Sign in to keep your chart and restore your purchases on a new phone.'**
   String get scrSaveAccountBody;
 
   /// from Screens/scr.saveAccount.cta
@@ -3650,7 +3650,7 @@ abstract class L {
   /// from Screens/scr.signIn.lead
   ///
   /// In en, this message translates to:
-  /// **'Signing in attaches a name to the account you already have. Nothing you have read or bought is lost — it is the same account, made durable.'**
+  /// **'Signing in links your email address to your existing account. Nothing you’ve read or bought is lost.'**
   String get scrSignInLead;
 
   /// from Screens/scr.signIn.linkSent

@@ -114,7 +114,7 @@ class LRu extends L {
   String get cabAreaWork => 'Работа';
 
   @override
-  String get cabAreaQuiet => 'Сегодня здесь ничего точного.';
+  String get cabAreaQuiet => 'Сегодня здесь нет точных аспектов.';
 
   @override
   String get cabAscendant => 'Асцендент';
@@ -216,13 +216,13 @@ class LRu extends L {
   String get cabBodySaturn => 'Сатурн';
 
   @override
-  String get cabBodySouthNode => 'Нисходящий узел';
+  String get cabBodySouthNode => 'Южный узел';
 
   @override
   String get cabBodySun => 'Солнце';
 
   @override
-  String get cabBodyTrueNode => 'Восходящий узел';
+  String get cabBodyTrueNode => 'Северный узел';
 
   @override
   String get cabBodyUranus => 'Уран';
@@ -242,7 +242,7 @@ class LRu extends L {
 
   @override
   String get cabChapterEndPlan =>
-      'Эта глава пишется один раз. Транзиты, год и совместимость переписываются вместе с небом — это и есть план.';
+      'Эта глава создаётся один раз. Транзиты, соляр и совместимость обновляются, пока действует подписка.';
 
   @override
   String cabChapterProgress(int p1, int p2) {
@@ -254,7 +254,7 @@ class LRu extends L {
 
   @override
   String get cabCompatNeedsPerson =>
-      'Совместимости нужно второе рождение. Добавь человека — и всё сравнение рассчитается бесплатно.';
+      'Совместимости нужно второе рождение. Добавь человека — и всё сравнение рассчитается целиком и бесплатно.';
 
   @override
   String get cabDataAndLegal => 'данные и документы';
@@ -442,7 +442,7 @@ class LRu extends L {
 
   @override
   String get cabLockedNote =>
-      'Пишется из твоих собственных позиций при первом открытии — твоя карта, никогда не шаблон.';
+      'Персональный текст создаётся по данным твоей карты при первом открытии.';
 
   @override
   String get cabLunarDay => 'Лунный день';
@@ -471,7 +471,7 @@ class LRu extends L {
 
   @override
   String get cabNoneActive =>
-      'Сегодня в орбисе ничего нет. Это ответ, а не пустой экран.';
+      'Сегодня нет аспектов в расчётном диапазоне (орбисе). Это нормальный результат, а не пустой экран.';
 
   @override
   String get cabNotCalculated => 'не рассчитано';
@@ -577,7 +577,7 @@ class LRu extends L {
 
   @override
   String get cabPlanFreeNote =>
-      'Каждый расчёт бесплатен. Платишь только за слова — чтение за чтением.';
+      'Каждый расчёт бесплатен целиком. Платишь только за слова — чтение за чтением.';
 
   @override
   String get cabPlanFreePlan => 'Бесплатно';
@@ -629,7 +629,7 @@ class LRu extends L {
 
   @override
   String get cabPlansBody =>
-      'По подписке открыты все восемь систем, каждое утро приходит уведомление, день переписывается вместе с небом — и Alma отвечает на вопросы своим глубоким голосом. Помесячно или на год.';
+      'Подписка держит живыми транзиты, соляр и совместимость, присылает утреннее уведомление и включает 25 вопросов в месяц. Все восемь систем открывает годовой план.';
 
   @override
   String get cabPlansCta => 'Посмотреть планы';
@@ -646,7 +646,7 @@ class LRu extends L {
 
   @override
   String cabQuestionsLeft(int p1) {
-    return 'Вопросов на сегодня: $p1';
+    return 'Осталось вопросов: $p1';
   }
 
   @override
@@ -825,7 +825,7 @@ class LRu extends L {
   String get cabSystemAstrocartography => 'Астрокартография';
 
   @override
-  String get cabSystemBirthCard => 'Карта рождения';
+  String get cabSystemBirthCard => 'Аркан рождения';
 
   @override
   String get cabSystemCompatibility => 'Совместимость';
@@ -927,7 +927,7 @@ class LRu extends L {
 
   @override
   String get dailyEmptyBody =>
-      'Что ещё в орбисе — ниже. Сегодня ничто не достигает точной отметки.';
+      'Другие аспекты в расчётном диапазоне — ниже. Сегодня ни один не достигает точного положения.';
 
   @override
   String get dailyEmptyTitle => 'Сегодня нет точных аспектов';
@@ -942,11 +942,11 @@ class LRu extends L {
 
   @override
   String dailyRunningNearest(String p1, String p2) {
-    return 'Ближе всего $p1, $p2. Остальное движется медленно.';
+    return 'Ближе всего — $p1; точный момент: $p2. Остальные аспекты меняются медленно.';
   }
 
   @override
-  String get dailyRunningTitle => 'Сегодня ничего точного';
+  String get dailyRunningTitle => 'Сегодня нет точных аспектов';
 
   @override
   String get dailySettingHour => 'Приходит в';
@@ -989,7 +989,7 @@ class LRu extends L {
   String get dailySettingTimezoneDevice => 'с твоего устройства';
 
   @override
-  String get dailySettingTitle => 'Каждое утро';
+  String get dailySettingTitle => 'Утренние уведомления';
 
   @override
   String get dailyStatusDenied =>
@@ -997,7 +997,7 @@ class LRu extends L {
 
   @override
   String get dailyStatusNotDelivering =>
-      'Пока ничего не отправляется. Этот телефон не зарегистрирован для уведомлений, так что утренняя строка живёт здесь, в «Сегодня».';
+      'Уведомления пока не приходят на этот телефон. Все обновления доступны в разделе «Сегодня».';
 
   @override
   String get dailyStatusOpenSettings => 'Открыть настройки';
@@ -1018,15 +1018,15 @@ class LRu extends L {
 
   @override
   String dailyTodayAt(String p1) {
-    return 'Точно в $p1';
+    return 'Точный момент — $p1';
   }
 
   @override
-  String get dailyTodayLabel => 'Точно сегодня';
+  String get dailyTodayLabel => 'Точный аспект сегодня';
 
   @override
   String dailyTodaySince(String p1) {
-    return 'В орбисе с $p1';
+    return 'В расчётном диапазоне с $p1';
   }
 
   @override
@@ -1035,7 +1035,7 @@ class LRu extends L {
   }
 
   @override
-  String get dailyVerifiedLabel => 'Точные дни в ближайшие 30';
+  String get dailyVerifiedLabel => 'Точные даты транзитов в ближайшие 30 дней';
 
   @override
   String get dailyVerifiedNote =>
@@ -1057,10 +1057,10 @@ class LRu extends L {
   String get journeyBack => 'Назад';
 
   @override
-  String get journeyBuildMySky => 'Построить моё небо';
+  String get journeyBuildMySky => 'Рассчитать мою карту';
 
   @override
-  String get journeyCalculated => 'все восемь систем · рассчитаны';
+  String get journeyCalculated => 'все восемь систем · рассчитаны бесплатно';
 
   @override
   String get journeyCaptureDay => 'День рождения';
@@ -1106,42 +1106,42 @@ class LRu extends L {
 
   @override
   String get journeyCeremony2Line =>
-      'Твой жизненный путь сводится к числу, которое предпочитает доказательства вере.';
+      'Число жизненного пути рассчитывается по дате рождения.';
 
   @override
-  String get journeyCeremony3Label => 'читаю систему 3 из 8 · карта рождения';
+  String get journeyCeremony3Label => 'читаю систему 3 из 8 · аркан рождения';
 
   @override
   String get journeyCeremony3Line =>
-      'Один из двадцати двух арканов, рассчитанный по одной только дате.';
+      'Аркан рождения — один из 22 старших арканов Таро; он рассчитывается по дате рождения.';
 
   @override
   String get journeyCeremony4Label => 'читаю систему 4 из 8 · транзиты';
 
   @override
   String get journeyCeremony4Line =>
-      'Где небо сейчас — против того, где оно было, когда началась твоя история.';
+      'Транзиты сравнивают положение планет сейчас и в момент твоего рождения.';
 
   @override
   String get journeyCeremony5Label => 'читаю систему 5 из 8 · совместимость';
 
   @override
   String get journeyCeremony5Line =>
-      'Останется открытой, пока не добавишь второго человека, — ничего не выдумано.';
+      'Для совместимости нужны данные рождения второго человека; время можно не указывать.';
 
   @override
   String get journeyCeremony6Label => 'читаю систему 6 из 8 · соляр';
 
   @override
   String get journeyCeremony6Line =>
-      'Год впереди, прочитанный с минуты, когда Солнце возвращается на своё место.';
+      'Соляр строится на момент ежегодного возвращения Солнца в положение при рождении.';
 
   @override
   String get journeyCeremony7Label => 'читаю систему 7 из 8 · астрокартография';
 
   @override
   String get journeyCeremony7Line =>
-      'Планетные линии поверх карты мира, проведённые из твоей точной минуты.';
+      'Планетные линии на карте мира рассчитываются по дате, месту и времени рождения.';
 
   @override
   String get journeyCeremony8Label =>
@@ -1149,7 +1149,7 @@ class LRu extends L {
 
   @override
   String get journeyCeremony8Line =>
-      'Девять осей. Где три традиции согласны — это идёт в твоё ядро.';
+      'Девять осей. Где три традиции согласны — это идёт в твою основу.';
 
   @override
   String get journeyCeremonySkip => 'Пропустить церемонию';
@@ -1177,7 +1177,7 @@ class LRu extends L {
 
   @override
   String get journeyFreeNote =>
-      'Эти две системы не стоят ничего и никогда. Они твои, читаешь ты дальше или нет.';
+      'Эти системы не стоят ничего и никогда. Они твои, читаешь ты дальше или нет.';
 
   @override
   String get journeyGenderFemale => 'Женский';
@@ -1190,7 +1190,7 @@ class LRu extends L {
 
   @override
   String get journeyHandoffSub =>
-      'Три правила, на которых это работает, — единственный онбординг, который у нас будет.';
+      'Три коротких правила помогут разобраться в Alma.';
 
   @override
   String get journeyHandoffTitle => 'Сохранено. Теперь читай себя медленно.';
@@ -1209,30 +1209,29 @@ class LRu extends L {
   }
 
   @override
-  String get journeyIntentSelf => 'Кто я на самом деле';
+  String get journeyIntentSelf => 'Лучше понять себя';
 
   @override
-  String get journeyIntentShifting =>
-      'Что-то сдвигается, и я не понимаю почему';
+  String get journeyIntentShifting => 'Разобраться в переменах';
 
   @override
-  String get journeyIntentUs => 'Мы — получится ли';
+  String get journeyIntentUs => 'Разобраться в отношениях';
 
   @override
-  String get journeyIntentWhere => 'Где мне жить';
+  String get journeyIntentWhere => 'Исследовать разные места';
 
   @override
   String get journeyIntentSkip => 'Пропустить — я знаю, чего хочу';
 
   @override
-  String get journeyIntentTitle => 'Что сейчас громче всего в тебе?';
+  String get journeyIntentTitle => 'Что ты хочешь узнать в первую очередь?';
 
   @override
-  String get journeyKeepMySky => 'Оставить моё небо';
+  String get journeyKeepMySky => 'Сохранить мою карту';
 
   @override
   String get journeyLockedWithoutTime =>
-      'Дома, соляр и карта мира остаются закрытыми';
+      'Без времени рождения недоступны дома, соляр и астрокартография.';
 
   @override
   String get journeyMeridiemLabel => 'AM или PM';
@@ -1317,7 +1316,7 @@ class LRu extends L {
   }
 
   @override
-  String get journeyOpenToday => 'Открыть моё «Сегодня»';
+  String get journeyOpenToday => 'Открыть раздел «Сегодня»';
 
   @override
   String get journeyPhaseFirstQuarter => 'первая четверть';
@@ -1347,22 +1346,22 @@ class LRu extends L {
   String get journeyPlacePlaceholder => 'Город';
 
   @override
-  String get journeyPlaceSub => 'Города достаточно.';
+  String get journeyPlaceSub => 'Достаточно указать город.';
 
   @override
   String get journeyPlaceTitle => 'Где всё началось?';
 
   @override
   String get journeyRule1 =>
-      'По одной главе за раз. Шестнадцать сразу — это шум.';
+      'Открывай главы по одной — так в них проще разобраться.';
 
   @override
   String get journeyRule2 =>
-      'Когда две системы расходятся, не выбирай победителя. Это и есть материал.';
+      'Сравнивай интерпретации: расхождения помогают увидеть тему с разных сторон.';
 
   @override
   String get journeyRule3 =>
-      'Спрашивай меня своими словами. Три вопроса бесплатно.';
+      'Спрашивай меня своими словами. Первый вопрос — бесплатно.';
 
   @override
   String get journeySignAquarius => 'Водолей';
@@ -1412,7 +1411,7 @@ class LRu extends L {
   String get journeySystemAstrocartography => 'Астрокартография';
 
   @override
-  String get journeySystemBirthCard => 'Карта рождения';
+  String get journeySystemBirthCard => 'Аркан рождения';
 
   @override
   String get journeySystemCompatibility => 'Совместимость';
@@ -1443,55 +1442,55 @@ class LRu extends L {
 
   @override
   String pushDailyConjunction(String p1, String p2, String p3) {
-    return '$p1 и $p2 — точное соединение в $p3.';
+    return '$p1 и $p2: соединение становится точным в $p3.';
   }
 
   @override
   String pushDailyEnteringConjunction(String p1, String p2) {
-    return '$p1 и $p2 — соединение входит в орбис сегодня.';
+    return '$p1 и $p2: соединение входит в расчётный диапазон сегодня.';
   }
 
   @override
   String pushDailyEnteringOpposition(String p1, String p2) {
-    return '$p1 и $p2 — оппозиция входит в орбис сегодня.';
+    return '$p1 и $p2: оппозиция входит в расчётный диапазон сегодня.';
   }
 
   @override
   String pushDailyEnteringSextile(String p1, String p2) {
-    return '$p1 и $p2 — секстиль входит в орбис сегодня.';
+    return '$p1 и $p2: секстиль входит в расчётный диапазон сегодня.';
   }
 
   @override
   String pushDailyEnteringSquare(String p1, String p2) {
-    return '$p1 и $p2 — квадратура входит в орбис сегодня.';
+    return '$p1 и $p2: квадратура входит в расчётный диапазон сегодня.';
   }
 
   @override
   String pushDailyEnteringTrine(String p1, String p2) {
-    return '$p1 и $p2 — трин входит в орбис сегодня.';
+    return '$p1 и $p2: трин входит в расчётный диапазон сегодня.';
   }
 
   @override
   String pushDailyOpposition(String p1, String p2, String p3) {
-    return '$p1 и $p2 — точная оппозиция в $p3.';
+    return '$p1 и $p2: оппозиция становится точной в $p3.';
   }
 
   @override
   String pushDailySextile(String p1, String p2, String p3) {
-    return '$p1 и $p2 — точный секстиль в $p3.';
+    return '$p1 и $p2: секстиль становится точным в $p3.';
   }
 
   @override
   String pushDailySquare(String p1, String p2, String p3) {
-    return '$p1 и $p2 — точная квадратура в $p3.';
+    return '$p1 и $p2: квадратура становится точной в $p3.';
   }
 
   @override
-  String get pushDailyTitle => 'Точно сегодня';
+  String get pushDailyTitle => 'Точный аспект сегодня';
 
   @override
   String pushDailyTrine(String p1, String p2, String p3) {
-    return '$p1 и $p2 — точный трин в $p3.';
+    return '$p1 и $p2: трин становится точным в $p3.';
   }
 
   @override
@@ -1555,7 +1554,7 @@ class LRu extends L {
   String get paywallArchiveNote => 'Все восемь систем — одной покупкой.';
 
   @override
-  String get paywallArchiveTitle => 'Весь архив';
+  String get paywallArchiveTitle => 'Все восемь систем';
 
   @override
   String get paywallAutoRenewTerms =>
@@ -1570,7 +1569,7 @@ class LRu extends L {
 
   @override
   String get paywallEverythingSub =>
-      'Пишется из твоих собственных позиций при первом открытии — твоя карта, никогда не шаблон.';
+      'Персональный текст создаётся по данным твоей карты при первом открытии.';
 
   @override
   String get paywallEverythingTitle =>
@@ -1578,7 +1577,7 @@ class LRu extends L {
 
   @override
   String get paywallFreeNote =>
-      'Каждый расчёт всегда бесплатен. Цену имеют только слова.';
+      'Каждый расчёт всегда бесплатен целиком. Цену имеют только слова.';
 
   @override
   String get paywallHonestyCancel => 'отмена в настройках Apple ID';
@@ -1649,15 +1648,14 @@ class LRu extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'Все восемь систем открыты, пока действует план.';
+      'Годовой план и архив открывают все восемь систем; недельный и месячный держат живыми три.';
 
   @override
   String get paywallPitchPlan2 =>
-      'Транзиты, соляр и совместимость переписываются вместе с небом.';
+      'Транзиты, соляр и совместимость обновляются, пока действует подписка.';
 
   @override
-  String get paywallPitchPlan3 =>
-      'Двадцать пять вопросов к Alma в месяц — отвечает её глубокий голос.';
+  String get paywallPitchPlan3 => 'Двадцать пять вопросов к Alma в месяц.';
 
   @override
   String get paywallPrivacy => 'Политика конфиденциальности';
@@ -1678,7 +1676,7 @@ class LRu extends L {
 
   @override
   String get paywallRestoredOther =>
-      'Эти покупки уже принадлежат другому аккаунту Alma. Войди в него — и они придут с тобой.';
+      'Эти покупки привязаны к другому аккаунту Alma. Войди в тот аккаунт, чтобы восстановить их.';
 
   @override
   String get paywallRestoring => 'Спрашиваю App Store…';
@@ -1697,7 +1695,7 @@ class LRu extends L {
   String get paywallSystemAstrocartography => 'Астрокартография';
 
   @override
-  String get paywallSystemBirthCard => 'Карта рождения';
+  String get paywallSystemBirthCard => 'Аркан рождения';
 
   @override
   String get paywallSystemCompatibility => 'Совместимость';
@@ -1721,11 +1719,10 @@ class LRu extends L {
   String get paywallTerms => 'Условия';
 
   @override
-  String get paywallUpgradeNote =>
-      'Архив минус то, что уже оплачено за одну систему.';
+  String get paywallUpgradeNote => 'Цена уже учитывает купленную систему.';
 
   @override
-  String get paywallUpgradeTitle => 'Остаток архива';
+  String get paywallUpgradeTitle => 'Доплата за все системы';
 
   @override
   String get paywallVerifyLater =>
@@ -1733,7 +1730,7 @@ class LRu extends L {
 
   @override
   String get paywallWeeklyNote =>
-      'Попробуй живой слой одну неделю. Продлевается еженедельно, пока не отменишь.';
+      'Обновляемые разборы и вопросы на неделю. Продлевается каждую неделю, пока не отменишь.';
 
   @override
   String get paywallWeeklyTitle => 'Всё живое — на неделю';
@@ -1756,7 +1753,7 @@ class LRu extends L {
 
   @override
   String get scrAddPersonLead =>
-      'Те же пять вещей, что нужны были твоей карте. Без минуты рождения сравнение всё равно считается — на меньшем числе факторов.';
+      'Нужны имя, дата и место рождения; время — если известно. Без точного времени сравнение тоже работает, но учитывает меньше факторов.';
 
   @override
   String get scrAddPersonName => 'имя';
@@ -1800,7 +1797,7 @@ class LRu extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Дальше разговор ведёт план — с утренним уведомлением и более глубоким голосом Alma.';
+      'Доступные вопросы закончились. В подписке — 25 вопросов в месяц.';
 
   @override
   String get scrChatPast => 'раньше';
@@ -1896,14 +1893,14 @@ class LRu extends L {
 
   @override
   String get scrEmptyLead =>
-      'Alma рассчитывает восемь независимых систем по настоящей эфемериде JPL — всего сорок одна глава — и показывает, где они сходятся насчёт тебя, а где расходятся.';
+      'В Alma восемь систем и 41 глава. «Общий портрет» сравнивает три из них: натальную карту, нумерологию и аркан рождения.';
 
   @override
   String get scrEmptyTitle => 'Восемь систем, одна карта';
 
   @override
   String get scrJourneyFreeNote =>
-      'Всё выше — расчёты, а расчёты всегда бесплатны. Это остаётся твоим, читаешь ты дальше или нет.';
+      'Всё выше — расчёты, а расчёты всегда бесплатны целиком. Это остаётся твоим, читаешь ты дальше или нет.';
 
   @override
   String get scrKeep => 'Оставить';
@@ -1920,7 +1917,7 @@ class LRu extends L {
 
   @override
   String get scrPeopleLead =>
-      'Совместимость сравнивает твою карту с чьей-то ещё. Само сравнение всегда рассчитывается целиком.';
+      'Совместимость сравнивает твою карту с чьей-то ещё. Само сравнение всегда рассчитывается целиком и бесплатно.';
 
   @override
   String get scrPeopleRemove => 'Убрать';
@@ -1943,7 +1940,7 @@ class LRu extends L {
 
   @override
   String get scrSaveAccountBody =>
-      'Войди один раз — и карта с покупками переживут новый телефон.';
+      'Войди, чтобы сохранить карту и покупки при смене телефона.';
 
   @override
   String get scrSaveAccountCta => 'Войти';
@@ -1976,7 +1973,7 @@ class LRu extends L {
 
   @override
   String get scrSignInLead =>
-      'Вход привязывает имя к аккаунту, который у тебя уже есть. Ничего из прочитанного и купленного не теряется — это тот же аккаунт, просто теперь он никуда не денется.';
+      'Вход привязывает адрес почты к аккаунту, который у тебя уже есть. Ничего из прочитанного и купленного не потеряется.';
 
   @override
   String get scrSignInLinkSent =>

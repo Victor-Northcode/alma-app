@@ -99,7 +99,7 @@ class LPt extends L {
   String get cabArcanaWheelOfFortune => 'A Roda da Fortuna';
 
   @override
-  String get cabArchiveNote => 'Os oito sistemas, comprados uma vez.';
+  String get cabArchiveNote => 'Os oito sistemas em um único pagamento.';
 
   @override
   String get cabAreaBody => 'Corpo';
@@ -254,10 +254,10 @@ class LPt extends L {
 
   @override
   String get cabCompatNeedsPerson =>
-      'A compatibilidade precisa de um segundo nascimento. Adicione alguém e toda a comparação é calculada de graça.';
+      'Para ver a compatibilidade, adicione os dados de nascimento de outra pessoa. Toda a comparação é calculada de graça.';
 
   @override
-  String get cabDataAndLegal => 'dados e jurídico';
+  String get cabDataAndLegal => 'dados e informações legais';
 
   @override
   String get cabDisclaimer =>
@@ -283,7 +283,7 @@ class LPt extends L {
   String get cabExportReady => 'Seu arquivo está pronto.';
 
   @override
-  String get cabFactBirthdayNumber => 'número do aniversário';
+  String get cabFactBirthdayNumber => 'número do dia de nascimento';
 
   @override
   String get cabFactBirthplace => 'local de nascimento';
@@ -457,11 +457,12 @@ class LPt extends L {
 
   @override
   String cabMerchantLine(String p1) {
-    return 'Pagamentos processados por $p1 como vendedor legal · impostos incluídos quando aplicável';
+    return 'Pagamentos processados por $p1, responsável legal pela venda · impostos incluídos quando aplicável';
   }
 
   @override
-  String get cabNeedsBirthTime => 'Este precisa da sua hora de nascimento.';
+  String get cabNeedsBirthTime =>
+      'Para isso, preciso da sua hora de nascimento.';
 
   @override
   String get cabNextChapter => 'próximo';
@@ -472,14 +473,14 @@ class LPt extends L {
 
   @override
   String get cabNoneActive =>
-      'Nada está em orbe hoje. Isso é uma resposta, não uma tela vazia.';
+      'Hoje não há trânsitos ativos. É um resultado real, não uma tela vazia.';
 
   @override
   String get cabNotCalculated => 'não calculado';
 
   @override
   String get cabNotPrediction =>
-      'Nada aqui é previsão. Cada linha nomeia a posição de onde foi lida.';
+      'Nada aqui é previsão. Cada linha indica em qual posição do seu mapa ela se baseia.';
 
   @override
   String get cabOneTimeNote => 'Um único pagamento.';
@@ -525,7 +526,7 @@ class LPt extends L {
   String get cabPlacementsLabel => 'suas posições';
 
   @override
-  String get cabPlanAnnualPlan => 'Tudo, por um ano';
+  String get cabPlanAnnualPlan => 'Alma completa por um ano';
 
   @override
   String get cabPlanCancelFailed =>
@@ -557,7 +558,7 @@ class LPt extends L {
   String get cabPlanDeleteForever => 'Apagar tudo, para sempre';
 
   @override
-  String get cabPlanDeleteMismatch => 'Esse não é o endereço desta conta.';
+  String get cabPlanDeleteMismatch => 'Esse não é o e-mail desta conta.';
 
   @override
   String get cabPlanDeleteWarning =>
@@ -578,7 +579,7 @@ class LPt extends L {
 
   @override
   String get cabPlanFreeNote =>
-      'Todo cálculo é grátis. Você paga pelas palavras, uma leitura por vez.';
+      'Todo cálculo é grátis, sempre. Você paga só pelas leituras escritas, uma por vez.';
 
   @override
   String get cabPlanFreePlan => 'Grátis';
@@ -630,7 +631,7 @@ class LPt extends L {
 
   @override
   String get cabPlansBody =>
-      'O plano mantém os oito sistemas abertos, envia a notificação da manhã, reescreve seu dia conforme o céu se move — e Alma responde suas perguntas com a voz mais profunda. Mensal ou anual.';
+      'A assinatura mantém atualizados trânsitos, revolução solar e compatibilidade, envia o aviso da manhã e inclui 30 perguntas por mês. O plano anual abre os oito sistemas.';
 
   @override
   String get cabPlansCta => 'Ver os planos';
@@ -647,7 +648,7 @@ class LPt extends L {
 
   @override
   String cabQuestionsLeft(int p1) {
-    return 'Perguntas restantes hoje: $p1';
+    return 'Perguntas disponíveis: $p1';
   }
 
   @override
@@ -699,7 +700,7 @@ class LPt extends L {
       'Esta conta não tem e-mail. O código dela está abaixo — digite-o para confirmar.';
 
   @override
-  String get cabSettingsEverythingMonthly => 'Tudo, todo mês';
+  String get cabSettingsEverythingMonthly => 'Alma completa todo mês';
 
   @override
   String get cabSettingsExportData => 'Exportar meus dados';
@@ -714,7 +715,7 @@ class LPt extends L {
   String get cabSettingsLanguage => 'Idioma';
 
   @override
-  String get cabSettingsLetters => 'Cartas';
+  String get cabSettingsLetters => 'E-mails';
 
   @override
   String get cabSettingsLettersNote =>
@@ -722,7 +723,7 @@ class LPt extends L {
 
   @override
   String get cabSettingsLettersNoteStore =>
-      'Alma envia uma coisa: seu link de acesso. A Apple envia o recibo de tudo o que você compra no app e o aviso antes de um plano renovar, porque é a Apple que cobra. Não há newsletter e nada para cancelar.';
+      'Alma envia um e-mail: seu link de acesso. A Apple envia o recibo de tudo o que você compra no app e o aviso antes de um plano renovar, porque é a Apple que processa o pagamento. Não há newsletter nem lista de e-mails.';
 
   @override
   String get cabSettingsPlace => 'Lugar';
@@ -813,13 +814,13 @@ class LPt extends L {
 
   @override
   String get cabSynthLead =>
-      'Três concordando é o mais perto de uma prova que existe. Dois discordando é ainda mais útil — é o conflito que você continua vivendo.';
+      'Quando três sistemas concordam, o padrão fica mais claro. Quando dois discordam, há uma tensão que vale a pena explorar.';
 
   @override
   String get cabSynthSingle => 'só um vê';
 
   @override
-  String get cabSynthTitle => 'Onde três sistemas concordam sobre você';
+  String get cabSynthTitle => 'Em que três sistemas concordam sobre você';
 
   @override
   String get cabSystemAstrocartography => 'Astrocartografia';
@@ -846,7 +847,7 @@ class LPt extends L {
   String get cabSystemTransits => 'Trânsitos';
 
   @override
-  String get cabSystemFinished => 'Aqui está tudo lido';
+  String get cabSystemFinished => 'Você já leu tudo aqui';
 
   @override
   String get cabUnknownTime => 'hora de nascimento desconhecida';
@@ -876,7 +877,7 @@ class LPt extends L {
 
   @override
   String get dailyAskBody =>
-      'Uma notificação, na hora que você escolher, nos dias em que algo no seu mapa fica exato. Cerca de uma vez por semana. Nunca à noite, e dá para desligar pela própria notificação.';
+      'Uma notificação, na hora que você escolher, nos dias em que um aspecto fica exato no seu mapa. Cerca de uma vez por semana. Nunca à noite, e dá para desligar pela própria notificação.';
 
   @override
   String get dailyAskNo => 'Agora não';
@@ -922,12 +923,12 @@ class LPt extends L {
 
   @override
   String dailyContactPhrase(String p1, String p2, String p3) {
-    return '$p1 agora e $p3 no seu mapa: $p2';
+    return '$p1 em $p2 com $p3 no seu mapa';
   }
 
   @override
   String get dailyEmptyBody =>
-      'O que ainda está em orbe está abaixo. Hoje nada se torna exato.';
+      'Os trânsitos ativos aparecem abaixo. Nenhum chega ao ponto exato hoje.';
 
   @override
   String get dailyEmptyTitle => 'Nada está exato hoje';
@@ -946,7 +947,7 @@ class LPt extends L {
   }
 
   @override
-  String get dailyRunningTitle => 'Hoje nada exato';
+  String get dailyRunningTitle => 'Nenhum aspecto exato hoje';
 
   @override
   String get dailySettingHour => 'Chega às';
@@ -973,10 +974,11 @@ class LPt extends L {
   String get dailySettingOnlyWhatMatters => 'Só o que importa';
 
   @override
-  String get dailySettingQuiet => 'Nunca entre 22:00 e 08:00, no seu horário.';
+  String get dailySettingQuiet =>
+      'Nunca entre 22:00 e 08:00 no seu fuso horário.';
 
   @override
-  String get dailySettingTimezone => 'Seu horário';
+  String get dailySettingTimezone => 'Seu fuso horário';
 
   @override
   String get dailySettingTimezoneBirth => 'dos seus dados de nascimento';
@@ -1007,14 +1009,14 @@ class LPt extends L {
 
   @override
   String get dailyStatusRegistered =>
-      'Este telefone está registrado para o diário.';
+      'Este telefone receberá os avisos da leitura do dia.';
 
   @override
   String get dailyStatusUpgrade => 'Deixe que cheguem de verdade';
 
   @override
   String get dailySubscriberOnly =>
-      'A notificação da manhã faz parte do plano.';
+      'As atualizações diárias fazem parte da assinatura ativa. A seção Hoje continua grátis.';
 
   @override
   String dailyTodayAt(String p1) {
@@ -1022,20 +1024,21 @@ class LPt extends L {
   }
 
   @override
-  String get dailyTodayLabel => 'Exato hoje';
+  String get dailyTodayLabel => 'Aspecto exato hoje';
 
   @override
   String dailyTodaySince(String p1) {
-    return 'Em orbe desde $p1';
+    return 'Ativo desde $p1';
   }
 
   @override
   String dailyTodayUntil(String p1) {
-    return 'em orbe até $p1';
+    return 'ativo até $p1';
   }
 
   @override
-  String get dailyVerifiedLabel => 'Dias exatos nos próximos 30';
+  String get dailyVerifiedLabel =>
+      'Datas exatas dos trânsitos nos próximos 30 dias';
 
   @override
   String get dailyVerifiedNote =>
@@ -1106,7 +1109,7 @@ class LPt extends L {
 
   @override
   String get journeyCeremony2Line =>
-      'Seu caminho de vida se reduz a um número que prefere prova a crença.';
+      'A numerologia transforma sua data de nascimento no número do seu caminho de vida.';
 
   @override
   String get journeyCeremony3Label =>
@@ -1121,7 +1124,7 @@ class LPt extends L {
 
   @override
   String get journeyCeremony4Line =>
-      'Onde o céu está agora, contra onde ele estava quando você começou.';
+      'Os trânsitos atuais comparam o céu de agora com o do momento em que você nasceu.';
 
   @override
   String get journeyCeremony5Label =>
@@ -1129,7 +1132,7 @@ class LPt extends L {
 
   @override
   String get journeyCeremony5Line =>
-      'Fica aberto até você adicionar uma segunda pessoa — nada inventado.';
+      'A compatibilidade fica completa quando você adiciona outra pessoa; nenhum dado é inventado.';
 
   @override
   String get journeyCeremony6Label =>
@@ -1137,7 +1140,7 @@ class LPt extends L {
 
   @override
   String get journeyCeremony6Line =>
-      'O ano que vem, lido a partir do minuto em que o Sol volta ao lugar.';
+      'Seu próximo ano pessoal, calculado a partir do momento em que o Sol volta à posição natal.';
 
   @override
   String get journeyCeremony7Label =>
@@ -1145,7 +1148,7 @@ class LPt extends L {
 
   @override
   String get journeyCeremony7Line =>
-      'Linhas planetárias no mapa, traçadas do seu minuto exato.';
+      'Linhas planetárias no mapa, calculadas com seu horário exato de nascimento.';
 
   @override
   String get journeyCeremony8Label =>
@@ -1153,7 +1156,7 @@ class LPt extends L {
 
   @override
   String get journeyCeremony8Line =>
-      'Nove eixos. Onde três tradições concordam, aquilo vai para o seu núcleo.';
+      'Nove eixos. Quando três sistemas concordam, aparece um padrão central.';
 
   @override
   String get journeyCeremonySkip => 'Pular a cerimônia';
@@ -1181,7 +1184,7 @@ class LPt extends L {
 
   @override
   String get journeyFreeNote =>
-      'Esses dois sistemas nunca custam nada. São seus, você lendo mais ou não.';
+      'Os resultados acima continuam grátis, mesmo que você não continue.';
 
   @override
   String get journeyGenderFemale => 'Feminino';
@@ -1197,7 +1200,7 @@ class LPt extends L {
       'Três regras que fazem isso funcionar — a única introdução que a gente vai te dar.';
 
   @override
-  String get journeyHandoffTitle => 'Salvo. Agora se leia devagar.';
+  String get journeyHandoffTitle => 'Salvo. Agora descubra seu mapa com calma.';
 
   @override
   String get journeyHourLabel => 'Hora';
@@ -1229,7 +1232,7 @@ class LPt extends L {
   String get journeyIntentSkip => 'Pular — já sei o que quero';
 
   @override
-  String get journeyIntentTitle => 'O que está mais alto em você agora?';
+  String get journeyIntentTitle => 'Qual tema mais importa para você agora?';
 
   @override
   String get journeyKeepMySky => 'Guardar meu céu';
@@ -1309,7 +1312,7 @@ class LPt extends L {
       'Um pagamento só. Seu para sempre. Não precisa de conta para comprar.';
 
   @override
-  String get journeyOfferSkip => 'Agora não — me leva para dentro';
+  String get journeyOfferSkip => 'Agora não — continuar';
 
   @override
   String get journeyOfferSub =>
@@ -1362,11 +1365,11 @@ class LPt extends L {
 
   @override
   String get journeyRule2 =>
-      'Quando dois sistemas discordam, não escolha um vencedor. O material está aí.';
+      'Quando dois sistemas discordam, não escolha um vencedor. É aí que vale a pena prestar atenção.';
 
   @override
   String get journeyRule3 =>
-      'Me pergunte com suas palavras. Três perguntas são de graça.';
+      'Pergunte com suas palavras. A primeira pergunta é grátis.';
 
   @override
   String get journeySignAquarius => 'Aquário';
@@ -1405,7 +1408,8 @@ class LPt extends L {
   String get journeySignVirgo => 'Virgem';
 
   @override
-  String get journeyStaysFree => 'Tudo acima fica de graça, para sempre';
+  String get journeyStaysFree =>
+      'Os resultados acima continuam grátis, mesmo que você não continue.';
 
   @override
   String journeyStep(String p1, String p2) {
@@ -1452,12 +1456,12 @@ class LPt extends L {
 
   @override
   String pushDailyEnteringConjunction(String p1, String p2) {
-    return '$p1 e $p2 — conjunção, em orbe a partir de hoje.';
+    return '$p1 e $p2: a conjunção começa a atuar hoje.';
   }
 
   @override
   String pushDailyEnteringOpposition(String p1, String p2) {
-    return '$p1 e $p2 — oposição, em orbe a partir de hoje.';
+    return '$p1 e $p2: a oposição começa a atuar hoje.';
   }
 
   @override
@@ -1467,7 +1471,7 @@ class LPt extends L {
 
   @override
   String pushDailyEnteringSquare(String p1, String p2) {
-    return '$p1 e $p2 — quadratura, em orbe a partir de hoje.';
+    return '$p1 e $p2: a quadratura começa a atuar hoje.';
   }
 
   @override
@@ -1491,7 +1495,7 @@ class LPt extends L {
   }
 
   @override
-  String get pushDailyTitle => 'Exato hoje';
+  String get pushDailyTitle => 'Aspecto exato hoje';
 
   @override
   String pushDailyTrine(String p1, String p2, String p3) {
@@ -1512,7 +1516,8 @@ class LPt extends L {
   String get stateLocked => 'Desbloquear para ler';
 
   @override
-  String get stateNeedsBirthTime => 'Este precisa da sua hora de nascimento.';
+  String get stateNeedsBirthTime =>
+      'Para isso, preciso da sua hora de nascimento.';
 
   @override
   String get stateNothingToSay =>
@@ -1552,13 +1557,13 @@ class LPt extends L {
       'Renova todo ano até você cancelar. Cancele quando quiser nos ajustes do seu Apple ID.';
 
   @override
-  String get paywallAnnualTitle => 'Tudo, por um ano';
+  String get paywallAnnualTitle => 'Alma completa por um ano';
 
   @override
-  String get paywallArchiveNote => 'Os oito sistemas, comprados uma vez.';
+  String get paywallArchiveNote => 'Os oito sistemas em um único pagamento.';
 
   @override
-  String get paywallArchiveTitle => 'O arquivo inteiro';
+  String get paywallArchiveTitle => 'Todas as leituras';
 
   @override
   String get paywallAutoRenewTerms =>
@@ -1580,7 +1585,7 @@ class LPt extends L {
 
   @override
   String get paywallFreeNote =>
-      'Todos os cálculos continuam de graça, sempre. O que tem preço é o texto.';
+      'Todo cálculo é grátis, sempre. Você paga só pelas leituras escritas, uma por vez.';
 
   @override
   String get paywallHonestyCancel => 'cancele nos ajustes do Apple ID';
@@ -1603,10 +1608,10 @@ class LPt extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Trânsitos, revolução solar e compatibilidade conforme se movem, mais 30 perguntas por mês. Renova até você cancelar.';
+      'Trânsitos, revolução solar e compatibilidade enquanto se movem, mais 30 perguntas por mês. Renova até você cancelar.';
 
   @override
-  String get paywallMonthlyTitle => 'Tudo que se move, todo mês';
+  String get paywallMonthlyTitle => 'Alma completa, mês a mês';
 
   @override
   String get paywallNotNow => 'Agora não';
@@ -1652,15 +1657,14 @@ class LPt extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'Os oito sistemas ficam abertos enquanto o plano estiver ativo.';
+      'O plano anual e o arquivo abrem os oito sistemas; o semanal e o mensal mantêm vivos os três que se movem.';
 
   @override
   String get paywallPitchPlan2 =>
       'Trânsitos, revolução solar e compatibilidade são reescritos conforme o céu se move.';
 
   @override
-  String get paywallPitchPlan3 =>
-      'Trinta perguntas por mês à Alma, com a voz mais profunda.';
+  String get paywallPitchPlan3 => '30 perguntas por mês para a Alma.';
 
   @override
   String get paywallPrivacy => 'Política de Privacidade';
@@ -1688,7 +1692,7 @@ class LPt extends L {
   String get paywallRestoring => 'Estou perguntando à App Store…';
 
   @override
-  String get paywallSkip => 'Agora não — me leva para dentro';
+  String get paywallSkip => 'Agora não — continuar';
 
   @override
   String get paywallStoreUnavailable =>
@@ -1737,10 +1741,10 @@ class LPt extends L {
 
   @override
   String get paywallWeeklyNote =>
-      'Experimente a camada viva por uma semana. Renova semanalmente até você cancelar.';
+      'Leituras atualizadas e perguntas por uma semana. Renova toda semana até você cancelar.';
 
   @override
-  String get paywallWeeklyTitle => 'Tudo ao vivo, semanal';
+  String get paywallWeeklyTitle => 'Alma completa, semana a semana';
 
   @override
   String get paywallWithdrawn =>
@@ -1804,7 +1808,7 @@ class LPt extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'A partir daqui o plano leva a conversa — com a notificação da manhã e a voz mais profunda da Alma.';
+      'Você usou as perguntas disponíveis por enquanto. Com uma assinatura ativa, pode continuar; ela inclui 30 perguntas por mês.';
 
   @override
   String get scrChatPast => 'anteriores';
@@ -1846,7 +1850,7 @@ class LPt extends L {
 
   @override
   String get scrChatRule =>
-      'Cada resposta nomeia as posições de onde foi lida. Nada aqui é uma previsão.';
+      'Cada resposta indica em quais posições do seu mapa ela se baseia. Nada aqui é previsão.';
 
   @override
   String get scrChatSend => 'Enviar';
@@ -1901,14 +1905,14 @@ class LPt extends L {
 
   @override
   String get scrEmptyLead =>
-      'Alma calcula oito sistemas independentes a partir de uma efeméride real do JPL — quarenta e um capítulos ao todo — e mostra onde eles concordam sobre você e onde não.';
+      'A Alma reúne oito sistemas de astrologia e autoconhecimento em 41 capítulos. A Síntese dos sistemas compara três deles: mapa natal, numerologia e Arcano de nascimento.';
 
   @override
   String get scrEmptyTitle => 'Oito sistemas, um mapa';
 
   @override
   String get scrJourneyFreeNote =>
-      'Tudo acima é calculado, e os cálculos são sempre gratuitos. É seu, leia você mais ou não.';
+      'Os resultados acima continuam grátis, mesmo que você não continue.';
 
   @override
   String get scrKeep => 'Manter';
@@ -1981,7 +1985,7 @@ class LPt extends L {
 
   @override
   String get scrSignInLead =>
-      'Entrar anexa um nome à conta que você já tem. Nada do que você leu ou comprou se perde — é a mesma conta, tornada durável.';
+      'Ao entrar, seu e-mail fica vinculado à conta que você já tem. Nada do que você leu ou comprou é perdido.';
 
   @override
   String get scrSignInLinkSent =>

@@ -86,7 +86,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo, por um ano"
+            "value": "Alma completa por um ano"
           }
         },
         "ru": {
@@ -116,7 +116,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los ocho sistemas, comprados una vez."
+            "value": "Los ocho sistemas con un solo pago."
           }
         },
         "fr": {
@@ -134,7 +134,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os oito sistemas, comprados uma vez."
+            "value": "Os oito sistemas em um único pagamento."
           }
         },
         "ru": {
@@ -158,7 +158,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The whole archive"
+            "value": "All eight systems"
           }
         },
         "es": {
@@ -176,19 +176,19 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'archivio intero"
+            "value": "Tutti e otto i sistemi"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O arquivo inteiro"
+            "value": "Todas as leituras"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Весь архив"
+            "value": "Все восемь систем"
           }
         }
       }
@@ -378,7 +378,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пишется из твоих собственных позиций при первом открытии — твоя карта, никогда не шаблон."
+            "value": "Персональный текст создаётся по данным твоей карты при первом открытии."
           }
         }
       }
@@ -438,13 +438,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle Berechnungen bleiben kostenlos, immer. Einen Preis hat das Geschriebene."
+            "value": "Jede Berechnung bleibt kostenlos — alle acht Systeme. Du zahlst nur für die geschriebenen Kapitel."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every calculation stays free, always. What has a price is the writing."
+            "value": "Every calculation stays free — all eight systems. You pay only for the written chapters."
           }
         },
         "es": {
@@ -456,25 +456,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tous les calculs restent gratuits, toujours. Ce qui a un prix, c'est le texte."
+            "value": "Tous les calculs restent gratuits, toujours. Ce qui se paie, ce sont les textes."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutti i calcoli restano gratis, sempre. Ad avere un prezzo è ciò che è scritto."
+            "value": "Ogni calcolo resta gratuito, sempre. Paghi solo la lettura scritta."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todos os cálculos continuam de graça, sempre. O que tem preço é o texto."
+            "value": "Todo cálculo é grátis, sempre. Você paga só pelas leituras escritas, uma por vez."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Каждый расчёт всегда бесплатен. Цену имеют только слова."
+            "value": "Каждый расчёт всегда бесплатен целиком. Цену имеют только слова."
           }
         }
       }
@@ -540,7 +540,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "one-time is one-time"
+            "value": "one-time purchases do not renew"
           }
         },
         "es": {
@@ -558,7 +558,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "una tantum è una tantum"
+            "value": "gli acquisti una tantum non si rinnovano"
           }
         },
         "pt-BR": {
@@ -780,13 +780,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel."
+            "value": "Transits, Solar Return and compatibility while they move, plus 30 questions a month. Renews until you cancel."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tránsitos, revolución solar y compatibilidad mientras se mueven, más 30 preguntas al mes. Se renueva hasta que lo canceles."
+            "value": "Tránsitos, revolución solar y compatibilidad mientras se mueven, más 30 preguntas al mes. Se renueva hasta que canceles."
           }
         },
         "fr": {
@@ -798,13 +798,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transiti, rivoluzione solare e affinità mentre si muovono, più 30 domande al mese. Si rinnova finché non disdici."
+            "value": "Transiti, Rivoluzione solare e compatibilità finché si muovono, più 30 domande al mese. Si rinnova finché non disdici."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trânsitos, revolução solar e compatibilidade conforme se movem, mais 30 perguntas por mês. Renova até você cancelar."
+            "value": "Trânsitos, revolução solar e compatibilidade enquanto se movem, mais 30 perguntas por mês. Renova até você cancelar."
           }
         },
         "ru": {
@@ -852,7 +852,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo que se move, todo mês"
+            "value": "Alma completa, mês a mês"
           }
         },
         "ru": {
@@ -1393,43 +1393,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle acht Systeme bleiben offen, solange der Plan läuft."
+            "value": "Das Jahresabo und das Archiv öffnen alle acht Systeme; Wochen- und Monatsabo halten die drei aktuell, die sich bewegen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "All eight systems stay open while the plan runs."
+            "value": "The yearly plan and the archive open all eight systems; weekly and monthly keep the three that move."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los ocho sistemas permanecen abiertos mientras el plan está activo."
+            "value": "El plan anual y el archivo abren los ocho sistemas; el semanal y el mensual mantienen vivos los tres que se mueven."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les huit systèmes restent ouverts tant que l'abonnement court."
+            "value": "L'abonnement annuel et l'archive ouvrent les huit systèmes ; l'hebdomadaire et le mensuel gardent vivants les trois qui bougent."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutti e otto i sistemi restano aperti finché il piano è attivo."
+            "value": "Il piano annuale e l'archivio aprono tutti e otto i sistemi; settimanale e mensile tengono vivi i tre che si muovono."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os oito sistemas ficam abertos enquanto o plano estiver ativo."
+            "value": "O plano anual e o arquivo abrem os oito sistemas; o semanal e o mensal mantêm vivos os três que se movem."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Все восемь систем открыты, пока действует план."
+            "value": "Годовой план и архив открывают все восемь систем; недельный и месячный держат живыми три."
           }
         }
       }
@@ -1446,7 +1446,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transits, the solar return and compatibility are rewritten as the sky moves."
+            "value": "Transits and Solar Return update as the sky changes; compatibility updates when you compare another person."
           }
         },
         "es": {
@@ -1464,7 +1464,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transiti, rivoluzione solare e affinità si riscrivono col cielo che si muove."
+            "value": "Transiti e Rivoluzione solare si aggiornano con il cielo; la compatibilità si aggiorna quando confronti un’altra persona."
           }
         },
         "pt-BR": {
@@ -1476,7 +1476,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Транзиты, соляр и совместимость переписываются вместе с небом."
+            "value": "Транзиты, соляр и совместимость обновляются, пока действует подписка."
           }
         }
       }
@@ -1487,13 +1487,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dreißig Fragen im Monat an Alma, mit der tieferen Stimme."
+            "value": "30 Fragen pro Monat an Alma."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Thirty questions a month to Alma, on the deeper voice."
+            "value": "30 questions for Alma each month."
           }
         },
         "es": {
@@ -1505,25 +1505,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trente questions par mois à Alma, avec la voix la plus profonde."
+            "value": "30 questions par mois à Alma."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trenta domande al mese ad Alma, con la voce più profonda."
+            "value": "30 domande al mese per Alma."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trinta perguntas por mês à Alma, com a voz mais profunda."
+            "value": "30 perguntas por mês para a Alma."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Двадцать пять вопросов к Alma в месяц — отвечает её глубокий голос."
+            "value": "Двадцать пять вопросов к Alma в месяц."
           }
         }
       }
@@ -1811,7 +1811,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эти покупки уже принадлежат другому аккаунту Alma. Войди в него — и они придут с тобой."
+            "value": "Эти покупки привязаны к другому аккаунту Alma. Войди в тот аккаунт, чтобы восстановить их."
           }
         }
       }
@@ -1871,37 +1871,37 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jetzt nicht — bring mich rein"
+            "value": "Nicht jetzt — weiter zur App"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not now — take me in"
+            "value": "Skip for now"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ahora no — llévame dentro"
+            "value": "Ahora no — continuar"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pas maintenant — fais-moi entrer"
+            "value": "Pas maintenant — continuer dans l'app"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non ora — portami dentro"
+            "value": "Salta per ora"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agora não — me leva para dentro"
+            "value": "Agora não — continuar"
           }
         },
         "ru": {
@@ -2063,7 +2063,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geburtskarte"
+            "value": "Tarot-Geburtskarte"
           }
         },
         "en": {
@@ -2075,13 +2075,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carta de nacimiento"
+            "value": "Arcano de nacimiento"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carte de naissance"
+            "value": "Arcane de naissance (tarot)"
           }
         },
         "it": {
@@ -2099,7 +2099,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Карта рождения"
+            "value": "Аркан рождения"
           }
         }
       }
@@ -2321,7 +2321,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Synthèse croisée"
+            "value": "Synthèse des systèmes"
           }
         },
         "it": {
@@ -2453,7 +2453,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The archive, less what you already paid for one system."
+            "value": "The price already includes credit for the system you bought."
           }
         },
         "es": {
@@ -2471,7 +2471,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'archivio, meno quello che hai già pagato per un sistema."
+            "value": "Il prezzo tiene già conto del sistema che hai acquistato."
           }
         },
         "pt-BR": {
@@ -2483,7 +2483,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Архив минус то, что уже оплачено за одну систему."
+            "value": "Цена уже учитывает купленную систему."
           }
         }
       }
@@ -2531,7 +2531,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Остаток архива"
+            "value": "Доплата за все системы"
           }
         }
       }
@@ -2590,43 +2590,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Probiere die lebendige Ebene eine Woche. Verlängert sich wöchentlich bis zur Kündigung."
+            "value": "Aktualisierte Deutungen und Fragen für eine Woche. Verlängert sich wöchentlich bis zur Kündigung."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Try the living layer for one week. Renews weekly until you cancel."
+            "value": "Live readings and questions for one week. Renews weekly until you cancel."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prueba la capa viva una semana. Se renueva cada semana hasta que canceles."
+            "value": "Lecturas actualizadas y preguntas durante una semana. Se renueva cada semana hasta que canceles."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Essaie la couche vivante une semaine. Se renouvelle chaque semaine jusqu'à annulation."
+            "value": "Interprétations actualisées et questions pendant une semaine. Renouvellement hebdomadaire jusqu’à résiliation."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prova lo strato vivo per una settimana. Si rinnova ogni settimana finché non annulli."
+            "value": "Letture aggiornate e domande per una settimana. Si rinnova ogni settimana finché non disdici."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Experimente a camada viva por uma semana. Renova semanalmente até você cancelar."
+            "value": "Leituras atualizadas e perguntas por uma semana. Renova toda semana até você cancelar."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Попробуй живой слой одну неделю. Продлевается еженедельно, пока не отменишь."
+            "value": "Обновляемые разборы и вопросы на неделю. Продлевается каждую неделю, пока не отменишь."
           }
         }
       }
@@ -2643,7 +2643,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everything live, weekly"
+            "value": "All live features, weekly"
           }
         },
         "es": {
@@ -2655,19 +2655,19 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout le vivant, à la semaine"
+            "value": "Toutes les interprétations actualisées, à la semaine"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutto il vivo, settimanale"
+            "value": "Tutte le funzioni live, ogni settimana"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo ao vivo, semanal"
+            "value": "Alma completa, semana a semana"
           }
         },
         "ru": {

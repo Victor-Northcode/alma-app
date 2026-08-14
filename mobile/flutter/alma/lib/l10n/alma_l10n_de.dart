@@ -254,7 +254,7 @@ class LDe extends L {
 
   @override
   String get cabCompatNeedsPerson =>
-      'Für die Partnerschaft braucht es eine zweite Geburt. Füge jemanden hinzu — der ganze Vergleich wird kostenlos berechnet.';
+      'Für die Kompatibilität brauchst du eine zweite Person. Der ganze Vergleich wird kostenlos berechnet.';
 
   @override
   String get cabDataAndLegal => 'Daten & Recht';
@@ -375,7 +375,7 @@ class LDe extends L {
 
   @override
   String get cabHoroscopeLocked =>
-      'Das Horoskop wird jeden Morgen aus deiner eigenen Karte geschrieben und gehört zum Plan.';
+      'Dein tägliches Horoskop wird jeden Morgen aus deinem Geburtshoroskop erstellt und ist im Abo enthalten.';
 
   @override
   String get cabHoroscopeOpen => 'Horoskop öffnen';
@@ -472,7 +472,7 @@ class LDe extends L {
 
   @override
   String get cabNoneActive =>
-      'Heute steht nichts im Orbis. Das ist eine Antwort, kein leerer Bildschirm.';
+      'Heute ist kein Transit aktiv. Das ist ein echtes Ergebnis, kein leerer Bildschirm.';
 
   @override
   String get cabNotCalculated => 'nicht berechnet';
@@ -580,7 +580,7 @@ class LDe extends L {
 
   @override
   String get cabPlanFreeNote =>
-      'Jede Berechnung ist kostenlos. Du zahlst für die Worte, eine Lesung nach der anderen.';
+      'Jede Berechnung bleibt kostenlos — alle acht Systeme. Du zahlst nur für die geschriebenen Kapitel.';
 
   @override
   String get cabPlanFreePlan => 'Kostenlos';
@@ -632,7 +632,7 @@ class LDe extends L {
 
   @override
   String get cabPlansBody =>
-      'Der Plan hält alle acht Systeme offen, schickt die Morgenbenachrichtigung, schreibt deinen Tag neu, während der Himmel sich bewegt — und Alma beantwortet deine Fragen mit ihrer tieferen Stimme. Monatlich oder jährlich.';
+      'Das Abo hält Transite, Solarhoroskop und Kompatibilität aktuell, schickt die Morgenmitteilung und enthält 30 Fragen im Monat. Alle acht Systeme öffnet das Jahresabo.';
 
   @override
   String get cabPlansCta => 'Pläne ansehen';
@@ -649,7 +649,7 @@ class LDe extends L {
 
   @override
   String cabQuestionsLeft(int p1) {
-    return 'Fragen heute übrig: $p1';
+    return 'Verfügbare Fragen: $p1';
   }
 
   @override
@@ -790,7 +790,7 @@ class LDe extends L {
       'Für Tage wie diesen gibt es die Morgenbenachrichtigung — sie kommt um 08:00, wenn etwas in deinem Horoskop exakt ist. Teil des Plans.';
 
   @override
-  String get cabSpheresLabel => 'was das Horoskop sagt';
+  String get cabSpheresLabel => 'was dein Horoskop sagt';
 
   @override
   String get cabStatusAddPerson => 'Person hinzufügen';
@@ -829,7 +829,7 @@ class LDe extends L {
   String get cabSystemAstrocartography => 'Astrokartografie';
 
   @override
-  String get cabSystemBirthCard => 'Geburtskarte';
+  String get cabSystemBirthCard => 'Tarot-Geburtskarte';
 
   @override
   String get cabSystemCompatibility => 'Partnerschaft';
@@ -880,7 +880,7 @@ class LDe extends L {
 
   @override
   String get dailyAskBody =>
-      'Eine Mitteilung, zur Stunde deiner Wahl, an den Tagen, an denen etwas in deiner Karte exakt ist. Etwa einmal die Woche. Nie nachts, und aus der Mitteilung selbst abschaltbar.';
+      'Eine Mitteilung zu deiner gewählten Uhrzeit an Tagen, an denen ein Einfluss in deinem Horoskop exakt wird. Etwa einmal pro Woche, nie nachts. Du kannst sie direkt über die Mitteilung abschalten.';
 
   @override
   String get dailyAskNo => 'Jetzt nicht';
@@ -932,7 +932,7 @@ class LDe extends L {
 
   @override
   String get dailyEmptyBody =>
-      'Was noch im Orbis steht, findest du unten. Heute wird nichts exakt.';
+      'Die aktiven Transite stehen unten. Heute erreicht keiner seinen exakten Punkt.';
 
   @override
   String get dailyEmptyTitle => 'Heute ist nichts exakt';
@@ -982,7 +982,7 @@ class LDe extends L {
       'Nie zwischen 22:00 und 08:00, in deiner Zeit.';
 
   @override
-  String get dailySettingTimezone => 'Deine Zeit';
+  String get dailySettingTimezone => 'Deine Zeitzone';
 
   @override
   String get dailySettingTimezoneBirth => 'aus deinen Geburtsdaten';
@@ -1020,7 +1020,7 @@ class LDe extends L {
 
   @override
   String get dailySubscriberOnly =>
-      'Die Morgenbenachrichtigung ist Teil des Plans.';
+      'Tägliche Updates sind in einem aktiven Abo enthalten. Der Bereich „Heute“ bleibt kostenlos.';
 
   @override
   String dailyTodayAt(String p1) {
@@ -1032,12 +1032,12 @@ class LDe extends L {
 
   @override
   String dailyTodaySince(String p1) {
-    return 'Im Orbis seit $p1';
+    return 'Aktiv seit $p1';
   }
 
   @override
   String dailyTodayUntil(String p1) {
-    return 'im Orbis bis $p1';
+    return 'aktiv bis $p1';
   }
 
   @override
@@ -1114,11 +1114,11 @@ class LDe extends L {
 
   @override
   String get journeyCeremony2Line =>
-      'Dein Lebensweg wird zu einer Zahl, die Beweise lieber mag als Glauben.';
+      'Die Numerologie berechnet aus deinem Geburtsdatum deine Lebenswegzahl.';
 
   @override
   String get journeyCeremony3Label =>
-      'System 3 von 8 wird gelesen · Geburtskarte';
+      'System 3 von 8 wird gelesen · Tarot-Geburtskarte';
 
   @override
   String get journeyCeremony3Line =>
@@ -1129,7 +1129,7 @@ class LDe extends L {
 
   @override
   String get journeyCeremony4Line =>
-      'Wo der Himmel jetzt steht, gegen den Stand von damals.';
+      'Wo der Himmel heute steht — im Vergleich zu deinem Geburtshoroskop.';
 
   @override
   String get journeyCeremony5Label =>
@@ -1137,7 +1137,7 @@ class LDe extends L {
 
   @override
   String get journeyCeremony5Line =>
-      'Bleibt offen, bis du eine zweite Person hinzufügst — nichts erfunden.';
+      'Wird berechnet, sobald du eine zweite Person hinzufügst — ohne erfundene Daten.';
 
   @override
   String get journeyCeremony6Label => 'System 6 von 8 wird gelesen · Solar';
@@ -1152,7 +1152,7 @@ class LDe extends L {
 
   @override
   String get journeyCeremony7Line =>
-      'Planetenlinien über der Karte, aus deiner genauen Minute gezogen.';
+      'Planetenlinien auf der Weltkarte, berechnet aus deiner genauen Geburtszeit.';
 
   @override
   String get journeyCeremony8Label =>
@@ -1160,7 +1160,7 @@ class LDe extends L {
 
   @override
   String get journeyCeremony8Line =>
-      'Neun Achsen. Wo drei Traditionen übereinstimmen, geht das in deinen Kern.';
+      'Neun Achsen. Wo drei Systeme übereinstimmen, zeigt sich, was dich im Kern prägt.';
 
   @override
   String get journeyCeremonySkip => 'Zeremonie überspringen';
@@ -1242,7 +1242,8 @@ class LDe extends L {
   String get journeyKeepMySky => 'Meinen Himmel behalten';
 
   @override
-  String get journeyLockedWithoutTime => 'Häuser, Solar und Karte bleiben zu';
+  String get journeyLockedWithoutTime =>
+      'Häuser, Solarhoroskop und Astrokartografie bleiben gesperrt';
 
   @override
   String get journeyMeridiemLabel => 'AM oder PM';
@@ -1305,7 +1306,7 @@ class LDe extends L {
   String get journeyNeedsTime => 'Geburtszeit fehlt';
 
   @override
-  String get journeyNeedsTimeRow => 'Solarhoroskop · Karte';
+  String get journeyNeedsTimeRow => 'Solarhoroskop · Astrokartografie';
 
   @override
   String get journeyOfferCta => 'Lesen';
@@ -1315,7 +1316,7 @@ class LDe extends L {
       'Eine Zahlung. Dauerhaft deins. Zum Kaufen brauchst du kein Konto.';
 
   @override
-  String get journeyOfferSkip => 'Jetzt nicht — bring mich rein';
+  String get journeyOfferSkip => 'Nicht jetzt — weiter zur App';
 
   @override
   String get journeyOfferSub =>
@@ -1372,7 +1373,7 @@ class LDe extends L {
 
   @override
   String get journeyRule3 =>
-      'Frag mich mit deinen eigenen Worten. Drei Fragen sind gratis.';
+      'Frag mit deinen eigenen Worten. Die erste Frage ist kostenlos.';
 
   @override
   String get journeySignAquarius => 'Wassermann';
@@ -1422,7 +1423,7 @@ class LDe extends L {
   String get journeySystemAstrocartography => 'Astrokartografie';
 
   @override
-  String get journeySystemBirthCard => 'Geburtskarte';
+  String get journeySystemBirthCard => 'Tarot-Geburtskarte';
 
   @override
   String get journeySystemCompatibility => 'Partnerschaft';
@@ -1458,27 +1459,27 @@ class LDe extends L {
 
   @override
   String pushDailyEnteringConjunction(String p1, String p2) {
-    return '$p1 und $p2 — Konjunktion, ab heute im Orbis.';
+    return '$p1 und $p2: Konjunktion wird heute wirksam.';
   }
 
   @override
   String pushDailyEnteringOpposition(String p1, String p2) {
-    return '$p1 und $p2 — Opposition, ab heute im Orbis.';
+    return '$p1 und $p2: Opposition wird heute wirksam.';
   }
 
   @override
   String pushDailyEnteringSextile(String p1, String p2) {
-    return '$p1 und $p2 — Sextil, ab heute im Orbis.';
+    return '$p1 und $p2: Sextil wird heute wirksam.';
   }
 
   @override
   String pushDailyEnteringSquare(String p1, String p2) {
-    return '$p1 und $p2 — Quadrat, ab heute im Orbis.';
+    return '$p1 und $p2: Quadrat wird heute wirksam.';
   }
 
   @override
   String pushDailyEnteringTrine(String p1, String p2) {
-    return '$p1 und $p2 — Trigon, ab heute im Orbis.';
+    return '$p1 und $p2: Trigon wird heute wirksam.';
   }
 
   @override
@@ -1587,7 +1588,7 @@ class LDe extends L {
 
   @override
   String get paywallFreeNote =>
-      'Alle Berechnungen bleiben kostenlos, immer. Einen Preis hat das Geschriebene.';
+      'Jede Berechnung bleibt kostenlos — alle acht Systeme. Du zahlst nur für die geschriebenen Kapitel.';
 
   @override
   String get paywallHonestyCancel => 'Kündigen in den Apple-ID-Einstellungen';
@@ -1660,15 +1661,14 @@ class LDe extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'Alle acht Systeme bleiben offen, solange der Plan läuft.';
+      'Das Jahresabo und das Archiv öffnen alle acht Systeme; Wochen- und Monatsabo halten die drei aktuell, die sich bewegen.';
 
   @override
   String get paywallPitchPlan2 =>
       'Transite, das Solar und die Partnerschaft werden neu geschrieben, während der Himmel sich bewegt.';
 
   @override
-  String get paywallPitchPlan3 =>
-      'Dreißig Fragen im Monat an Alma, mit der tieferen Stimme.';
+  String get paywallPitchPlan3 => '30 Fragen pro Monat an Alma.';
 
   @override
   String get paywallPrivacy => 'Datenschutzerklärung';
@@ -1696,7 +1696,7 @@ class LDe extends L {
   String get paywallRestoring => 'Ich frage den App Store…';
 
   @override
-  String get paywallSkip => 'Jetzt nicht — bring mich rein';
+  String get paywallSkip => 'Nicht jetzt — weiter zur App';
 
   @override
   String get paywallStoreUnavailable =>
@@ -1709,7 +1709,7 @@ class LDe extends L {
   String get paywallSystemAstrocartography => 'Astrokartografie';
 
   @override
-  String get paywallSystemBirthCard => 'Geburtskarte';
+  String get paywallSystemBirthCard => 'Tarot-Geburtskarte';
 
   @override
   String get paywallSystemCompatibility => 'Partnerschaft';
@@ -1745,7 +1745,7 @@ class LDe extends L {
 
   @override
   String get paywallWeeklyNote =>
-      'Probiere die lebendige Ebene eine Woche. Verlängert sich wöchentlich bis zur Kündigung.';
+      'Aktualisierte Deutungen und Fragen für eine Woche. Verlängert sich wöchentlich bis zur Kündigung.';
 
   @override
   String get paywallWeeklyTitle => 'Alles Lebendige, wöchentlich';
@@ -1812,7 +1812,7 @@ class LDe extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Ab hier trägt der Plan das Gespräch — mit der Morgenbenachrichtigung und Almas tieferer Stimme.';
+      'Deine verfügbaren Fragen sind vorerst aufgebraucht. Mit einem aktiven Abo kannst du weitermachen; es enthält 30 Fragen pro Monat.';
 
   @override
   String get scrChatPast => 'früher';
@@ -1836,7 +1836,7 @@ class LDe extends L {
 
   @override
   String scrChatPromptRising(String p1) {
-    return 'Aszendent $p1. Ist das, was andere zuerst von mir sehen?';
+    return 'Aszendent $p1. Ist es das, was andere zuerst von mir wahrnehmen?';
   }
 
   @override
@@ -1932,7 +1932,7 @@ class LDe extends L {
 
   @override
   String get scrPeopleLead =>
-      'Die Partnerschafts-Analyse vergleicht dein Horoskop mit dem eines anderen. Der Vergleich selbst wird immer vollständig berechnet.';
+      'Die Kompatibilitätsanalyse vergleicht dein Horoskop mit dem einer anderen Person. Der Vergleich wird immer vollständig berechnet.';
 
   @override
   String get scrPeopleRemove => 'Entfernen';
@@ -1942,7 +1942,7 @@ class LDe extends L {
 
   @override
   String get scrPeopleRemoveWhat =>
-      'Ihre Geburt wird gelöscht, und mit ihr jede daraus geschriebene Partnerschaftsdeutung. Bezahlte Deutungen lassen sich nicht Wort für Wort neu schreiben.';
+      'Ihre Geburtsdaten werden gelöscht — und damit alle daraus erstellten Kompatibilitätsdeutungen. Bezahlte Deutungen können nicht Wort für Wort neu erstellt werden.';
 
   @override
   String get scrPeopleSaved => 'gespeichert';
@@ -1988,7 +1988,7 @@ class LDe extends L {
 
   @override
   String get scrSignInLead =>
-      'Die Anmeldung hängt einen Namen an das Konto, das du bereits hast. Nichts, was du gelesen oder gekauft hast, geht verloren — es ist dasselbe Konto, nur dauerhaft.';
+      'Bei der Anmeldung wird deine E-Mail-Adresse mit deinem bestehenden Konto verknüpft. Deine gelesenen Inhalte und Käufe bleiben erhalten.';
 
   @override
   String get scrSignInLinkSent =>
@@ -2006,7 +2006,7 @@ class LDe extends L {
 
   @override
   String get scrSignInReason2 =>
-      'Alles Gekaufte lässt sich wiederherstellen. Ein Kauf gehört dem Konto, das ihn zuerst beansprucht hat — melde dich also vor einer Neuinstallation an.';
+      'Alles Gekaufte lässt sich wiederherstellen. Ein Kauf gehört zu dem Konto, mit dem er zuerst verknüpft wurde — melde dich also vor einer Neuinstallation an.';
 
   @override
   String get scrSignInReason3 =>

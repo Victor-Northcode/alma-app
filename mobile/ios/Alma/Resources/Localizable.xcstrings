@@ -140,7 +140,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — точное соединение в %3$@."
+            "value": "%1$@ и %2$@: соединение становится точным в %3$@."
           }
         }
       }
@@ -152,7 +152,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ und %2$@ — Konjunktion, ab heute im Orbis."
+            "value": "%1$@ und %2$@: Konjunktion wird heute wirksam."
           }
         },
         "en": {
@@ -170,25 +170,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ et %2$@ — conjonction, dans l'orbe dès aujourd'hui."
+            "value": "%1$@ et %2$@ : la conjonction devient active aujourd’hui."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ e %2$@ — congiunzione, in orbe da oggi."
+            "value": "%1$@ e %2$@: la congiunzione diventa attiva oggi."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ e %2$@ — conjunção, em orbe a partir de hoje."
+            "value": "%1$@ e %2$@: a conjunção começa a atuar hoje."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — соединение входит в орбис сегодня."
+            "value": "%1$@ и %2$@: соединение начинает действовать сегодня."
           }
         }
       }
@@ -200,7 +200,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ und %2$@ — Opposition, ab heute im Orbis."
+            "value": "%1$@ und %2$@: Opposition wird heute wirksam."
           }
         },
         "en": {
@@ -230,13 +230,13 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ e %2$@ — oposição, em orbe a partir de hoje."
+            "value": "%1$@ e %2$@: a oposição começa a atuar hoje."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — оппозиция входит в орбис сегодня."
+            "value": "%1$@ и %2$@: оппозиция начинает действовать сегодня."
           }
         }
       }
@@ -248,7 +248,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ und %2$@ — Sextil, ab heute im Orbis."
+            "value": "%1$@ und %2$@: Sextil wird heute wirksam."
           }
         },
         "en": {
@@ -266,7 +266,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ et %2$@ — sextile, dans l'orbe dès aujourd'hui."
+            "value": "%1$@ et %2$@ : le sextile devient actif aujourd’hui."
           }
         },
         "it": {
@@ -284,7 +284,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — секстиль входит в орбис сегодня."
+            "value": "%1$@ и %2$@: секстиль начинает действовать сегодня."
           }
         }
       }
@@ -296,7 +296,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ und %2$@ — Quadrat, ab heute im Orbis."
+            "value": "%1$@ und %2$@: Quadrat wird heute wirksam."
           }
         },
         "en": {
@@ -314,25 +314,25 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ et %2$@ — carré, dans l'orbe dès aujourd'hui."
+            "value": "%1$@ et %2$@ : le carré devient actif aujourd’hui."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ e %2$@ — quadratura, in orbe da oggi."
+            "value": "%1$@ e %2$@: la quadratura diventa attiva oggi."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ e %2$@ — quadratura, em orbe a partir de hoje."
+            "value": "%1$@ e %2$@: a quadratura começa a atuar hoje."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — квадратура входит в орбис сегодня."
+            "value": "%1$@ и %2$@: квадратура начинает действовать сегодня."
           }
         }
       }
@@ -344,7 +344,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ und %2$@ — Trigon, ab heute im Orbis."
+            "value": "%1$@ und %2$@: Trigon wird heute wirksam."
           }
         },
         "en": {
@@ -362,7 +362,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ et %2$@ — trigone, dans l'orbe dès aujourd'hui."
+            "value": "%1$@ et %2$@ : le trigone devient actif aujourd’hui."
           }
         },
         "it": {
@@ -380,7 +380,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — трин входит в орбис сегодня."
+            "value": "%1$@ и %2$@: трин начинает действовать сегодня."
           }
         }
       }
@@ -428,7 +428,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — точная оппозиция в %3$@."
+            "value": "%1$@ и %2$@: оппозиция становится точной в %3$@."
           }
         }
       }
@@ -476,7 +476,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — точный секстиль в %3$@."
+            "value": "%1$@ и %2$@: секстиль становится точным в %3$@."
           }
         }
       }
@@ -524,7 +524,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — точная квадратура в %3$@."
+            "value": "%1$@ и %2$@: квадратура становится точной в %3$@."
           }
         }
       }
@@ -548,7 +548,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exacto hoy"
+            "value": "Aspecto exacto hoy"
           }
         },
         "fr": {
@@ -566,13 +566,13 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exato hoje"
+            "value": "Aspecto exato hoje"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Точно сегодня"
+            "value": "Точный аспект сегодня"
           }
         }
       }
@@ -620,7 +620,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ и %2$@ — точный трин в %3$@."
+            "value": "%1$@ и %2$@: трин становится точным в %3$@."
           }
         }
       }
@@ -836,7 +836,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este necesita tu hora de nacimiento."
+            "value": "Para esto necesito tu hora de nacimiento."
           }
         },
         "fr": {
@@ -854,7 +854,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este precisa da sua hora de nascimento."
+            "value": "Para isso, preciso da sua hora de nascimento."
           }
         },
         "ru": {

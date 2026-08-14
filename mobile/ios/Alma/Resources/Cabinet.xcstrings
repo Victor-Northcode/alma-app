@@ -218,7 +218,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Saisir mes données"
+            "value": "Saisir mes données de naissance"
           }
         },
         "it": {
@@ -266,7 +266,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajouter mon heure"
+            "value": "Ajouter mon heure de naissance"
           }
         },
         "it": {
@@ -1437,7 +1437,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los ocho sistemas, comprados una vez."
+            "value": "Los ocho sistemas con un solo pago."
           }
         },
         "fr": {
@@ -1455,7 +1455,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os oito sistemas, comprados uma vez."
+            "value": "Os oito sistemas em um único pagamento."
           }
         },
         "ru": {
@@ -1696,7 +1696,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сегодня здесь ничего точного."
+            "value": "Сегодня здесь нет точных аспектов."
           }
         }
       }
@@ -1808,7 +1808,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In the same place: they work as one thing and amplify each other."
+            "value": "Very close together: their themes blend and become stronger."
           }
         },
         "es": {
@@ -1826,7 +1826,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nello stesso punto: agiscono come una cosa sola e si amplificano."
+            "value": "Molto vicini: i loro temi si uniscono e diventano più intensi."
           }
         },
         "pt-BR": {
@@ -1855,7 +1855,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Facing each other: they pull opposite ways, and you choose every time."
+            "value": "Across from each other: their needs can pull in different directions."
           }
         },
         "es": {
@@ -1873,7 +1873,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uno di fronte all'altro: tirano in direzioni opposte, e ogni volta si sceglie."
+            "value": "Di fronte: le loro esigenze possono spingere in direzioni diverse."
           }
         },
         "pt-BR": {
@@ -1902,7 +1902,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "They cannot see each other: two demands that do not reconcile."
+            "value": "An awkward angle: their needs often require adjustment."
           }
         },
         "es": {
@@ -1920,7 +1920,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non si vedono: due richieste che non si conciliano."
+            "value": "Un angolo poco fluido: le loro esigenze richiedono spesso un aggiustamento."
           }
         },
         "pt-BR": {
@@ -1949,7 +1949,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "They help each other, if you put the effort in."
+            "value": "A supportive connection that becomes stronger when you act on it."
           }
         },
         "es": {
@@ -1967,7 +1967,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si aiutano, se ci si mette impegno."
+            "value": "Un legame favorevole che diventa più forte quando lo coltivi."
           }
         },
         "pt-BR": {
@@ -1996,7 +1996,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "They get in each other's way: the place where you have to cope."
+            "value": "A tense connection that can create pressure and motivate change."
           }
         },
         "es": {
@@ -2014,7 +2014,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si intralciano: il punto in cui tocca cavarsela."
+            "value": "Un legame teso che può creare pressione e spingere al cambiamento."
           }
         },
         "pt-BR": {
@@ -2043,7 +2043,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "They fit together easily — so easily that it is rarely used on purpose."
+            "value": "An easy, natural connection that may feel effortless."
           }
         },
         "es": {
@@ -2061,7 +2061,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si incastrano facilmente, tanto che di rado lo si usa apposta."
+            "value": "Un legame fluido e naturale che può sembrare spontaneo."
           }
         },
         "pt-BR": {
@@ -3211,7 +3211,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Нисходящий узел"
+            "value": "Южный узел"
           }
         }
       }
@@ -3305,7 +3305,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Восходящий узел"
+            "value": "Северный узел"
           }
         }
       }
@@ -3685,7 +3685,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le reste de ce système est écrit de la même façon — depuis tes positions, à toi pour toujours."
+            "value": "Le reste de ce système est écrit de la même façon — à partir de tes positions, et reste à toi pour toujours."
           }
         },
         "it": {
@@ -3750,7 +3750,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эта глава пишется один раз. Транзиты, год и совместимость переписываются вместе с небом — это и есть план."
+            "value": "Эта глава создаётся один раз. Транзиты, соляр и совместимость обновляются, пока действует подписка."
           }
         }
       }
@@ -3858,43 +3858,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für die Partnerschaft braucht es eine zweite Geburt. Füge jemanden hinzu — der ganze Vergleich wird kostenlos berechnet."
+            "value": "Für die Kompatibilität brauchst du eine zweite Person. Der ganze Vergleich wird kostenlos berechnet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Compatibility needs a second birth. Add somebody and the whole comparison is calculated free."
+            "value": "Compatibility needs a second birth. Add someone and the whole comparison is calculated free."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La compatibilidad necesita un segundo nacimiento. Añade a alguien y toda la comparación se calcula gratis."
+            "value": "Para ver la compatibilidad, añade los datos de nacimiento de otra persona. Toda la comparación se calcula gratis."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La compatibilité a besoin d'une deuxième naissance. Ajoute quelqu'un et toute la comparaison est calculée gratuitement."
+            "value": "Pour voir la compatibilité, ajoute les données de naissance d’une autre personne. Toute la comparaison est calculée gratuitement."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'affinità ha bisogno di una seconda nascita. Aggiungi qualcuno e tutto il confronto viene calcolato gratis."
+            "value": "Per vedere la compatibilità, aggiungi i dati di nascita di un'altra persona. Tutto il confronto è calcolato gratis."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A compatibilidade precisa de um segundo nascimento. Adicione alguém e toda a comparação é calculada de graça."
+            "value": "Para ver a compatibilidade, adicione os dados de nascimento de outra pessoa. Toda a comparação é calculada de graça."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Совместимости нужно второе рождение. Добавь человека — и всё сравнение рассчитается бесплатно."
+            "value": "Совместимости нужно второе рождение. Добавь человека — и всё сравнение рассчитается целиком и бесплатно."
           }
         }
       }
@@ -3918,7 +3918,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "datos y legal"
+            "value": "datos y cuestiones legales"
           }
         },
         "fr": {
@@ -3936,7 +3936,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "dados e jurídico"
+            "value": "dados e informações legais"
           }
         },
         "ru": {
@@ -4300,7 +4300,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "número del cumpleaños"
+            "value": "número del día de nacimiento"
           }
         },
         "fr": {
@@ -4318,7 +4318,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "número do aniversário"
+            "value": "número do dia de nascimento"
           }
         },
         "ru": {
@@ -5568,7 +5568,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Invité"
+            "value": "Mode invité"
           }
         },
         "it": {
@@ -5622,7 +5622,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non hai effettuato l'accesso. Il tuo tema vive solo su questo telefono."
+            "value": "Non hai effettuato l’accesso. Accedi per ritrovare questo tema su un altro dispositivo."
           }
         },
         "pt-BR": {
@@ -5692,7 +5692,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das Horoskop wird jeden Morgen aus deiner eigenen Karte geschrieben und gehört zum Plan."
+            "value": "Dein tägliches Horoskop wird jeden Morgen aus deinem Geburtshoroskop erstellt und ist im Abo enthalten."
           }
         },
         "en": {
@@ -5710,7 +5710,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'horoscope est écrit chaque matin à partir de ta propre carte et vient avec l'abonnement."
+            "value": "Ton horoscope du jour est rédigé chaque matin à partir de ton thème natal et fait partie de l'abonnement."
           }
         },
         "it": {
@@ -6758,7 +6758,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scritto dalle tue posizioni la prima volta che lo apri — il tuo tema, mai un modello."
+            "value": "Personalizzata in base al tuo tema natale quando la apri per la prima volta."
           }
         },
         "pt-BR": {
@@ -6770,7 +6770,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пишется из твоих собственных позиций при первом открытии — твоя карта, никогда не шаблон."
+            "value": "Персональный текст создаётся по данным твоей карты при первом открытии."
           }
         }
       }
@@ -6938,7 +6938,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagos procesados por %@ como vendedor legal · IVA incluido cuando corresponde"
+            "value": "Pagos procesados por %@, responsable legal de la venta · IVA incluido cuando corresponda"
           }
         },
         "fr": {
@@ -6956,7 +6956,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pagamentos processados por %@ como vendedor legal · impostos incluídos quando aplicável"
+            "value": "Pagamentos processados por %@, responsável legal pela venda · impostos incluídos quando aplicável"
           }
         },
         "ru": {
@@ -6986,7 +6986,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este necesita tu hora de nacimiento."
+            "value": "Para esto necesito tu hora de nacimiento."
           }
         },
         "fr": {
@@ -7004,7 +7004,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este precisa da sua hora de nascimento."
+            "value": "Para isso, preciso da sua hora de nascimento."
           }
         },
         "ru": {
@@ -7118,43 +7118,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Heute steht nichts im Orbis. Das ist eine Antwort, kein leerer Bildschirm."
+            "value": "Heute ist kein Transit aktiv. Das ist ein echtes Ergebnis, kein leerer Bildschirm."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing is in orb today. That is an answer, not an empty screen."
+            "value": "No transit is active today. That is a real result, not an empty screen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hoy no hay nada en orbe. Eso es una respuesta, no una pantalla vacía."
+            "value": "Hoy no hay tránsitos activos. Es un resultado real, no una pantalla vacía."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rien n'est dans l'orbe aujourd'hui. C'est une réponse, pas un écran vide."
+            "value": "Aucun transit n’est actif aujourd’hui. C’est un vrai résultat, pas un écran vide."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oggi non c'è niente in orbe. È una risposta, non uno schermo vuoto."
+            "value": "Oggi non ci sono transiti attivi. È un risultato reale, non uno schermo vuoto."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nada está em orbe hoje. Isso é uma resposta, não uma tela vazia."
+            "value": "Hoje não há trânsitos ativos. É um resultado real, não uma tela vazia."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сегодня в орбисе ничего нет. Это ответ, а не пустой экран."
+            "value": "Сегодня нет активных транзитов. Это нормальный результат, а не пустой экран."
           }
         }
       }
@@ -7226,7 +7226,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nada de esto es una predicción. Cada línea nombra la posición de la que se leyó."
+            "value": "Nada de esto es una predicción. Cada línea indica en qué posición de tu carta se basa."
           }
         },
         "fr": {
@@ -7244,7 +7244,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nada aqui é previsão. Cada linha nomeia a posição de onde foi lida."
+            "value": "Nada aqui é previsão. Cada linha indica em qual posição do seu mapa ela se baseia."
           }
         },
         "ru": {
@@ -8075,7 +8075,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo, por um ano"
+            "value": "Alma completa por um ano"
           }
         },
         "ru": {
@@ -8207,7 +8207,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le prochain prélèvement s’arrête. Tout ce que tu as déjà payé reste ouvert jusqu’à la fin de la période — résilier n’est pas un remboursement, et nous ne reprenons rien."
+            "value": "Le prochain prélèvement n'aura pas lieu. Tout ce que tu as déjà payé reste accessible jusqu'à la fin de la période — une résiliation n'est pas un remboursement, et rien ne t'est retiré."
           }
         },
         "it": {
@@ -8489,7 +8489,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esa no es la dirección de esta cuenta."
+            "value": "Ese no es el correo de esta cuenta."
           }
         },
         "fr": {
@@ -8507,7 +8507,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esse não é o endereço desta conta."
+            "value": "Esse não é o e-mail desta conta."
           }
         },
         "ru": {
@@ -8765,43 +8765,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jede Berechnung ist kostenlos. Du zahlst für die Worte, eine Lesung nach der anderen."
+            "value": "Jede Berechnung bleibt kostenlos — alle acht Systeme. Du zahlst nur für die geschriebenen Kapitel."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every calculation is free. You pay for the words, one reading at a time."
+            "value": "Every calculation stays free — all eight systems. You pay only for the written chapters."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todos los cálculos son gratis. Pagas por las palabras, una lectura cada vez."
+            "value": "Todos los cálculos son gratis, siempre. Pagas solo por las lecturas escritas, una cada vez."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chaque calcul est gratuit. Tu paies les mots, une lecture à la fois."
+            "value": "Chaque calcul reste gratuit, toujours — tous les systèmes, tous les chiffres. Tu paies seulement les chapitres écrits."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ogni calcolo è gratuito. Paghi le parole, una lettura alla volta."
+            "value": "Ogni calcolo resta gratuito, sempre. Paghi solo la lettura scritta."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todo cálculo é grátis. Você paga pelas palavras, uma leitura por vez."
+            "value": "Todo cálculo é grátis, sempre. Você paga só pelas leituras escritas, uma por vez."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Каждый расчёт бесплатен. Платишь только за слова — чтение за чтением."
+            "value": "Каждый расчёт бесплатен целиком. Платишь только за слова — чтение за чтением."
           }
         }
       }
@@ -8885,7 +8885,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non hai effettuato l'accesso. Il tuo tema vive solo in questo browser."
+            "value": "Non hai effettuato l’accesso. Accedi per ritrovare questo tema su un altro dispositivo."
           }
         },
         "pt-BR": {
@@ -9017,7 +9017,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esto necesita una cuenta a la que podamos vincularlo."
+            "value": "Para hacer esto, primero inicia sesión."
           }
         },
         "fr": {
@@ -9387,43 +9387,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Plan hält alle acht Systeme offen, schickt die Morgenbenachrichtigung, schreibt deinen Tag neu, während der Himmel sich bewegt — und Alma beantwortet deine Fragen mit ihrer tieferen Stimme. Monatlich oder jährlich."
+            "value": "Das Abo hält Transite, Solarhoroskop und Kompatibilität aktuell, schickt die Morgenmitteilung und enthält 30 Fragen im Monat. Alle acht Systeme öffnet das Jahresabo."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The plan keeps all eight systems open, sends the morning notification, rewrites your day as the sky moves — and Alma answers your questions in her deeper voice. Monthly or yearly."
+            "value": "The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The yearly plan opens all eight systems."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El plan mantiene abiertos los ocho sistemas, envía la notificación de la mañana, reescribe tu día con el cielo — y Alma responde tus preguntas con su voz más profunda. Mensual o anual."
+            "value": "La suscripción mantiene al día tránsitos, revolución solar y compatibilidad, envía el aviso matinal e incluye 30 preguntas al mes. El plan anual abre los ocho sistemas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'abonnement garde les huit systèmes ouverts, envoie la notification du matin, réécrit ta journée avec le ciel — et Alma répond à tes questions de sa voix la plus profonde. Mensuel ou annuel."
+            "value": "L'abonnement garde à jour les transits, la révolution solaire et la compatibilité, envoie la notification du matin et inclut 30 questions par mois. L'abonnement annuel ouvre les huit systèmes."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il piano tiene aperti tutti e otto i sistemi, invia la notifica del mattino, riscrive la tua giornata col cielo — e Alma risponde alle tue domande con la sua voce più profonda. Mensile o annuale."
+            "value": "Il piano tiene aggiornati transiti, Rivoluzione solare e compatibilità, invia l'aggiornamento del mattino e include 30 domande al mese. Il piano annuale apre tutti e otto i sistemi."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O plano mantém os oito sistemas abertos, envia a notificação da manhã, reescreve seu dia conforme o céu se move — e Alma responde suas perguntas com a voz mais profunda. Mensal ou anual."
+            "value": "A assinatura mantém atualizados trânsitos, revolução solar e compatibilidade, envia o aviso da manhã e inclui 30 perguntas por mês. O plano anual abre os oito sistemas."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "По подписке открыты все восемь систем, каждое утро приходит уведомление, день переписывается вместе с небом — и Alma отвечает на вопросы своим глубоким голосом. Помесячно или на год."
+            "value": "Подписка держит живыми транзиты, соляр и совместимость, присылает утреннее уведомление и включает 25 вопросов в месяц. Все восемь систем открывает годовой план."
           }
         }
       }
@@ -9622,43 +9622,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Fragen heute übrig: %lld"
+            "value": "Verfügbare Fragen: %lld"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questions left today: %lld"
+            "value": "Questions available: %lld"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Preguntas restantes hoy: %lld"
+            "value": "Preguntas disponibles: %lld"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questions restantes aujourd'hui : %lld"
+            "value": "Questions disponibles : %lld"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Domande rimaste oggi: %lld"
+            "value": "Domande disponibili: %lld"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Perguntas restantes hoje: %lld"
+            "value": "Perguntas disponíveis: %lld"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вопросов на сегодня: %lld"
+            "value": "Доступно вопросов: %lld"
           }
         }
       }
@@ -10409,7 +10409,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo, todo mês"
+            "value": "Alma completa todo mês"
           }
         },
         "ru": {
@@ -10648,7 +10648,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cartas"
+            "value": "E-mails"
           }
         },
         "ru": {
@@ -10684,7 +10684,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma en envoie trois : ton lien de connexion, un reçu pour ce que tu achètes, et un avertissement trois jours avant le renouvellement d'un abonnement. Les trois portent sur quelque chose que tu as fait. Il n'y a pas de newsletter et rien à désabonner."
+            "value": "Alma en envoie trois : ton lien de connexion, un reçu pour tes achats et un avertissement trois jours avant le renouvellement d'un abonnement. Ces messages concernent uniquement tes actions. Il n'y a pas de newsletter, donc aucune désinscription à effectuer."
           }
         },
         "it": {
@@ -10744,7 +10744,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma envia uma coisa: seu link de acesso. A Apple envia o recibo de tudo o que você compra no app e o aviso antes de um plano renovar, porque é a Apple que cobra. Não há newsletter e nada para cancelar."
+            "value": "Alma envia um e-mail: seu link de acesso. A Apple envia o recibo de tudo o que você compra no app e o aviso antes de um plano renovar, porque é a Apple que processa o pagamento. Não há newsletter nem lista de e-mails."
           }
         },
         "ru": {
@@ -11706,7 +11706,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "was das Horoskop sagt"
+            "value": "was dein Horoskop sagt"
           }
         },
         "en": {
@@ -11724,7 +11724,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "ce que dit la carte"
+            "value": "ce que dit ton thème"
           }
         },
         "it": {
@@ -12424,25 +12424,25 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Que tres coincidan es lo más parecido a una prueba. Que dos discrepen es aún más útil — ese es el conflicto que sigues viviendo."
+            "value": "Cuando tres sistemas coinciden, el patrón se ve más claro. Cuando dos no coinciden, ahí hay una tensión que vale la pena explorar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trois qui s'accordent, c'est ce qui ressemble le plus à une preuve. Deux qui se contredisent, c'est encore plus utile — c'est le conflit que tu continues de vivre."
+            "value": "Quand trois systèmes montrent le même schéma, il mérite d’être regardé de plus près. Quand deux divergent, cette tension peut aussi être révélatrice."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tre che concordano sono la cosa più vicina a una prova. Due che si contraddicono servono ancora di più — è il conflitto che continui a vivere."
+            "value": "Quando tre sistemi indicano lo stesso schema, vale la pena osservarlo meglio. Quando due differiscono, anche quella tensione può essere utile."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Três concordando é o mais perto de uma prova que existe. Dois discordando é ainda mais útil — é o conflito que você continua vivendo."
+            "value": "Quando três sistemas concordam, o padrão fica mais claro. Quando dois discordam, há uma tensão que vale a pena explorar."
           }
         },
         "ru": {
@@ -12682,7 +12682,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Donde tres sistemas coinciden sobre ti"
+            "value": "En qué coinciden tres sistemas sobre ti"
           }
         },
         "fr": {
@@ -12700,7 +12700,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Onde três sistemas concordam sobre você"
+            "value": "Em que três sistemas concordam sobre você"
           }
         },
         "ru": {
@@ -12766,7 +12766,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geburtskarte"
+            "value": "Tarot-Geburtskarte"
           }
         },
         "en": {
@@ -12778,13 +12778,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carta de nacimiento"
+            "value": "Arcano de nacimiento"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Carte de naissance"
+            "value": "Arcane de naissance (tarot)"
           }
         },
         "it": {
@@ -12802,7 +12802,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Карта рождения"
+            "value": "Аркан рождения"
           }
         }
       }
@@ -13024,7 +13024,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Synthèse croisée"
+            "value": "Synthèse des systèmes"
           }
         },
         "it": {
@@ -13131,7 +13131,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aqui está tudo lido"
+            "value": "Você já leu tudo aqui"
           }
         },
         "ru": {

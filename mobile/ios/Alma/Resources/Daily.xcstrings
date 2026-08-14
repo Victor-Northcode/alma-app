@@ -152,7 +152,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Mitteilung, zur Stunde deiner Wahl, an den Tagen, an denen etwas in deiner Karte exakt ist. Etwa einmal die Woche. Nie nachts, und aus der Mitteilung selbst abschaltbar."
+            "value": "Eine Mitteilung zu deiner gewählten Uhrzeit an Tagen, an denen ein Einfluss in deinem Horoskop exakt wird. Etwa einmal pro Woche, nie nachts. Du kannst sie direkt über die Mitteilung abschalten."
           }
         },
         "en": {
@@ -164,13 +164,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Una notificación, a la hora que elijas, los días en que algo en tu carta es exacto. Más o menos una vez por semana. Nunca de noche, y se puede desactivar desde la propia notificación."
+            "value": "Una notificación, a la hora que elijas, los días en que se forma un aspecto exacto en tu carta. Más o menos una vez por semana. Nunca de noche, y se puede desactivar desde la propia notificación."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une notification, à l'heure que tu choisis, les jours où quelque chose est exact dans ta carte. Environ une fois par semaine. Jamais la nuit, et désactivable depuis la notification elle-même."
+            "value": "Une notification à l'heure choisie les jours où une influence devient exacte dans ton thème. Environ une fois par semaine, jamais la nuit. Tu peux la désactiver directement depuis la notification."
           }
         },
         "it": {
@@ -182,7 +182,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uma notificação, na hora que você escolher, nos dias em que algo no seu mapa fica exato. Cerca de uma vez por semana. Nunca à noite, e dá para desligar pela própria notificação."
+            "value": "Uma notificação, na hora que você escolher, nos dias em que um aspecto fica exato no seu mapa. Cerca de uma vez por semana. Nunca à noite, e dá para desligar pela própria notificação."
           }
         },
         "ru": {
@@ -890,7 +890,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ agora e %3$@ no seu mapa: %2$@"
+            "value": "%1$@ em %2$@ com %3$@ no seu mapa"
           }
         },
         "ru": {
@@ -908,43 +908,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was noch im Orbis steht, findest du unten. Heute wird nichts exakt."
+            "value": "Die aktiven Transite stehen unten. Heute erreicht keiner seinen exakten Punkt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "What is still in orb is below. Nothing perfects today."
+            "value": "Active transits are shown below. None reaches its exact point today."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lo que sigue en orbe está abajo. Hoy nada se hace exacto."
+            "value": "Los tránsitos activos aparecen abajo. Ninguno alcanza su punto exacto hoy."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce qui est encore dans l'orbe est ci-dessous. Rien ne devient exact aujourd'hui."
+            "value": "Les transits actifs sont affichés ci-dessous. Aucun n’atteint son point exact aujourd’hui."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ciò che è ancora in orbe è qui sotto. Oggi niente diventa esatto."
+            "value": "I transiti attivi sono qui sotto. Nessuno raggiunge il punto esatto oggi."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "O que ainda está em orbe está abaixo. Hoje nada se torna exato."
+            "value": "Os trânsitos ativos aparecem abaixo. Nenhum chega ao ponto exato hoje."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Что ещё в орбисе — ниже. Сегодня ничто не достигает точной отметки."
+            "value": "Активные транзиты показаны ниже. Сегодня ни один не достигает точного положения."
           }
         }
       }
@@ -962,13 +962,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing is exact today"
+            "value": "No transit is exact today"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hoy nada es exacto"
+            "value": "Hoy no hay aspectos exactos"
           }
         },
         "fr": {
@@ -980,7 +980,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Oggi niente è esatto"
+            "value": "Nessun transito è esatto oggi"
           }
         },
         "pt-BR": {
@@ -1133,7 +1133,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ближе всего %1$@, %2$@. Остальное движется медленно."
+            "value": "Ближе всего — %1$@; точный момент: %2$@. Остальные аспекты меняются медленно."
           }
         }
       }
@@ -1156,7 +1156,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hoy nada es exacto"
+            "value": "Hoy no hay aspectos exactos"
           }
         },
         "fr": {
@@ -1174,13 +1174,13 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hoje nada exato"
+            "value": "Nenhum aspecto exato hoje"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сегодня ничего точного"
+            "value": "Сегодня нет точных аспектов"
           }
         }
       }
@@ -1486,7 +1486,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Only what matters"
+            "value": "Long-term transits only"
           }
         },
         "es": {
@@ -1504,7 +1504,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Solo ciò che conta"
+            "value": "Solo transiti a lungo termine"
           }
         },
         "pt-BR": {
@@ -1534,13 +1534,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Never between 22:00 and 08:00, in your time."
+            "value": "Never between 22:00 and 08:00 in your local time zone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nunca entre las 22:00 y las 08:00, en tu hora."
+            "value": "Nunca entre las 22:00 y las 08:00 de tu zona horaria."
           }
         },
         "fr": {
@@ -1552,13 +1552,13 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mai tra le 22:00 e le 08:00, nella tua ora."
+            "value": "Mai tra le 22:00 e le 08:00 nel tuo fuso orario."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nunca entre 22:00 e 08:00, no seu horário."
+            "value": "Nunca entre 22:00 e 08:00 no seu fuso horário."
           }
         },
         "ru": {
@@ -1576,37 +1576,37 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Zeit"
+            "value": "Deine Zeitzone"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your time"
+            "value": "Time zone"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu hora"
+            "value": "Tu zona horaria"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ton heure"
+            "value": "Ton fuseau horaire"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La tua ora"
+            "value": "Fuso orario"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seu horário"
+            "value": "Seu fuso horário"
           }
         },
         "ru": {
@@ -1774,7 +1774,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The daily"
+            "value": "Daily updates"
           }
         },
         "es": {
@@ -1792,7 +1792,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il quotidiano"
+            "value": "Aggiornamenti giornalieri"
           }
         },
         "pt-BR": {
@@ -1804,7 +1804,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Каждое утро"
+            "value": "Утренние уведомления"
           }
         }
       }
@@ -1870,7 +1870,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing is being sent yet. This phone is not registered for notifications, so the daily lives here, on Today."
+            "value": "Notifications aren’t set up on this phone yet. You can still see Today in the app."
           }
         },
         "es": {
@@ -1888,7 +1888,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non viene ancora inviato nulla. Questo telefono non è registrato per le notifiche, quindi il quotidiano vive qui, in Oggi."
+            "value": "Le notifiche non sono ancora configurate su questo telefono. Puoi comunque vedere Oggi nell’app."
           }
         },
         "pt-BR": {
@@ -1900,7 +1900,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Пока ничего не отправляется. Этот телефон не зарегистрирован для уведомлений, так что утренняя строка живёт здесь, в «Сегодня»."
+            "value": "Уведомления пока не приходят на этот телефон. Все обновления доступны в разделе «Сегодня»."
           }
         }
       }
@@ -2020,7 +2020,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este teléfono está registrado para lo diario."
+            "value": "Este teléfono recibirá los avisos de la lectura del día."
           }
         },
         "fr": {
@@ -2038,7 +2038,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este telefone está registrado para o diário."
+            "value": "Este telefone receberá os avisos da leitura do dia."
           }
         },
         "ru": {
@@ -2062,7 +2062,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Let them arrive properly"
+            "value": "Choose how notifications appear"
           }
         },
         "es": {
@@ -2080,7 +2080,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Falle arrivare davvero"
+            "value": "Scegli come mostrare le notifiche"
           }
         },
         "pt-BR": {
@@ -2103,43 +2103,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Morgenbenachrichtigung ist Teil des Plans."
+            "value": "Tägliche Updates sind in einem aktiven Abo enthalten. Der Bereich „Heute“ bleibt kostenlos."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The morning notification is part of the plan."
+            "value": "Daily updates are included with an active subscription. Today remains free."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La notificación matinal es parte del plan."
+            "value": "Las actualizaciones diarias se incluyen con una suscripción activa. La sección Hoy sigue siendo gratis."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La notification du matin fait partie de l'abonnement."
+            "value": "Les actualisations quotidiennes sont incluses avec un abonnement actif. La rubrique Aujourd’hui reste gratuite."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La notifica del mattino fa parte del piano."
+            "value": "Gli aggiornamenti giornalieri sono inclusi con un abbonamento attivo. Oggi resta gratuito."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A notificação da manhã faz parte do plano."
+            "value": "As atualizações diárias fazem parte da assinatura ativa. A seção Hoje continua grátis."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Утреннее уведомление — часть плана."
+            "value": "Утренние обновления входят в активную подписку. Раздел «Сегодня» остаётся бесплатным."
           }
         }
       }
@@ -2187,7 +2187,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Точно в %@"
+            "value": "Точный момент — %@"
           }
         }
       }
@@ -2211,7 +2211,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exacto hoy"
+            "value": "Aspecto exacto hoy"
           }
         },
         "fr": {
@@ -2229,13 +2229,13 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exato hoje"
+            "value": "Aspecto exato hoje"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Точно сегодня"
+            "value": "Точный аспект сегодня"
           }
         }
       }
@@ -2247,43 +2247,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Im Orbis seit %@"
+            "value": "Aktiv seit %@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "In orb since %@"
+            "value": "Active since %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "En orbe desde el %@"
+            "value": "Activo desde el %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dans l'orbe depuis le %@"
+            "value": "Actif depuis le %@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "In orbe dal %@"
+            "value": "Attivo dal %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Em orbe desde %@"
+            "value": "Ativo desde %@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "В орбисе с %@"
+            "value": "Активно с %@"
           }
         }
       }
@@ -2295,43 +2295,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "im Orbis bis %@"
+            "value": "aktiv bis %@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "in orb until %@"
+            "value": "active until %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "en orbe hasta el %@"
+            "value": "activo hasta el %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "dans l'orbe jusqu'au %@"
+            "value": "actif jusqu’au %@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "in orbe fino al %@"
+            "value": "attivo fino al %@"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "em orbe até %@"
+            "value": "ativo até %@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "в орбисе до %@"
+            "value": "активно до %@"
           }
         }
       }
@@ -2349,37 +2349,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Exact days in the next 30"
+            "value": "Exact transit dates in the next 30 days"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Días exactos en los próximos 30"
+            "value": "Fechas exactas de los tránsitos en los próximos 30 días"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jours exacts dans les 30 prochains"
+            "value": "Dates exactes des transits dans les 30 prochains jours"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Giorni esatti nei prossimi 30"
+            "value": "Date esatte dei transiti nei prossimi 30 giorni"
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dias exatos nos próximos 30"
+            "value": "Datas exatas dos trânsitos nos próximos 30 dias"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Точные дни в ближайшие 30"
+            "value": "Точные даты транзитов в ближайшие 30 дней"
           }
         }
       }

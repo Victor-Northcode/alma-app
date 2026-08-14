@@ -123,3 +123,25 @@ def test_factors_are_usable_strings(chart):
     factors = result.factors()
     assert factors and all(isinstance(f, str) and f.strip() for f in factors)
     assert any("solar return 2026" in f for f in factors)
+
+
+@pytest.mark.parametrize("year", [2023, 2024, 2025, 2026])
+def test_a_leap_day_birth_gets_its_year_chart(year):
+    """29 February has no anniversary in three years out of four.
+
+    `birthday.replace(year=…)` raised `ValueError: day is out of range for
+    month` for every common year, so a person born on a leap day lost the
+    solar return three years in four — the whole system, not a field of it.
+
+    The anniversary is only the centre of a ±5-day bracket around a crossing
+    the Sun makes regardless of the calendar, so the assertion is the same one
+    the rest of this file makes: the Sun is back where it started.
+    """
+    moment = resolve(year=2000, month=2, day=29, hour=12, minute=0, tz_name="Europe/Rome")
+    leap_chart = natal.compute(moment=moment, **MILAN)
+    result = solar_return.compute(natal_chart=leap_chart, birth_moment=moment, year=year)
+
+    natal_sun = leap_chart.placements["sun"].longitude
+    return_sun = float(ephemeris.longitudes("sun", [result.return_jd])[0])
+    error = abs((return_sun - natal_sun + 180.0) % 360.0 - 180.0) * 3600.0
+    assert error < 0.1, f"the {year} return is {error:.3f}\" off the natal Sun"

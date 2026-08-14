@@ -92,13 +92,13 @@
     <string name="cabinet_open_all_chapters_no_price">Open all %1$d chapters</string>
     <string name="cabinet_open_system">Open %1$s · %2$s</string>
     <string name="cabinet_open_system_no_price">Open %1$s</string>
-    <string name="cabinet_eight_tail">Grouped by your question, not by the name of the tradition. Every one of the eight is calculated free.</string>
+    <string name="cabinet_eight_tail">Grouped by what you want to explore, not by technical labels. All eight systems are calculated free.</string>
     <string name="cabinet_free_data">calculated free</string>
     <string name="state_reading_chart">Alma is reading your chart</string>
     <string name="state_writing">Alma is writing this chapter…</string>
     <string name="state_writing_note">It is written once, and it will say the same thing tomorrow.</string>
     <string name="state_locked_note">Written from your own positions the first time you open it — your chart, never a template.</string>
-    <string name="synthesis_title">Where eight traditions agree about you</string>
+    <string name="synthesis_title">Where three systems point to the same theme</string>
     <string name="synthesis_lead">Three agreeing is the closest thing to proof. Two disagreeing is more useful still — that\'s the conflict you keep living out.</string>
     <string name="synthesis_agree">%1$d agree</string>
     <string name="synthesis_disagree">%1$d disagree</string>
@@ -153,7 +153,7 @@
     <string name="settings_everything_monthly">Everything, monthly</string>
     <string name="settings_annual_plan">Everything, for a year</string>
     <string name="settings_free_plan">Free</string>
-    <string name="settings_free_note">Every calculation is free. You pay for the words, one reading at a time.</string>
+    <string name="settings_free_note">Every calculation stays free — all eight systems. You pay only for the written chapters.</string>
     <string name="settings_owned_plan">What you own</string>
     <string name="settings_renews">Renews %1$s · we email you 3 days before</string>
     <string name="settings_renews_no_email">Renews %1$s · add an email to be warned before it charges</string>
@@ -275,7 +275,7 @@
     <string name="journey_ceremony_skip">Skip the ceremony</string>
     <string name="journey_calculated">all eight systems · calculated</string>
     <string name="journey_free_label">yours, free, forever</string>
-    <string name="journey_free_note">These numbers cost nothing, ever. They are yours whether you read further or not.</string>
+    <string name="journey_free_note">The results above stay free, whether or not you continue.</string>
     <string name="journey_needs_time_row">Solar return · map</string>
     <string name="journey_keep_my_sky">Keep my sky</string>
     <string name="journey_stays_free">Everything above stays free, forever</string>
@@ -322,7 +322,7 @@
         <item>When two systems disagree, don\'t pick a winner. That\'s the material.</item>
         <item>Ask me in your own words. Three questions are free.</item>
     </string-array>
-    <string name="paywall_unverified">Google has taken the payment and we could not confirm it yet. Nothing is lost — it opens by itself as soon as we can, and if we never can, Google refunds it within three days.</string>
+    <string name="paywall_unverified">Google took the payment and we can’t confirm it yet. Nothing is lost — it opens by itself as soon as we can, and if we never can, Google refunds it within three days.</string>
     <string name="cabinet_good_afternoon">Good afternoon,</string>
     <string name="cabinet_good_evening">Good evening,</string>
     <string name="cabinet_good_night">Still awake,</string>
@@ -349,12 +349,12 @@
     <string name="chat_offline">I cannot reach your chart just now. Your question is still in the box — try again in a moment.</string>
     <string name="chat_unavailable">Something on my side is not working. Your chart is untouched, and your question is still in the box.</string>
     <string name="chat_went_wrong">That did not go through. Nothing was lost — your question is still in the box.</string>
-    <string name="chat_questions_left">%1$d questions left today</string>
-    <string name="chat_no_questions">From here the plan carries the conversation — with the morning notification and the text of your day.</string>
+    <string name="chat_questions_left">Questions available: %1$d</string>
+    <string name="chat_no_questions">You’ve used the questions available for now. With an active subscription, you can continue; it includes 30 questions each month.</string>
     <string name="chat_get_more">See the plans</string>
     <string name="chat_lead">Ask me anything. I answer from your own placements, and I say so when I cannot.</string>
     <string name="signin_title">Sign in</string>
-    <string name="signin_lead">Signing in attaches an address to the account you already have. Nothing you have read or bought moves anywhere.</string>
+    <string name="signin_lead">Signing in links your email address to your existing account. Nothing you’ve read or bought is lost.</string>
     <string name="signin_email">Your email address</string>
     <string name="signin_send">Send me a link</string>
     <string name="signin_sent">Check your email. The link signs you in on this phone and expires shortly.</string>
@@ -369,12 +369,12 @@
     <string name="people_saved">saved</string>
     <string name="people_unnamed">Someone</string>
     <string name="people_remove">Remove</string>
-    <string name="people_remove_confirm">Remove — sure?</string>
+    <string name="people_remove_confirm">Remove this person?</string>
     <string name="people_birth_date">Date of birth</string>
     <string name="people_birth_time">Time, if it is known</string>
     <string name="people_save">Save this person</string>
     <string name="people_consent">Only add somebody whose birth data you were given to use.</string>
-    <string name="people_not_built">Adding a second person is not built on Android yet. You can add one on the web and it will be here.</string>
+    <string name="people_not_built">This feature is not available on Android yet. Add the person on the website and they will appear here.</string>
     <string name="chapter_next">Next: %1$s</string>
     <string name="state_nothing_today">Nothing in your sky is asking for attention today. That is a real answer, and it is not the same as nothing happening.</string>
 
@@ -434,7 +434,7 @@
     
     <string name="daily_status_registered">This phone is registered for the daily.</string>
     
-    <string name="daily_subscriber_only">The daily is part of the monthly plan. Today is free, and always will be.</string>
+    <string name="daily_subscriber_only">Daily updates are included with an active subscription. Today remains free.</string>
     
     <string name="daily_timezone">Your time</string>
     
@@ -450,11 +450,11 @@
     
     <string name="daily_today_label">Exact today</string>
     
-    <string name="daily_today_since">In orb since %1$s</string>
+    <string name="daily_today_since">Active since %1$s</string>
     
-    <string name="daily_today_until">in orb until %1$s</string>
+    <string name="daily_today_until">active until %1$s</string>
     
-    <string name="daily_verified_label">Exact days in the next 30</string>
+    <string name="daily_verified_label">Exact transit dates in the next 30 days</string>
     
     <string name="daily_verified_note">Counted from your own chart, on this device, with the same rule the notification uses.</string>
     
@@ -480,7 +480,7 @@
     
     <string name="push_daily_trine">%1$s trines your %2$s at %3$s.</string>
     
-    <string name="renewal_channel_description">Before a charge, and when a plan changes. Not marketing, and it cannot be unsubscribed from.</string>
+    <string name="renewal_channel_description">Service updates about charges and plan changes. You can change notification settings on your phone.</string>
     
     <string name="renewal_channel_name">Your subscription</string>
     <string name="cabinet_your_day">Your day</string>
@@ -489,7 +489,7 @@
     <string name="cabinet_not_prediction">Nothing here is a prediction. Every line names the placement it was read from.</string>
     <string name="cabinet_ask_alma">Ask Alma a question</string>
     <string name="plans_title">Everything open, every day</string>
-    <string name="plans_body">The plan keeps all eight systems open, sends the morning notification, rewrites your day as the sky moves — and Alma answers your questions in her deeper voice. Monthly or yearly.</string>
+    <string name="plans_body">The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The yearly plan opens all eight systems.</string>
     <string name="plans_cta">See the plans</string>
     <string name="cabinet_placements_label">your placements</string>
     <string name="cabinet_spheres_label">what the chart says</string>
@@ -538,9 +538,9 @@
     <string name="paywall_pitch_door_1">One payment opens every chapter of this system.</string>
     <string name="paywall_pitch_door_2">Each chapter is written from your own positions the first time you open it.</string>
     <string name="paywall_pitch_door_3">Yours permanently — read it any time, in seven languages.</string>
-    <string name="paywall_pitch_plan_1">All eight systems stay open while the plan runs.</string>
+    <string name="paywall_pitch_plan_1">The yearly plan and the archive open all eight systems; weekly and monthly keep the three that move.</string>
     <string name="paywall_pitch_plan_2">Transits, the solar return and compatibility are rewritten as the sky moves.</string>
-    <string name="paywall_pitch_plan_3">Thirty questions a month to Alma, on the deeper voice.</string>
+    <string name="paywall_pitch_plan_3">30 questions for Alma each month.</string>
     <string name="chapter_end_door">The rest of this system is written the same way — from your positions, yours to keep.</string>
     <string name="chapter_end_plan">This chapter is written once. Transits, the year and compatibility are rewritten as the sky moves — that is the plan.</string>
     <string name="settings_delete_confirm_guest">Type this code to confirm</string>

@@ -32,7 +32,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "la loro ora di nascita"
+            "value": "la sua ora di nascita"
           }
         },
         "pt-BR": {
@@ -80,7 +80,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "la loro data di nascita"
+            "value": "la sua data di nascita"
           }
         },
         "pt-BR": {
@@ -128,7 +128,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "il loro luogo di nascita"
+            "value": "il suo luogo di nascita"
           }
         },
         "pt-BR": {
@@ -206,7 +206,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The same five things your own chart needed. Without the minute of birth the comparison still runs, on fewer factors."
+            "value": "Add their name, birth date, birthplace and birth time if known. Without an exact time, Alma can still compare fewer chart factors."
           }
         },
         "es": {
@@ -224,7 +224,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le stesse cinque cose che servivano al tuo tema. Senza il minuto di nascita il confronto funziona lo stesso, su meno fattori."
+            "value": "Aggiungi nome, data e luogo di nascita, più l’ora se la conosci. Senza un’ora esatta, Alma può comunque confrontare meno elementi del tema."
           }
         },
         "pt-BR": {
@@ -236,7 +236,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Те же пять вещей, что нужны были твоей карте. Без минуты рождения сравнение всё равно считается — на меньшем числе факторов."
+            "value": "Нужны имя, дата и место рождения; время — если известно. Без точного времени сравнение тоже работает, но учитывает меньше факторов."
           }
         }
       }
@@ -272,7 +272,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "il loro nome"
+            "value": "il suo nome"
           }
         },
         "pt-BR": {
@@ -820,43 +820,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ab hier trägt der Plan das Gespräch — mit der Morgenbenachrichtigung und Almas tieferer Stimme."
+            "value": "Deine verfügbaren Fragen sind vorerst aufgebraucht. Mit einem aktiven Abo kannst du weitermachen; es enthält 30 Fragen pro Monat."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "From here the plan carries the conversation — with the morning notification and Alma's deeper voice."
+            "value": "You’ve used the questions available for now. With an active subscription, you can continue; it includes 30 questions each month."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "A partir de aquí el plan lleva la conversación — con la notificación matinal y la voz más profunda de Alma."
+            "value": "Has usado las preguntas disponibles por ahora. Con una suscripción activa puedes continuar; incluye 30 preguntas al mes."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "À partir d'ici, l'abonnement porte la conversation — avec la notification du matin et la voix plus profonde d'Alma."
+            "value": "Tu as utilisé les questions disponibles pour le moment. Avec un abonnement actif, tu peux continuer ; il inclut 30 questions par mois."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Da qui in poi il piano porta la conversazione — con la notifica del mattino e la voce più profonda di Alma."
+            "value": "Per ora hai usato tutte le domande disponibili. Con un abbonamento attivo puoi continuare; include 30 domande al mese."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "A partir daqui o plano leva a conversa — com a notificação da manhã e a voz mais profunda da Alma."
+            "value": "Você usou as perguntas disponíveis por enquanto. Com uma assinatura ativa, pode continuar; ela inclui 30 perguntas por mês."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Дальше разговор ведёт план — с утренним уведомлением и более глубоким голосом Alma."
+            "value": "Доступные вопросы закончились. В подписке — 25 вопросов в месяц."
           }
         }
       }
@@ -1030,7 +1030,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Qu'est-ce qui traverse mon thème cette semaine ?"
+            "value": "Qu'est-ce qui influence mon thème cette semaine ?"
           }
         },
         "it": {
@@ -1078,7 +1078,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Où mes systèmes ne sont-ils pas d'accord sur moi ?"
+            "value": "Sur quels points mes systèmes se contredisent-ils ?"
           }
         },
         "it": {
@@ -1156,13 +1156,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aszendent %@. Ist das, was andere zuerst von mir sehen?"
+            "value": "Aszendent %@. Ist es das, was andere zuerst von mir wahrnehmen?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ rising. Is that what people meet first?"
+            "value": "%@ rising. Is that the first impression I give?"
           }
         },
         "es": {
@@ -1174,13 +1174,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ascendant %@. Est-ce ce que les autres rencontrent en premier ?"
+            "value": "Ascendant %@. Est-ce la première impression que je donne aux autres ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ascendente %@. È questo che gli altri incontrano per primo?"
+            "value": "Ascendente %@. È la prima impressione che do agli altri?"
           }
         },
         "pt-BR": {
@@ -1258,7 +1258,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Show every placement this was read from"
+            "value": "Show the chart placements used for this answer"
           }
         },
         "es": {
@@ -1276,7 +1276,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mostra tutte le posizioni da cui è stato letto"
+            "value": "Mostra le posizioni del tema usate per questa risposta"
           }
         },
         "pt-BR": {
@@ -1360,7 +1360,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada respuesta nombra las posiciones de las que se leyó. Nada de esto es una predicción."
+            "value": "Cada respuesta indica en qué posiciones de tu carta se basa. Nada de esto es una predicción."
           }
         },
         "fr": {
@@ -1378,7 +1378,7 @@
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada resposta nomeia as posições de onde foi lida. Nada aqui é uma previsão."
+            "value": "Cada resposta indica em quais posições do seu mapa ela se baseia. Nada aqui é previsão."
           }
         },
         "ru": {
@@ -1468,7 +1468,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "A questa ho risposto da ciò che so, non dal tuo tema."
+            "value": "Questa risposta è generale e non si basa sul tuo tema natale."
           }
         },
         "pt-BR": {
@@ -2074,37 +2074,37 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma computes eight independent systems from a real JPL ephemeris — forty-one chapters in all — and shows you where they agree about you and where they do not."
+            "value": "Alma brings eight astrology and self-reflection systems together in 41 chapters. Combined Insights compares three of them: your birth chart, numerology and Tarot Birth Card."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma calcula ocho sistemas independientes desde una efeméride real del JPL — cuarenta y un capítulos en total — y te muestra dónde coinciden sobre ti y dónde no."
+            "value": "Alma reúne ocho sistemas de astrología y autoconocimiento en 41 capítulos. La Síntesis de sistemas compara tres: carta natal, numerología y Arcano de nacimiento."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma calcule huit systèmes indépendants à partir d'une éphéméride JPL réelle — quarante et un chapitres en tout — et te montre où ils s'accordent sur toi et où ils divergent."
+            "value": "Alma réunit huit systèmes d’astrologie et de connaissance de soi en 41 chapitres. La Synthèse des systèmes en compare trois : thème natal, numérologie et Arcane de naissance (tarot)."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma calcola otto sistemi indipendenti da un'effemeride JPL reale — quarantuno capitoli in tutto — e ti mostra dove concordano su di te e dove no."
+            "value": "Alma riunisce otto sistemi astrologici e di riflessione personale in 41 capitoli. La Sintesi combinata ne confronta tre: tema natale, numerologia e Carta dei tarocchi di nascita."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma calcula oito sistemas independentes a partir de uma efeméride real do JPL — quarenta e um capítulos ao todo — e mostra onde eles concordam sobre você e onde não."
+            "value": "A Alma reúne oito sistemas de astrologia e autoconhecimento em 41 capítulos. A Síntese dos sistemas compara três deles: mapa natal, numerologia e Arcano de nascimento."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alma рассчитывает восемь независимых систем по настоящей эфемериде JPL — всего сорок одна глава — и показывает, где они сходятся насчёт тебя, а где расходятся."
+            "value": "В Alma восемь систем и 41 глава. «Общий портрет» сравнивает три из них: натальную карту, нумерологию и аркан рождения."
           }
         }
       }
@@ -2175,31 +2175,31 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todo lo de arriba está calculado, y los cálculos son siempre gratis. Es tuyo, leas más o no."
+            "value": "Los resultados de arriba siguen siendo gratis, decidas continuar o no."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout ce qui précède est calculé, et les calculs sont toujours gratuits. Ça reste à toi, que tu lises la suite ou non."
+            "value": "Les résultats ci-dessus restent gratuits, que tu continues ou non."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tutto quello sopra è calcolato, e i calcoli sono sempre gratuiti. Resta tuo, che tu continui a leggere o no."
+            "value": "I risultati qui sopra restano gratuiti, anche se decidi di non continuare."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tudo acima é calculado, e os cálculos são sempre gratuitos. É seu, leia você mais ou não."
+            "value": "Os resultados acima continuam grátis, mesmo que você não continue."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Всё выше — расчёты, а расчёты всегда бесплатны. Это остаётся твоим, читаешь ты дальше или нет."
+            "value": "Результаты выше останутся бесплатными, даже если ты не продолжишь."
           }
         }
       }
@@ -2401,7 +2401,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Partnerschafts-Analyse vergleicht dein Horoskop mit dem eines anderen. Der Vergleich selbst wird immer vollständig berechnet."
+            "value": "Die Kompatibilitätsanalyse vergleicht dein Horoskop mit dem einer anderen Person. Der Vergleich wird immer vollständig berechnet."
           }
         },
         "en": {
@@ -2437,7 +2437,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Совместимость сравнивает твою карту с чьей-то ещё. Само сравнение всегда рассчитывается целиком."
+            "value": "Совместимость сравнивает твою карту с чьей-то ещё. Само сравнение всегда рассчитывается целиком и бесплатно."
           }
         }
       }
@@ -2545,7 +2545,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ihre Geburt wird gelöscht, und mit ihr jede daraus geschriebene Partnerschaftsdeutung. Bezahlte Deutungen lassen sich nicht Wort für Wort neu schreiben."
+            "value": "Ihre Geburtsdaten werden gelöscht — und damit alle daraus erstellten Kompatibilitätsdeutungen. Bezahlte Deutungen können nicht Wort für Wort neu erstellt werden."
           }
         },
         "en": {
@@ -2563,13 +2563,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sa naissance disparaît, et avec elle chaque lecture de compatibilité qui en est issue. Les lectures payées ne peuvent pas être réécrites mot pour mot."
+            "value": "Ses données de naissance sont supprimées — ainsi que toutes les interprétations de compatibilité créées à partir de ces données. Les interprétations payées ne peuvent pas être recréées mot pour mot."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La loro nascita sparisce, e con essa ogni lettura di compatibilità scritta da lì. Le letture pagate non possono essere riscritte parola per parola."
+            "value": "Questo elimina i suoi dati di nascita e ogni lettura di compatibilità basata su di essi. Le letture pagate potrebbero non essere ricreate parola per parola."
           }
         },
         "pt-BR": {
@@ -2742,25 +2742,25 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign in once and your chart and purchases survive a new phone."
+            "value": "Sign in to keep your chart and restore your purchases on a new phone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inicia sesión una vez y tu carta y tus compras sobreviven a un teléfono nuevo."
+            "value": "Inicia sesión una vez y podrás recuperar tu carta y tus compras aunque cambies de teléfono."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecte-toi une fois et ton thème et tes achats survivent à un nouveau téléphone."
+            "value": "Connecte-toi une fois : ton thème et tes achats resteront accessibles même sur un nouveau téléphone."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accedi una volta e il tuo tema e i tuoi acquisti sopravvivono a un telefono nuovo."
+            "value": "Accedi per conservare il tuo tema e ripristinare gli acquisti su un nuovo telefono."
           }
         },
         "pt-BR": {
@@ -2772,7 +2772,7 @@
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Войди один раз — и карта с покупками переживут новый телефон."
+            "value": "Войди, чтобы сохранить карту и покупки при смене телефона."
           }
         }
       }
@@ -2943,7 +2943,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ton compte est déjà ouvert. Il te suit sur n'importe quel téléphone."
+            "value": "Une session est déjà ouverte. Ton compte reste accessible sur n'importe quel téléphone."
           }
         },
         "it": {
@@ -3211,43 +3211,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Anmeldung hängt einen Namen an das Konto, das du bereits hast. Nichts, was du gelesen oder gekauft hast, geht verloren — es ist dasselbe Konto, nur dauerhaft."
+            "value": "Bei der Anmeldung wird deine E-Mail-Adresse mit deinem bestehenden Konto verknüpft. Deine gelesenen Inhalte und Käufe bleiben erhalten."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signing in attaches a name to the account you already have. Nothing you have read or bought is lost — it is the same account, made durable."
+            "value": "Signing in links your email address to your existing account. Nothing you’ve read or bought is lost."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Iniciar sesión añade un nombre a la cuenta que ya tienes. No se pierde nada de lo que has leído o comprado: es la misma cuenta, hecha duradera."
+            "value": "Iniciar sesión vincula tu correo electrónico a la cuenta que ya tienes. No perderás nada de lo que hayas leído o comprado."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se connecter attache un nom au compte que tu as déjà. Rien de ce que tu as lu ou acheté n'est perdu — c'est le même compte, rendu durable."
+            "value": "La connexion associe ton adresse e-mail au compte que tu as déjà. Tu ne perds rien de ce que tu as lu ou acheté."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accedere aggiunge un nome all'account che hai già. Nulla di ciò che hai letto o comprato va perso: è lo stesso account, reso duraturo."
+            "value": "L’accesso collega il tuo indirizzo email all’account che hai già. Non perdi nulla di ciò che hai letto o acquistato."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entrar anexa um nome à conta que você já tem. Nada do que você leu ou comprou se perde — é a mesma conta, tornada durável."
+            "value": "Ao entrar, seu e-mail fica vinculado à conta que você já tem. Nada do que você leu ou comprou é perdido."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вход привязывает имя к аккаунту, который у тебя уже есть. Ничего из прочитанного и купленного не теряется — это тот же аккаунт, просто теперь он никуда не денется."
+            "value": "Вход привязывает адрес почты к аккаунту, который у тебя уже есть. Ничего из прочитанного и купленного не потеряется."
           }
         }
       }
@@ -3451,7 +3451,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alles Gekaufte lässt sich wiederherstellen. Ein Kauf gehört dem Konto, das ihn zuerst beansprucht hat — melde dich also vor einer Neuinstallation an."
+            "value": "Alles Gekaufte lässt sich wiederherstellen. Ein Kauf gehört zu dem Konto, mit dem er zuerst verknüpft wurde — melde dich also vor einer Neuinstallation an."
           }
         },
         "en": {
@@ -3469,7 +3469,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tout ce que tu as acheté peut être restauré. Un achat appartient au compte qui l'a réclamé en premier, alors connecte-toi avant de réinstaller."
+            "value": "Tous tes achats peuvent être restaurés. Un achat appartient au compte auquel il a été associé en premier ; connecte-toi donc avant de réinstaller l'app."
           }
         },
         "it": {

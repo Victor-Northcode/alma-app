@@ -27,13 +27,33 @@ from alma.notify import message
 
 ANDROID = Path(__file__).resolve().parents[2] / "mobile/android/app/src/main/res"
 
-#: What the client calls the three placements it shows, and what we call them.
-SHARED = {"cabinet_sun": "sun", "cabinet_moon": "moon", "cabinet_ascendant": "ascendant"}
+#: What the client calls the placements it shows, and what we call them.
+#:
+#: **The node is here because it was the one that drifted.** Sun, Moon and
+#: Ascendant were checked from the first version and never moved; the node was
+#: not checked, and Russian ended up calling it «Восходящий узел» on all three
+#: clients while this table sent «Северный узел» in the notification about it.
+#: Six languages and the English were fine. A word that appears both on the
+#: chart and in a push about that chart is exactly the pair this file exists
+#: to hold together, so the list is now every such word rather than three.
+SHARED = {
+    "cabinet_sun": "sun",
+    "cabinet_moon": "moon",
+    "cabinet_ascendant": "ascendant",
+    "body_true_node": "true_node",
+}
 
 #: Android's directory suffix per locale. `values` with no suffix is English.
+#:
+#: **Russian was missing here for as long as Russian has existed.** It is in
+#: `i18n.LOCALES`, it is a column in `PLACEMENTS`, and the client has shipped
+#: `values-ru` since the seventh locale landed — but this map never grew the
+#: row, so the entire Russian half of "one source, two mirrors" was asserted
+#: nowhere. That is how the node drifted without a red test.
 ANDROID_DIRS = {
     "en": "values", "es": "values-es", "de": "values-de",
     "it": "values-it", "fr": "values-fr", "pt-BR": "values-pt-rBR",
+    "ru": "values-ru",
 }
 
 
