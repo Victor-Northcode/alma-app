@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -8,6 +9,8 @@ import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../state/session.dart';
+import '../legal/legal_screen.dart';
+import '../legal/legal_text.dart';
 
 /// Настройки.
 ///
@@ -29,13 +32,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _daily;
   Map<String, dynamic>? _plan;
   bool _started = false;
-
-  /// Адрес сайта для юридических документов.
-  ///
-  /// На нативных сборках он же; домен пока не резолвится, и это записано в
-  /// docs/PARITY.md отдельной строкой — Play требует работающую ссылку на
-  /// политику. Здесь он назван один раз, чтобы менять его в одном месте.
-  static const _site = 'https://alma.pazl.ai';
 
   @override
   void didChangeDependencies() {
@@ -133,19 +129,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ]),
         ..._planSection(l),
         _Section(label: l.cabDataAndLegal, children: [
-          for (final (label, path) in [
-            (l.cabLegalTerms, 'terms'),
-            (l.cabLegalPrivacy, 'privacy'),
-            (l.cabLegalRefunds, 'refunds'),
-            (l.cabLegalSubscriptionTerms, 'subscription-terms'),
-            (l.cabLegalImprint, 'imprint'),
-          ])
+          // **Документы открываются внутри приложения.**
+          //
+          // Здесь стоял `launchUrl` на `$_site/…`, то есть на `alma.pazl.ai`,
+          // которого не существует: пять строк открывали браузер с ошибкой.
+          // Присутствующая и мёртвая ссылка хуже отсутствующей — она читается
+          // как попытка закрыть чек-лист. Текст лежит в бинарнике и не
+          // нуждается в сети совсем.
+          for (final document in LegalDocument.values)
             _Row(
-              label: label,
+              label: LegalScreen.title(l, document),
               value: '',
               arrow: true,
-              onTap: () => launchUrl(Uri.parse('$_site/$path'),
-                  mode: LaunchMode.externalApplication),
+              onTap: () => Navigator.of(context, rootNavigator: true).push(
+                CupertinoPageRoute(
+                    builder: (context) => LegalScreen(document: document)),
+              ),
             ),
         ]),
       ],

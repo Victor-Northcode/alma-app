@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
 import '../billing/alma_store.dart';
@@ -11,6 +12,8 @@ import '../l10n/alma_l10n.dart';
 import '../net/alma_client.dart';
 import '../net/models.dart';
 import '../state/session.dart';
+import 'legal/legal_screen.dart';
+import 'legal/legal_text.dart';
 
 /// Витрина: что можно открыть, почём, и одна кнопка.
 ///
@@ -414,6 +417,27 @@ class _BuyArea extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(l.paywallFreeNote, style: AlmaType.meta),
+        const SizedBox(height: 14),
+        // **Условия, политика и условия подписки — с самой витрины.**
+        //
+        // Guideline 3.1.2 просит рабочие ссылки на первые две с того экрана,
+        // где продаётся подписка, и рецензент открывает каждую. Документы —
+        // экраны, а не веб-ссылки: ссылка наружу может лежать в тот день,
+        // когда идёт ревью, и в порте она вела на несуществующий домен.
+        Center(
+          child: Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              _LegalLink(l.paywallTerms, LegalDocument.terms),
+              Text('  ·  ', style: AlmaType.meta),
+              _LegalLink(l.paywallPrivacy, LegalDocument.privacy),
+              Text('  ·  ', style: AlmaType.meta),
+              _LegalLink(
+                  l.paywallSubscriptionTerms, LegalDocument.subscriptionTerms),
+            ],
+          ),
+        ),
         const SizedBox(height: 18),
         // Apple отклоняет приложение, которое продаёт разовые покупки и не
         // умеет их вернуть. И это же единственное, что помогает человеку с
@@ -445,6 +469,30 @@ class _BuyArea extends StatelessWidget {
         StoreMessage.restored => l.paywallRestored,
         StoreMessage.restoredNone => l.paywallRestoredNone,
       };
+}
+
+/// Ссылка на документ: золотая, подчёркнутая, открывает экран.
+class _LegalLink extends StatelessWidget {
+  const _LegalLink(this.label, this.document);
+
+  final String label;
+  final LegalDocument document;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: () => Navigator.of(context, rootNavigator: true).push(
+          CupertinoPageRoute(
+              builder: (context) => LegalScreen(document: document)),
+        ),
+        child: Text(
+          label,
+          style: AlmaType.meta.copyWith(
+            color: AlmaPalette.gold,
+            decoration: TextDecoration.underline,
+            decorationColor: AlmaPalette.gold.withValues(alpha: 0.6),
+          ),
+        ),
+      );
 }
 
 class _RestoreButton extends StatelessWidget {

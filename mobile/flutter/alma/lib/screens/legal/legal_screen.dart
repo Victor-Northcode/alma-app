@@ -1,0 +1,187 @@
+import 'package:flutter/material.dart';
+
+import '../../design/metrics.dart';
+import '../../design/palette.dart';
+import '../../design/screen_scaffold.dart';
+import '../../design/section_label.dart';
+import '../../design/sky/night_sky.dart';
+import '../../design/typography.dart';
+import '../../l10n/alma_l10n.dart';
+import 'legal_text.dart';
+
+/// Один из пяти юридических документов.
+///
+/// Открывается из настроек и из трёх ссылок в подвале витрины. В порте обе
+/// дороги вели наружу, на `alma.pazl.ai`, которого не существует: пять строк
+/// открывали браузер с ошибкой. Присутствующая и мёртвая ссылка хуже
+/// отсутствующей — она читается как попытка закрыть чек-лист.
+///
+/// Текст лежит в бинарнике (см. [LegalText]), поэтому у экрана нет ни
+/// состояния, ни загрузки, ни отказа. Это единственный экран приложения,
+/// который не может не открыться, и так задумано.
+class LegalScreen extends StatelessWidget {
+  const LegalScreen({super.key, required this.document});
+
+  final LegalDocument document;
+
+  static String title(L l, LegalDocument document) => switch (document) {
+        LegalDocument.terms => l.cabLegalTerms,
+        LegalDocument.privacy => l.cabLegalPrivacy,
+        LegalDocument.refunds => l.cabLegalRefunds,
+        LegalDocument.subscriptionTerms => l.cabLegalSubscriptionTerms,
+        LegalDocument.imprint => l.cabLegalImprint,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final doc = LegalText.of(document);
+    return Scaffold(
+      backgroundColor: AlmaPalette.night,
+      body: ScreenScaffold(
+        eyebrow: 'Alma · ${LegalText.operatorName}',
+        title: title(l, document),
+        mood: SkyMood.reading,
+        seed: 0x4C454741,
+        children: [
+          Text('Last updated ${LegalText.updated}', style: AlmaType.meta),
+          // Признание — перед документом, а не под ним.
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Text(LegalText.preamble, style: AlmaType.meta),
+          ),
+          const _Rule(),
+          Text(doc.lead, style: AlmaType.voice),
+          for (final section in doc.sections) ...[
+            const SizedBox(height: AlmaMetrics.gapLarge),
+            SectionLabel(section.title),
+            const SizedBox(height: 6),
+            for (final block in section.blocks) _Block(block: block),
+          ],
+          const SizedBox(height: AlmaMetrics.gapLarge),
+          const _Rule(),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(LegalText.footer, style: AlmaType.meta),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text('${LegalText.operatorName} · Wyoming, United States',
+                style: AlmaType.meta),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Абзац, список, факт или пропуск.
+class _Block extends StatelessWidget {
+  const _Block({required this.block});
+
+  final LegalBlock block;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (block) {
+      case LegalPara(:final text):
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Text(text, style: AlmaType.body),
+        );
+
+      case LegalPoints(:final items):
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final item in items)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Та же золотая точка, что на честной плашке витрины.
+                      // Не системный маркер: залитый кружок — это список в
+                      // приложении настроек.
+                      Text('·', style: AlmaType.numeral),
+                      const SizedBox(width: 10),
+                      Expanded(child: Text(item, style: AlmaType.body)),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        );
+
+      case LegalFact(:final label, :final value):
+        return _FactRow(label: label, value: value);
+
+      case LegalFactBlank(:final label, :final value):
+        return _FactRow(label: label, value: '[$value]', missing: true);
+
+      case LegalBlank(:final what):
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Text('[$what]',
+              style: AlmaType.body
+                  .copyWith(color: AlmaPalette.disagree.withValues(alpha: 0.8))),
+        );
+    }
+  }
+}
+
+class _FactRow extends StatelessWidget {
+  const _FactRow({required this.label, required this.value, this.missing = false});
+
+  final String label;
+  final String value;
+  final bool missing;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Вес 4/6, как во всех парах «подпись — значение» продукта: у
+            // `Expanded` по умолчанию один flex, и значение запиралось в своей
+            // половине.
+            Expanded(flex: 4, child: Text(label, style: AlmaType.meta)),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 6,
+              child: Text(
+                value,
+                textAlign: TextAlign.right,
+                style: AlmaType.body.copyWith(
+                  color: missing
+                      ? AlmaPalette.disagree.withValues(alpha: 0.8)
+                      : AlmaPalette.body,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+}
+
+/// Линейка, гаснущая к краям, — та же, что делит разделы кабинета.
+class _Rule extends StatelessWidget {
+  const _Rule();
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+              AlmaPalette.hairlineGold,
+              AlmaPalette.hairlineGold.withValues(alpha: 0),
+            ]),
+          ),
+        ),
+      );
+}
