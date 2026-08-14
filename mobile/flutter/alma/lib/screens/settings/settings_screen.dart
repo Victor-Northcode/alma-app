@@ -14,6 +14,7 @@ import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../state/session.dart';
+import '../../billing/alma_store.dart';
 import '../legal/legal_screen.dart';
 import '../legal/legal_text.dart';
 
@@ -445,7 +446,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _Row(label: l.cabPlanFreePlan, value: ''),
           const SizedBox(height: 12),
           Text(l.cabPlanFreeNote, style: AlmaType.meta),
-        ] else
+        ] else ...[
           for (final row in rows)
             _Row(
               label: row['system'] == 'all'
@@ -456,9 +457,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       l.localeName, (row['expires_at'] as String).split('T').first))
                   : '',
             ),
+          // **Управление подпиской — у того, кто её продал.**
+          //
+          // Ни Apple, ни Google не позволяют серверу остановить подписку,
+          // принадлежащую их аккаунту, и локальный флажок «отменено» не
+          // останавливает списание. Поэтому здесь ссылка в магазин, а не
+          // кнопка отмены: `POST /v1/billing/subscription/cancel` на такую
+          // подписку отвечает 409 и ничего не пишет — правильно, — и кнопка
+          // туда вела бы к фразе, показывающей обратно на эту же ссылку.
+          if (rows.any(_isSubscription)) ...[
+            const SizedBox(height: 14),
+            AlmaButton(
+              kind: AlmaButtonKind.outline,
+              fills: false,
+              label: l.cabManageInStore,
+              onTap: () => launchUrl(
+                Uri.parse('https://apps.apple.com/account/subscriptions'),
+                mode: LaunchMode.externalApplication,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(l.cabManagedByApple, style: AlmaType.meta),
+          ],
+        ],
+        // **Восстановление — вне витрины.**
+        //
+        // Apple отклоняет приложение, которое продаёт разовые покупки и не
+        // даёт их вернуть в месте, до которого можно дойти, не открывая
+        // пейволл. И это же единственное, что помогает человеку с новым
+        // телефоном, — случай, который действительно случается.
+        const SizedBox(height: 18),
+        _RestoreRow(store: AlmaStore.shared),
       ]),
     ];
   }
+
+  /// Подписка ли это право. `one_time` — купленная навсегда дверь: её не
+  /// отменяют и ею не управляют в магазине.
+  static bool _isSubscription(Map<String, dynamic> row) =>
+      const ['weekly', 'monthly', 'annual'].contains(row['kind']);
 
   /// Гражданская дата — не мгновение. «1992-05-11» без пояса; разбор её как
   /// времени в поясе устройства делал бы её десятым мая для всех западнее
@@ -720,3 +757,80 @@ class _ExportReady extends _Export {
 
 /// Где удаление аккаунта.
 enum _Delete { idle, confirming, mismatch, working, failed, done }
+
+
+/// Восстановление покупок в настройках: кнопка и то, чем магазин ответил.
+class _RestoreRow extends StatefulWidget {
+  const _RestoreRow({required this.store});
+
+  final AlmaStore store;
+
+  @override
+  State<_RestoreRow> createState() => _RestoreRowState();
+}
+
+class _RestoreRowState extends State<_RestoreRow> {
+  @override
+  void initState() {
+    super.initState();
+    widget.store.addListener(_changed);
+  }
+
+  @override
+  void dispose() {
+    widget.store.removeListener(_changed);
+    super.dispose();
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final store = widget.store;
+    final notice = store.notice;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AlmaButton(
+          kind: AlmaButtonKind.veil,
+          fills: false,
+          label: store.restoring ? l.paywallRestoring : l.paywallRestore,
+          onTap: store.restoring || store.busy != null
+              ? null
+              : () {
+                  store.attach(SessionScope.of(context));
+                  store.restore();
+                },
+        ),
+        if (notice != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(
+              switch (notice.message) {
+                StoreMessage.storeSilent => l.paywallStoreUnavailable,
+                StoreMessage.pending => l.paywallPending,
+                StoreMessage.offline => l.paywallOffline,
+                StoreMessage.notVerified => l.paywallNotVerified,
+                StoreMessage.verifyLater => l.paywallVerifyLater,
+                StoreMessage.withdrawn => l.paywallWithdrawn,
+                StoreMessage.unlocked => l.paywallRestored,
+                StoreMessage.restoring => l.paywallRestoring,
+                StoreMessage.restored => l.paywallRestored,
+                StoreMessage.restoredNone => l.paywallRestoredNone,
+              },
+              style: AlmaType.meta.copyWith(
+                color: switch (notice.tone) {
+                  StoreTone.good => AlmaPalette.agree,
+                  StoreTone.waiting => AlmaPalette.gold,
+                  StoreTone.bad => AlmaPalette.disagree,
+                },
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
