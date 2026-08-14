@@ -1,0 +1,139 @@
+import 'package:flutter/material.dart';
+
+import '../../design/palette.dart';
+import '../../design/typography.dart';
+import '../../l10n/alma_l10n.dart';
+import '../cabinet_words.dart';
+
+/// Одна реплика беседы — **одна на два экрана**.
+///
+/// Живая лента и переоткрытая беседа рисуют реплики этим виджетом, и это не
+/// экономия строк. На нативе у экрана прошлой беседы была своя копия, и она
+/// молча разошлась с лентой: одно и то же сообщение показывало «ответила не из
+/// карты» в чате и не показывало в архиве. Одна вью — одно поведение.
+class ChatTurnView extends StatelessWidget {
+  const ChatTurnView({
+    super.key,
+    required this.mine,
+    required this.body,
+    this.citedFactors = const [],
+  });
+
+  final bool mine;
+  final String body;
+  final List<String> citedFactors;
+
+  @override
+  Widget build(BuildContext context) {
+    if (mine) {
+      // Реплика человека — справа и в пузыре, и пузырь никогда не во всю
+      // ширину: иначе он перестаёт читаться как чья-то отдельная фраза.
+      return Align(
+        alignment: Alignment.centerRight,
+        child: Container(
+          margin: const EdgeInsets.only(top: 14, left: 48),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          constraints: const BoxConstraints(maxWidth: 300),
+          decoration: BoxDecoration(
+            color: AlmaPalette.veilStrong,
+            borderRadius: BorderRadius.circular(18),
+          ),
+          child: Text(body, style: AlmaType.body),
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 20),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Text('ALMA', style: AlmaType.overline),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(gradient: AlmaGradient.fadedRule),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 10),
+        Text(body, style: AlmaType.voice),
+        if (citedFactors.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Citation(factors: citedFactors),
+        ],
+      ]),
+    );
+  }
+}
+
+/// Цитата под ответом: подпись, первая позиция и сколько ещё.
+///
+/// Раскрывается нажатием на «+» — тогда показываются все позиции, из которых
+/// прочитан ответ. Свёрнутая по умолчанию, потому что ответ читают, а цитату
+/// проверяют: она обязана быть на виду и не обязана занимать треть экрана.
+/// Первый порт вываливал все факторы переносом на три строки, и цитата весила
+/// больше самого ответа — найдено сравнением с нативным кадром.
+class Citation extends StatefulWidget {
+  const Citation({super.key, required this.factors});
+
+  final List<String> factors;
+
+  @override
+  State<Citation> createState() => CitationState();
+}
+
+class CitationState extends State<Citation> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final rest = widget.factors.length - 1;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Text(l.cabReadFrom.toUpperCase(), style: AlmaType.overline),
+        const SizedBox(width: 12),
+        // **Позиция получает место, а не остаток от него.** `Flexible` рядом
+        // со `Spacer` уступал: распорка забирала всю свободную ширину, и
+        // «ascendant 12°03′ ♌» — строка, которая помещается целиком, —
+        // печаталась как «ascendant …». На нативе цитата читается полностью;
+        // она и есть обещание продукта, что ответ прочитан из карты.
+        Expanded(
+          child: Text(
+            CabinetWordsMore.factor(l, widget.factors.first),
+            style: AlmaType.numeral.copyWith(
+              color: AlmaPalette.gold,
+              fontFamilyFallback: AlmaType.glyphFallback,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        if (rest > 0 && !_open) ...[
+          const SizedBox(width: 8),
+          Text('+$rest',
+              style: AlmaType.numeral.copyWith(color: AlmaPalette.goldDeep)),
+        ],
+        if (rest > 0)
+          InkResponse(
+            onTap: () => setState(() => _open = !_open),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Text(_open ? '−' : '+',
+                  style: AlmaType.numeral
+                      .copyWith(color: AlmaPalette.gold, fontSize: 17)),
+            ),
+          ),
+      ]),
+      if (_open)
+        for (final factor in widget.factors.skip(1))
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Text(CabinetWordsMore.factor(l, factor),
+                style: AlmaType.numeral.copyWith(
+                  color: AlmaPalette.gold,
+                  fontFamilyFallback: AlmaType.glyphFallback,
+                )),
+          ),
+    ]);
+  }
+}

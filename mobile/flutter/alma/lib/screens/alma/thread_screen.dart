@@ -1,0 +1,98 @@
+import 'package:flutter/material.dart';
+
+import '../../design/metrics.dart';
+import '../../design/palette.dart';
+import '../../design/screen_scaffold.dart';
+import '../../design/sky/night_sky.dart';
+import '../../design/typography.dart';
+import '../../l10n/alma_l10n.dart';
+import '../../net/alma_client.dart';
+import '../../net/models.dart';
+import '../../state/session.dart';
+import 'chat_turn.dart';
+
+/// Одна прошлая беседа, целиком.
+///
+/// Порт `mobile/ios/Alma/Screens/Alma/ThreadScreen.swift`. Открывается только
+/// из меню «раньше» на вкладке Alma.
+///
+/// **Только для чтения, и это решение.** Композер живёт ровно на одном экране:
+/// второе место, откуда можно отправить вопрос, — это второе место, где можно
+/// потратить чужую квоту и перепутать идентификатор беседы.
+///
+/// Реплики рисует **та же** [ChatTurnView], что и живая лента. На нативе здесь
+/// когда-то стояла своя копия, и она молча разошлась: одно и то же сообщение
+/// показывало «ответила не из карты» в живом чате и не показывало в
+/// переоткрытой беседе.
+class ThreadScreen extends StatefulWidget {
+  const ThreadScreen({super.key, required this.id, this.title});
+
+  final String id;
+  final String? title;
+
+  @override
+  State<ThreadScreen> createState() => _ThreadScreenState();
+}
+
+class _ThreadScreenState extends State<ThreadScreen> {
+  List<ChatTurn>? _turns;
+  AlmaError? _failure;
+  bool _started = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    _load();
+  }
+
+  Future<void> _load() async {
+    setState(() => _failure = null);
+    try {
+      final turns = await SessionScope.of(context).client.thread(widget.id);
+      if (mounted) setState(() => _turns = turns);
+    } on AlmaError catch (error) {
+      if (mounted) setState(() => _failure = error);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final turns = _turns;
+    return Scaffold(
+      backgroundColor: AlmaPalette.night,
+      body: ScreenScaffold(
+        eyebrow: l.tabAlma,
+        mood: SkyMood.reading,
+        seed: 0x54485244,
+        children: [
+          Text(widget.title?.isNotEmpty == true ? widget.title! : l.scrChatUntitled,
+              style: AlmaType.displayL),
+          const SizedBox(height: 8),
+          if (_failure != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(l.stateUnavailable, style: AlmaType.meta),
+            )
+          else if (turns == null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(l.stateLoadingShort, style: AlmaType.meta),
+            )
+          else
+            for (final turn in turns)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AlmaMetrics.gapLarge),
+                child: ChatTurnView(
+                  mine: turn.mine,
+                  body: turn.body,
+                  citedFactors: turn.citedFactors,
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+}

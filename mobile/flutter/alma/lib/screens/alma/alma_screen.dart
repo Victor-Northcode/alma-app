@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
 import '../../design/buttons.dart';
@@ -11,6 +12,8 @@ import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 import '../today/today_screen.dart' show openOffer;
+import 'chat_turn.dart';
+import 'thread_screen.dart';
 
 /// Беседа с Alma.
 ///
@@ -45,6 +48,9 @@ class _AlmaScreenState extends State<AlmaScreen> {
   /// ответа лимит не показывается: пустой счётчик над полем — это счётчик,
   /// который врёт.
   int? _left;
+
+  /// Прошлые беседы, свежая первой — то, из чего строится меню «раньше».
+  List<ChatThreadRef> _past = const [];
   bool _openersLoaded = false;
   bool _threadLoaded = false;
 
@@ -83,6 +89,7 @@ class _AlmaScreenState extends State<AlmaScreen> {
     if (!session.hasBirthData) return;
     try {
       final threads = await session.client.threads();
+      if (mounted) setState(() => _past = threads);
       if (threads.isEmpty) return;
       final turns = await session.client.thread(threads.first.id);
       if (!mounted || turns.isEmpty) return;
@@ -235,6 +242,7 @@ class _AlmaScreenState extends State<AlmaScreen> {
                       MediaQuery.paddingOf(context).bottom * 0.5 +
                       16),
           child: Column(children: [
+            _header(l),
             Expanded(
               child: _turns.isEmpty
                   ? _opening(l, session)
@@ -321,48 +329,64 @@ class _AlmaScreenState extends State<AlmaScreen> {
           );
         }
         final turn = _turns[i];
-        if (turn.mine) {
-          return Align(
-            alignment: Alignment.centerRight,
-            child: Container(
-              margin: const EdgeInsets.only(top: 14, left: 48),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: AlmaPalette.veilStrong,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Text(turn.body, style: AlmaType.body),
-            ),
-          );
-        }
-        return Padding(
-          padding: const EdgeInsets.only(top: 20),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Text('ALMA', style: AlmaType.overline),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Container(
-                  height: 1,
-                  decoration:
-                      BoxDecoration(gradient: AlmaGradient.fadedRule),
-                ),
-              ),
-            ]),
-            const SizedBox(height: 10),
-            Text(turn.body, style: AlmaType.voice),
-            if (turn.citedFactors.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              // Цитата под ответом — обещание продукта, и она **одна строка**:
-              // подпись, первая позиция засечным золотом, «+N» о том, сколько
-              // ещё, и знак раскрытия справа. Первый порт вываливал все
-              // факторы переносом на три строки — цитата весила больше ответа.
-              _Citation(factors: turn.citedFactors),
-            ],
-          ]),
+        return ChatTurnView(
+          mine: turn.mine,
+          body: turn.body,
+          citedFactors: turn.citedFactors,
         );
       },
+    );
+  }
+
+  /// Шапка вкладки: «ALMA», гаснущая линейка и — когда бесед больше одной —
+  /// меню «раньше».
+  ///
+  /// **Меню, а не экран списка.** Бесед всегда единицы, каждая — одна строка,
+  /// и отдельный экран, каждая строка которого заголовок, был бы экраном ради
+  /// списка из одной вещи. Появляется только со второй беседой: пункт меню,
+  /// ведущий на то же, что уже открыто, — это пункт, который нажимают один раз
+  /// и больше никогда.
+  Widget _header(L l) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 14, AlmaMetrics.pad, 10),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Text(l.tabAlma.toUpperCase(), style: AlmaType.overline),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: AlmaPalette.gold.withValues(alpha: 0.28),
+          ),
+        ),
+        if (_past.length > 1) ...[
+          const SizedBox(width: 12),
+          PopupMenuButton<ChatThreadRef>(
+            color: AlmaPalette.night700,
+            position: PopupMenuPosition.under,
+            tooltip: l.scrChatPast,
+            onSelected: (thread) => Navigator.of(context, rootNavigator: true).push(
+              CupertinoPageRoute(
+                builder: (context) =>
+                    ThreadScreen(id: thread.id, title: thread.title),
+              ),
+            ),
+            itemBuilder: (context) => [
+              for (final thread in _past)
+                PopupMenuItem(
+                  value: thread,
+                  child: Text(
+                    thread.title?.isNotEmpty == true
+                        ? thread.title!
+                        : l.scrChatUntitled,
+                    style: AlmaType.body.copyWith(fontSize: 15),
+                  ),
+                ),
+            ],
+            child: Text(l.scrChatPast.toUpperCase(),
+                style: AlmaType.tag.copyWith(color: AlmaPalette.gold)),
+          ),
+        ],
+      ]),
     );
   }
 
@@ -455,77 +479,5 @@ class _AlmaScreenState extends State<AlmaScreen> {
         ]),
       ]),
     );
-  }
-}
-
-/// Цитата под ответом: подпись, первая позиция и сколько ещё.
-///
-/// Раскрывается нажатием на «+» — тогда показываются все позиции, из которых
-/// прочитан ответ. Свёрнутая по умолчанию, потому что ответ читают, а цитату
-/// проверяют: она обязана быть на виду и не обязана занимать треть экрана.
-/// Первый порт вываливал все факторы переносом на три строки, и цитата весила
-/// больше самого ответа — найдено сравнением с нативным кадром.
-class _Citation extends StatefulWidget {
-  const _Citation({required this.factors});
-
-  final List<String> factors;
-
-  @override
-  State<_Citation> createState() => _CitationState();
-}
-
-class _CitationState extends State<_Citation> {
-  bool _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    final rest = widget.factors.length - 1;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-        Text(l.cabReadFrom.toUpperCase(), style: AlmaType.overline),
-        const SizedBox(width: 12),
-        // **Позиция получает место, а не остаток от него.** `Flexible` рядом
-        // со `Spacer` уступал: распорка забирала всю свободную ширину, и
-        // «ascendant 12°03′ ♌» — строка, которая помещается целиком, —
-        // печаталась как «ascendant …». На нативе цитата читается полностью;
-        // она и есть обещание продукта, что ответ прочитан из карты.
-        Expanded(
-          child: Text(
-            CabinetWordsMore.factor(l, widget.factors.first),
-            style: AlmaType.numeral.copyWith(
-              color: AlmaPalette.gold,
-              fontFamilyFallback: AlmaType.glyphFallback,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        if (rest > 0 && !_open) ...[
-          const SizedBox(width: 8),
-          Text('+$rest',
-              style: AlmaType.numeral.copyWith(color: AlmaPalette.goldDeep)),
-        ],
-        if (rest > 0)
-          InkResponse(
-            onTap: () => setState(() => _open = !_open),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Text(_open ? '−' : '+',
-                  style: AlmaType.numeral
-                      .copyWith(color: AlmaPalette.gold, fontSize: 17)),
-            ),
-          ),
-      ]),
-      if (_open)
-        for (final factor in widget.factors.skip(1))
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(CabinetWordsMore.factor(l, factor),
-                style: AlmaType.numeral.copyWith(
-                  color: AlmaPalette.gold,
-                  fontFamilyFallback: AlmaType.glyphFallback,
-                )),
-          ),
-    ]);
   }
 }

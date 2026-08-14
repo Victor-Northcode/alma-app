@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
@@ -103,6 +104,35 @@ class _PeopleScreenState extends State<PeopleScreen> {
     }
   }
 
+  /// **Подтверждение, а не одно нажатие.** Удаление человека уносит и каждое
+  /// чтение совместимости, написанное из его рождения, — а оплаченное чтение
+  /// нельзя переписать слово в слово. Одно нажатие рядом с именем это ровно
+  /// тот случай, ради которого подтверждения и существуют.
+  Future<void> _confirmRemove(Profile person) async {
+    final l = L.of(context);
+    final yes = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AlmaPalette.night700,
+        title: Text(l.scrPeopleRemoveTitle, style: AlmaType.headingM),
+        content: Text(l.scrPeopleRemoveWhat, style: AlmaType.meta),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l.scrKeep,
+                style: AlmaType.button.copyWith(color: AlmaPalette.body)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l.scrPeopleRemove,
+                style: AlmaType.button.copyWith(color: AlmaPalette.disagree)),
+          ),
+        ],
+      ),
+    );
+    if (yes == true && mounted) await _remove(person);
+  }
+
   Future<void> _remove(Profile person) async {
     final session = SessionScope.of(context);
     try {
@@ -112,6 +142,23 @@ class _PeopleScreenState extends State<PeopleScreen> {
     } on AlmaError {
       if (mounted) setState(() {});
     }
+  }
+
+  /// Три факта через точку: дата, время (или что оно неизвестно) и город.
+  /// Пропущенное не оставляет пустого места между разделителями.
+  String _facts(L l, Profile person) => [
+        _civilDate(l.localeName, person.birthDate),
+        person.birthTime ?? l.cabUnknownTime,
+        person.placeLabel,
+      ].whereType<String>().where((s) => s.isNotEmpty).join(' · ');
+
+  /// Гражданская дата — не мгновение: разбор её как времени в поясе устройства
+  /// делал бы 11 мая десятым для всех западнее Лондона.
+  static String _civilDate(String locale, String civil) {
+    final parts = civil.split('-');
+    if (parts.length != 3) return civil;
+    return DateFormat.yMMMMd(locale).format(
+        DateTime.utc(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2])));
   }
 
   @override
@@ -125,20 +172,46 @@ class _PeopleScreenState extends State<PeopleScreen> {
         if (session.people.isNotEmpty) ...[
           SectionLabel(l.cabPeopleTitle, trailing: '${session.people.length}'),
           const SizedBox(height: 8),
+          // **Строка человека — это его данные, а не только имя.** Раньше
+          // здесь стояло имя или голая дата «1992-05-11», и человек, добавивший
+          // двоих, не мог отличить их иначе как по имени: ни города, ни
+          // времени, ни кем приходится. Три факта через точку — как на нативе.
           for (final person in session.people)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
+              ),
               child: Row(children: [
                 Expanded(
-                  child: Text(
-                    person.name?.isNotEmpty == true ? person.name! : person.birthDate,
-                    style: AlmaType.body,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        person.name?.isNotEmpty == true
+                            ? person.name!
+                            : l.scrPeopleUnnamed,
+                        style: AlmaType.headingM,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(_facts(l, person), style: AlmaType.meta),
+                      if (person.relation?.isNotEmpty == true) ...[
+                        const SizedBox(height: 4),
+                        // Приглушённым, а не золотом: золото на каждой строке
+                        // перестаёт значить «вот это главное».
+                        Text(person.relation!.toUpperCase(),
+                            style: AlmaType.tag
+                                .copyWith(color: AlmaPalette.muted3)),
+                      ],
+                    ],
                   ),
                 ),
+                const SizedBox(width: 14),
                 TextButton(
-                  onPressed: () => _remove(person),
-                  child: Text(l.cabPeopleRemove,
-                      style: AlmaType.meta.copyWith(color: AlmaPalette.disagree)),
+                  onPressed: () => _confirmRemove(person),
+                  child: Text(l.scrPeopleRemove,
+                      style: AlmaType.meta.copyWith(
+                          color: AlmaPalette.disagree.withValues(alpha: 0.85))),
                 ),
               ]),
             ),
