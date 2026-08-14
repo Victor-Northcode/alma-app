@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../design/arrival.dart';
+import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/section_label.dart';
@@ -12,6 +14,7 @@ import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
+import '../offer_screen.dart';
 import 'today_model.dart';
 
 /// Первая страница кабинета: сегодняшнее небо против карты рождения.
@@ -49,7 +52,7 @@ class _TodayScreenState extends State<TodayScreen> {
       model.addListener(() {
         if (mounted) setState(() {});
       });
-      model.load(locale: session.locale);
+      model.load(locale: session.locale, subscriber: session.isSubscriber);
     }
 
     final model = _model;
@@ -67,13 +70,30 @@ class _TodayScreenState extends State<TodayScreen> {
       underTitle: _moonHeaderLine(l, model),
       onRefresh: () async {
         if (model != null && session.hasBirthData) {
-          await model.load(locale: session.locale);
+          await model.load(
+              locale: session.locale, subscriber: session.isSubscriber);
         }
       },
       children: [
         if (model != null) ...[
           const SizedBox(height: AlmaMetrics.gapLarge),
-          _DaySection(model: model),
+          _DaySection(model: model, subscriber: session.isSubscriber),
+        ],
+        // **План, сказанный словами, тому, у кого его нет.**
+        //
+        // Он был доступен с лестницы, которая открывалась, только если сперва
+        // ткнуть в закрытую главу, — и владелец прошёл собственный продукт из
+        // конца в конец, ни разу не увидев, что подписка вообще предлагается.
+        // «Один тап в настройках» оказалось фразой, не стоящей ничего: никто
+        // не открывает настройки, чтобы ему что-нибудь продали.
+        //
+        // Здесь — потому что это экран, которым подписчик пользуется каждый
+        // день, и, значит, экран, где причина подписки читается: транзиты над
+        // ним движутся, а купленная однажды глава — нет. Исчезает в ту секунду,
+        // когда план появляется.
+        if (!session.isSubscriber) ...[
+          const SizedBox(height: AlmaMetrics.gapSection),
+          const _PlanInvitation(),
         ],
       ],
     );
@@ -161,12 +181,13 @@ class _TodayScreenState extends State<TodayScreen> {
 /// «Гороскоп на сегодня» — блок дня.
 ///
 /// **Только подписчикам, по решению владельца**: не первый абзац, не проба.
-/// Разовая покупка его тоже не открывает. Здесь пока показывается сама секция
-/// и области; дверь тарифа приедет вместе с экраном покупок.
+/// Разовая покупка его тоже не открывает — ни блюра, ни пустой карточки. Одна
+/// фраза о том, что это такое и где живёт, и дверь.
 class _DaySection extends StatelessWidget {
-  const _DaySection({required this.model});
+  const _DaySection({required this.model, required this.subscriber});
 
   final TodayModel model;
+  final bool subscriber;
 
   @override
   Widget build(BuildContext context) {
@@ -176,9 +197,20 @@ class _DaySection extends StatelessWidget {
       children: [
         SectionLabel(l.cabHoroscopeToday),
         const SizedBox(height: 14),
-        ..._voice(l),
-        const SizedBox(height: 4),
-        ..._areas(l),
+        if (subscriber) ...[
+          ..._voice(l),
+          const SizedBox(height: 4),
+          ..._areas(l),
+        ] else ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Text(l.cabHoroscopeLocked, style: AlmaType.body),
+          ),
+          AlmaActionRow(
+            label: l.cabHoroscopeOpen,
+            onTap: () => openOffer(context),
+          ),
+        ],
       ],
     );
   }
@@ -396,4 +428,48 @@ class _MoonPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _MoonPainter old) =>
       old.illumination != illumination || old.waxing != waxing;
+}
+
+/// Открыть витрину планов.
+///
+/// `rootNavigator`, потому что вкладка «Мои системы» держит свой стек, а
+/// витрина — страница поверх всего кабинета, включая бар: продажа не должна
+/// оказаться внутри одной вкладки.
+void openOffer(BuildContext context, {SystemSlug? system}) {
+  Navigator.of(context, rootNavigator: true).push(
+    CupertinoPageRoute(builder: (context) => OfferScreen(system: system)),
+  );
+}
+
+/// План, объяснённый там, где видно, зачем он.
+///
+/// Порт `PlanInvitation` из `TodayScreen.swift`: заголовок, что внутри, одна
+/// кнопка. Не карточка и не баннер — три строки на ночи, как всё остальное на
+/// этом экране.
+class _PlanInvitation extends StatelessWidget {
+  const _PlanInvitation();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l.cabPlansTitle, style: AlmaType.headingM),
+        const SizedBox(height: 8),
+        Text(l.cabPlansBody, style: AlmaType.meta),
+        const SizedBox(height: 16),
+        AlmaButton(
+          kind: AlmaButtonKind.outline,
+          fills: false,
+          label: l.cabPlansCta,
+          // Без системы: приглашение к плану открывает лестницу планами
+          // вперёд. На нативе здесь стоит `.offer(system: .natal)`, и это
+          // ставит первой ступенью натальную дверь — то есть отвечает на
+          // «покажи планы» ценой одной главы.
+          onTap: () => openOffer(context),
+        ),
+      ],
+    );
+  }
 }

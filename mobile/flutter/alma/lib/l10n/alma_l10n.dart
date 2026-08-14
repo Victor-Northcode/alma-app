@@ -3002,7 +3002,7 @@ abstract class L {
   /// from Paywall/paywall.monthlyNote
   ///
   /// In en, this message translates to:
-  /// **'Transits, the solar return and compatibility while they move, plus 40 questions a month. Renews until you cancel.'**
+  /// **'Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel.'**
   String get paywallMonthlyNote;
 
   /// from Paywall/paywall.monthlyTitle
@@ -3092,7 +3092,7 @@ abstract class L {
   /// from Paywall/paywall.pitchPlan3
   ///
   /// In en, this message translates to:
-  /// **'Forty questions a month to Alma, on the deeper voice.'**
+  /// **'Thirty questions a month to Alma, on the deeper voice.'**
   String get paywallPitchPlan3;
 
   /// from Paywall/paywall.privacy

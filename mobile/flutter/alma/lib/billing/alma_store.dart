@@ -1,0 +1,274 @@
+import 'dart:async';
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+
+import '../net/alma_client.dart';
+import '../state/session.dart';
+import 'ladder.dart';
+
+/// Всё, что этот продукт знает о магазине.
+///
+/// Порт `mobile/ios/Alma/Billing/AlmaStore.swift`. Спрашивает цены, открывает
+/// лист покупки, отдаёт подписанную покупку серверу, восстанавливает и слушает
+/// то, что приходит, когда никто не смотрит. Ни один экран не импортирует
+/// `in_app_purchase`, и ни один экран не решает, что человек чем-то владеет.
+///
+/// **Единственное правило, ради которого этот файл существует.** Покупка в
+/// руке — это не право. Она уходит на `/v1/billing/iap/verify`, сервер
+/// проверяет подпись магазина, и открывает главу **ответ сервера**. Всё, что
+/// клиент может решить, клиента можно заставить решить.
+///
+/// **Почему один на процесс.** Поток `purchaseStream` обязан быть прочитан всю
+/// жизнь приложения: одобрение «спросить у родителя», продление, возврат и
+/// покупка, сделанная на другом устройстве, приходят туда в моменты, никак не
+/// связанные с экранами. Второй слушатель забрал бы ту же покупку дважды.
+class AlmaStore extends ChangeNotifier {
+  AlmaStore._();
+
+  static final AlmaStore shared = AlmaStore._();
+
+  final InAppPurchase _iap = InAppPurchase.instance;
+  StreamSubscription<List<PurchaseDetails>>? _feed;
+  AlmaSession? _session;
+
+  /// Цены магазина по ступеням. Пусто — магазин ещё не ответил.
+  final Map<LadderKey, ProductDetails> _products = {};
+
+  StoreState _state = StoreState.idle;
+  LadderKey? _busy;
+  bool _restoring = false;
+  StoreNotice? _notice;
+
+  StoreState get state => _state;
+
+  /// Какая ступень сейчас покупается. Пока она есть, лестница не отвечает на
+  /// нажатия: два листа покупки подряд — это два списания.
+  LadderKey? get busy => _busy;
+  bool get restoring => _restoring;
+  StoreNotice? get notice => _notice;
+
+  /// Цена ступени строкой — **как её напечатал магазин**.
+  ///
+  /// Не серверная: доллары, показанные тому, кто платит в иенах, это число,
+  /// которого с него не возьмут, — и по правилам App Review, и по-человечески.
+  /// `null` значит «магазин молчит», и тогда цена не выдумывается.
+  String? price(LadderKey key) => _products[key]?.price;
+
+  /// Привязать сессию. Идемпотентно, чтобы каждый экран, который трогает
+  /// магазин, мог позвать это у себя, ни с кем не сговариваясь.
+  void attach(AlmaSession session) {
+    _session = session;
+    _feed ??= _iap.purchaseStream.listen(
+      _heard,
+      onDone: () => _feed = null,
+      onError: (Object error) =>
+          debugPrint('поток покупок оборвался: $error'),
+    );
+  }
+
+  /// Спросить магазин, что почём.
+  Future<void> load() async {
+    if (_state == StoreState.loading) return;
+    _state = StoreState.loading;
+    notifyListeners();
+
+    if (!await _iap.isAvailable()) {
+      _state = StoreState.silent;
+      notifyListeners();
+      return;
+    }
+
+    final wanted = {for (final key in LadderKey.values) key.storeProductId: key};
+    final answer = await _iap.queryProductDetails(wanted.keys.toSet());
+    _products.clear();
+    for (final product in answer.productDetails) {
+      final key = wanted[product.id];
+      if (key != null) _products[key] = product;
+    }
+    // Ни одного товара — это молчащий магазин, а не пустая полка: на
+    // симуляторе без конфигурации StoreKit ответ выглядит именно так, и
+    // рисовать лестницу без единой цены как «всё продано» было бы враньём.
+    _state = _products.isEmpty ? StoreState.silent : StoreState.ready;
+    notifyListeners();
+  }
+
+  /// Открыть лист покупки.
+  ///
+  /// Ничего не открывает сам: успех здесь означает только, что магазин принял
+  /// платёж. Право приходит из [_claim], то есть с сервера.
+  Future<void> buy(LadderKey key) async {
+    final product = _products[key];
+    // Ступень без товара — строка, которой не следовало быть нарисованной:
+    // лестница строится только по тому, на что магазин ответил. Отказ вместо
+    // падения — падать в секунду нажатия «купить» худшее из времён.
+    if (_busy != null || product == null) return;
+    _busy = key;
+    _notice = null;
+    notifyListeners();
+
+    final purchase = PurchaseParam(productDetails: product);
+    try {
+      // `buyNonConsumable` и для подписок: расходуемых товаров у продукта нет
+      // ни одного — ни главы, ни план не «тратятся».
+      await _iap.buyNonConsumable(purchaseParam: purchase);
+    } catch (error) {
+      debugPrint('покупка ${key.slug} не открылась: $error');
+      _busy = null;
+      _notice = StoreNotice(StoreTone.bad, StoreMessage.storeSilent);
+      notifyListeners();
+    }
+    // Дальше слово за `purchaseStream`: лист закрывается, и покупка приходит
+    // туда — успехом, отменой или ожиданием.
+  }
+
+  /// То, что App Store требует от каждого приложения, продающего разовые
+  /// покупки, и то, что действительно нужно человеку с новым телефоном.
+  Future<void> restore() async {
+    if (_restoring) return;
+    _restoring = true;
+    _notice = StoreNotice(StoreTone.waiting, StoreMessage.restoring);
+    notifyListeners();
+    try {
+      await _iap.restorePurchases();
+    } catch (error) {
+      debugPrint('восстановление не удалось: $error');
+      _notice = StoreNotice(StoreTone.bad, StoreMessage.storeSilent);
+    }
+    // Восстановленные покупки приезжают тем же потоком; здесь остаётся снять
+    // ожидание, чтобы кнопка не крутилась вечно, если магазин не прислал
+    // ничего — «ничего не нашлось» тоже ответ.
+    _restoring = false;
+    if (_notice?.message == StoreMessage.restoring) {
+      _notice = StoreNotice(StoreTone.waiting, StoreMessage.restoredNone);
+    }
+    notifyListeners();
+  }
+
+  void clearNotice() {
+    if (_notice == null) return;
+    _notice = null;
+    notifyListeners();
+  }
+
+  /* ── то, что приходит из магазина ─────────────────────────────────────── */
+
+  Future<void> _heard(List<PurchaseDetails> purchases) async {
+    for (final purchase in purchases) {
+      switch (purchase.status) {
+        case PurchaseStatus.pending:
+          // «Спросить у родителя» или способ оплаты, которому нужен шаг вне
+          // приложения. Ничего не списано и заканчивать нечего: покупка придёт
+          // сюда же, если и когда её одобрят.
+          _notice = StoreNotice(StoreTone.waiting, StoreMessage.pending);
+          notifyListeners();
+
+        case PurchaseStatus.canceled:
+          // Молчание, намеренно. Закрывший лист сказал «нет», и приложение,
+          // отвечающее на это сообщением, начинает спорить.
+          _busy = null;
+          notifyListeners();
+
+        case PurchaseStatus.error:
+          debugPrint('магазин отказал: ${purchase.error}');
+          _busy = null;
+          _notice = StoreNotice(StoreTone.bad, StoreMessage.storeSilent);
+          notifyListeners();
+
+        case PurchaseStatus.purchased:
+        case PurchaseStatus.restored:
+          await _claim(purchase);
+      }
+      // **Завершать обязательно и всегда.** Незавершённую покупку StoreKit
+      // будет переотдавать при каждом запуске, а Google через три дня вернёт
+      // за неё деньги. Это делается после ответа сервера — если сервер не
+      // ответил, покупка придёт снова, и это правильно.
+      if (purchase.pendingCompletePurchase) {
+        await _iap.completePurchase(purchase);
+      }
+    }
+  }
+
+  /// Отдать покупку серверу и перечитать права.
+  Future<void> _claim(PurchaseDetails purchase) async {
+    final session = _session;
+    final key = LadderKey.fromStoreProductId(purchase.productID);
+    if (session == null || key == null) {
+      debugPrint('покупка с неизвестным товаром: ${purchase.productID}');
+      _busy = null;
+      notifyListeners();
+      return;
+    }
+    try {
+      await session.client.verifyPurchase(
+        platform: Platform.isIOS ? 'appstore' : 'playstore',
+        // Слаг каталога — из подписанного магазином идентификатора, а не из
+        // нажатой кнопки.
+        product: key.slug,
+        transaction: purchase.verificationData.serverVerificationData,
+      );
+      await session.refreshRights();
+      _notice = StoreNotice(
+        StoreTone.good,
+        purchase.status == PurchaseStatus.restored
+            ? StoreMessage.restored
+            : StoreMessage.unlocked,
+      );
+    } on AlmaError catch (error) {
+      // Деньги магазин уже взял. Разница между «мы не смогли спросить» и «это
+      // не та покупка» существенна для того, кто читает: первое пройдёт само,
+      // второе — нет.
+      debugPrint('сервер не подтвердил покупку: $error');
+      _notice = StoreNotice(
+        StoreTone.bad,
+        error is NetworkDown
+            ? StoreMessage.offline
+            : StoreMessage.notVerified,
+      );
+    }
+    _busy = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _feed?.cancel();
+    super.dispose();
+  }
+}
+
+/// Что сейчас с полкой.
+enum StoreState {
+  idle,
+  loading,
+
+  /// Магазин ответил, цены есть.
+  ready,
+
+  /// Магазин не отвечает: цен нет и купить нельзя, но полка всё равно
+  /// показывается — что на ней лежит, известно и без App Store.
+  silent,
+}
+
+enum StoreTone { good, waiting, bad }
+
+/// Что сказать человеку. Перечислением, а не строкой: строку берёт экран, у
+/// которого есть язык, — здесь его нет и быть не должно.
+enum StoreMessage {
+  storeSilent,
+  pending,
+  offline,
+  notVerified,
+  unlocked,
+  restoring,
+  restored,
+  restoredNone,
+}
+
+class StoreNotice {
+  const StoreNotice(this.tone, this.message);
+
+  final StoreTone tone;
+  final StoreMessage message;
+}

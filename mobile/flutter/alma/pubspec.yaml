@@ -39,6 +39,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   fixnum: ^1.1.1
   http: ^1.6.0
+  # Магазин. Один пакет на обе платформы: StoreKit на iOS, Play Billing на
+  # Android — ровно то, что на нативе делают AlmaStore.swift и BillingClient.
+  in_app_purchase: ^3.2.4
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
 

@@ -1610,7 +1610,7 @@ class LFr extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Transits, révolution solaire et compatibilité au fil de leur course, plus 40 questions par mois. Se renouvelle jusqu\'à résiliation.';
+      'Transits, révolution solaire et compatibilité au fil de leur course, plus 30 questions par mois. Se renouvelle jusqu\'à résiliation.';
 
   @override
   String get paywallMonthlyTitle => 'Tout ce qui bouge, chaque mois';
@@ -1667,7 +1667,7 @@ class LFr extends L {
 
   @override
   String get paywallPitchPlan3 =>
-      'Quarante questions par mois à Alma, avec la voix la plus profonde.';
+      'Trente questions par mois à Alma, avec la voix la plus profonde.';
 
   @override
   String get paywallPrivacy => 'Politique de confidentialité';

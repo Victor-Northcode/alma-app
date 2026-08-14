@@ -1606,7 +1606,7 @@ class LIt extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Transiti, rivoluzione solare e affinità mentre si muovono, più 40 domande al mese. Si rinnova finché non disdici.';
+      'Transiti, rivoluzione solare e affinità mentre si muovono, più 30 domande al mese. Si rinnova finché non disdici.';
 
   @override
   String get paywallMonthlyTitle => 'Tutto ciò che si muove, ogni mese';
@@ -1663,7 +1663,7 @@ class LIt extends L {
 
   @override
   String get paywallPitchPlan3 =>
-      'Quaranta domande al mese ad Alma, con la voce più profonda.';
+      'Trenta domande al mese ad Alma, con la voce più profonda.';
 
   @override
   String get paywallPrivacy => 'Informativa privacy';

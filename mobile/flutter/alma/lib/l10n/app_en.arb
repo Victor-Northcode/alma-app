@@ -2151,7 +2151,7 @@
   "@paywallManageNote": {
     "description": "from Paywall/paywall.manageNote"
   },
-  "paywallMonthlyNote": "Transits, the solar return and compatibility while they move, plus 40 questions a month. Renews until you cancel.",
+  "paywallMonthlyNote": "Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel.",
   "@paywallMonthlyNote": {
     "description": "from Paywall/paywall.monthlyNote"
   },
@@ -2219,7 +2219,7 @@
   "@paywallPitchPlan2": {
     "description": "from Paywall/paywall.pitchPlan2"
   },
-  "paywallPitchPlan3": "Forty questions a month to Alma, on the deeper voice.",
+  "paywallPitchPlan3": "Thirty questions a month to Alma, on the deeper voice.",
   "@paywallPitchPlan3": {
     "description": "from Paywall/paywall.pitchPlan3"
   },

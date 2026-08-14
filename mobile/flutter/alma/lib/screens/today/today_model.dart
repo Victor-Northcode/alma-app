@@ -49,16 +49,23 @@ class TodayModel extends ChangeNotifier {
     return moon is Map ? moon.cast<String, dynamic>() : null;
   }
 
-  Future<void> load({required String locale}) async {
+  /// Небо считается всем, письмо дня — только тому, кому его покажут.
+  ///
+  /// **Расчёт бесплатен навсегда, платны слова.** Небо нужно и без подписки:
+  /// из него медальон луны и фаза в шапке. А вот главу дня незачем даже
+  /// просить у сервера, если экран её не покажет: это деньги за генерацию,
+  /// потраченные в пустоту, и — на бесплатном тарифе — месячный потолок,
+  /// сгорающий на тексте, которого никто не прочтёт.
+  Future<void> load({required String locale, required bool subscriber}) async {
     sky = const LoadRunning();
-    line = const LoadRunning();
+    line = subscriber ? const LoadRunning() : const LoadIdle();
     notifyListeners();
 
     // Одновременно, как на iOS: гороскоп — это транзиты плюс письмо дня, и
     // ждать их по очереди значит удвоить время до первого слова на экране.
     await Future.wait([
       _loadSky(),
-      _loadLine(locale),
+      if (subscriber) _loadLine(locale),
     ]);
   }
 

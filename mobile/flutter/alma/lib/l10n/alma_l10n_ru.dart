@@ -1601,7 +1601,7 @@ class LRu extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Транзиты, соляр и совместимость, пока они движутся, плюс 40 вопросов в месяц. Продлевается, пока не отменишь.';
+      'Транзиты, соляр и совместимость, пока они движутся, плюс 25 вопросов в месяц. Продлевается, пока не отменишь.';
 
   @override
   String get paywallMonthlyTitle => 'Вся Alma — на месяц';
@@ -1657,7 +1657,7 @@ class LRu extends L {
 
   @override
   String get paywallPitchPlan3 =>
-      'Сорок вопросов к Alma в месяц — отвечает её глубокий голос.';
+      'Двадцать пять вопросов к Alma в месяц — отвечает её глубокий голос.';
 
   @override
   String get paywallPrivacy => 'Политика конфиденциальности';

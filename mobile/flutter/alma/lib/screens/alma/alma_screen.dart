@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
@@ -9,6 +10,7 @@ import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
+import '../today/today_screen.dart' show openOffer;
 
 /// Беседа с Alma.
 ///
@@ -38,6 +40,11 @@ class _AlmaScreenState extends State<AlmaScreen> {
   List<String> _openers = const [];
   String? _threadId;
   bool _sending = false;
+
+  /// Сколько вопросов осталось. `null` — сервер ещё не говорил, и до первого
+  /// ответа лимит не показывается: пустой счётчик над полем — это счётчик,
+  /// который врёт.
+  int? _left;
   bool _openersLoaded = false;
   bool _threadLoaded = false;
 
@@ -151,6 +158,7 @@ class _AlmaScreenState extends State<AlmaScreen> {
       if (!mounted) return;
       setState(() {
         _threadId = reply.threadId ?? _threadId;
+        _left = reply.questionsLeft ?? _left;
         _turns.add(_Turn(
           mine: false,
           body: reply.paragraphs.join('\n\n'),
@@ -232,7 +240,7 @@ class _AlmaScreenState extends State<AlmaScreen> {
                   ? _opening(l, session)
                   : _transcript(l),
             ),
-            _composer(l),
+            _limitWall(l, session) ?? _composer(l),
           ]),
         ),
       ),
@@ -358,6 +366,33 @@ class _AlmaScreenState extends State<AlmaScreen> {
     );
   }
 
+  /// Стена вместо поля, когда вопросы кончились.
+  ///
+  /// **Стена видна в ту секунду, когда потрачен последний вопрос.** Поле
+  /// оставалось открытым на нуле, и отказ приходил только на следующее
+  /// нажатие — владелец задал три вопроса и решил, что лимита нет вовсе.
+  /// Композер, принимающий текст, который он откажется отправить, — это ложь
+  /// вёрсткой; на нуле блок **и есть** стена, и стена продаёт план.
+  ///
+  /// `null` значит «стены нет» — тогда рисуется поле.
+  Widget? _limitWall(L l, AlmaSession session) {
+    if (_left != 0 || session.isSubscriber) return null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 12, AlmaMetrics.pad, 10),
+      child: Column(children: [
+        Text(l.scrChatOutOfQuestions,
+            textAlign: TextAlign.center, style: AlmaType.meta),
+        const SizedBox(height: 12),
+        AlmaButton(
+          kind: AlmaButtonKind.outline,
+          fills: false,
+          label: l.cabPlansCta,
+          onTap: () => openOffer(context),
+        ),
+      ]),
+    );
+  }
+
   Widget _composer(L l) {
     return Container(
       padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 12, AlmaMetrics.pad, 10),
@@ -366,7 +401,15 @@ class _AlmaScreenState extends State<AlmaScreen> {
       // Волосяная линия сверху отрезала его от ленты, и поле читалось как блок
       // на подставке — «должен быть в невесомости». Разделителя нет: беседа
       // просто уходит под поле, а само поле держится на своей обводке.
-      child: Row(children: [
+      child: Column(children: [
+        // Счётчик появляется на последних трёх и молчит всё остальное время:
+        // цифра над каждым вопросом превращает разговор в счётчик такси.
+        if (_left != null && _left! >= 1 && _left! <= 3)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Text(l.cabQuestionsLeft(_left!), style: AlmaType.meta),
+          ),
+        Row(children: [
         Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -409,6 +452,7 @@ class _AlmaScreenState extends State<AlmaScreen> {
             ),
           ),
         ),
+        ]),
       ]),
     );
   }

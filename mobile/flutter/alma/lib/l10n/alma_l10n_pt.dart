@@ -1603,7 +1603,7 @@ class LPt extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Trânsitos, revolução solar e compatibilidade conforme se movem, mais 40 perguntas por mês. Renova até você cancelar.';
+      'Trânsitos, revolução solar e compatibilidade conforme se movem, mais 30 perguntas por mês. Renova até você cancelar.';
 
   @override
   String get paywallMonthlyTitle => 'Tudo que se move, todo mês';
@@ -1660,7 +1660,7 @@ class LPt extends L {
 
   @override
   String get paywallPitchPlan3 =>
-      'Quarenta perguntas por mês à Alma, com a voz mais profunda.';
+      'Trinta perguntas por mês à Alma, com a voz mais profunda.';
 
   @override
   String get paywallPrivacy => 'Política de Privacidade';

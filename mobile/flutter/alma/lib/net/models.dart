@@ -681,6 +681,49 @@ class ChatTurn {
 }
 
 
+/// Что аккаунт уже держит.
+///
+/// Порт `Entitlements` с iOS. Два вопроса витрины — «есть ли живой план» и
+/// «куплен ли архив» — отвечаются по строкам прав, а не по `unlocked`, и
+/// разница существенная: `unlocked` это плоский список систем, потому что
+/// сервер разворачивает право «всё» в восемь, а не шлёт звёздочку. «Владеет
+/// восемью системами» правда и про того, кто купил архив, и про того, кто
+/// купил пять дверей и снимает три живых. Спрятать архив от второго — спрятать
+/// то, что он вот-вот захочет.
+class Entitlements {
+  const Entitlements({required this.unlocked, required this.rows});
+
+  const Entitlements.none() : unlocked = const [], rows = const [];
+
+  /// Слаги систем, открытых прямо сейчас.
+  final List<String> unlocked;
+
+  /// Сами права: `active`, `kind` (`one_time` | `weekly` | `monthly` |
+  /// `annual`) и `scope` (`system` | `all` | `live`).
+  final List<Map<String, dynamic>> rows;
+
+  bool get hasPlan => rows.any((row) =>
+      row['active'] == true &&
+      const ['weekly', 'monthly', 'annual'].contains(row['kind']));
+
+  bool get ownsArchive => rows.any((row) =>
+      row['active'] == true &&
+      row['scope'] == 'all' &&
+      row['kind'] == 'one_time');
+
+  bool opened(SystemSlug system) => unlocked.contains(system.slug);
+
+  factory Entitlements.fromJson(Map<String, dynamic> json) => Entitlements(
+        unlocked: ((json['unlocked'] as List?) ?? const [])
+            .map((s) => s.toString())
+            .toList(),
+        rows: ((json['entitlements'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((row) => row.cast<String, dynamic>())
+            .toList(),
+      );
+}
+
 /// Строка полки: чем это называется, сколько стоит и что открывает.
 class Plan {
   const Plan({

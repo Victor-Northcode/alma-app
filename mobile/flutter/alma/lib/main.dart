@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
+import 'billing/alma_store.dart';
 import 'design/metrics.dart';
 import 'design/palette.dart';
 import 'design/tab_bar.dart';
@@ -48,6 +49,15 @@ class _AlmaAppState extends State<AlmaApp> {
   void initState() {
     super.initState();
     _session.start();
+    // **Слушать магазин всю жизнь приложения.**
+    //
+    // Одобренная «спросить у родителя» покупка, продление, возврат и покупка,
+    // сделанная на другом устройстве, приходят в поток покупок в моменты, не
+    // связанные ни с одним экраном. Пока это делалось только на витрине, всё
+    // доставленное магазином асинхронно не доходило до нас, пока кто-нибудь не
+    // откроет витрину; на нативе строчка стоит там же — в `RootView`, под
+    // `.tint`, по той же причине.
+    AlmaStore.shared.attach(_session);
   }
 
   @override

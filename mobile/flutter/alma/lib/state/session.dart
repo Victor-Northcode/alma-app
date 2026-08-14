@@ -21,10 +21,12 @@ class AlmaSession extends ChangeNotifier {
   AlmaAccount? _account;
   Profile? _profile;
 
-  /// Есть ли живая подписка. Нужно ровно для того, чтобы не звать покупать
-  /// того, кто уже заплатил: приглашение подписчику — это не продажа, а
-  /// неловкость.
-  bool _subscriber = false;
+  /// Что аккаунт держит: открытые системы и сами права.
+  ///
+  /// Нужно ровно для того, чтобы не звать покупать того, кто уже заплатил —
+  /// приглашение подписчику это не продажа, а неловкость, — и чтобы лестница
+  /// не показывала ступень, которая ничего не добавит.
+  Entitlements _rights = const Entitlements.none();
   List<Profile> _people = const [];
   Hub? _hub;
   bool _ready = false;
@@ -32,7 +34,8 @@ class AlmaSession extends ChangeNotifier {
 
   AlmaAccount? get account => _account;
   Profile? get profile => _profile;
-  bool get isSubscriber => _subscriber;
+  Entitlements get entitlements => _rights;
+  bool get isSubscriber => _rights.hasPlan;
   List<Profile> get people => _people;
   Hub? get hub => _hub;
   bool get ready => _ready;
@@ -65,22 +68,29 @@ class AlmaSession extends ChangeNotifier {
       _hub = _profile == null ? null : await client.hub();
       // Права — отдельным тихим запросом: витрина не должна падать оттого,
       // что кошелёк не ответил.
-      try {
-        final rights = await client.entitlements();
-        final rows = (rights['entitlements'] as List?) ?? const [];
-        _subscriber = rows.any((row) =>
-            row is Map &&
-            row['active'] == true &&
-            const ['weekly', 'monthly', 'annual'].contains(row['kind']));
-      } on AlmaError {
-        _subscriber = false;
-      }
+      await refreshRights();
       _ready = true;
     } on AlmaError catch (error) {
       _failure = error;
       _ready = true;
     }
     notifyListeners();
+  }
+
+  /// Перечитать права.
+  ///
+  /// Отдельным методом, потому что после покупки это первое, что обязано
+  /// произойти: сервер записал право, и до тех пор, пока клиент его не
+  /// перечитал, купленная глава остаётся закрытой на экране у того, кто за неё
+  /// заплатил. Молча при отказе — витрина не должна падать оттого, что кошелёк
+  /// не ответил, а старые права всё ещё вернее пустых.
+  Future<void> refreshRights() async {
+    try {
+      _rights = Entitlements.fromJson(await client.entitlements());
+      notifyListeners();
+    } on AlmaError {
+      // Молча: что было известно, то и остаётся известным.
+    }
   }
 
   /// **Устройство побеждает.** Порт `adoptLocaleFromDevice` с iOS: язык — это

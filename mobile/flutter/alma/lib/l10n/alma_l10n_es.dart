@@ -1601,7 +1601,7 @@ class LEs extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Tránsitos, revolución solar y compatibilidad mientras se mueven, más 40 preguntas al mes. Se renueva hasta que lo canceles.';
+      'Tránsitos, revolución solar y compatibilidad mientras se mueven, más 30 preguntas al mes. Se renueva hasta que lo canceles.';
 
   @override
   String get paywallMonthlyTitle => 'Todo lo que se mueve, cada mes';
@@ -1658,7 +1658,7 @@ class LEs extends L {
 
   @override
   String get paywallPitchPlan3 =>
-      'Cuarenta preguntas al mes a Alma, con la voz más profunda.';
+      'Treinta preguntas al mes a Alma, con la voz más profunda.';
 
   @override
   String get paywallPrivacy => 'Política de privacidad';

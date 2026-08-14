@@ -774,43 +774,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transite, Solarhoroskop und Partnerschaft, solange sie ziehen, dazu 40 Fragen im Monat. Verlängert sich, bis du kündigst."
+            "value": "Transite, Solarhoroskop und Partnerschaft, solange sie ziehen, dazu 30 Fragen im Monat. Verlängert sich, bis du kündigst."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transits, the solar return and compatibility while they move, plus 40 questions a month. Renews until you cancel."
+            "value": "Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tránsitos, revolución solar y compatibilidad mientras se mueven, más 40 preguntas al mes. Se renueva hasta que lo canceles."
+            "value": "Tránsitos, revolución solar y compatibilidad mientras se mueven, más 30 preguntas al mes. Se renueva hasta que lo canceles."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transits, révolution solaire et compatibilité au fil de leur course, plus 40 questions par mois. Se renouvelle jusqu'à résiliation."
+            "value": "Transits, révolution solaire et compatibilité au fil de leur course, plus 30 questions par mois. Se renouvelle jusqu'à résiliation."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Transiti, rivoluzione solare e affinità mentre si muovono, più 40 domande al mese. Si rinnova finché non disdici."
+            "value": "Transiti, rivoluzione solare e affinità mentre si muovono, più 30 domande al mese. Si rinnova finché non disdici."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trânsitos, revolução solar e compatibilidade conforme se movem, mais 40 perguntas por mês. Renova até você cancelar."
+            "value": "Trânsitos, revolução solar e compatibilidade conforme se movem, mais 30 perguntas por mês. Renova até você cancelar."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Транзиты, соляр и совместимость, пока они движутся, плюс 40 вопросов в месяц. Продлевается, пока не отменишь."
+            "value": "Транзиты, соляр и совместимость, пока они движутся, плюс 25 вопросов в месяц. Продлевается, пока не отменишь."
           }
         }
       }
@@ -1487,43 +1487,43 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vierzig Fragen im Monat an Alma, mit der tieferen Stimme."
+            "value": "Dreißig Fragen im Monat an Alma, mit der tieferen Stimme."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Forty questions a month to Alma, on the deeper voice."
+            "value": "Thirty questions a month to Alma, on the deeper voice."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuarenta preguntas al mes a Alma, con la voz más profunda."
+            "value": "Treinta preguntas al mes a Alma, con la voz más profunda."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quarante questions par mois à Alma, avec la voix la plus profonde."
+            "value": "Trente questions par mois à Alma, avec la voix la plus profonde."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quaranta domande al mese ad Alma, con la voce più profonda."
+            "value": "Trenta domande al mese ad Alma, con la voce più profonda."
           }
         },
         "pt-BR": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quarenta perguntas por mês à Alma, com a voz mais profunda."
+            "value": "Trinta perguntas por mês à Alma, com a voz mais profunda."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Сорок вопросов к Alma в месяц — отвечает её глубокий голос."
+            "value": "Двадцать пять вопросов к Alma в месяц — отвечает её глубокий голос."
           }
         }
       }

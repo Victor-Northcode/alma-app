@@ -1598,7 +1598,7 @@ class LEn extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Transits, the solar return and compatibility while they move, plus 40 questions a month. Renews until you cancel.';
+      'Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel.';
 
   @override
   String get paywallMonthlyTitle => 'Everything live, monthly';
@@ -1656,7 +1656,7 @@ class LEn extends L {
 
   @override
   String get paywallPitchPlan3 =>
-      'Forty questions a month to Alma, on the deeper voice.';
+      'Thirty questions a month to Alma, on the deeper voice.';
 
   @override
   String get paywallPrivacy => 'Privacy Policy';

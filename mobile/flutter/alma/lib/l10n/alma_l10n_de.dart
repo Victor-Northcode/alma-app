@@ -1610,7 +1610,7 @@ class LDe extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Transite, Solarhoroskop und Partnerschaft, solange sie ziehen, dazu 40 Fragen im Monat. Verlängert sich, bis du kündigst.';
+      'Transite, Solarhoroskop und Partnerschaft, solange sie ziehen, dazu 30 Fragen im Monat. Verlängert sich, bis du kündigst.';
 
   @override
   String get paywallMonthlyTitle => 'Alles Lebendige, monatlich';
@@ -1668,7 +1668,7 @@ class LDe extends L {
 
   @override
   String get paywallPitchPlan3 =>
-      'Vierzig Fragen im Monat an Alma, mit der tieferen Stimme.';
+      'Dreißig Fragen im Monat an Alma, mit der tieferen Stimme.';
 
   @override
   String get paywallPrivacy => 'Datenschutzerklärung';

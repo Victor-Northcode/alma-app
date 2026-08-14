@@ -1,14 +1,17 @@
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
+import '../offer_screen.dart';
 import 'writing_art.dart';
 import '../../state/session.dart';
 
@@ -406,7 +409,12 @@ class _ChapterScreenState extends State<ChapterScreen> {
                 textAlign: TextAlign.center,
                 style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
             const SizedBox(height: 14),
-            Center(child: _GoldButton(label: l.cabUnlock, onTap: () {})),
+            Center(
+              child: _GoldButton(
+                label: l.cabUnlock,
+                onTap: () => _openOffer(context, widget.system),
+              ),
+            ),
           ],
           if (reading.advice != null) ...[
             const SizedBox(height: 26),
@@ -422,10 +430,43 @@ class _ChapterScreenState extends State<ChapterScreen> {
               ),
             ),
           ],
+          if (!_preview) _chapterEndOffer(l),
           const SizedBox(height: 34),
           // Хвост: следующая глава и полоса подтверждения. Полоса наливается
           // от 56 до 130 — сколько ещё тянуть, видно, а не угадывается.
           if (next != null) _tail(l, next),
+        ],
+      ),
+    );
+  }
+
+  /// Одна тихая строка в конце дочитанной главы — в ту минуту, когда письмо
+  /// только что доказало себя, а это и есть определение верного момента.
+  ///
+  /// Порт `chapterEndOffer`. Статично, под текстом; ни всплывающего окна, ни
+  /// прерывания на середине. Дверь — для системы, которую этот аккаунт не
+  /// покупал; план — для той, которую покупал: купленная глава пишется один
+  /// раз, а движется живой слой. Подписчик не видит ни того, ни другого.
+  Widget _chapterEndOffer(L l) {
+    final session = SessionScope.of(context);
+    if (session.isSubscriber) return const SizedBox.shrink();
+    final opened = session.entitlements.opened(widget.system);
+    return Padding(
+      padding: const EdgeInsets.only(top: AlmaMetrics.gapLarge),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(opened ? l.cabChapterEndPlan : l.cabChapterEndDoor,
+              style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
+          const SizedBox(height: 12),
+          AlmaButton(
+            kind: AlmaButtonKind.outline,
+            fills: false,
+            label: opened
+                ? l.cabPlansCta
+                : l.cabOpenSystemNamed(_systemName(l)),
+            onTap: () => _openOffer(context, opened ? null : widget.system),
+          ),
         ],
       ),
     );
@@ -548,7 +589,10 @@ class _LockedWall extends StatelessWidget {
             Text(l.cabLockedNote,
                 textAlign: TextAlign.center, style: AlmaType.meta),
             const SizedBox(height: 24),
-            _GoldButton(label: l.cabUnlock, onTap: () {}),
+            _GoldButton(
+              label: l.cabUnlock,
+              onTap: () => _openOffer(context, system),
+            ),
           ],
         ),
       ),
@@ -556,9 +600,18 @@ class _LockedWall extends StatelessWidget {
   }
 }
 
-/// Золотая дверь. Пока она никуда не ведёт: покупок в порте ещё нет, и
-/// рисовать её действующей значило бы врать. Кнопка стоит там, где ей быть,
-/// и ждёт `StoreKit`.
+/// Открыть витрину этой системы.
+///
+/// Отдельным маршрутом поверх всего, а не листом внутри вкладки: витрина —
+/// это страница, на которую уходят и с которой возвращаются туда же, откуда
+/// пришли, и глава под ней остаётся на своей странице.
+void _openOffer(BuildContext context, SystemSlug? system) {
+  Navigator.of(context, rootNavigator: true).push(
+    CupertinoPageRoute(builder: (context) => OfferScreen(system: system)),
+  );
+}
+
+/// Золотая дверь.
 class _GoldButton extends StatelessWidget {
   const _GoldButton({required this.label, required this.onTap});
 
