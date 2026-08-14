@@ -1,8 +1,13 @@
+import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../design/buttons.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
@@ -33,6 +38,84 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _plan;
   bool _started = false;
 
+  /// Где сейчас выгрузка данных: ничего / собираю / готово / не собралась.
+  _Export _export = _Export.idle;
+
+  /// Где сейчас удаление аккаунта. Двухшаговое намеренно: маршрут уничтожает
+  /// оплаченные чтения, которые нельзя переписать слово в слово.
+  _Delete _delete = _Delete.idle;
+  final _confirm = TextEditingController();
+
+  @override
+  void dispose() {
+    _confirm.dispose();
+    super.dispose();
+  }
+
+  /// Чем этот аккаунт подтверждает себя: почтой у вошедшего, собственным
+  /// идентификатором у гостя.
+  ///
+  /// **Гость удаляет тоже, и это тот экран, где это важнее всего.** Alma
+  /// заводит серверный аккаунт на первом же запросе и кладёт в него дату,
+  /// время и координату рождения раньше, чем человек увидел экран входа. Гость
+  /// — не крайний случай, а состояние, в котором начинается каждая установка,
+  /// и состояние, в котором лежат самые чувствительные данные из всех, что у
+  /// нас есть. Требовать адрес почты как плату за удаление уже взятого — ровно
+  /// то, что запрещает Guideline 5.1.1(v), и с чем рецензент встречается лично,
+  /// потому что он тоже гость.
+  String? _confirmationOf(AlmaSession session) =>
+      session.account?.email ?? session.account?.id;
+
+  bool _typedMatches(String? confirmation) {
+    if (confirmation == null || confirmation.isEmpty) return false;
+    final typed = _confirm.text.trim();
+    // Адрес — без учёта регистра; идентификатор аккаунта — точно, потому что
+    // он сгенерирован, а не набран по памяти, и сложенный регистр принял бы
+    // почти-совпадение.
+    return confirmation.contains('@')
+        ? typed.toLowerCase() == confirmation.toLowerCase()
+        : typed == confirmation;
+  }
+
+  Future<void> _exportEverything() async {
+    setState(() => _export = _Export.working);
+    try {
+      final document = await SessionScope.of(context).client.exportAccount();
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/alma-export.json');
+      // С отступами и отсортированными ключами: файл существует, чтобы его
+      // **читали** — тот, кто его попросил, и тот, кому он его покажет.
+      await file.writeAsString(
+          const JsonEncoder.withIndent('  ').convert(document));
+      if (mounted) setState(() => _export = _Export.ready(file.path));
+    } catch (_) {
+      if (mounted) setState(() => _export = _Export.failed);
+    }
+  }
+
+  Future<void> _confirmDelete(AlmaSession session) async {
+    final confirmation = _confirmationOf(session);
+    if (!_typedMatches(confirmation)) {
+      setState(() => _delete = _Delete.mismatch);
+      return;
+    }
+    setState(() => _delete = _Delete.working);
+    try {
+      await session.client.deleteAccount(confirmation!);
+      if (!mounted) return;
+      setState(() => _delete = _Delete.done);
+      // **Дважды.** После удаления сохранённый токен указывает на строку,
+      // которой больше нет; клиент чистит хранилище, когда видит 410 на
+      // следующем запросе. Первый старт падает и чистит, второй не находит
+      // токена и оставляет приложение без аккаунта — правильный конец для
+      // того, кто только что попросил себя стереть.
+      await session.start(force: true);
+      await session.start(force: true);
+    } on AlmaError {
+      if (mounted) setState(() => _delete = _Delete.failed);
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -47,6 +130,125 @@ class _SettingsScreenState extends State<SettingsScreen> {
       }).catchError((Object _) {});
     }
   }
+
+
+  /// Что стоит под строкой выгрузки.
+  List<Widget> _exportState(L l) => switch (_export) {
+        _ExportIdle() => [_note(l.cabExportNote)],
+        _ExportWorking() => [_note(l.cabPlanExporting)],
+        _ExportFailed() => [_note(l.cabPlanExportFailed)],
+        final _ExportReady ready => [
+            _note(l.cabExportReady),
+            Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 6),
+              child: AlmaButton(
+                kind: AlmaButtonKind.outline,
+                fills: false,
+                label: l.cabSaveFile,
+                // Файл уже существует к этому моменту — поэтому лист
+                // «поделиться» открывается мгновенно, а не ждёт сети. Лист,
+                // которому надо дождаться запроса, открывается пустым.
+                onTap: () => Share.shareXFiles([XFile(ready.path)]),
+              ),
+            ),
+          ],
+      };
+
+  /// Что стоит под строкой удаления. Подтверждение набором — не «вы уверены?»:
+  /// одно нажатие мимо не должно уничтожать оплаченные чтения.
+  List<Widget> _deleteState(L l, AlmaSession session) {
+    final confirmation = _confirmationOf(session);
+    final guest = confirmation != null && !confirmation.contains('@');
+    switch (_delete) {
+      case _Delete.idle:
+        return const [];
+      case _Delete.working:
+        return [_note(l.stateLoadingShort)];
+      case _Delete.failed:
+        return [_note(l.cabPlanDeleteFailed)];
+      case _Delete.done:
+        return [_note(l.stateAccountDeleted)];
+      case _Delete.confirming:
+      case _Delete.mismatch:
+        return [
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.cabPlanDeleteWarning, style: AlmaType.meta),
+                const SizedBox(height: 14),
+                Text(
+                  guest
+                      ? l.cabSettingsDeleteGuestNote
+                      : l.cabSettingsDeleteConfirm,
+                  style: AlmaType.meta,
+                ),
+                if (guest) ...[
+                  const SizedBox(height: 6),
+                  SelectableText(confirmation,
+                      style: AlmaType.numeral.copyWith(
+                          color: AlmaPalette.gold, fontSize: 15)),
+                ],
+                const SizedBox(height: 10),
+                Container(
+                  height: 52,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  alignment: Alignment.centerLeft,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AlmaPalette.hairline),
+                    borderRadius: BorderRadius.circular(26),
+                  ),
+                  child: TextField(
+                    controller: _confirm,
+                    autocorrect: false,
+                    enableSuggestions: false,
+                    style: AlmaType.body.copyWith(fontSize: 16),
+                    decoration: const InputDecoration(border: InputBorder.none),
+                    onChanged: (_) => setState(() {}),
+                  ),
+                ),
+                if (_delete == _Delete.mismatch) ...[
+                  const SizedBox(height: 8),
+                  Text(l.cabPlanDeleteMismatch,
+                      style: AlmaType.meta
+                          .copyWith(color: AlmaPalette.disagree)),
+                ],
+                const SizedBox(height: 14),
+                Row(children: [
+                  AlmaButton(
+                    kind: AlmaButtonKind.danger,
+                    fills: false,
+                    label: l.cabPlanDeleteForever,
+                    // Кнопка гаснет, пока набранное не совпало: отказ после
+                    // нажатия — это отказ, которого можно было не допускать.
+                    onTap: _typedMatches(confirmation)
+                        ? () => _confirmDelete(session)
+                        : null,
+                  ),
+                  const SizedBox(width: 12),
+                  AlmaButton(
+                    kind: AlmaButtonKind.veil,
+                    fills: false,
+                    label: l.cabinetBack,
+                    onTap: () => setState(() {
+                      _confirm.clear();
+                      _delete = _Delete.idle;
+                    }),
+                  ),
+                ]),
+                const SizedBox(height: 6),
+              ],
+            ),
+          ),
+        ];
+    }
+  }
+
+  Widget _note(String text) => Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(text, style: AlmaType.meta),
+      );
 
   /// Выбор уходит на сервер, экран верит себе сразу — та же оптимистика, что у
   /// языка на iOS.
@@ -129,6 +331,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ]),
         ..._planSection(l),
         _Section(label: l.cabDataAndLegal, children: [
+          // **Выгрузка и удаление — то, чего в порте не было вовсе.**
+          //
+          // Оба магазина требуют способ забрать свои данные и удалить аккаунт
+          // изнутри приложения; у Play это ещё и поле формы, которое
+          // проверяется. На нативе они здесь же и в этом же порядке.
+          _Row(
+            label: l.cabSettingsExportData,
+            value: '',
+            arrow: true,
+            onTap: _export == _Export.working ? null : _exportEverything,
+          ),
+          ..._exportState(l),
+          _Row(
+            label: l.cabSettingsDeleteAccount,
+            value: '',
+            arrow: true,
+            danger: true,
+            onTap: () => setState(() {
+              _confirm.clear();
+              _delete = _Delete.confirming;
+            }),
+          ),
+          ..._deleteState(l, session),
           // **Документы открываются внутри приложения.**
           //
           // Здесь стоял `launchUrl` на `$_site/…`, то есть на `alma.pazl.ai`,
@@ -286,6 +511,7 @@ class _Row extends StatelessWidget {
     this.caption,
     this.checked = false,
     this.arrow = false,
+    this.danger = false,
     this.onTap,
   });
 
@@ -294,6 +520,10 @@ class _Row extends StatelessWidget {
   final String? caption;
   final bool checked;
   final bool arrow;
+
+  /// Удаление аккаунта. Цветом несогласия и без заливки: залитую красную
+  /// кнопку нажимают рефлексом.
+  final bool danger;
   final VoidCallback? onTap;
 
   @override
@@ -319,9 +549,13 @@ class _Row extends StatelessWidget {
           flex: 4,
           child: Text(
             label,
-            style: checked || onTap != null && value.isEmpty
-                ? AlmaType.body.copyWith(color: AlmaPalette.inkLight, fontSize: 17)
-                : AlmaType.meta.copyWith(fontSize: 15),
+            style: danger
+                ? AlmaType.body
+                    .copyWith(color: AlmaPalette.disagree, fontSize: 17)
+                : checked || onTap != null && value.isEmpty
+                    ? AlmaType.body
+                        .copyWith(color: AlmaPalette.inkLight, fontSize: 17)
+                    : AlmaType.meta.copyWith(fontSize: 15),
           ),
         ),
         const SizedBox(width: 16),
@@ -465,3 +699,24 @@ String _endonym(String code) => switch (code) {
       'ru' => 'Русский',
       _ => code,
     };
+
+
+/// Где выгрузка данных.
+sealed class _Export {
+  const _Export();
+  static const idle = _ExportIdle();
+  static const working = _ExportWorking();
+  static const failed = _ExportFailed();
+  const factory _Export.ready(String path) = _ExportReady;
+}
+
+class _ExportIdle extends _Export { const _ExportIdle(); }
+class _ExportWorking extends _Export { const _ExportWorking(); }
+class _ExportFailed extends _Export { const _ExportFailed(); }
+class _ExportReady extends _Export {
+  const _ExportReady(this.path);
+  final String path;
+}
+
+/// Где удаление аккаунта.
+enum _Delete { idle, confirming, mismatch, working, failed, done }

@@ -10,7 +10,7 @@ one.
 
 from __future__ import annotations
 
-from tests.conftest import LUCAS, SOFIA
+from tests.conftest import LUCAS, SOFIA, run_async
 
 
 # ── service ────────────────────────────────────────────────────────────────
@@ -535,6 +535,48 @@ def test_timezone_lookup_uses_the_rules_of_that_year(api):
 
 
 # ── account ────────────────────────────────────────────────────────────────
+
+def test_the_export_survives_a_conversation(api, auth_headers, monkeypatch):
+    """Экспорт ломался у каждого, у кого есть хоть одна беседа.
+
+    `accounts.export` читал `thread.messages` — ленивую связь — в сборке
+    словаря, а ленивая загрузка в asyncio это `MissingGreenlet`, то есть 500.
+    Маршрут выгрузки данных обязателен для обоих магазинов и это статья 15
+    GDPR; он падал ровно у тех, у кого есть что выгружать.
+
+    **Почему это не поймали два теста рядом.** Оба экспортируют аккаунт без
+    единой беседы, и ветка со связью просто не выполнялась: тест проходил не
+    потому, что код верен, а потому, что до кода не доходило. Здесь беседа
+    заводится до выгрузки — и падение возвращается, если `selectinload` уйдёт.
+    """
+    from alma.db import session as db
+    from alma.db.models import ChatMessage, ChatThread, User
+    from sqlalchemy import select
+
+    account = api.get("/v1/account", headers=auth_headers).json()
+
+    async def _write() -> None:
+        async with db.session_scope() as session:
+            user = (
+                await session.execute(select(User).where(User.id == account["id"]))
+            ).scalar_one()
+            thread = ChatThread(user_id=user.id, title="о Луне")
+            session.add(thread)
+            await session.flush()
+            session.add(ChatMessage(thread_id=thread.id, role="user", body="что с Луной?"))
+            session.add(ChatMessage(thread_id=thread.id, role="alma", body="она в Рыбах."))
+
+    run_async(_write)
+
+    export = api.get("/v1/account/export", headers=auth_headers)
+    assert export.status_code == 200, export.text
+    conversations = export.json()["conversations"]
+    assert len(conversations) == 1
+    assert [m["body"] for m in conversations[0]["messages"]] == [
+        "что с Луной?",
+        "она в Рыбах.",
+    ]
+
 
 def test_a_guest_can_export_and_delete(api, auth_headers):
     """This test used to assert the exact opposite, and the reversal is the point.

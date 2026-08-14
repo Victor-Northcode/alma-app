@@ -21,6 +21,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from ..funnel import forget
 from ..db.models import (
@@ -276,8 +277,19 @@ async def export(session: AsyncSession, user: User) -> dict:
     readings = (
         await session.execute(select(Reading).where(Reading.user_id == user.id))
     ).scalars().all()
+    # **`selectinload`, а не ленивая связь.**
+    #
+    # Реплики читаются ниже, при сборке словаря, и ленивая загрузка в
+    # asyncio — это `MissingGreenlet`, то есть 500. Выгрузка ломалась у
+    # каждого, у кого есть хоть одна беседа; тесты этого не ловили, потому что
+    # экспортировали аккаунт без бесед — путь просто не выполнялся. Поймано на
+    # симуляторе: «Файл не собрался».
     threads = (
-        await session.execute(select(ChatThread).where(ChatThread.user_id == user.id))
+        await session.execute(
+            select(ChatThread)
+            .where(ChatThread.user_id == user.id)
+            .options(selectinload(ChatThread.messages))
+        )
     ).scalars().all()
     memories = (
         await session.execute(select(Memory).where(Memory.user_id == user.id))

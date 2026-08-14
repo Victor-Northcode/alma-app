@@ -200,6 +200,18 @@ class AlmaClient {
   /// аккаунта; сервер отвечает 404 на чужой профиль.
   Future<void> deleteProfile(String id) => _send('DELETE', '/v1/profiles/$id', null, normalTimeout);
 
+  /// Всё, что мы держим об этом аккаунте, одним документом.
+  Future<Map<String, dynamic>> exportAccount() => _get('/v1/account/export');
+
+  /// Стереть аккаунт и всё, что в нём.
+  ///
+  /// `confirm` обязан совпасть с тем, чем аккаунт подтверждает себя: почтой у
+  /// вошедшего, собственным идентификатором у гостя. Маршрут уничтожает
+  /// оплаченные чтения, которые нельзя переписать слово в слово, и случайное
+  /// нажатие до него доходить не должно.
+  Future<Map<String, dynamic>> deleteAccount(String confirm) =>
+      _post('/v1/account/delete', {'confirm': confirm});
+
   /* ── расчёт ──────────────────────────────────────────────────────────── */
 
   Future<CalcResult> compute(
