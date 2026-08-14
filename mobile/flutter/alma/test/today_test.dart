@@ -134,8 +134,17 @@ void main() {
   testWidgets('«Сегодня» показывает имя, области и письмо дня', (tester) async {
     await tester.pumpWidget(AlmaApp(client: richClient()));
     // Сессия и обе загрузки — несколько кругов по сети в пробирке.
+    // Заставка держит экран 3,4 секунды и уходит, только когда сессия
+    // ответила. Пробирка проматывает её целиком — иначе каждый тест кабинета
+    // проверял бы небо.
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 60));
+    }
+    await tester.pump(const Duration(seconds: 4));
+    // И ещё несколько кадров: каскад прихода ставит по таймеру на блок, и
+    // тест, кончившийся раньше них, падает на «pending timers».
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
     }
 
     // Имя владельца вместо «Today» — как на iOS. Профиль есть, значит
@@ -158,8 +167,17 @@ void main() {
   testWidgets('без плана гороскоп закрыт, и письмо дня даже не запрашивается',
       (tester) async {
     await tester.pumpWidget(AlmaApp(client: richClient(subscriber: false)));
+    // Заставка держит экран 3,4 секунды и уходит, только когда сессия
+    // ответила. Пробирка проматывает её целиком — иначе каждый тест кабинета
+    // проверял бы небо.
     for (var i = 0; i < 8; i++) {
       await tester.pump(const Duration(milliseconds: 60));
+    }
+    await tester.pump(const Duration(seconds: 4));
+    // И ещё несколько кадров: каскад прихода ставит по таймеру на блок, и
+    // тест, кончившийся раньше них, падает на «pending timers».
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
     }
 
     // Ни абзаца дня, ни блюра, ни пустой карточки: одна фраза о том, что это

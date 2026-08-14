@@ -372,6 +372,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     builder: (context) => LegalScreen(document: document)),
               ),
             ),
+          // **Мелкий шрифт — в конце и мелким.**
+          //
+          // Кто продавец, кто оператор и чем Alma не является: это обязано
+          // стоять в приложении, а не только в документе, — но стоять там, где
+          // читают в конце, а не поверх содержимого.
+          const SizedBox(height: 26),
+          Text(l.cabMerchantLine(LegalText.merchant), style: AlmaType.meta),
+          const SizedBox(height: 8),
+          Text('${LegalText.operatorName} · Wyoming, United States',
+              style: AlmaType.meta),
+          const SizedBox(height: 8),
+          Text(l.cabDisclaimer, style: AlmaType.meta),
         ]),
       ],
     );

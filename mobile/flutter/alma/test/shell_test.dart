@@ -63,6 +63,14 @@ void main() {
     for (var i = 0; i < 6; i++) {
       await tester.pump(const Duration(milliseconds: 60));
     }
+    // Заставка держит экран 3,4 секунды и уходит, только когда сессия
+    // ответила. Пробирка проматывает её целиком.
+    await tester.pump(const Duration(seconds: 4));
+    // И ещё несколько кадров: каскад прихода ставит по таймеру на блок, и
+    // тест, кончившийся раньше них, падает на «pending timers».
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
     // Первый шаг путешествия — вопрос имени — и обещание, что ничего не
     // сохраняется. Кабинет без рождения не рисуется вовсе.
     expect(find.text('What should I call you?'), findsOneWidget);

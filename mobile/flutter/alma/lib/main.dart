@@ -15,12 +15,13 @@ import 'net/alma_client.dart';
 import 'net/models.dart';
 import 'screens/alma/alma_screen.dart';
 import 'screens/journey/journey_screen.dart';
+import 'screens/launch_screen.dart';
 import 'screens/offer_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
-import 'screens/today/today_screen.dart';
+import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
 import 'state/session.dart';
 
 void main() => runApp(AlmaApp(
@@ -62,6 +63,9 @@ class _AlmaAppState extends State<AlmaApp> {
     // откроет витрину; на нативе строчка стоит там же — в `RootView`, под
     // `.tint`, по той же причине.
     AlmaStore.shared.attach(_session);
+    // Счёт запусков для карточки «сохрани карту»: считается здесь, потому что
+    // здесь и есть запуск. Внутри карточки это был бы счёт визитов на экран.
+    noteLaunch();
   }
 
   @override
@@ -132,9 +136,24 @@ class _CabinetShellState extends State<CabinetShell> {
     ));
   }
 
+  /// Заставка отыграла и сессия ответила. Живёт в оболочке, а не внутри
+  /// заставки: кабинет не должен строиться за ней — иначе откроется
+  /// недорисованным, — а анкета не должна показываться поверх экрана, которого
+  /// человек ещё не видел.
+  bool _launched = false;
+
   @override
   Widget build(BuildContext context) {
     final session = SessionScope.of(context);
+    // **Отказ сети не ждёт церемонии.** Человеку с мёртвой сетью не к чему
+    // приходить: 3,4 секунды красивого неба перед экраном ошибки — это
+    // издевательство, а не приход.
+    if (!_launched && !(session.ready && session.failure != null)) {
+      return LaunchScreen(
+        ready: session.ready,
+        onDone: () => setState(() => _launched = true),
+      );
+    }
     // **Отказ сети — это не «рождения нет».**
     //
     // `start()` ловит AlmaError, ставит ready и оставляет профиль пустым, а

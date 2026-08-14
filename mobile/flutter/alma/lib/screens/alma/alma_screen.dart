@@ -255,6 +255,29 @@ class _AlmaScreenState extends State<AlmaScreen> {
     );
   }
 
+  /// «Нужно больше данных» — не отказ, а форма.
+  ///
+  /// Порт `NeedMore`. Ничего не сломалось: данных ещё не дали, и ответ на это —
+  /// то, чем их дают, а не извинение с кнопкой «повторить».
+  Widget _needMore(String message, String action, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(message, style: AlmaType.voice),
+          const SizedBox(height: 16),
+          AlmaButton(
+            kind: AlmaButtonKind.outline,
+            fills: false,
+            label: action,
+            onTap: onTap,
+          ),
+        ],
+      ),
+    );
+  }
+
   /// Вступление: присутствие, две фразы голосом и три вопроса из карты.
   Widget _opening(L l, AlmaSession session) {
     return ListView(
@@ -283,6 +306,15 @@ class _AlmaScreenState extends State<AlmaScreen> {
         ),
         const SizedBox(height: 12),
         Text(l.scrChatRule, style: AlmaType.meta),
+        // **Без карты — форма, а не три вопроса.** Вопросы вида «Луна у меня —
+        // Дева» человеку без рождения предлагать нечего: они собраны из карты,
+        // которой нет. На их месте — то, чем эту карту дают.
+        if (!session.hasBirthData)
+          _needMore(l.cabNoBirthData, l.cabAddBirthData, () {
+            // Анкету открывает оболочка, увидев пустой профиль: своего
+            // маршрута к ней у вкладки нет и быть не должно — она полноэкранная
+            // церемония, а не страница поверх кабинета.
+          }),
         if (session.hasBirthData && _openers.isNotEmpty) ...[
           const SizedBox(height: AlmaMetrics.gapLarge),
           Text(l.scrChatCouldAsk.toUpperCase(), style: AlmaType.overline),

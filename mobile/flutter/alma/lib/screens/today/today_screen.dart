@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/arrival.dart';
 import '../../design/buttons.dart';
@@ -94,6 +95,18 @@ class _TodayScreenState extends State<TodayScreen> {
         if (!session.isSubscriber) ...[
           const SizedBox(height: AlmaMetrics.gapSection),
           const _PlanInvitation(),
+        ],
+        // **Карточка «сохрани карту» — гостю, которому есть что терять.**
+        //
+        // Четыре условия, и каждое обязательно: не вошёл, карта уже есть, не
+        // отказывался раньше и это **не первый запуск** — первый принадлежит
+        // продукту, а не просьбе зарегистрироваться. Отказ помнится в
+        // настройках телефона, а не на сервере: это предпочтение «спрашивать
+        // ли меня», а не состояние аккаунта, и свежая установка честно
+        // является новым поводом спросить.
+        if (session.account?.isGuest == true && session.hasBirthData) ...[
+          const SizedBox(height: AlmaMetrics.gapSection),
+          const _SaveAccountCard(),
         ],
       ],
     );
@@ -473,3 +486,79 @@ class _PlanInvitation extends StatelessWidget {
     );
   }
 }
+
+
+/// «Сохрани свою карту» — единственная просьба войти во всём кабинете.
+class _SaveAccountCard extends StatefulWidget {
+  const _SaveAccountCard();
+
+  @override
+  State<_SaveAccountCard> createState() => _SaveAccountCardState();
+}
+
+class _SaveAccountCardState extends State<_SaveAccountCard> {
+  static const _dismissedKey = 'alma.saveAccountDismissed';
+  static const _launchesKey = 'alma.saveAccountLaunches';
+
+  /// Сколько раз приложение запускали. Считается **при запуске**, а не при
+  /// показе карточки: счёт визитов на экран считал бы совсем другое.
+  static Future<void> _noteLaunch() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_launchesKey, (prefs.getInt(_launchesKey) ?? 0) + 1);
+  }
+
+  bool _show = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _decide();
+  }
+
+  Future<void> _decide() async {
+    final prefs = await SharedPreferences.getInstance();
+    final dismissed = prefs.getBool(_dismissedKey) ?? false;
+    final launches = prefs.getInt(_launchesKey) ?? 0;
+    if (mounted) setState(() => _show = !dismissed && launches >= 2);
+  }
+
+  Future<void> _later() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_dismissedKey, true);
+    if (mounted) setState(() => _show = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_show) return const SizedBox.shrink();
+    final l = L.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l.scrSaveAccountTitle, style: AlmaType.headingM),
+        const SizedBox(height: 10),
+        Text(l.scrSaveAccountBody, style: AlmaType.meta),
+        const SizedBox(height: 14),
+        Row(children: [
+          AlmaButton(
+            kind: AlmaButtonKind.veil,
+            fills: false,
+            label: l.scrSaveAccountCta,
+            // Экрана входа в порте ещё нет — и кнопка честно ничего не
+            // обещает, пока его нет. Появится вместе с ним.
+            onTap: null,
+          ),
+          const SizedBox(width: 18),
+          TextButton(
+            onPressed: _later,
+            child: Text(l.scrSaveAccountLater, style: AlmaType.meta),
+          ),
+        ]),
+      ],
+    );
+  }
+}
+
+
+/// Отметить запуск приложения — для карточки «сохрани карту».
+Future<void> noteLaunch() => _SaveAccountCardState._noteLaunch();
