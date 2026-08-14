@@ -178,7 +178,7 @@
           "introductoryOffer": null,
           "localizations": [
             {
-              "description": "Transits, the solar return and compatibility while they move, plus forty questions a month.",
+              "description": "Transits, the solar return and compatibility while they move, plus thirty questions a month.",
               "displayName": "Everything live, weekly",
               "locale": "en_US"
             }
@@ -200,7 +200,7 @@
           "introductoryOffer": null,
           "localizations": [
             {
-              "description": "Transits, the solar return and compatibility while they move, plus forty questions a month.",
+              "description": "Transits, the solar return and compatibility while they move, plus thirty questions a month.",
               "displayName": "Everything live, monthly",
               "locale": "en_US"
             }

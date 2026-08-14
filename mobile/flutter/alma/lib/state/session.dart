@@ -51,6 +51,21 @@ class AlmaSession extends ChangeNotifier {
   /// сервер при первом запуске, который его заметил.
   String get locale => _account?.locale ?? 'en';
 
+  /// Ждёт, пока сессия узнает, кто перед ней.
+  ///
+  /// **Нужно ровно одному месту — магазину.** StoreKit переотдаёт незавершённые
+  /// покупки в первые же миллисекунды запуска, а `start()` в этот момент ещё
+  /// летит: покупка ушла бы на сервер без токена, сервер завёл бы под неё
+  /// нового гостя, и оплаченная глава открылась бы у аккаунта, которого человек
+  /// никогда не увидит. Дважды выданной она уже не будет — `already_claimed`.
+  Future<void> whenReady() async {
+    if (_ready) return;
+    final running = _starting ??= start().whenComplete(() => _starting = null);
+    await running;
+  }
+
+  Future<void>? _starting;
+
   Future<void> start({bool force = false}) async {
     if (_ready && !force) return;
     _failure = null;

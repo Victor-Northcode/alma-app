@@ -136,6 +136,24 @@ PARTNER_LIMIT: dict[str, str] = {
     "ru": "Одно сохранённое сравнение — бесплатно. Дверь совместимости вмещает двоих, а подписка — столько людей, сколько их в твоей жизни.",
 }
 
+#: Совместимость просят без второго человека.
+#:
+#: **Это единственное сообщение, которое читатель видел дословно из кода.**
+#: На экране главы стояло «a compatibility reading is about two people — send
+#: `partner_profile_id`» — имя поля API, по-английски, посреди русской
+#: страницы, снято владельцем на кадре. Оно писалось для того, кто зовёт
+#: эндпоинт руками, и туда же вернулось: подробность остаётся кодом ошибки
+#: `partner_required`, а человеку говорится, чего не хватает и что сделать.
+PARTNER_REQUIRED: dict[str, str] = {
+    "en": "A compatibility reading is about two people. Add someone, and I will read you together.",
+    "es": "La compatibilidad trata de dos personas. Añade a alguien y os leeré juntos.",
+    "de": "Partnerschaft handelt von zwei Menschen. Füge jemanden hinzu, und ich lese euch zusammen.",
+    "it": "L'affinità riguarda due persone. Aggiungi qualcuno e vi leggerò insieme.",
+    "fr": "La compatibilité parle de deux personnes. Ajoute quelqu'un, et je vous lirai ensemble.",
+    "pt-BR": "A compatibilidade é sobre duas pessoas. Adicione alguém e vou ler vocês juntos.",
+    "ru": "Совместимость — это про двоих. Добавь человека, и я прочту вас вместе.",
+}
+
 #: Every table in this module, by the machine code the clients classify on.
 #: Named so the test that checks all six languages are present can iterate
 #: rather than list — a table added without its translations is the failure.
@@ -170,6 +188,7 @@ BY_ERROR: dict[str, dict[str, str]] = {
     "question_limit.day": LIMIT_DAY,
     "question_limit.month": LIMIT_MONTH,
     "partner_limit": PARTNER_LIMIT,
+    "partner_required": PARTNER_REQUIRED,
     "budget_exceeded": BUDGET,
 }
 

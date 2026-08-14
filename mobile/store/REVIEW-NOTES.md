@@ -187,13 +187,13 @@ list is not read as something withheld.
 
 THE SUBSCRIPTION — THE TWO PLANS SELL DIFFERENT THINGS
 Monthly ($9.99) buys the LIVING layer and only that: transits, the solar return and
-compatibility recomputed as they move, plus forty questions a month in the chat. It
+compatibility recomputed as they move, plus thirty questions a month in the chat. It
 does not include the 41 archive chapters. A natal chart does not change, and renting
 it would be rent on a number fixed at birth.
 
 Annual ($78.99) is the wider plan: the living layer AND all 41 chapters, for twelve
 months. That is why its product description reads "All 41 chapters + what moves, 12
-months" while the monthly's reads "3 live systems + 40 questions a month". The
+months" while the monthly's reads "3 live systems + 30 questions a month". The
 difference is not duration, it is scope — `annual` is granted `scope="all"` and
 `monthly` `scope="live"` in `backend/alma/billing/catalogue.py:207-216` — which is also
 why they are levels 1 and 2 of one subscription group rather than two options at one
@@ -307,7 +307,7 @@ rather than in a week of guessing.
 | archive-bump absent from the iOS build on purpose | `mobile/ios/Alma/Billing/LadderKey.swift:17–23` — the comment is explicit that it must never be created in App Store Connect |
 | archive-upgrade offered once, inside 30 days | `backend/alma/billing/catalogue.py:197–206`; `CREDIT_WINDOW` in `backend/alma/auth/entitlements.py` |
 | Monthly = the living layer; **annual = the living layer and the 41 chapters, for a year** | `backend/alma/billing/catalogue.py:146–150` (`LIVING_SYSTEMS`), `:211` (`monthly`, `scope="live"`), `:215` (`annual`, `scope="all"`). The notes described the subscription as buying only the living layer until 7 Aug 2026, while `alma.annual`'s own App Store description — in the same submission — read "Every system, every chapter, and the transits as they move." `PRODUCTS.md` §3.5 has always had it right |
-| Forty questions a month | `backend/alma/config.py:279–281` |
+| Thirty questions a month | `backend/alma/config.py:279–281` |
 | Deletion needs a signed-in account, and the reviewer is a guest | `mobile/ios/Alma/Screens/Settings/AccountModel.swift:220–222`; `backend/alma/api/deps.py:95–99`; `backend/alma/api/routers/account.py:74–79`. This is the one row in this table that is a *problem* rather than a citation — `APP-CHANGES-NEEDED.md` §1 |
 | Renewal terms adjacent to the button | `mobile/ios/Alma/Billing/PaywallView.swift:155–166`; the string at `mobile/ios/Alma/Localization/PaywallL10n.swift:157–160` |
 | Three legal links on the paywall, in the binary | `mobile/ios/Alma/Billing/PaywallView.swift:262–281` |
@@ -513,7 +513,7 @@ Every line names the placement it was read from."*
 - **"Access to Alma" as a description of the subscription.** It would invite the
   obvious question of what the $38.99 archive was for, and 3.1.2(a) is where that
   question gets asked. The **monthly** is *the living layer*: transits, the solar
-  return, compatibility, plus forty questions a month.
+  return, compatibility, plus thirty questions a month.
 
   The **annual** is a different product and must be described as one — it is
   `scope="all"` (`catalogue.py:215`), so it does include the 41 chapters, for twelve

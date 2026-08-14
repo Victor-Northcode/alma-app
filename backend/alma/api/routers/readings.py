@@ -78,8 +78,10 @@ router = APIRouter(tags=["readings"])
 #:
 #: The cost of the difference, measured rather than feared: 107 factors and
 #: ~1,430 input tokens becomes 492 factors and ~5,280, which on Sonnet is
-#: **$0.0253 → $0.0368 a turn**. A subscriber's forty questions go from $1.01 to
-#: $1.47 a month against $8.99 of net revenue. Input is the cheap half of a
+#: **$0.0253 → $0.0368 a turn**. A subscriber's thirty questions go from $0.76
+#: to $1.10 a month against $8.99 of net revenue — the count was forty when
+#: this was measured and the owner has since lowered it, which only widens the
+#: margin the paragraph is arguing about. Input is the cheap half of a
 #: generation and the output length did not change; the fear that "the whole
 #: chart is too expensive to send" was worth exactly one cent a question.
 #:
@@ -680,10 +682,11 @@ async def _partner(session, user, payload: ReadingRequest):
             422,
             detail={
                 "error": "partner_required",
-                "message": (
-                    "a compatibility reading is about two people — send "
-                    "`partner_profile_id`"
-                ),
+                # Читателю — фраза на его языке, зовущему эндпоинт руками —
+                # код ошибки. Прежняя строка называла имя поля API и уходила
+                # прямо на экран главы: снято владельцем на кадре, посреди
+                # русской страницы.
+                "message": i18n_replies.reply("partner_required", payload.locale),
             },
         )
     profile = await session.get(Profile, payload.partner_profile_id)

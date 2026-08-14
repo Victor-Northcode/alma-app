@@ -55,7 +55,33 @@ object AlmaHaptics {
      */
     private fun play(context: Context, effect: Int) {
         try {
-            vibrator(context)?.vibrate(VibrationEffect.createPredefined(effect))
+            val motor = vibrator(context) ?: return
+            // **`createPredefined` is API 29 and this app ships to API 26.**
+            //
+            // On Android 8.0, 8.1 and 9.0 the method does not exist, and a
+            // missing method is a `NoSuchMethodError` — an `Error`, which
+            // neither catch below covers. So the ceremony's last step killed
+            // the app on every phone older than Android 10, at the exact moment
+            // onboarding finishes. Nothing on the simulator or on a modern test
+            // device could show it; `minSdk = 26` in `build.gradle.kts:152` and
+            // the constant's own API level are the whole proof.
+            //
+            // The fallback is a one-shot of the same length the predefined
+            // effects run at, and `createOneShot` is API 26 — old enough for
+            // every device this build reaches. Worse touch on old phones is a
+            // trade; a crash is not.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                motor.vibrate(VibrationEffect.createPredefined(effect))
+            } else {
+                val millis = when (effect) {
+                    VibrationEffect.EFFECT_TICK -> 12L
+                    VibrationEffect.EFFECT_DOUBLE_CLICK -> 40L
+                    else -> 20L
+                }
+                motor.vibrate(
+                    VibrationEffect.createOneShot(millis, VibrationEffect.DEFAULT_AMPLITUDE)
+                )
+            }
         } catch (_: SecurityException) {
         } catch (_: RuntimeException) {
         }

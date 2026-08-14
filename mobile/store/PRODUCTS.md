@@ -305,12 +305,12 @@ discovering the answer from a customer.
 
 | lang | Display name | Description |
 |---|---|---|
-| en | What moves, monthly | 3 live systems + 40 questions a month. |
-| es | Lo que se mueve, cada mes | 3 sistemas vivos + 40 preguntas al mes. |
-| de | Was sich bewegt, monatlich | 3 lebende Systeme + 40 Fragen im Monat. |
-| it | Ciò che si muove, ogni mese | 3 sistemi vivi + 40 domande al mese. |
-| fr | Ce qui bouge, chaque mois | 3 systèmes vivants + 40 questions par mois. |
-| pt-BR | O que se move, todo mês | 3 sistemas vivos + 40 perguntas por mês. |
+| en | What moves, monthly | 3 live systems + 30 questions a month. |
+| es | Lo que se mueve, cada mes | 3 sistemas vivos + 30 preguntas al mes. |
+| de | Was sich bewegt, monatlich | 3 lebende Systeme + 30 Fragen im Monat. |
+| it | Ciò che si muove, ogni mese | 3 sistemi vivi + 30 domande al mese. |
+| fr | Ce qui bouge, chaque mois | 3 systèmes vivants + 30 questions par mois. |
+| pt-BR | O que se move, todo mês | 3 sistemas vivos + 30 perguntas por mês. |
 
 The three systems are `LIVING_SYSTEMS` (`catalogue.py:150`); the forty is
 `subscriber_questions_per_month` (`config.py:279–281`). The cap is stated in the description

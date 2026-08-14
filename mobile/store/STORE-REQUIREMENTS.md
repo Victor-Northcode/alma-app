@@ -462,7 +462,7 @@ Source of truth for every number: `/Users/anatoliymikhaylow/alma_project1/backen
 | `archive` | $38.99 | Non-consumable | All 41 chapters. |
 | `archive-bump` | $29.99 | Non-consumable | `offered="in-checkout"` — never on the shelf. Must be explained under 2.1(b). |
 | `archive-upgrade` | $33.00 | Non-consumable | `offered="after-door"` — offered once to a door owner, inside a 30-day window (`CREDIT_WINDOW` in `auth/entitlements.py`). Must be explained under 2.1(b). |
-| `monthly` | $9.99 | Auto-renewable | The living layer + 40 questions/month. |
+| `monthly` | $9.99 | Auto-renewable | The living layer + 30 questions/month. |
 | `annual` | $78.99 | Auto-renewable | Same group as `monthly` (3.1.2(b)). |
 
 Every one of the twelve needs a display name ≤35 and a description ≤55 in each of the six

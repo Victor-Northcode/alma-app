@@ -22,7 +22,7 @@ paywall.
 | `alma.synthesis` | Non-consumable | $5.99 | all 4 cross-synthesis chapters |
 | `alma.archive` | Non-consumable | $38.99 | all 41 chapters |
 | `alma.archive_upgrade` | Non-consumable | $33.00 | all 41, for somebody who owns a door |
-| `alma.monthly` | Auto-renewable, 1 month | $9.99 | the living layer + 40 questions a month |
+| `alma.monthly` | Auto-renewable, 1 month | $9.99 | the living layer + 30 questions a month |
 | `alma.annual` | Auto-renewable, 1 year | $78.99 | everything, for a year |
 
 `alma.archive_bump` is **not** created. It exists only as an upsell inside

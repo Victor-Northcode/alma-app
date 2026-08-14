@@ -584,7 +584,7 @@ enum PaywallIntent: Sendable, Equatable {
     /// against it is *selection*, not *concealment*. The rung a person reached
     /// for stays pre-selected, the plans sit below it as a separate choice, and
     /// each one says what it contains: the monthly is transits, the solar
-    /// return and compatibility while they move, plus forty questions a month.
+    /// return and compatibility while they move, plus thirty questions a month.
     ///
     /// What concealment actually bought was a product whose recurring revenue
     /// was invisible. The owner walked the whole app and never once saw the

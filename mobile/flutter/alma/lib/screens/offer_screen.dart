@@ -438,6 +438,8 @@ class _BuyArea extends StatelessWidget {
         StoreMessage.pending => l.paywallPending,
         StoreMessage.offline => l.paywallOffline,
         StoreMessage.notVerified => l.paywallNotVerified,
+        StoreMessage.verifyLater => l.paywallVerifyLater,
+        StoreMessage.withdrawn => l.paywallWithdrawn,
         StoreMessage.unlocked => l.paywallRestored,
         StoreMessage.restoring => l.paywallRestoring,
         StoreMessage.restored => l.paywallRestored,

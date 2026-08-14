@@ -13,6 +13,7 @@ import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../cabinet_words.dart';
 import '../offer_screen.dart';
+import 'people_screen.dart';
 import 'writing_art.dart';
 import '../../state/session.dart';
 
@@ -320,6 +321,24 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // unlocked yet» — это для разработчика; читателю нужна причина и путь.
     if (failure is ServerRefused && failure.code == 'locked' && _reading == null) {
       return _LockedWall(system: widget.system);
+    }
+    // **Совместимости нужен второй человек — и дверь к нему, а не фраза в
+    // пустоте.**
+    //
+    // Здесь на весь экран стояла одна серая строка. Сначала это была вообще
+    // служебная строка сервера с именем поля API («send `partner_profile_id`»),
+    // снятая владельцем на кадре; теперь сервер отвечает по-человечески, но
+    // экран всё равно оставлял человека без единственного действия, которое
+    // тут имеет смысл. На экране системы этот случай давно нарисован так —
+    // рисунок, фраза, кнопка, — и глава обязана вести себя так же.
+    if (failure is ServerRefused &&
+        failure.code == 'partner_required' &&
+        _reading == null) {
+      return _NeedsPartner(
+        system: widget.system,
+        message: failure.message.isNotEmpty ? failure.message : l.cabCompatNeedsSecond,
+        onAdded: _load,
+      );
     }
     if (failure != null && _reading == null) {
       // **Отказ по потолку сам называет выход — значит, выход обязан быть на
@@ -664,4 +683,59 @@ class _GoldButton extends StatelessWidget {
           ),
         ),
       );
+}
+
+/// «Совместимости нужен второй человек» — с рисунком и дверью к нему.
+///
+/// Порт того же состояния с экрана системы, слово в слово: пустое небо над
+/// одной серой строкой читается как сломанный экран, а рисунок, который ничего
+/// не утверждает — две орбиты, ещё не встретившиеся, — читается как ожидание.
+class _NeedsPartner extends StatelessWidget {
+  const _NeedsPartner({
+    required this.system,
+    required this.message,
+    required this.onAdded,
+  });
+
+  final SystemSlug system;
+  final String message;
+  final Future<void> Function() onAdded;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Зерно 0 — орбиты: две дуги, которые ещё не встретились. У
+            // совместимости своё зерно даёт решётку, и пустая решётка на
+            // экране «второго человека нет» читается как пустая таблица,
+            // то есть как сломанный экран.
+            const WritingArt(size: 200, seed: 0),
+            const SizedBox(height: 24),
+            // **Чернила — цвет пергамента, а не ночи.** Здесь стоял
+            // `AlmaPalette.ink`, и фраза почти пропадала на тёмном: снято на
+            // кадре. Пергамент появляется вместе с главой, а этой главы нет.
+            Text(message,
+                textAlign: TextAlign.center,
+                style: AlmaType.body.copyWith(color: AlmaPalette.muted)),
+            const SizedBox(height: 20),
+            AlmaButton(
+              fills: false,
+              label: l.cabPeopleAdd,
+              onTap: () async {
+                await Navigator.of(context, rootNavigator: true).push(
+                  CupertinoPageRoute(builder: (context) => const PeopleScreen()),
+                );
+                await onAdded();
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

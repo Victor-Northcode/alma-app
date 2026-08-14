@@ -116,12 +116,12 @@ add("paywall.monthlyTitle", "The monthly plan. The backend calls it 'Everything 
     "Tudo que se move, todo mês")
 
 add("paywall.monthlyNote", "What the monthly plan actually grants. Not everything — the living layer.",
-    "Transits, the solar return and compatibility while they move, plus 40 questions a month. Renews until you cancel.",
-    "Tránsitos, revolución solar y compatibilidad mientras se mueven, más 40 preguntas al mes. Se renueva hasta que lo canceles.",
-    "Transite, Solarhoroskop und Partnerschaft, solange sie ziehen, dazu 40 Fragen im Monat. Verlängert sich, bis du kündigst.",
-    "Transiti, rivoluzione solare e affinità mentre si muovono, più 40 domande al mese. Si rinnova finché non disdici.",
-    "Transits, révolution solaire et compatibilité au fil de leur course, plus 40 questions par mois. Se renouvelle jusqu'à résiliation.",
-    "Trânsitos, revolução solar e compatibilidade conforme se movem, mais 40 perguntas por mês. Renova até você cancelar.")
+    "Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel.",
+    "Tránsitos, revolución solar y compatibilidad mientras se mueven, más 30 preguntas al mes. Se renueva hasta que lo canceles.",
+    "Transite, Solarhoroskop und Partnerschaft, solange sie ziehen, dazu 30 Fragen im Monat. Verlängert sich, bis du kündigst.",
+    "Transiti, rivoluzione solare e affinità mentre si muovono, più 30 domande al mese. Si rinnova finché non disdici.",
+    "Transits, révolution solaire et compatibilité au fil de leur course, plus 30 questions par mois. Se renouvelle jusqu'à résiliation.",
+    "Trânsitos, revolução solar e compatibilidade conforme se movem, mais 30 perguntas por mês. Renova até você cancelar.")
 
 add("paywall.annualTitle", "The annual plan. pricing.everythingYear.",
     "Everything, for a year", "Todo, durante un año", "Alles, für ein Jahr",

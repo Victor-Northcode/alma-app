@@ -178,57 +178,111 @@ class AlmaStore extends ChangeNotifier {
 
         case PurchaseStatus.purchased:
         case PurchaseStatus.restored:
-          await _claim(purchase);
-      }
-      // **Завершать обязательно и всегда.** Незавершённую покупку StoreKit
-      // будет переотдавать при каждом запуске, а Google через три дня вернёт
-      // за неё деньги. Это делается после ответа сервера — если сервер не
-      // ответил, покупка придёт снова, и это правильно.
-      if (purchase.pendingCompletePurchase) {
-        await _iap.completePurchase(purchase);
+          // **Завершать — только когда завершать безопасно.**
+          //
+          // Здесь стояло «завершать обязательно и всегда», и это была самая
+          // дорогая строка во всём файле. Незавершённая покупка возвращается
+          // при каждом запуске — это неприятно; завершённая раньше времени не
+          // возвращается **никогда**, и человек, с которого магазин взял
+          // деньги, остаётся без главы и без способа её получить. Из двух
+          // сторон ошибаться можно только в первую.
+          //
+          // Правило снято с натива дословно (`StoreProblem.mayFinishTransaction`):
+          // завершать на успехе и на отказе, который никогда не станет
+          // согласием, — не тот товар, покупка отозвана, аккаунта больше нет.
+          // Всё остальное — неподтверждённая подпись, молчащий сервер, мёртвая
+          // сеть — может получиться со следующей попытки, а транзакция это
+          // единственное доказательство, что деньги ушли.
+          final mayFinish = await _claim(purchase);
+          if (mayFinish && purchase.pendingCompletePurchase) {
+            await _iap.completePurchase(purchase);
+          }
       }
     }
   }
 
   /// Отдать покупку серверу и перечитать права.
-  Future<void> _claim(PurchaseDetails purchase) async {
+  ///
+  /// Возвращает, **можно ли завершать транзакцию** — единственное необратимое
+  /// решение во всей этой работе, и потому оно возвращается значением, а не
+  /// угадывается на месте вызова.
+  Future<bool> _claim(PurchaseDetails purchase) async {
     final session = _session;
+    // Аккаунт должен существовать раньше, чем уйдёт чек: иначе сервер заведёт
+    // под покупку нового гостя, и оплаченное откроется у того, кого человек
+    // никогда не увидит.
+    await session?.whenReady();
     final key = LadderKey.fromStoreProductId(purchase.productID);
     if (session == null || key == null) {
+      // Товар, которого этот клиент не знает: сборка старше сервера или
+      // наоборот. Держать транзакцию вечно смысла нет — она не станет нашей
+      // от ожидания, — но и завершать чужую покупку мы не вправе, поэтому
+      // ждём следующего запуска, где сборка может оказаться новее.
       debugPrint('покупка с неизвестным товаром: ${purchase.productID}');
       _busy = null;
       notifyListeners();
-      return;
+      return false;
     }
     try {
-      await session.client.verifyPurchase(
-        platform: Platform.isIOS ? 'appstore' : 'playstore',
+      final answer = await session.client.verifyPurchase(
+        // **`googleplay`, а не `playstore`.** Так называется адаптер на
+        // сервере (`alma/billing/googleplay.py`), и он отвечает 400 «магазин,
+        // которого эта сборка не знает» на любое другое слово — то есть
+        // каждая покупка на Android отваливалась бы на последнем шаге.
+        platform: Platform.isIOS ? 'appstore' : 'googleplay',
         // Слаг каталога — из подписанного магазином идентификатора, а не из
         // нажатой кнопки.
         product: key.slug,
         transaction: purchase.verificationData.serverVerificationData,
       );
       await session.refreshRights();
-      _notice = StoreNotice(
-        StoreTone.good,
-        purchase.status == PurchaseStatus.restored
-            ? StoreMessage.restored
-            : StoreMessage.unlocked,
-      );
+      // **«Открыто» говорится по списку прав, а не по факту ответа 200.**
+      //
+      // Сервер отвечает 200 и на случай «ничего не выдано»: `status` бывает
+      // `not_offered`, и единственное поле, которому можно верить, — это
+      // `unlocked`, тот же список, что отдаёт `/billing/entitlements`.
+      // Радостная строка над закрытой главой — худшее, что можно показать
+      // человеку, который только что заплатил.
+      final unlocked = ((answer['unlocked'] as List?) ?? const []).isNotEmpty ||
+          session.entitlements.hasPlan;
+      _notice = unlocked
+          ? StoreNotice(
+              StoreTone.good,
+              purchase.status == PurchaseStatus.restored
+                  ? StoreMessage.restored
+                  : StoreMessage.unlocked,
+            )
+          : StoreNotice(StoreTone.waiting, StoreMessage.verifyLater);
+      _busy = null;
+      notifyListeners();
+      // Сервер ответил и записал, что смог: транзакция своё дело сделала.
+      return true;
     } on AlmaError catch (error) {
       // Деньги магазин уже взял. Разница между «мы не смогли спросить» и «это
-      // не та покупка» существенна для того, кто читает: первое пройдёт само,
-      // второе — нет.
+      // не та покупка» существенна и для того, кто читает, и для того,
+      // завершать ли транзакцию.
       debugPrint('сервер не подтвердил покупку: $error');
+      final refused = error is ServerRefused ? error : null;
+      final code = refused?.code;
+      // Отказ, который никогда не станет согласием: не тот товар, покупка
+      // отозвана магазином, аккаунт удалён. Держать такую транзакцию — значит
+      // слать один и тот же запрос при каждом запуске до конца жизни установки.
+      final permanent = code == 'product_mismatch' ||
+          code == 'purchase_incomplete' ||
+          refused?.status == 410;
       _notice = StoreNotice(
         StoreTone.bad,
-        error is NetworkDown
-            ? StoreMessage.offline
-            : StoreMessage.notVerified,
+        switch (true) {
+          _ when error is NetworkDown => StoreMessage.offline,
+          _ when code == 'purchase_incomplete' => StoreMessage.withdrawn,
+          _ when (refused?.status ?? 0) >= 500 => StoreMessage.verifyLater,
+          _ => StoreMessage.notVerified,
+        },
       );
+      _busy = null;
+      notifyListeners();
+      return permanent;
     }
-    _busy = null;
-    notifyListeners();
   }
 
   @override
@@ -260,6 +314,14 @@ enum StoreMessage {
   pending,
   offline,
   notVerified,
+
+  /// Магазин деньги взял, а мы в эту секунду не смогли подтвердить. Само
+  /// откроется: у обоих магазинов есть своё уведомление, которое дойдёт до
+  /// сервера независимо от приложения.
+  verifyLater,
+
+  /// Возврат или отмена: под этой покупкой ничего не открыто и не откроется.
+  withdrawn,
   unlocked,
   restoring,
   restored,

@@ -175,8 +175,14 @@ class Settings(BaseSettings):
     #: every day and buys the whole archive in the same month.
     owner_month_budget: float = Field(default=3.25, alias="ALMA_OWNER_MONTH_BUDGET")
     #: Поднят с 3.50 вместе с длиной платных глав: сорок одна глава по
-    #: 480 слов плюс сорок вопросов в месяц дают $3.52, и прежний потолок
-    #: обещал больше, чем мог оплатить. Поймано `test_no_tier_is_promised_more_than_its_ceiling_can_fund`.
+    #: 480 слов плюс вопросы месяца дают $3.52 в худшем случае, и прежний
+    #: потолок обещал больше, чем мог оплатить. Поймано
+    #: `test_no_tier_is_promised_more_than_its_ceiling_can_fund`.
+    #:
+    #: Число вопросов с тех пор снижено владельцем до 30 (25 на кириллице), и
+    #: запас стал только больше — но потолок не опущен обратно намеренно:
+    #: он считается по худшему случаю, а худший случай теперь дешевле обещания,
+    #: и это правильная сторона ошибки.
     subscriber_month_budget: float = Field(default=4.50, alias="ALMA_SUBSCRIBER_MONTH_BUDGET")
 
     # ── billing ────────────────────────────────────────────────────────────

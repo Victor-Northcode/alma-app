@@ -64,7 +64,7 @@ enum PaywallL10n {
     static let pitchPlan2 = res(
         "paywall.pitchPlan2",
         "Transits, the solar return and compatibility are rewritten as the sky moves.")
-    static let pitchPlan3 = res("paywall.pitchPlan3", "Forty questions a month to Alma, on the deeper voice.")
+    static let pitchPlan3 = res("paywall.pitchPlan3", "Thirty questions a month to Alma, on the deeper voice.")
 
     static let freeNote = res(
         "paywall.freeNote",
@@ -88,7 +88,7 @@ enum PaywallL10n {
     static let monthlyTitle = res("paywall.monthlyTitle", "Everything live, monthly")
     static let monthlyNote = res(
         "paywall.monthlyNote",
-        "Transits, the solar return and compatibility while they move, plus 40 questions a month. Renews until you cancel."
+        "Transits, the solar return and compatibility while they move, plus 30 questions a month. Renews until you cancel."
     )
     static let annualTitle = res("paywall.annualTitle", "Everything, for a year")
     static let annualNote = res(
