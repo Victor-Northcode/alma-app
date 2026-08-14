@@ -1,5 +1,9 @@
+import 'dart:async';
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'billing/alma_store.dart';
 import 'design/metrics.dart';
@@ -185,18 +189,21 @@ class _CabinetShellState extends State<CabinetShell> {
           _Alive(child: SettingsScreen()),
         ],
       ),
-      // **Одно стоячее приглашение.**
+      // **Приглашение приходит и уходит, а не стоит.**
       //
       // На нативе это золотая пилюля в углу «Сегодня» и «Моих систем»: не
-      // баннер и не всплывающее окно, а маленькая печать, которая ждёт. Она
-      // исчезает в ту секунду, когда план появляется, — звать заплатившего
-      // значит показывать, что мы не знаем, кто перед нами.
-      // **Над пергаментом её нет.**
+      // баннер и не всплывающее окно, а маленькая печать. Но печать, которая
+      // на экране всегда, перестаёт быть событием на второй минуте — глаз
+      // научается её не видеть, и она превращается в мебель, которая вдобавок
+      // закрывает угол содержимого. Владелец сказал это прямо: пусть всплывает
+      // в нужный момент, иногда напоминает о себе движением и испаряется.
       //
-      // Пилюля висела поверх открытой главы и налезала на строки: вкладка всё
-      // ещё «Мои системы», а экран уже документ. Продавать поверх того, за что
-      // человек только что заплатил вниманием, — худший момент из возможных, и
-      // признак чтения у нас уже есть, тот самый, что перекрашивает бар.
+      // Что она делает — в [_InvitationPill]. Здесь решается только одно: **кому
+      // и когда её вообще показывать**. Заплатившему — никогда: звать
+      // подписчика купить подписку значит показать, что мы не знаем, кто перед
+      // нами. Над пергаментом — никогда: вкладка всё ещё «Мои системы», а экран
+      // уже документ, и продавать поверх того, за что человек только что
+      // заплатил вниманием, — худший момент из возможных.
       floatingActionButton: ValueListenableBuilder<bool>(
         valueListenable: readingNow,
         builder: (context, reading, _) {
@@ -204,13 +211,19 @@ class _CabinetShellState extends State<CabinetShell> {
               session.hasBirthData &&
               !reading &&
               (_tab == CabinetTab.today || _tab == CabinetTab.systems);
-          if (!invited) return const SizedBox.shrink();
           return Padding(
             padding: EdgeInsets.only(bottom: AlmaMetrics.tabBarHeight - 8),
-            child: _AllAlmaPill(onTap: () {
-              Navigator.of(context).push(CupertinoPageRoute(
-                  builder: (context) => const OfferScreen()));
-            }),
+            child: _InvitationPill(
+              // Смена вкладки — новый момент: отсчёт начинается заново, и
+              // приглашение приходит после того, как экран прочитан, а не
+              // вместе с ним.
+              moment: _tab,
+              allowed: invited,
+              onTap: () {
+                Navigator.of(context).push(CupertinoPageRoute(
+                    builder: (context) => const OfferScreen()));
+              },
+            ),
           );
         },
       ),
@@ -329,26 +342,167 @@ class _AliveState extends State<_Alive> with AutomaticKeepAliveClientMixin {
 }
 
 
-/// Золотая пилюля «Вся Alma» — единственное стоячее приглашение в кабинете.
-class _AllAlmaPill extends StatelessWidget {
-  const _AllAlmaPill({required this.onTap});
+/// Золотая пилюля «Вся Alma» — приглашение, которое приходит и уходит.
+///
+/// **Почему у неё есть жизнь, а не только вид.** Пилюля висела в углу
+/// постоянно. Постоянное приглашение перестаёт быть приглашением: на второй
+/// минуте глаз перестаёт его замечать, а угол экрана оно закрывать не
+/// перестаёт. Владелец сформулировал задачу словами «всплывала в нужный
+/// момент… иногда тряслась… и испарялась».
+///
+/// Отсюда три числа и один закон.
+///
+/// * **Шесть секунд молчания после прихода на экран.** Экран сначала читают.
+///   Приглашение, появившееся вместе с содержимым, спорит с ним за первый
+///   взгляд и проигрывает — а проиграв, воспринимается как помеха.
+/// * **Одиннадцать секунд жизни.** Достаточно, чтобы заметить и дотянуться, и
+///   мало, чтобы стать мебелью.
+/// * **Полторы минуты тишины** между появлениями, и не больше трёх появлений
+///   на один приход на вкладку. Четвёртое напоминание за две минуты — это уже
+///   не напоминание.
+///
+/// Закон: **движение только на приходе**. Пилюля вздрагивает, когда появилась,
+/// и ещё раз в середине жизни — так вздрагивает то, что хочет, чтобы его
+/// заметили, а не то, что сломалось. Трясущийся элемент, который трясётся
+/// всегда, читается как ошибка отрисовки.
+///
+/// Уходит она не исчезновением: гаснет, чуть уменьшается и поднимается — то
+/// самое «испаряется». Появление зеркально.
+class _InvitationPill extends StatefulWidget {
+  const _InvitationPill({
+    required this.moment,
+    required this.allowed,
+    required this.onTap,
+  });
+
+  /// Что считается «новым моментом». Меняется — цикл начинается заново.
+  final Object moment;
+
+  /// Можно ли звать вообще: подписчику и над пергаментом — нет.
+  final bool allowed;
 
   final VoidCallback onTap;
 
   @override
+  State<_InvitationPill> createState() => _InvitationPillState();
+}
+
+class _InvitationPillState extends State<_InvitationPill>
+    with SingleTickerProviderStateMixin {
+  static const _quiet = Duration(seconds: 6);
+  static const _life = Duration(seconds: 11);
+  static const _rest = Duration(seconds: 90);
+  static const _times = 3;
+
+  late final AnimationController _wobble = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 620),
+  );
+
+  bool _visible = false;
+  int _shown = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _restart();
+  }
+
+  @override
+  void didUpdateWidget(_InvitationPill old) {
+    super.didUpdateWidget(old);
+    if (old.moment != widget.moment) {
+      _restart();
+    } else if (old.allowed != widget.allowed && !widget.allowed) {
+      _timer?.cancel();
+      if (_visible) setState(() => _visible = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _wobble.dispose();
+    super.dispose();
+  }
+
+  void _restart() {
+    _timer?.cancel();
+    _shown = 0;
+    if (_visible) _visible = false;
+    _timer = Timer(_quiet, _appear);
+  }
+
+  void _appear() {
+    if (!mounted || !widget.allowed || _shown >= _times) return;
+    setState(() => _visible = true);
+    _shown += 1;
+    _wobble.forward(from: 0);
+    // Второе вздрагивание в середине жизни: одно на приходе можно и
+    // пропустить, глядя в другую часть экрана.
+    _timer = Timer(_life ~/ 2, () {
+      if (mounted && _visible) _wobble.forward(from: 0);
+      _timer = Timer(_life ~/ 2, _vanish);
+    });
+  }
+
+  void _vanish() {
+    if (!mounted) return;
+    setState(() => _visible = false);
+    if (_shown >= _times) return;
+    _timer = Timer(_rest, _appear);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    return Material(
-      color: AlmaPalette.gold,
-      borderRadius: BorderRadius.circular(999),
-      elevation: 6,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Text('✦ ${l.cabAllAlmaPill}',
-              style: AlmaType.meta.copyWith(color: AlmaPalette.inkOnGold)),
+    return IgnorePointer(
+      ignoring: !_visible || !widget.allowed,
+      child: AnimatedOpacity(
+        opacity: _visible && widget.allowed ? 1 : 0,
+        duration: _visible ? AlmaMotion.ui : AlmaMotion.sheet,
+        curve: AlmaMotion.uiCurve,
+        child: AnimatedSlide(
+          // Испарение — вверх и чуть меньше; приход — оттуда же обратно.
+          offset: _visible ? Offset.zero : const Offset(0, -0.35),
+          duration: _visible ? AlmaMotion.ui : AlmaMotion.sheet,
+          curve: AlmaMotion.uiCurve,
+          child: AnimatedScale(
+            scale: _visible ? 1 : 0.92,
+            duration: _visible ? AlmaMotion.ui : AlmaMotion.sheet,
+            curve: AlmaMotion.uiCurve,
+            child: AnimatedBuilder(
+              animation: _wobble,
+              builder: (context, child) {
+                // Затухающее покачивание: две с половиной волны, амплитуда
+                // тает к концу. Не тряска — кивок.
+                final t = _wobble.value;
+                final decay = (1 - t) * (1 - t);
+                final angle = math.sin(t * math.pi * 5) * 0.055 * decay;
+                return Transform.rotate(angle: angle, child: child);
+              },
+              child: Material(
+                color: AlmaPalette.gold,
+                borderRadius: BorderRadius.circular(999),
+                elevation: 6,
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    widget.onTap();
+                  },
+                  borderRadius: BorderRadius.circular(999),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    child: Text('✦ ${l.cabAllAlmaPill}',
+                        style: AlmaType.meta
+                            .copyWith(color: AlmaPalette.inkOnGold)),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
