@@ -473,7 +473,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
               ),
             ),
           ],
-          if (!_preview) _chapterEndOffer(l),
           const SizedBox(height: 34),
           // Хвост: следующая глава и полоса подтверждения. Полоса наливается
           // от 56 до 130 — сколько ещё тянуть, видно, а не угадывается.
@@ -483,40 +482,20 @@ class _ChapterScreenState extends State<ChapterScreen> {
     );
   }
 
-  /// Одна тихая строка в конце дочитанной главы — в ту минуту, когда письмо
-  /// только что доказало себя, а это и есть определение верного момента.
-  ///
-  /// Порт `chapterEndOffer`. Статично, под текстом; ни всплывающего окна, ни
-  /// прерывания на середине. Дверь — для системы, которую этот аккаунт не
-  /// покупал; план — для той, которую покупал: купленная глава пишется один
-  /// раз, а движется живой слой. Подписчик не видит ни того, ни другого.
-  Widget _chapterEndOffer(L l) {
-    final session = SessionScope.of(context);
-    if (session.isSubscriber) return const SizedBox.shrink();
-    final opened = session.entitlements.opened(widget.system);
-    return Padding(
-      padding: const EdgeInsets.only(top: AlmaMetrics.gapLarge),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(opened ? l.cabChapterEndPlan : l.cabChapterEndDoor,
-              style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
-          const SizedBox(height: 12),
-          // **Золотая, а не обводкой.** У обводки надпись цвета `goldBright`,
-          // и на пергаменте её почти не видно — снято на кадре: «Открыть:
-          // Натальная карта» читалась как водяной знак. На нативе дверь в
-          // конце главы тоже золотая (`DoorButton`), и здесь это единственное
-          // действие страницы, так что второго акцента не возникает.
-          AlmaButton(
-            label: opened
-                ? l.cabPlansCta
-                : l.cabOpenSystemNamed(_systemName(l)),
-            onTap: () => _openOffer(context, opened ? null : widget.system),
-          ),
-        ],
-      ),
-    );
-  }
+  // **Предложения в конце дочитанной главы больше нет.** Здесь стояла тихая
+  // строка и золотая дверь «Открыть: Натальная карта» — в расчёте на минуту,
+  // когда письмо только что доказало себя. На экране это работало иначе:
+  // кнопка вставала ровно между концом текста и подсказкой протяжки к
+  // следующей главе, и человек, дочитавший бесплатную главу, упирался в
+  // покупку там, где ждал продолжения чтения. Владелец, увидев кадр: «она тут
+  // вообще не нужна».
+  //
+  // Снято только в порте, по его же решению — на нативе `chapterEndOffer`
+  // остаётся, и это сознательное расхождение, а не отставание порта.
+  //
+  // Дверь на *закрытой* главе цела: `_preview` выше рисует «Разблокировать»,
+  // и это единственный способ её купить. Убрано предложение поверх уже
+  // прочитанного, а не путь к покупке.
 
   String _systemName(L l) => switch (widget.system) {
         SystemSlug.natal => l.cabSystemNatal,
