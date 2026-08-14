@@ -383,12 +383,18 @@ monthly is a **downgrade**, effective at the next renewal date. Stacking them at
 would make the switch a crossgrade between different durations, which waits for the existing
 subscription to expire — a person paying us more would wait up to a month to get it.
 
-**Play.** One subscription product, `alma.live`, with two base plans:
+**Play.** Три отдельные подписки в одной группе — так же, как у Apple, и так же, как
+спрашивает клиент:
 
-| Base plan id | Billing period | Renewal type |
+| Product id | Billing period | Renewal type |
 |---|---|---|
-| `monthly` | P1M | auto-renewing |
-| `annual` | P1Y | auto-renewing |
+| `alma.weekly` | P1W | auto-renewing |
+| `alma.monthly` | P1M | auto-renewing |
+| `alma.annual` | P1Y | auto-renewing |
+
+Раньше здесь стоял один продукт `alma.live` с базовыми планами. От него отказались: обе
+апки и сервер знают ровно эти три идентификатора, а один продукт с планами потребовал бы
+второй карты соответствий в трёх местах.
 
 Base plan ids may contain only lowercase letters, numbers and hyphens — `monthly` and `annual`
 qualify. Play's default replacement mode for switching base plans within one subscription is set
@@ -715,7 +721,7 @@ PRODUCTS: dict[str, Product] = {
         band="monthly", interval="month", scope="live",
         processor_ids={
             "appstore": "alma.monthly",
-            "googleplay": "alma.live",
+            "googleplay": "alma.monthly",
         },
     ),
     "annual": Product(
@@ -723,7 +729,7 @@ PRODUCTS: dict[str, Product] = {
         band="annual", interval="year", scope="all",
         processor_ids={
             "appstore": "alma.annual",
-            "googleplay": "alma.live",
+            "googleplay": "alma.monthly",
         },
     ),
 }
