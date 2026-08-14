@@ -55,24 +55,30 @@ produced `REGIONAL_CENTS` therefore survives the move intact.
 
 | Catalogue slug | Type | Apple product id | Play product id | On the shelf? |
 |---|---|---|---|---|
-| `natal` | Non-consumable | `ai.pazl.alma.natal` | `ai.pazl.alma.natal` | yes |
-| `numerology` | Non-consumable | `ai.pazl.alma.numerology` | `ai.pazl.alma.numerology` | yes |
-| `birth-card` | Non-consumable | `ai.pazl.alma.birth_card` | `ai.pazl.alma.birth_card` | yes |
-| `transits` | Non-consumable | `ai.pazl.alma.transits` | `ai.pazl.alma.transits` | yes |
-| `solar-return` | Non-consumable | `ai.pazl.alma.solar_return` | `ai.pazl.alma.solar_return` | yes |
-| `compatibility` | Non-consumable | `ai.pazl.alma.compatibility` | `ai.pazl.alma.compatibility` | yes |
-| `astrocartography` | Non-consumable | `ai.pazl.alma.astrocartography` | `ai.pazl.alma.astrocartography` | yes |
-| `synthesis` | Non-consumable | `ai.pazl.alma.synthesis` | `ai.pazl.alma.synthesis` | yes |
-| `archive` | Non-consumable | `ai.pazl.alma.archive` | `ai.pazl.alma.archive` | yes |
-| `archive-upgrade` | Non-consumable | `ai.pazl.alma.archive_upgrade` | `ai.pazl.alma.archive_upgrade` | no — after-door |
+| `natal` | Non-consumable | `alma.natal` | `alma.natal` | yes |
+| `numerology` | Non-consumable | `alma.numerology` | `alma.numerology` | yes |
+| `birth-card` | Non-consumable | `alma.birth_card` | `alma.birth_card` | yes |
+| `transits` | Non-consumable | `alma.transits` | `alma.transits` | yes |
+| `solar-return` | Non-consumable | `alma.solar_return` | `alma.solar_return` | yes |
+| `compatibility` | Non-consumable | `alma.compatibility` | `alma.compatibility` | yes |
+| `astrocartography` | Non-consumable | `alma.astrocartography` | `alma.astrocartography` | yes |
+| `synthesis` | Non-consumable | `alma.synthesis` | `alma.synthesis` | yes |
+| `archive` | Non-consumable | `alma.archive` | `alma.archive` | yes |
+| `archive-upgrade` | Non-consumable | `alma.archive_upgrade` | `alma.archive_upgrade` | no — after-door |
 | `archive-bump` | **none** | **do not create** | **do not create** | no — see §6 |
-| `weekly` | Auto-renewable, 1 week | `ai.pazl.alma.weekly` | `ai.pazl.alma.live`, base plan `weekly` | yes |
-| `monthly` | Auto-renewable, 1 month | `ai.pazl.alma.monthly` | `ai.pazl.alma.live`, base plan `monthly` | yes |
-| `annual` | Auto-renewable, 1 year | `ai.pazl.alma.annual` | `ai.pazl.alma.live`, base plan `annual` | yes |
+| `weekly` | Auto-renewable, 1 week | `alma.weekly` | `alma.weekly` | yes |
+| `monthly` | Auto-renewable, 1 month | `alma.monthly` | `alma.monthly` | yes |
+| `annual` | Auto-renewable, 1 year | `alma.annual` | `alma.annual` | yes |
 
 **Thirteen products on Apple** — ten non-consumables and three auto-renewable subscriptions.
-**Eleven on Play** — the same ten one-time products, and one subscription carrying three base
-plans. Apple's product-page ceiling is 20 items across both sections, so we are not near it.
+**Thirteen on Play** — те же десять разовых и три отдельные подписки в одной группе.
+Потолок карточки у Apple — 20 позиций на обе секции, так что запас есть.
+
+**Подписки заводятся тремя отдельными продуктами, а не одним с базовыми планами.**
+Так построены обе апки и файл локальных тестов покупок: клиент спрашивает у магазина
+`alma.weekly`, `alma.monthly`, `alma.annual`, сервер по этим же идентификаторам выдаёт права.
+Один продукт с базовыми планами потребовал бы второй карты соответствий в трёх местах —
+и первая же опечатка в ней выглядела бы как исчезнувшая строка на витрине.
 
 The weekly rung was added to the catalogue after this document was first written and spent a
 day missing from it — in `LadderKey`, in `catalogue.py` and in `StoreProducts.kt`, absent
@@ -107,12 +113,12 @@ why §3 never describes either one as access to Alma.
 
 ### The form
 
-`ai.pazl.alma.` + the catalogue key with hyphens turned into underscores. Reverse-DNS under the
+`alma.` + the catalogue key with hyphens turned into underscores. Reverse-DNS under the
 Android `applicationId` / iOS bundle namespace (`mobile/android/app/build.gradle.kts:13`).
 Both stores accept it: Apple allows *"letters, numbers, hyphens, periods, and underscores"* up
 to 100 characters; Play requires an id that *"must start with a number or lowercase letter and
 can contain numbers (0-9), lowercase letters (a-z), underscores (_), and periods (.)"* with a
-**maximum of 40 characters** — our longest, `ai.pazl.alma.astrocartography`, is 29.
+**maximum of 40 characters** — our longest, `alma.astrocartography`, is 29.
 
 ### This is a change, and it has to happen before the first product is saved
 
@@ -132,9 +138,9 @@ costs a new set of products and every buyer's entitlement.
 **Do all four together or none:**
 
 ```
-ALMA_STORE_PRODUCT_PREFIX=ai.pazl.alma.        # deployment environment
-LadderKey.prefix       = "ai.pazl.alma."       # LadderKey.swift:115
-StoreProducts.PREFIX   = "ai.pazl.alma."       # StoreProducts.kt:57
+ALMA_STORE_PRODUCT_PREFIX=alma.        # deployment environment
+LadderKey.prefix       = "alma."       # LadderKey.swift:115
+StoreProducts.PREFIX   = "alma."       # StoreProducts.kt:57
 processor_ids          = see §7                # catalogue.py
 ```
 
@@ -377,7 +383,7 @@ monthly is a **downgrade**, effective at the next renewal date. Stacking them at
 would make the switch a crossgrade between different durations, which waits for the existing
 subscription to expire — a person paying us more would wait up to a month to get it.
 
-**Play.** One subscription product, `ai.pazl.alma.live`, with two base plans:
+**Play.** One subscription product, `alma.live`, with two base plans:
 
 | Base plan id | Billing period | Renewal type |
 |---|---|---|
@@ -627,64 +633,64 @@ PRODUCTS: dict[str, Product] = {
     "natal": Product(
         "natal", "Natal chart", "one_time", _DOOR_CENTS, band="door",
         processor_ids={
-            "appstore": "ai.pazl.alma.natal",
-            "googleplay": "ai.pazl.alma.natal",
+            "appstore": "alma.natal",
+            "googleplay": "alma.natal",
         },
     ),
     "numerology": Product(
         "numerology", "Numerology", "one_time", _DOOR_CENTS, band="door",
         processor_ids={
-            "appstore": "ai.pazl.alma.numerology",
-            "googleplay": "ai.pazl.alma.numerology",
+            "appstore": "alma.numerology",
+            "googleplay": "alma.numerology",
         },
     ),
     "birth-card": Product(
         "birth-card", "Birth Card", "one_time", _DOOR_CENTS, band="door",
         processor_ids={
-            "appstore": "ai.pazl.alma.birth_card",
-            "googleplay": "ai.pazl.alma.birth_card",
+            "appstore": "alma.birth_card",
+            "googleplay": "alma.birth_card",
         },
     ),
     "transits": Product(
         "transits", "Transits", "one_time", _DOOR_CENTS, band="door",
         processor_ids={
-            "appstore": "ai.pazl.alma.transits",
-            "googleplay": "ai.pazl.alma.transits",
+            "appstore": "alma.transits",
+            "googleplay": "alma.transits",
         },
     ),
     "solar-return": Product(
         "solar-return", "Solar return", "one_time", _DOOR_CENTS, band="door",
         processor_ids={
-            "appstore": "ai.pazl.alma.solar_return",
-            "googleplay": "ai.pazl.alma.solar_return",
+            "appstore": "alma.solar_return",
+            "googleplay": "alma.solar_return",
         },
     ),
     "compatibility": Product(
         "compatibility", "Compatibility", "one_time", _DOOR_CENTS, band="door",
         processor_ids={
-            "appstore": "ai.pazl.alma.compatibility",
-            "googleplay": "ai.pazl.alma.compatibility",
+            "appstore": "alma.compatibility",
+            "googleplay": "alma.compatibility",
         },
     ),
     "astrocartography": Product(
         "astrocartography", "Astrocartography", "one_time", _DOOR_CENTS, band="door",
         processor_ids={
-            "appstore": "ai.pazl.alma.astrocartography",
-            "googleplay": "ai.pazl.alma.astrocartography",
+            "appstore": "alma.astrocartography",
+            "googleplay": "alma.astrocartography",
         },
     ),
     "synthesis": Product(
         "synthesis", "Cross-synthesis", "one_time", _DOOR_CENTS, band="door",
         processor_ids={
-            "appstore": "ai.pazl.alma.synthesis",
-            "googleplay": "ai.pazl.alma.synthesis",
+            "appstore": "alma.synthesis",
+            "googleplay": "alma.synthesis",
         },
     ),
     "archive": Product(
         "*", "The whole archive", "one_time", 3899, band="archive", scope="all",
         processor_ids={
-            "appstore": "ai.pazl.alma.archive",
-            "googleplay": "ai.pazl.alma.archive",
+            "appstore": "alma.archive",
+            "googleplay": "alma.archive",
         },
     ),
     # Never created in either console. See mobile/store/PRODUCTS.md §6.
@@ -697,8 +703,8 @@ PRODUCTS: dict[str, Product] = {
         "*", "The rest of the archive", "one_time", 3300,
         band="archive-upgrade", scope="all", offered="after-door",
         processor_ids={
-            "appstore": "ai.pazl.alma.archive_upgrade",
-            "googleplay": "ai.pazl.alma.archive_upgrade",
+            "appstore": "alma.archive_upgrade",
+            "googleplay": "alma.archive_upgrade",
         },
     ),
     # Apple: two products in one subscription group. Play: two base plans on
@@ -708,16 +714,16 @@ PRODUCTS: dict[str, Product] = {
         "*", "Everything live, monthly", "monthly", 999,
         band="monthly", interval="month", scope="live",
         processor_ids={
-            "appstore": "ai.pazl.alma.monthly",
-            "googleplay": "ai.pazl.alma.live",
+            "appstore": "alma.monthly",
+            "googleplay": "alma.live",
         },
     ),
     "annual": Product(
         "*", "Everything, for a year", "annual", 7899,
         band="annual", interval="year", scope="all",
         processor_ids={
-            "appstore": "ai.pazl.alma.annual",
-            "googleplay": "ai.pazl.alma.live",
+            "appstore": "alma.annual",
+            "googleplay": "alma.live",
         },
     ),
 }
@@ -731,9 +737,9 @@ And two module-level constants beside it, because a shared Play id is not enough
 #: group: a person can hold one of them at a time and switching is a switch
 #: rather than a second purchase. The consequence is that a Play product id no
 #: longer identifies a catalogue row on its own — both rows carry
-#: `ai.pazl.alma.live` — so `by_price_id` would answer "monthly" for either one.
+#: `alma.live` — so `by_price_id` would answer "monthly" for either one.
 #: This table is the second half of the key.
-GOOGLE_SUBSCRIPTION_ID: str = "ai.pazl.alma.live"
+GOOGLE_SUBSCRIPTION_ID: str = "alma.live"
 
 #: catalogue key → Play base plan id, and back. Base plan ids may hold only
 #: lowercase letters, numbers and hyphens.
@@ -743,7 +749,7 @@ GOOGLE_BASE_PLANS: dict[str, str] = {"monthly": "monthly", "annual": "annual"}
 ### The bug this creates if it is only half done
 
 `by_price_id` (`catalogue.py:382–407`) walks `PRODUCTS` in insertion order and returns the first
-key whose identifier matches. With `ai.pazl.alma.live` on both subscription rows it will always
+key whose identifier matches. With `alma.live` on both subscription rows it will always
 answer `"monthly"` — so **an annual purchase would grant the monthly's `"live"` scope and record
 a year's money against a month's product.** `store_slug` (`provider.py:687–703`) delegates to it,
 and `googleplay.Event.product` (`googleplay.py:485–486`) delegates to that. Three layers, one
@@ -770,7 +776,7 @@ wrong answer. §8 is what closes it, and it has to land in the same change as th
 
 **`mobile/android/.../billing/StoreProducts.kt`**
 
-* `PREFIX` → `"ai.pazl.alma."`.
+* `PREFIX` → `"alma."`.
 * `productId(slug)` must return `GOOGLE_SUBSCRIPTION_ID` for `monthly` and `annual`, and the
   computed id for everything else — the plain rule no longer covers the two subscriptions.
 * A companion `basePlanFor(slug)` returning `"monthly"` / `"annual"`.
@@ -794,12 +800,12 @@ wrong answer. §8 is what closes it, and it has to land in the same change as th
 
 **`mobile/ios/Alma/Billing/LadderKey.swift`**
 
-* `prefix` → `"ai.pazl.alma."` (line 115). Nothing else: Apple has no base plans, `monthly` and
+* `prefix` → `"alma."` (line 115). Nothing else: Apple has no base plans, `monthly` and
   `annual` stay two product ids, and `archive-bump` is already absent.
 
 **Environment**
 
-* `ALMA_STORE_PRODUCT_PREFIX=ai.pazl.alma.` so the computed fallback in
+* `ALMA_STORE_PRODUCT_PREFIX=alma.` so the computed fallback in
   `provider.store_product_id` agrees with the pins for any row that ever loses one.
 
 **Tests worth adding in the same change**
@@ -815,7 +821,7 @@ wrong answer. §8 is what closes it, and it has to land in the same change as th
 
 ## 9. What only the owner can decide
 
-1. **Adopt `ai.pazl.alma.` or keep `alma.`?** Free today, impossible after the first product is
+1. **Adopt `alma.` or keep `alma.`?** Free today, impossible after the first product is
    saved in either console. Recommendation: adopt, and change the four constants in §2 together.
 2. **Cap or decay the owner chat allowance before opening the PPP door.** `config.py:143–146`
    already names the two options and says the decision has not been made. Opening BRL, MXN, PLN,
@@ -834,7 +840,7 @@ wrong answer. §8 is what closes it, and it has to land in the same change as th
    which way to move it. Whatever is chosen has to go back into `REGIONAL_CENTS` in the same
    commit.
 6. **Confirm Play's default replacement mode** is set to *Charge immediately* on the
-   `ai.pazl.alma.live` subscription, so the monthly → annual switch behaves like Apple's
+   `alma.live` subscription, so the monthly → annual switch behaves like Apple's
    level-1-over-level-2 upgrade rather than waiting for the next billing date.
 7. **UNSOURCED — verify in Play Console:** whether Billing Library 8 requires one-time products
    to be created under the newer *purchase options and offers* model rather than as plain
