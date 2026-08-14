@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:alma/main.dart';
 import 'package:alma/net/alma_client.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -47,7 +48,14 @@ AlmaClient deadNetworkClient() {
 }
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // **Связка в пробирке.** `flutter_secure_storage` разговаривает с
+    // платформой каналом, которого в тестах нет: без этой строки первый же
+    // `read()` не отвечает никогда, и тест умирает по десятиминутному
+    // таймауту, не сказав почему.
+    FlutterSecureStorage.setMockInitialValues({});
+  });
 
   testWidgets('гостя без рождения встречает путешествие, не пустой кабинет',
       (tester) async {

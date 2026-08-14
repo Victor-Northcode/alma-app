@@ -4,6 +4,7 @@ import 'dart:io' show Link, Platform;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models.dart';
@@ -41,30 +42,89 @@ class BadPayload extends AlmaError {
 ///
 /// На iOS он лежит в связке ключей, и это правильно: связка переживает
 /// переустановку. `shared_preferences` так не умеет, и разница записана здесь
-/// честно, а не спрятана — вернуть поведение связки будет отдельной задачей с
-/// нативным плагином. Пока токен живёт столько же, сколько установка, и
-/// восстановление покупок опирается на вход в аккаунт, а не на связку.
+/// честно, а не спрятана: на iOS связка переживает переустановку, на Android
+/// ключ Keystore уничтожается вместе с приложением, а в вебе это шифрование в
+/// том же браузере. Общее для всех трёх — «не переживает удаления
+/// приложения», и именно так это сказано в юридическом тексте.
 class TokenStore {
   static const _key = 'alma.token';
   static const _anonKey = 'alma.anon';
 
-  String? _cached;
+  /// **Связка ключей, а не настройки.**
+  ///
+  /// Токен — это и есть аккаунт: у безымянного гостя нет ни почты, ни имени, и
+  /// сервер не имеет способа вернуть ему его покупки. Пока токен лежал в
+  /// `shared_preferences`, он умирал вместе с установкой — вместе с картой и
+  /// оплаченными главами.
+  ///
+  /// `first_unlock_this_device` выбран двумя отказами, как на нативе: не
+  /// `unlocked` — фоновое обновление с телефоном в кармане обязано читать; и
+  /// не переезжающий вариант — элемент, уехавший в зашифрованном бэкапе на
+  /// новое устройство, дал бы один гостевой аккаунт из двух мест, а серверные
+  /// лимиты под это не написаны.
+  ///
+  /// **Обещание платформенное.** На iOS связка переживает переустановку; на
+  /// Android ключ Keystore уничтожается вместе с приложением, а в вебе это
+  /// вообще не связка. Поэтому нигде — ни здесь, ни в юридическом тексте — не
+  /// говорится «переживает переустановку»: сказано «не переживает удаления
+  /// приложения», и это верно на всех трёх.
+  static const _secure = FlutterSecureStorage(
+    iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock_this_device),
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
+  /// Двойная необязательность нарочно: внешний `null` — «ещё не читали»,
+  /// внутренний — «читали, токена нет». Без различия аккаунт без токена
+  /// долбил бы хранилище на каждом запросе, а чтение связки заметно дороже
+  /// чтения настроек.
+  ({String? value})? _cached;
   String? _anonCached;
 
   Future<String?> read() async {
-    if (_cached != null) return _cached;
+    final cached = _cached;
+    if (cached != null) return cached.value;
+    var value = await _secure.read(key: _key);
+    value ??= await _migrateFromPreferences();
+    _cached = (value: value);
+    return value;
+  }
+
+  /// Переезд старого токена из настроек в связку.
+  ///
+  /// **Порядок здесь — цена аккаунта.** Записать, перечитать, сравнить и лишь
+  /// потом удалить из настроек: удаление раньше проверки — это потерянный
+  /// аккаунт со всеми покупками, и восстановить его нечем. И это переезд, а не
+  /// слепая перезапись: если в связке уже что-то есть, значение из настроек
+  /// выбрасывается — иначе откат на предыдущую сборку и обратно затёр бы
+  /// свежий токен старым.
+  Future<String?> _migrateFromPreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    return _cached = prefs.getString(_key);
+    final old = prefs.getString(_key);
+    if (old == null) return null;
+    try {
+      await _secure.write(key: _key, value: old);
+      if (await _secure.read(key: _key) == old) {
+        await prefs.remove(_key);
+      }
+    } catch (_) {
+      // Связка не ответила — токен остаётся в настройках и переедет в
+      // следующий раз. Хуже потерянного аккаунта нет ничего.
+    }
+    return old;
   }
 
   Future<void> write(String token) async {
-    _cached = token;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_key, token);
+    // **Пустая запись — это запись.** Каждый ответ сервера несёт заголовок с
+    // токеном, и без этой проверки прокручиваемый экран переписывал бы связку
+    // десятки раз в минуту.
+    if (_cached?.value == token) return;
+    _cached = (value: token);
+    await _secure.write(key: _key, value: token);
   }
 
   Future<void> clear() async {
-    _cached = null;
+    _cached = (value: null);
+    await _secure.delete(key: _key);
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_key);
   }
@@ -401,6 +461,30 @@ class AlmaClient {
     }
 
     final text = await streamed.stream.bytesToString();
+
+    // **Токен приходит заголовком, а не только телом.**
+    //
+    // Сервер чеканит гостя в зависимости запроса и кладёт свежий токен в
+    // `X-Alma-Token` любого ответа (`api/deps.py`). Порт этот заголовок не
+    // читал вовсе и жил на токене из тела `/v1/auth/refresh` — то есть на том
+    // единственном, который успел получить. Пока хранилище умирало вместе с
+    // установкой, это было незаметно; с долговечным хранилищем незамеченный
+    // здесь токен становится долговечно неправильным.
+    final minted = streamed.headers[tokenHeader.toLowerCase()];
+    if (minted != null && minted.isNotEmpty) {
+      await _tokens.write(minted);
+    }
+
+    // **410 значит «этого аккаунта больше нет» — и хранилище чистится.**
+    //
+    // Токен, переживший удаление аккаунта, запирает человека навсегда: каждый
+    // запрос отвечает 410, приложение не заводит нового гостя, и выхода нет.
+    // На нативе это `AlmaClient.classify`, и там же сказано, почему чистится
+    // и идентификатор установки: аккаунта нет, привязывать не к чему.
+    if (streamed.statusCode == 410) {
+      await _tokens.clear();
+    }
+
     if (streamed.statusCode >= 400) {
       // **Предложение сервера показывается как есть — когда оно для
       // читателя.** FastAPI кладёт тело отказа в `detail`, и наш сервер шлёт

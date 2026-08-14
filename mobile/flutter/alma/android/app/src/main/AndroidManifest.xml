@@ -1,5 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- **Автобэкап выключён, и это не осторожность, а условие работы.**
+         `flutter_secure_storage` шифрует ключом из Keystore, а Keystore не
+         уезжает в бэкап; восстановленная из Google Drive копия отдаёт
+         зашифрованный токен и ключ, которым его не расшифровать —
+         InvalidKeyException при первом же запросе. Флаг обязан стоять до того,
+         как токен туда поедет. -->
     <application
+        android:allowBackup="false"
+        android:fullBackupContent="false"
         android:label="alma"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

@@ -6,6 +6,7 @@ import 'package:alma/net/models.dart';
 import 'package:alma/screens/systems/chapter_screen.dart';
 import 'package:alma/state/session.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -72,7 +73,14 @@ Widget host(AlmaSession session) => SessionScope(
     );
 
 void main() {
-  setUp(() => SharedPreferences.setMockInitialValues({}));
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // **Связка в пробирке.** `flutter_secure_storage` разговаривает с
+    // платформой каналом, которого в тестах нет: без этой строки первый же
+    // `read()` не отвечает никогда, и тест умирает по десятиминутному
+    // таймауту, не сказав почему.
+    FlutterSecureStorage.setMockInitialValues({});
+  });
 
   testWidgets('резкий смах на дне не переворачивает страницу', (tester) async {
     final session = AlmaSession(chapterClient());

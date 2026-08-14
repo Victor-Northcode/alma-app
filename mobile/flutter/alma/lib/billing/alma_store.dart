@@ -170,8 +170,17 @@ class AlmaStore extends ChangeNotifier {
           notifyListeners();
 
         case PurchaseStatus.canceled:
-          // Молчание, намеренно. Закрывший лист сказал «нет», и приложение,
-          // отвечающее на это сообщением, начинает спорить.
+          // Молчание на экране, намеренно: закрывший лист сказал «нет», и
+          // приложение, отвечающее на это сообщением, начинает спорить. Но в
+          // отчёт это уходит — «закрыл лист Apple» и «нажал не сейчас» оба
+          // `offer_declined`, и на нативе они шлются из обоих мест. Без
+          // первого воронка теряет ровно тех, кто дошёл до оплаты и передумал
+          // на последнем шаге.
+          final cancelled = LadderKey.fromStoreProductId(purchase.productID);
+          if (cancelled != null) {
+            _session?.client.track(FunnelStage.offerDeclined,
+                meta: {'product': cancelled.slug});
+          }
           _busy = null;
           notifyListeners();
 
