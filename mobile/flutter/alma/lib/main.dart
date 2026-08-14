@@ -150,10 +150,17 @@ class _CabinetShellState extends State<CabinetShell> {
         if (mounted) setState(() {});
       });
     }
+    // **Вход для проверки.** Анкету видит только человек без рождения, а
+    // значит один раз в жизни установки — и её экраны нечем снять рядом с
+    // нативным кадром. На нативе для этого есть `-AlmaJourneyStep` в
+    // `UserDefaults` (`JourneyModel.swift`), здесь — то же самое сборкой:
+    // `--dart-define=ALMA_JOURNEY=1`. В обычной сборке константа пуста, и
+    // ветка мертва.
+    const forced = bool.fromEnvironment('ALMA_JOURNEY');
     // Без рождения кабинету нечего считать: новый человек попадает в
     // путешествие, как на iOS его встречает полноэкранная обложка. Пока
     // сессия не готова — ночь без всего, а не мигающий каркас.
-    if (session.ready && !session.hasBirthData) {
+    if (forced || (session.ready && !session.hasBirthData)) {
       return JourneyScreen(onDone: () => setState(() {}));
     }
     return Scaffold(
