@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
+import 'design/metrics.dart';
 import 'design/palette.dart';
 import 'design/tab_bar.dart';
 import 'design/typography.dart';
@@ -173,6 +174,24 @@ class _CabinetShellState extends State<CabinetShell> {
           _Alive(child: SettingsScreen()),
         ],
       ),
+      // **Одно стоячее приглашение.**
+      //
+      // На нативе это золотая пилюля в углу «Сегодня» и «Моих систем»: не
+      // баннер и не всплывающее окно, а маленькая печать, которая ждёт. Она
+      // исчезает в ту секунду, когда план появляется, — звать заплатившего
+      // значит показывать, что мы не знаем, кто перед нами.
+      floatingActionButton: (!session.isSubscriber &&
+              session.hasBirthData &&
+              (_tab == CabinetTab.today || _tab == CabinetTab.systems))
+          ? Padding(
+              padding: EdgeInsets.only(bottom: AlmaMetrics.tabBarHeight - 8),
+              child: _AllAlmaPill(onTap: () {
+                _pages.animateToPage(CabinetTab.systems.index,
+                    duration: const Duration(milliseconds: 320),
+                    curve: Curves.easeOutCubic);
+              }),
+            )
+          : null,
       bottomNavigationBar: CabinetTabBar(
         current: _tab,
         // Нажатие идёт тем же путём, что смах: одно движение на оба способа.
@@ -284,5 +303,32 @@ class _AliveState extends State<_Alive> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
     return widget.child;
+  }
+}
+
+
+/// Золотая пилюля «Вся Alma» — единственное стоячее приглашение в кабинете.
+class _AllAlmaPill extends StatelessWidget {
+  const _AllAlmaPill({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Material(
+      color: AlmaPalette.gold,
+      borderRadius: BorderRadius.circular(999),
+      elevation: 6,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Text('✦ ${l.cabAllAlmaPill}',
+              style: AlmaType.meta.copyWith(color: AlmaPalette.inkOnGold)),
+        ),
+      ),
+    );
   }
 }
