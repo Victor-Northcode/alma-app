@@ -53,6 +53,9 @@ that single constraint shaped the entire astronomy stack.
 
 ## Where to go next
 
+- **Running it locally** → [`docs/RUN-LOCAL.md`](docs/RUN-LOCAL.md) — storefront and backend
+  directly on the machine, no Docker and no venv, and the one Windows path-casing trap that
+  breaks the dev server in a way nothing on screen explains.
 - **Working here at all** → [`docs/WORKING.md`](docs/WORKING.md) — the owner's rules, the
   simulator UDID, how to give a test guest a chart in two minutes, and the traps that cost
   hours. Read it first.
