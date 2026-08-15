@@ -287,11 +287,22 @@ class _JourneyScreenState extends State<JourneyScreen> {
               Expanded(
                 child: _Wheel(
                   label: l.journeyCaptureYear,
-                  // Девяносто два года вниз от «десять лет назад»: продукт для
-                  // взрослых, и год рождения младенца в списке — это строка,
-                  // которую прокручивают мимо, а не выбирают.
-                  options: [for (var i = 0; i < 92; i++) _thisYear - 10 - i],
+                  // **Годы идут вверх, как в эталоне, а не вниз.**
+                  //
+                  // Список шёл от «десять лет назад» вниз, и колесо открывалось
+                  // на 2016 — то есть на годе, который почти никому не нужен, а
+                  // до своего человек крутил полсотни строк. Теперь порядок
+                  // естественный, а открывается колесо на тридцати годах назад:
+                  // это середина списка и середина взрослой жизни.
+                  //
+                  // Верхняя граница прежняя — десять лет назад: продукт для
+                  // взрослых, и год рождения младенца это строка, которую
+                  // прокручивают мимо, а не выбирают.
+                  options: [
+                    for (var y = _thisYear - 101; y <= _thisYear - 10; y++) y,
+                  ],
                   selected: _year,
+                  fallback: _thisYear - 30,
                   caption: (y) => '$y',
                   onChanged: (y) => setState(() => _year = y),
                 ),
@@ -459,11 +470,22 @@ class _JourneyScreenState extends State<JourneyScreen> {
 
 /// Одно колесо анкеты.
 ///
-/// Порт `JourneyWheel` из `JourneyControls.swift`, и главное здесь —
-/// **биндинг**: пока ничего не выбрано, в окне видно первое значение, но
-/// записанным оно не считается. Иначе колесо, открывшееся на «1», отдало бы
-/// единицу тому, кто до него не дотронулся, и дата рождения половины людей
-/// начиналась бы с первого числа.
+/// Главное здесь — **пустое состояние**. Натив ради него отказался от колеса
+/// вовсе: «`DatePicker` всегда имеет значение, поэтому открывается на сегодня,
+/// и человек, пролиставший мимо, молча сообщил, что родился сегодня утром»
+/// (`JourneyControls.swift:145`). Дизайн-проект колесо вернул, но правило
+/// осталось: значение в полосе не считается выбранным, пока барабан не
+/// повернули. Иначе датой рождения половины людей стало бы то, на чём колесо
+/// открылось.
+///
+/// Отсюда вся приглушённость: невыбранное колесо тусклое целиком, и полоса
+/// выбора у него почти погашена. Раньше оно выглядело точно как выбранное —
+/// в окне стояло «1 января 1996» слоновой костью, а кнопка «дальше» была
+/// серой, и экран сам себе противоречил.
+///
+/// Свою же строку выбирают поворотом туда и обратно: барабан отдаёт значение,
+/// когда центральная строка сменилась, поэтому вернувшийся на место отдаёт то
+/// же число — но уже как выбранное.
 class _Wheel extends StatefulWidget {
   const _Wheel({
     required this.label,
@@ -471,11 +493,17 @@ class _Wheel extends StatefulWidget {
     required this.selected,
     required this.caption,
     required this.onChanged,
+    this.fallback,
   });
 
   final String label;
   final List<int> options;
   final int? selected;
+
+  /// На чём открыться, пока ничего не выбрано, если середина списка не годится.
+  /// Году она не годится: середина диапазона в сто лет — это 1971, а середина
+  /// взрослой жизни — тридцать лет назад.
+  final int? fallback;
   final String Function(int) caption;
   final ValueChanged<int> onChanged;
 
@@ -485,16 +513,41 @@ class _Wheel extends StatefulWidget {
 
 class _WheelState extends State<_Wheel> {
   late final FixedExtentScrollController _controller = FixedExtentScrollController(
-    initialItem: widget.selected == null
-        ? 0
-        : widget.options.indexOf(widget.selected!).clamp(0, widget.options.length - 1),
+    initialItem: _initial,
   );
+
+  /// Какая строка сейчас в полосе выбора. Нужна для лестницы прозрачности:
+  /// она считается от расстояния до центра, а не от того, выбрано ли значение.
+  late int _centre = _initial;
+
+  /// **Колесо открывается в середине списка, а не на первой строке.**
+  ///
+  /// Первая строка — это половина барабана, стоящая пустой: над «1 января»
+  /// ничего нет, и колонка из пяти строк показывает три. Эталон нарисован
+  /// полным, и полным он должен быть с первого кадра, до всякой прокрутки.
+  int get _initial {
+    final at = widget.selected ?? widget.fallback;
+    if (at == null) return widget.options.length ~/ 2;
+    final index = widget.options.indexOf(at);
+    return index < 0 ? widget.options.length ~/ 2 : index;
+  }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
+
+  /// Высота строки. Пять строк в окне 148 — как в эталоне: там пять детей по
+  /// 25.5 с зазором 6, что даёт ту же плотность.
+  static const _extent = 148 / 5;
+
+  bool get _chosen => widget.selected != null;
+
+  /// Полоса выбора зажигается вместе со значением. Пока значения нет, она
+  /// почти невидима — ровно как золотой кант нативного поля, который
+  /// появляется только у заполненного (`JourneyControls.swift:186`).
+  Color get _band => _chosen ? const Color(0x29C9AE6B) : const Color(0x0FC9AE6B);
 
   @override
   Widget build(BuildContext context) {
@@ -504,52 +557,67 @@ class _WheelState extends State<_Wheel> {
       child: SizedBox(
         height: 148,
         child: Stack(alignment: Alignment.center, children: [
-          // Полоса выбора: две волосяные линии в 34 точках друг от друга —
-          // ровно высота строки. Без неё колесо не показывает, какое из
-          // значений выбрано, и центральная строка ничем не отличается от
-          // соседних.
+          // **Полоса выбора вчетверо бледнее, чем была.** Стояла в полный
+          // `hairlineGold`, и две золотые черты спорили с самим значением —
+          // глаз читал сначала рамку, потом цифру. В эталоне это едва заметная
+          // подсказка: `rgba(201,174,107,.16)`.
           Container(
             height: 34,
             decoration: BoxDecoration(
               border: Border(
-                top: BorderSide(color: AlmaPalette.hairlineGold),
-                bottom: BorderSide(color: AlmaPalette.hairlineGold),
+                top: BorderSide(color: _band),
+                bottom: BorderSide(color: _band),
               ),
             ),
           ),
           ListWheelScrollView.useDelegate(
-          controller: _controller,
-          // 34 — высота строки, при которой в окно 148 точек попадает
-          // четыре с половиной значения: столько же, сколько в нативном
-          // колесе, и достаточно, чтобы соседние читались, а не угадывались.
-          itemExtent: 34,
-          diameterRatio: 1.6,
-          perspective: 0.004,
-          physics: const FixedExtentScrollPhysics(),
-          onSelectedItemChanged: (index) {
-            HapticFeedback.selectionClick();
-            widget.onChanged(widget.options[index]);
-          },
-          childDelegate: ListWheelChildBuilderDelegate(
-            childCount: widget.options.length,
-            builder: (context, index) {
-              final value = widget.options[index];
-              final chosen = widget.selected == value;
-              return Center(
-                child: Text(
-                  widget.caption(value),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AlmaType.displayL.copyWith(
-                    fontSize: 19,
-                    // Невыбранное — тише, но читаемо: колесо, у которого
-                    // видно только центральную строку, перестаёт быть колесом.
-                    color: chosen ? AlmaPalette.inkLight : AlmaPalette.muted3,
-                  ),
-                ),
-              );
+            controller: _controller,
+            itemExtent: _extent,
+            // Барабан почти плоский — таким он нарисован. Перспектива здесь
+            // мешает: колонка узкая, и завал крайних строк читается сбоем
+            // вёрстки, а не объёмом.
+            diameterRatio: 2.4,
+            perspective: 0.002,
+            physics: const FixedExtentScrollPhysics(),
+            onSelectedItemChanged: (index) {
+              HapticFeedback.selectionClick();
+              setState(() => _centre = index);
+              widget.onChanged(widget.options[index]);
             },
-          ),
+            childDelegate: ListWheelChildBuilderDelegate(
+              childCount: widget.options.length,
+              builder: (context, index) {
+                // **Лестница прозрачности — то, чего не хватало больше всего.**
+                //
+                // Раньше строка была либо выбранной, либо приглушённой одинаково,
+                // и колесо читалось плоским списком. В эталоне яркость падает со
+                // ступенькой на каждую строку от центра: 1 → .55 → .4. Именно
+                // это и делает столбик похожим на барабан, а не перспектива.
+                final away = (index - _centre).abs();
+                final color = _chosen && away == 0
+                    ? AlmaPalette.inkLight
+                    : AlmaPalette.body.withValues(
+                        alpha: switch ((_chosen, away)) {
+                          (true, 1) => 0.55,
+                          (true, _) => 0.4,
+                          // Невыбранное колесо всё целиком на ступень тусклее:
+                          // его центральная строка светит ровно как соседка
+                          // выбранного, и слоновой кости в ней нет.
+                          (false, 0) => 0.55,
+                          (false, 1) => 0.4,
+                          (false, _) => 0.3,
+                        },
+                      );
+                return Center(
+                  child: Text(
+                    widget.caption(widget.options[index]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AlmaType.displayL.copyWith(fontSize: 19, color: color),
+                  ),
+                );
+              },
+            ),
           ),
         ]),
       ),
