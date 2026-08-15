@@ -45,36 +45,55 @@ class GoldTexture {
     stops: [0, 0.55],
   );
 
-  /// Лучи. Шаг 7°: 1.8° золота и 5.2° пустоты, из-под низа кнопки.
+  /// Лучи рисуются painter'ом, а не градиентом.
   ///
-  /// `SweepGradient` красит по кругу от 0 и не умеет повторяться — поэтому
-  /// остановки считаются заранее, парой на каждый луч. Пятьдесят один луч на
-  /// круг: ровно 360/7.
-  static SweepGradient rays() {
-    const period = 7 * math.pi / 180;
-    const lit = 1.8 * math.pi / 180;
-    const gold = Color(0x66C9AE6B); // rgba(201,174,107,.4)
-    const none = Color(0x00C9AE6B);
+  /// `SweepGradient` пробовался первым — он ближе всего к
+  /// `repeating-conic-gradient` по замыслу, и рисовал он, если честно, почти то
+  /// же самое. Но повторения он не умеет: пятьдесят один луч приходится
+  /// задавать двумя сотнями остановок, посчитанных вручную, и любая правка
+  /// шага требует пересчёта всего массива. Painter говорит то же самое тремя
+  /// числами — клин в 1.8° каждые 7°, начиная с −8°, из точки на 130% высоты,
+  /// то есть чуть ниже кнопки, — и читается как рецепт, а не как результат его
+  /// применения.
+  ///
+  /// Сверено с эталоном в одном масштабе: веер, число и толщина лучей
+  /// совпадают. Первое впечатление «лучи втрое шире» оказалось артефактом
+  /// сравнения — эталон снимался в 1×, устройство в 2,23×.
+}
 
-    final colors = <Color>[];
-    final stops = <double>[];
-    const full = 2 * math.pi;
-    for (double a = 0; a < full; a += period) {
-      final start = a / full;
-      final end = math.min(a + lit, full) / full;
-      // Пара «включили — выключили» на каждый луч: резкая грань, а не размытие.
-      colors.addAll([gold, gold, none, none]);
-      stops.addAll([start, end, end, math.min(a + period, full) / full]);
+/// Веер тонких лучей из точки под кнопкой.
+class _RaysPainter extends CustomPainter {
+  const _RaysPainter();
+
+  /// Шаг и освещённая доля, градусы. Из `SKILL.md §2`.
+  static const _period = 7.0;
+  static const _lit = 1.8;
+  static const _from = -8.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Центр на 130% высоты от верха — ниже нижнего края на 30% высоты.
+    final c = Offset(size.width / 2, size.height * 1.3);
+    // Луч должен доставать до дальнего угла, иначе веер обрывается на середине.
+    final reach = math.sqrt(size.width * size.width + c.dy * c.dy) * 1.1;
+    final paint = Paint()..color = const Color(0x66C9AE6B);
+
+    for (double a = _from; a < 360 + _from; a += _period) {
+      final from = a * math.pi / 180;
+      final to = (a + _lit) * math.pi / 180;
+      canvas.drawPath(
+        Path()
+          ..moveTo(c.dx, c.dy)
+          ..lineTo(c.dx + reach * math.cos(from), c.dy + reach * math.sin(from))
+          ..lineTo(c.dx + reach * math.cos(to), c.dy + reach * math.sin(to))
+          ..close(),
+        paint,
+      );
     }
-    return SweepGradient(
-      center: const Alignment(0, 1.6),
-      startAngle: -8 * math.pi / 180,
-      endAngle: -8 * math.pi / 180 + full,
-      colors: colors,
-      stops: stops,
-      tileMode: TileMode.repeated,
-    );
   }
+
+  @override
+  bool shouldRepaint(_RaysPainter oldDelegate) => false;
 }
 
 /// Кнопка, залитая текстурным золотом.
@@ -101,16 +120,29 @@ class GoldSurface extends StatelessWidget {
     return ClipRRect(
       borderRadius: radius,
       child: Stack(
-        fit: StackFit.passthrough,
         children: [
-          const DecoratedBox(decoration: BoxDecoration(gradient: GoldTexture.base)),
-          Opacity(
-            opacity: dimmed ? 0.5 : 1,
-            child: DecoratedBox(decoration: BoxDecoration(gradient: GoldTexture.rays())),
+          // **Слои растягиваются `Positioned.fill`, а не сами по себе.**
+          //
+          // `DecoratedBox` без ребёнка имеет нулевой размер: сложенные в `Stack`
+          // просто как дети, все три градиента отрисовались в ничто, и кнопка
+          // вышла прозрачной — сквозь неё было видно небо. Размер стопке задаёт
+          // последний слой, у которого есть содержимое; остальные растягиваются
+          // по нему.
+          const Positioned.fill(
+            child: DecoratedBox(decoration: BoxDecoration(gradient: GoldTexture.base)),
           ),
-          Opacity(
-            opacity: dimmed ? 0.55 : 1,
-            child: const DecoratedBox(decoration: BoxDecoration(gradient: GoldTexture.glow)),
+          Positioned.fill(
+            child: Opacity(
+              opacity: dimmed ? 0.5 : 1,
+              child: const CustomPaint(painter: _RaysPainter()),
+            ),
+          ),
+          Positioned.fill(
+            child: Opacity(
+              opacity: dimmed ? 0.55 : 1,
+              child: const DecoratedBox(
+                  decoration: BoxDecoration(gradient: GoldTexture.glow)),
+            ),
           ),
           DecoratedBox(
             decoration: BoxDecoration(

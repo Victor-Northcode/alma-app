@@ -21,6 +21,7 @@ import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
+import 'design/gallery.dart';
 import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
 import 'state/session.dart';
 
@@ -87,7 +88,12 @@ class _AlmaAppState extends State<AlmaApp> {
             onPrimary: AlmaPalette.inkOnGold,
           ),
         ),
-        home: const CabinetShell(),
+        // Витрина базовых виджетов вместо приложения — только в сборке с
+        // `--dart-define=ALMA_GALLERY=1`. В обычной сборке ветка мертва и
+        // выкидывается компилятором вместе с экраном.
+        home: DesignGallery.requested
+            ? const DesignGallery()
+            : const CabinetShell(),
       ),
     );
   }
