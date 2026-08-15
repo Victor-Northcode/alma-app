@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../design/buttons.dart';
+import '../../design/emblem.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
@@ -235,7 +236,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
             const SizedBox(height: 24),
             // Плейсхолдера нет намеренно: «София» в поле имени читается как
             // чужая заполненная анкета, а не как подсказка.
-            _field(_name, ''),
+            CeremonialField(controller: _name),
           ],
         _Step.about => [
             Text(l.journeyAboutTitle, style: AlmaType.displayL),
@@ -365,17 +366,25 @@ class _JourneyScreenState extends State<JourneyScreen> {
             const SizedBox(height: 10),
             Text(l.journeyPlaceSub, style: AlmaType.meta),
             const SizedBox(height: 24),
-            _field(_placeQuery, l.journeyCaptureSearchPlace,
-                onChanged: _searchPlaces),
+            CeremonialField(
+              controller: _placeQuery,
+              hint: l.journeyCaptureSearchPlace,
+              onChanged: _searchPlaces,
+            ),
             const SizedBox(height: 8),
-            for (final place in _places)
-              _choice(place.label, selected: _place?.id == place.id, onTap: () {
-                setState(() {
-                  _place = place;
-                  _placeQuery.text = place.label;
-                  _places = const [];
-                });
-              }),
+            for (final (index, place) in _places.indexed)
+              _PlaceRow(
+                label: place.label,
+                best: index == 0,
+                selected: _place?.id == place.id,
+                onTap: () {
+                  setState(() {
+                    _place = place;
+                    _placeQuery.text = place.label;
+                    _places = const [];
+                  });
+                },
+              ),
           ],
         // Церемония рисует себя целиком и не пользуется общей рамкой шага:
         // у неё нет ни заголовка, ни кнопки.
@@ -416,26 +425,6 @@ class _JourneyScreenState extends State<JourneyScreen> {
     );
   }
 
-  Widget _field(TextEditingController controller, String hint,
-      {ValueChanged<String>? onChanged}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        border: Border.all(color: AlmaPalette.hairlineGold),
-        borderRadius: BorderRadius.circular(AlmaMetrics.fieldHeight / 2),
-      ),
-      child: TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: AlmaType.body,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: AlmaType.meta,
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
 
   Widget _choice(String label,
       {required bool selected, required VoidCallback onTap}) {
@@ -453,6 +442,85 @@ class _JourneyScreenState extends State<JourneyScreen> {
         child: Text(label,
             style: AlmaType.body.copyWith(
                 color: selected ? AlmaPalette.goldBright : AlmaPalette.body)),
+      ),
+    );
+  }
+}
+
+/// Найденное место — строка списка, а не кнопка.
+///
+/// **Раньше это были капсулы с обводкой**, теми же, какими нарисованы «женский
+/// / мужской» и «не знаю времени». Разница существенная: там выбор из трёх
+/// заранее известных ответов, здесь — список находок, который меняется на
+/// каждую набранную букву. Пять обведённых капсул под полем ввода читаются
+/// пятью кнопками равного веса, и среди них теряется первая — та, которая в
+/// девяти случаях из десяти и есть ответ.
+///
+/// В эталоне у списка два тихих различителя вместо рамок: метка слева и
+/// яркость подписи. Лучшее совпадение помечено золотой звёздочкой и написано
+/// светлее (`starFill`), остальные — тусклой точкой и приглушённым текстом.
+/// Галочка справа появляется у выбранного.
+class _PlaceRow extends StatelessWidget {
+  const _PlaceRow({
+    required this.label,
+    required this.best,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+
+  /// Первая находка. Метка ярче и подпись светлее — это подсказка, а не
+  /// предвыбор: нажать всё равно нужно.
+  final bool best;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        // Высота строки в эталоне 51 при одной строке подписи. Здесь она
+        // нижняя граница, а не размер: наши названия длиннее нарисованных —
+        // «Berlin Köpenick, State of Berlin, Germany» в одну строку не встаёт,
+        // — и обрезать город многоточием значит прятать от человека ровно то,
+        // чем одна находка отличается от другой.
+        constraints: const BoxConstraints(minHeight: 51),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              best ? '✦' : '·',
+              style: AlmaType.meta.copyWith(
+                fontSize: 10,
+                color: best
+                    ? AlmaPalette.gold
+                    : AlmaPalette.gold.withValues(alpha: 0.35),
+              ),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AlmaType.headingM.copyWith(
+                  fontSize: 16,
+                  color: best
+                      ? AlmaPalette.starFill
+                      : AlmaPalette.body.withValues(alpha: 0.85),
+                ),
+              ),
+            ),
+            if (selected)
+              Text('✓',
+                  style: AlmaType.meta
+                      .copyWith(fontSize: 13, color: AlmaPalette.gold)),
+          ],
+        ),
       ),
     );
   }

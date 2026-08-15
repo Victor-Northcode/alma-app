@@ -234,6 +234,7 @@ class CeremonialField extends StatefulWidget {
     super.key,
     required this.controller,
     this.hint,
+    this.onChanged,
     this.onSubmitted,
     this.autofocus = false,
     this.keyboardType,
@@ -242,6 +243,10 @@ class CeremonialField extends StatefulWidget {
 
   final TextEditingController controller;
   final String? hint;
+
+  /// Поле, которое ищет по мере набора: город в анкете. Отдельно от
+  /// `onSubmitted`, потому что искать нужно на каждой букве, а не на «готово».
+  final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
   final bool autofocus;
   final TextInputType? keyboardType;
@@ -270,17 +275,18 @@ class _CeremonialFieldState extends State<CeremonialField> {
       duration: AlmaMotion.ui,
       curve: AlmaMotion.uiCurve,
       height: AlmaMetrics.fieldHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 18),
       decoration: BoxDecoration(
-        color: const Color(0xD90D101C),
+        // **Заливка уходит, когда в поле пишут.** В покое это тёмная плашка на
+        // небе; под курсором — золотое кольцо, сквозь которое небо видно. Так
+        // нарисовано во всём дизайн-проекте: у полей в покое (имя, почта) фон
+        // `rgba(13,16,28,.85)` и бледный кант, у полей с набранным текстом
+        // («Berl» в городах, «Hamb» у второго человека) фон прозрачный и кант
+        // золотой. Разница заметнее, чем смена цвета рамки, и она бесплатна.
+        color: lit ? null : const Color(0xD90D101C),
         borderRadius: BorderRadius.circular(AlmaMetrics.fieldHeight / 2),
         border: Border.all(
-          // Кант при фокусе золотой и плотный: поле, в которое пишут, должно
-          // отличаться от поля, которое ждёт, чем-то кроме мигающей палочки.
-          color: lit
-              ? const Color(0xCCC9AE6B)
-              : const Color(0x1FEDE7DA),
-          width: lit ? 1.4 : 1,
+          color: lit ? const Color(0xCCC9AE6B) : const Color(0x1FEDE7DA),
         ),
       ),
       // **Material внутри, а не снаружи.** `TextField` без него падает красной
@@ -296,6 +302,7 @@ class _CeremonialFieldState extends State<CeremonialField> {
           autofocus: widget.autofocus,
           keyboardType: widget.keyboardType,
           textAlign: widget.textAlign,
+          onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
           cursorColor: const Color(0xFFC9AE6B),
           style: AlmaType.body.copyWith(fontSize: 16, color: AlmaPalette.inkLight),
