@@ -18,6 +18,7 @@ from ..calc.service import AmbiguousBirthTime, TimeRequired
 from ..config import settings
 from ..db import create_all, dispose
 from ..geo import PlaceIndexMissing
+from . import plates
 from .routers import (
     account,
     auth,
@@ -88,6 +89,11 @@ def create_app() -> FastAPI:
         notify.router,
     ):
         app.include_router(router, prefix="" if router is health.router else "/v1")
+
+    # Вклейки глав живут вне `/v1`: это файлы, а не ручка API, и версия им ни к
+    # чему — содержимое под именем неизменно, новая картинка приезжает новым
+    # `?v=` в ссылке.
+    app.include_router(plates.router)
 
     @app.exception_handler(AmbiguousBirthTime)
     async def _ambiguous(_request: Request, exc: AmbiguousBirthTime) -> JSONResponse:
