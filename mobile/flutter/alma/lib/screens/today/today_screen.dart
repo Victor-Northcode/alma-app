@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/arrival.dart';
+import '../settings/sign_in_screen.dart';
 import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
@@ -544,9 +545,12 @@ class _SaveAccountCardState extends State<_SaveAccountCard> {
             kind: AlmaButtonKind.veil,
             fills: false,
             label: l.scrSaveAccountCta,
-            // Экрана входа в порте ещё нет — и кнопка честно ничего не
-            // обещает, пока его нет. Появится вместе с ним.
-            onTap: null,
+            // Экран входа появился — кнопка ведёт на него. До этого она стояла
+            // выключенной, и это было честно: обещать вход, которого нет, хуже,
+            // чем не обещать.
+            onTap: () => Navigator.of(context, rootNavigator: true).push(
+              CupertinoPageRoute(builder: (_) => const SignInScreen()),
+            ),
           ),
           const SizedBox(width: 18),
           TextButton(

@@ -158,6 +158,54 @@ class AlmaShrink {
   /// это — перенос, а не мельче: текст, который стал нечитаемым, не помещается
   /// вообще, он просто выглядит помещённым.
   static const bodyFixed = 15.5;
+
+  /// Подобрать подпись кнопки под ширину: сначала кегль, потом словарь.
+  ///
+  /// Порядок из правил владельца и он не переставляется: спуститься по
+  /// ступеням до 14, и **только если и там не влезло** — взять короткий
+  /// вариант строки, снова с самого верха. Кнопка с подписью мельче 14 читается
+  /// сломанной вёрсткой; кнопка с более коротким словом читается кнопкой.
+  ///
+  /// Короткий вариант есть далеко не в каждом языке: «Anmeldelink per E-Mail
+  /// senden» ужимается до «Link senden», а «Прислать ссылку для входа» короче
+  /// не становится — и тогда `short` совпадает с `label`, ступень 14 остаётся
+  /// последним словом, и это честнее выдуманного сокращения.
+  static ({String text, double size}) fitLabel({
+    required String label,
+    required TextStyle style,
+    required double maxWidth,
+    String? short,
+    List<double> steps = buttonSteps,
+    TextScaler scaler = TextScaler.noScaling,
+  }) {
+    // Ширины нет — мерить нечего; отдаём как есть, а не гадаем.
+    if (!maxWidth.isFinite || maxWidth <= 0) {
+      return (text: label, size: steps.first);
+    }
+    double width(String text, double size) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style.copyWith(fontSize: size)),
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout();
+      return painter.width;
+    }
+
+    for (final candidate in [label, if (short != null && short != label) short]) {
+      for (final size in steps) {
+        if (width(candidate, size) <= maxWidth) {
+          return (text: candidate, size: size);
+        }
+      }
+    }
+    // Не влезло ничего: короткий вариант на нижней ступени — дальше многоточие,
+    // и решает его уже сам `Text`.
+    return (
+      text: short ?? label,
+      size: steps.last,
+    );
+  }
 }
 
 /// Правила, которые зависят от языка, а не от ширины.

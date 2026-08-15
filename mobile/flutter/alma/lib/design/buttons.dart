@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'gold_texture.dart';
+import 'layout.dart';
 import 'metrics.dart';
 import 'palette.dart';
 import 'typography.dart';
@@ -34,9 +35,16 @@ class AlmaButton extends StatefulWidget {
     this.kind = AlmaButtonKind.gold,
     this.fills = true,
     this.radius,
+    this.shortLabel,
   });
 
   final String label;
+
+  /// Тот же смысл покороче — на случай, когда полная подпись не влезает даже
+  /// на нижней ступени кегля. Есть не в каждом языке: у немецкого
+  /// «Anmeldelink per E-Mail senden» короче «Link senden», у русского
+  /// «Прислать ссылку для входа» короче ничего нет.
+  final String? shortLabel;
 
   /// `null` — кнопка выключена: приглушена и не отвечает.
   final VoidCallback? onTap;
@@ -144,12 +152,28 @@ class _AlmaButtonState extends State<AlmaButton> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Flexible(
-                  child: Text(
-                    widget.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: _style,
+                  // **Подпись меряется, а не масштабируется.** `FittedBox`
+                  // ужал бы её плавно до любой доли кегля, и немецкая кнопка
+                  // рядом с английской выглядела бы напечатанной другим
+                  // шрифтом. Ступени 16.5 / 15 / 14 и словарь — правило
+                  // владельца, и оно требует знать ширину.
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      final fit = AlmaShrink.fitLabel(
+                        label: widget.label,
+                        short: widget.shortLabel,
+                        style: _style,
+                        maxWidth: box.maxWidth,
+                        scaler: MediaQuery.textScalerOf(context),
+                      );
+                      return Text(
+                        fit.text,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: _style.copyWith(fontSize: fit.size),
+                      );
+                    },
                   ),
                 ),
               ],

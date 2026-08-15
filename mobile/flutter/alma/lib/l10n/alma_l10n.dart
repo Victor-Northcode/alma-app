@@ -3650,7 +3650,7 @@ abstract class L {
   /// from Screens/scr.signIn.lead
   ///
   /// In en, this message translates to:
-  /// **'Signing in links your email address to your existing account. Nothing you’ve read or bought is lost.'**
+  /// **'Your chart follows you to any phone.'**
   String get scrSignInLead;
 
   /// from Screens/scr.signIn.linkSent
@@ -3659,11 +3659,11 @@ abstract class L {
   /// **'Check your inbox. The link signs you in and expires shortly.'**
   String get scrSignInLinkSent;
 
-  /// from Screens/scr.signIn.orEmail
+  /// from Screens/scr.signIn.orWith
   ///
   /// In en, this message translates to:
-  /// **'or by email'**
-  String get scrSignInOrEmail;
+  /// **'or sign in with'**
+  String get scrSignInOrWith;
 
   /// from Screens/scr.signIn.privacy
   ///
@@ -3692,8 +3692,14 @@ abstract class L {
   /// from Screens/scr.signIn.sendLink
   ///
   /// In en, this message translates to:
-  /// **'Send me a link'**
+  /// **'Email me a sign-in link'**
   String get scrSignInSendLink;
+
+  /// Короткий вариант подписи кнопки для узких экранов. Совпадает с полным везде, кроме немецкого: короче «Anmeldelink per E-Mail senden» в языке ничего нет, а в остальных сокращать нечего.
+  ///
+  /// In en, this message translates to:
+  /// **'Email me a sign-in link'**
+  String get scrSignInSendLinkShort;
 
   /// from Screens/scr.signIn.sending
   ///

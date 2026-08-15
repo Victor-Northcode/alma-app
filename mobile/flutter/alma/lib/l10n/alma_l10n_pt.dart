@@ -1984,15 +1984,14 @@ class LPt extends L {
   String get scrSignInGoogle => 'Continuar com o Google';
 
   @override
-  String get scrSignInLead =>
-      'Ao entrar, seu e-mail fica vinculado à conta que você já tem. Nada do que você leu ou comprou é perdido.';
+  String get scrSignInLead => 'Seu mapa te segue em qualquer telefone.';
 
   @override
   String get scrSignInLinkSent =>
       'Verifique sua caixa de entrada. O link faz você entrar e expira em breve.';
 
   @override
-  String get scrSignInOrEmail => 'ou por e-mail';
+  String get scrSignInOrWith => 'ou entre com';
 
   @override
   String get scrSignInPrivacy =>
@@ -2009,7 +2008,10 @@ class LPt extends L {
   String get scrSignInReason3 => 'Não há senha. Nunca haverá.';
 
   @override
-  String get scrSignInSendLink => 'Me envie um link';
+  String get scrSignInSendLink => 'Enviar link de acesso';
+
+  @override
+  String get scrSignInSendLinkShort => 'Enviar link de acesso';
 
   @override
   String get scrSignInSending => 'Enviando…';

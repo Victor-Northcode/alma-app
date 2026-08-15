@@ -267,6 +267,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
             Row(children: [
               Expanded(
                 child: _Wheel(
+                  key: const ValueKey('wheel.day'),
                   label: l.journeyCaptureDay,
                   options: [for (var d = 1; d <= 31; d++) d],
                   selected: _day,
@@ -279,6 +280,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
               Expanded(
                 flex: 2,
                 child: _Wheel(
+                  key: const ValueKey('wheel.month'),
                   label: l.journeyCaptureMonth,
                   options: [for (var m = 1; m <= 12; m++) m],
                   selected: _month,
@@ -288,6 +290,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
               ),
               Expanded(
                 child: _Wheel(
+                  key: const ValueKey('wheel.year'),
                   label: l.journeyCaptureYear,
                   // **Годы идут вверх, как в эталоне, а не вниз.**
                   //
@@ -332,6 +335,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
                 child: Row(children: [
                   Expanded(
                     child: _Wheel(
+                      key: const ValueKey('wheel.hour'),
                       label: l.journeyHourLabel,
                       options: [for (var h = 0; h <= 23; h++) h],
                       selected: _hour,
@@ -341,6 +345,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
                   ),
                   Expanded(
                     child: _Wheel(
+                      key: const ValueKey('wheel.minute'),
                       label: l.journeyMinuteLabel,
                       options: [for (var m = 0; m <= 59; m++) m],
                       selected: _minute,
@@ -546,6 +551,7 @@ class _PlaceRow extends StatelessWidget {
 /// же число — но уже как выбранное.
 class _Wheel extends StatefulWidget {
   const _Wheel({
+    super.key,
     required this.label,
     required this.options,
     required this.selected,
@@ -602,6 +608,9 @@ class _WheelState extends State<_Wheel> {
 
   bool get _chosen => widget.selected != null;
 
+  /// Барабан хоть раз тронули пальцем. До этого он ничего не отдаёт.
+  bool _touched = false;
+
   /// Полоса выбора зажигается вместе со значением. Пока значения нет, она
   /// почти невидима — ровно как золотой кант нативного поля, который
   /// появляется только у заполненного (`JourneyControls.swift:186`).
@@ -628,7 +637,27 @@ class _WheelState extends State<_Wheel> {
               ),
             ),
           ),
-          ListWheelScrollView.useDelegate(
+          NotificationListener<ScrollNotification>(
+            // **Значение отдаёт палец, а не барабан.**
+            //
+            // `onSelectedItemChanged` срабатывает на любое изменение
+            // центральной строки, включая то, которое человек не делал:
+            // барабан доезжает сам при появлении на экране, при возврате на
+            // шаг, при подстройке размеров. Именно так на шаге даты однажды
+            // оказалось выбрано «6 января 1925» с горящей кнопкой «дальше» —
+            // дата, которую никто не называл, готовая уехать на сервер и лечь
+            // в основание всех восьми систем.
+            //
+            // `dragDetails != null` отличает жест от всего остального: у
+            // прокрутки, начатой пальцем, они есть, у программной — нет.
+            onNotification: (notification) {
+              if (notification is ScrollStartNotification &&
+                  notification.dragDetails != null) {
+                _touched = true;
+              }
+              return false;
+            },
+            child: ListWheelScrollView.useDelegate(
             controller: _controller,
             itemExtent: _extent,
             // Барабан почти плоский — таким он нарисован. Перспектива здесь
@@ -638,8 +667,11 @@ class _WheelState extends State<_Wheel> {
             perspective: 0.002,
             physics: const FixedExtentScrollPhysics(),
             onSelectedItemChanged: (index) {
-              HapticFeedback.selectionClick();
+              // Лестница яркости следует за видимой строкой всегда — она
+              // описывает барабан, а не выбор.
               setState(() => _centre = index);
+              if (!_touched) return;
+              HapticFeedback.selectionClick();
               widget.onChanged(widget.options[index]);
             },
             childDelegate: ListWheelChildBuilderDelegate(
@@ -676,6 +708,7 @@ class _WheelState extends State<_Wheel> {
                 );
               },
             ),
+          ),
           ),
         ]),
       ),

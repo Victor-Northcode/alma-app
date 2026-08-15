@@ -1975,15 +1975,14 @@ class LEn extends L {
   String get scrSignInGoogle => 'Continue with Google';
 
   @override
-  String get scrSignInLead =>
-      'Signing in links your email address to your existing account. Nothing you’ve read or bought is lost.';
+  String get scrSignInLead => 'Your chart follows you to any phone.';
 
   @override
   String get scrSignInLinkSent =>
       'Check your inbox. The link signs you in and expires shortly.';
 
   @override
-  String get scrSignInOrEmail => 'or by email';
+  String get scrSignInOrWith => 'or sign in with';
 
   @override
   String get scrSignInPrivacy =>
@@ -2000,7 +1999,10 @@ class LEn extends L {
   String get scrSignInReason3 => 'There is no password. There never will be.';
 
   @override
-  String get scrSignInSendLink => 'Send me a link';
+  String get scrSignInSendLink => 'Email me a sign-in link';
+
+  @override
+  String get scrSignInSendLinkShort => 'Email me a sign-in link';
 
   @override
   String get scrSignInSending => 'Sending…';

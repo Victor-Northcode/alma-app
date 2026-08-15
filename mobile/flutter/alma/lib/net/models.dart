@@ -65,6 +65,27 @@ enum SystemSlug {
 
 /// Что возвращает `/v1/auth/*`. Аккаунт настоящий с первого запроса; это то,
 /// что он о себе говорит.
+/// Ответ на просьбу прислать ссылку входа.
+///
+/// `sent` здесь всегда `true` и **не означает «адрес нам знаком»**: сервер
+/// отвечает одинаково любому адресу, потому что разный ответ — это способ
+/// проверить чужую почту на наличие аккаунта.
+class MagicLinkSent {
+  const MagicLinkSent({required this.expiresInMinutes, this.debugToken});
+
+  final int expiresInMinutes;
+
+  /// Токен из письма, отданный напрямую. Приходит **только** когда почтовик не
+  /// настроен и сборка не продакшн: иначе локальный вход нечем закончить.
+  /// В продакшне поля нет вовсе — не «пустое», а отсутствующее.
+  final String? debugToken;
+
+  factory MagicLinkSent.fromJson(Map<String, dynamic> json) => MagicLinkSent(
+        expiresInMinutes: (json['expires_in_minutes'] as num?)?.toInt() ?? 0,
+        debugToken: json['debug_token'] as String?,
+      );
+}
+
 class AlmaSessionInfo {
   const AlmaSessionInfo({
     required this.token,

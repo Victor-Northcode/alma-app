@@ -1987,15 +1987,14 @@ class LDe extends L {
   String get scrSignInGoogle => 'Weiter mit Google';
 
   @override
-  String get scrSignInLead =>
-      'Bei der Anmeldung wird deine E-Mail-Adresse mit deinem bestehenden Konto verknüpft. Deine gelesenen Inhalte und Käufe bleiben erhalten.';
+  String get scrSignInLead => 'Deine Karte folgt dir auf jedes Telefon.';
 
   @override
   String get scrSignInLinkSent =>
       'Sieh in deinem Posteingang nach. Der Link meldet dich an und läuft bald ab.';
 
   @override
-  String get scrSignInOrEmail => 'oder per E-Mail';
+  String get scrSignInOrWith => 'oder anmelden mit';
 
   @override
   String get scrSignInPrivacy =>
@@ -2013,7 +2012,10 @@ class LDe extends L {
       'Es gibt kein Passwort. Und wird nie eines geben.';
 
   @override
-  String get scrSignInSendLink => 'Schick mir einen Link';
+  String get scrSignInSendLink => 'Anmeldelink per E-Mail senden';
+
+  @override
+  String get scrSignInSendLinkShort => 'Link senden';
 
   @override
   String get scrSignInSending => 'Wird gesendet…';

@@ -1987,15 +1987,14 @@ class LIt extends L {
   String get scrSignInGoogle => 'Continua con Google';
 
   @override
-  String get scrSignInLead =>
-      'L’accesso collega il tuo indirizzo email all’account che hai già. Non perdi nulla di ciò che hai letto o acquistato.';
+  String get scrSignInLead => 'La tua carta ti segue su qualsiasi telefono.';
 
   @override
   String get scrSignInLinkSent =>
       'Controlla la posta. Il link ti fa accedere e scade a breve.';
 
   @override
-  String get scrSignInOrEmail => 'o via email';
+  String get scrSignInOrWith => 'oppure entra con';
 
   @override
   String get scrSignInPrivacy =>
@@ -2012,7 +2011,10 @@ class LIt extends L {
   String get scrSignInReason3 => 'Non c\'è password. Non ci sarà mai.';
 
   @override
-  String get scrSignInSendLink => 'Mandami un link';
+  String get scrSignInSendLink => 'Inviami un link di accesso';
+
+  @override
+  String get scrSignInSendLinkShort => 'Inviami un link di accesso';
 
   @override
   String get scrSignInSending => 'Invio…';

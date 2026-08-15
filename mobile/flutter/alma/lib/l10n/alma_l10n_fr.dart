@@ -1990,15 +1990,14 @@ class LFr extends L {
   String get scrSignInGoogle => 'Continuer avec Google';
 
   @override
-  String get scrSignInLead =>
-      'La connexion associe ton adresse e-mail au compte que tu as déjà. Tu ne perds rien de ce que tu as lu ou acheté.';
+  String get scrSignInLead => 'Ta carte te suit sur n\'importe quel téléphone.';
 
   @override
   String get scrSignInLinkSent =>
       'Regarde ta boîte de réception. Le lien te connecte et expire bientôt.';
 
   @override
-  String get scrSignInOrEmail => 'ou par e-mail';
+  String get scrSignInOrWith => 'ou connecte-toi avec';
 
   @override
   String get scrSignInPrivacy =>
@@ -2016,7 +2015,10 @@ class LFr extends L {
       'Il n\'y a pas de mot de passe. Il n\'y en aura jamais.';
 
   @override
-  String get scrSignInSendLink => 'Envoie-moi un lien';
+  String get scrSignInSendLink => 'M\'envoyer un lien de connexion';
+
+  @override
+  String get scrSignInSendLinkShort => 'M\'envoyer un lien de connexion';
 
   @override
   String get scrSignInSending => 'Envoi…';

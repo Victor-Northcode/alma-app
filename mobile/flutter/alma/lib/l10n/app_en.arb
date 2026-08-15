@@ -2616,7 +2616,7 @@
   "@scrSignInGoogle": {
     "description": "from Screens/scr.signIn.google"
   },
-  "scrSignInLead": "Signing in links your email address to your existing account. Nothing you’ve read or bought is lost.",
+  "scrSignInLead": "Your chart follows you to any phone.",
   "@scrSignInLead": {
     "description": "from Screens/scr.signIn.lead"
   },
@@ -2624,9 +2624,9 @@
   "@scrSignInLinkSent": {
     "description": "from Screens/scr.signIn.linkSent"
   },
-  "scrSignInOrEmail": "or by email",
-  "@scrSignInOrEmail": {
-    "description": "from Screens/scr.signIn.orEmail"
+  "scrSignInOrWith": "or sign in with",
+  "@scrSignInOrWith": {
+    "description": "from Screens/scr.signIn.orWith"
   },
   "scrSignInPrivacy": "We use your address for the sign-in link and nothing else. There is no newsletter.",
   "@scrSignInPrivacy": {
@@ -2644,7 +2644,11 @@
   "@scrSignInReason3": {
     "description": "from Screens/scr.signIn.reason3"
   },
-  "scrSignInSendLink": "Send me a link",
+  "scrSignInSendLink": "Email me a sign-in link",
+  "scrSignInSendLinkShort": "Email me a sign-in link",
+  "@scrSignInSendLinkShort": {
+    "description": "Короткий вариант подписи кнопки для узких экранов. Совпадает с полным везде, кроме немецкого: короче «Anmeldelink per E-Mail senden» в языке ничего нет, а в остальных сокращать нечего."
+  },
   "@scrSignInSendLink": {
     "description": "from Screens/scr.signIn.sendLink"
   },

@@ -1973,15 +1973,14 @@ class LRu extends L {
   String get scrSignInGoogle => 'Продолжить через Google';
 
   @override
-  String get scrSignInLead =>
-      'Вход привязывает адрес почты к аккаунту, который у тебя уже есть. Ничего из прочитанного и купленного не потеряется.';
+  String get scrSignInLead => 'Твоя карта следует за тобой на любой телефон.';
 
   @override
   String get scrSignInLinkSent =>
       'Проверь почту. Ссылка выполнит вход сама и скоро погаснет.';
 
   @override
-  String get scrSignInOrEmail => 'или по почте';
+  String get scrSignInOrWith => 'или войди через';
 
   @override
   String get scrSignInPrivacy =>
@@ -1998,7 +1997,10 @@ class LRu extends L {
   String get scrSignInReason3 => 'Пароля нет. И не будет.';
 
   @override
-  String get scrSignInSendLink => 'Отправить мне ссылку';
+  String get scrSignInSendLink => 'Прислать ссылку для входа';
+
+  @override
+  String get scrSignInSendLinkShort => 'Прислать ссылку для входа';
 
   @override
   String get scrSignInSending => 'Отправляю…';

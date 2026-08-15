@@ -16,6 +16,7 @@ import '../../net/alma_client.dart';
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
 import '../legal/legal_screen.dart';
+import 'sign_in_screen.dart';
 import '../legal/legal_text.dart';
 
 /// Настройки.
@@ -300,7 +301,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // читается как главное действие экрана, а вход здесь — предложение.
             Align(
               alignment: Alignment.centerLeft,
-              child: _OutlineButton(label: l.cabSignIn, onTap: () {}),
+              // **Кнопка вела в пустоту.** `onTap: () {}` — присутствующее и
+              // мёртвое действие: человек, у которого карта живёт на одном
+              // телефоне, нажимал «Войти» и не получал ничего. Экрана входа в
+              // порте не было вовсе, хотя строки к нему были перенесены.
+              child: _OutlineButton(
+                label: l.cabSignIn,
+                onTap: () => Navigator.of(context, rootNavigator: true).push(
+                  CupertinoPageRoute(builder: (_) => const SignInScreen()),
+                ),
+              ),
             ),
           ],
         ]),

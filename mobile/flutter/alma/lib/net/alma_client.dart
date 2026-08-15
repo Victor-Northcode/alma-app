@@ -280,6 +280,54 @@ class AlmaClient {
     return info;
   }
 
+  /* ── вход ────────────────────────────────────────────────────────────── */
+
+  /// Попросить письмо со ссылкой входа.
+  ///
+  /// **Ответ одинаков всегда** — сервер не сообщает, знает он этот адрес или
+  /// нет, и это не забывчивость, а решение: ручка, отвечающая по-разному, —
+  /// это способ проверить чужую почту на наличие аккаунта.
+  ///
+  /// `debug_token` приходит только когда почтовик не настроен и сборка не
+  /// продакшн: без него локальный вход было бы нечем закончить.
+  Future<MagicLinkSent> requestMagicLink(
+    String email, {
+    required String locale,
+  }) async =>
+      MagicLinkSent.fromJson(
+        await _post('/v1/auth/magic-link', {'email': email, 'locale': locale}),
+      );
+
+  /// Обменять токен из письма на сессию. Ссылка одноразовая.
+  Future<AlmaSessionInfo> consumeMagicLink(String token) async =>
+      _adopt(await _post('/v1/auth/magic-link/consume', {'token': token}));
+
+  Future<AlmaSessionInfo> signInWithGoogle(String credential) async =>
+      _adopt(await _post('/v1/auth/google', {'credential': credential}));
+
+  /// Имя Apple отдаёт **ровно один раз** — при первой авторизации и никогда
+  /// больше. Поэтому оно уезжает, когда есть, и не уезжает пустым: пустая
+  /// строка поверх уже сохранённого имени превращает человека в безымянного
+  /// при втором входе.
+  Future<AlmaSessionInfo> signInWithApple(
+    String identityToken, {
+    String? fullName,
+  }) async =>
+      _adopt(await _post('/v1/auth/apple', {
+        'identity_token': identityToken,
+        if (fullName != null && fullName.isNotEmpty) 'full_name': fullName,
+      }));
+
+  /// Принять новую сессию: токен в связку до того, как о нём узнает экран.
+  ///
+  /// Иначе следующий же запрос уйдёт под гостевым токеном — вход состоялся бы
+  /// на сервере и не состоялся на телефоне.
+  Future<AlmaSessionInfo> _adopt(Map<String, dynamic> body) async {
+    final info = AlmaSessionInfo.fromJson(body);
+    await _tokens.write(info.token);
+    return info;
+  }
+
   Future<AlmaAccount> account() async =>
       AlmaAccount.fromJson(await _get('/v1/account'));
 

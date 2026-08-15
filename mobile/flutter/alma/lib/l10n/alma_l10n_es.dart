@@ -1978,15 +1978,14 @@ class LEs extends L {
   String get scrSignInGoogle => 'Continuar con Google';
 
   @override
-  String get scrSignInLead =>
-      'Iniciar sesión vincula tu correo electrónico a la cuenta que ya tienes. No perderás nada de lo que hayas leído o comprado.';
+  String get scrSignInLead => 'Tu carta te sigue a cualquier teléfono.';
 
   @override
   String get scrSignInLinkSent =>
       'Revisa tu bandeja de entrada. El enlace te identifica y caduca pronto.';
 
   @override
-  String get scrSignInOrEmail => 'o por correo';
+  String get scrSignInOrWith => 'o entra con';
 
   @override
   String get scrSignInPrivacy =>
@@ -2003,7 +2002,10 @@ class LEs extends L {
   String get scrSignInReason3 => 'No hay contraseña. Nunca la habrá.';
 
   @override
-  String get scrSignInSendLink => 'Envíame un enlace';
+  String get scrSignInSendLink => 'Enviarme un enlace de acceso';
+
+  @override
+  String get scrSignInSendLinkShort => 'Enviarme un enlace de acceso';
 
   @override
   String get scrSignInSending => 'Enviando…';

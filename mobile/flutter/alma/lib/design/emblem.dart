@@ -62,7 +62,15 @@ class _AlmaEmblemState extends State<AlmaEmblem> with TickerProviderStateMixin {
     // знака, а не украшение поверх него.
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     final side = widget.size;
-    final full = widget.rings ? side * 2.1 : side;
+    // **Кольца обнимают ромб, а не висят от него в стороне.**
+    //
+    // Стояло `side * 2.1`, то есть внешнее кольцо было в 2,9 ромба, и знак
+    // читался ромбом посреди пустой карусели. В эталоне отношение 1,73 —
+    // проверено на двух независимых экземплярах, `s41` (ромб 37, кольцо 64) и
+    // `s44` (ромб 91, кольца 158 и 130), и оно там одно и то же. При ромбе
+    // `side * 0.72` это даёт `side * 1.25`; отношение внутреннего к внешнему
+    // 0,82 совпало с самого начала.
+    final full = widget.rings ? side * 1.25 : side;
 
     return SizedBox(
       width: full,

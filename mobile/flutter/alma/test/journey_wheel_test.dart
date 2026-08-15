@@ -105,4 +105,51 @@ void main() {
     expect((wheel.controller as FixedExtentScrollController).selectedItem, 15,
         reason: 'вернулись на середину списка — шестнадцатое число');
   });
+
+  testWidgets('уход с шага и возврат не подменяют дату', (tester) async {
+    // **Регрессия, найденная руками на симуляторе.** Колёса не имели ключей, и
+    // Flutter переиспользовал состояние: барабан часов, возвращаясь, оказывался
+    // барабаном дня — со своим смещением. На шаге даты после «назад» стояло
+    // «6 января 1925» с горящей кнопкой «дальше»: дата, которую никто не
+    // называл, готовая уехать на сервер и лечь в основание восьми систем.
+    await toDateStep(tester);
+    for (final wheel in find.byType(ListWheelScrollView).evaluate().toList()) {
+      await tester.drag(find.byWidget(wheel.widget), const Offset(0, -60));
+      await settle(tester);
+    }
+    expect(forwardEnabled(tester), isTrue);
+    final chosen = _centres(tester);
+
+    await tester.tap(find.byType(AlmaButton).last); // на шаг времени
+    await settle(tester);
+    expect(find.byType(ListWheelScrollView), findsNWidgets(2),
+        reason: 'время: часы и минуты');
+
+    await tester.tap(find.byIcon(Icons.arrow_back)); // и обратно на дату
+    await settle(tester);
+    expect(find.byType(ListWheelScrollView), findsNWidgets(3));
+    expect(_centres(tester), chosen,
+        reason: 'вернулись к своей дате, а не к чужому смещению');
+    expect(forwardEnabled(tester), isTrue);
+  });
+
+  testWidgets('нетронутые колёса остаются нетронутыми и после возврата',
+      (tester) async {
+    await toDateStep(tester);
+    expect(forwardEnabled(tester), isFalse);
+    // Уйти можно только назад: вперёд без даты не пускают — в этом и смысл.
+    await tester.tap(find.byIcon(Icons.arrow_back));
+    await settle(tester);
+    await tester.tap(find.byType(AlmaButton).last);
+    await settle(tester);
+    expect(find.byType(ListWheelScrollView), findsNWidgets(3));
+    expect(forwardEnabled(tester), isFalse,
+        reason: 'барабан, доехавший сам, — это не выбор человека');
+  });
 }
+
+/// Какие строки стоят в полосе выбора у всех колёс шага.
+List<int> _centres(WidgetTester tester) => tester
+    .widgetList<ListWheelScrollView>(find.byType(ListWheelScrollView))
+    .map((w) => (w.controller as FixedExtentScrollController).selectedItem)
+    .toList();
