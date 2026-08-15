@@ -2021,4 +2021,54 @@ class LEn extends L {
 
   @override
   String get cabPeopleRemove => 'Remove';
+
+  @override
+  String get splashTagline => 'Written in the sky before you asked.';
+
+  @override
+  String get journeyNameHint => 'Alma will greet you by it — nowhere else.';
+
+  @override
+  String get journeyAboutSkip =>
+      'You can skip this. It only tunes how Alma writes to you.';
+
+  @override
+  String get dstOverline => 'about your birth time';
+
+  @override
+  String dstTitle(String time) {
+    return 'That night, $time happened twice';
+  }
+
+  @override
+  String dstBody(String city, String date, String time) {
+    return 'Clocks were set back in $city on $date. Alma will not flip a coin about your sky — which $time is yours?';
+  }
+
+  @override
+  String get dstEarlier => 'The earlier one';
+
+  @override
+  String dstEarlierSub(String time, String abbr) {
+    return '$time on the summer clock · $abbr';
+  }
+
+  @override
+  String get dstLater => 'The later one';
+
+  @override
+  String dstLaterSub(String time, String abbr, String delta) {
+    return '$time on the winter clock · $abbr, $delta after';
+  }
+
+  @override
+  String dstFooter(String delta) {
+    return 'If nobody remembers, pick either — the houses shift by $delta and you can change it in Settings.';
+  }
+
+  @override
+  String get dstDeltaHour => 'an hour';
+
+  @override
+  String get dstDeltaHalfHour => '30 minutes';
 }

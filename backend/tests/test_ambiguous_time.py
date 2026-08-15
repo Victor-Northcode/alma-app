@@ -76,3 +76,75 @@ def test_nobody_builds_this_body_by_hand_any_more():
         if '"error": "ambiguous_birth_time"' in path.read_text()
     ]
     assert culprits == [], f"собирают ответ мимо ambiguity_detail: {culprits}"
+
+
+AMBIGUOUS = {
+    "birth_date": "1998-10-25",
+    "birth_time": "02:30",
+    "latitude": 45.4642,
+    "longitude": 9.19,
+    "timezone": "Europe/Rome",
+    "place_label": "Milan, Italy",
+    "name": "Sofia Rossi",
+    "is_self": True,
+}
+
+
+def test_the_answer_survives_being_saved(api, auth_headers):
+    """**Без этого вопрос задавался бы вечно.**
+
+    Движок умел развести двойное 02:30 и умел принять решение, но профиль его
+    не хранил: `birth_from_profile` не передавал `on_ambiguous`, и каждый
+    следующий расчёт по сохранённому рождению снова упирался в 409. Человек,
+    родившийся в час перевода часов, отвечал на вопрос и получал его снова —
+    на каждой главе, каждый день.
+    """
+    created = api.post(
+        "/v1/profiles",
+        json={**AMBIGUOUS, "on_ambiguous": "later"},
+        headers=auth_headers,
+    ).json()
+    assert created["on_ambiguous"] == "later"
+
+    # И расчёт по этому профилю больше не спрашивает.
+    answer = api.post(
+        "/v1/systems/natal",
+        json={"profile_id": created["id"]},
+        headers=auth_headers,
+    )
+    assert answer.status_code == 200, answer.text
+
+
+def test_an_unanswered_birth_still_asks(api, auth_headers):
+    """NULL — это «не спрашивали», а не «выбрано раньшее»."""
+    created = api.post(
+        "/v1/profiles", json=AMBIGUOUS, headers=auth_headers
+    ).json()
+    assert created["on_ambiguous"] is None
+
+    answer = api.post(
+        "/v1/systems/natal",
+        json={"profile_id": created["id"]},
+        headers=auth_headers,
+    )
+    assert answer.status_code == 409
+    assert answer.json()["detail"]["error"] == "ambiguous_birth_time"
+
+
+def test_editing_the_name_does_not_erase_the_answer(api, auth_headers):
+    """Клиент правит имя формой целиком и про развилку не помнит.
+
+    `on_ambiguous` по умолчанию «raise», и слепая запись затёрла бы ответ,
+    данный однажды, — вопрос вернулся бы после безобидной правки.
+    """
+    created = api.post(
+        "/v1/profiles",
+        json={**AMBIGUOUS, "on_ambiguous": "earlier"},
+        headers=auth_headers,
+    ).json()
+    edited = api.patch(
+        f"/v1/profiles/{created['id']}",
+        json={**AMBIGUOUS, "name": "Sofia R."},
+        headers=auth_headers,
+    ).json()
+    assert edited["on_ambiguous"] == "earlier", "ответ пережил правку имени"

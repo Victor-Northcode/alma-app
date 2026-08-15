@@ -2663,5 +2663,97 @@
   "cabCompatNeedsSecond": "Compatibility needs a second person.",
   "cabPeopleTitle": "People",
   "cabPeopleAdd": "Add a person",
-  "cabPeopleRemove": "Remove"
+  "cabPeopleRemove": "Remove",
+  "splashTagline": "Written in the sky before you asked.",
+  "@splashTagline": {
+    "description": "Подпись под знаком на заставке."
+  },
+  "journeyNameHint": "Alma will greet you by it — nowhere else.",
+  "@journeyNameHint": {
+    "description": "Под полем имени: где имя будет видно, а где нет."
+  },
+  "journeyAboutSkip": "You can skip this. It only tunes how Alma writes to you.",
+  "@journeyAboutSkip": {
+    "description": "Подзаголовок шага «о себе»."
+  },
+  "dstOverline": "about your birth time",
+  "@dstOverline": {
+    "description": "Оверлайн развилки перевода часов. Номера шага у неё нет: это не часть анкеты, а вопрос, который небо задаёт в ответ во время церемонии."
+  },
+  "dstTitle": "That night, {time} happened twice",
+  "@dstTitle": {
+    "description": "Заголовок развилки.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dstBody": "Clocks were set back in {city} on {date}. Alma will not flip a coin about your sky — which {time} is yours?",
+  "@dstBody": {
+    "description": "Что произошло в ту ночь и почему выбор за человеком.",
+    "placeholders": {
+      "city": {
+        "type": "String"
+      },
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "dstEarlier": "The earlier one",
+  "@dstEarlier": {
+    "description": "Первый из двух моментов."
+  },
+  "dstEarlierSub": "{time} on the summer clock · {abbr}",
+  "@dstEarlierSub": {
+    "description": "Летние часы: имя зоны приходит с сервера.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "abbr": {
+        "type": "String"
+      }
+    }
+  },
+  "dstLater": "The later one",
+  "@dstLater": {
+    "description": "Второй из двух моментов."
+  },
+  "dstLaterSub": "{time} on the winter clock · {abbr}, {delta} after",
+  "@dstLaterSub": {
+    "description": "Зимние часы и размер склейки.",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      },
+      "abbr": {
+        "type": "String"
+      },
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "dstFooter": "If nobody remembers, pick either — the houses shift by {delta} and you can change it in Settings.",
+  "@dstFooter": {
+    "description": "Что делать тому, кто не знает. Размер склейки тот же.",
+    "placeholders": {
+      "delta": {
+        "type": "String"
+      }
+    }
+  },
+  "dstDeltaHour": "an hour",
+  "@dstDeltaHour": {
+    "description": "Размер склейки, когда он час. Подставляется в {delta}: захардкоженного «часом позже» быть не должно — переводы на полчаса существуют."
+  },
+  "dstDeltaHalfHour": "30 minutes",
+  "@dstDeltaHalfHour": {
+    "description": "Размер склейки в полчаса — остров Лорд-Хау и подобные."
+  }
 }

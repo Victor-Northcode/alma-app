@@ -604,5 +604,18 @@
   "cabCompatNeedsSecond": "Für die Verbindung fehlt eine zweite Person.",
   "cabPeopleTitle": "Menschen",
   "cabPeopleAdd": "Person hinzufügen",
-  "cabPeopleRemove": "Entfernen"
+  "cabPeopleRemove": "Entfernen",
+  "splashTagline": "In den Himmel geschrieben, bevor du gefragt hast.",
+  "journeyNameHint": "Alma begrüßt dich damit — sonst nirgends.",
+  "journeyAboutSkip": "Du kannst das überspringen. Es stimmt nur ab, wie Alma dir schreibt.",
+  "dstOverline": "über deine Geburtszeit",
+  "dstTitle": "In jener Nacht gab es {time} zweimal",
+  "dstBody": "Am {date} wurden in {city} die Uhren zurück­gestellt. Alma wirft über deinen Himmel keine Münze — welche {time} ist deine?",
+  "dstEarlier": "Die frühere",
+  "dstEarlierSub": "{time} nach Sommerzeit · {abbr}",
+  "dstLater": "Die spätere",
+  "dstLaterSub": "{time} nach Winterzeit · {abbr}, {delta} später",
+  "dstFooter": "Wenn sich niemand erinnert, wähl irgendeine — die Häuser verschieben sich um {delta}, und in den Einstellungen lässt es sich ändern.",
+  "dstDeltaHour": "eine Stunde",
+  "dstDeltaHalfHour": "30 Minuten"
 }

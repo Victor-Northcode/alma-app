@@ -106,6 +106,7 @@ class ProfileOut(BaseModel):
     longitude: float
     timezone: str
     place_label: str | None
+    on_ambiguous: str | None = None
 
 
 class PlaceOut(BaseModel):

@@ -289,6 +289,9 @@ def birth_from_profile(profile: Profile) -> BirthData:
         timezone=profile.timezone,
         place_label=profile.place_label,
         name=profile.name,
+        # Ответ, если он был дан. NULL — «не спрашивали»: расчёт снова упрётся
+        # в развилку и снова спросит, что и требуется.
+        on_ambiguous=profile.on_ambiguous or "raise",
     )
 
 

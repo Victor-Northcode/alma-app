@@ -124,15 +124,15 @@ class LFr extends L {
 
   @override
   String get cabAspectMeaningConjunction =>
-      'Au même point : ils agissent comme un seul et s\'amplifient.';
+      'Au même point : ils agissent comme un seul et s\'amplifient.';
 
   @override
   String get cabAspectMeaningOpposition =>
-      'Face à face : ils tirent en sens inverse, et il faut choisir chaque fois.';
+      'Face à face : ils tirent en sens inverse, et il faut choisir chaque fois.';
 
   @override
   String get cabAspectMeaningQuincunx =>
-      'Ils ne se voient pas : deux exigences qui ne se concilient pas.';
+      'Ils ne se voient pas : deux exigences qui ne se concilient pas.';
 
   @override
   String get cabAspectMeaningSextile =>
@@ -140,7 +140,7 @@ class LFr extends L {
 
   @override
   String get cabAspectMeaningSquare =>
-      'Ils se gênent : l\'endroit où il faut faire avec.';
+      'Ils se gênent : l\'endroit où il faut faire avec.';
 
   @override
   String get cabAspectMeaningTrine =>
@@ -453,7 +453,7 @@ class LFr extends L {
 
   @override
   String get cabManagedByApple =>
-      'Cet abonnement a été acheté dans l\'App Store : Apple détient le moyen de paiement, et la résiliation se fait là-bas.';
+      'Cet abonnement a été acheté dans l\'App Store : Apple détient le moyen de paiement, et la résiliation se fait là-bas.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -486,7 +486,7 @@ class LFr extends L {
 
   @override
   String cabOpenSystemNamed(String p1) {
-    return 'Ouvrir : $p1';
+    return 'Ouvrir : $p1';
   }
 
   @override
@@ -647,7 +647,7 @@ class LFr extends L {
 
   @override
   String cabQuestionsLeft(int p1) {
-    return 'Questions disponibles : $p1';
+    return 'Questions disponibles : $p1';
   }
 
   @override
@@ -718,11 +718,11 @@ class LFr extends L {
 
   @override
   String get cabSettingsLettersNote =>
-      'Alma en envoie trois : ton lien de connexion, un reçu pour tes achats et un avertissement trois jours avant le renouvellement d\'un abonnement. Ces messages concernent uniquement tes actions. Il n\'y a pas de newsletter, donc aucune désinscription à effectuer.';
+      'Alma en envoie trois : ton lien de connexion, un reçu pour tes achats et un avertissement trois jours avant le renouvellement d\'un abonnement. Ces messages concernent uniquement tes actions. Il n\'y a pas de newsletter, donc aucune désinscription à effectuer.';
 
   @override
   String get cabSettingsLettersNoteStore =>
-      'Alma envoie une chose : ton lien de connexion. Apple envoie le reçu de tout ce que tu achètes dans l\'app et l\'avertissement avant le renouvellement d\'un abonnement, car c\'est Apple qui encaisse. Il n\'y a pas de newsletter et rien à résilier.';
+      'Alma envoie une chose : ton lien de connexion. Apple envoie le reçu de tout ce que tu achètes dans l\'app et l\'avertissement avant le renouvellement d\'un abonnement, car c\'est Apple qui encaisse. Il n\'y a pas de newsletter et rien à résilier.';
 
   @override
   String get cabSettingsPlace => 'Lieu';
@@ -922,7 +922,7 @@ class LFr extends L {
 
   @override
   String dailyContactPhrase(String p1, String p2, String p3) {
-    return '$p1 maintenant et $p3 dans ton thème : $p2';
+    return '$p1 maintenant et $p3 dans ton thème : $p2';
   }
 
   @override
@@ -1172,7 +1172,7 @@ class LFr extends L {
   String get journeyDateSub => 'La date seule donne déjà trois systèmes.';
 
   @override
-  String get journeyDateTitle => 'Quelle est ta date de naissance ?';
+  String get journeyDateTitle => 'Quelle est ta date de naissance ?';
 
   @override
   String get journeyDialogLabel => 'On fait connaissance';
@@ -1235,7 +1235,7 @@ class LFr extends L {
 
   @override
   String get journeyIntentTitle =>
-      'Qu\'est-ce qui résonne le plus fort en toi maintenant ?';
+      'Qu\'est-ce qui résonne le plus fort en toi maintenant ?';
 
   @override
   String get journeyKeepMySky => 'Garder mon ciel';
@@ -1299,7 +1299,7 @@ class LFr extends L {
   String get journeyNameSub => 'Rien n\'est encore enregistré.';
 
   @override
-  String get journeyNameTitle => 'Comment je t\'appelle ?';
+  String get journeyNameTitle => 'Comment je t\'appelle ?';
 
   @override
   String get journeyNeedsTime => 'heure de naissance manquante';
@@ -1323,7 +1323,7 @@ class LFr extends L {
 
   @override
   String journeyOfferTitle(String p1) {
-    return 'Ta lecture : $p1';
+    return 'Ta lecture : $p1';
   }
 
   @override
@@ -1360,7 +1360,7 @@ class LFr extends L {
   String get journeyPlaceSub => 'La ville suffit.';
 
   @override
-  String get journeyPlaceTitle => 'Quel est ton lieu de naissance ?';
+  String get journeyPlaceTitle => 'Quel est ton lieu de naissance ?';
 
   @override
   String get journeyRule1 =>
@@ -1444,7 +1444,7 @@ class LFr extends L {
   String get journeySystemTransits => 'Transits';
 
   @override
-  String get journeyTimeTitle => 'Quelle est ton heure de naissance ?';
+  String get journeyTimeTitle => 'Quelle est ton heure de naissance ?';
 
   @override
   String get cabinetBack => 'Retour';
@@ -1459,7 +1459,7 @@ class LFr extends L {
 
   @override
   String pushDailyEnteringConjunction(String p1, String p2) {
-    return '$p1 et $p2 : la conjonction devient active aujourd’hui.';
+    return '$p1 et $p2 : la conjonction devient active aujourd’hui.';
   }
 
   @override
@@ -1469,17 +1469,17 @@ class LFr extends L {
 
   @override
   String pushDailyEnteringSextile(String p1, String p2) {
-    return '$p1 et $p2 : le sextile devient actif aujourd’hui.';
+    return '$p1 et $p2 : le sextile devient actif aujourd’hui.';
   }
 
   @override
   String pushDailyEnteringSquare(String p1, String p2) {
-    return '$p1 et $p2 : le carré devient actif aujourd’hui.';
+    return '$p1 et $p2 : le carré devient actif aujourd’hui.';
   }
 
   @override
   String pushDailyEnteringTrine(String p1, String p2) {
-    return '$p1 et $p2 : le trigone devient actif aujourd’hui.';
+    return '$p1 et $p2 : le trigone devient actif aujourd’hui.';
   }
 
   @override
@@ -1661,7 +1661,7 @@ class LFr extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'L\'abonnement annuel et l\'archive ouvrent les huit systèmes ; l\'hebdomadaire et le mensuel gardent vivants les trois qui bougent.';
+      'L\'abonnement annuel et l\'archive ouvrent les huit systèmes ; l\'hebdomadaire et le mensuel gardent vivants les trois qui bougent.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -1813,7 +1813,7 @@ class LFr extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Tu as utilisé les questions disponibles pour le moment. Avec un abonnement actif, tu peux continuer ; il inclut 30 questions par mois.';
+      'Tu as utilisé les questions disponibles pour le moment. Avec un abonnement actif, tu peux continuer ; il inclut 30 questions par mois.';
 
   @override
   String get scrChatPast => 'avant';
@@ -1822,29 +1822,29 @@ class LFr extends L {
   String get scrChatPlaceholder => 'Demande à Alma';
 
   @override
-  String get scrChatPrompt1 => 'Comment suis-je quand personne ne regarde ?';
+  String get scrChatPrompt1 => 'Comment suis-je quand personne ne regarde ?';
 
   @override
   String get scrChatPrompt2 =>
-      'Qu\'est-ce qui influence mon thème cette semaine ?';
+      'Qu\'est-ce qui influence mon thème cette semaine ?';
 
   @override
   String get scrChatPrompt3 =>
-      'Sur quels points mes systèmes se contredisent-ils ?';
+      'Sur quels points mes systèmes se contredisent-ils ?';
 
   @override
   String scrChatPromptMoon(String p1) {
-    return 'Ma Lune est en $p1. De quoi a-t-elle vraiment besoin ?';
+    return 'Ma Lune est en $p1. De quoi a-t-elle vraiment besoin ?';
   }
 
   @override
   String scrChatPromptRising(String p1) {
-    return 'Ascendant $p1. Est-ce la première impression que je donne aux autres ?';
+    return 'Ascendant $p1. Est-ce la première impression que je donne aux autres ?';
   }
 
   @override
   String scrChatPromptSun(String p1) {
-    return 'Mon Soleil est en $p1 — qu\'est-ce que cela me demande ?';
+    return 'Mon Soleil est en $p1 — qu\'est-ce que cela me demande ?';
   }
 
   @override
@@ -1911,7 +1911,7 @@ class LFr extends L {
 
   @override
   String get scrEmptyLead =>
-      'Alma réunit huit systèmes d’astrologie et de connaissance de soi en 41 chapitres. La Synthèse des systèmes en compare trois : thème natal, numérologie et Arcane de naissance (tarot).';
+      'Alma réunit huit systèmes d’astrologie et de connaissance de soi en 41 chapitres. La Synthèse des systèmes en compare trois : thème natal, numérologie et Arcane de naissance (tarot).';
 
   @override
   String get scrEmptyTitle => 'Huit systèmes, un thème';
@@ -1941,7 +1941,7 @@ class LFr extends L {
   String get scrPeopleRemove => 'Retirer';
 
   @override
-  String get scrPeopleRemoveTitle => 'Retirer cette personne ?';
+  String get scrPeopleRemoveTitle => 'Retirer cette personne ?';
 
   @override
   String get scrPeopleRemoveWhat =>
@@ -1958,7 +1958,7 @@ class LFr extends L {
 
   @override
   String get scrSaveAccountBody =>
-      'Connecte-toi une fois : ton thème et tes achats resteront accessibles même sur un nouveau téléphone.';
+      'Connecte-toi une fois : ton thème et tes achats resteront accessibles même sur un nouveau téléphone.';
 
   @override
   String get scrSaveAccountCta => 'Se connecter';
@@ -2008,7 +2008,7 @@ class LFr extends L {
 
   @override
   String get scrSignInReason2 =>
-      'Tous tes achats peuvent être restaurés. Un achat appartient au compte auquel il a été associé en premier ; connecte-toi donc avant de réinstaller l\'app.';
+      'Tous tes achats peuvent être restaurés. Un achat appartient au compte auquel il a été associé en premier ; connecte-toi donc avant de réinstaller l\'app.';
 
   @override
   String get scrSignInReason3 =>
@@ -2038,4 +2038,55 @@ class LFr extends L {
 
   @override
   String get cabPeopleRemove => 'Retirer';
+
+  @override
+  String get splashTagline => 'Écrit dans le ciel avant que tu ne demandes.';
+
+  @override
+  String get journeyNameHint =>
+      'Alma t\'accueillera par ce prénom — nulle part ailleurs.';
+
+  @override
+  String get journeyAboutSkip =>
+      'Tu peux passer. Cela règle seulement la façon dont Alma t\'écrit.';
+
+  @override
+  String get dstOverline => 'sur ton heure de naissance';
+
+  @override
+  String dstTitle(String time) {
+    return 'Cette nuit-là, $time a existé deux fois';
+  }
+
+  @override
+  String dstBody(String city, String date, String time) {
+    return 'Le $date à $city, les horloges ont été reculées. Alma ne jouera pas ton ciel à pile ou face — quel $time est le tien ?';
+  }
+
+  @override
+  String get dstEarlier => 'La première';
+
+  @override
+  String dstEarlierSub(String time, String abbr) {
+    return '$time à l\'heure d\'été · $abbr';
+  }
+
+  @override
+  String get dstLater => 'La seconde';
+
+  @override
+  String dstLaterSub(String time, String abbr, String delta) {
+    return '$time à l\'heure d\'hiver · $abbr, $delta plus tard';
+  }
+
+  @override
+  String dstFooter(String delta) {
+    return 'Si personne ne s\'en souvient, choisis l\'une ou l\'autre — les maisons se décalent de $delta et tu pourras le changer dans les Réglages.';
+  }
+
+  @override
+  String get dstDeltaHour => 'une heure';
+
+  @override
+  String get dstDeltaHalfHour => '30 minutes';
 }

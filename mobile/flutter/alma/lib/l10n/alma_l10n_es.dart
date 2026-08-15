@@ -2025,4 +2025,55 @@ class LEs extends L {
 
   @override
   String get cabPeopleRemove => 'Quitar';
+
+  @override
+  String get splashTagline => 'Escrito en el cielo antes de que preguntaras.';
+
+  @override
+  String get journeyNameHint =>
+      'Alma te saludará con él — en ningún otro lugar.';
+
+  @override
+  String get journeyAboutSkip =>
+      'Puedes saltarte esto. Solo ajusta cómo te escribe Alma.';
+
+  @override
+  String get dstOverline => 'sobre tu hora de nacimiento';
+
+  @override
+  String dstTitle(String time) {
+    return 'Esa noche, las $time ocurrieron dos veces';
+  }
+
+  @override
+  String dstBody(String city, String date, String time) {
+    return 'El $date en $city se atrasaron los relojes. Alma no echará tu cielo a cara o cruz — ¿cuál de las $time es la tuya?';
+  }
+
+  @override
+  String get dstEarlier => 'La primera';
+
+  @override
+  String dstEarlierSub(String time, String abbr) {
+    return 'las $time en horario de verano · $abbr';
+  }
+
+  @override
+  String get dstLater => 'La segunda';
+
+  @override
+  String dstLaterSub(String time, String abbr, String delta) {
+    return 'las $time en horario de invierno · $abbr, $delta después';
+  }
+
+  @override
+  String dstFooter(String delta) {
+    return 'Si nadie lo recuerda, elige cualquiera — las casas se desplazan $delta y puedes cambiarlo en Ajustes.';
+  }
+
+  @override
+  String get dstDeltaHour => 'una hora';
+
+  @override
+  String get dstDeltaHalfHour => '30 minutos';
 }

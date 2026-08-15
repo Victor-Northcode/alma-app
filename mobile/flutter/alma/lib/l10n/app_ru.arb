@@ -604,5 +604,18 @@
   "cabCompatNeedsSecond": "Совместимости нужен второй человек.",
   "cabPeopleTitle": "Люди",
   "cabPeopleAdd": "Добавить человека",
-  "cabPeopleRemove": "Убрать"
+  "cabPeopleRemove": "Убрать",
+  "splashTagline": "Записано в небе ещё до твоего вопроса.",
+  "journeyNameHint": "Alma будет звать тебя по имени в приветствии — и больше нигде.",
+  "journeyAboutSkip": "Можно пропустить. Это лишь настраивает, как Alma тебе пишет.",
+  "dstOverline": "о времени твоего рождения",
+  "dstTitle": "В ту ночь {time} было дважды",
+  "dstBody": "{date} в {city} переводили часы назад. Alma не станет подбрасывать монетку о твоём небе — какое из двух {time} твоё?",
+  "dstEarlier": "Более раннее",
+  "dstEarlierSub": "{time} по летнему времени · {abbr}",
+  "dstLater": "Более позднее",
+  "dstLaterSub": "{time} по зимнему времени · {abbr}, {delta} спустя",
+  "dstFooter": "Если никто не помнит — выбери любое: дома сдвинутся на {delta}, а изменить выбор можно в настройках.",
+  "dstDeltaHour": "час",
+  "dstDeltaHalfHour": "30 минут"
 }

@@ -2019,4 +2019,55 @@ class LRu extends L {
 
   @override
   String get cabPeopleRemove => 'Убрать';
+
+  @override
+  String get splashTagline => 'Записано в небе ещё до твоего вопроса.';
+
+  @override
+  String get journeyNameHint =>
+      'Alma будет звать тебя по имени в приветствии — и больше нигде.';
+
+  @override
+  String get journeyAboutSkip =>
+      'Можно пропустить. Это лишь настраивает, как Alma тебе пишет.';
+
+  @override
+  String get dstOverline => 'о времени твоего рождения';
+
+  @override
+  String dstTitle(String time) {
+    return 'В ту ночь $time было дважды';
+  }
+
+  @override
+  String dstBody(String city, String date, String time) {
+    return '$date в $city переводили часы назад. Alma не станет подбрасывать монетку о твоём небе — какое из двух $time твоё?';
+  }
+
+  @override
+  String get dstEarlier => 'Более раннее';
+
+  @override
+  String dstEarlierSub(String time, String abbr) {
+    return '$time по летнему времени · $abbr';
+  }
+
+  @override
+  String get dstLater => 'Более позднее';
+
+  @override
+  String dstLaterSub(String time, String abbr, String delta) {
+    return '$time по зимнему времени · $abbr, $delta спустя';
+  }
+
+  @override
+  String dstFooter(String delta) {
+    return 'Если никто не помнит — выбери любое: дома сдвинутся на $delta, а изменить выбор можно в настройках.';
+  }
+
+  @override
+  String get dstDeltaHour => 'час';
+
+  @override
+  String get dstDeltaHalfHour => '30 минут';
 }

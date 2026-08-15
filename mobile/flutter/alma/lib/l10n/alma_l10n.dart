@@ -3736,6 +3736,84 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Remove'**
   String get cabPeopleRemove;
+
+  /// Подпись под знаком на заставке.
+  ///
+  /// In en, this message translates to:
+  /// **'Written in the sky before you asked.'**
+  String get splashTagline;
+
+  /// Под полем имени: где имя будет видно, а где нет.
+  ///
+  /// In en, this message translates to:
+  /// **'Alma will greet you by it — nowhere else.'**
+  String get journeyNameHint;
+
+  /// Подзаголовок шага «о себе».
+  ///
+  /// In en, this message translates to:
+  /// **'You can skip this. It only tunes how Alma writes to you.'**
+  String get journeyAboutSkip;
+
+  /// Оверлайн развилки перевода часов. Номера шага у неё нет: это не часть анкеты, а вопрос, который небо задаёт в ответ во время церемонии.
+  ///
+  /// In en, this message translates to:
+  /// **'about your birth time'**
+  String get dstOverline;
+
+  /// Заголовок развилки.
+  ///
+  /// In en, this message translates to:
+  /// **'That night, {time} happened twice'**
+  String dstTitle(String time);
+
+  /// Что произошло в ту ночь и почему выбор за человеком.
+  ///
+  /// In en, this message translates to:
+  /// **'Clocks were set back in {city} on {date}. Alma will not flip a coin about your sky — which {time} is yours?'**
+  String dstBody(String city, String date, String time);
+
+  /// Первый из двух моментов.
+  ///
+  /// In en, this message translates to:
+  /// **'The earlier one'**
+  String get dstEarlier;
+
+  /// Летние часы: имя зоны приходит с сервера.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} on the summer clock · {abbr}'**
+  String dstEarlierSub(String time, String abbr);
+
+  /// Второй из двух моментов.
+  ///
+  /// In en, this message translates to:
+  /// **'The later one'**
+  String get dstLater;
+
+  /// Зимние часы и размер склейки.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} on the winter clock · {abbr}, {delta} after'**
+  String dstLaterSub(String time, String abbr, String delta);
+
+  /// Что делать тому, кто не знает. Размер склейки тот же.
+  ///
+  /// In en, this message translates to:
+  /// **'If nobody remembers, pick either — the houses shift by {delta} and you can change it in Settings.'**
+  String dstFooter(String delta);
+
+  /// Размер склейки, когда он час. Подставляется в {delta}: захардкоженного «часом позже» быть не должно — переводы на полчаса существуют.
+  ///
+  /// In en, this message translates to:
+  /// **'an hour'**
+  String get dstDeltaHour;
+
+  /// Размер склейки в полчаса — остров Лорд-Хау и подобные.
+  ///
+  /// In en, this message translates to:
+  /// **'30 minutes'**
+  String get dstDeltaHalfHour;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

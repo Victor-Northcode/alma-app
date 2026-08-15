@@ -61,6 +61,19 @@ class _JourneyScreenState extends State<JourneyScreen> {
   bool _saving = false;
   String? _failure;
 
+  /// Развилка перевода часов, если небо задало встречный вопрос.
+  ///
+  /// **Это интеррапт церемонии, а не шаг анкеты.** Номера у неё нет: спросить
+  /// можно только после «Построить моё небо», когда расчёт упёрся в двойное
+  /// 02:30, — но и «V / VI» солгало бы, потому что это не шестая часть анкеты.
+  /// Решение владельца: биты церемонии встают на паузу и не сбрасываются,
+  /// стрелка ведёт назад на шаг времени.
+  AmbiguousBirthTime? _fork;
+
+  /// Какое из двух времён выбрано. Уезжает в профиль и живёт там: без этого
+  /// вопрос возвращался бы на каждом расчёте.
+  String? _fold;
+
   /// Начало анкеты сообщается один раз за приход, а не на каждый кадр.
   bool _announced = false;
 
@@ -143,15 +156,32 @@ class _JourneyScreenState extends State<JourneyScreen> {
         placeLabel: place.label,
         placeId: place.id,
         name: _name.text.trim().isEmpty ? null : _name.text.trim(),
+        onAmbiguous: _fold,
       ), gender: _gender);
       if (_name.text.trim().isNotEmpty) {
         await session.client.setDisplayName(_name.text.trim());
       }
+      // **Церемония наконец действительно считает.** Докстринг рядом обещал
+      // это давно, а на деле она была таймером на восемь ударов: ни сохранение
+      // профиля, ни хаб ничего не вычисляют. Натальная карта — расчёт, который
+      // человеку всё равно нужен первым, и сервер её кэширует, так что это не
+      // лишняя работа, а перенесённая на девять секунд раньше.
+      //
+      // И только здесь может прийти встречный вопрос про двойное время.
+      await session.client.compute(SystemSlug.natal);
       await session.start(force: true);
       if (!mounted) return;
       setState(() => _saving = false);
       // Кто пришёл вторым, тот и уводит.
       if (_ceremonyPlayed) widget.onDone();
+    } on AmbiguousBirthTime catch (fork) {
+      // Не отказ, а вопрос: церемония замирает и ждёт ответа.
+      if (mounted) {
+        setState(() {
+          _saving = false;
+          _fork = fork;
+        });
+      }
     } on AlmaError catch (error) {
       if (mounted) {
         setState(() {
@@ -164,6 +194,22 @@ class _JourneyScreenState extends State<JourneyScreen> {
     }
   }
 
+  /// Время, которое человек назвал, — в том же виде, в каком его показывают
+  /// строки развилки: «02:30».
+  String get _wallClock => _hour == null || _minute == null
+      ? ''
+      : '${_hour!.toString().padLeft(2, '0')}:'
+          '${_minute!.toString().padLeft(2, '0')}';
+
+  /// Ответ дан — сохраняем его в профиль и продолжаем расчёт.
+  Future<void> _answerFork(String choice) async {
+    setState(() {
+      _fold = choice;
+      _fork = null;
+    });
+    await _build();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -174,7 +220,15 @@ class _JourneyScreenState extends State<JourneyScreen> {
         seed: 0x4A4F5552 + _step.index,
         child: SafeArea(
           child: _step == _Step.ceremony
-              ? _Ceremony(
+              ? Stack(children: [
+                  // **Развилка ложится поверх церемонии, а не вместо неё.**
+                  //
+                  // Заменяя сцену, я её размонтировал — а `dispose` ставит
+                  // `_stopped`, то есть биты не вставали на паузу, а
+                  // сбрасывались, и после ответа отсчёт начинался заново.
+                  // Владелец сказал прямо: на паузе, не сбрасываются.
+                  _Ceremony(
+                  paused: _fork != null,
                   onDone: () {
                     // Церемония доиграла. Уходим, только когда и сохранение
                     // закончилось: сцена, ушедшая раньше ответа сервера,
@@ -182,7 +236,26 @@ class _JourneyScreenState extends State<JourneyScreen> {
                     if (mounted && !_saving) widget.onDone();
                     _ceremonyPlayed = true;
                   },
-                )
+                ),
+                  if (_fork != null)
+                    Positioned.fill(
+                      child: ColoredBox(
+                        // Вопрос закрывает сцену собой: под ним она живёт, но
+                        // читать два текста разом нельзя.
+                        color: AlmaPalette.night.withValues(alpha: 0.96),
+                        child: _Fork(
+                          fork: _fork!,
+                          time: _wallClock,
+                          city: _place?.label ?? '',
+                          onChoose: _answerFork,
+                          onBack: () => setState(() {
+                            _fork = null;
+                            _step = _Step.time;
+                          }),
+                        ),
+                      ),
+                    ),
+                ])
               : Padding(
             padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -237,11 +310,22 @@ class _JourneyScreenState extends State<JourneyScreen> {
             // Плейсхолдера нет намеренно: «София» в поле имени читается как
             // чужая заполненная анкета, а не как подсказка.
             CeremonialField(controller: _name),
+            const SizedBox(height: 12),
+            // **Под полем, а не под заголовком.** Наверху сказано, что ничего
+            // не сохраняется; здесь — где имя вообще будет видно. Это ответ на
+            // вопрос, который появляется уже после того, как имя набрали, и в
+            // эталоне строка стоит именно под полем (`s13`, y=535 против
+            // поля на 470).
+            Text(
+              l.journeyNameHint,
+              style: AlmaType.meta
+                  .copyWith(color: AlmaPalette.body.withValues(alpha: 0.55)),
+            ),
           ],
         _Step.about => [
             Text(l.journeyAboutTitle, style: AlmaType.displayL),
             const SizedBox(height: 10),
-            Text(l.journeyAboutSub, style: AlmaType.meta),
+            Text(l.journeyAboutSkip, style: AlmaType.meta),
             const SizedBox(height: 24),
             for (final (value, label) in [
               ('female', l.journeyGenderFemale),
@@ -531,6 +615,121 @@ class _PlaceRow extends StatelessWidget {
   }
 }
 
+/// Развилка перевода часов — встречный вопрос неба, а не шаг анкеты.
+///
+/// **У неё нет номера, и это решение владельца.** «IV / VI» из первой редакции
+/// макета обещало бы шаг времени, до которого уже не вернуться; «V / VI»
+/// солгало бы иначе — это не шестая часть анкеты. Вопрос возникает после
+/// «Построить моё небо», когда расчёт упёрся в двойное 02:30, поэтому сверху
+/// стоит оверлайн «о времени рождения», а стрелка ведёт назад на шаг времени.
+///
+/// Два варианта различаются **не временем** — оно одинаковое, в этом вся
+/// суть, — а именем, которое часы носили в ту ночь. Имена приходят с сервера:
+/// базы часовых поясов у телефона нет.
+class _Fork extends StatelessWidget {
+  const _Fork({
+    required this.fork,
+    required this.time,
+    required this.city,
+    required this.onChoose,
+    required this.onBack,
+  });
+
+  final AmbiguousBirthTime fork;
+  final String time;
+  final String city;
+  final ValueChanged<String> onChoose;
+  final VoidCallback onBack;
+
+  /// Размер склейки словами. Захардкоженного «часом позже» здесь быть не
+  /// может: переводы на полчаса существуют — остров Лорд-Хау и подобные, — и
+  /// строка, уверенно называющая час, была бы там просто неправдой.
+  String _delta(L l) =>
+      (fork.gapHours ?? 1).abs() < 0.75 ? l.dstDeltaHalfHour : l.dstDeltaHour;
+
+  /// Дата перевода — так, как её пишут в этой локали. Сервер присылает
+  /// «1992-09-27»; показывать человеку ISO значит показывать ему машину.
+  String _date(L l) {
+    final raw = DateTime.tryParse(fork.transitionLocalDate);
+    if (raw == null) return fork.transitionLocalDate;
+    return DateFormat.yMMMMd(l.localeName).format(raw);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final delta = _delta(l);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const SizedBox(height: 12),
+        Row(children: [
+          Text(l.dstOverline.toUpperCase(), style: AlmaType.overline),
+          const Spacer(),
+          IconButton(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_back, color: AlmaPalette.gold),
+          ),
+        ]),
+        const Spacer(),
+        Text(l.dstTitle(time), style: AlmaType.displayL),
+        const SizedBox(height: 18),
+        Text(l.dstBody(city, _date(l), time), style: AlmaType.meta),
+        const SizedBox(height: 26),
+        _Choice(
+          title: l.dstEarlier,
+          note: l.dstEarlierSub(time, fork.earlier?.abbreviation ?? ''),
+          onTap: () => onChoose('earlier'),
+        ),
+        const SizedBox(height: 14),
+        _Choice(
+          title: l.dstLater,
+          note: l.dstLaterSub(time, fork.later?.abbreviation ?? '', delta),
+          onTap: () => onChoose('later'),
+        ),
+        const SizedBox(height: 20),
+        // Тому, кто не знает, тоже нужен выход — и честный: разница в час
+        // сдвигает дома, а не переписывает карту.
+        Text(
+          l.dstFooter(delta),
+          style: AlmaType.meta.copyWith(
+              fontSize: 12, color: AlmaPalette.body.withValues(alpha: 0.5)),
+        ),
+        const Spacer(),
+        const SizedBox(height: 24),
+      ]),
+    );
+  }
+}
+
+/// Один из двух моментов: титул засечным, под ним — чем он отличается.
+class _Choice extends StatelessWidget {
+  const _Choice({required this.title, required this.note, required this.onTap});
+
+  final String title;
+  final String note;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          decoration: BoxDecoration(
+            border: Border.all(color: AlmaPalette.hairline),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: AlmaType.headingM.copyWith(fontSize: 17)),
+            const SizedBox(height: 4),
+            Text(note, style: AlmaType.meta),
+          ]),
+        ),
+      );
+}
+
 /// Одно колесо анкеты.
 ///
 /// Главное здесь — **пустое состояние**. Натив ради него отказался от колеса
@@ -728,9 +927,12 @@ class _WheelState extends State<_Wheel> {
 /// единственный экран, где системы действительно считаются, — и оставлял
 /// человека перед пустым кабинетом, который ещё не успел ничего получить.
 class _Ceremony extends StatefulWidget {
-  const _Ceremony({required this.onDone});
+  const _Ceremony({required this.onDone, this.paused = false});
 
   final VoidCallback onDone;
+
+  /// Небо задало встречный вопрос: отсчёт стоит, но ничего не забыто.
+  final bool paused;
 
   @override
   State<_Ceremony> createState() => _CeremonyState();
@@ -755,6 +957,12 @@ class _CeremonyState extends State<_Ceremony> {
   Future<void> _play() async {
     for (var next = 2; next <= 8; next++) {
       await Future<void>.delayed(const Duration(milliseconds: 1150));
+      if (_stopped || !mounted) return;
+      // Пауза — это ожидание, а не выход: удар, до которого дошли, остаётся, и
+      // после ответа сцена продолжает с него же.
+      while (widget.paused && !_stopped && mounted) {
+        await Future<void>.delayed(const Duration(milliseconds: 120));
+      }
       if (_stopped || !mounted) return;
       setState(() => _beat = next);
       HapticFeedback.selectionClick();

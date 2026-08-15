@@ -2035,4 +2035,55 @@ class LDe extends L {
 
   @override
   String get cabPeopleRemove => 'Entfernen';
+
+  @override
+  String get splashTagline =>
+      'In den Himmel geschrieben, bevor du gefragt hast.';
+
+  @override
+  String get journeyNameHint => 'Alma begrüßt dich damit — sonst nirgends.';
+
+  @override
+  String get journeyAboutSkip =>
+      'Du kannst das überspringen. Es stimmt nur ab, wie Alma dir schreibt.';
+
+  @override
+  String get dstOverline => 'über deine Geburtszeit';
+
+  @override
+  String dstTitle(String time) {
+    return 'In jener Nacht gab es $time zweimal';
+  }
+
+  @override
+  String dstBody(String city, String date, String time) {
+    return 'Am $date wurden in $city die Uhren zurück­gestellt. Alma wirft über deinen Himmel keine Münze — welche $time ist deine?';
+  }
+
+  @override
+  String get dstEarlier => 'Die frühere';
+
+  @override
+  String dstEarlierSub(String time, String abbr) {
+    return '$time nach Sommerzeit · $abbr';
+  }
+
+  @override
+  String get dstLater => 'Die spätere';
+
+  @override
+  String dstLaterSub(String time, String abbr, String delta) {
+    return '$time nach Winterzeit · $abbr, $delta später';
+  }
+
+  @override
+  String dstFooter(String delta) {
+    return 'Wenn sich niemand erinnert, wähl irgendeine — die Häuser verschieben sich um $delta, und in den Einstellungen lässt es sich ändern.';
+  }
+
+  @override
+  String get dstDeltaHour => 'eine Stunde';
+
+  @override
+  String get dstDeltaHalfHour => '30 Minuten';
 }

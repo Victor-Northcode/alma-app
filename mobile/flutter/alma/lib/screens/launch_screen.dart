@@ -202,6 +202,33 @@ class _LaunchScreenState extends State<LaunchScreen>
                     ),
                   ],
                 ),
+                // **Обещание — внизу, и приходит последним.**
+                //
+                // В эталоне оно на `y=789` из 874, то есть у самого низа, а не
+                // под знаком: знак называет продукт, эта строка объясняет, о
+                // чём он, и читается уже после. Курсивным Playfair 15.5 —
+                // единственная фраза заставки, набранная голосом Alma, а не
+                // подписью.
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(34, 0, 34, 62),
+                    child: Opacity(
+                      // Заставка живёт 3.4 секунды; проявление до 3.45 значило
+                      // бы, что строку не успевают увидеть вовсе. Приходит
+                      // вместе с оседающей разрядкой знака и держится.
+                      opacity: still ? 1 : _eased(2.55, 3.05, t),
+                      child: Text(
+                        l.splashTagline,
+                        textAlign: TextAlign.center,
+                        style: AlmaType.voice.copyWith(
+                          fontSize: 15.5,
+                          color: AlmaPalette.inkLight.withValues(alpha: 0.82),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             );
           },

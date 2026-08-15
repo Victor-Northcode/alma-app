@@ -13,6 +13,11 @@ from ..schemas import ProfileInput, ProfileOut
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 
+def _fold(value: str | None) -> str | None:
+    """«raise» — это не ответ, а его отсутствие; в базе ему соответствует NULL."""
+    return value if value in ("earlier", "later") else None
+
+
 def _out(profile: Profile) -> ProfileOut:
     return ProfileOut(
         id=profile.id,
@@ -26,6 +31,7 @@ def _out(profile: Profile) -> ProfileOut:
         longitude=profile.longitude,
         timezone=profile.timezone,
         place_label=profile.place_label,
+        on_ambiguous=profile.on_ambiguous,
     )
 
 
@@ -111,6 +117,7 @@ async def create_profile(
         timezone=payload.timezone,
         place_label=payload.place_label,
         place_id=payload.place_id,
+        on_ambiguous=_fold(payload.on_ambiguous),
     )
     session.add(profile)
     await session.flush()
@@ -139,6 +146,11 @@ async def update_profile(
     profile.timezone = payload.timezone
     profile.place_label = payload.place_label
     profile.place_id = payload.place_id
+    # **Ответ не стирается пустым запросом.** Клиент, правящий имя, шлёт форму
+    # целиком и не обязан помнить про развилку; сохранённый выбор пережил бы
+    # такую правку, а «raise» по умолчанию затёр бы его и спросил заново.
+    if _fold(payload.on_ambiguous) is not None:
+        profile.on_ambiguous = _fold(payload.on_ambiguous)
     await session.flush()
     return _out(profile)
 

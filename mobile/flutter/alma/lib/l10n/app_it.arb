@@ -604,5 +604,18 @@
   "cabCompatNeedsSecond": "La compatibilità ha bisogno di una seconda persona.",
   "cabPeopleTitle": "Persone",
   "cabPeopleAdd": "Aggiungi persona",
-  "cabPeopleRemove": "Rimuovi"
+  "cabPeopleRemove": "Rimuovi",
+  "splashTagline": "Scritto nel cielo prima che tu chiedessi.",
+  "journeyNameHint": "Alma ti saluterà così — e in nessun altro posto.",
+  "journeyAboutSkip": "Puoi saltarlo. Serve solo a regolare come Alma ti scrive.",
+  "dstOverline": "sulla tua ora di nascita",
+  "dstTitle": "Quella notte le {time} sono esistite due volte",
+  "dstBody": "Il {date} a {city} gli orologi sono stati portati indietro. Alma non tira una moneta sul tuo cielo — quale {time} è la tua?",
+  "dstEarlier": "La prima",
+  "dstEarlierSub": "le {time} con l'ora legale · {abbr}",
+  "dstLater": "La seconda",
+  "dstLaterSub": "le {time} con l'ora solare · {abbr}, {delta} dopo",
+  "dstFooter": "Se nessuno lo ricorda, scegline una — le case si spostano di {delta} e puoi cambiarlo nelle Impostazioni.",
+  "dstDeltaHour": "un'ora",
+  "dstDeltaHalfHour": "30 minuti"
 }

@@ -2031,4 +2031,55 @@ class LPt extends L {
 
   @override
   String get cabPeopleRemove => 'Remover';
+
+  @override
+  String get splashTagline => 'Escrito no céu antes de você perguntar.';
+
+  @override
+  String get journeyNameHint =>
+      'A Alma vai te cumprimentar por ele — e em mais nenhum lugar.';
+
+  @override
+  String get journeyAboutSkip =>
+      'Você pode pular. Isso só ajusta como a Alma escreve para você.';
+
+  @override
+  String get dstOverline => 'sobre sua hora de nascimento';
+
+  @override
+  String dstTitle(String time) {
+    return 'Naquela noite, $time aconteceu duas vezes';
+  }
+
+  @override
+  String dstBody(String city, String date, String time) {
+    return 'Em $date, em $city, os relógios foram atrasados. A Alma não vai tirar seu céu na moeda — qual $time é o seu?';
+  }
+
+  @override
+  String get dstEarlier => 'A primeira';
+
+  @override
+  String dstEarlierSub(String time, String abbr) {
+    return '$time no horário de verão · $abbr';
+  }
+
+  @override
+  String get dstLater => 'A segunda';
+
+  @override
+  String dstLaterSub(String time, String abbr, String delta) {
+    return '$time no horário de inverno · $abbr, $delta depois';
+  }
+
+  @override
+  String dstFooter(String delta) {
+    return 'Se ninguém lembra, escolha qualquer uma — as casas se deslocam $delta e você pode mudar depois nos Ajustes.';
+  }
+
+  @override
+  String get dstDeltaHour => 'uma hora';
+
+  @override
+  String get dstDeltaHalfHour => '30 minutos';
 }

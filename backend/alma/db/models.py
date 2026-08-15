@@ -207,6 +207,18 @@ class Profile(Base):
     #: system that needs the horizon checks it and refuses rather than
     #: assuming noon.
     birth_time: Mapped[str | None] = mapped_column(String(5))
+    #: Какое из двух одинаковых времён имелось в виду, когда часы в ту ночь
+    #: переводили назад: "earlier" | "later" | NULL.
+    #:
+    #: **Без этого поля ответ было некуда положить.** Движок умеет разводить
+    #: двойное 02:30 и умеет принять решение — но `birth_from_profile` не
+    #: передавал его, и любой расчёт по сохранённому профилю снова упирался в
+    #: 409. То есть человек, родившийся в час перевода часов, отвечал на вопрос
+    #: и получал его снова, и так каждый раз, до конца.
+    #:
+    #: NULL значит «не спрашивали», и это верно для подавляющего большинства
+    #: рождений: развилка возникает один час в году в каждом поясе.
+    on_ambiguous: Mapped[str | None] = mapped_column(String(8))
     latitude: Mapped[float] = mapped_column(Float)
     longitude: Mapped[float] = mapped_column(Float)
     timezone: Mapped[str] = mapped_column(String(64))

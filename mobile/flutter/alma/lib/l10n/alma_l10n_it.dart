@@ -2034,4 +2034,55 @@ class LIt extends L {
 
   @override
   String get cabPeopleRemove => 'Rimuovi';
+
+  @override
+  String get splashTagline => 'Scritto nel cielo prima che tu chiedessi.';
+
+  @override
+  String get journeyNameHint =>
+      'Alma ti saluterà così — e in nessun altro posto.';
+
+  @override
+  String get journeyAboutSkip =>
+      'Puoi saltarlo. Serve solo a regolare come Alma ti scrive.';
+
+  @override
+  String get dstOverline => 'sulla tua ora di nascita';
+
+  @override
+  String dstTitle(String time) {
+    return 'Quella notte le $time sono esistite due volte';
+  }
+
+  @override
+  String dstBody(String city, String date, String time) {
+    return 'Il $date a $city gli orologi sono stati portati indietro. Alma non tira una moneta sul tuo cielo — quale $time è la tua?';
+  }
+
+  @override
+  String get dstEarlier => 'La prima';
+
+  @override
+  String dstEarlierSub(String time, String abbr) {
+    return 'le $time con l\'ora legale · $abbr';
+  }
+
+  @override
+  String get dstLater => 'La seconda';
+
+  @override
+  String dstLaterSub(String time, String abbr, String delta) {
+    return 'le $time con l\'ora solare · $abbr, $delta dopo';
+  }
+
+  @override
+  String dstFooter(String delta) {
+    return 'Se nessuno lo ricorda, scegline una — le case si spostano di $delta e puoi cambiarlo nelle Impostazioni.';
+  }
+
+  @override
+  String get dstDeltaHour => 'un\'ora';
+
+  @override
+  String get dstDeltaHalfHour => '30 minuti';
 }
