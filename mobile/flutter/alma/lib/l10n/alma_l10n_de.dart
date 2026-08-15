@@ -261,7 +261,7 @@ class LDe extends L {
 
   @override
   String get cabDisclaimer =>
-      'Nur zur Selbsterkenntnis. Keine medizinische, psychologische, rechtliche oder finanzielle Beratung und keine Vorhersage von Ereignissen.';
+      'Nur zur Selbst­erkenntnis. Keine medizinische, psychologische, rechtliche oder finanzielle Beratung und keine Vorhersage von Ereignissen.';
 
   @override
   String get cabElementAir => 'Luft';
@@ -375,7 +375,7 @@ class LDe extends L {
 
   @override
   String get cabHoroscopeLocked =>
-      'Dein tägliches Horoskop wird jeden Morgen aus deinem Geburtshoroskop erstellt und ist im Abo enthalten.';
+      'Dein tägliches Horoskop wird jeden Morgen aus deinem Geburts­horoskop erstellt und ist im Abo enthalten.';
 
   @override
   String get cabHoroscopeOpen => 'Horoskop öffnen';
@@ -453,7 +453,7 @@ class LDe extends L {
 
   @override
   String get cabManagedByApple =>
-      'Dieser Plan wurde im App Store gekauft — Apple verwaltet die Zahlungsmethode, und dort wird auch gekündigt.';
+      'Dieser Plan wurde im App Store gekauft — Apple verwaltet die Zahlungs­methode, und dort wird auch gekündigt.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -529,7 +529,7 @@ class LDe extends L {
 
   @override
   String get cabPlanCancelFailed =>
-      'Wir konnten den Zahlungsanbieter nicht erreichen, es wurde also nichts geändert. Versuch es gleich noch einmal.';
+      'Wir konnten den Zahlungs­anbieter nicht erreichen, es wurde also nichts geändert. Versuch es gleich noch einmal.';
 
   @override
   String get cabPlanCancelSubscription => 'Abo kündigen';
@@ -632,7 +632,7 @@ class LDe extends L {
 
   @override
   String get cabPlansBody =>
-      'Das Abo hält Transite, Solarhoroskop und Kompatibilität aktuell, schickt die Morgenmitteilung und enthält 30 Fragen im Monat. Alle acht Systeme öffnet das Jahresabo.';
+      'Das Abo hält Transite, Solarhoroskop und Kompatibilität aktuell, schickt die Morgen­mitteilung und enthält 30 Fragen im Monat. Alle acht Systeme öffnet das Jahresabo.';
 
   @override
   String get cabPlansCta => 'Pläne ansehen';
@@ -787,7 +787,7 @@ class LDe extends L {
 
   @override
   String get cabSkyEventBody =>
-      'Für Tage wie diesen gibt es die Morgenbenachrichtigung — sie kommt um 08:00, wenn etwas in deinem Horoskop exakt ist. Teil des Plans.';
+      'Für Tage wie diesen gibt es die Morgen­benach­richtigung — sie kommt um 08:00, wenn etwas in deinem Horoskop exakt ist. Teil des Plans.';
 
   @override
   String get cabSpheresLabel => 'was dein Horoskop sagt';
@@ -1009,7 +1009,7 @@ class LDe extends L {
 
   @override
   String get dailyStatusProvisional =>
-      'Sie kommen leise an. Almas Mitteilungen gehen direkt in die Mitteilungszentrale — ohne Banner, ohne Ton — bis du es anders entscheidest.';
+      'Sie kommen leise an. Almas Mitteilungen gehen direkt in die Mitteilungs­zentrale — ohne Banner, ohne Ton — bis du es anders entscheidest.';
 
   @override
   String get dailyStatusRegistered =>
@@ -1102,7 +1102,7 @@ class LDe extends L {
 
   @override
   String get journeyCeremony1Label =>
-      'System 1 von 8 wird gelesen · Geburtshoroskop';
+      'System 1 von 8 wird gelesen · Geburts­horoskop';
 
   @override
   String get journeyCeremony1Line =>
@@ -1129,7 +1129,7 @@ class LDe extends L {
 
   @override
   String get journeyCeremony4Line =>
-      'Wo der Himmel heute steht — im Vergleich zu deinem Geburtshoroskop.';
+      'Wo der Himmel heute steht — im Vergleich zu deinem Geburts­horoskop.';
 
   @override
   String get journeyCeremony5Label =>
@@ -1148,7 +1148,7 @@ class LDe extends L {
 
   @override
   String get journeyCeremony7Label =>
-      'System 7 von 8 wird gelesen · Astrokartografie';
+      'System 7 von 8 wird gelesen · Astro­kartografie';
 
   @override
   String get journeyCeremony7Line =>
@@ -1243,7 +1243,7 @@ class LDe extends L {
 
   @override
   String get journeyLockedWithoutTime =>
-      'Häuser, Solarhoroskop und Astrokartografie bleiben gesperrt';
+      'Häuser, Solarhoroskop und Astro­kartografie bleiben gesperrt';
 
   @override
   String get journeyMeridiemLabel => 'AM oder PM';
@@ -1682,11 +1682,11 @@ class LDe extends L {
 
   @override
   String get paywallRestored =>
-      'Wiederhergestellt. Alles, was du gekauft hast, ist wieder offen.';
+      'Wieder­hergestellt. Alles, was du gekauft hast, ist wieder offen.';
 
   @override
   String get paywallRestoredNone =>
-      'Der App Store hat für diese Apple-ID nichts wiederherzustellen.';
+      'Der App Store hat für diese Apple-ID nichts wieder­herzustellen.';
 
   @override
   String get paywallRestoredOther =>
@@ -1932,7 +1932,7 @@ class LDe extends L {
 
   @override
   String get scrPeopleLead =>
-      'Die Kompatibilitätsanalyse vergleicht dein Horoskop mit dem einer anderen Person. Der Vergleich wird immer vollständig berechnet.';
+      'Die Kompa­tibilitäts­analyse vergleicht dein Horoskop mit dem einer anderen Person. Der Vergleich wird immer vollständig berechnet.';
 
   @override
   String get scrPeopleRemove => 'Entfernen';
@@ -1942,7 +1942,7 @@ class LDe extends L {
 
   @override
   String get scrPeopleRemoveWhat =>
-      'Ihre Geburtsdaten werden gelöscht — und damit alle daraus erstellten Kompatibilitätsdeutungen. Bezahlte Deutungen können nicht Wort für Wort neu erstellt werden.';
+      'Ihre Geburtsdaten werden gelöscht — und damit alle daraus erstellten Kompa­tibilitäts­deutungen. Bezahlte Deutungen können nicht Wort für Wort neu erstellt werden.';
 
   @override
   String get scrPeopleSaved => 'gespeichert';
@@ -2006,7 +2006,7 @@ class LDe extends L {
 
   @override
   String get scrSignInReason2 =>
-      'Alles Gekaufte lässt sich wiederherstellen. Ein Kauf gehört zu dem Konto, mit dem er zuerst verknüpft wurde — melde dich also vor einer Neuinstallation an.';
+      'Alles Gekaufte lässt sich wieder­herstellen. Ein Kauf gehört zu dem Konto, mit dem er zuerst verknüpft wurde — melde dich also vor einer Neu­installation an.';
 
   @override
   String get scrSignInReason3 =>

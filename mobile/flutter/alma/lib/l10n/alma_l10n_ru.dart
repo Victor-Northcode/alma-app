@@ -261,7 +261,7 @@ class LRu extends L {
 
   @override
   String get cabDisclaimer =>
-      'Только для самопознания. Не медицинский, не психологический, не юридический и не финансовый совет — и не предсказание событий.';
+      'Только для самопознания. Не медицинский, не психо­логический, не юридический и не финансовый совет — и не предсказание событий.';
 
   @override
   String get cabElementAir => 'воздух';
@@ -535,7 +535,7 @@ class LRu extends L {
 
   @override
   String get cabPlanCancelWhat =>
-      'Следующее списание останавливается. Всё уже оплаченное остаётся открытым до конца периода — отмена не возврат, и мы ничего не забираем.';
+      'Следующее списание оста­навливается. Всё уже оплаченное остаётся открытым до конца периода — отмена не возврат, и мы ничего не забираем.';
 
   @override
   String cabPlanCancelled(String p1) {
@@ -1008,7 +1008,7 @@ class LRu extends L {
 
   @override
   String get dailyStatusRegistered =>
-      'Этот телефон зарегистрирован для утренних уведомлений.';
+      'Этот телефон зареги­стрирован для утренних уведомлений.';
 
   @override
   String get dailyStatusUpgrade => 'Пусть приходят как положено';
@@ -1137,7 +1137,8 @@ class LRu extends L {
       'Соляр строится на момент ежегодного возвращения Солнца в положение при рождении.';
 
   @override
-  String get journeyCeremony7Label => 'читаю систему 7 из 8 · астрокартография';
+  String get journeyCeremony7Label =>
+      'читаю систему 7 из 8 · астро­картография';
 
   @override
   String get journeyCeremony7Line =>
@@ -1231,7 +1232,7 @@ class LRu extends L {
 
   @override
   String get journeyLockedWithoutTime =>
-      'Без времени рождения недоступны дома, соляр и астрокартография.';
+      'Без времени рождения недоступны дома, соляр и астро­картография.';
 
   @override
   String get journeyMeridiemLabel => 'AM или PM';
