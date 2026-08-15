@@ -36,6 +36,43 @@ from .contract import BirthData, CalcResult, build, json_safe
 AmbiguousBirthTime = AmbiguousLocalTime
 
 
+def ambiguity_detail(exc: AmbiguousBirthTime) -> dict:
+    """The 409 body for a DST-ambiguous wall clock.
+
+    **One builder, three callers.** This body was assembled by hand in
+    `api/app.py`, `routers/systems.py` and `routers/readings.py`, and the three
+    copies were identical — which is exactly why they drifted the moment the
+    fork screen needed the zone names: the handler learned to send them and
+    the two routers went on sending two bare timestamps. Which of the three
+    answers a person gets depends only on which endpoint they happened to hit,
+    and that is not a distinction the product means to make.
+    """
+    return {
+        "error": "ambiguous_birth_time",
+        "message": str(exc),
+        # Экран развилки спрашивает «какие из двух 02:30 ваши?». Ответить,
+        # видя два одинаковых времени, нельзя — различают их имена, которые
+        # часы носили в ту ночь, и дата перевода. Считает их зона, базы часовых
+        # поясов у клиента нет, поэтому они приходят отсюда.
+        "timezone": exc.tz_name,
+        "transition_local_date": exc.transition_local_date,
+        "options": [
+            {
+                "choice": "earlier",
+                "utc": exc.earlier.isoformat(),
+                "abbreviation": exc.earlier_abbr,
+                "offset_hours": exc.earlier_offset_hours,
+            },
+            {
+                "choice": "later",
+                "utc": exc.later.isoformat(),
+                "abbreviation": exc.later_abbr,
+                "offset_hours": exc.later_offset_hours,
+            },
+        ],
+    }
+
+
 class TimeRequired(Exception):
     """This system cannot be computed without a real birth time."""
 

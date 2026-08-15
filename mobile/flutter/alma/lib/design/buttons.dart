@@ -33,6 +33,7 @@ class AlmaButton extends StatefulWidget {
     required this.onTap,
     this.kind = AlmaButtonKind.gold,
     this.fills = true,
+    this.radius,
   });
 
   final String label;
@@ -43,6 +44,16 @@ class AlmaButton extends StatefulWidget {
 
   /// Тянется ли кнопка на всю ширину. На телефоне — почти всегда.
   final bool fills;
+
+  /// Скругление. По умолчанию пилюля — половина высоты, и такими нарисованы в
+  /// дизайн-проекте все золотые кнопки продукта, кроме одной.
+  ///
+  /// Исключение — кнопка шага анкеты: у неё 15 при высоте 56, то есть
+  /// прямоугольник со скруглёнными углами. Так нарисованы все шесть её
+  /// появлений (`s13`–`s16`, `s35`, `s38`) и ни одна кнопка вне анкеты, так
+  /// что это форма, а не описка: ключ, которым продвигаются вперёд, не должен
+  /// выглядеть как кнопка, которой покупают.
+  final double? radius;
 
   @override
   State<AlmaButton> createState() => _AlmaButtonState();
@@ -71,8 +82,11 @@ class _AlmaButtonState extends State<AlmaButton> {
           AlmaType.button.copyWith(fontSize: 14.5, color: AlmaPalette.disagree),
       };
 
+  BorderRadius get _radius =>
+      BorderRadius.circular(widget.radius ?? _height / 2);
+
   Decoration get _decoration {
-    final radius = BorderRadius.circular(_height / 2);
+    final radius = _radius;
     return switch (widget.kind) {
       // Золото рисует `GoldSurface`: три слоя не складываются в один
       // `BoxDecoration`, который знает про единственный градиент.
@@ -149,7 +163,7 @@ class _AlmaButtonState extends State<AlmaButton> {
   /// Золотая кнопка одевается в текстуру, остальные три остаются как есть.
   Widget _wrapGold(Widget child) => widget.kind == AlmaButtonKind.gold
       ? GoldSurface(
-          radius: BorderRadius.circular(_height / 2),
+          radius: _radius,
           dimmed: _pressed,
           child: child,
         )

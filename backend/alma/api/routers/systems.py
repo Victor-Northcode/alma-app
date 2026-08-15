@@ -22,7 +22,7 @@ from ... import i18n
 from ...auth import entitlements
 from ...calc import BirthData, CalcResult, TimeRequired
 from ...calc.cache import compute_cached
-from ...calc.service import AmbiguousBirthTime
+from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...db.models import Profile
 from ..cache import result_cache
 from ..deps import CurrentUser, SessionDep, birth_from_input, resolve_birth
@@ -78,17 +78,7 @@ def _ambiguous(exc: AmbiguousBirthTime) -> HTTPException:
     a coin flip inside a paid reading, so the client is told what happened
     and given the two options to offer.
     """
-    return HTTPException(
-        status.HTTP_409_CONFLICT,
-        detail={
-            "error": "ambiguous_birth_time",
-            "message": str(exc),
-            "options": [
-                {"choice": "earlier", "utc": exc.earlier.isoformat()},
-                {"choice": "later", "utc": exc.later.isoformat()},
-            ],
-        },
-    )
+    return HTTPException(status.HTTP_409_CONFLICT, detail=ambiguity_detail(exc))
 
 
 async def _run(system: str, birth: BirthData, **options) -> CalcResult:

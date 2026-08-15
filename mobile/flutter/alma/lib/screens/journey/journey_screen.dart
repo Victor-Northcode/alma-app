@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
@@ -388,41 +389,30 @@ class _JourneyScreenState extends State<JourneyScreen> {
         !(_step == _Step.date && !_dateComplete) &&
         !(_step == _Step.date && _dateImpossible) &&
         !(_step == _Step.time && _timeHalfGiven);
-    // **Выключенная кнопка обязана выглядеть выключенной.** Золотая заливка
-    // рисовалась всегда, и на шаге даты человек видел горящую кнопку, которая
-    // не отвечает на нажатие: это читается как поломка, а не как «сначала
-    // выбери дату».
-    return Opacity(
-      opacity: enabled ? 1 : 0.45,
-      child: SizedBox(
-      width: double.infinity,
-      height: AlmaMetrics.buttonHeight,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: AlmaGradient.goldButton,
-          borderRadius: BorderRadius.circular(AlmaPalette.buttonRadius),
-        ),
-        child: TextButton(
-          onPressed: enabled
-              ? () {
-                  if (isLast) {
-                    // На церемонию уходят сразу, а сохранение стартует под
-                    // ней: экран не ждёт сети, чтобы показать, что за человека
-                    // взялись.
-                    setState(() => _step = _Step.ceremony);
-                    _build();
-                  } else {
-                    setState(() => _step = _Step.values[_step.index + 1]);
-                  }
-                }
-              : null,
-          child: Text(
-            isLast ? l.journeyBuildMySky : l.journeyContinueCta,
-            style: AlmaType.button,
-          ),
-        ),
-      ),
-      ),
+    // **Кнопка продукта, а не своя.** Здесь стояла плоская золотая заливка с
+    // тёмной подписью — ровно та, которую дизайн-система запрещает словом
+    // «никогда» (`gold_texture.dart`). В эталоне и эта кнопка тёмная,
+    // текстурная, с подписью слоновой костью; отличается она от остальных
+    // только формой — 15 вместо пилюли.
+    //
+    // Выключенное состояние `AlmaButton` берёт на себя: `onTap: null` гасит её
+    // до 0.45 и отключает нажатие, — а до этого золото горело всегда, и на
+    // шаге даты человек видел горящую кнопку, которая не отвечает.
+    return AlmaButton(
+      label: isLast ? l.journeyBuildMySky : l.journeyContinueCta,
+      radius: AlmaPalette.buttonRadius,
+      onTap: enabled
+          ? () {
+              if (isLast) {
+                // На церемонию уходят сразу, а сохранение стартует под ней:
+                // экран не ждёт сети, чтобы показать, что за человека взялись.
+                setState(() => _step = _Step.ceremony);
+                _build();
+              } else {
+                setState(() => _step = _Step.values[_step.index + 1]);
+              }
+            }
+          : null,
     );
   }
 

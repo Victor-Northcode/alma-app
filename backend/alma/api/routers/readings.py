@@ -238,15 +238,7 @@ async def _calc(system: str, birth, **options) -> CalcResult:
         return compute_cached(system, birth, cache=result_cache(), **options)
     except AmbiguousBirthTime as exc:
         raise HTTPException(
-            status.HTTP_409_CONFLICT,
-            detail={
-                "error": "ambiguous_birth_time",
-                "message": str(exc),
-                "options": [
-                    {"choice": "earlier", "utc": exc.earlier.isoformat()},
-                    {"choice": "later", "utc": exc.later.isoformat()},
-                ],
-            },
+            status.HTTP_409_CONFLICT, detail=ambiguity_detail(exc)
         ) from exc
     except TimeRequired as exc:
         raise HTTPException(

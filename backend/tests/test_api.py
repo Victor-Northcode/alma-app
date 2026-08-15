@@ -439,6 +439,33 @@ def test_an_ambiguous_birth_time_asks_rather_than_guesses(api, auth_headers):
     assert {option["choice"] for option in detail["options"]} == {"earlier", "later"}
 
 
+def test_the_ambiguity_carries_what_the_question_needs_to_be_answerable(
+    api, auth_headers
+):
+    """Two identical times are not a choice — the names of the clock are.
+
+    The fork screen asks «which of the two 02:30 is yours?», and a person can
+    only answer it if the two are told apart: CEST an hour before CET, on the
+    night the clocks went back. None of that can be assembled on the phone —
+    the clients carry no timezone database — so the 409 has to state it.
+    """
+    detail = api.post(
+        "/v1/systems/natal",
+        json={
+            "birth": {**SOFIA, "birth_date": "1998-10-25", "birth_time": "02:30"}
+        },
+        headers=auth_headers,
+    ).json()["detail"]
+
+    assert detail["timezone"] == SOFIA["timezone"]
+    assert detail["transition_local_date"] == "1998-10-25"
+    options = {option["choice"]: option for option in detail["options"]}
+    assert options["earlier"]["abbreviation"] == "CEST"
+    assert options["later"]["abbreviation"] == "CET"
+    assert options["earlier"]["offset_hours"] == 2.0
+    assert options["later"]["offset_hours"] == 1.0
+
+
 def test_the_ambiguity_can_then_be_resolved(api, auth_headers):
     payload = {
         **SOFIA, "birth_date": "1998-10-25", "birth_time": "02:30", "on_ambiguous": "earlier"

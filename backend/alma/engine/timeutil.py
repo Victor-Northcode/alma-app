@@ -11,7 +11,7 @@ history, so we resolve the offset at the birth instant rather than today's.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
@@ -20,12 +20,38 @@ class AmbiguousLocalTime(Exception):
 
     Carries both candidate instants so the caller can decide rather than
     having a guess silently baked into a chart.
+
+    It also carries what the *question* needs, not only what the calculation
+    needs. Asking "which 02:30 is yours?" is unanswerable without the two
+    names the clock had that night — CEST and CET — and the date it changed;
+    a fork offering two identical-looking times is a coin flip with extra
+    steps. Those come from the zone at each instant, so this is the one place
+    that can state them, and stating them here keeps `zoneinfo` out of the
+    clients.
     """
 
-    def __init__(self, message: str, *, earlier: datetime, later: datetime) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        earlier: datetime,
+        later: datetime,
+        tz_name: str = "",
+        earlier_abbr: str = "",
+        later_abbr: str = "",
+        earlier_offset_hours: float = 0.0,
+        later_offset_hours: float = 0.0,
+        transition_local_date: str = "",
+    ) -> None:
         super().__init__(message)
         self.earlier = earlier
         self.later = later
+        self.tz_name = tz_name
+        self.earlier_abbr = earlier_abbr
+        self.later_abbr = later_abbr
+        self.earlier_offset_hours = earlier_offset_hours
+        self.later_offset_hours = later_offset_hours
+        self.transition_local_date = transition_local_date
 
 
 @dataclass(frozen=True, slots=True)
@@ -95,6 +121,12 @@ def resolve(
                 "(daylight-saving transition) — ask which one",
                 earlier=earlier.astimezone(timezone.utc),
                 later=later.astimezone(timezone.utc),
+                tz_name=tz_name,
+                earlier_abbr=earlier.tzname() or "",
+                later_abbr=later.tzname() or "",
+                earlier_offset_hours=_hours(earlier.utcoffset()),
+                later_offset_hours=_hours(later.utcoffset()),
+                transition_local_date=_transition_date(earlier, later),
             )
         chosen = later if on_ambiguous == "later" else earlier
         note = f"daylight-saving transition; resolved to the {on_ambiguous} instant"
@@ -112,6 +144,48 @@ def resolve(
         dst_active=bool(dst and dst.total_seconds()),
         tz_note=note,
     )
+
+
+def _hours(delta: timedelta | None) -> float:
+    return delta.total_seconds() / 3600.0 if delta else 0.0
+
+
+def _transition_date(earlier: datetime, later: datetime) -> str:
+    """The date of the changed clock at the transition, `YYYY-MM-DD`.
+
+    **Read by the *new* offset — the person's own night, not the decree's.**
+    Where the clock goes back at two or three in the morning, as it does
+    almost everywhere, both readings give the same day and the choice never
+    shows. Brazil switched at midnight: on 2015-02-22 00:00 −02 the clock
+    became 2015-02-21 23:00 −03, so the repeated hour belongs to the 21st
+    while the official date of the change is the 22nd. Somebody born at 23:30
+    that night lived through the 21st, and «clocks were set back on the 22nd»
+    would send them looking for a different night than the one they are being
+    asked about.
+
+    The remaining crack is an overlap that itself crosses midnight — a
+    transition at 00:30 repeats 23:30…00:30 — where a birth after midnight
+    gets the day before it. It stays: the alternative pins the sentence to the
+    birth date and loses Brazil, which is the case that actually occurs.
+
+    `zoneinfo` publishes no list of transitions, so the instant is found by
+    walking the gap between the two candidates. It is at most a couple of
+    hours wide and transitions land on whole minutes, so a minute-wide step
+    finds it exactly.
+    """
+    target = later.utcoffset()
+    step = timedelta(minutes=1)
+    at = earlier.astimezone(timezone.utc)
+    end = later.astimezone(timezone.utc)
+    zone = later.tzinfo
+    while at <= end:
+        if at.astimezone(zone).utcoffset() == target:
+            return at.astimezone(zone).date().isoformat()
+        at += step
+    # Недостижимо: обе точки на то и разные, что смещение между ними меняется.
+    # Но соврать датой хуже, чем промолчать, — поэтому пустая строка, и экран
+    # покажет вопрос без неё.
+    return ""
 
 
 def _julian_day(dt: datetime) -> float:

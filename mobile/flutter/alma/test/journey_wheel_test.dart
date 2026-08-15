@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:alma/design/buttons.dart';
 import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/net/alma_client.dart';
 import 'package:alma/screens/journey/journey_screen.dart';
@@ -46,17 +47,17 @@ void main() {
     }
   }
 
-  /// Нижняя кнопка шага. Её `onPressed` — единственный внешний признак того,
+  /// Нижняя кнопка шага. Её `onTap` — единственный внешний признак того,
   /// засчитана дата или нет.
   bool forwardEnabled(WidgetTester tester) =>
-      tester.widget<TextButton>(find.byType(TextButton).last).onPressed != null;
+      tester.widget<AlmaButton>(find.byType(AlmaButton).last).onTap != null;
 
   /// Довести анкету до шага даты: имя и «о себе» кнопку не запирают.
   Future<void> toDateStep(WidgetTester tester) async {
     await tester.pumpWidget(host());
     await settle(tester);
     for (var i = 0; i < 2; i++) {
-      await tester.tap(find.byType(TextButton).last);
+      await tester.tap(find.byType(AlmaButton).last);
       await settle(tester);
     }
     expect(find.byType(ListWheelScrollView), findsNWidgets(3),

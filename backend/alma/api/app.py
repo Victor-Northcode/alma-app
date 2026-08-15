@@ -14,7 +14,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from ..calc.service import AmbiguousBirthTime, TimeRequired
+from ..calc.service import AmbiguousBirthTime, TimeRequired, ambiguity_detail
 from ..config import settings
 from ..db import create_all, dispose
 from ..geo import PlaceIndexMissing
@@ -99,14 +99,7 @@ def create_app() -> FastAPI:
     async def _ambiguous(_request: Request, exc: AmbiguousBirthTime) -> JSONResponse:
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            content={
-                "error": "ambiguous_birth_time",
-                "message": str(exc),
-                "options": [
-                    {"choice": "earlier", "utc": exc.earlier.isoformat()},
-                    {"choice": "later", "utc": exc.later.isoformat()},
-                ],
-            },
+            content=ambiguity_detail(exc),
         )
 
     @app.exception_handler(TimeRequired)

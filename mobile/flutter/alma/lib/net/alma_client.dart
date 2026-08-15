@@ -38,6 +38,93 @@ class BadPayload extends AlmaError {
   final String detail;
 }
 
+/// 409 `ambiguous_birth_time` — **вопрос, а не поломка.**
+///
+/// Часы в ту ночь перевели назад, и названное время случилось дважды: оба раза
+/// настоящие, оба дают разное небо. Сервер отказывается угадывать, и правильно
+/// делает — монетка, брошенная здесь, ляжет в дома, в соляр и в карту, за
+/// которые потом заплатят.
+///
+/// Отдельным типом, потому что экрану развилки нужно то, чего нет в общем
+/// отказе: два варианта с именами, которые часы носили в ту ночь, и дата
+/// перевода. Без типа это была бы строка сообщения, которую пришлось бы
+/// разбирать обратно.
+class AmbiguousBirthTime extends AlmaError {
+  const AmbiguousBirthTime({
+    required this.options,
+    required this.timezone,
+    required this.transitionLocalDate,
+  });
+
+  final List<BirthTimeOption> options;
+  final String timezone;
+
+  /// Дата перевода часов, `YYYY-MM-DD`. Пустая, если сервер её не назвал —
+  /// экран тогда задаёт вопрос без неё, а не выдумывает.
+  final String transitionLocalDate;
+
+  BirthTimeOption? get earlier => _by('earlier');
+  BirthTimeOption? get later => _by('later');
+
+  BirthTimeOption? _by(String choice) {
+    for (final option in options) {
+      if (option.choice == choice) return option;
+    }
+    return null;
+  }
+
+  /// На сколько часов второй вариант отстоит от первого. Это и есть «часом
+  /// позже» в подписи; переводы часов бывают и на полчаса, поэтому число, а не
+  /// слово в коде.
+  double? get gapHours {
+    final a = earlier, b = later;
+    if (a == null || b == null) return null;
+    return a.offsetHours - b.offsetHours;
+  }
+
+  static AmbiguousBirthTime? from(Map<String, dynamic> detail) {
+    final raw = detail['options'];
+    if (raw is! List) return null;
+    final options = <BirthTimeOption>[];
+    for (final item in raw) {
+      if (item is Map) options.add(BirthTimeOption.fromJson(item));
+    }
+    if (options.isEmpty) return null;
+    return AmbiguousBirthTime(
+      options: options,
+      timezone: (detail['timezone'] ?? '').toString(),
+      transitionLocalDate: (detail['transition_local_date'] ?? '').toString(),
+    );
+  }
+}
+
+/// Один из двух настоящих моментов, которыми обернулось названное время.
+class BirthTimeOption {
+  const BirthTimeOption({
+    required this.choice,
+    required this.utc,
+    required this.abbreviation,
+    required this.offsetHours,
+  });
+
+  /// `earlier` или `later` — уезжает обратно как `on_ambiguous`.
+  final String choice;
+  final DateTime? utc;
+
+  /// Имя часов в ту ночь: CEST, CET, EDT. Единственное, чем два одинаковых
+  /// времени на экране отличаются друг от друга.
+  final String abbreviation;
+  final double offsetHours;
+
+  factory BirthTimeOption.fromJson(Map<dynamic, dynamic> json) =>
+      BirthTimeOption(
+        choice: (json['choice'] ?? '').toString(),
+        utc: DateTime.tryParse((json['utc'] ?? '').toString()),
+        abbreviation: (json['abbreviation'] ?? '').toString(),
+        offsetHours: (json['offset_hours'] as num?)?.toDouble() ?? 0,
+      );
+}
+
 /// Где живёт токен.
 ///
 /// На iOS он лежит в связке ключей, и это правильно: связка переживает
@@ -500,6 +587,7 @@ class AlmaClient {
       // AlmaFailure рисует displayText, а не серверное нутро.
       String message = '';
       String? code;
+      AmbiguousBirthTime? fork;
       try {
         final parsed = jsonDecode(text);
         if (parsed is Map) {
@@ -507,6 +595,15 @@ class AlmaClient {
           if (detail is Map) {
             message = (detail['message'] ?? '').toString();
             code = detail['error'] as String?;
+            // Развилка перевода часов уходит своим типом: это единственный
+            // отказ, на который у экрана есть ответ, а не только сожаление.
+            //
+            // Собирается здесь, а бросается **ниже**: этот разбор обёрнут в
+            // `catch (_) {}`, который проглотил бы бросок вместе с опечаткой в
+            // JSON, и развилка молча превратилась бы в общий отказ.
+            if (code == 'ambiguous_birth_time') {
+              fork = AmbiguousBirthTime.from(detail.cast<String, dynamic>());
+            }
           } else if (detail is String) {
             message = detail;
           } else {
@@ -515,6 +612,7 @@ class AlmaClient {
           }
         }
       } catch (_) {}
+      if (fork != null) throw fork;
       // **Кроме тех кодов, у которых фраза заведомо переведена.**
       //
       // `alma/i18n/replies.py` — единственный источник этих сообщений, и они
