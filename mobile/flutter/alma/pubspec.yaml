@@ -82,6 +82,29 @@ flutter:
   # платформ и началось в прошлый раз.
   generate: true
 
+  # **Шрифты вшиты, а не скачиваются.** `typography.dart` звал «Playfair
+  # Display» и «Golos Text» по имени с первого дня, но файлов в приложении не
+  # было — и iOS молча подставлял New York и системный SF. Экран выглядел
+  # «почти правильно», отчего расхождение с эталоном и не было заметно.
+  #
+  # Файлы вариативные, по одному на начертание: одна ось `wght`, весь диапазон
+  # 400–900 внутри. Это меньше набора отдельных весов и позволяет брать
+  # промежуточные значения. Кириллица, latin-ext, «ё» и кавычки-ёлочки на
+  # месте — сабсеттинг не делался, иначе развалились бы шесть локалей из семи.
+  #
+  # Вариативный шрифт во Flutter не выбирает вес сам по `fontWeight`: файл
+  # отдаёт своё умолчание, пока ось не задана явно. Поэтому вес ставится
+  # `fontVariations: [FontVariation('wght', N)]` — см. `AlmaType._w`.
+  fonts:
+    - family: Playfair Display
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay-Variable.ttf
+        - asset: assets/fonts/PlayfairDisplay-Italic-Variable.ttf
+          style: italic
+    - family: Golos Text
+      fonts:
+        - asset: assets/fonts/GolosText-Variable.ttf
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg
