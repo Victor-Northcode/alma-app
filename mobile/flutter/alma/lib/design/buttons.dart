@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'gold_texture.dart';
 import 'metrics.dart';
 import 'palette.dart';
 import 'typography.dart';
@@ -58,8 +59,10 @@ class _AlmaButtonState extends State<AlmaButton> {
       };
 
   TextStyle get _style => switch (widget.kind) {
+        // Слоновая кость, а не чернила: текстурное золото тёмное, и тёмная
+        // подпись на нём не читается вовсе.
         AlmaButtonKind.gold =>
-          AlmaType.button.copyWith(color: AlmaPalette.inkOnGold),
+          AlmaType.button.copyWith(color: AlmaPalette.inkLight),
         AlmaButtonKind.outline => AlmaType.button
             .copyWith(fontSize: 16, color: AlmaPalette.goldBright),
         AlmaButtonKind.veil =>
@@ -71,19 +74,9 @@ class _AlmaButtonState extends State<AlmaButton> {
   Decoration get _decoration {
     final radius = BorderRadius.circular(_height / 2);
     return switch (widget.kind) {
-      AlmaButtonKind.gold => BoxDecoration(
-          gradient: _pressed
-              ? AlmaGradient.goldButtonPressed
-              : AlmaGradient.goldButton,
-          borderRadius: radius,
-          boxShadow: [
-            BoxShadow(
-              color: AlmaPalette.button,
-              blurRadius: AlmaPalette.buttonRadius,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
+      // Золото рисует `GoldSurface`: три слоя не складываются в один
+      // `BoxDecoration`, который знает про единственный градиент.
+      AlmaButtonKind.gold => const BoxDecoration(),
       AlmaButtonKind.veil => BoxDecoration(
           color: AlmaPalette.body.withValues(alpha: _pressed ? 0.13 : 0.07),
           borderRadius: radius,
@@ -121,7 +114,7 @@ class _AlmaButtonState extends State<AlmaButton> {
               : Offset.zero,
           duration: AlmaMotion.tap,
           curve: AlmaMotion.tapCurve,
-          child: Container(
+          child: _wrapGold(Container(
             height: _height,
             padding: const EdgeInsets.symmetric(horizontal: 28),
             decoration: _decoration,
@@ -147,11 +140,20 @@ class _AlmaButtonState extends State<AlmaButton> {
                 ),
               ],
             ),
-          ),
+          )),
         ),
       ),
     );
   }
+
+  /// Золотая кнопка одевается в текстуру, остальные три остаются как есть.
+  Widget _wrapGold(Widget child) => widget.kind == AlmaButtonKind.gold
+      ? GoldSurface(
+          radius: BorderRadius.circular(_height / 2),
+          dimmed: _pressed,
+          child: child,
+        )
+      : child;
 }
 
 /// Строка-действие: слово слева, стрелка справа, ничего вокруг.

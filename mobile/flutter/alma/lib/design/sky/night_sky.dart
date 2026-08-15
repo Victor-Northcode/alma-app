@@ -4,6 +4,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart' show Ticker;
 
+import '../art.dart';
 import '../palette.dart';
 import 'sky_field.dart';
 
@@ -128,6 +129,14 @@ class _NightSkyState extends State<NightSky> with SingleTickerProviderStateMixin
       child: Stack(
         fit: StackFit.expand,
         children: [
+          // **Туманность и скрим — самый нижний слой продукта.**
+          //
+          // До дизайн-проекта небо было целиком нарисованным: аура плюс точки.
+          // Фотография даёт то, чего кистью не сделать, — неровность, из-за
+          // которой фон перестаёт читаться как заливка. Она всегда под скримом
+          // и никогда сама по себе: на голой туманности текст нечитаем, а
+          // сорок восемь эталонных экранов ставят её именно так.
+          const _SkyPhoto(),
           // Аура стоит высоко и в стороне. Никогда по центру: центральное
           // свечение оказывается ровно под первым абзацем.
           Positioned(
@@ -374,6 +383,47 @@ class _Aura extends StatelessWidget {
         },
         child: blurred,
       ),
+    );
+  }
+}
+
+/// Фотография туманности под градиентным скримом.
+///
+/// Снимок один на всё приложение и лежит в бандле: он нужен на первом же
+/// экране, до всякой сети. Скрим — три остановки из `SKILL.md`: сверху
+/// полупрозрачно, к низу почти глухо, чтобы нижние две трети экрана держали
+/// текст.
+class _SkyPhoto extends StatelessWidget {
+  const _SkyPhoto();
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset(
+          AlmaArt.sky,
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          // Ошибка загрузки не должна оставлять белую дыру во весь экран:
+          // ночь под фотографией уже залита, и её достаточно.
+          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+        ),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color(0x800A0D1C),
+                Color(0xAD090C1A),
+                Color(0xF0070A16),
+              ],
+              stops: [0, 0.55, 1],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
