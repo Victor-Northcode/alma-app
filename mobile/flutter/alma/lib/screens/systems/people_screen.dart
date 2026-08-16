@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../design/buttons.dart';
+import '../../design/emblem.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
@@ -112,22 +114,84 @@ class _PeopleScreenState extends State<PeopleScreen> {
     final l = L.of(context);
     final yes = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AlmaPalette.night700,
-        title: Text(l.scrPeopleRemoveTitle, style: AlmaType.headingM),
-        content: Text(l.scrPeopleRemoveWhat, style: AlmaType.meta),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l.scrKeep,
-                style: AlmaType.button.copyWith(color: AlmaPalette.body)),
+      // Затемнение из макета: почти чёрное небо на шесть десятых, а не
+      // материаловская серая вуаль.
+      barrierColor: AlmaPalette.voidDark.withValues(alpha: 0.6),
+      // **`Dialog`, а не `AlertDialog`.**
+      //
+      // `AlertDialog` меряет свои действия внутренними размерами
+      // (`getMinIntrinsicWidth`), а подпись `AlmaButton` стоит в
+      // `LayoutBuilder` — тот внутренних размеров не отдаёт и падает
+      // «LayoutBuilder does not support returning intrinsic dimensions».
+      // То есть кнопки продукта в `AlertDialog.actions` не живут вообще;
+      // проверено зондом, а не на глаз. Ручная колонка ничего не меряет.
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 34),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 26),
+          decoration: BoxDecoration(
+            // Ночная плашка с золотым кантом и скруглением 22 — форма из
+            // дизайн-проекта (s41). Material 3 рисовал здесь свою поверхность
+            // и своё скругление, и диалог выходил чужим на экране, у которого
+            // всё остальное небо и золото.
+            color: AlmaPalette.night700,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.3)),
+            boxShadow: const [
+              BoxShadow(
+                  color: Color(0x99000000),
+                  blurRadius: 60,
+                  offset: Offset(0, 24)),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l.scrPeopleRemove,
-                style: AlmaType.button.copyWith(color: AlmaPalette.disagree)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Ступень между заголовком экрана (29) и заголовком строки
+              // (17.5) — ровно та, которой в макете набран вопрос диалога.
+              Text(l.scrPeopleRemoveTitle,
+                  style: AlmaType.displayL.copyWith(fontSize: 22, height: 1.2)),
+              const SizedBox(height: 12),
+              Text(l.scrPeopleRemoveWhat, style: AlmaType.meta),
+              const SizedBox(height: 22),
+              // **Кнопки продукта, а не материаловские.** «Оставить» — тихая
+              // вуаль, «Удалить» — `danger`, то есть всегда обводка: красную
+              // заливку нажимают рефлексом, а это ровно тот экран, где рефлекс
+              // уносит оплаченные чтения. Разная высота (50 против 44) — не
+              // недосмотр: иерархия в этой дизайн-системе держится высотой, и
+              // разрушающее действие обязано быть ниже безопасного.
+              //
+              // `Wrap`, а не `Row`: `Row` раздал бы кнопкам неограниченную
+              // ширину, а подпись внутри `AlmaButton` стоит во `Flexible` —
+              // упало бы на «RenderFlex … constraints are unbounded». `Wrap`
+              // даёт ограниченную ширину и переносит вторую кнопку под первую,
+              // когда перевод длиннее строки, — а языков здесь семь.
+              Wrap(
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  AlmaButton(
+                    kind: AlmaButtonKind.veil,
+                    fills: false,
+                    label: l.scrKeep,
+                    onTap: () => Navigator.of(context).pop(false),
+                  ),
+                  AlmaButton(
+                    kind: AlmaButtonKind.danger,
+                    fills: false,
+                    label: l.scrPeopleRemove,
+                    onTap: () => Navigator.of(context).pop(true),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
     if (yes == true && mounted) await _remove(person);
@@ -165,139 +229,209 @@ class _PeopleScreenState extends State<PeopleScreen> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final session = SessionScope.of(context);
-    return ScreenScaffold(
-      seed: 0x50454F50,
-      title: l.cabPeopleTitle,
-      children: [
-        if (session.people.isNotEmpty) ...[
-          SectionLabel(l.cabPeopleTitle, trailing: '${session.people.length}'),
-          const SizedBox(height: 8),
-          // **Строка человека — это его данные, а не только имя.** Раньше
-          // здесь стояло имя или голая дата «1992-05-11», и человек, добавивший
-          // двоих, не мог отличить их иначе как по имени: ни города, ни
-          // времени, ни кем приходится. Три факта через точку — как на нативе.
-          for (final person in session.people)
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 15),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
-              ),
-              child: Row(children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        person.name?.isNotEmpty == true
-                            ? person.name!
-                            : l.scrPeopleUnnamed,
-                        style: AlmaType.headingM,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(_facts(l, person), style: AlmaType.meta),
-                      if (person.relation?.isNotEmpty == true) ...[
+    return Scaffold(
+      backgroundColor: AlmaPalette.night,
+      // **Своя material-поверхность — иначе экран не открывается вовсе.**
+      //
+      // `ScreenScaffold` — это небо и колонка, а не `Material`: на вкладках его
+      // держит `Scaffold` кабинета. Сюда же приходят маршрутом
+      // (`CupertinoPageRoute`, из главы — вообще через корневой навигатор), и
+      // над экраном нет ни одного `Material`. А `TextField`, `ListTile`,
+      // `SwitchListTile` и `InkWell` его требуют утверждением
+      // `debugCheckHasMaterial` — то есть страница людей падала «No Material
+      // widget found» ровно в тот момент, когда за вторым человеком приходили
+      // из закрытой главы совместимости. Ту же дыру уже закрыли в витрине
+      // (`offer_screen.dart`), и закрывается она тем же способом.
+      body: ScreenScaffold(
+        seed: 0x50454F50,
+        title: l.cabPeopleTitle,
+        children: [
+          if (session.people.isNotEmpty) ...[
+            SectionLabel(l.cabPeopleTitle, trailing: '${session.people.length}'),
+            const SizedBox(height: 8),
+            // **Строка человека — это его данные, а не только имя.** Раньше
+            // здесь стояло имя или голая дата «1992-05-11», и человек,
+            // добавивший двоих, не мог отличить их иначе как по имени: ни
+            // города, ни времени, ни кем приходится. Три факта через точку —
+            // как на нативе и как в макете.
+            for (final person in session.people)
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                decoration: BoxDecoration(
+                  border:
+                      Border(bottom: BorderSide(color: AlmaPalette.hairline)),
+                ),
+                child: Row(children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          person.name?.isNotEmpty == true
+                              ? person.name!
+                              : l.scrPeopleUnnamed,
+                          style: AlmaType.headingM,
+                        ),
                         const SizedBox(height: 4),
-                        // Приглушённым, а не золотом: золото на каждой строке
-                        // перестаёт значить «вот это главное».
-                        Text(person.relation!.toUpperCase(),
-                            style: AlmaType.tag
-                                .copyWith(color: AlmaPalette.muted3)),
+                        Text(_facts(l, person), style: AlmaType.meta),
+                        if (person.relation?.isNotEmpty == true) ...[
+                          const SizedBox(height: 4),
+                          // Приглушённым, а не золотом: золото на каждой строке
+                          // перестаёт значить «вот это главное».
+                          Text(person.relation!.toUpperCase(),
+                              style: AlmaType.tag
+                                  .copyWith(color: AlmaPalette.muted3)),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 14),
-                TextButton(
-                  onPressed: () => _confirmRemove(person),
-                  child: Text(l.scrPeopleRemove,
-                      style: AlmaType.meta.copyWith(
-                          color: AlmaPalette.disagree.withValues(alpha: 0.85))),
-                ),
-              ]),
-            ),
-          const SizedBox(height: AlmaMetrics.gapLarge),
-        ],
-        SectionLabel(l.cabPeopleAdd),
-        const SizedBox(height: 12),
-        _field(_name, l.journeyNamePlaceholder),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _number(l.journeyCaptureDayShort, _day, 1, 31, (v) => setState(() => _day = v))),
-          const SizedBox(width: 8),
-          Expanded(child: _number(l.journeyCaptureMonthShort, _month, 1, 12, (v) => setState(() => _month = v))),
-          const SizedBox(width: 8),
-          Expanded(child: _number(l.journeyCaptureYearShort, _year, 1900, DateTime.now().year,
-              (v) => setState(() => _year = v))),
-        ]),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: _number(l.journeyHourLabel, _hour, 0, 23, (v) => setState(() => _hour = v))),
-          const SizedBox(width: 8),
-          Expanded(child: _number(l.journeyMinuteLabel, _minute, 0, 59, (v) => setState(() => _minute = v))),
-        ]),
-        SwitchListTile(
-          contentPadding: EdgeInsets.zero,
-          value: _timeUnknown,
-          activeThumbColor: AlmaPalette.gold,
-          onChanged: (v) => setState(() => _timeUnknown = v),
-          title: Text(l.cabUnknownTime, style: AlmaType.meta),
-        ),
-        _field(_place, l.journeyCaptureSearchPlace, onChanged: _search),
-        for (final place in _found)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(place.label, style: AlmaType.meta),
-            onTap: () => setState(() {
-              _chosen = place;
-              _place.text = place.label;
-              _found = const [];
-            }),
-          ),
-        if (_failure != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(_failure!, style: AlmaType.meta),
-          ),
-        const SizedBox(height: 16),
-        Opacity(
-          opacity: _chosen == null || _saving ? 0.5 : 1,
-          child: InkWell(
-            onTap: _chosen == null || _saving ? null : _save,
-            child: Container(
-              height: 54,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AlmaPalette.gold,
-                borderRadius: BorderRadius.circular(28),
+                  const SizedBox(width: 14),
+                  TextButton(
+                    onPressed: () => _confirmRemove(person),
+                    child: Text(l.scrPeopleRemove,
+                        style: AlmaType.meta.copyWith(
+                            color:
+                                AlmaPalette.disagree.withValues(alpha: 0.85))),
+                  ),
+                ]),
               ),
-              child: Text(l.cabPeopleAdd,
-                  style: AlmaType.button.copyWith(color: AlmaPalette.inkOnGold)),
-            ),
+            const SizedBox(height: AlmaMetrics.gapLarge),
+          ],
+          SectionLabel(l.cabPeopleAdd),
+          const SizedBox(height: 12),
+          // **Поле продукта, а не материаловское.** Здесь стоял `TextField` с
+          // `OutlineInputBorder` — то есть чужая форма с плавающей подписью и
+          // материаловским фокусом. У продукта поля пилюлями: в покое тёмная
+          // плашка с бледным кантом, под курсором — золотое кольцо, сквозь
+          // которое видно небо. `CeremonialField` рисует ровно это, и её
+          // собственный комментарий ссылается на «Hamb» из этого же макета.
+          CeremonialField(controller: _name, hint: l.journeyNamePlaceholder),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+                child: _number(l.journeyCaptureDayShort, _day, 1, 31,
+                    (v) => setState(() => _day = v))),
+            const SizedBox(width: 8),
+            Expanded(
+                child: _number(l.journeyCaptureMonthShort, _month, 1, 12,
+                    (v) => setState(() => _month = v))),
+            const SizedBox(width: 8),
+            Expanded(
+                child: _number(l.journeyCaptureYearShort, _year, 1900,
+                    DateTime.now().year, (v) => setState(() => _year = v))),
+          ]),
+          const SizedBox(height: 10),
+          Row(children: [
+            Expanded(
+                child: _number(l.journeyHourLabel, _hour, 0, 23,
+                    (v) => setState(() => _hour = v))),
+            const SizedBox(width: 8),
+            Expanded(
+                child: _number(l.journeyMinuteLabel, _minute, 0, 59,
+                    (v) => setState(() => _minute = v))),
+          ]),
+          // **Строка с тумблером, а не `SwitchListTile`.** В макете это подпись
+          // слева и тумблер справа — ровно строка. `ListTile` же красит фон и
+          // всплеск на ближайшем `Material`, а между ним и этой строкой стоит
+          // небо (`ColoredBox`); Flutter ловит это утверждением «ListTile
+          // background color or ink splashes may be invisible» и роняет экран.
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Row(children: [
+              Expanded(child: Text(l.cabUnknownTime, style: AlmaType.meta)),
+              Switch(
+                value: _timeUnknown,
+                activeThumbColor: AlmaPalette.gold,
+                inactiveThumbColor: AlmaPalette.body.withValues(alpha: 0.6),
+                inactiveTrackColor: AlmaPalette.body.withValues(alpha: 0.12),
+                onChanged: (v) => setState(() => _timeUnknown = v),
+              ),
+            ]),
           ),
-        ),
-      ],
+          CeremonialField(
+            controller: _place,
+            hint: l.journeyCaptureSearchPlace,
+            onChanged: _search,
+          ),
+          _suggestions(),
+          if (_failure != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(_failure!, style: AlmaType.meta),
+            ),
+          const SizedBox(height: 16),
+          // **Кнопка продукта, а не своя.** Здесь стояла плоская золотая
+          // заливка с чернильной подписью — та самая, которую дизайн-система
+          // запрещает словом «никогда» (`gold_texture.dart`): читается она
+          // пластиковой наклейкой, а не ключом от двери. `AlmaButton` берёт на
+          // себя и текстуру, и высоту 56, и выключенное состояние — а `Opacity`
+          // 0.5 поверх живого `InkWell` гасила кнопку, не отменяя нажатия.
+          AlmaButton(
+            // Пока сохраняем — так и сказано. Строка уже есть в семи языках,
+            // и до сих пор ею никто не пользовался: кнопка просто тускнела.
+            label: _saving ? l.scrAddPersonSaving : l.cabPeopleAdd,
+            onTap: _chosen == null || _saving ? null : _save,
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _field(TextEditingController controller, String hint,
-          {ValueChanged<String>? onChanged}) =>
-      TextField(
-        controller: controller,
-        onChanged: onChanged,
-        style: AlmaType.body,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: AlmaType.meta,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
-            borderSide: BorderSide(color: AlmaPalette.gold.withValues(alpha: 0.4)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
-            borderSide: BorderSide(color: AlmaPalette.gold.withValues(alpha: 0.8)),
-          ),
-        ),
-      );
+  /// Находки города — всплывающей панелью, как в макете (s11): ночная плашка с
+  /// золотым кантом и тенью, строки через волосяную линию. Голым списком под
+  /// полем они читались продолжением формы, а не ответом на набранное.
+  Widget _suggestions() {
+    if (_found.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(top: 6),
+      decoration: BoxDecoration(
+        color: AlmaPalette.night700,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.35)),
+        boxShadow: const [
+          BoxShadow(
+              color: Color(0x8C000000), blurRadius: 34, offset: Offset(0, 14)),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          for (final (i, place) in _found.indexed)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => setState(() {
+                _chosen = place;
+                _place.text = place.label;
+                _found = const [];
+              }),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                decoration: BoxDecoration(
+                  border: i == _found.length - 1
+                      ? null
+                      : Border(
+                          bottom: BorderSide(
+                              color: AlmaPalette.body.withValues(alpha: 0.08))),
+                ),
+                // Первая находка светлее остальных — это подсказка, а не
+                // предвыбор: нажать всё равно нужно.
+                child: Text(
+                  place.label,
+                  style: AlmaType.body.copyWith(
+                    fontSize: 15,
+                    color: i == 0
+                        ? AlmaPalette.goldBright
+                        : AlmaPalette.body.withValues(alpha: 0.85),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   /// Число крутится колесом платформы — тем же, что в анкете на Android.
   Widget _number(String label, int value, int min, int max, ValueChanged<int> onPick) =>

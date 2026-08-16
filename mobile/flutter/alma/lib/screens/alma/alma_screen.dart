@@ -39,6 +39,13 @@ class _Turn {
 class _AlmaScreenState extends State<AlmaScreen> {
   final _draft = TextEditingController();
   final _scroll = ScrollController();
+
+  /// Фокус композера. Нужен не оформлению, а вступительным вопросам: нажатие
+  /// на один из них **заполняет поле**, и без фокуса человек остался бы перед
+  /// заполненным полем и закрытой клавиатурой, не понимая, отправилось это или
+  /// нет.
+  final _focus = FocusNode();
+
   final List<_Turn> _turns = [];
   List<String> _openers = const [];
   String? _threadId;
@@ -48,6 +55,20 @@ class _AlmaScreenState extends State<AlmaScreen> {
   /// ответа лимит не показывается: пустой счётчик над полем — это счётчик,
   /// который врёт.
   int? _left;
+
+  /// Последний отказ — **не реплика Alma**, а то, что сделала система.
+  ///
+  /// Раньше отказ дописывался в ленту как ответ Alma: «Что-то не работает на
+  /// моей стороне» вставало под подписью «ALMA» рядом с цитатой позиций, то
+  /// есть системная поломка получала её голос — и оставалась в переписке
+  /// навсегда, потому что на сервере её нет и после перезагрузки она исчезала.
+  /// Держим отдельно, как `ChatModel.refusal` на нативе.
+  AlmaError? _refusal;
+
+  /// Фраза сервера про исчерпанный лимит. Она уже переведена и — в отличие от
+  /// нашей — называет, **когда** вопросы вернутся; поэтому стена печатает её, а
+  /// свою общую строку оставляет на случай, когда сервер промолчал.
+  String? _limitSentence;
 
   /// Прошлые беседы, свежая первой — то, из чего строится меню «раньше».
   List<ChatThreadRef> _past = const [];
@@ -150,8 +171,13 @@ class _AlmaScreenState extends State<AlmaScreen> {
     final message = text.trim();
     if (message.isEmpty || _sending) return;
     final session = SessionScope.of(context);
+    // Реплика человека встаёт в ленту до похода на сервер: это его собственные
+    // слова, тут нечего выдумывать, а вопрос, пропавший на восемь секунд,
+    // читается как несостоявшаяся отправка.
+    final pending = _Turn(mine: true, body: message);
     setState(() {
-      _turns.add(_Turn(mine: true, body: message));
+      _turns.add(pending);
+      _refusal = null;
       _sending = true;
       _draft.clear();
     });
@@ -168,24 +194,64 @@ class _AlmaScreenState extends State<AlmaScreen> {
         _left = reply.questionsLeft ?? _left;
         _turns.add(_Turn(
           mine: false,
-          body: reply.paragraphs.join('\n\n'),
+          body: reply.body,
           citedFactors: reply.citedFactors,
         ));
       });
     } on AlmaError catch (error) {
       if (!mounted) return;
-      final l = L.of(context);
       setState(() {
-        _turns.add(_Turn(
-          mine: false,
-          body: error is ServerRefused && error.message.isNotEmpty
+        // **Вопрос возвращается в поле, а не теряется.** Тому, кому только что
+        // сказали, что вопросы кончились, не хватало ещё набирать свой вопрос
+        // заново.
+        _turns.remove(pending);
+        _draft.text = message;
+        if (_isLimit(error)) {
+          // Лимит — не сообщение в ленте, а **стена**: она встаёт на место
+          // композера и продаёт план (s31). Ноль здесь ставим сами, потому что
+          // на отказе `questions_left` уже не приходит, а сервер только что
+          // сказал ровно это.
+          _left = 0;
+          _limitSentence = error is ServerRefused && error.message.isNotEmpty
               ? error.message
-              : l.stateUnavailable,
-        ));
+              : null;
+          // У подписчика стены не будет — звать его купить подписку значит
+          // показать, что мы не знаем, кто перед нами. Его месячные тридцать
+          // тоже кончаются, и тогда фраза сервера (в ней сказано, когда они
+          // вернутся) остаётся единственным, что объясняет молчание.
+          if (session.isSubscriber) _refusal = error;
+        } else {
+          _refusal = error;
+        }
       });
     } finally {
       if (mounted) setState(() => _sending = false);
       _scrollDown();
+    }
+  }
+
+  /// Отказ по исчерпанному лимиту. Коды — те же, что перечислены в
+  /// `AlmaClient` как «фраза заведомо переведена»: сервер отвечает на них 503,
+  /// и без разбора кода это выглядело бы как поломка на его стороне.
+  static bool _isLimit(AlmaError error) =>
+      error is ServerRefused && (error.code?.startsWith('question_limit') ?? false);
+
+  /// Отказ, сказанный так, как сказала бы Alma.
+  ///
+  /// Порт `RefusalView`: код статуса — не голос. Три поломки, которые человек
+  /// здесь действительно встречает, имеют по своей фразе в каталоге; фраза
+  /// сервера остаётся только там, где она заведомо переведена и говорит
+  /// больше нашей.
+  String _refusalSentence(L l, AlmaError error) {
+    switch (error) {
+      case NetworkDown():
+        return l.scrChatOffline;
+      case ServerRefused(:final status, :final message, :final code):
+        if (code == 'answer_refused') return l.scrChatRefused;
+        if (message.isNotEmpty) return message;
+        return status >= 500 ? l.scrChatUnavailable : l.scrChatWentWrong;
+      default:
+        return l.scrChatWentWrong;
     }
   }
 
@@ -205,6 +271,7 @@ class _AlmaScreenState extends State<AlmaScreen> {
   void dispose() {
     _draft.dispose();
     _scroll.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -321,7 +388,14 @@ class _AlmaScreenState extends State<AlmaScreen> {
           const SizedBox(height: 10),
           for (final prompt in _openers)
             InkWell(
-              onTap: () => _send(prompt),
+              // **Нажатие заполняет поле, а не отправляет.** Вопросов в день
+              // три; тот, кто ткнул в строку посмотреть, что это, потратил бы
+              // на этом треть дневной нормы — это ловушка, а не приглашение.
+              // Так же на нативе: `model.draft = prompt; composing = true`.
+              onTap: () {
+                _draft.text = prompt;
+                _focus.requestFocus();
+              },
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
@@ -341,6 +415,12 @@ class _AlmaScreenState extends State<AlmaScreen> {
               ),
             ),
         ],
+        // **Отказ виден и на пустом экране.** Первый же вопрос может не уйти —
+        // сеть, отказ модели, — и тогда его реплика снимается из ленты, лента
+        // снова пуста, и экран возвращается к вступлению. Без этой строки
+        // единственное объяснение молчания исчезало вместе с ней: человек
+        // видел свой вопрос обратно в поле и ни слова о том, почему.
+        if (_refusal != null) _refusalView(l, _refusal!),
       ],
     );
   }
@@ -348,17 +428,23 @@ class _AlmaScreenState extends State<AlmaScreen> {
   /// Лента: мои реплики пилюлей справа, ответы Alma — засечным на всю ширину,
   /// с подписью «ALMA» и цитатой позиций под текстом.
   Widget _transcript(L l) {
+    // Хвост ленты: пока идёт ответ — строка ожидания, после неудачи — отказ.
+    // Одновременно их не бывает, поэтому это одна лишняя позиция, а не две.
+    final tail = _sending || _refusal != null ? 1 : 0;
     return ListView.builder(
       controller: _scroll,
       padding: const EdgeInsets.symmetric(
           horizontal: AlmaMetrics.pad, vertical: AlmaMetrics.gap),
-      itemCount: _turns.length + (_sending ? 1 : 0),
+      itemCount: _turns.length + tail,
       itemBuilder: (context, i) {
         if (i == _turns.length) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(l.cabReadingChart, style: AlmaType.meta),
-          );
+          if (_sending) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Text(l.cabReadingChart, style: AlmaType.meta),
+            );
+          }
+          return _refusalView(l, _refusal!);
         }
         final turn = _turns[i];
         return ChatTurnView(
@@ -367,6 +453,17 @@ class _AlmaScreenState extends State<AlmaScreen> {
           citedFactors: turn.citedFactors,
         );
       },
+    );
+  }
+
+  /// Отказ в ленте: фраза телом, без подписи «ALMA» и без цитаты позиций.
+  ///
+  /// Подпись и цитата — обещание, что ответ прочитан из карты; ставить их над
+  /// сообщением о мёртвой сети значит подписывать этим обещанием поломку.
+  Widget _refusalView(L l, AlmaError error) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Text(_refusalSentence(l, error), style: AlmaType.body),
     );
   }
 
@@ -436,7 +533,10 @@ class _AlmaScreenState extends State<AlmaScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 12, AlmaMetrics.pad, 10),
       child: Column(children: [
-        Text(l.scrChatOutOfQuestions,
+        // Фраза сервера, когда она есть: она уже переведена и называет, **когда**
+        // вопросы вернутся, — числа, которое этот экран иначе выводил бы из
+        // тарифа и переврал бы в день, когда тарифы поменяются.
+        Text(_limitSentence ?? l.scrChatOutOfQuestions,
             textAlign: TextAlign.center, style: AlmaType.meta),
         const SizedBox(height: 12),
         AlmaButton(
@@ -457,13 +557,16 @@ class _AlmaScreenState extends State<AlmaScreen> {
       // Волосяная линия сверху отрезала его от ленты, и поле читалось как блок
       // на подставке — «должен быть в невесомости». Разделителя нет: беседа
       // просто уходит под поле, а само поле держится на своей обводке.
-      child: Column(children: [
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         // Счётчик появляется на последних трёх и молчит всё остальное время:
         // цифра над каждым вопросом превращает разговор в счётчик такси.
+        // Прижат влево, к началу строки поля, — так он на макете (s7); по
+        // центру он читался как заголовок композера, а не как примечание.
         if (_left != null && _left! >= 1 && _left! <= 3)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: Text(l.cabQuestionsLeft(_left!), style: AlmaType.meta),
+            child: Text(l.cabQuestionsLeft(_left!),
+                textAlign: TextAlign.left, style: AlmaType.meta),
           ),
         Row(children: [
         Expanded(
@@ -477,6 +580,7 @@ class _AlmaScreenState extends State<AlmaScreen> {
             ),
             child: TextField(
               controller: _draft,
+              focusNode: _focus,
               style: AlmaType.body.copyWith(fontSize: 16),
               decoration: InputDecoration(
                 hintText: l.scrChatPlaceholder,

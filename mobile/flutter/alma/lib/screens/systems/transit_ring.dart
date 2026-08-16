@@ -169,7 +169,9 @@ class _RingPainter extends CustomPainter {
           ..strokeWidth = 1.2
           ..color = AlmaPalette.goldBright.withValues(alpha: 0.9 * armed),
       );
-      _glyph(canvas, '☉', at(0, ring + side * 0.045), side * 0.04,
+      // Солнце сидит **внутри** кольца, под нижним концом стрелки, как в
+      // макете: снаружи оно читалось тринадцатым делением года, а не «сегодня».
+      _glyph(canvas, '☉', at(0, ring - side * 0.34), side * 0.04,
           AlmaPalette.goldBright.withValues(alpha: armed));
     }
   }

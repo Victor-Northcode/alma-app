@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
@@ -15,11 +16,18 @@ import 'system_art.dart';
 import 'transit_ring.dart';
 import 'writing_art.dart';
 
-/// Одна система: её оглавление, дверь и бесплатные расчёты.
+/// Одна система: её рисунок, её факты и её оглавление.
 ///
-/// Порт `mobile/ios/Alma/Screens/Systems/SystemScreen.swift`, пока без колеса
-/// натальной карты и рисунков систем — они приедут отдельным заходом, это
-/// самостоятельные полотна. Оглавление здесь главное: это дорога к главе.
+/// Порт `mobile/ios/Alma/Screens/Systems/SystemScreen.swift`, собранный в
+/// порядке дизайн-проекта (s4, s19–s25): заголовок, рисунок системы, строки
+/// фактов и сразу оглавление. Оглавление здесь главное: это дорога к главе.
+///
+/// **Факты выбирает макет, а не полнота выдачи.** У каждой системы напечатано
+/// ровно то, чего её рисунок сказать не может: у карты рождения — стихия
+/// (аркан и имя стоят на самой карте), у соляра — момент возвращения и
+/// управитель года, у астрокартографии — место, число линий и число
+/// пересечений. Нумерология и синтез не показывают строк вовсе: их числа
+/// уже внутри рисунка, и второй раз печатать их значило бы повторяться.
 class SystemScreen extends StatefulWidget {
   const SystemScreen({super.key, required this.system, required this.onOpenChapter});
 
@@ -167,13 +175,24 @@ class _SystemScreenState extends State<SystemScreen> {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
+    final facts = _facts(context, l);
+    // Отбивка до оглавления — из макета: 26 точек после блока «добавьте
+    // человека», 22 после строк фактов, и ни одной под самим рисунком — он
+    // отбивает себя сам нижним полем. Без рисунка отбивка снова нужна.
+    final gap = _needsPartner
+        ? 26.0
+        : facts.isNotEmpty
+            ? 22.0
+            : _result == null
+                ? 10.0
+                : 0.0;
     return ScreenScaffold(
       seed: 0x53595300 + widget.system.index,
       title: CabinetWordsMore.system(l, widget.system),
       onRefresh: _load,
       children: [
         // Рисунок системы, чертящий себя. Натальная и соляр — настоящее
-        // колесо; у остальных свои полотна, они приедут следующими.
+        // колесо; у остальных своё полотно, по одному на систему.
         if (_wheelData case final chart?)
           Padding(
             padding: const EdgeInsets.only(top: 6, bottom: 10),
@@ -188,9 +207,10 @@ class _SystemScreenState extends State<SystemScreen> {
               SystemSlug.transits => TransitYearRing(data: payload),
               SystemSlug.numerology => NumerologyRing(data: payload, age: _age(context)),
               SystemSlug.astrocartography => LinesMapArt(data: payload),
-              // Имя аркана порт пока печатает строкой под рисунком экрана,
-              // а не внутри карты: словаря имён в каталоге ещё нет.
-              SystemSlug.birthCard => BirthCardArt(data: payload),
+              // Имя аркана стоит на самой карте, как в макете: «XVII» и
+              // «Звезда» — одна вещь, и разлучать их строкой ниже незачем.
+              SystemSlug.birthCard =>
+                BirthCardArt(data: payload, name: _arcanaName(l, payload)),
               SystemSlug.synthesis => SynthesisStar(data: payload),
               // Совместимость — это тоже карта: небо самих отношений.
               SystemSlug.compatibility => switch (_relationshipChart(payload)) {
@@ -210,12 +230,17 @@ class _SystemScreenState extends State<SystemScreen> {
           // как пустая таблица. Здесь нужен рисунок, который ничего не
           // утверждает: две дуги, которые ещё не встретились.
           const Center(child: WritingArt(size: 220, seed: 0)),
-          const SizedBox(height: 18),
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 10),
-            child: Text(L.of(context).cabCompatNeedsSecond,
-                style: AlmaType.meta),
+          const SizedBox(height: 10),
+          // По центру и в колонку шириной 300 — как в макете: это обещание
+          // системы, а не примечание под рисунком.
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 300),
+              child: Text(l.cabCompatNeedsPerson,
+                  textAlign: TextAlign.center, style: AlmaType.meta),
+            ),
           ),
+          const SizedBox(height: 14),
           InkWell(
             onTap: () async {
               await Navigator.of(context).push(CupertinoPageRoute(
@@ -245,7 +270,8 @@ class _SystemScreenState extends State<SystemScreen> {
               style: AlmaType.meta,
             ),
           ),
-        const SizedBox(height: 10),
+        ...facts,
+        SizedBox(height: gap),
         _section(
           l.cabChapters,
           trailing: _chapters?.total.toString(),
@@ -287,6 +313,189 @@ class _SystemScreenState extends State<SystemScreen> {
     }
     return null;
   }
+
+  /// Строки фактов между рисунком и оглавлением — у каждой системы свой
+  /// состав, продиктованный макетом; почему именно такой, см. у класса.
+  ///
+  /// Ни одной выдуманной строки: подпись берётся из каталога, значение — из
+  /// payload, и факт, которого в выдаче нет, просто не появляется. Это тот же
+  /// закон, по которому рисунок не чертит штриха без данных.
+  List<Widget> _facts(BuildContext context, L l) {
+    final data = _result?.data;
+    if (data == null) return const [];
+    switch (widget.system) {
+      case SystemSlug.birthCard:
+        final card = data['personality'];
+        final element = card is Map ? card['element'] as String? : null;
+        final word = element == null ? null : _elementWord(l, element);
+        return [if (word != null) _fact(l.cabFactElement, word)];
+
+      case SystemSlug.solarReturn:
+        // Момент возвращения приезжает мгновением в UTC, а печатается днём:
+        // час без часового пояса — это час, который врёт на полсуток, и натив
+        // отрезает его по той же причине.
+        final at = DateTime.tryParse(data['return_at'] as String? ?? '');
+        final ruler = data['year_ruler'] as String?;
+        return [
+          if (at != null)
+            _fact(l.cabFactReturn,
+                DateFormat.yMMMMd(l.localeName).format(at.toLocal())),
+          if (ruler != null && ruler.isNotEmpty)
+            _fact(l.cabFactYearRuler, CabinetWords.body(l, ruler.toLowerCase())),
+        ];
+
+      case SystemSlug.astrocartography:
+        // Название места живёт в профиле, а не в расчёте: движок под ключом
+        // `birthplace` держит прозу о линиях над этой точкой, а макет просит
+        // здесь именно «Берлин, Германия».
+        final place = SessionScope.of(context).profile?.placeLabel;
+        final lines = (data['lines'] as List?)?.length ?? 0;
+        final parans = (data['parans'] as List?)?.length ?? 0;
+        return [
+          if (place != null && place.isNotEmpty) _fact(l.cabFactBirthplace, place),
+          if (lines > 0) _fact(l.cabFactLines, '$lines'),
+          if (parans > 0) _fact(l.cabFactCrossings, '$parans'),
+        ];
+
+      case SystemSlug.transits:
+        return _activeNow(l);
+
+      default:
+        return const [];
+    }
+  }
+
+  /// «стихия — воздух»: подпись слева строчными, значение справа засечным.
+  Widget _fact(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Доля 4/6, как во всех парах «подпись — значение» продукта: место
+          // рождения бывает длиннее своей половины.
+          Expanded(flex: 4, child: Text(label, style: AlmaType.meta)),
+          const SizedBox(width: 12),
+          Expanded(
+            flex: 6,
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: AlmaType.numeral.copyWith(fontSize: 17),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// «Сейчас активно» — контакты, уже стоящие в орбе, с датой точности.
+  ///
+  /// У транзитов рисунок показывает дуги, но не называет их; макет ставит под
+  /// кольцом именно этот список. Напряжённый аспект берёт красный — тот же,
+  /// которым его дуга нарисована выше, чтобы строка и дуга читались как одно.
+  List<Widget> _activeNow(L l) {
+    final rows = ((_result?.data['active'] as List?) ?? const [])
+        .whereType<Map>()
+        .take(5)
+        .toList();
+    return [
+      _section(
+        l.cabActiveNow,
+        children: [
+          if (rows.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 13),
+              child: Text(l.cabNoneActive, style: AlmaType.meta),
+            )
+          else
+            for (final row in rows) _contact(l, row),
+        ],
+      ),
+    ];
+  }
+
+  Widget _contact(L l, Map<dynamic, dynamic> row) {
+    final aspect = row['aspect'] as String? ?? '';
+    final tense = aspect == 'square' || aspect == 'opposition';
+    final exact = DateTime.tryParse(row['exact'] as String? ?? '');
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 13),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text(
+              CabinetWords.contact(
+                l,
+                transiting: row['transiting'] as String? ?? '',
+                aspect: aspect,
+                natal: row['natal'] as String? ?? '',
+              ),
+              style: AlmaType.meta,
+            ),
+          ),
+          if (exact != null) ...[
+            const SizedBox(width: 12),
+            Text(
+              DateFormat.MMMd(l.localeName).format(exact.toLocal()),
+              style: tense
+                  ? AlmaType.numeral.copyWith(color: AlmaPalette.disagree)
+                  : AlmaType.numeral,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// Имя аркана на языке читателя. Движок называет карту по-английски — это
+  /// идентификатор, — а на карту выходит слово из каталога.
+  String? _arcanaName(L l, Map<String, dynamic> data) {
+    final card = data['personality'];
+    final name = card is Map ? card['name'] as String? : null;
+    return switch (name) {
+      'Death' => l.cabArcanaDeath,
+      'Judgement' => l.cabArcanaJudgement,
+      'Justice' => l.cabArcanaJustice,
+      'Strength' => l.cabArcanaStrength,
+      'Temperance' => l.cabArcanaTemperance,
+      'The Chariot' => l.cabArcanaTheChariot,
+      'The Devil' => l.cabArcanaTheDevil,
+      'The Emperor' => l.cabArcanaTheEmperor,
+      'The Empress' => l.cabArcanaTheEmpress,
+      'The Fool' => l.cabArcanaTheFool,
+      'The Hanged Man' => l.cabArcanaTheHangedMan,
+      'The Hermit' => l.cabArcanaTheHermit,
+      'The Hierophant' => l.cabArcanaTheHierophant,
+      'The High Priestess' => l.cabArcanaTheHighPriestess,
+      'The Lovers' => l.cabArcanaTheLovers,
+      'The Magician' => l.cabArcanaTheMagician,
+      'The Moon' => l.cabArcanaTheMoon,
+      'The Star' => l.cabArcanaTheStar,
+      'The Sun' => l.cabArcanaTheSun,
+      'The Tower' => l.cabArcanaTheTower,
+      'The World' => l.cabArcanaTheWorld,
+      'Wheel of Fortune' => l.cabArcanaWheelOfFortune,
+      // Незнакомая карта печатается собственным именем движка, а не пропадает:
+      // тот же договор, что у имён планет в `CabinetWords`.
+      _ => name,
+    };
+  }
+
+  String? _elementWord(L l, String element) => switch (element.toLowerCase()) {
+        'air' => l.cabElementAir,
+        'earth' => l.cabElementEarth,
+        'fire' => l.cabElementFire,
+        'water' => l.cabElementWater,
+        _ => element,
+      };
 
   Widget _section(String label, {String? trailing, required List<Widget> children}) {
     return Column(

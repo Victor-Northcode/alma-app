@@ -42,11 +42,12 @@ class ChatTurnView extends StatelessWidget {
         ),
       );
     }
+    final l = L.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Text('ALMA', style: AlmaType.overline),
+          Text(l.tabAlma.toUpperCase(), style: AlmaType.overline),
           const SizedBox(width: 12),
           Expanded(
             child: Container(
@@ -55,14 +56,35 @@ class ChatTurnView extends StatelessWidget {
             ),
           ),
         ]),
-        const SizedBox(height: 10),
-        Text(body, style: AlmaType.voice),
+        // **Абзацы — отдельными строками, а не пустой строкой внутри одной.**
+        //
+        // Тело склеивалось через `\n\n`, и между абзацами вставала пустая
+        // строка засечного кегля — почти тридцать точек, вдвое больше, чем на
+        // макете, где абзацы идут через 10. Ответ из трёх абзацев из-за этого
+        // распадался на три отдельных высказывания.
+        for (final paragraph in _paragraphs)
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Text(paragraph, style: AlmaType.voice),
+          ),
         if (citedFactors.isNotEmpty) ...[
           const SizedBox(height: 12),
           Citation(factors: citedFactors),
         ],
       ]),
     );
+  }
+
+  /// Тело, разрезанное по пустой строке. Пустые куски выброшены: сервер иногда
+  /// заканчивает ответ переносом, и хвостовой пустой абзац дорисовывал бы под
+  /// ответом пустую строку перед цитатой.
+  List<String> get _paragraphs {
+    final parts = body
+        .split('\n\n')
+        .map((p) => p.trim())
+        .where((p) => p.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? [body] : parts;
   }
 }
 
@@ -114,13 +136,20 @@ class CitationState extends State<Citation> {
               style: AlmaType.numeral.copyWith(color: AlmaPalette.goldDeep)),
         ],
         if (rest > 0)
-          InkResponse(
-            onTap: () => setState(() => _open = !_open),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Text(_open ? '−' : '+',
-                  style: AlmaType.numeral
-                      .copyWith(color: AlmaPalette.gold, fontSize: 17)),
+          // Знак «плюс» — это вся подпись кнопки, и вслух она не говорит
+          // ничего. Подпись для голоса есть в каталоге и ровно про это:
+          // «показать все позиции, из которых это прочитано».
+          Semantics(
+            button: true,
+            label: l.scrChatReadFromAll,
+            child: InkResponse(
+              onTap: () => setState(() => _open = !_open),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Text(_open ? '−' : '+',
+                    style: AlmaType.numeral
+                        .copyWith(color: AlmaPalette.gold, fontSize: 17)),
+              ),
             ),
           ),
       ]),
