@@ -1677,6 +1677,10 @@ class LPt extends L {
   String get paywallRestore => 'Restaurar compras';
 
   @override
+  String get paywallRenewShort =>
+      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
+
+  @override
   String get paywallRestored =>
       'Restaurado. Tudo o que você comprou está aberto de novo.';
 

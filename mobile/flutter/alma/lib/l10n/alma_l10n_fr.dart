@@ -1681,6 +1681,10 @@ class LFr extends L {
   String get paywallRestore => 'Restaurer les achats';
 
   @override
+  String get paywallRenewShort =>
+      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
+
+  @override
   String get paywallRestored =>
       'Restauré. Tout ce que tu as acheté est de nouveau ouvert.';
 

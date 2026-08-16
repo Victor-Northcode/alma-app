@@ -3113,6 +3113,12 @@ abstract class L {
   /// **'Restore purchases'**
   String get paywallRestore;
 
+  /// from Paywall/paywall.renewShort (s8, one paragraph)
+  ///
+  /// In en, this message translates to:
+  /// **'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time'**
+  String get paywallRenewShort;
+
   /// from Paywall/paywall.restored
   ///
   /// In en, this message translates to:

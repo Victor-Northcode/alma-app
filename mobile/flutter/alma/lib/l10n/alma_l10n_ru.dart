@@ -1669,6 +1669,10 @@ class LRu extends L {
   String get paywallRestore => 'Восстановить покупки';
 
   @override
+  String get paywallRenewShort =>
+      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
+
+  @override
   String get paywallRestored => 'Восстановлено. Всё купленное снова открыто.';
 
   @override

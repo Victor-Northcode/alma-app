@@ -2232,6 +2232,10 @@
     "description": "from Paywall/paywall.refused"
   },
   "paywallRestore": "Restore purchases",
+  "paywallRenewShort": "Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time",
+  "@paywallRenewShort": {
+    "description": "from Paywall/paywall.renewShort (s8, one paragraph)"
+  },
   "@paywallRestore": {
     "description": "from Paywall/paywall.restore"
   },

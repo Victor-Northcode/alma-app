@@ -1680,6 +1680,10 @@ class LIt extends L {
   String get paywallRestore => 'Ripristina acquisti';
 
   @override
+  String get paywallRenewShort =>
+      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
+
+  @override
   String get paywallRestored =>
       'Ripristinato. Tutto quello che hai comprato è di nuovo aperto.';
 

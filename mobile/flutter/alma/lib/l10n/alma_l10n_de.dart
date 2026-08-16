@@ -1681,6 +1681,10 @@ class LDe extends L {
   String get paywallRestore => 'Käufe wiederherstellen';
 
   @override
+  String get paywallRenewShort =>
+      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
+
+  @override
   String get paywallRestored =>
       'Wieder­hergestellt. Alles, was du gekauft hast, ist wieder offen.';
 

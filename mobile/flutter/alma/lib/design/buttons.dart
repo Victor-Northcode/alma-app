@@ -36,6 +36,7 @@ class AlmaButton extends StatefulWidget {
     this.fills = true,
     this.radius,
     this.shortLabel,
+    this.height,
   });
 
   final String label;
@@ -63,6 +64,14 @@ class AlmaButton extends StatefulWidget {
   /// выглядеть как кнопка, которой покупают.
   final double? radius;
 
+  /// Высота вопреки виду. По умолчанию её задаёт `kind` — золото 56, обводка
+  /// 54, вуаль 50, — и это правильный порядок: иерархия кнопок держится
+  /// высотой. Переопределяется там, где эталон ставит две второстепенные
+  /// кнопки **в одну строку** и требует, чтобы они были одного роста: на `s8`
+  /// «Restore purchases» и «Not now» обе по 48, и разница в четыре точки между
+  /// вуалью и обводкой читалась бы сбоем вёрстки, а не иерархией.
+  final double? height;
+
   @override
   State<AlmaButton> createState() => _AlmaButtonState();
 }
@@ -70,7 +79,9 @@ class AlmaButton extends StatefulWidget {
 class _AlmaButtonState extends State<AlmaButton> {
   bool _pressed = false;
 
-  double get _height => switch (widget.kind) {
+  double get _height =>
+      widget.height ??
+      switch (widget.kind) {
         AlmaButtonKind.gold => AlmaMetrics.buttonHeight,
         AlmaButtonKind.outline => AlmaMetrics.buttonHeightOutline,
         AlmaButtonKind.veil => AlmaMetrics.buttonHeightVeil,

@@ -282,17 +282,29 @@ class _OfferScreenState extends State<OfferScreen> {
         children: [
           Text(door == null ? l.paywallEverythingSub : l.paywallDoorSub,
               style: AlmaType.body),
-          // **Картина стоит ровно здесь, а не под заголовком.** В эталоне
-          // `s37` арт замерен на y=216 — то есть после вводного абзаца и до
-          // перечня: сначала говорят, что продают, потом показывают.
-          _Crown(door: door),
-          // Что покупают — до всякой цены и до всякой ошибки. Владелец однажды
-          // ткнул в закрытую главу на симуляторе без магазина и попал на
-          // страницу, всё содержимое которой было «App Store не отвечает».
-          _Facts(door: door != null),
-          // `margin-top:10px` у блока лестницы в `s8`. Отбивать её от фактов
-          // сильнее нечем: у ступеней теперь своя рамка, и она сама держит
-          // расстояние.
+          // **Факты до цены — закон витрины.**
+          //
+          // Строка «каждый расчёт бесплатен» стояла в самом низу, под кнопкой и
+          // под тремя буллетами: человек узнавал, что ему ничего не обязательно
+          // покупать, уже перешагнув через все цены. Эталон держит её сразу под
+          // подзаголовком, до первой цифры, и это же решение владельца.
+          const SizedBox(height: 14),
+          const _FreeLine(),
+          const SizedBox(height: 14),
+          // **Перечня обещаний на лестнице нет.** Три строки с точкой
+          // («годовой открывает все восемь», «транзиты обновляются», «30
+          // вопросов в месяц») повторяли то, что и так написано подписью под
+          // каждым планом, и стоили 160 точек — больше, чем вся юридика с
+          // кнопкой вместе. В перечне эталона их нет: шапка → бесплатность →
+          // планы → юридика → кнопка → Restore и «не сейчас» → ссылки.
+          // На двери (`s37`) перечень остаётся: там продают систему, и сказать
+          // о ней больше нечем.
+          if (door != null) _Facts(door: true),
+          // **Картины здесь нет.** До 16 августа 2026 над лестницей стояли
+          // ворота в пергаментной раме. В эталоне `s8` арта нет вообще: он
+          // живёт на `s46` (дверь одной системы) и баннером 128 в шите `s32`.
+          // Здесь рама съедала пол-экрана и уводила цены за сгиб — «эта
+          // картина здесь съедает пол-экрана», решение владельца.
           const SizedBox(height: 10),
           if (_loading)
             Padding(
@@ -336,11 +348,12 @@ class _OfferScreenState extends State<OfferScreen> {
               ),
             )
           else ...[
-            for (final key in rungs)
+            for (final (i, key) in rungs.indexed)
               _Rung(
                 rung: key,
                 price: _store.price(key),
                 selected: key == chosen,
+                first: i == 0,
                 onTap: _store.busy != null
                     ? null
                     : () => setState(() => _chosen = key),
@@ -947,6 +960,50 @@ class _Facts extends StatelessWidget {
   }
 }
 
+/// Строка, ради которой витрина остаётся честной: считать бесплатно.
+///
+/// **Стоит до первой цены, а не под кнопкой.** Человек, который узнаёт, что
+/// расчёт всех восьми систем ничего не стоит, уже перешагнув через три цены и
+/// золотую кнопку, узнаёт это слишком поздно, чтобы поверить. Эталон держит её
+/// сразу под подзаголовком.
+///
+/// Числа эталона: звезда золотом, подпись Golos 600 14/1.5 цветом `#E4D3A2`.
+/// Шестисотое начертание — единственное на экране: строка не кричит размером,
+/// она весит в наборе.
+class _FreeLine extends StatelessWidget {
+  const _FreeLine();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Text('\u2726',
+              style: AlmaType.numeral.copyWith(fontSize: 13)),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            l.paywallFreeNote,
+            style: AlmaType.body.copyWith(
+              fontSize: 14,
+              height: 1.5,
+              fontWeight: FontWeight.w600,
+              // Вариативному шрифту вес задаётся осью — иначе он молча
+              // останется обычным. См. `typography.dart`.
+              fontVariations: const [FontVariation('wght', 600)],
+              color: AlmaPalette.goldBright,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 /// Строки, начинающиеся с точки. Тот же приём, что на нативе, и он один на
 /// оба места — обещания и факты.
 class _Dotted extends StatelessWidget {
@@ -978,91 +1035,113 @@ class _Dotted extends StatelessWidget {
       );
 }
 
-/// Ступень: плашка с именем и подписью, ценой справа.
+/// Ступень: **строка списка**, а не карточка.
 ///
-/// **Выбор показывает сама плашка, а не кружок.** Кружок-радиокнопка стоял
-/// слева от каждой строки и был первым, что владелец назвал вслух: ряд пустых
-/// кружков на голом небе читается как анкета, а не как полка.
+/// **Рамки сняты по эталону.** До 16 августа 2026 каждая ступень была плашкой
+/// со скруглением 18 и обводкой — форма, взятая у `s38`, где эталон выбирает
+/// одно из двух. Лестница `s8` устроена иначе: это список, разделённый
+/// волосом, и четыре рамки одна под другой раздували экран примерно вдвое —
+/// цены уходили за сгиб, а весь экран переставал помещаться в 402×874. Владелец
+/// на это: «планы — строки списка, а не карточки».
 ///
-/// **И не одна пилюля цены.** Пилюля из `s43` осталась и по-прежнему говорит о
-/// выборе, но нести его одна она не может: цену печатает App Store, а он
-/// молчит и на симуляторе, и на отвалившейся сети, и до одобрения товаров. В
-/// этом состоянии лестница выходила рядом голых строк, разделённых волосом, —
-/// ровно то, что владелец увидел с третьего раза: «тут всё не так, как в
-/// дизайне», «ступени — голые строки». Указатель выбора, исчезающий вместе с
-/// ценой, — это отсутствующий указатель.
+/// Числа эталона: радио-точка 8, заголовок Playfair 400 17.5/1.25, подпись
+/// Golos 400 13/1.45 цветом слоновая кость .72, цена справа Playfair 400 14
+/// золотом, поле 15 сверху и снизу, между строками волос 1 px
+/// `rgba(237,231,218,.1)`.
 ///
-/// Форма взята у `s38`, где эталон выбирает одно из двух и у каждого варианта
-/// заголовок с подписью: поле 16×20, скругление 18, промежуток 12; выбранное —
-/// обводка `#C9AE6B` и заголовок `#E4D3A2`, невыбранное — обводка
-/// `rgba(237,231,218,.1)` и заголовок `#F6F1E4`. Заливки нет ни у того, ни у
-/// другого: витрина остаётся ночью с предметами на ней, а не панелью.
+/// **Кружок вернулся, и это не противоречие.** Он уже стоял здесь когда-то и
+/// был снят: ряд пустых кружков на голом небе читался анкетой. Но там кружок
+/// был единственным указателем выбора у строк **без рамки и без разделителя**;
+/// в эталоне он часть списка, и вместе с волосом и золотом заголовка читается
+/// выбором, а не полем ввода.
+///
+/// **Цена — из каталога локали, и только оттуда.** `null` значит, что App Store
+/// не ответил: колонка остаётся пустой. Единственное, что здесь нельзя
+/// выдумать и нельзя отформатировать самим, — это число: валюта, разделитель и
+/// порядок знаков принадлежат магазину той страны, где стоит человек.
 class _Rung extends StatelessWidget {
   const _Rung({
     required this.rung,
     required this.price,
     required this.selected,
+    required this.first,
     required this.onTap,
   });
 
   final LadderKey rung;
 
-  /// `null` — магазин не ответил. Колонка остаётся пустой: единственное, что
-  /// нельзя выдумывать, это число.
+  /// `null` — магазин не ответил.
   final String? price;
   final bool selected;
+
+  /// Первая строка списка волоса сверху не получает: он разделяет строки, а не
+  /// отбивает список от того, что над ним.
+  final bool first;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Opacity(
-          opacity: onTap == null ? 0.75 : 1,
-          child: AnimatedContainer(
-            duration: AlmaMotion.ui,
-            curve: AlmaMotion.uiCurve,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: selected ? AlmaPalette.gold : AlmaPalette.hairline,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Opacity(
+        opacity: onTap == null ? 0.75 : 1,
+        child: Container(
+          decoration: first
+              ? null
+              : BoxDecoration(
+                  border: Border(top: BorderSide(color: AlmaPalette.hairline)),
+                ),
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Точка стоит на строке заголовка, а не по центру строки: у
+              // двухстрочной подписи центр уезжает вниз, и кружок оказывался
+              // напротив пустоты.
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: AnimatedContainer(
+                  duration: AlmaMotion.ui,
+                  curve: AlmaMotion.uiCurve,
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected ? AlmaPalette.gold : Colors.transparent,
+                    border: Border.all(
+                      color: selected ? AlmaPalette.gold : AlmaPalette.hairline,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        rung.title(l),
-                        style: AlmaType.headingM.copyWith(
-                          color: selected
-                              ? AlmaPalette.goldBright
-                              : AlmaPalette.inkLight,
-                        ),
+                    Text(
+                      rung.title(l),
+                      style: AlmaType.headingM.copyWith(
+                        color: selected
+                            ? AlmaPalette.goldBright
+                            : AlmaPalette.inkLight,
                       ),
                     ),
-                    // Магазин молчит — колонки нет вовсе. Пустая пилюля обещала
-                    // бы число, которого никто не называл.
-                    if (price != null) ...[
-                      const SizedBox(width: 12),
-                      _PricePill(price: price!, selected: selected),
-                    ],
+                    const SizedBox(height: 3),
+                    Text(rung.note(l), style: AlmaType.meta),
                   ],
                 ),
-                // Подпись во всю ширину плашки, а не в колонку рядом с ценой:
-                // зажатая пилюлей, она уходила в четыре строки и растила
-                // ступень выше картины.
-                const SizedBox(height: 3),
-                Text(rung.note(l), style: AlmaType.meta),
+              ),
+              if (price != null) ...[
+                const SizedBox(width: 12),
+                Padding(
+                  padding: const EdgeInsets.only(top: 1),
+                  child: Text(price!, style: AlmaType.numeral),
+                ),
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -1100,14 +1179,30 @@ class _BuyArea extends StatelessWidget {
         // автопродлении рядом с действием оплаты, а человек, открывший это
         // нажатием на одну закрытую главу, не должен узнать о годовом
         // списании из выписки.
+        //
+        // **Один абзац, а не простыня в четыре строки.** Здесь стоял
+        // `paywallAutoRenewTerms` кеглем `meta` — три предложения, которые на
+        // 375 точках разворачивались в четыре строки и выталкивали кнопку за
+        // сгиб. Эталон держит три факта через точку-разделитель и набирает их
+        // 12.5/1.5: списывают при подтверждении · продлевается, если не отменить
+        // за 24 часа · отменить можно когда угодно.
         if (chosen.isSubscription)
           Padding(
             padding: const EdgeInsets.only(top: 18),
-            child: Text(l.paywallAutoRenewTerms, style: AlmaType.meta),
+            child: Text(
+              l.paywallRenewShort,
+              style: AlmaType.meta.copyWith(
+                fontSize: 12.5,
+                height: 1.5,
+                color: AlmaPalette.body.withValues(alpha: 0.78),
+              ),
+            ),
           ),
         if (price == null) ...[
           // Магазин молчит. Полка выше осталась на месте — что на ней лежит,
           // известно и без App Store, — а купить нельзя, и это сказано.
+          // Телом 15.5/1.55, как всё на этом экране, и кнопка обычного роста:
+          // офлайн — это состояние, а не отдельный жанр вёрстки.
           const SizedBox(height: 18),
           Text(l.paywallStoreUnavailable, style: AlmaType.body),
           const SizedBox(height: 16),
@@ -1115,6 +1210,7 @@ class _BuyArea extends StatelessWidget {
             child: AlmaButton(
               kind: AlmaButtonKind.outline,
               fills: false,
+              height: 50,
               label: l.stateRetry,
               onTap: store.load,
             ),
@@ -1163,22 +1259,62 @@ class _BuyArea extends StatelessWidget {
               ),
             ),
           ),
-        Padding(
-          padding: const EdgeInsets.only(top: 22),
-          // Три обещания, поправленные на магазин: у веб-приложения продавец
-          // мы, здесь — Apple. Она берёт деньги, она присылает чек, у неё же
-          // отменяют.
-          child: _Dotted(
-            lines: [
-              l.paywallHonestyOnce,
-              l.paywallHonestySeller,
-              l.paywallHonestyCancel,
-            ],
-            style: AlmaType.meta,
+        // **Три буллета сняты с лестницы.** «Разовые покупки не продлеваются ·
+        // Apple берёт деньги и присылает чек · отменяют в настройках Apple ID»
+        // — это сноска разовой покупки (`s37`, `s43`), и рядом с подпиской она
+        // говорила о продлении дважды и противоположными словами. Остаётся там,
+        // где продают разовое.
+        if (!chosen.isSubscription)
+          Padding(
+            padding: const EdgeInsets.only(top: 22),
+            child: _Dotted(
+              lines: [
+                l.paywallHonestyOnce,
+                l.paywallHonestySeller,
+                l.paywallHonestyCancel,
+              ],
+              style: AlmaType.meta,
+            ),
           ),
+        // **Restore и «не сейчас» — в одну строку.**
+        //
+        // Две полноширинные плиты одна под другой занимали 50 + 14 + 54 = 118
+        // точек и читались как два равных решения — при том что второе из них
+        // «уйти». В эталоне это одна строка по центру: вуаль 48 и обводка 48,
+        // одного роста (см. `AlmaButton.height`).
+        const SizedBox(height: 18),
+        // **`Wrap`, а не `Row`.** Строка из двух кнопок по содержимому на
+        // английском занимает около 290 точек из 358 и стоит одной строкой —
+        // как в эталоне. Но «Käufe wiederherstellen» рядом с «Jetzt nicht» в
+        // 358 не влезает ни при каком кегле, и у `Row` это переполнение с
+        // жёлто-чёрной лентой, а у `Flexible` — «Restore purch…». Ни то ни
+        // другое не годится: закон эталона — подпись кнопки **не режется
+        // никогда**. `Wrap` роняет вторую кнопку на следующую строку и
+        // оставляет обе подписи целыми. Найдено тестом на узкой колонке.
+        Wrap(
+          alignment: WrapAlignment.center,
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            // Apple отклоняет приложение, которое продаёт разовые покупки и не
+            // умеет их вернуть. И это же единственное, что помогает человеку с
+            // новым телефоном, — случай, который действительно случается.
+            // **По содержимому, а не по половинам.** `Flexible` делил строку
+            // поровну, и «Restore purchases» — подпись вдвое длиннее «Not
+            // now» — выходила «Restore purch…». Ужимать её ступенями кегля
+            // здесь нечем: короткого словарного варианта у этой строки нет ни
+            // в одном из семи языков, а выдумывать его нельзя. Обе кнопки
+            // берут свою ширину и встают по центру.
+            _RestoreButton(store: store),
+            AlmaButton(
+              kind: AlmaButtonKind.outline,
+              fills: false,
+              height: 48,
+              label: intent.isDoor ? l.paywallSkip : l.paywallNotNow,
+              onTap: onDecline,
+            ),
+          ],
         ),
-        const SizedBox(height: 6),
-        Text(l.paywallFreeNote, style: AlmaType.meta),
         const SizedBox(height: 14),
         // **Условия, политика и условия подписки — с самой витрины.**
         //
@@ -1198,20 +1334,6 @@ class _BuyArea extends StatelessWidget {
               _LegalLink(
                   l.paywallSubscriptionTerms, LegalDocument.subscriptionTerms),
             ],
-          ),
-        ),
-        const SizedBox(height: 18),
-        // Apple отклоняет приложение, которое продаёт разовые покупки и не
-        // умеет их вернуть. И это же единственное, что помогает человеку с
-        // новым телефоном, — случай, который действительно случается.
-        Center(child: _RestoreButton(store: store)),
-        const SizedBox(height: 14),
-        Center(
-          child: AlmaButton(
-            kind: AlmaButtonKind.outline,
-            fills: false,
-            label: intent.isDoor ? l.paywallSkip : l.paywallNotNow,
-            onTap: onDecline,
           ),
         ),
         const SizedBox(height: 8),
@@ -1268,211 +1390,12 @@ class _RestoreButton extends StatelessWidget {
     return AlmaButton(
       kind: AlmaButtonKind.veil,
       fills: false,
+      // 48 и радиус 24 — числа эталона, и они же равняют её с «не сейчас»
+      // рядом: обе кнопки в одной строке обязаны быть одного роста.
+      height: 48,
+      radius: 24,
       label: store.restoring ? l.paywallRestoring : l.paywallRestore,
       onTap: store.restoring || store.busy != null ? null : store.restore,
-    );
-  }
-}
-
-/* ── картина витрины ─────────────────────────────────────────────────────── */
-
-/// Что венчает витрину: общая дверь или та, за которой пришли.
-///
-/// **Одна картина на экран, и она обязана говорить про этот экран.** За одной
-/// системой пришли — стоит её собственная карта: экран, продающий нумерологию
-/// под общей картинкой ворот, не отличается от экрана, продающего всё. Пришли
-/// за всем — стоят ворота.
-///
-/// **Обе картины — в одной раме, и рама здесь важнее картины.** До 16 августа
-/// 2026 у двух случаев было два разных вида: дверь получала пергаментную карту
-/// `s42`, а «вся Alma» — широкую полосу фотографии с золотым кантом. Владелец о
-/// полосе: «картинки вставлены сырыми полосами, верхняя занимает четверть
-/// экрана». И он прав по существу, а не по вкусу: кадр во всю колонку, кроме
-/// скругления не имеющий формы, читается наклейкой поверх неба — тем более что
-/// внутри у него фотография с собственной перспективой. В эталонах витрины
-/// (`s42`, `s43`) фотографии «просто так» нет ни одной: арт **всегда** внутри
-/// пергаментной рамы, и именно рама делает его предметом на витрине, а не
-/// куском обоев. Поэтому рама одна на оба случая, а разное — только то, что в
-/// ней лежит и как оно подписано.
-class _Crown extends StatelessWidget {
-  const _Crown({required this.door});
-
-  /// `null` — витрина целиком.
-  final SystemSlug? door;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    return Padding(
-      // Снизу больше, чем сверху: табличка свисает за нижний край рамы, и
-      // 16 точек, которых хватало карте, она бы вынесла на первую ступень.
-      padding: const EdgeInsets.only(top: 18, bottom: 26),
-      child: _ArtCard(
-        image: door == null ? AlmaArt.gates : AlmaArt.card(door!),
-        // Ворота ничем не названы — им нужна табличка. Карту системы уже
-        // назвал заголовок экрана, и вторая подпись была бы эхом.
-        plate: door == null ? l.cabAllAlmaPill : null,
-        // Звёзды по углам — приём карточной рамы `s42`, и он принадлежит
-        // карте. У ворот вместо них табличка; два украшения на одной раме
-        // спорят.
-        stars: door != null,
-      ),
-    );
-  }
-}
-
-/// Картина витрины в пергаментной раме.
-///
-/// Порт рамы `s43` — «full access, framed art»: 170×240, поле 8, скругление 12,
-/// внутренний штрих с отступом 5 и скруглением 8 цветом `rgba(168,135,60,.45)`,
-/// картинка со скруглением 6, тень `0 20px 55px rgba(0,0,0,.6)` и золотой волос
-/// по контуру `rgba(201,174,107,.4)`. Всё пересчитано от ширины рамы, чтобы она
-/// не разъезжалась на узком телефоне.
-///
-/// Ширина — 42.5% колонки, но не больше 170 точек эталона. В `s43` карта
-/// занимает 42% ширины экрана и там она **весь** экран; здесь под ней ещё лид,
-/// три факта и лестница цен, и рама в полный рост эталона отправила бы первую
-/// цену за нижний край.
-///
-/// **Картинка садится `cover` и теряет по краю — так и надо.** Ворота
-/// (402×603) и карты систем (280×420) обе портретные и обе почти той же
-/// пропорции, что просвет рамы; кадрируется несколько процентов по высоте.
-/// Полоса, которая стояла здесь раньше, выбрасывала из ворот две трети кадра.
-class _ArtCard extends StatelessWidget {
-  const _ArtCard({
-    required this.image,
-    required this.plate,
-    required this.stars,
-  });
-
-  final String image;
-
-  /// Табличка под нижним краем рамы. `null` — картину подписывать нечем.
-  final String? plate;
-  final bool stars;
-
-  /// Рама эталона `s43`.
-  static const _w = 170.0;
-  static const _h = 240.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, box) {
-      final w = math.min(box.maxWidth * 0.425, _w);
-      final k = w / _w; // всё остальное — доли эталонной ширины
-      return Center(
-        child: _Floating(
-          child: SizedBox(
-            width: w,
-            height: _h * k,
-            // Табличка свисает ниже рамы — обрезать её нечем и незачем.
-            child: Stack(clipBehavior: Clip.none, fit: StackFit.expand, children: [
-              Container(
-                padding: EdgeInsets.all(8 * k),
-                decoration: BoxDecoration(
-                  color: AlmaPalette.inkLight,
-                  borderRadius: BorderRadius.circular(12 * k),
-                  border: Border.all(
-                      color: AlmaPalette.gold.withValues(alpha: 0.4)),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      blurRadius: 55 * k,
-                      offset: Offset(0, 20 * k),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6 * k),
-                  child: Image.asset(image, fit: BoxFit.cover),
-                ),
-              ),
-              // Штрих и звёзды — поверх картины: рама принадлежит карте, а не
-              // тому, что на ней нарисовано.
-              IgnorePointer(
-                child: Padding(
-                  padding: EdgeInsets.all(5 * k),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8 * k),
-                      border: Border.all(
-                          color: AlmaPalette.goldDeep.withValues(alpha: 0.45)),
-                    ),
-                  ),
-                ),
-              ),
-              if (stars)
-                for (final corner in const [
-                  Alignment.topLeft,
-                  Alignment.topRight,
-                  Alignment.bottomLeft,
-                  Alignment.bottomRight,
-                ])
-                  Align(
-                    alignment: corner,
-                    child: Padding(
-                      padding: EdgeInsets.all(3 * k),
-                      // Звезда в `s42` — 16 точек на раме шириной 224, то есть
-                      // 7.1% ширины. Держим долю, а не число: на раме 170 звезда
-                      // в 16 точек стала бы кляксой в углу.
-                      child: CustomPaint(
-                        size: Size.square(w * 0.071),
-                        painter: const _CornerStar(),
-                      ),
-                    ),
-                  ),
-              if (plate != null)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: -16 * k,
-                  child: Center(child: _NamePlate(label: plate!, k: k)),
-                ),
-            ]),
-          ),
-        ),
-      );
-    });
-  }
-}
-
-/// Табличка под картиной — из `s42`, где ею подписана аркана.
-///
-/// Числа эталона: подложка `#04060E`, золотая обводка `rgba(201,174,107,.7)`,
-/// скругление 6, поле 8×22, засечный 15; вокруг — кант в три точки цвета ночи и
-/// ещё волос золота на 35%, то есть табличка вырезана из неба и обведена
-/// дважды. Подпись **не внутри** картины, как в `s43`: там арт светлый снизу, а
-/// наши ворота там темнее всего, и чернильная строка на них не читалась бы.
-class _NamePlate extends StatelessWidget {
-  const _NamePlate({required this.label, required this.k});
-
-  final String label;
-  final double k;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.all(3 * k),
-      decoration: BoxDecoration(
-        color: AlmaPalette.voidDark,
-        borderRadius: BorderRadius.circular(9 * k),
-        border:
-            Border.all(color: AlmaPalette.gold.withValues(alpha: 0.35)),
-      ),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 22 * k, vertical: 8 * k),
-        decoration: BoxDecoration(
-          color: AlmaPalette.voidDark,
-          borderRadius: BorderRadius.circular(6 * k),
-          border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.7)),
-        ),
-        child: Text(
-          label,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AlmaType.headingM.copyWith(fontSize: 15 * k, height: 1.2),
-        ),
-      ),
     );
   }
 }
@@ -1553,63 +1476,6 @@ class _FloatingState extends State<_Floating>
         ),
         child: widget.child,
       );
-}
-
-/// Пилюля цены — она же второй указатель выбора.
-///
-/// Числа `s43`, где стоят ровно две такие пилюли: выбранная — заливка
-/// `#F6F1E4`, число `600 17px` чернилами `#1C1A17`, тень
-/// `0 8px 22px rgba(0,0,0,.4)`; невыбранная — та же форма обводкой
-/// `rgba(201,174,107,.4)` и число слоновой костью. Скругление 999 у обеих.
-///
-/// Поле по горизонтали 16 — своё: в эталоне пилюля тянется на половину экрана
-/// (`flex:1`) и её поле задано только по вертикали, а здесь она обнимает число
-/// в углу ступени.
-///
-/// **Это не золотая кнопка и не может ею стать.** Дизайн-система запрещает
-/// плоское золото с тёмной подписью (`gold_texture.dart`), и здесь его нет:
-/// заливка — светлая бумага, а не золотой градиент. Пилюля к тому же не глагол
-/// и вдвое ниже кнопки — спутать её с «купить» не с чем.
-class _PricePill extends StatelessWidget {
-  const _PricePill({required this.price, required this.selected});
-
-  final String price;
-  final bool selected;
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: AlmaMotion.ui,
-      curve: AlmaMotion.uiCurve,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
-      decoration: BoxDecoration(
-        color: selected ? AlmaPalette.inkLight : Colors.transparent,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: selected
-              ? Colors.transparent
-              : AlmaPalette.gold.withValues(alpha: 0.4),
-        ),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  blurRadius: 22,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : null,
-      ),
-      child: Text(
-        price,
-        maxLines: 1,
-        style: AlmaType.button.copyWith(
-          fontSize: 17,
-          color: selected ? AlmaPalette.ink : AlmaPalette.inkLight,
-        ),
-      ),
-    );
-  }
 }
 
 /// Тёплое свечение под золотой кнопкой.
