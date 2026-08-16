@@ -49,7 +49,7 @@ from ...auth import entitlements
 from ...calc import CalcResult, TimeRequired
 from ...calc.cache import MOMENT_OPTIONS, compute_cached
 from ...calc.contract import cache_key
-from ...calc.service import AmbiguousBirthTime
+from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...config import settings
 from ...db.models import ChatMessage, ChatThread, Memory, Reading, UsageCounter, utcnow
 from ..cache import result_cache
@@ -343,16 +343,44 @@ async def read(
     # simply stop accumulating siblings.
     language = i18n.resolve(payload.locale)
 
-    # A locked chapter is no longer an instant wall. The owner's design: the
-    # first few locked chapters a person opens are *really written* — the
-    # real first paragraph in the clear, the real rest blurred under the
-    # unlock button — because a blurred page of actual prose about you sells
-    # what sixteen locked titles never did. The allowance is small and
-    # config-owned (`ALMA_PREVIEW_CHAPTERS`); past it, the wall is the wall.
-    # Whether THIS request is within the allowance is decided inside the
-    # write lock, where the stored-copy lookup lives — a preview already
-    # written reopens freely forever, exactly like a bought chapter.
+    # **Без права глава не пишется вовсе.**
+    #
+    # Прежнее правило нужно назвать вслух, иначе следующий читающий увидит
+    # «закрытая глава = пустая стена», решит, что здесь потеряна щедрость, и
+    # вернёт генерацию. Оно было такое: первые несколько закрытых глав аккаунт
+    # получал *написанными по-настоящему* — сервер сочинял главу целиком,
+    # помечал ответ `preview`, клиент показывал первый абзац и размывал
+    # остальное; допуск задавался `ALMA_PREVIEW_CHAPTERS`. Замысел был
+    # продающий: страница настоящей прозы о тебе продаёт лучше, чем
+    # шестнадцать закрытых заголовков.
+    #
+    # Владелец это отменил, и причина названа им — деньги за генерацию.
+    # Каждое такое превью это запись сильной моделью (десятки тысяч входных
+    # токенов и пара тысяч выходных, $0.02–0.10) за того, кто не заплатил
+    # ничего, и тратится она *до* решения о покупке, а не после. «Пока у
+    # человека нет подписки или купленного — не пишем; после покупки пишется
+    # полная глава».
+    #
+    # Стена стоит **до** `resolve_birth` и `_calc` намеренно: так «не писать»
+    # становится свойством устройства кода, а не следствием удачного порядка
+    # проверок ниже по течению. Бесплатная глава системы сюда не попадает —
+    # `entitlements.check` разрешает её сама, — и это единственный путь письма
+    # для неоплатившего.
+    #
+    # Ответ тот же 402 `locked`, что стоял здесь до превью: клиент рисует
+    # стену S26 (заголовок, объяснение, одна кнопка) и, зная право заранее из
+    # оглавления, обычно даже не доходит до этого запроса.
     access = await entitlements.check(session, user, payload.system, chapter=chapter.slug)
+    if not access.allowed and not chapter.free:
+        raise HTTPException(
+            status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "error": "locked",
+                "message": access.reason,
+                "system": payload.system,
+                "chapter": chapter.slug,
+            },
+        )
 
     birth = await resolve_birth(
         session, user, profile_id=payload.profile_id, birth=payload.birth
@@ -382,7 +410,7 @@ async def read(
             return await _read_or_write(
                 payload, user, session, provider, chapter=chapter,
                 language=language, result=result, calc_key=calc_key,
-                lookup=_lookup, access=access,
+                lookup=_lookup,
             )
     finally:
         _prune_lock(lock_key)
@@ -406,35 +434,6 @@ async def _reader_gender(session, user, payload) -> str | None:
     return profile.gender if profile is not None else None
 
 
-async def _previews_used(session, user) -> int:
-    """How many locked chapters this account has already had written.
-
-    Counted from the readings themselves rather than from a separate tally:
-    a reading of a non-free chapter in a system the account does not own *is*
-    a spent preview, and a purchase retroactively stops those readings
-    counting — which is the right direction to be generous in.
-    """
-    rows = (
-        await session.execute(
-            select(Reading.system, Reading.chapter)
-            .where(Reading.user_id == user.id)
-            .distinct()
-        )
-    ).all()
-    used = 0
-    for system, slug in rows:
-        try:
-            chapter = chapter_defs.find(system, slug)
-        except ValueError:
-            continue
-        if chapter.free:
-            continue
-        owned = await entitlements.check(session, user, system, chapter=slug)
-        if not owned.allowed:
-            used += 1
-    return used
-
-
 async def _read_or_write(
     payload: ReadingRequest,
     user,
@@ -446,36 +445,25 @@ async def _read_or_write(
     result: CalcResult,
     calc_key: str,
     lookup,
-    access,
 ) -> dict:
-    """The half of `read` that must run one-at-a-time per reading key."""
-    preview = not access.allowed and not chapter.free
+    """The half of `read` that must run one-at-a-time per reading key.
+
+    Everything below happens only for somebody entitled to this chapter: the
+    wall in `read` has already answered 402 otherwise, before the chart was
+    even computed. No `access` argument reaches here for that reason — the one
+    thing it used to decide, the blurred-preview flag, no longer exists.
+    """
     stored = await lookup()
     if stored is not None:
         # Written once, returned forever. The reading a person paid for must
         # say the same thing the second time they open it — and the request
         # that lost the race to the lock wakes up exactly here, having spent
-        # nothing. A stored preview reopens the same way: the words already
-        # exist and blurring them again costs nothing.
+        # nothing.
         return {
             "reading": stored.body,
             "cached": True,
-            "preview": preview,
             "created_at": stored.created_at.isoformat(),
         }
-
-    if preview:
-        used = await _previews_used(session, user)
-        if used >= settings().preview_chapters:
-            raise HTTPException(
-                status.HTTP_402_PAYMENT_REQUIRED,
-                detail={
-                    "error": "locked",
-                    "message": access.reason,
-                    "system": payload.system,
-                    "chapter": chapter.slug,
-                },
-            )
 
     # One fact — is this chapter the free sample? — chooses both the model and
     # the ceiling that model is spent against, so the two cannot disagree.
@@ -578,7 +566,6 @@ async def _read_or_write(
             return {
                 "reading": theirs.body,
                 "cached": True,
-                "preview": preview,
                 "created_at": theirs.created_at.isoformat(),
             }
         raise
@@ -586,7 +573,6 @@ async def _read_or_write(
     return {
         "reading": written.as_dict(),
         "cached": False,
-        "preview": preview,
         "created_at": utcnow().isoformat(),
     }
 

@@ -440,10 +440,30 @@ class AlmaClient {
 
   Future<Hub> hub() async => Hub.fromJson(await _get('/v1/systems/hub'));
 
-  Future<ChapterList> chapters(SystemSlug system, {required String locale}) async =>
-      ChapterList.fromJson(
-        await _get('/v1/readings/${system.path}/chapters?locale=$locale'),
-      );
+  Future<ChapterList> chapters(SystemSlug system, {required String locale}) async {
+    final list = ChapterList.fromJson(
+      await _get('/v1/readings/${system.path}/chapters?locale=$locale'),
+    );
+    _knownChapters['${system.path}:$locale'] = list;
+    return list;
+  }
+
+  /// Последнее оглавление этой системы, если его уже привозили.
+  ///
+  /// **Существует ради одного кадра.** В главу заходят с экрана системы,
+  /// который только что показал это самое оглавление, — значит, ответ на
+  /// вопрос «открыта ли эта глава» уже в памяти, и экран главы обязан
+  /// ответить им *синхронно*, до первого кадра. Иначе закрытая глава сперва
+  /// показывает ожидание, и кнопка «Разблокировать» появляется после ответа
+  /// сервера — ровно то, что владелец снял: «кнопка на первом скрине должна
+  /// быть сразу как ты заходишь на не открытую страницу».
+  ///
+  /// Память, а не диск: право меняется покупкой, и оглавление, пережившее
+  /// запуск, показывало бы стену тому, кто уже заплатил.
+  ChapterList? knownChapters(SystemSlug system, {required String locale}) =>
+      _knownChapters['${system.path}:$locale'];
+
+  final Map<String, ChapterList> _knownChapters = {};
 
   /// Глава. Несёт [writingTimeout]: если её ещё не писали, модель сейчас будет
   /// молча работать почти минуту.

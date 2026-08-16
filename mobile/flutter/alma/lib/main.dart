@@ -211,6 +211,13 @@ class _CabinetShellState extends State<CabinetShell> {
   /// человек ещё не видел.
   bool _launched = false;
 
+  /// Путешествие началось и ещё не отпустило.
+  ///
+  /// Анкета живёт дольше своего повода: рождение появляется в середине
+  /// церемонии, а за церемонией идёт хвост из трёх экранов. Кто уходит — решает
+  /// она сама; см. соображение у ветки, которая её показывает.
+  bool _journeyRunning = false;
+
   @override
   Widget build(BuildContext context) {
     final session = SessionScope.of(context);
@@ -248,8 +255,23 @@ class _CabinetShellState extends State<CabinetShell> {
     // Без рождения кабинету нечего считать: новый человек попадает в
     // путешествие, как на iOS его встречает полноэкранная обложка. Пока
     // сессия не готова — ночь без всего, а не мигающий каркас.
-    if (forced || (session.ready && !session.hasBirthData)) {
-      return JourneyScreen(onDone: () => setState(() {}));
+    //
+    // **Уводит отсюда само путешествие, а не появившееся рождение.**
+    //
+    // Условие читалось «нет рождения — анкета», и оно же выбрасывало анкету в
+    // ту секунду, когда профиль сохранился: `session.start(force: true)`
+    // будит эту сборку, `hasBirthData` становится истиной, и всё поддерево
+    // подменяется кабинетом. То есть церемония обрывалась ровно у тех, у кого
+    // сервер ответил быстрее девяти с половиной секунд, а хвост путешествия —
+    // витрина, пре-аск, вход — не имел бы шанса открыться вовсе: его снесло бы
+    // вместе с экраном, который его показывает. Признак ниже держит анкету на
+    // экране до её собственного `onDone`; сказать «я закончила» вправе только
+    // она.
+    if (forced || _journeyRunning || (session.ready && !session.hasBirthData)) {
+      _journeyRunning = true;
+      return JourneyScreen(
+        onDone: () => setState(() => _journeyRunning = false),
+      );
     }
     return Scaffold(
       backgroundColor: AlmaPalette.night,

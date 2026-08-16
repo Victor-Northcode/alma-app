@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -12,15 +13,44 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
+import '../offer_screen.dart';
+import '../settings/sign_in_screen.dart';
 import '../systems/writing_art.dart';
+import 'push_ask_screen.dart';
 
-/// Путешествие: шесть шагов от имени до церемонии.
+/// Путешествие: шесть шагов от имени до церемонии и трёхшаговый хвост за ней.
 ///
 /// Порт `mobile/ios/Alma/Screens/Journey/*`. Порядок шагов тот же — имя, о
 /// себе, дата, время, место, церемония, — и обещание под первым вопросом то
 /// же: «Пока ничего не сохраняется». Это правда буквально: профиль не
 /// создаётся до нажатия «Построить моё небо», и человек, закрывший путешествие
 /// на четвёртом шаге, не оставил на сервере ничего.
+///
+/// ## Хвост: `s37` → `s39` → `s44`
+///
+/// До 16 августа 2026 церемония звала [onDone] и человек оказывался прямо в
+/// кабинете. Три экрана, нарисованные для этой минуты, не показывались никогда —
+/// а минута эта единственная в своём роде: числа только что посчитаны, читать
+/// ещё нечего, и человек впервые в жизни установки готов слушать про продукт
+/// целиком. Порядок восстановлен целиком и точно, ничего не выкинуто:
+///
+/// * **`s37`, витрина под натальной картой** — *единственный автоматический
+///   показ витрины в продукте*. Все остальные продающие экраны человек
+///   открывает сам: ткнув в закрытую главу, нажав «Вся Alma», зайдя в
+///   настройки. Без этого шага денежный слой стоит на одних стенах — то есть
+///   существует только для тех, кто уже упёрся в закрытую дверь;
+/// * **`s39`, пред-вопрос про уведомления** — обязателен **до** системного
+///   диалога, и это не вежливость. iOS даёт одну попытку на установку; о том,
+///   почему её нельзя тратить без пре-аска, подробно в [PushAskScreen];
+/// * **`s44`, вход** — пропускаемый, но показывается. Гость должен узнать, что
+///   карта может следовать за ним на другой телефон: тот, кто не знал этого в
+///   день прихода, узнаёт об этом в день, когда телефон уже поменял, — и узнаёт
+///   вместе с тем, что покупки остались на старом.
+///
+/// **Маршрутами поверх путешествия, а не состоянием внутри него.** Каждый из
+/// трёх экранов уже умеет уходить сам — «Skip for now», «Not now», стрелка
+/// назад, — и все три зовут `maybePop`. Положенные сюда состоянием, они бы этот
+/// выход потеряли: `maybePop` на корневом маршруте не делает ничего.
 class JourneyScreen extends StatefulWidget {
   const JourneyScreen({super.key, required this.onDone});
 
@@ -173,7 +203,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
       if (!mounted) return;
       setState(() => _saving = false);
       // Кто пришёл вторым, тот и уводит.
-      if (_ceremonyPlayed) widget.onDone();
+      if (_ceremonyPlayed) _leave();
     } on AmbiguousBirthTime catch (fork) {
       // Не отказ, а вопрос: церемония замирает и ждёт ответа.
       if (mounted) {
@@ -233,7 +263,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
                     // Церемония доиграла. Уходим, только когда и сохранение
                     // закончилось: сцена, ушедшая раньше ответа сервера,
                     // показала бы пустой кабинет.
-                    if (mounted && !_saving) widget.onDone();
+                    if (mounted && !_saving) _leave();
                     _ceremonyPlayed = true;
                   },
                 ),
@@ -298,6 +328,43 @@ class _JourneyScreenState extends State<JourneyScreen> {
   /// Церемония доиграла до конца. Нужно, чтобы уйти в кабинет тому, у кого
   /// сохранение оказалось дольше девяти с половиной секунд.
   bool _ceremonyPlayed = false;
+
+  /// Хвост уже идёт. Позвать его пытаются двое — доигравшая церемония и
+  /// закончившееся сохранение, — и кто из них придёт вторым, заранее неизвестно
+  /// (в этом весь смысл `_ceremonyPlayed`). Второй зов обязан не сделать
+  /// ничего: три экрана, выложенные в стек дважды, человек проходил бы дважды.
+  bool _leaving = false;
+
+  /// Хвост путешествия, а за ним — кабинет.
+  ///
+  /// Порядок точный и целиком: `s37` → `s39` → `s44` → «Сегодня». Почему
+  /// именно так и почему маршрутами — в шапке [JourneyScreen].
+  Future<void> _leave() async {
+    if (_leaving) return;
+    _leaving = true;
+    // Навигатор берётся до первого `await`: после него `context` может уже не
+    // принадлежать дереву, и `Navigator.of` на нём падает.
+    final navigator = Navigator.of(context, rootNavigator: true);
+    // Витрина ведёт натальной картой: это единственная система, которую
+    // церемония действительно посчитала, и единственная, чьи числа у человека
+    // уже на руках.
+    await navigator.push(CupertinoPageRoute<void>(
+      builder: (context) => const OfferScreen(
+        system: SystemSlug.natal,
+        journeyStep: true,
+      ),
+    ));
+    if (!mounted) return;
+    await navigator.push(CupertinoPageRoute<void>(
+      builder: (context) => const PushAskScreen(),
+    ));
+    if (!mounted) return;
+    await navigator.push(CupertinoPageRoute<void>(
+      builder: (context) => const SignInScreen(),
+    ));
+    if (!mounted) return;
+    widget.onDone();
+  }
 
   static String _roman(int n) => const ['I', 'II', 'III', 'IV', 'V', 'VI'][n - 1];
 

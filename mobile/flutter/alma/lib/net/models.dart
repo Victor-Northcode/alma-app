@@ -600,11 +600,17 @@ class Reading {
       );
 }
 
+/// Ответ на запрос главы. Приходит только тогда, когда глава положена: без
+/// права сервер отвечает 402 `locked` и ничего не пишет.
+///
+/// Здесь было поле `preview` — «глава настоящая, но неоплаченная», по которому
+/// экран размывал все абзацы кроме первого. Владелец отменил само правило
+/// (платить за генерацию до покупки), сервер этот ключ больше не шлёт, и поле
+/// снято, чтобы никто не восстановил размытие по мёртвому флагу.
 class ReadingResponse {
   const ReadingResponse({
     required this.reading,
     required this.cached,
-    this.preview,
     this.createdAt,
   });
 
@@ -614,17 +620,11 @@ class ReadingResponse {
   /// `false` значит, что человек только что оплатил само написание.
   final bool cached;
 
-  /// Глава настоящая и неоплаченная: первый абзац показывается открыто,
-  /// остальное под размытием, кнопка открытия сверху. На старых серверах поля
-  /// нет, и это разбирается как «не предпросмотр».
-  final bool? preview;
-
   final String? createdAt;
 
   factory ReadingResponse.fromJson(Map<String, dynamic> json) => ReadingResponse(
         reading: Reading.fromJson((json['reading'] as Map).cast<String, dynamic>()),
         cached: json['cached'] as bool? ?? false,
-        preview: json['preview'] as bool?,
         createdAt: json['created_at'] as String?,
       );
 }

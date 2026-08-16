@@ -148,3 +148,28 @@ def test_editing_the_name_does_not_erase_the_answer(api, auth_headers):
         headers=auth_headers,
     ).json()
     assert edited["on_ambiguous"] == "earlier", "ответ пережил правку имени"
+
+
+def test_the_reading_route_can_actually_build_the_fork(api, auth_headers):
+    """**Регрессия, прожившая незамеченной.**
+
+    Когда три рукописные копии этого ответа сводили в `ambiguity_detail`,
+    в `readings.py` заменили вызов, а импорт добавить забыли. Модуль
+    импортируется — Python ловит неизвестное имя только при исполнении, — и
+    ветка молчала до первого человека, родившегося в час перевода часов: он
+    вместо вопроса получал 500. Тест зовёт ветку по-настоящему.
+    """
+    from alma.api.routers import readings
+
+    assert hasattr(readings, "ambiguity_detail"), (
+        "ambiguity_detail не импортирован в readings.py — развилка ответит 500"
+    )
+    api.post("/v1/profiles", json={**AMBIGUOUS, "is_self": True}, headers=auth_headers)
+    answer = api.post(
+        "/v1/readings",
+        json={"system": "natal", "chapter": "core", "locale": "en"},
+        headers=auth_headers,
+    )
+    assert answer.status_code in (402, 409), answer.text
+    if answer.status_code == 409:
+        assert answer.json()["detail"]["error"] == "ambiguous_birth_time"

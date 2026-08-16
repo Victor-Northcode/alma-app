@@ -202,49 +202,31 @@ def test_a_paid_chapter_is_written_by_the_strong_model(api, auth_headers, script
     assert scripted.calls[0]["model"] == strong
 
 
-def test_locked_chapters_preview_for_real_until_the_allowance_runs_out(
-    api, auth_headers, scripted, monkeypatch
+def test_a_locked_chapter_writes_nothing_and_spends_nothing(
+    api, auth_headers, scripted
 ):
-    """The blurred preview is real prose, capped, and reopens for free.
+    """Закрытая глава не доходит ни до писателя, ни до счётчика денег.
 
-    The owner's design: the first few locked chapters a person opens are
-    genuinely written — marked `preview` for the client to blur — and past
-    the allowance the wall is the wall. A preview already written reopens
-    without a second generation, exactly like a bought chapter.
+    Здесь стоял обратный тест: первые несколько закрытых глав писались
+    по-настоящему (`preview`), клиент размывал их, и допуск задавался
+    `ALMA_PREVIEW_CHAPTERS`. Владелец отменил правило ради экономии на
+    генерации — и отмена проверяется с обоих концов: модель не вызвана, и
+    месячный счёт аккаунта не сдвинулся ни на цент. Второе важнее первого:
+    вызов без записи в счёт был бы дырой в потолке, а не экономией.
     """
-    from alma.config import settings
-
-    monkeypatch.setattr(settings(), "preview_chapters", 2)
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
-    factors = _natal_factors()
-    scripted.responses.extend([_reply(factors), _reply(factors)])
+    scripted.responses.append(_reply(_natal_factors()))
+    user_id = api.get("/v1/auth/session", headers=auth_headers).json()["user_id"]
 
-    first = api.post(
-        "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
-    )
-    assert first.status_code == 200, first.text
-    assert first.json()["preview"] is True
-    _cheap, _mid, strong = models()
-    assert scripted.calls[0]["model"] == strong, "a preview is the real chapter"
+    for chapter in ("career", "love", "shadow"):
+        wall = api.post(
+            "/v1/readings", json={"system": "natal", "chapter": chapter}, headers=auth_headers
+        )
+        assert wall.status_code == 402, wall.text
+        assert wall.json()["detail"]["error"] == "locked"
 
-    second = api.post(
-        "/v1/readings", json={"system": "natal", "chapter": "love"}, headers=auth_headers
-    )
-    assert second.status_code == 200, second.text
-    assert second.json()["preview"] is True
-
-    wall = api.post(
-        "/v1/readings", json={"system": "natal", "chapter": "shadow"}, headers=auth_headers
-    )
-    assert wall.status_code == 402, "past the allowance the wall stands"
-
-    reopened = api.post(
-        "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
-    )
-    assert reopened.status_code == 200
-    assert reopened.json()["preview"] is True
-    assert reopened.json()["cached"] is True
-    assert len(scripted.calls) == 2, "a reopened preview writes nothing new"
+    assert scripted.calls == [], "закрытая глава не должна доходить до писателя"
+    assert _spent(user_id) == 0.0, "стена не стоит денег"
 
 
 # ── which model and how many turns each tier gets ──────────────────────────

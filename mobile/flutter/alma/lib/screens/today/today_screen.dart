@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -6,9 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../design/arrival.dart';
 import '../settings/sign_in_screen.dart';
 import '../../design/buttons.dart';
-import '../../design/metrics.dart';
 import '../../design/palette.dart';
-import '../../design/section_label.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
@@ -22,12 +23,21 @@ import 'today_model.dart';
 
 /// Первая страница кабинета: сегодняшнее небо против карты рождения.
 ///
-/// Порт `mobile/ios/Alma/Screens/Today/TodayScreen.swift`. Один рассказ о дне
-/// под одним именем: экран когда-то говорил одно и то же небо трижды под
-/// заголовками, которые обычный человек не мог разобрать, и владелец спросил,
-/// зачем средний. Честным ответом было «в таком порядке мы их строили» — теперь
-/// блок один, называется так, как это называют люди, и открывает его подписка:
-/// расчёты бесплатны навсегда, продаётся написанное.
+/// Собрана по финальному экрану доски — **s45**. Один рассказ о дне под одним
+/// именем: экран когда-то говорил одно и то же небо трижды под заголовками,
+/// которые обычный человек не мог разобрать, и владелец спросил, зачем средний.
+/// Честным ответом было «в таком порядке мы их строили» — теперь блок один,
+/// называется так, как это называют люди, и открывает его подписка: расчёты
+/// бесплатны навсегда, продаётся написанное.
+///
+/// **Один каркас, два состояния.** До 16 августа 2026 порт был посимвольной
+/// копией s1: строки лежали прямо на ночи, дата пряталась внутри фразы области,
+/// медальон был диском в кольце. s45 — тот же экран, пересобранный: шапка с
+/// лучевым медальоном, стеклянная панель гороскопа, стеклянная панель областей,
+/// где дата вынесена вправо. Бесплатное состояние — **тот же** каркас, в
+/// котором панель гороскопа несёт залоченный блок из s2. Два разных экрана
+/// вместо двух состояний одного — это ровно тот способ, которым две страницы
+/// расходятся молча и навсегда.
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key});
 
@@ -79,8 +89,16 @@ class _TodayScreenState extends State<TodayScreen> {
       },
       children: [
         if (model != null) ...[
-          const SizedBox(height: AlmaMetrics.gapLarge),
-          _DaySection(model: model, subscriber: session.isSubscriber),
+          // 22 от низа шапки до панели — число s45. Раньше здесь стояло 28
+          // (`gapLarge`), потому что панели не было вовсе и отбивка была общей.
+          const SizedBox(height: 22),
+          _HoroscopePanel(model: model, subscriber: session.isSubscriber),
+          // Области — вторая панель, и только подписчику: под замком гороскоп
+          // целиком, а не его первый абзац.
+          if (session.isSubscriber) ...[
+            const SizedBox(height: 14),
+            _AreasPanel(model: model),
+          ],
         ],
         // **План, сказанный словами, тому, у кого его нет.**
         //
@@ -94,8 +112,12 @@ class _TodayScreenState extends State<TodayScreen> {
         // день, и, значит, экран, где причина подписки читается: транзиты над
         // ним движутся, а купленная однажды глава — нет. Исчезает в ту секунду,
         // когда план появляется.
+        //
+        // **На ночи, а не в стекле** — так это нарисовано в s2: панель на этом
+        // экране принадлежит гороскопу, и приглашение, одетое в такую же,
+        // читалось бы вторым гороскопом.
         if (!session.isSubscriber) ...[
-          const SizedBox(height: AlmaMetrics.gapSection),
+          const SizedBox(height: _sectionGap),
           const _PlanInvitation(),
         ],
         // **Карточка «сохрани карту» — гостю, которому есть что терять.**
@@ -107,7 +129,7 @@ class _TodayScreenState extends State<TodayScreen> {
         // ли меня», а не состояние аккаунта, и свежая установка честно
         // является новым поводом спросить.
         if (session.account?.isGuest == true && session.hasBirthData) ...[
-          const SizedBox(height: AlmaMetrics.gapSection),
+          const SizedBox(height: _sectionGap),
           const _SaveAccountCard(),
         ],
       ],
@@ -128,31 +150,27 @@ class _TodayScreenState extends State<TodayScreen> {
     final line = _moonLine(l, model);
     if (line == null) return null;
     return Row(children: [
-      // Глиф засечным и 19-м кеглем — на нативе это `AlmaFonts.display(19)`,
-      // а не строка обычного текста.
+      // Глиф засечным и 19-м кеглем — на доске это `400 19px Playfair`, а не
+      // строка обычного текста.
       Text('☽',
           style: AlmaType.displayL
               .copyWith(fontSize: 19, color: AlmaPalette.goldBright)),
       const SizedBox(width: 8),
-      Text(line, style: AlmaType.meta.copyWith(color: AlmaPalette.muted2)),
+      // Гибкой: строка стоит в колонке шириной с экран минус медальон, и на
+      // языке с длинным именем фазы негибкий текст выдавал бы жёлто-чёрную
+      // ленту переполнения вместо переноса. Поймано замером на 402 точках.
+      Flexible(
+        child: Text(line, style: AlmaType.meta.copyWith(color: AlmaPalette.muted2)),
+      ),
     ]);
   }
 
   String? _moonLine(L l, TodayModel model) {
-    final moon = _moonPhase(model);
+    final moon = model.moonPhase;
     if (moon == null) return null;
     final name = _phaseName(l, moon['phase'] as String? ?? '');
     final lit = ((moon['illumination'] as num?)?.toDouble() ?? 0) * 100;
     return '$name · ${lit.round()} %';
-  }
-
-  Map<String, dynamic>? _moonPhase(TodayModel model) {
-    final sky = model.sky;
-    if (sky is! LoadDone<CalcResult>) return null;
-    final now = sky.value.data['sky_now'];
-    if (now is! Map) return null;
-    final moon = now['moon_phase'];
-    return moon is Map ? moon.cast<String, dynamic>() : null;
   }
 
   String _phaseName(L l, String phase) => switch (phase) {
@@ -171,35 +189,155 @@ class _TodayScreenState extends State<TodayScreen> {
   /// этот экран нарисована в его углу — каждое утро новая.
   Widget? _moonSeal(TodayModel? model) {
     if (model == null) return null;
-    final moon = _moonPhase(model);
+    final moon = model.moonPhase;
     if (moon == null) return null;
     return Padding(
-      padding: const EdgeInsets.only(top: 26),
-      // Дышит, как на iOS: осевший рисунок не замирает — иначе читается как
-      // пропавший. «Анимация пропадает, она должна оставаться».
-      child: Breathing(
-        child: SizedBox(
-          width: 68,
-          height: 68,
-          child: CustomPaint(
-            painter: _MoonPainter(
-              illumination: ((moon['illumination'] as num?)?.toDouble() ?? 0),
-              waxing: moon['waxing'] as bool? ?? true,
-            ),
-          ),
-        ),
+      // 18 сверху — s45; в s1 было 26, и медальон там на 18 точек меньше.
+      padding: const EdgeInsets.only(top: 18),
+      child: _MoonMedallion(
+        illumination: ((moon['illumination'] as num?)?.toDouble() ?? 0),
+        waxing: moon['waxing'] as bool? ?? true,
       ),
     );
   }
 }
 
-/// «Гороскоп на сегодня» — блок дня.
+/* ── стекло ─────────────────────────────────────────────────────────────── */
+
+/// Отбивка между разделами бесплатного экрана.
+///
+/// **Тридцать, а не сорок четыре, и это не вкус.** С `gapSection` бесплатное
+/// «Сегодня» переваливало за нижнюю кромку на 33 точки — измерено на
+/// симуляторе смахом: страница уезжала ровно на столько и возвращалась,
+/// «дёргалась», хотя листать на ней нечего. Тридцать — число самого макета
+/// (s2, отбивка перед «Everything open, every day»); второй раздел получает
+/// его же, потому что 38 точек, которые в макете занимает пилюля между ними, у
+/// нас живут в накладке над экраном, а не в потоке.
+///
+/// Кегль при этом не тронут: тело текста в этом продукте не ужимается никогда.
+const _sectionGap = 30.0;
+
+/// Верхний тон стеклянной панели.
+///
+/// **Числа держатся здесь, а не в `palette.dart`, потому что стекло пока живёт
+/// на одном экране.** Тон 0x10131F в палитре продукта не назван — он пришёл с
+/// доски вместе с панелями (s45, s46). Когда стекло выйдет за «Сегодня», ему
+/// место в палитре; до тех пор именованный токен обещал бы общность, которой
+/// ещё нет.
+const _panelTop = Color(0xFF10131F);
+
+/// Стеклянная панель s45: градиент ночи, золотой кант, радиус 20.
+///
+/// Панель — не карточка: она не отделяет содержимое от экрана, а собирает его в
+/// одно тело, за которым видно то же небо, только размытое. Отсюда и размытие
+/// подложки: без него панель читается плашкой, положенной поверх звёзд, а не
+/// стеклом, лежащим в них.
+///
+/// Вторая панель (области) на доске **без** размытия и с более слабыми
+/// градиентом и кантом — так две панели не спорят за одно и то же внимание.
+class _GlassPanel extends StatelessWidget {
+  const _GlassPanel({
+    required this.child,
+    required this.padding,
+    this.topAlpha = 0.72,
+    this.bottomAlpha = 0.55,
+    this.borderAlpha = 0.28,
+    this.blur = true,
+  });
+
+  final Widget child;
+  final EdgeInsets padding;
+  final double topAlpha;
+  final double bottomAlpha;
+  final double borderAlpha;
+  final bool blur;
+
+  static final _radius = BorderRadius.circular(20);
+
+  @override
+  Widget build(BuildContext context) {
+    final panel = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        borderRadius: _radius,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _panelTop.withValues(alpha: topAlpha),
+            AlmaPalette.night850.withValues(alpha: bottomAlpha),
+          ],
+        ),
+        border: Border.all(color: AlmaPalette.gold.withValues(alpha: borderAlpha)),
+      ),
+      child: child,
+    );
+    if (!blur) return panel;
+    // `blur(10px)` в CSS — гауссиана со стандартным отклонением в половину
+    // радиуса, отсюда 5.
+    return ClipRRect(
+      borderRadius: _radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: panel,
+      ),
+    );
+  }
+}
+
+/// Подпись раздела **внутри** панели: надзаголовок и линия до правого канта.
+///
+/// Не `SectionLabel`: тот отдаёт подписи 30.5 % ширины, потому что на голой
+/// странице «ГОРОСКОП НА СЕГОДНЯ» переносится ровно так же, как на нативном
+/// кадре. Внутри панели доска переноса не делает — подпись стоит строкой, линия
+/// забирает остаток, — и втиснутая в треть панели она встала бы в две строки
+/// там, где в эталоне одна. Запас в 28 точек оставлен линии: он и есть то
+/// «сжимайся, но не исчезай», которое в вёрстке делает `flex`.
+class _PanelLabel extends StatelessWidget {
+  const _PanelLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) => Row(
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: math.max(0, box.maxWidth - 40)),
+            child: Text(text.toUpperCase(), style: AlmaType.overline),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Container(
+              height: 1,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0x00000000),
+                    AlmaPalette.gold.withValues(alpha: 0.4),
+                    const Color(0x00000000),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/* ── гороскоп ───────────────────────────────────────────────────────────── */
+
+/// «Гороскоп на сегодня» — блок дня в стеклянной панели.
 ///
 /// **Только подписчикам, по решению владельца**: не первый абзац, не проба.
 /// Разовая покупка его тоже не открывает — ни блюра, ни пустой карточки. Одна
-/// фраза о том, что это такое и где живёт, и дверь.
-class _DaySection extends StatelessWidget {
-  const _DaySection({required this.model, required this.subscriber});
+/// фраза о том, что это такое и где живёт, и дверь. Панель при этом остаётся
+/// той же самой: подписка меняет то, что внутри, а не форму экрана.
+class _HoroscopePanel extends StatelessWidget {
+  const _HoroscopePanel({required this.model, required this.subscriber});
 
   final TodayModel model;
   final bool subscriber;
@@ -207,28 +345,31 @@ class _DaySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionLabel(l.cabHoroscopeToday),
-        const SizedBox(height: 14),
-        if (subscriber) ...[
-          ..._voice(l),
-          const SizedBox(height: 4),
-          ..._areas(l),
-        ] else ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
-            child: Text(l.cabHoroscopeLocked, style: AlmaType.body),
-          ),
-          AlmaActionRow(
-            label: l.cabHoroscopeOpen,
-            onTap: () => openOffer(context),
-          ),
+    return _GlassPanel(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _PanelLabel(l.cabHoroscopeToday),
+          if (subscriber) ..._voice(l) else ..._locked(context, l),
         ],
-      ],
+      ),
     );
   }
+
+  /// Залоченное состояние — блок из s2, целиком: строка о том, что это такое и
+  /// когда приходит, и строка-дверь. Ни блюра поверх настоящего текста, ни
+  /// пустой карточки: показывать размытым то, за что просят денег, — это
+  /// обещание, которого продукт не давал.
+  List<Widget> _locked(BuildContext context, L l) => [
+        const SizedBox(height: 20),
+        Text(l.cabHoroscopeLocked, style: AlmaType.body),
+        const SizedBox(height: 6),
+        AlmaActionRow(
+          label: l.cabHoroscopeOpen,
+          onTap: () => openOffer(context),
+        ),
+      ];
 
   List<Widget> _voice(L l) {
     switch (model.line) {
@@ -237,7 +378,9 @@ class _DaySection extends StatelessWidget {
         // точка и подпись «читаю твою карту» над пустотой, и полминуты это
         // выглядело сломанным экраном. В макете (s27) на месте будущего текста
         // лежат заготовки строк, по которым идёт блик: человек видит, сколько
-        // текста придёт и куда он ляжет, ещё до первого слова.
+        // текста придёт и куда он ляжет, ещё до первого слова. Заготовки лежат
+        // **в той же панели**, в которой встанет текст, — иначе страница
+        // прыгнет в момент, когда он придёт.
         //
         // Числа макета: отбивка 24 сверху и 18 снизу у строки присутствия,
         // строки высотой 15 через 13, ширины 100/94/62 %, блик 1.9 с линейно
@@ -266,19 +409,19 @@ class _DaySection extends StatelessWidget {
           ),
         ];
       case LoadDone<ReadingResponse>(value: final answer):
-        // Подписчику — весь день; остальным первая строка. Сейчас, до экрана
-        // покупок, показывается всё тело: тестовый аккаунт владельца подписан.
+        // Первый абзац в 14 точках под подписью, соседние — в 8 друг от друга:
+        // числа s45 и s1.
         return [
-          for (final paragraph in answer.reading.body)
+          for (final (i, paragraph) in answer.reading.body.indexed)
             Padding(
-              padding: const EdgeInsets.only(top: 6, bottom: 8),
+              padding: EdgeInsets.only(top: i == 0 ? 14 : 8),
               child: Text(paragraph, style: AlmaType.dayVoice),
             ),
         ];
       case LoadFailed<ReadingResponse>(error: final error):
         return [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 6),
+            padding: const EdgeInsets.only(top: 14),
             child: Text(
               error is ServerRefused && error.message.isNotEmpty
                   ? error.message
@@ -291,23 +434,57 @@ class _DaySection extends StatelessWidget {
         return const [];
     }
   }
+}
 
-  /// Четыре области жизни, у каждой ближайший контакт — или честное «здесь
-  /// сегодня тихо». Пустая область, заполненная чем-нибудь, была бы ровно тем
-  /// провалом, ради избегания которого экран существует: это строка, которую
-  /// не может написать ни один гороскоп по знаку Солнца.
-  List<Widget> _areas(L l) {
+/* ── области ────────────────────────────────────────────────────────────── */
+
+/// Четыре области жизни, у каждой ближайший контакт — или честное «здесь
+/// сегодня тихо».
+///
+/// Пустая область, заполненная чем-нибудь, была бы ровно тем провалом, ради
+/// избегания которого экран существует: это строка, которую не может написать
+/// ни один гороскоп по знаку Солнца.
+///
+/// **Дата вынесена из предложения на правый край панели.** В s1 она стояла
+/// внутри фразы — «Сатурн сейчас соединяется с твоей Серединой неба, 18
+/// августа», — и четыре такие строки читались одним слипшимся абзацем. На s45
+/// строка отвечает «что», а колонка справа — «когда», и глаз берёт даты
+/// столбцом, не перечитывая фразы.
+class _AreasPanel extends StatelessWidget {
+  const _AreasPanel({required this.model});
+
+  final TodayModel model;
+
+  /// Порядок серверный, зеркалится здесь, чтобы двое молча не разошлись в том,
+  /// что идёт первым.
+  static const _order = ['work', 'love', 'money', 'body'];
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final rows = _rows(l);
+    if (rows.isEmpty) return const SizedBox.shrink();
+    return _GlassPanel(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      topAlpha: 0.6,
+      bottomAlpha: 0.45,
+      borderAlpha: 0.2,
+      blur: false,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: rows),
+    );
+  }
+
+  List<Widget> _rows(L l) {
     final sky = model.sky;
     // Пока небо считается, области стоят заготовками — по макету s27: золотая
-    // метка 52×11 и строка под ней, отбивка 30 у первой группы и 22 у
-    // остальных (первая получает 26, потому что четыре точки над ней уже
-    // отдал `build`). Заготовка ничего не обещает про содержание: она держит
-    // место, чтобы страница не прыгнула, когда придут настоящие строки.
+    // метка 52×11 и строка под ней, 12 между ними и 22 между группами.
+    // Заготовка ничего не обещает про содержание: она держит место, чтобы
+    // страница не прыгнула, когда придут настоящие строки.
     if (sky is LoadRunning<CalcResult>) {
       return [
         for (var i = 0; i < 4; i++)
           Padding(
-            padding: EdgeInsets.only(top: i == 0 ? 26 : 22),
+            padding: EdgeInsets.only(top: i == 0 ? 0 : 22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -329,72 +506,249 @@ class _DaySection extends StatelessWidget {
       ];
     }
     if (sky is! LoadDone<CalcResult>) return const [];
-    final data = sky.value.data;
 
-    // **Оба списка, и пропуск одного — то, что опустошало экран.** `active` —
-    // что в орбе прямо сейчас, `upcoming` — что на подходе; читая только
-    // первый, владелец открыл гороскоп, где все четыре области сказали «тихо».
-    // Они говорили правду про active — а в upcoming стояло сорок контактов.
-    final hits = <Map<String, dynamic>>[
-      ...(data['active'] as List? ?? const []).whereType<Map>().map((e) => e.cast<String, dynamic>()),
-      ...(data['upcoming'] as List? ?? const []).whereType<Map>().map((e) => e.cast<String, dynamic>()),
-    ];
+    final rows = <Widget>[];
+    for (final area in _order) {
+      final hit = model.nearest(area);
+      if (rows.isNotEmpty) {
+        rows.add(const SizedBox(height: 12));
+        rows.add(Container(
+          height: 1,
+          color: AlmaPalette.body.withValues(alpha: 0.08),
+        ));
+        rows.add(const SizedBox(height: 12));
+      }
+      rows.add(_AreaRow(area: area, hit: hit));
+    }
+    return rows;
+  }
+}
 
-    // Порядок серверный, зеркалится здесь, чтобы двое молча не разошлись в
-    // том, что идёт первым.
-    const order = ['work', 'love', 'money', 'body'];
+/// Одна область: имя слева, дата справа, фраза под ними.
+class _AreaRow extends StatelessWidget {
+  const _AreaRow({required this.area, required this.hit});
 
-    return [
-      for (final area in order)
-        Padding(
-          padding: const EdgeInsets.only(top: 14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+  final String area;
+
+  /// Ближайший контакт или `null` — «здесь сегодня тихо».
+  final Map<String, dynamic>? hit;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final quiet = hit == null;
+    final exact = hit?['exact'] as String?;
+    final day = exact == null ? null : DateTime.tryParse(exact);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Expanded(
+              child: Text(
                 CabinetWords.area(l, area),
                 style: AlmaType.meta.copyWith(
-                  color: AlmaPalette.goldBright,
+                  // Тихая область не золотится: у неё нечего подсвечивать, и
+                  // ряд золотых меток над «здесь сегодня тихо» обещал бы
+                  // четыре события там, где их два.
+                  color: quiet
+                      ? AlmaPalette.body.withValues(alpha: 0.6)
+                      : AlmaPalette.goldBright,
                   fontWeight: FontWeight.w500,
+                  // Вес вариативному шрифту задаётся осью: один `fontWeight`
+                  // выбирает ближайший **объявленный** инстанс, а объявлен один,
+                  // и метка молча оставалась тонкой. См. `typography.dart`.
+                  fontVariations: const [FontVariation('wght', 500)],
                 ),
               ),
-              const SizedBox(height: 3),
-              Builder(builder: (context) {
-                final mine = hits.where((h) => h['area'] == area).toList()
-                  ..sort((a, b) => ((b['urgency'] as num?) ?? 0)
-                      .compareTo((a['urgency'] as num?) ?? 0));
-                if (mine.isEmpty) {
-                  return Text(l.cabAreaQuiet, style: AlmaType.meta);
-                }
-                return Text(_sentence(l, mine.first), style: AlmaType.meta);
-              }),
+            ),
+            // Дата — только когда она у движка есть: контакту, уже прошедшему
+            // точность, выдумывать «сегодня» нельзя именно на этом экране.
+            if (day != null) ...[
+              const SizedBox(width: 12),
+              Text(
+                // «Aug 18», а не «August 18»: в колонке справа полное имя
+                // месяца съедало бы половину строки области.
+                DateFormat.MMMd(l.localeName).format(day.toLocal()),
+                style: AlmaType.numeral.copyWith(fontSize: 13),
+              ),
             ],
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          quiet ? l.cabAreaQuiet : '${_phrase(l, hit!)}.',
+          style: AlmaType.meta.copyWith(
+            height: 1.5,
+            color: AlmaPalette.body.withValues(alpha: quiet ? 0.55 : 0.78),
           ),
         ),
-    ];
+      ],
+    );
   }
 
-  /// «Сатурн сейчас и Середина неба в твоей карте: соединение, 14 августа.»
-  /// Дата — только когда она у движка есть: контакту, уже прошедшему точность,
-  /// выдумывать «сегодня» нельзя именно на этом экране.
-  String _sentence(L l, Map<String, dynamic> hit) {
-    final phrase = CabinetWords.contact(
-      l,
-      transiting: hit['transiting'] as String? ?? '',
-      aspect: hit['aspect'] as String? ?? '',
-      natal: hit['natal'] as String? ?? '',
-    );
-    final exact = hit['exact'] as String?;
-    final day = exact == null ? null : DateTime.tryParse(exact);
-    if (day == null) return '$phrase.';
-    return '$phrase, ${DateFormat.MMMMd(l.localeName).format(day.toLocal())}.';
+  /// «Сатурн сейчас соединяется с твоей Серединой неба» — без даты: она стоит
+  /// колонкой справа.
+  String _phrase(L l, Map<String, dynamic> hit) => CabinetWords.contact(
+        l,
+        transiting: hit['transiting'] as String? ?? '',
+        aspect: hit['aspect'] as String? ?? '',
+        natal: hit['natal'] as String? ?? '',
+      );
+}
+
+/* ── медальон ───────────────────────────────────────────────────────────── */
+
+/// Печать дня: лучевой венец, а внутри него луна сегодняшней фазы.
+///
+/// **Кольцо стало венцом.** В s1 медальон был диском в тонком золотом кольце —
+/// две окружности, между которыми ничего не происходит. На s45 вокруг луны
+/// стоит венец из тонких лучей, и он медленно поворачивается: 80 секунд на
+/// оборот — движение, которое нельзя поймать взглядом, но которое видно, если
+/// вернуться к экрану через минуту. Это то же «небо движется, интерфейс — нет»,
+/// что и везде: медальон — небо, а не элемент управления.
+class _MoonMedallion extends StatefulWidget {
+  const _MoonMedallion({required this.illumination, required this.waxing});
+
+  final double illumination;
+  final bool waxing;
+
+  /// Числа s45: коробка 86, диск 52 по центру, лучи от 0.52 до 0.76 радиуса
+  /// маски (то есть от 31.6 до края коробки).
+  static const box = 86.0;
+  static const disc = 52.0;
+
+  @override
+  State<_MoonMedallion> createState() => _MoonMedallionState();
+}
+
+class _MoonMedallionState extends State<_MoonMedallion>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _spin = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 80),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // «Меньше движения» оставляет венец неподвижным — не замедленным:
+      // половина движения читается как подтормаживание.
+      final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+      if (!still) _spin.repeat();
+    });
   }
+
+  @override
+  void dispose() {
+    _spin.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _MoonMedallion.box,
+      height: _MoonMedallion.box,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          AnimatedBuilder(
+            animation: _spin,
+            builder: (context, _) => CustomPaint(
+              size: const Size.square(_MoonMedallion.box),
+              painter: _RayCrownPainter(turn: _spin.value),
+            ),
+          ),
+          // Дышит, как на доске (7 с туда-обратно): осевший рисунок не
+          // замирает — иначе читается как пропавший. «Анимация пропадает, она
+          // должна оставаться».
+          Breathing(
+            child: SizedBox(
+              width: _MoonMedallion.disc,
+              height: _MoonMedallion.disc,
+              child: CustomPaint(
+                painter: _MoonPainter(
+                  illumination: widget.illumination,
+                  waxing: widget.waxing,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Венец: 45 лучей через 8°, каждый шириной 2.4°, гаснущие с обоих концов.
+///
+/// Кольцевая маска доски — радиальный градиент с мягкими краями (прозрачно до
+/// 0.52 радиуса, золото с 0.54 по 0.72, прозрачно к 0.76); радиус там считается
+/// до дальнего угла коробки, отсюда 0.707 в долях стороны.
+class _RayCrownPainter extends CustomPainter {
+  const _RayCrownPainter({required this.turn});
+
+  /// Доля оборота, 0…1.
+  final double turn;
+
+  static const _rays = 45;
+  static const _width = 2.4 * math.pi / 180;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centre = size.center(Offset.zero);
+    // Дальний угол квадрата — то, от чего CSS считает проценты радиального
+    // градиента.
+    final reach = size.width * 0.7071;
+    final gold = AlmaPalette.gold.withValues(alpha: 0.55);
+    final paint = Paint()
+      ..shader = RadialGradient(
+        radius: 0.7071,
+        colors: [
+          gold.withValues(alpha: 0),
+          gold,
+          gold,
+          gold.withValues(alpha: 0),
+        ],
+        stops: const [0.52, 0.54, 0.72, 0.76],
+      ).createShader(Offset.zero & size);
+
+    final path = Path();
+    for (var i = 0; i < _rays; i++) {
+      final a = turn * 2 * math.pi + i * 2 * math.pi / _rays;
+      path.moveTo(centre.dx, centre.dy);
+      path.arcTo(
+        Rect.fromCircle(center: centre, radius: reach),
+        a - _width / 2,
+        _width,
+        false,
+      );
+      path.close();
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _RayCrownPainter old) => old.turn != turn;
 }
 
 /// Луна медальона: диск и тень, посчитанные из освещённости.
 ///
 /// Тень — второй круг, сдвинутый по горизонтали: на растущей луне он уходит
-/// влево, на убывающей вправо. Та же геометрия, что у `MoonMedallion` на iOS.
+/// влево, на убывающей вправо.
+///
+/// **Геометрия оставлена своя, а не снята с доски.** На s45 освещённая доля
+/// вырезана эллипсом `ellipse(74% 100% at 74% 50%)`, и это выражение при любой
+/// освещённости от половины и выше накрывает диск целиком: 74 % там нарисованы
+/// полной луной. Иллюстрации это не мешает, живому экрану — мешает ровно так,
+/// как уже случалось здесь однажды: рядом со строкой «убывающий серп · 7 %»
+/// стояла полная луна, и владелец это увидел. Со сдвинутой тенью 74 % выглядят
+/// теми же 74 %, а 7 % остаются серпом.
 class _MoonPainter extends CustomPainter {
   _MoonPainter({required this.illumination, required this.waxing});
 
@@ -403,29 +757,16 @@ class _MoonPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final centre = Offset(size.width / 2, size.height / 2);
-    // Диск заметно меньше кольца — воздух между ними и есть «печать»; при
-    // 0.36 диск почти касался кольца, и медальон читался как кнопка. Сверено
-    // с нативным кадром бок о бок на одном симуляторе.
-    final radius = size.width * 0.30;
-
-    // Кольцо вокруг — золотая волосяная линия.
-    canvas.drawCircle(
-      centre,
-      size.width * 0.47,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = AlmaPalette.gold.withValues(alpha: 0.35),
-    );
+    final centre = size.center(Offset.zero);
+    final radius = size.width / 2;
 
     // **Ночная сторона и обводка рисуются всегда, свет ложится поверх.**
     //
     // Порядок был обратный — светлый диск, а сверху тень, — и в новолуние от
-    // медальона не оставалось ничего: чёрный кружок без края. На нативе в ту же
+    // медальона не оставалось ничего: чёрный кружок без края. На доске в ту же
     // ночь виден тёмно-синий диск в тонкой золотой обводке, потому что там
-    // ночная сторона это заливка, а не то, чем закрашивают свет
-    // (`MoonMedallion.swift`: fill Night700 0.9, stroke Gold 0.3 шириной 0.7).
+    // ночная сторона это заливка, а не то, чем закрашивают свет (s45: заливка
+    // Night700 0.9, кант Gold 0.35 шириной 0.7).
     canvas.drawCircle(
       centre,
       radius,
@@ -437,14 +778,10 @@ class _MoonPainter extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 0.7
-        ..color = AlmaPalette.gold.withValues(alpha: 0.3),
+        ..color = AlmaPalette.gold.withValues(alpha: 0.35),
     );
 
     // Освещённая доля: диск света, из которого вырезан сдвинутый круг тени.
-    // Сдвиг растёт с освещённостью — в новолуние тень концентрична и съедает
-    // весь свет, в полнолуние ушла на два радиуса. Первый порт перепутал
-    // направление роста: при серпе в 7% луна рисовалась полной. Найдено на
-    // экране, рядом со строкой «убывающий серп · 7 %».
     if (illumination > 0.005) {
       // Сдвиг растёт **с** освещённостью: в новолуние тень концентрична и
       // съедает весь свет, в полнолуние ушла на два радиуса. Написанное
@@ -474,6 +811,8 @@ class _MoonPainter extends CustomPainter {
       old.illumination != illumination || old.waxing != waxing;
 }
 
+/* ── продажа ────────────────────────────────────────────────────────────── */
+
 /// Открыть витрину планов.
 ///
 /// `rootNavigator`, потому что вкладка «Мои системы» держит свой стек, а
@@ -487,9 +826,8 @@ void openOffer(BuildContext context, {SystemSlug? system}) {
 
 /// План, объяснённый там, где видно, зачем он.
 ///
-/// Порт `PlanInvitation` из `TodayScreen.swift`: заголовок, что внутри, одна
-/// кнопка. Не карточка и не баннер — три строки на ночи, как всё остальное на
-/// этом экране.
+/// Блок из s2: заголовок, что внутри, одна кнопка. Не карточка и не баннер —
+/// три строки на ночи, как всё остальное на этом экране.
 class _PlanInvitation extends StatelessWidget {
   const _PlanInvitation();
 

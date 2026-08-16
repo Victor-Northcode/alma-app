@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -66,10 +64,29 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   Reading? _reading;
 
-  /// Глава пришла как **превью**: сервер написал её по-настоящему, но она
-  /// платная, и читателю положен только вкус. Порт этот флаг не читал вовсе —
-  /// платные главы показывались целиком и бесплатно.
-  bool _preview = false;
+  /// Права на эту главу нет — на экране стена S26, и запроса не будет.
+  ///
+  /// **Здесь стоял `_preview`, и это отменённое правило.** Платная глава
+  /// приезжала *написанной*: сервер сочинял её целиком, помечал ответ
+  /// `preview`, экран показывал первый абзац и размывал остальные. Владелец
+  /// снял правило — «мы не должны сразу писать всю главу, пока у человека нет
+  /// подписки или купленного», — потому что за каждый такой показ платили мы,
+  /// до всякого решения о покупке. Поэтому размытой пробы больше нет вовсе:
+  /// текста не написано, и экран не должен делать вид, что он есть.
+  ///
+  /// Считается **до** запроса, из оглавления (`ChapterEntry.open`) — того
+  /// самого, которое только что показал экран системы, — поэтому кнопка стоит
+  /// на первом кадре, а не после ответа сервера.
+  bool _locked = false;
+
+  /// Право есть, текста ещё нет: сервер сейчас пишет главу.
+  ///
+  /// Отдельно от `_loading`, потому что ожиданий два и они разной длины.
+  /// Оглавление — обычный GET на десятки миллисекунд, письмо — сорок-девяносто
+  /// секунд. «Пишу эту главу…» с рисунком принадлежит второму; показывать его
+  /// на первом значило обещать текст ещё до того, как выяснилось, положен ли
+  /// он вообще.
+  bool _writing = false;
   ChapterList? _list;
   AlmaError? _failure;
   bool _loading = true;
@@ -97,11 +114,59 @@ class _ChapterScreenState extends State<ChapterScreen> {
     super.didChangeDependencies();
     if (!_started) {
       _started = true;
+      // **Право спрашивается до первого кадра, а не после первого ответа.**
+      //
+      // В главу заходят с экрана системы, который только что показал
+      // оглавление; клиент помнит его (`AlmaClient.knownChapters`), и этого
+      // достаточно, чтобы нарисовать стену сразу — так же, как эталон рисует
+      // её на s26: заголовок, объяснение, одна кнопка. Раньше здесь начинался
+      // запрос, экран показывал «Пишу эту главу…», и дверь появлялась только
+      // после ответа сервера.
+      final session = SessionScope.of(context);
+      final known =
+          session.client.knownChapters(widget.system, locale: session.locale);
+      // Заодно шапка «4 / 16» встаёт правильной с первого кадра.
+      if (known != null) _list = known;
+      final right = _right(session);
+      _locked = right == false;
+      // Право известно и оно есть — значит, ждать действительно текста, и
+      // «Пишу эту главу…» встаёт сразу, как вставало всегда. Пока право
+      // неизвестно (оглавления не привозили), экран молчит: показывать
+      // ожидание текста тому, кому текст, возможно, не положен, — то же
+      // обещание, ради снятия которого всё это и делалось.
+      _writing = right == true;
       _load();
     }
   }
 
-  Future<void> _load() async {
+  /// Открыта ли показываемая глава. `null` — пока неизвестно.
+  ///
+  /// **Права аккаунта спрашиваются первыми, и только на «да».** Открытая
+  /// система открыта во всех своих главах — сервер собирает `unlocked` именно
+  /// так и купленную в одиночку главу туда не кладёт, — а права обновляются
+  /// покупкой сразу, тогда как оглавление в памяти могло быть привезено до
+  /// неё. Порядок «сначала список» показывал бы стену тому, кто только что
+  /// заплатил, и это худшая из возможных ошибок здесь.
+  ///
+  /// Обратное неверно: «система не куплена» ещё не значит «эта глава закрыта»
+  /// — бесплатная глава платной системы открыта, — поэтому отрицательный ответ
+  /// даёт только оглавление. В нём `open` считается тем же
+  /// `entitlements.check`, что и стена в `POST /v1/readings`.
+  bool? _right(AlmaSession session, {ChapterList? from}) {
+    if (session.entitlements.opened(widget.system)) return true;
+    final list = from ?? _list;
+    if (list != null) {
+      for (final entry in list.chapters) {
+        if (entry.slug == _showing) return entry.open;
+      }
+    }
+    return null;
+  }
+
+  /// [relist] — перечитать оглавление с сервера, а не верить памяти. Нужно
+  /// после возврата с витрины: покупка меняет право, и старый список сказал бы
+  /// «закрыто» тому, кто только что заплатил.
+  Future<void> _load({bool relist = false}) async {
     final session = SessionScope.of(context);
     setState(() {
       _loading = true;
@@ -110,8 +175,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
       _armed = false;
     });
     try {
-      final list = _list ??
-          await session.client.chapters(widget.system, locale: session.locale);
       // **Оглавление показывается, как только пришло, а не вместе с текстом.**
       //
       // Список глав — обычный GET и отвечает мгновенно; глава пишется 40–90
@@ -119,7 +182,27 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // эту минуту, и счётчик печатал запасную единицу: открытая седьмая глава
       // весь показ «Пишу эту главу…» держала в шапке «1 / 16». Снято на
       // симуляторе 13 августа 2026.
-      if (mounted && _list == null) setState(() => _list = list);
+      final list = (relist || _list == null)
+          ? await session.client.chapters(widget.system, locale: session.locale)
+          : _list!;
+      if (!mounted) return;
+      setState(() {
+        _list = list;
+        _locked = _right(session, from: list) == false;
+      });
+      // **Закрытая глава не спрашивает сервер вовсе.** Не потому, что сервер
+      // ответит отказом — он ответит, 402 `locked`, — а потому, что просить
+      // текст, который решено не писать, значит ждать впустую на глазах у
+      // человека, которому нужна кнопка.
+      //
+      // Признак перелистывания снимается здесь же: страница доехала, пусть и
+      // до стены. Иначе протяжка в закрытую главу оставляла бы жест
+      // заблокированным до следующего удачного чтения.
+      if (_locked) {
+        setState(() => _advancing = false);
+        return;
+      }
+      setState(() => _writing = true);
       final response = await session.client.reading(
         system: widget.system,
         chapter: _showing,
@@ -133,17 +216,27 @@ class _ChapterScreenState extends State<ChapterScreen> {
         final route = ModalRoute.of(context);
         if (route == null || route.isCurrent) readingNow.value = true;
         setState(() {
-          _list = list;
           _reading = response.reading;
-          _preview = response.preview ?? false;
           _advancing = false;
         });
       }
     } on AlmaError catch (error) {
       if (mounted) setState(() => _failure = error);
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _writing = false;
+        });
+      }
     }
+  }
+
+  /// Вернулись с витрины. Право могло измениться — перечитываем оглавление у
+  /// сервера и, если глава открылась, тем же путём идём за текстом: покупка
+  /// это и есть то, после чего глава пишется целиком.
+  Future<void> _afterOffer() async {
+    if (mounted) await _load(relist: true);
   }
 
   ChapterEntry? get _entry {
@@ -340,7 +433,12 @@ class _ChapterScreenState extends State<ChapterScreen> {
   }
 
   Widget _page(L l) {
-    if (_loading && _reading == null) {
+    // Стена — раньше всего остального, включая ожидание: на закрытой главе
+    // ждать нечего, а кнопка нужна сразу.
+    if (_locked && _reading == null) {
+      return _LockedWall(system: widget.system, onReturned: _afterOffer);
+    }
+    if (_writing && _reading == null) {
       // **Самое долгое ожидание в продукте — сорок-девяносто секунд.**
       //
       // На нативе здесь надпись о том, откуда берётся текст, и рисунок,
@@ -392,8 +490,12 @@ class _ChapterScreenState extends State<ChapterScreen> {
     final failure = _failure;
     // **Стена говорит по-человечески.** Сервер отвечает «natal has not been
     // unlocked yet» — это для разработчика; читателю нужна причина и путь.
+    //
+    // Второй рубеж, а не первый: право теперь читается из оглавления до
+    // запроса, и сюда попадает только случай, когда клиент считал главу
+    // открытой, а сервер отказал, — право истекло между списком и запросом.
     if (failure is ServerRefused && failure.code == 'locked' && _reading == null) {
-      return _LockedWall(system: widget.system);
+      return _LockedWall(system: widget.system, onReturned: _afterOffer);
     }
     // **Совместимости нужен второй человек — и дверь к нему, а не фраза в
     // пустоте.**
@@ -519,46 +621,29 @@ class _ChapterScreenState extends State<ChapterScreen> {
             color: AlmaPalette.ink.withValues(alpha: 0.12),
           ),
           const SizedBox(height: 8),
-          // **Превью: первый абзац читается, остальное под дымкой.**
+          // **Размытой пробы здесь больше нет — и это осознанная отмена.**
           //
-          // Глава написана целиком и настоящая — сервер её действительно
-          // сочинил из этой карты, — но она платная. Показывать всё значит
-          // отдавать товар даром; показывать заглушку значит не показывать
-          // ничего. Первый абзац открыт, дальше размытие и дверь.
-          for (final (i, paragraph) in reading.body.indexed)
+          // Стояло так: платная глава приезжала написанной целиком, с флагом
+          // `preview`; первый абзац читался, остальные шли под `ImageFilter.
+          // blur(5.5)`, а под ними — «Разблокировать». Продающий замысел был
+          // в том, что страница настоящей прозы о тебе убеждает сильнее
+          // шестнадцати закрытых заголовков.
+          //
+          // Владелец отменил его ради денег за генерацию: сервер писал главу
+          // сильной моделью до всякой покупки, то есть платили мы, а решал
+          // потом человек. Теперь текста без права не существует, и размывать
+          // нечего — а рисовать дымку поверх пустоты значило бы врать, что
+          // написанное есть. Закрытая глава показывает стену (`_LockedWall`),
+          // и она честна: заголовок, объяснение, одна кнопка.
+          //
+          // Сюда, к пергаменту, попадает только оплаченный текст — целиком.
+          for (final paragraph in reading.body)
             Padding(
               padding: const EdgeInsets.only(top: 14),
-              child: _preview && i > 0
-                  ? ImageFiltered(
-                      imageFilter: ImageFilter.blur(sigmaX: 5.5, sigmaY: 5.5),
-                      child: Text(paragraph,
-                          style: AlmaType.body.copyWith(
-                              color: AlmaPalette.ink, fontSize: 17, height: 1.6)),
-                    )
-                  : Text(paragraph,
-                      style: AlmaType.body.copyWith(
-                          color: AlmaPalette.ink, fontSize: 17, height: 1.6)),
+              child: Text(paragraph,
+                  style: AlmaType.body.copyWith(
+                      color: AlmaPalette.ink, fontSize: 17, height: 1.6)),
             ),
-          if (_preview) ...[
-            const SizedBox(height: 22),
-            Text(l.cabLockedNote,
-                textAlign: TextAlign.center,
-                style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
-            const SizedBox(height: 14),
-            // Золото — то самое, из дизайн-системы: тёмная текстура и подпись
-            // слоновой костью. Здесь стояла своя кнопка, плоско залитая
-            // `AlmaPalette.gold` с чернильной подписью, — ровно та заливка,
-            // которую `GoldTexture` запрещает словом «никогда». `fills: false`
-            // — как на нативе (`AlmaButtonStyle(kind: .gold, fills: false)`):
-            // дверь обнимает своё слово, а не занимает строку.
-            Center(
-              child: AlmaButton(
-                fills: false,
-                label: l.cabUnlock,
-                onTap: () => _openOffer(context, widget.system),
-              ),
-            ),
-          ],
           if (reading.advice != null) ...[
             const SizedBox(height: 26),
             Container(
@@ -593,9 +678,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
   // Снято только в порте, по его же решению — на нативе `chapterEndOffer`
   // остаётся, и это сознательное расхождение, а не отставание порта.
   //
-  // Дверь на *закрытой* главе цела: `_preview` выше рисует «Разблокировать»,
-  // и это единственный способ её купить. Убрано предложение поверх уже
-  // прочитанного, а не путь к покупке.
+  // Дверь на *закрытой* главе цела: стена `_LockedWall` рисует
+  // «Разблокировать», и это единственный способ её купить. Убрано предложение
+  // поверх уже прочитанного, а не путь к покупке.
 
   String _systemName(L l) => switch (widget.system) {
         SystemSlug.natal => l.cabSystemNatal,
@@ -697,10 +782,20 @@ class _CitedLineState extends State<_CitedLine> {
 /// Прежде здесь стояла служебная строка сервера — «natal has not been unlocked
 /// yet», по-английски и про внутренние понятия. Читателю нужно другое: что
 /// именно закрыто, почему это стоит открыть и одна кнопка.
+///
+/// Разметка — s26 эталона, буква в букву: рисунок 200, отбивка 28, заголовок
+/// 24 засечным, отбивка 12, объяснение, отбивка 24, кнопка. И ровно столько:
+/// обещать на стене то, чего пока не написано, нельзя, поэтому ни строки
+/// текста главы, ни дымки на её месте здесь нет.
 class _LockedWall extends StatelessWidget {
-  const _LockedWall({required this.system});
+  const _LockedWall({required this.system, required this.onReturned});
 
   final SystemSlug system;
+
+  /// Витрину закрыли. Право могло измениться — экран обязан перепроверить его
+  /// и, если глава куплена, идти за текстом. Без этого купивший возвращался
+  /// на ту же стену, с которой ушёл платить.
+  final Future<void> Function() onReturned;
 
   @override
   Widget build(BuildContext context) {
@@ -723,7 +818,10 @@ class _LockedWall extends StatelessWidget {
             AlmaButton(
               fills: false,
               label: l.cabUnlock,
-              onTap: () => _openOffer(context, system),
+              onTap: () async {
+                await _openOffer(context, system);
+                await onReturned();
+              },
             ),
           ],
         ),
@@ -737,11 +835,13 @@ class _LockedWall extends StatelessWidget {
 /// Отдельным маршрутом поверх всего, а не листом внутри вкладки: витрина —
 /// это страница, на которую уходят и с которой возвращаются туда же, откуда
 /// пришли, и глава под ней остаётся на своей странице.
-void _openOffer(BuildContext context, SystemSlug? system) {
-  Navigator.of(context, rootNavigator: true).push(
-    CupertinoPageRoute(builder: (context) => OfferScreen(system: system)),
-  );
-}
+///
+/// Ждёт закрытия витрины: вызывающему нужно знать, когда возвращаться к
+/// вопросу о праве.
+Future<void> _openOffer(BuildContext context, SystemSlug? system) =>
+    Navigator.of(context, rootNavigator: true).push(
+      CupertinoPageRoute(builder: (context) => OfferScreen(system: system)),
+    );
 
 /// «Совместимости нужен второй человек» — с рисунком и дверью к нему.
 ///

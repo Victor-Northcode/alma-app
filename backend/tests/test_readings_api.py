@@ -143,16 +143,14 @@ def test_a_reading_is_written_once_and_never_changes(api, auth_headers, scripted
     assert len(scripted.calls) == 1, "the model was called again for a stored reading"
 
 
-def test_a_locked_chapter_never_reaches_the_model(api, auth_headers, scripted, monkeypatch):
+def test_a_locked_chapter_never_reaches_the_model(api, auth_headers, scripted):
     """A paywall that still pays for inference is pointed the wrong way.
 
-    Past the preview allowance, that is — the first few locked chapters are
-    deliberately written for real (`test_readings_budget` holds that flow).
-    This test zeroes the allowance and pins the wall itself.
+    Held without qualification again. Between the two there was an allowance
+    (`ALMA_PREVIEW_CHAPTERS`) under which the first few locked chapters *were*
+    written for real and blurred client-side; the owner cancelled it because
+    the generation was paid for before anybody decided to buy.
     """
-    from alma.config import settings
-
-    monkeypatch.setattr(settings(), "preview_chapters", 0)
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     response = api.post(
         "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
@@ -239,18 +237,14 @@ def test_a_model_that_only_invents_produces_no_reading(api, auth_headers, script
     assert response.json()["detail"]["error"] == "reading_refused"
 
 
-def test_locked_outranks_an_unconfigured_api_key(api, auth_headers, monkeypatch):
+def test_locked_outranks_an_unconfigured_api_key(api, auth_headers):
     """A paywall must answer before the AI does, even with no key set.
 
     No provider override here — the real dependency, with nothing configured.
     Building the provider eagerly made "the AI is unavailable" beat "this is
     locked", which tells the person the product is broken when in fact they
-    simply have not bought it. The preview allowance is zeroed because inside
-    it a locked chapter *is* supposed to reach the model — that is the point.
+    simply have not bought it.
     """
-    from alma.config import settings
-
-    monkeypatch.setattr(settings(), "preview_chapters", 0)
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     response = api.post(
         "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers

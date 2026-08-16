@@ -358,15 +358,15 @@ class Settings(BaseSettings):
     #: is the only turn a free reader gets, it is also the turn that has to
     #: prove what the conversation is. After it, the plan carries the chat.
     free_welcome_bundle: int = Field(default=1, alias="ALMA_WELCOME_BUNDLE")
-    #: How many locked chapters an account may have *really written* before
-    #: paying — the blurred-preview allowance. The owner's design: a locked
-    #: chapter opens as its real first paragraph over the real rest blurred,
-    #: because a page of actual prose about you sells what a locked title
-    #: never did. Three, because each preview is a strong-model write
-    #: (~$0.02–0.10) spent on somebody who has paid nothing: at three the
-    #: worst case stays inside the free month ceiling; at 999 this becomes
-    #: the unlimited variant the owner can switch on with one env var.
-    preview_chapters: int = Field(default=3, alias="ALMA_PREVIEW_CHAPTERS")
+    #: `ALMA_PREVIEW_CHAPTERS` жил здесь и снят вместе с самим превью.
+    #:
+    #: Он задавал, сколько закрытых глав аккаунту напишут по-настоящему до
+    #: оплаты: глава сочинялась целиком, первый абзац показывался, остальное
+    #: размывалось. Владелец отменил это правило — каждое превью стоило записи
+    #: сильной моделью ($0.02–0.10) за того, кто не заплатил ничего. Ручку
+    #: убрали, а не оставили с нулём: настройка, которая ничего не включает,
+    #: обещает включаемость. Правило и причина записаны там, где стоит стена, —
+    #: `api/routers/readings.py`, в `read()`.
     #: Counted per month rather than per day: what runs out for a subscriber is
     #: money, not patience, so a daily allowance large enough to feel like a
     #: subscription would be a promise that stops working on the eighth.

@@ -40,13 +40,44 @@ class TodayModel extends ChangeNotifier {
   Load<CalcResult> sky = const LoadIdle();
   Load<ReadingResponse> line = const LoadIdle();
 
-  /// Луна из расчёта транзитов: освещённость, растёт ли, строка вида
-  /// «убывающий серп · 13%».
-  Map<String, dynamic>? get moonNow {
+  /// Луна из расчёта транзитов: фаза, освещённость, растёт ли.
+  ///
+  /// **Путь именно такой, и он не сокращается.** Здесь лежал геттер, читавший
+  /// `data['moon']`, — движок кладёт луну в `data['sky_now']['moon_phase']`, и
+  /// геттер молча возвращал `null` всегда. Экран этим не пользовался и брал
+  /// фазу сам, поэтому ошибка ничего не ломала и жила незамеченной: мёртвый
+  /// код, отвечающий неправдой, — это ловушка, расставленная следующему.
+  Map<String, dynamic>? get moonPhase {
     final result = sky;
     if (result is! LoadDone<CalcResult>) return null;
-    final moon = result.value.data['moon'];
+    final now = result.value.data['sky_now'];
+    if (now is! Map) return null;
+    final moon = now['moon_phase'];
     return moon is Map ? moon.cast<String, dynamic>() : null;
+  }
+
+  /// Ближайший контакт области или `null` — «здесь сегодня тихо».
+  ///
+  /// **Оба списка, и пропуск одного — то, что опустошало экран.** `active` —
+  /// что в орбе прямо сейчас, `upcoming` — что на подходе; читая только первый,
+  /// владелец открыл гороскоп, где все четыре области сказали «тихо». Они
+  /// говорили правду про `active` — а в `upcoming` стояло сорок контактов.
+  Map<String, dynamic>? nearest(String area) {
+    final result = sky;
+    if (result is! LoadDone<CalcResult>) return null;
+    final data = result.value.data;
+    final hits = <Map<String, dynamic>>[
+      for (final key in const ['active', 'upcoming'])
+        ...(data[key] as List? ?? const [])
+            .whereType<Map>()
+            .map((e) => e.cast<String, dynamic>())
+            .where((e) => e['area'] == area),
+    ];
+    if (hits.isEmpty) return null;
+    // Самый срочный первым — тот же порядок, что у движка.
+    hits.sort((a, b) => ((b['urgency'] as num?) ?? 0)
+        .compareTo((a['urgency'] as num?) ?? 0));
+    return hits.first;
   }
 
   /// Небо считается всем, письмо дня — только тому, кому его покажут.
