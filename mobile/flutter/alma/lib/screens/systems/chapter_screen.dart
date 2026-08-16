@@ -8,6 +8,7 @@ import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/plates.dart';
+import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
@@ -47,6 +48,15 @@ class ChapterScreen extends StatefulWidget {
 class _ChapterScreenState extends State<ChapterScreen> {
   static const _nearMark = 56.0;
   static const _commitMark = 130.0;
+
+  /// Зерно неба главы — «CHAP», буква в букву как в `ChapterScreen.swift`.
+  ///
+  /// **Одно на все сорок одну главу, а не своё у каждой.** Зерно у [NightSky]
+  /// различает *экраны*, чтобы переход между ними был видимым переходом; глава
+  /// — один экран, и перелистывание внутри него меняет текст, а не место, где
+  /// его читают. Небо, пересобранное на каждой протяжке, читалось бы как
+  /// подмена экрана посреди жеста, а не как следующая страница.
+  static const _skySeed = 0x43484150;
 
   /// Какая глава показывается. Начинается с запрошенной; протяжка за конец
   /// заменяет её на следующую — **своим состоянием, не навигацией**: на iOS
@@ -244,60 +254,87 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
     return Scaffold(
       backgroundColor: AlmaPalette.night,
-      body: Container(
-        decoration: _reading == null
-            ? null
-            : const BoxDecoration(gradient: AlmaGradient.parchment),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 10, AlmaMetrics.pad, 0),
-                child: Row(children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: Icon(Icons.arrow_back,
-                        color: _reading == null ? AlmaPalette.gold : AlmaPalette.inkMuted),
-                    padding: EdgeInsets.zero,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '$index / $total',
-                    style: AlmaType.numeral.copyWith(
-                      color: _reading == null ? AlmaPalette.gold : AlmaPalette.inkMuted,
+      // **Фон — нижний слой стопки, а не украшение на содержимом.**
+      //
+      // Ночным состояниям главы — ожиданию письма, стене закрытой системы,
+      // отказу — полагается то же небо, что «Сегодня» и анкете: на s26 и s29 за
+      // содержимым звёзды и туманность. Здесь была ровная заливка ночью, и
+      // экран читался плоским рядом с любым соседним. Пергамент неба не
+      // показывает — там документ, и звёзды под непрозрачным листом стоили бы
+      // только кадров на самом длинном чтении продукта.
+      //
+      // Слоем, а не обёрткой вокруг содержимого: оборачивание меняло бы
+      // глубину поддерева ровно в тот кадр, когда пергамент сменяется ночью, —
+      // то есть на перелистывании, — и `AnimatedSwitcher` терял бы свой элемент
+      // вместе с начатой анимацией. В стопке второй ребёнок всегда `SafeArea`,
+      // и меняется только первый.
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (onParchment)
+            const DecoratedBox(
+              decoration: BoxDecoration(gradient: AlmaGradient.parchment),
+            )
+          else
+            // Настроение заведено ровно для этого экрана: поле приглушено и
+            // кометы нет, потому что продукт здесь — слова, а свет, идущий
+            // поперёк страницы, мешает их читать.
+            const NightSky(
+              mood: SkyMood.reading,
+              seed: _skySeed,
+              child: SizedBox.expand(),
+            ),
+          SafeArea(
+            bottom: false,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 10, AlmaMetrics.pad, 0),
+                  child: Row(children: [
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: Icon(Icons.arrow_back,
+                          color: onParchment ? AlmaPalette.inkMuted : AlmaPalette.gold),
+                      padding: EdgeInsets.zero,
                     ),
-                  ),
-                ]),
-              ),
-              Expanded(
-                // Смена главы — снизу вверх с затуханием, той же кривой turn,
-                // что на iOS: анимация заканчивает движение, начатое пальцем,
-                // и должна выглядеть оседающей страницей, а не новым экраном.
-                child: AnimatedSwitcher(
-                  duration: AlmaMotion.turn,
-                  switchInCurve: AlmaMotion.turnCurve,
-                  switchOutCurve: AlmaMotion.turnCurve.flipped,
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: SlideTransition(
-                      position: Tween(
-                        begin: const Offset(0, 0.12),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: child,
+                    const SizedBox(width: 6),
+                    Text(
+                      '$index / $total',
+                      style: AlmaType.numeral.copyWith(
+                        color: onParchment ? AlmaPalette.inkMuted : AlmaPalette.gold,
+                      ),
                     ),
-                  ),
-                  child: KeyedSubtree(
-                    key: ValueKey(_showing),
-                    child: _page(l),
+                  ]),
+                ),
+                Expanded(
+                  // Смена главы — снизу вверх с затуханием, той же кривой turn,
+                  // что на iOS: анимация заканчивает движение, начатое пальцем,
+                  // и должна выглядеть оседающей страницей, а не новым экраном.
+                  child: AnimatedSwitcher(
+                    duration: AlmaMotion.turn,
+                    switchInCurve: AlmaMotion.turnCurve,
+                    switchOutCurve: AlmaMotion.turnCurve.flipped,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: SlideTransition(
+                        position: Tween(
+                          begin: const Offset(0, 0.12),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      ),
+                    ),
+                    child: KeyedSubtree(
+                      key: ValueKey(_showing),
+                      child: _page(l),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -508,8 +545,15 @@ class _ChapterScreenState extends State<ChapterScreen> {
                 textAlign: TextAlign.center,
                 style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
             const SizedBox(height: 14),
+            // Золото — то самое, из дизайн-системы: тёмная текстура и подпись
+            // слоновой костью. Здесь стояла своя кнопка, плоско залитая
+            // `AlmaPalette.gold` с чернильной подписью, — ровно та заливка,
+            // которую `GoldTexture` запрещает словом «никогда». `fills: false`
+            // — как на нативе (`AlmaButtonStyle(kind: .gold, fills: false)`):
+            // дверь обнимает своё слово, а не занимает строку.
             Center(
-              child: _GoldButton(
+              child: AlmaButton(
+                fills: false,
                 label: l.cabUnlock,
                 onTap: () => _openOffer(context, widget.system),
               ),
@@ -671,7 +715,8 @@ class _LockedWall extends StatelessWidget {
             Text(l.cabLockedNote,
                 textAlign: TextAlign.center, style: AlmaType.meta),
             const SizedBox(height: 24),
-            _GoldButton(
+            AlmaButton(
+              fills: false,
               label: l.cabUnlock,
               onTap: () => _openOffer(context, system),
             ),
@@ -691,33 +736,6 @@ void _openOffer(BuildContext context, SystemSlug? system) {
   Navigator.of(context, rootNavigator: true).push(
     CupertinoPageRoute(builder: (context) => OfferScreen(system: system)),
   );
-}
-
-/// Золотая дверь.
-class _GoldButton extends StatelessWidget {
-  const _GoldButton({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(28),
-        child: Container(
-          height: 54,
-          padding: const EdgeInsets.symmetric(horizontal: 34),
-          decoration: BoxDecoration(
-            color: AlmaPalette.gold,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Center(
-            widthFactor: 1,
-            child: Text(label,
-                style: AlmaType.button.copyWith(color: AlmaPalette.inkOnGold)),
-          ),
-        ),
-      );
 }
 
 /// «Совместимости нужен второй человек» — с рисунком и дверью к нему.
