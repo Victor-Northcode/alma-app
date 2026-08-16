@@ -1,6 +1,7 @@
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/widgets.dart';
+import '../design/plates.dart';
 
 import '../net/alma_client.dart';
 import '../net/models.dart';
@@ -14,9 +15,18 @@ import '../net/models.dart';
 /// могут быть покупки. Вход добавляет к ней имя и делает её долговечной, а не
 /// создаёт заново — поэтому здесь нет состояния «не вошёл, значит ничего нет».
 class AlmaSession extends ChangeNotifier {
-  AlmaSession(this.client);
+  AlmaSession(this.client)
+      : plates = PlateStore(baseUrl: client.baseUrl);
 
   final AlmaClient client;
+
+  /// Склад вклеек глав.
+  ///
+  /// **Живёт на сессии, а не на экране главы.** Диск-кэш имеет смысл ровно
+  /// потому, что переживает уход с экрана: картина в 620×780 скачивается один
+  /// раз за установку, а глава открывается и закрывается десятки раз. Store,
+  /// созданный экраном, качал бы её заново на каждый вход.
+  final PlateStore plates;
 
   AlmaAccount? _account;
   Profile? _profile;

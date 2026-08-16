@@ -181,8 +181,8 @@ class PlateArch extends StatefulWidget {
     required this.store,
     required this.plate,
     required this.numeral,
-    this.width = 148,
-    this.height = 182,
+    this.width = 150,
+    this.height = 188,
   });
 
   /// Откуда брать файл. `null` — сразу запасной вид: так рисуется превью в
@@ -237,11 +237,14 @@ class _PlateArchState extends State<PlateArch> {
     });
   }
 
+  /// Арка: верх — полукруг ровно в половину ширины, низ едва скруглён.
+  /// Эталон (`s5`): рама 153×191 с радиусами 75/75/14/14, картина 150×188
+  /// внутри неё, внутренний штрих 140×178 с радиусами на пять меньше.
   static const _radius = BorderRadius.only(
-    topLeft: Radius.circular(85),
-    topRight: Radius.circular(85),
-    bottomLeft: Radius.circular(12),
-    bottomRight: Radius.circular(12),
+    topLeft: Radius.circular(75),
+    topRight: Radius.circular(75),
+    bottomLeft: Radius.circular(14),
+    bottomRight: Radius.circular(14),
   );
 
   @override
@@ -268,7 +271,7 @@ class _PlateArchState extends State<PlateArch> {
                 border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.5)),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(5),
+                padding: const EdgeInsets.all(5.5),
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     borderRadius: _radius,

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
+import '../../design/plates.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
@@ -400,6 +401,26 @@ class _ChapterScreenState extends State<ChapterScreen> {
         padding: const EdgeInsets.fromLTRB(
             AlmaMetrics.pad, 8, AlmaMetrics.pad, AlmaMetrics.gapSection),
         children: [
+          // **Вклейка — первое, что видно в главе.**
+          //
+          // Виджет арки был собран ещё в нулевом этапе и жил только в
+          // отладочной витрине: карта вклеек на все сорок одну главу есть,
+          // эндпоинт есть, диск-кэш есть, — а на самой главе картины не было
+          // ни одной. В эталоне (`s5`) она стоит над надзаголовком, 150×188,
+          // по центру.
+          //
+          // Главы без арта показывают римскую цифру в той же раме, а не
+          // пустоту: дыра в шесть картин известна и помечена, и подменять её
+          // чужой картинкой нельзя — вклейка не про то, что человек читает,
+          // на платной главе хуже, чем её отсутствие.
+          Center(
+            child: PlateArch(
+              store: SessionScope.of(context).plates,
+              plate: AlmaPlates.name(widget.system, _showing),
+              numeral: _entry?.numeral ?? '',
+            ),
+          ),
+          const SizedBox(height: 26),
           Text(
             '${_entry?.numeral ?? ''} · ${_systemName(l)}'.toLowerCase(),
             style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep),
