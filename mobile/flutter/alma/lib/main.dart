@@ -21,9 +21,7 @@ import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
-import 'design/gallery.dart';
 import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
-import 'design/plates.dart';
 import 'state/session.dart';
 
 void main() => runApp(AlmaApp(
@@ -89,15 +87,7 @@ class _AlmaAppState extends State<AlmaApp> {
             onPrimary: AlmaPalette.inkOnGold,
           ),
         ),
-        // Витрина базовых виджетов вместо приложения — только в сборке с
-        // `--dart-define=ALMA_GALLERY=1`. В обычной сборке ветка мертва и
-        // выкидывается компилятором вместе с экраном.
-        home: DesignGallery.requested
-            // Витрине нужен настоящий склад вклеек, иначе арка показывает
-            // римскую цифру и проверить нечего: цифра — это как раз запасной
-            // вид для главы без арта.
-            ? DesignGallery(plates: PlateStore(baseUrl: widget.client.baseUrl))
-            : const CabinetShell(),
+        home: const CabinetShell(),
       ),
     );
   }
