@@ -1,6 +1,9 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../design/art.dart';
+import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
@@ -9,26 +12,44 @@ import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 
-/// Хаб: восемь систем, сгруппированные по вопросу человека, а не по имени
-/// традиции.
+/// Хаб: восемь систем одной колодой.
 ///
-/// Порт `mobile/ios/Alma/Screens/Systems/SystemsScreen.swift`. Наверху — три
-/// строки собственных позиций (Солнце, Луна, Асцендент), причём с градусами:
-/// градусы — та часть, которая доказывает, что это настоящий расчёт, а не знак
-/// Солнца. Ниже — группы «Кто я», «Прямо сейчас», «В этом году», «Мы вдвоём»,
-/// «Где быть», и отдельным блоком — синтез.
-class SystemsScreen extends StatefulWidget {
+/// **Это полотно, а не список.** Заголовок, счётчик — и сразу восемь карт по
+/// две в ряд, четыре ряда, все на одном экране без прокрутки. Разрезать их
+/// заголовками разделов («кто я», «прямо сейчас», «в этом году») значило бы
+/// вернуть список пунктов меню: полка, с которой берут, читается целиком и
+/// сразу, а полка, разложенная по ящикам, читается по одному ящику за раз.
+///
+/// **Строки Солнца, Луны и Асцендента отсюда ушли.** Они занимали треть
+/// экрана — ровно ту треть, в которой теперь стоят четыре карты. Это решение
+/// владельца, а не оптимизация по месту; см. отчёт о том, где этим числам
+/// теперь жить.
+class SystemsScreen extends StatelessWidget {
   const SystemsScreen({super.key, required this.onOpenSystem});
 
   final void Function(SystemSlug slug) onOpenSystem;
 
-  @override
-  State<SystemsScreen> createState() => _SystemsScreenState();
-}
+  /// Порядок колоды. Задан макетом и не выводится из ответа сервера: хаб
+  /// присылает слаг и состояние, а очерёдность карт — решение дизайна, и
+  /// перестановка на сервере не должна тасовать колоду под рукой у человека.
+  static const _order = <SystemSlug>[
+    SystemSlug.natal,
+    SystemSlug.birthCard,
+    SystemSlug.solarReturn,
+    SystemSlug.astrocartography,
+    SystemSlug.numerology,
+    SystemSlug.transits,
+    SystemSlug.compatibility,
+    SystemSlug.synthesis,
+  ];
 
-class _SystemsScreenState extends State<SystemsScreen> {
-  CalcResult? _portrait;
-  String? _loadedForProfile;
+  /// Номер карты в колоде. Римскими — тем же способом, каким продукт нумерует
+  /// шаги пути и главы системы.
+  static const _roman = <String>['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+
+  /// Зазор между картами. Он же половина бокового поля: карта у края и карта у
+  /// соседки должны отстоять одинаково, иначе полотно косит.
+  static const _gap = 12.0;
 
   @override
   Widget build(BuildContext context) {
@@ -36,32 +57,15 @@ class _SystemsScreenState extends State<SystemsScreen> {
     final l = L.of(context);
     final hub = session.hub;
 
-    final profileId = session.profile?.id;
-    if (profileId != null && profileId != _loadedForProfile) {
-      _loadedForProfile = profileId;
-      session.client.compute(SystemSlug.natal).then((result) {
-        if (mounted) setState(() => _portrait = result);
-      }).catchError((Object _) {
-        // Пиллы — украшение хаба, не его условие: без них экран полон.
-      });
-    }
-
     return ScreenScaffold(
       seed: 0x53595354,
       title: l.tabSystems,
       trailing: _tally(l, hub),
-      children: [
-        ..._pills(l),
-        if (hub != null) ...[
-          const SizedBox(height: 10),
-          ..._groups(l, hub),
-          ..._synthesis(l, hub),
-        ],
-      ],
+      children: hub == null ? const [] : _deck(context, l, hub),
     );
   }
 
-  /// «7/8 рассчитано» — рядом с заголовком, засечным, как на iOS. Слово
+  /// «8/8 рассчитано» — рядом с заголовком, засечным, как на iOS. Слово
   /// счётчика своё, не слово строки: в четырёх языках им нужны разные числа́ —
   /// calculés против calculé, — и одна строка на обе роли уже была ошибкой.
   Widget? _tally(L l, Hub? hub) {
@@ -76,151 +80,84 @@ class _SystemsScreenState extends State<SystemsScreen> {
     );
   }
 
-  /// Солнце, Луна, Асцендент — с градусами и домом. Асцендент существует
-  /// только вместе со временем рождения; запасного варианта нет: у карты без
-  /// горизонта нет восходящего градуса, и строка уходит, а не показывает знак,
-  /// который был бы в полдень.
-  List<Widget> _pills(L l) {
-    final chart = _portrait?.data;
-    if (chart == null) return const [];
-
-    (String, String)? placement(String body, String fallbackSign) {
-      final label = CabinetWords.body(l, body);
-      final placements = chart['placements'];
-      if (placements is Map) {
-        final own = placements[body];
-        if (own is Map) {
-          final formatted = own['formatted'];
-          if (formatted is String) {
-            final houseNumber = (own['house'] as num?)?.toInt();
-            final house = houseNumber == null
-                ? ''
-                : ' · ${CabinetWordsMore.house(l, houseNumber)}';
-            return (label, CabinetWordsMore.spellSigns(l, formatted) + house);
-          }
-        }
-      }
-      final sign = chart[fallbackSign];
-      if (sign is String) return (label, CabinetWordsMore.sign(l, sign));
-      return null;
-    }
-
-    final rows = <(String, String)>[
-      ?placement('sun', 'sun_sign'),
-      ?placement('moon', 'moon_sign'),
+  /// Колода: четыре ряда по две карты, в порядке [_order].
+  ///
+  /// Карт **всегда восемь**, даже если хаб прислал меньше: колода с дырой
+  /// читается как поломка вёрстки, а система, о которой сервер промолчал,
+  /// честнее выглядит приглушённой картой с состоянием «пока нет».
+  List<Widget> _deck(BuildContext context, L l, Hub hub) {
+    final height = _cardHeight(context);
+    final entries = [
+      for (final slug in _order)
+        hub.systems.where((e) => e.slug == slug).firstOrNull ??
+            HubEntry(slug: slug, unlocked: false, status: 'not-yet'),
     ];
-    final angles = chart['angles'];
-    if (angles is Map &&
-        angles['formatted'] is Map &&
-        (angles['formatted'] as Map)['ascendant'] is String) {
-      rows.add((
-        l.cabAscendant,
-        CabinetWordsMore.spellSigns(
-            l, (angles['formatted'] as Map)['ascendant'] as String),
-      ));
-    } else if (chart['rising_sign'] is String) {
-      rows.add((l.cabAscendant, CabinetWordsMore.sign(l, chart['rising_sign'] as String)));
-    }
 
     return [
-      for (final row in rows)
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
-          ),
+      for (var i = 0; i < entries.length; i += 2)
+        Padding(
+          padding: const EdgeInsets.only(top: _gap),
           child: Row(children: [
-            Text(row.$1, style: AlmaType.meta),
-            const Spacer(),
-            Text(row.$2,
-                style: AlmaType.numeral.copyWith(fontSize: 17), textAlign: TextAlign.end),
+            Expanded(child: _card(l, entries[i], i, height)),
+            const SizedBox(width: _gap),
+            Expanded(child: _card(l, entries[i + 1], i + 1, height)),
           ]),
         ),
     ];
   }
 
-  /// Группы по вопросу. Готовые системы стоят под своими вопросами, неготовые
-  /// собраны под «пока нет» — вместе с причиной в статусе каждой строки.
-  List<Widget> _groups(L l, Hub hub) {
-    final entries = hub.systems.where((e) => e.slug != SystemSlug.synthesis).toList();
-    final pending = entries.where((e) => !CabinetWordsMore.isReady(e.status)).toList();
-
-    final groups = <(String, List<HubEntry>)>[
-      (l.cabGroupWhoAmI, _of(entries, const [SystemSlug.natal, SystemSlug.numerology, SystemSlug.birthCard])),
-      (l.cabGroupRightNow, _of(entries, const [SystemSlug.transits])),
-      (l.cabGroupThisYear, _of(entries, const [SystemSlug.solarReturn])),
-      (l.cabGroupHowWeMatch, _of(entries, const [SystemSlug.compatibility])),
-      (l.cabGroupWhereToBe, _of(entries, const [SystemSlug.astrocartography])),
-    ];
-
-    return [
-      for (final (title, rows) in groups)
-        if (rows.isNotEmpty) _section(title, _deck(l, rows)),
-      if (pending.isNotEmpty) _section(l.cabStatusNotYet, _deck(l, pending)),
-    ];
-  }
-
-  List<HubEntry> _of(List<HubEntry> entries, List<SystemSlug> slugs) => entries
-      .where((e) => slugs.contains(e.slug) && CabinetWordsMore.isReady(e.status))
-      .toList();
-
-  List<Widget> _synthesis(L l, Hub hub) {
-    final entry = hub.systems.where((e) => e.slug == SystemSlug.synthesis).toList();
-    final status = entry.isEmpty ? 'not-yet' : entry.first.status;
-    return [
-      _section(l.cabGroupAllOfIt, _deck(l, [
-        HubEntry(
-            slug: SystemSlug.synthesis,
-            unlocked: entry.isNotEmpty && entry.first.unlocked,
-            status: status),
-      ])),
-    ];
-  }
-
-  Widget _section(String label, List<Widget> children) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 26),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(children: [
-            Text(label.toUpperCase(), style: AlmaType.overline),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Container(
-                height: 1,
-                decoration: BoxDecoration(gradient: AlmaGradient.fadedRule),
-              ),
-            ),
-          ]),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  /// Карточка системы: арт, золотой кант, имя понизу.
+  /// Высота карты, при которой все восемь помещаются на экран без прокрутки.
   ///
-  /// **Строкой список быть перестал.** В эталоне (`s47`) восемь систем стоят
-  /// карточками 172×156 по две в ряд, у каждой своя картина: в них и вся
-  /// разница между «список пунктов меню» и «полка, с которой берут». Порт
-  /// показывал строки с надписью «open» — арт лежал в пакете и не был виден
-  /// нигде.
+  /// **Пропорция карты — потолок, а не закон.** В дизайн-пакете карта 172×156;
+  /// на кадре 402×874 это даёт 173×157, и четыре ряда садятся ровно на кромку
+  /// бара вкладок — последний ряд оказывается под его растворяющимся краем.
+  /// Поэтому берётся меньшее из двух: пропорции и той высоты, которая
+  /// действительно осталась. На кадре 402×874 остаётся 154.25 — карта ниже
+  /// эталонной на две с половиной точки, и это цена того, что колода видна
+  /// целиком: измерено на симуляторе, нижний ряд кончается на 778 при кромке
+  /// бара на 788.
   ///
-  /// Закрытая система отличается не замком, а тишиной: картина приглушена и
-  /// вместо «открыть» стоит своё состояние. Замок на витрине читается запретом,
-  /// а здесь всё рассчитано — закрыт только текст.
-  Widget _card(L l, HubEntry entry) {
+  /// Считаем от окна, а не от окружения: `ScreenScaffold` уже съел верхний
+  /// вырез своим `SafeArea`, а низ у оболочки объявлен `extendBody: true` — то
+  /// есть окружение вернуло бы полную высоту бара, посчитанную ещё раз.
+  double _cardHeight(BuildContext context) {
+    final view = MediaQueryData.fromView(View.of(context));
+    final width = (view.size.width - AlmaMetrics.pad * 2 - _gap) / 2;
+    final ideal = width * 156 / 172;
+
+    final free = view.size.height -
+        view.padding.top -
+        // Бар вкладок: своя высота плюс домашний индикатор. Содержимое уходит
+        // под него, потому что он растворяется кверху, — но карта под ним уже
+        // не видна, и на неё рассчитывать нельзя.
+        (AlmaMetrics.tabBarHeight + view.padding.bottom) -
+        12 - // верхний отступ списка в `ScreenScaffold`
+        // Шапка. Не 36.5, как считается из кегля 29 и интерлиньяжа 1.12 плюс
+        // нижние 4: измерено на кадре — верх первой карты стоит на 127, то
+        // есть шапка занимает 41. Разницу даёт строчный ящик засечного шрифта,
+        // и угадать её из чисел стиля нельзя.
+        41 -
+        _gap * 4 - // отступ первого ряда и три зазора между четырьмя рядами
+        8; // воздух над баром, чтобы нижний ряд не касался его края
+
+    return math.min(ideal, free / 4);
+  }
+
+  /// Карта системы: арт, золотой кант, номер сверху, имя и состояние понизу.
+  ///
+  /// Закрытая система отличается не замком, а тишиной: картина приглушена, а
+  /// вместо «рассчитано» стоит своё состояние — «нужно время рождения»,
+  /// «добавь человека». Замок на витрине читается запретом, а здесь всё
+  /// рассчитано и бесплатно — закрыт только текст.
+  Widget _card(L l, HubEntry entry, int ordinal, double height) {
     final ready = CabinetWordsMore.isReady(entry.status);
     return GestureDetector(
-      onTap: ready ? () => widget.onOpenSystem(entry.slug) : null,
+      onTap: ready ? () => onOpenSystem(entry.slug) : null,
       behavior: HitTestBehavior.opaque,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(13),
-        child: AspectRatio(
-          // 172×156 в эталоне — на телефоне это две карточки в ряд с полем 22
-          // и зазором 12, то есть ровно та же пропорция.
-          aspectRatio: 172 / 156,
+      child: SizedBox(
+        height: height,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(13),
           child: Stack(fit: StackFit.expand, children: [
             Opacity(
               opacity: ready ? 1 : 0.45,
@@ -232,37 +169,68 @@ class _SystemsScreenState extends State<SystemsScreen> {
                 border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.5)),
                 // Имя стоит на своей земле: без затемнения книзу светлая
                 // картина съедает подпись целиком.
+                //
+                // **Затемнение теперь и сверху.** На кадре римские I, II и III
+                // пропали совсем: под ними золотое шитьё и светлая кожа, а
+                // цифра сама золотая. Номер карты — не украшение, по нему
+                // читают порядок колоды, поэтому у него своя земля, как у
+                // имени. Нижняя половина градиента прежняя: от середины
+                // прозрачной до 0xE6 у низа.
                 gradient: const LinearGradient(
-                  begin: Alignment.center,
+                  begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0x00070A16), Color(0xE6070A16)],
+                  colors: [
+                    Color(0xA6070A16),
+                    Color(0x00070A16),
+                    Color(0x00070A16),
+                    Color(0xE6070A16),
+                  ],
+                  stops: [0, 0.28, 0.5, 1],
                 ),
               ),
             ),
-            Align(
-              alignment: Alignment.bottomLeft,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(11, 0, 11, 9),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      CabinetWordsMore.system(l, entry.slug),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AlmaType.headingM.copyWith(
-                          fontSize: 16, color: AlmaPalette.starFill),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(11, 7, 11, 9),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Тень под цифрой, а не только затемнение под ней: у первой
+                  // карты под номером золотое шитьё, и одного скрима не
+                  // хватило — «I» на кадре читалась хуже остальных семи.
+                  Text(
+                    _roman[ordinal],
+                    style: AlmaType.numeral.copyWith(
+                      fontSize: 13,
+                      shadows: const [
+                        Shadow(color: Color(0xCC070A16), blurRadius: 5),
+                      ],
                     ),
-                    if (!ready) ...[
-                      const SizedBox(height: 2),
-                      Text(CabinetWordsMore.status(l, entry.status),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AlmaType.meta.copyWith(fontSize: 11.5)),
-                    ],
-                  ],
-                ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    CabinetWordsMore.system(l, entry.slug),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AlmaType.headingM
+                        .copyWith(fontSize: 16, color: AlmaPalette.starFill),
+                  ),
+                  const SizedBox(height: 2),
+                  // Состояние стоит **всегда**, а не только у закрытой карты:
+                  // «рассчитано» — это и есть то, что человек пришёл увидеть,
+                  // и молчание на семи картах из восьми делало счётчик наверху
+                  // единственным доказательством расчёта.
+                  // Две строки, а не одна: по-английски «needs birth time»
+                  // укладывается в ширину карты, а по-французски «heure de
+                  // naissance manquante» — нет, и обрезанная причина не
+                  // объясняет ничего. Место под вторую строку на карте есть.
+                  Text(
+                    CabinetWordsMore.status(l, entry.status),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AlmaType.meta
+                        .copyWith(fontSize: 11.5, color: AlmaPalette.gold),
+                  ),
+                ],
               ),
             ),
           ]),
@@ -270,26 +238,4 @@ class _SystemsScreenState extends State<SystemsScreen> {
       ),
     );
   }
-
-  /// Ряд из двух карточек. `GridView` здесь не нужен: список короткий и живёт
-  /// внутри чужой прокрутки, а вложенная сетка потребовала бы своей высоты.
-  List<Widget> _deck(L l, List<HubEntry> entries) {
-    final rows = <Widget>[];
-    for (var i = 0; i < entries.length; i += 2) {
-      rows.add(Padding(
-        padding: const EdgeInsets.only(top: 12),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Expanded(child: _card(l, entries[i])),
-          const SizedBox(width: 12),
-          Expanded(
-            child: i + 1 < entries.length
-                ? _card(l, entries[i + 1])
-                : const SizedBox.shrink(),
-          ),
-        ]),
-      ));
-    }
-    return rows;
-  }
-
 }
