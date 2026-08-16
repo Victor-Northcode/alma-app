@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../design/art.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
@@ -154,9 +155,8 @@ class _SystemsScreenState extends State<SystemsScreen> {
 
     return [
       for (final (title, rows) in groups)
-        if (rows.isNotEmpty) _section(title, [for (final e in rows) _row(l, e)]),
-      if (pending.isNotEmpty)
-        _section(l.cabStatusNotYet, [for (final e in pending) _row(l, e)]),
+        if (rows.isNotEmpty) _section(title, _deck(l, rows)),
+      if (pending.isNotEmpty) _section(l.cabStatusNotYet, _deck(l, pending)),
     ];
   }
 
@@ -168,9 +168,12 @@ class _SystemsScreenState extends State<SystemsScreen> {
     final entry = hub.systems.where((e) => e.slug == SystemSlug.synthesis).toList();
     final status = entry.isEmpty ? 'not-yet' : entry.first.status;
     return [
-      _section(l.cabGroupAllOfIt, [
-        _row(l, HubEntry(slug: SystemSlug.synthesis, unlocked: entry.isNotEmpty && entry.first.unlocked, status: status)),
-      ]),
+      _section(l.cabGroupAllOfIt, _deck(l, [
+        HubEntry(
+            slug: SystemSlug.synthesis,
+            unlocked: entry.isNotEmpty && entry.first.unlocked,
+            status: status),
+      ])),
     ];
   }
 
@@ -196,24 +199,97 @@ class _SystemsScreenState extends State<SystemsScreen> {
     );
   }
 
-  Widget _row(L l, HubEntry entry) {
-    return InkWell(
-      onTap: () => widget.onOpenSystem(entry.slug),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
+  /// Карточка системы: арт, золотой кант, имя понизу.
+  ///
+  /// **Строкой список быть перестал.** В эталоне (`s47`) восемь систем стоят
+  /// карточками 172×156 по две в ряд, у каждой своя картина: в них и вся
+  /// разница между «список пунктов меню» и «полка, с которой берут». Порт
+  /// показывал строки с надписью «open» — арт лежал в пакете и не был виден
+  /// нигде.
+  ///
+  /// Закрытая система отличается не замком, а тишиной: картина приглушена и
+  /// вместо «открыть» стоит своё состояние. Замок на витрине читается запретом,
+  /// а здесь всё рассчитано — закрыт только текст.
+  Widget _card(L l, HubEntry entry) {
+    final ready = CabinetWordsMore.isReady(entry.status);
+    return GestureDetector(
+      onTap: ready ? () => widget.onOpenSystem(entry.slug) : null,
+      behavior: HitTestBehavior.opaque,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(13),
+        child: AspectRatio(
+          // 172×156 в эталоне — на телефоне это две карточки в ряд с полем 22
+          // и зазором 12, то есть ровно та же пропорция.
+          aspectRatio: 172 / 156,
+          child: Stack(fit: StackFit.expand, children: [
+            Opacity(
+              opacity: ready ? 1 : 0.45,
+              child: Image.asset(AlmaArt.card(entry.slug), fit: BoxFit.cover),
+            ),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(13),
+                border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.5)),
+                // Имя стоит на своей земле: без затемнения книзу светлая
+                // картина съедает подпись целиком.
+                gradient: const LinearGradient(
+                  begin: Alignment.center,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0x00070A16), Color(0xE6070A16)],
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(11, 0, 11, 9),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      CabinetWordsMore.system(l, entry.slug),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AlmaType.headingM.copyWith(
+                          fontSize: 16, color: AlmaPalette.starFill),
+                    ),
+                    if (!ready) ...[
+                      const SizedBox(height: 2),
+                      Text(CabinetWordsMore.status(l, entry.status),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AlmaType.meta.copyWith(fontSize: 11.5)),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ]),
         ),
-        child: Row(children: [
-          Expanded(
-            child: Text(CabinetWordsMore.system(l, entry.slug), style: AlmaType.headingM),
-          ),
-          Text(
-            CabinetWordsMore.status(l, entry.status),
-            style: AlmaType.meta.copyWith(color: AlmaPalette.gold),
-          ),
-        ]),
       ),
     );
   }
+
+  /// Ряд из двух карточек. `GridView` здесь не нужен: список короткий и живёт
+  /// внутри чужой прокрутки, а вложенная сетка потребовала бы своей высоты.
+  List<Widget> _deck(L l, List<HubEntry> entries) {
+    final rows = <Widget>[];
+    for (var i = 0; i < entries.length; i += 2) {
+      rows.add(Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Expanded(child: _card(l, entries[i])),
+          const SizedBox(width: 12),
+          Expanded(
+            child: i + 1 < entries.length
+                ? _card(l, entries[i + 1])
+                : const SizedBox.shrink(),
+          ),
+        ]),
+      ));
+    }
+    return rows;
+  }
+
 }
