@@ -198,17 +198,73 @@ class CitationState extends State<Citation> {
 
 /* ── A2: думание ─────────────────────────────────────────────────────────── */
 
-/// A2 — думание: свет в кольце лучей и строка, называющая расчёт.
+/// Что Alma читает прямо сейчас.
 ///
-/// **Строка нейтральна, пока движок не отдаёт стадию.** §6 спеки: «"reading
-/// your …" показывается только с настоящими данными; если движок не отдал
+/// **Показывается только с настоящими данными.** §6 спеки: «"reading your …"
+/// показывается только с настоящими данными запроса; если движок не отдал
 /// контекст — нейтральное `reading your chart…`, никаких выдуманных домов».
-class ThinkingView extends StatelessWidget {
-  const ThinkingView({super.key});
+/// Поэтому [house] и [body] приходят сверху и по умолчанию пусты: потока
+/// `{stage, name}` от движка ещё нет, и правдоподобный «четвёртый дом» здесь
+/// был бы враньём ровно там, где продукт обещает не выдумывать.
+class ThinkingStage {
+  const ThinkingStage({this.house, this.body, this.factors = const []});
+
+  /// Порядковое имя дома словами каталога — «fourth», «4-й».
+  final String? house;
+
+  /// Имя тела словами каталога — «Saturn», «Сатурн».
+  final String? body;
+
+  /// Позиции под строкой. Это карта **самого человека**, посчитанная сервером
+  /// и известная клиенту честно, — в отличие от того, что именно движок читает
+  /// в эту секунду.
+  final List<String> factors;
+}
+
+/// A2 — думание: свет в кольце лучей, тлеющая строка, позиции под ней.
+class ThinkingView extends StatefulWidget {
+  const ThinkingView({super.key, this.stage = const ThinkingStage()});
+
+  final ThinkingStage stage;
+
+  @override
+  State<ThinkingView> createState() => _ThinkingViewState();
+}
+
+class _ThinkingViewState extends State<ThinkingView>
+    with SingleTickerProviderStateMixin {
+  /// `glowPulse` эталона — 2.4 секунды на цикл, половина в одну сторону.
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1200),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (!(MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
+        _pulse.repeat(reverse: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
+    final stage = widget.stage;
+    final line = stage.house != null
+        ? l.chatReadingHouse(stage.house!)
+        : stage.body != null
+            ? l.chatOpeningBody(stage.body!)
+            : l.scrChatThinking;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 18),
       child: Column(
@@ -220,11 +276,33 @@ class ThinkingView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          Text(
-            l.scrChatThinking,
-            textAlign: TextAlign.center,
-            style: AlmaType.meta.copyWith(color: AlmaPalette.goldBright),
+          // Строка тлеет, а не мигает: пульс ходит между .55 и 1. Анимация
+          // обёрнута вокруг **готового** ребёнка — он строится один раз, и по
+          // кадрам меняется только прозрачность, то есть отрисовка.
+          AnimatedBuilder(
+            animation: _pulse,
+            builder: (context, child) => Opacity(
+              opacity: 0.55 + 0.45 * Curves.easeInOut.transform(_pulse.value),
+              child: child,
+            ),
+            child: Text(
+              line,
+              textAlign: TextAlign.center,
+              style: AlmaType.meta.copyWith(color: AlmaPalette.goldBright),
+            ),
           ),
+          if (stage.factors.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              stage.factors.take(2).join('  ·  '),
+              textAlign: TextAlign.center,
+              style: AlmaType.numeral.copyWith(
+                fontSize: 12.5,
+                color: AlmaPalette.gold.withValues(alpha: 0.7),
+                fontFamilyFallback: AlmaType.glyphFallback,
+              ),
+            ),
+          ],
         ],
       ),
     );

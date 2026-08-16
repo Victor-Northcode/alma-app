@@ -56,6 +56,11 @@ class _AlmaScreenState extends State<AlmaScreen>
   final List<_Turn> _turns = [];
   List<String> _openers = const [];
 
+  /// Что показывает A2. Дома и тела пусты, пока сервер не отдаёт стадию
+  /// работы (`{stage, name}` из §8): выдумывать «читаю твой четвёртый дом»
+  /// нельзя. Позиции — карта самого человека, и они известны честно.
+  ThinkingStage _stage = const ThinkingStage();
+
 
   String? _threadId;
   bool _sending = false;
@@ -188,6 +193,16 @@ class _AlmaScreenState extends State<AlmaScreen>
       if (mounted) {
         setState(() {
           _openers = questions.take(3).toList();
+          // Позиции под строкой думания — настоящие: две первые из карты,
+          // обрезанные до головы мета-строки (тело + градус + знак); дом и
+          // достоинство в такой строке лишние. Что именно движок читает в эту
+          // секунду, клиент не знает и не выдумывает — см. `ThinkingStage`.
+          _stage = ThinkingStage(
+            factors: [
+              for (final raw in natal.factors.take(2))
+                CabinetWordsMore.factor(l, raw).split(' · ').first,
+            ],
+          );
         });
       }
     } on AlmaError {
@@ -486,7 +501,7 @@ class _AlmaScreenState extends State<AlmaScreen>
       itemCount: _turns.length + tail,
       itemBuilder: (context, i) {
         if (i == _turns.length) {
-          if (_sending) return const ThinkingView();
+          if (_sending) return ThinkingView(stage: _stage);
           return _refusalView(l, _refusal!);
         }
         final turn = _turns[i];
