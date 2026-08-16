@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
-import '../../design/section_label.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
@@ -39,11 +38,38 @@ class LegalScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: AlmaPalette.night,
       body: ScreenScaffold(
-        eyebrow: 'Alma · ${LegalText.operatorName}',
-        title: title(l, document),
         mood: SkyMood.reading,
         seed: 0x4C454741,
         children: [
+          // **Шапка рисуется здесь, а не слотами каркаса.**
+          //
+          // В макете над заголовком стоит «← DATA & LEGAL»: стрелка и название
+          // раздела, из которого пришли, одной строкой. У каркаса надзаголовок
+          // — строка, в неё кнопку не положить, а выше заголовка у него места
+          // нет. Заодно чинится то, что этот экран **вообще не имел видимого
+          // возврата**: он открывается `CupertinoPageRoute` без панели, и
+          // назад вёл только краевой смах.
+          //
+          // Надзаголовком стояло «ALMA · PAZL LLC» — имя оператора, которое
+          // ниже и так напечатано дважды, вместо того единственного, что тут
+          // нужно: откуда сюда пришли и как выйти.
+          Row(children: [
+            InkResponse(
+              onTap: () => Navigator.of(context).maybePop(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                child: Text('←',
+                    style: AlmaType.body
+                        .copyWith(fontSize: 18, color: AlmaPalette.gold)),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(l.cabDataAndLegal.toUpperCase(), style: AlmaType.overline),
+          ]),
+          Padding(
+            padding: const EdgeInsets.only(top: 10, bottom: 4),
+            child: Text(title(l, document), style: AlmaType.displayL),
+          ),
           Text('Last updated ${LegalText.updated}', style: AlmaType.meta),
           // Признание — перед документом, а не под ним.
           Padding(
@@ -52,9 +78,19 @@ class LegalScreen extends StatelessWidget {
           ),
           const _Rule(),
           Text(doc.lead, style: AlmaType.voice),
-          for (final section in doc.sections) ...[
+          for (final (i, section) in doc.sections.indexed) ...[
             const SizedBox(height: AlmaMetrics.gapLarge),
-            SectionLabel(section.title),
+            // «1 · WHAT ALMA IS» — номер и разделитель, как в макете. Номер не
+            // строка перевода: это порядковый номер раздела, и по нему на
+            // документ ссылаются в переписке.
+            //
+            // **Без линейки и во всю ширину.** `SectionLabel` отдаёт подписи
+            // 30.5% строки — доля, снятая с кабинета, где подписи в одно
+            // слово. Заголовок документа так не живёт: «IF SOMETHING GOES
+            // WRONG» вставало в четыре строки у левого края. В макете у
+            // юридического экрана линейки нет вовсе.
+            Text('${i + 1} · ${section.title}'.toUpperCase(),
+                style: AlmaType.overline),
             const SizedBox(height: 6),
             for (final block in section.blocks) _Block(block: block),
           ],

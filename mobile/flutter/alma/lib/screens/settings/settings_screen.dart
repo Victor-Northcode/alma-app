@@ -13,8 +13,11 @@ import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
+import '../../net/models.dart' show SystemSlug;
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
+import '../cabinet_words.dart';
+import '../offer_screen.dart';
 import '../legal/legal_screen.dart';
 import 'sign_in_screen.dart';
 import '../legal/legal_text.dart';
@@ -39,6 +42,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _daily;
   Map<String, dynamic>? _plan;
   bool _started = false;
+
+  /// Не «нет данных», а «спросили и не ответили». Раздел, который просто
+  /// исчезает при отказе сети, врёт молча: у «каждого утра» пропадает
+  /// единственный выключатель уведомлений, у плана — восстановление покупок.
+  bool _dailyFailed = false;
+  bool _planFailed = false;
 
   /// Где сейчас выгрузка данных: ничего / собираю / готово / не собралась.
   _Export _export = _Export.idle;
@@ -123,13 +132,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.didChangeDependencies();
     if (!_started) {
       _started = true;
-      final client = SessionScope.of(context).client;
-      client.dailySettings().then((d) {
-        if (mounted) setState(() => _daily = d);
-      }).catchError((Object _) {});
-      client.entitlements().then((e) {
-        if (mounted) setState(() => _plan = e);
-      }).catchError((Object _) {});
+      _loadDaily();
+      _loadPlan();
+    }
+  }
+
+  Future<void> _loadDaily() async {
+    setState(() => _dailyFailed = false);
+    try {
+      final daily = await SessionScope.of(context).client.dailySettings();
+      if (mounted) setState(() => _daily = daily);
+    } catch (_) {
+      if (mounted) setState(() => _dailyFailed = _daily == null);
+    }
+  }
+
+  Future<void> _loadPlan() async {
+    setState(() => _planFailed = false);
+    try {
+      final plan = await SessionScope.of(context).client.entitlements();
+      if (mounted) setState(() => _plan = plan);
+    } catch (_) {
+      if (mounted) setState(() => _planFailed = _plan == null);
     }
   }
 
@@ -164,12 +188,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     switch (_delete) {
       case _Delete.idle:
         return const [];
-      case _Delete.working:
-        return [_note(l.stateLoadingShort)];
-      case _Delete.failed:
-        return [_note(l.cabPlanDeleteFailed)];
       case _Delete.done:
         return [_note(l.stateAccountDeleted)];
+      // **Отказ не уносит форму.** Раньше `failed` возвращал одну строку, а с
+      // ней исчезали и набранное подтверждение, и обе кнопки: человек, у
+      // которого запрос не прошёл, читал «не удалось» и не имел, чем повторить,
+      // — оставалось закрыть и начать сначала. Ошибка стоит **под** кнопками,
+      // как на нативе, и форма остаётся на месте.
+      case _Delete.working:
+      case _Delete.failed:
       case _Delete.confirming:
       case _Delete.mismatch:
         return [
@@ -179,14 +206,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(l.cabPlanDeleteWarning, style: AlmaType.meta),
-                const SizedBox(height: 14),
-                Text(
-                  guest
-                      ? l.cabSettingsDeleteGuestNote
-                      : l.cabSettingsDeleteConfirm,
-                  style: AlmaType.meta,
-                ),
+                // Гостю — как в макете: почему у него нет адреса, и сам код
+                // под этим. Вошедшему объяснять нечего, у него подсказка стоит
+                // в самом поле: «Type your email address to confirm».
                 if (guest) ...[
+                  const SizedBox(height: 14),
+                  Text(l.cabSettingsDeleteGuestNote, style: AlmaType.meta),
                   const SizedBox(height: 6),
                   SelectableText(confirmation,
                       style: AlmaType.numeral.copyWith(
@@ -205,26 +230,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     controller: _confirm,
                     autocorrect: false,
                     enableSuggestions: false,
+                    // Поле стояло пустым и без единого слова о том, что в него
+                    // набирать. Подсказка — та же, что на нативе, и она разная
+                    // у гостя и у вошедшего, потому что и набирают они разное.
+                    keyboardType:
+                        guest ? TextInputType.text : TextInputType.emailAddress,
                     style: AlmaType.body.copyWith(fontSize: 16),
-                    decoration: const InputDecoration(border: InputBorder.none),
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                      hintText: guest
+                          ? l.cabSettingsDeleteConfirmGuest
+                          : l.cabSettingsDeleteConfirm,
+                      hintStyle: AlmaType.body
+                          .copyWith(fontSize: 16, color: AlmaPalette.muted3),
+                    ),
                     onChanged: (_) => setState(() {}),
                   ),
                 ),
-                if (_delete == _Delete.mismatch) ...[
-                  const SizedBox(height: 8),
-                  Text(l.cabPlanDeleteMismatch,
-                      style: AlmaType.meta
-                          .copyWith(color: AlmaPalette.disagree)),
-                ],
                 const SizedBox(height: 14),
                 Row(children: [
                   AlmaButton(
                     kind: AlmaButtonKind.danger,
                     fills: false,
-                    label: l.cabPlanDeleteForever,
+                    label: _delete == _Delete.working
+                        ? l.cabPlanDeleting
+                        : l.cabPlanDeleteForever,
                     // Кнопка гаснет, пока набранное не совпало: отказ после
                     // нажатия — это отказ, которого можно было не допускать.
-                    onTap: _typedMatches(confirmation)
+                    // И на время запроса — тоже, чтобы второе нажатие не ушло
+                    // вторым удалением.
+                    onTap: _typedMatches(confirmation) &&
+                            _delete != _Delete.working
                         ? () => _confirmDelete(session)
                         : null,
                   ),
@@ -233,12 +269,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     kind: AlmaButtonKind.veil,
                     fills: false,
                     label: l.cabinetBack,
-                    onTap: () => setState(() {
-                      _confirm.clear();
-                      _delete = _Delete.idle;
-                    }),
+                    onTap: _delete == _Delete.working
+                        ? null
+                        : () => setState(() {
+                              _confirm.clear();
+                              _delete = _Delete.idle;
+                            }),
                   ),
                 ]),
+                if (_delete == _Delete.mismatch ||
+                    _delete == _Delete.failed) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _delete == _Delete.mismatch
+                        ? l.cabPlanDeleteMismatch
+                        : l.cabPlanDeleteFailed,
+                    style:
+                        AlmaType.meta.copyWith(color: AlmaPalette.disagree),
+                  ),
+                ],
                 const SizedBox(height: 6),
               ],
             ),
@@ -282,9 +331,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _Section(label: l.cabAccountLabel, children: [
           const SizedBox(height: 14),
           Text(
-            account?.displayName?.isNotEmpty == true
-                ? account!.displayName!
-                : l.cabGuest,
+            // **Имя — то, которое человек дал, где бы он его ни дал.**
+            //
+            // Здесь читался один `account.displayName`, а он появляется только
+            // после входа. Имя же вводят на втором экране путешествия, и оно
+            // ложится на **профиль**: тот, кто набрал «Анатолий» и прошёл
+            // восемь экранов, открывал настройки и читал, что он Гость. Ровно
+            // эту ошибку нативный экран уже нашёл и исправил, а порт внёс её
+            // обратно.
+            _displayName(session) ?? l.cabGuest,
             style: AlmaType.headingM.copyWith(fontSize: 22),
           ),
           if (account?.email != null) ...[
@@ -340,7 +395,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mode: LaunchMode.externalApplication),
           ),
         ]),
-        ..._planSection(l),
+        ..._planSection(l, session),
         _Section(label: l.cabDataAndLegal, children: [
           // **Выгрузка и удаление — то, чего в порте не было вовсе.**
           //
@@ -404,7 +459,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// пояс устройства и счётчик точных дней.
   List<Widget> _everyMorning(L l) {
     final daily = _daily;
-    if (daily == null) return const [];
+    // **Выключатель не исчезает.** Раздел возвращал пустой список, пока
+    // `/v1/notifications` не ответит, — то есть у человека, пришедшего сюда
+    // после уведомления, которого он не хотел, при отказе сети пропадала сама
+    // возможность их выключить. Отказ показываем отказом, с чем повторить.
+    if (daily == null) {
+      if (!_dailyFailed) return const [];
+      return [
+        _Section(label: l.dailySettingTitle, children: [
+          const SizedBox(height: 14),
+          Text(l.stateOffline, style: AlmaType.meta),
+          const SizedBox(height: 12),
+          AlmaButton(
+            kind: AlmaButtonKind.veil,
+            fills: false,
+            label: l.stateRetry,
+            onTap: _loadDaily,
+          ),
+        ]),
+      ];
+    }
     final mode = daily['daily'] as String? ?? 'off';
     final hour = (daily['hour'] as num?)?.toInt() ?? 10;
     final zone = daily['timezone'] as String?;
@@ -455,53 +529,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ];
   }
 
-  List<Widget> _planSection(L l) {
+  /// Раздел «план» — и он стоит **всегда**.
+  ///
+  /// **Восстановление покупок пропадало вместе с сетью.** Весь раздел
+  /// возвращал пустой список, пока `/v1/billing/entitlements` не ответит, а
+  /// внутри него жила единственная в приложении кнопка «Восстановить
+  /// покупки». То есть у человека, у которого запрос не прошёл — на новом
+  /// телефоне, в дороге, в день, когда наш сервер лежит, — исчезала ровно та
+  /// кнопка, которая для этого случая и существует, и которую Guideline 3.1.1
+  /// требует держать достижимой. Теперь состояние права — внутреннее дело
+  /// раздела, а восстановление стоит под ним при любом ответе.
+  List<Widget> _planSection(L l, AlmaSession session) {
     final plan = _plan;
-    if (plan == null) return const [];
-    final rows = (plan['entitlements'] as List? ?? const [])
+    final rows = (plan?['entitlements'] as List? ?? const [])
         .whereType<Map>()
         .map((e) => e.cast<String, dynamic>())
         .toList();
+    // Подписка — активное право, купленное не навсегда. Спрашиваем `kind`, а
+    // не `system`: оба повторяющихся продукта лежат под `system: "*"`, и
+    // сравнение по нему объявляло месячного подписчика годовым.
+    final subscription = rows
+        .where((r) => r['active'] == true && r['kind'] != 'one_time')
+        .firstOrNull;
+    // Двери и архив: куплены один раз, держатся навсегда.
+    final doors =
+        rows.where((r) => r['active'] == true && r['kind'] == 'one_time').toList();
+    // План, который кончился. Об этом стоит сказать вслух: одно слово «Free»
+    // тому, кто платил в прошлом году, читается как потерянная запись, а не
+    // как закончившийся год.
+    final lapsed = subscription == null
+        ? rows.where((r) => r['active'] != true && r['kind'] != 'one_time').firstOrNull
+        : null;
+
     return [
       _Section(label: l.cabSettingsPlan, children: [
-        if (rows.isEmpty) ...[
-          _Row(label: l.cabPlanFreePlan, value: ''),
+        if (plan == null && _planFailed) ...[
+          const SizedBox(height: 14),
+          Text(l.stateOffline, style: AlmaType.meta),
           const SizedBox(height: 12),
-          Text(l.cabPlanFreeNote, style: AlmaType.meta),
-        ] else ...[
-          for (final row in rows)
-            _Row(
-              label: row['system'] == 'all'
-                  ? l.cabSettingsEverythingMonthly
-                  : (row['system'] as String? ?? ''),
-              value: row['expires_at'] is String
-                  ? l.cabPlanRunsUntil(_civilDate(
-                      l.localeName, (row['expires_at'] as String).split('T').first))
-                  : '',
-            ),
-          // **Управление подпиской — у того, кто её продал.**
-          //
-          // Ни Apple, ни Google не позволяют серверу остановить подписку,
-          // принадлежащую их аккаунту, и локальный флажок «отменено» не
-          // останавливает списание. Поэтому здесь ссылка в магазин, а не
-          // кнопка отмены: `POST /v1/billing/subscription/cancel` на такую
-          // подписку отвечает 409 и ничего не пишет — правильно, — и кнопка
-          // туда вела бы к фразе, показывающей обратно на эту же ссылку.
-          if (rows.any(_isSubscription)) ...[
-            const SizedBox(height: 14),
-            AlmaButton(
-              kind: AlmaButtonKind.outline,
-              fills: false,
-              label: l.cabManageInStore,
-              onTap: () => launchUrl(
-                Uri.parse('https://apps.apple.com/account/subscriptions'),
-                mode: LaunchMode.externalApplication,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(l.cabManagedByApple, style: AlmaType.meta),
-          ],
-        ],
+          AlmaButton(
+            kind: AlmaButtonKind.veil,
+            fills: false,
+            label: l.stateRetry,
+            onTap: _loadPlan,
+          ),
+        ] else if (plan == null) ...[
+          const SizedBox(height: 14),
+          Text(l.stateLoadingShort, style: AlmaType.meta),
+        ] else if (subscription != null)
+          ..._subscribed(l, session, subscription)
+        else
+          ..._unsubscribed(l, doors, lapsed),
         // **Восстановление — вне витрины.**
         //
         // Apple отклоняет приложение, которое продаёт разовые покупки и не
@@ -509,15 +587,160 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // пейволл. И это же единственное, что помогает человеку с новым
         // телефоном, — случай, который действительно случается.
         const SizedBox(height: 18),
-        _RestoreRow(store: AlmaStore.shared),
+        // Успешное восстановление меняет права — раздел выше обязан
+        // перечитать их сам, иначе человек видит «всё открыто снова» над
+        // словом «Free».
+        _RestoreRow(store: AlmaStore.shared, onRestored: _loadPlan),
       ]),
     ];
   }
 
-  /// Подписка ли это право. `one_time` — купленная навсегда дверь: её не
-  /// отменяют и ею не управляют в магазине.
-  static bool _isSubscription(Map<String, dynamic> row) =>
-      const ['weekly', 'monthly', 'annual'].contains(row['kind']);
+  /// Активная подписка (s30): имя плана мелким, срок под ним крупным.
+  ///
+  /// **Это не строка списка.** Здесь стояла пара «подпись — значение» в одну
+  /// строку, и в правую половину загонялось целое предложение («Действует до
+  /// 14 марта 2027. Продлеваться не будет.»), которое ломалось на три строки
+  /// у правого края. В макете имя плана — надпись над сроком, а срок — сам
+  /// текст строки.
+  List<Widget> _subscribed(
+      L l, AlmaSession session, Map<String, dynamic> row) {
+    final renews = _instantDate(l.localeName, row['renews_at'] as String?);
+    final expires = _instantDate(l.localeName, row['expires_at'] as String?);
+    final store = _boughtInStore(row);
+    return [
+      Padding(
+        padding: const EdgeInsets.only(top: 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_planName(l, row['kind'] as String?), style: AlmaType.meta),
+            const SizedBox(height: 5),
+            Text(
+              // **«Продлевается» — только пока продлевается.**
+              //
+              // Здесь всегда печаталось «Действует до …, продлеваться не
+              // будет» по `expires_at`, а `expires_at` есть и у живой
+              // подписки. То есть человеку, который платит дальше, сообщали,
+              // что списаний больше не будет, — и наоборот, тому, кто только
+              // что отменил, ничего не подтверждали. Обе ошибки про деньги.
+              //
+              // Какая из трёх фраз — решает `source`, то есть кто продал, а не
+              // есть ли у нас адрес: подписку из App Store списывает, чекует и
+              // предупреждает Apple, чей бы адрес мы ни держали.
+              renews != null
+                  ? (store
+                      ? l.cabPlanRenewsAtStore(renews)
+                      : (session.account?.email?.isNotEmpty == true
+                          ? l.cabPlanRenews(renews)
+                          : l.cabPlanRenewsNoEmail(renews)))
+                  : (expires != null ? l.cabPlanRunsUntil(expires) : ''),
+              style: AlmaType.body
+                  .copyWith(color: AlmaPalette.inkLight, fontSize: 17),
+            ),
+          ],
+        ),
+      ),
+      // **Управление подпиской — у того, кто её продал.**
+      //
+      // Ни Apple, ни Google не позволяют серверу остановить подписку,
+      // принадлежащую их аккаунту, и локальный флажок «отменено» не
+      // останавливает списание. Поэтому здесь ссылка в магазин, а не кнопка
+      // отмены: `POST /v1/billing/subscription/cancel` на такую подписку
+      // отвечает 409 и ничего не пишет — правильно, — и кнопка туда вела бы к
+      // фразе, показывающей обратно на эту же ссылку.
+      const SizedBox(height: 14),
+      AlmaButton(
+        kind: AlmaButtonKind.outline,
+        fills: false,
+        label: l.cabManageInStore,
+        onTap: () => launchUrl(
+          Uri.parse('https://apps.apple.com/account/subscriptions'),
+          mode: LaunchMode.externalApplication,
+        ),
+      ),
+      // Обещание про кошелёк — только там, где оно правда. У подписки,
+      // купленной не в магазине, платёжное средство держим мы, и эта фраза
+      // отправила бы человека искать отмену туда, где её нет.
+      if (store) ...[
+        const SizedBox(height: 10),
+        Text(l.cabManagedByApple, style: AlmaType.meta),
+      ],
+    ];
+  }
+
+  /// Подписки нет: что открыто навсегда и чем это было раньше.
+  List<Widget> _unsubscribed(
+      L l, List<Map<String, dynamic>> doors, Map<String, dynamic>? lapsed) {
+    final ended = _instantDate(l.localeName, lapsed?['expires_at'] as String?);
+    return [
+      const SizedBox(height: 14),
+      Text(doors.isEmpty ? l.cabPlanFreePlan : l.cabPlanOwnedPlan,
+          style: AlmaType.headingM.copyWith(fontSize: 22)),
+      const SizedBox(height: 12),
+      // Пара «заголовок — пояснение» та же, что на нативе: `cab.plan.freeNote`
+      // у пустого счёта, `cab.plan.oneTimeNote` у того, кто уже купил дверь.
+      Text(doors.isEmpty ? l.cabPlanFreeNote : l.cabPlanOneTimeNote,
+          style: AlmaType.meta),
+      if (ended != null) ...[
+        const SizedBox(height: 8),
+        Text(l.cabPlanPlanEnded(ended), style: AlmaType.meta),
+      ],
+      // Каждая дверь и день, когда её купили. Это тот чек, который экран
+      // может показать, ничего не спрашивая у магазина.
+      for (final door in doors)
+        _Row(
+          label: _doorName(l, door['system'] as String?),
+          value: _instantDate(l.localeName, door['granted_at'] as String?) ?? '',
+        ),
+      // Самый недорогой посетитель с намерением, какой у этого приложения
+      // бывает, — тот, кто сам открыл настройки посмотреть на план. Раздел
+      // **описывал** план и не давал ничего нажать.
+      const SizedBox(height: 14),
+      AlmaButton(
+        kind: AlmaButtonKind.outline,
+        fills: false,
+        label: l.cabPlansCta,
+        onTap: () => Navigator.of(context, rootNavigator: true).push(
+          CupertinoPageRoute(builder: (_) => const OfferScreen()),
+        ),
+      ),
+    ];
+  }
+
+  /// Магазин ли держит это право — и, значит, его отмену. Пустой `source` —
+  /// бэкенд старше этой сборки; тогда говорим меньше, а не выдумываем.
+  static bool _boughtInStore(Map<String, dynamic> row) =>
+      row['source'] == 'appstore' || row['source'] == 'googleplay';
+
+  /// Как называется ступень, на которой человек стоит, — на его языке.
+  ///
+  /// Раньше здесь печаталось `row['system']`, и только для значения `'all'`,
+  /// которого сервер не присылает: повторяющиеся продукты лежат под `"*"`.
+  /// То есть в настройках подписчика стоял сырой слаг вроде `natal`.
+  static String _planName(L l, String? kind) => switch (kind) {
+        'annual' => l.cabPlanAnnualPlan,
+        'monthly' => l.cabSettingsEverythingMonthly,
+        'weekly' => l.paywallWeeklyTitle,
+        _ => l.cabSettingsPlan,
+      };
+
+  /// Как называется купленная навсегда дверь. `"*"` — весь архив.
+  static String _doorName(L l, String? system) {
+    final slug = SystemSlug.from(system);
+    // `system` живёт в расширении `CabinetWordsMore`, а не в самом классе:
+    // статический член расширения зовётся по имени расширения.
+    if (slug != null) return CabinetWordsMore.system(l, slug);
+    return system == '*' ? l.paywallArchiveTitle : (system ?? '');
+  }
+
+  /// Как звать этого человека: имя с карты, потом имя с аккаунта, потом никак.
+  static String? _displayName(AlmaSession session) {
+    final onProfile = session.profile?.name?.trim();
+    if (onProfile != null && onProfile.isNotEmpty) return onProfile;
+    final onAccount = session.account?.displayName?.trim();
+    if (onAccount != null && onAccount.isNotEmpty) return onAccount;
+    return null;
+  }
 
   /// Гражданская дата — не мгновение. «1992-05-11» без пояса; разбор её как
   /// времени в поясе устройства делал бы её десятым мая для всех западнее
@@ -528,6 +751,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final date =
         DateTime.utc(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
     return DateFormat.yMMMMd(locale).format(date);
+  }
+
+  /// Мгновение — наоборот, обязано приехать в пояс читателя. `expires_at` и
+  /// `renews_at` сервер отдаёт в UTC (`as_utc` там же и стоит), и отрезание
+  /// хвоста по «T» печатало дату UTC: тому, кто западнее Лондона, срок плана
+  /// показывался на день позже, чем он есть, — а это ровно та дата, по которой
+  /// решают, отменять ли подписку.
+  String? _instantDate(String locale, String? instant) {
+    if (instant == null) return null;
+    final parsed = DateTime.tryParse(instant);
+    if (parsed == null) return null;
+    return DateFormat.yMMMMd(locale).format(parsed.toLocal());
   }
 }
 
@@ -783,15 +1018,21 @@ enum _Delete { idle, confirming, mismatch, working, failed, done }
 
 /// Восстановление покупок в настройках: кнопка и то, чем магазин ответил.
 class _RestoreRow extends StatefulWidget {
-  const _RestoreRow({required this.store});
+  const _RestoreRow({required this.store, required this.onRestored});
 
   final AlmaStore store;
+
+  /// Перечитать права. Восстановление меняет то, что написано выше в разделе,
+  /// и без этого «Всё, что ты покупал, снова открыто» стояло над словом «Free».
+  final VoidCallback onRestored;
 
   @override
   State<_RestoreRow> createState() => _RestoreRowState();
 }
 
 class _RestoreRowState extends State<_RestoreRow> {
+  StoreMessage? _seen;
+
   @override
   void initState() {
     super.initState();
@@ -805,7 +1046,15 @@ class _RestoreRowState extends State<_RestoreRow> {
   }
 
   void _changed() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    final message = widget.store.notice?.message;
+    // Только на переходе, а не на каждом уведомлении слушателя: иначе один
+    // ответ магазина заказывал бы запрос прав по кругу.
+    if (message != _seen &&
+        (message == StoreMessage.restored || message == StoreMessage.unlocked)) {
+      widget.onRestored();
+    }
+    setState(() => _seen = message);
   }
 
   @override
