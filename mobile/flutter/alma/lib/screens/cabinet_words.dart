@@ -192,18 +192,38 @@ extension CabinetWordsMore on CabinetWords {
   /// занимает один знак и не теряется никогда; в макете (s5, s7) в этой строке
   /// стоит именно он. Имена знаков живут в прозе главы, где им хватает места,
   /// и в подписи для VoiceOver — см. [factorSpoken].
-  static String factor(L l, String raw) => keepSigns(_translated(l, raw));
+  static String factor(L l, String raw) =>
+      keepSigns(_translated(l, raw, lower: true));
 
   /// Та же цитата вслух: знак назван именем.
   ///
   /// Глиф VoiceOver либо молчит, либо читает кодовую точку, и позиция для
   /// незрячего читателя пропадает целиком. Подпись собирается из тех же слов
   /// каталога, что и проза, — ничего нового не выдумано.
-  static String factorSpoken(L l, String raw) => spellSigns(l, _translated(l, raw));
+  static String factorSpoken(L l, String raw) =>
+      spellSigns(l, _translated(l, raw));
+
+  /// Имя тела в регистре, который требует **язык**, а не оформление.
+  ///
+  /// В эталоне мета-строка набрана строчными: `venus 28°40′ ♓︎ · 7th house`.
+  /// Понизить регистр в каталоге было бы ошибкой: по-немецки существительные
+  /// пишутся с заглавной по правилу орфографии, и «mond» вместо «Mond» — не
+  /// стиль, а опечатка. Поэтому регистр применяется здесь, на рендере строки, и
+  /// только к английскому — единственному языку, на котором эталон нарисован.
+  /// Остальным пяти строчная норма разрешена, но их каталоги мы не трогаем: у
+  /// каждого своя традиция, и менять её вслепую не за что.
+  /// [lower] просит строчную — но просит только видимая строка. Голосовая
+  /// форма зовёт то же самое без него: спека даёт скринридеру «Moon 22°07′
+  /// Sagittarius», с заглавной, и это не непоследовательность — проговорённое
+  /// имя начинает фразу, а не стоит в наборе.
+  static String _bodyCased(L l, String key, {required bool lower}) {
+    final name = CabinetWords.body(l, key);
+    return lower && l.localeName.startsWith('en') ? name.toLowerCase() : name;
+  }
 
   /// Общая половина обеих форм: тела, аспекты и дома — словами каталога,
   /// знаки — как их напечатал движок.
-  static String _translated(L l, String raw) {
+  static String _translated(L l, String raw, {bool lower = false}) {
     var out = raw;
 
     // Дом: «house 9» → «9-й дом». Регистр числа — до имени тела, иначе
@@ -222,7 +242,7 @@ extension CabinetWordsMore on CabinetWords {
       'sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn',
       'uranus', 'neptune', 'pluto',
     ]) {
-      out = out.replaceAll(RegExp('\\b$key\\b'), CabinetWords.body(l, key));
+      out = out.replaceAll(RegExp('\\b$key\\b'), _bodyCased(l, key, lower: lower));
     }
 
     // Аспекты словами — тем же способом, что и везде.
