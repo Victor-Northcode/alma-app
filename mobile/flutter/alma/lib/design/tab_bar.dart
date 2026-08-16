@@ -66,17 +66,28 @@ class CabinetTabBar extends StatelessWidget {
               colors: reading
                   ? [
                       AlmaPalette.parchmentB.withValues(alpha: 0),
-                      AlmaPalette.parchmentB.withValues(alpha: 0.82),
-                      AlmaPalette.parchmentB.withValues(alpha: 0.92),
+                      AlmaPalette.parchmentB.withValues(alpha: 0.90),
+                      AlmaPalette.parchmentB.withValues(alpha: 0.96),
                     ]
                   : [
                       AlmaPalette.night850.withValues(alpha: 0),
-                      AlmaPalette.night850.withValues(alpha: 0.82),
-                      AlmaPalette.night850.withValues(alpha: 0.92),
+                      AlmaPalette.night850.withValues(alpha: 0.90),
+                      AlmaPalette.night850.withValues(alpha: 0.96),
                     ],
-              stops: const [0, 0.55, 1],
+              stops: const [0, 0.30, 1],
             ),
           ),
+          // **Завеса выше самого бара, и это лечит «срезанную строку».**
+          //
+          // Градиент начинался прозрачным ровно по верхней кромке подписей и
+          // за 55% высоты доходил до плотного: строка списка, попавшая в эти
+          // полсотни точек, оказывалась разрезанной пополам — сверху видна,
+          // снизу нет. Читалось поломкой, а не глубиной.
+          //
+          // Растворение осталось, но плотность набирается втрое быстрее: за
+          // первые 30% высоты вместо 55%. Верхние двадцать точек — по-прежнему
+          // мягкий переход, дальше подписи стоят на своей земле, и строка под
+          // ними уходит в ночь целиком, а не пополам.
           child: Padding(
             padding: EdgeInsets.only(bottom: bottomInset),
             child: SizedBox(
