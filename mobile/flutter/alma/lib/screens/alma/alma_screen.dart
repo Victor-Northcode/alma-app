@@ -36,10 +36,18 @@ class AlmaScreen extends StatefulWidget {
 }
 
 class _Turn {
-  _Turn({required this.mine, required this.body, this.citedFactors = const []});
+  _Turn({
+    required this.mine,
+    required this.body,
+    this.citedFactors = const [],
+    this.arriving = false,
+  });
   final bool mine;
   final String body;
   final List<String> citedFactors;
+
+  /// Ответ пришёл в эту сессию и ещё не оседал — см. `ChatTurnView.arriving`.
+  final bool arriving;
 }
 
 class _AlmaScreenState extends State<AlmaScreen>
@@ -239,6 +247,7 @@ class _AlmaScreenState extends State<AlmaScreen>
           mine: false,
           body: reply.body,
           citedFactors: reply.citedFactors,
+          arriving: true,
         ));
       });
     } on AlmaError catch (error) {
@@ -509,6 +518,8 @@ class _AlmaScreenState extends State<AlmaScreen>
           mine: turn.mine,
           body: turn.body,
           citedFactors: turn.citedFactors,
+          // Оседает только ответ, пришедший в эту сессию и последним.
+          arriving: turn.arriving && i == _turns.length - 1,
         );
       },
     );

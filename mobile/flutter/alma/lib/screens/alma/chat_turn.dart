@@ -13,17 +13,91 @@ import '../cabinet_words.dart';
 /// экономия строк. На нативе у экрана прошлой беседы была своя копия, и она
 /// молча разошлась с лентой: одно и то же сообщение показывало «ответила не из
 /// карты» в чате и не показывало в архиве. Одна вью — одно поведение.
-class ChatTurnView extends StatelessWidget {
+class ChatTurnView extends StatefulWidget {
   const ChatTurnView({
     super.key,
     required this.mine,
     required this.body,
     this.citedFactors = const [],
+    this.arriving = false,
   });
 
   final bool mine;
   final String body;
   final List<String> citedFactors;
+
+  /// Ответ пришёл только что и обязан осесть, а не появиться готовым.
+  ///
+  /// A3 + A4: сперва шапка и мета-строка «read from» — «она открыла карту,
+  /// потом заговорила», — и только после этого строки оседают каскадом.
+  /// Перечитанная беседа приходит с `false`: оседать заново тому, что человек
+  /// уже читал, — тик, а не жизнь.
+  final bool arriving;
+
+  @override
+  State<ChatTurnView> createState() => _ChatTurnViewState();
+}
+
+class _ChatTurnViewState extends State<ChatTurnView>
+    with TickerProviderStateMixin {
+  /// Часы каскада. Длительность — 70 мс на строку.
+  late final AnimationController _settle = AnimationController(
+    vsync: this,
+    duration: Duration(milliseconds: 70 * _lines),
+  );
+
+  /// Линейка под «alma» дорисовывается последней: 34 % → 100 % за 420 мс.
+  late final AnimationController _rule = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 420),
+  );
+
+  /// Прогресс каскада **в строках**: строке надо знать, на сколько она отстала
+  /// от ведущей. Ведущая идёт с опережением на три — пока первая проявилась,
+  /// третья ещё тлеет.
+  late final Animation<double> _cascade =
+      _settle.drive(Tween(begin: 0, end: (_lines + 3).toDouble()));
+
+  /// Грубая оценка числа строк — только чтобы назначить длительность. Точную
+  /// разбивку делает [_SettlingParagraph] на своей ширине.
+  int get _lines => (widget.body.length / 42).ceil().clamp(3, 40);
+
+  bool get mine => widget.mine;
+  String get body => widget.body;
+  List<String> get citedFactors => widget.citedFactors;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.arriving) {
+      _settle.value = 1;
+      _rule.value = 1;
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // Reduced motion: каскада нет, всё встаёт готовым.
+      if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+        _settle.value = 1;
+        _rule.value = 1;
+        return;
+      }
+      // A3: мета-строка появляется за 240 мс, и только потом идут строки.
+      Future<void>.delayed(const Duration(milliseconds: 240), () {
+        if (!mounted) return;
+        _settle.forward().whenComplete(() {
+          if (mounted) _rule.forward();
+        });
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _settle.dispose();
+    _rule.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,31 +122,63 @@ class ChatTurnView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        // **A3: источник первым.** Шапка со светом 26 и мета-строка «read
+        // from» встают ДО текста — «она открыла карту, потом заговорила».
+        // Раньше цитата стояла под ответом: человек сперва читал слова, а
+        // потом узнавал, откуда они, — порядок обратный обещанию продукта.
         Row(children: [
+          const AlmaPresence(size: AlmaPresence.inHeader),
+          const SizedBox(width: 10),
           Text(l.tabAlma.toUpperCase(), style: AlmaType.overline),
           const SizedBox(width: 12),
           Expanded(
-            child: Container(
-              height: 1,
-              decoration: BoxDecoration(gradient: AlmaGradient.fadedRule),
+            // Линейка дорисовывается последней, когда строки уже осели: это
+            // подпись под сказанным, а не полоска загрузки.
+            child: AnimatedBuilder(
+              animation: _rule,
+              builder: (context, child) => FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: 0.34 + 0.66 * _rule.value,
+                child: child,
+              ),
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(gradient: AlmaGradient.fadedRule),
+              ),
             ),
           ),
         ]),
+        if (citedFactors.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Citation(factors: citedFactors),
+        ],
         // **Абзацы — отдельными строками, а не пустой строкой внутри одной.**
         //
         // Тело склеивалось через `\n\n`, и между абзацами вставала пустая
         // строка засечного кегля — почти тридцать точек, вдвое больше, чем на
         // макете, где абзацы идут через 10. Ответ из трёх абзацев из-за этого
         // распадался на три отдельных высказывания.
-        for (final paragraph in _paragraphs)
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Text(paragraph, style: AlmaType.voice),
-          ),
-        if (citedFactors.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Citation(factors: citedFactors),
-        ],
+        // A4: строки оседают каскадом. Сквозная нумерация по всему ответу —
+        // абзацы продолжают друг друга, а не начинают счёт заново. Разметка
+        // считается **один раз**: анимация висит на каждой строке отдельно и
+        // трогает только прозрачность и сдвиг.
+        ...() {
+          var line = 0;
+          final blocks = <Widget>[];
+          for (final paragraph in _paragraphs) {
+            blocks.add(Padding(
+              padding: const EdgeInsets.only(top: 10),
+              child: _SettlingParagraph(
+                text: paragraph,
+                style: AlmaType.voice,
+                progress: _cascade,
+                startLine: line,
+              ),
+            ));
+            line += (paragraph.length / 42).ceil().clamp(1, 40);
+          }
+          return blocks;
+        }(),
       ]),
     );
   }
@@ -305,6 +411,112 @@ class _ThinkingViewState extends State<ThinkingView>
           ],
         ],
       ),
+    );
+  }
+}
+
+/// Абзац, оседающий строками вёрстки.
+///
+/// **По строкам, а не по словам и не по буквам.** §2 A4: «строки ответа
+/// оседают каскадом: fade + подъём 4–8 pt, 70 мс на строку; строка N =
+/// opacity 1, N+1 = .55, N+2 = .22. Никакого посимвольного тайпрайтера».
+/// Посимвольный набор изображает печатающего бота — ровно то, чем Alma не
+/// является; каскад по строкам изображает проступающие чернила.
+///
+/// Разбивка — `TextPainter.getLineBoundary`, то есть **настоящие** строки
+/// вёрстки на этой ширине. Их границы зависят от шрифта, кегля и ширины
+/// колонки, и другого способа узнать их нет.
+class _SettlingParagraph extends StatelessWidget {
+  const _SettlingParagraph({
+    required this.text,
+    required this.style,
+    required this.progress,
+    required this.startLine,
+  });
+
+  final String text;
+  final TextStyle style;
+
+  /// Сколько строк уже проявилось, дробью.
+  ///
+  /// **Анимацией, а не числом.** Числом каскад перестраивал бы весь абзац на
+  /// каждом кадре: `LayoutBuilder` заново мерил бы строки и помечал разметку
+  /// грязной — внутри ленивого списка, пока тот сам себя раскладывает. Флаттер
+  /// ловит это утверждением `!_doingMountOrUpdate` в `viewport.dart`.
+  final Animation<double> progress;
+
+  /// Номер первой строки этого абзаца в сквозной нумерации ответа.
+  final int startLine;
+
+  /// Ступени эталона: N = 1, N+1 = .55, N+2 = .22, дальше не видно.
+  static double opacityFor(double lead) {
+    if (lead <= 0) return 1;
+    if (lead >= 3) return 0;
+    if (lead <= 1) return 1 - lead * 0.45;
+    if (lead <= 2) return 0.55 - (lead - 1) * 0.33;
+    return 0.22 * (3 - lead);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, box) {
+        // **Мерить надо ровно тем стилем, каким `Text` потом рисует.**
+        //
+        // `Text` со стилем-наследником сливает его с окружающим
+        // `DefaultTextStyle`, и всё, чего в `AlmaType.voice` не задано —
+        // интервал, запасные семейства, — приходит оттуда и делает строку
+        // шире промера. Мерил голым стилем — и вымеренная строка на экране
+        // переносилась: «…still pull four / ways at once». Слитый стиль
+        // отдаётся и рисовальщику, и `Text`.
+        final effective = style.inherit
+            ? DefaultTextStyle.of(context).style.merge(style)
+            : style;
+        final painter = TextPainter(
+          text: TextSpan(text: text, style: effective),
+          textDirection: Directionality.of(context),
+          textScaler: MediaQuery.textScalerOf(context),
+        )..layout(maxWidth: box.maxWidth);
+        final lines = <String>[];
+        var offset = 0;
+        while (offset < text.length) {
+          final range = painter.getLineBoundary(TextPosition(offset: offset));
+          if (range.end <= offset) break;
+          // Хвостовой пробел уносим: он не виден, но входит в ширину, и
+          // строка, померенная с ним, при повторной вёрстке уже не влезает.
+          lines.add(text.substring(range.start, range.end).trimRight());
+          offset = range.end;
+        }
+        if (lines.isEmpty) lines.add(text);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            for (final (i, line) in lines.indexed)
+              AnimatedBuilder(
+                animation: progress,
+                builder: (context, child) {
+                  final o = opacityFor((startLine + i) - progress.value);
+                  return Opacity(
+                    opacity: o,
+                    // Подъём 4–8 pt: строка приходит снизу и садится на место.
+                    child: Transform.translate(
+                      offset: Offset(0, 8 * (1 - o).clamp(0.0, 1.0)),
+                      child: child,
+                    ),
+                  );
+                },
+                // **Без `softWrap: false`.** С ним строка, вымеренная по
+                // `getLineBoundary`, при повторной вёрстке выходила на
+                // доли точки шире своей ширины и обрезалась по краю: ответ
+                // читался как «Your chiron sits at 18°03′ in Capricorn, in th».
+                // Найдено на устройстве. Перенос здесь и не случится — кусок
+                // по построению ровно на одну строку, — а вот запас на
+                // округление нужен.
+                child: Text(line, style: effective),
+              ),
+          ],
+        );
+      },
     );
   }
 }
