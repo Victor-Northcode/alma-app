@@ -632,14 +632,19 @@ class _Pill extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: _radius,
+          // **Одна тень, без золотого ореола.**
+          //
+          // Ореол был в спеке, но не в макете, и на кадре давал вокруг чипа
+          // свечение, которого в дизайне нет: решение владельца — прав эталон.
+          // Сама тень чуть глубже макетной `0 5 14`, потому что там пилюля
+          // нарисована в потоке, а у нас она плавающая и обязана отделяться от
+          // содержимого под собой.
           boxShadow: const [
             BoxShadow(
-              color: Color(0x80000000),
-              blurRadius: 26,
-              offset: Offset(0, 10),
+              color: Color(0x73000000),
+              blurRadius: 20,
+              offset: Offset(0, 8),
             ),
-            // Золотой ореол: пилюля светится, а не лежит.
-            BoxShadow(color: Color(0x2EC9AE6B), blurRadius: 22),
           ],
         ),
         child: Stack(
@@ -672,11 +677,16 @@ class _Pill extends StatelessWidget {
                       // Место под звезду: она нарисована слоем выше, чтобы
                       // растворение тела её не уносило.
                       const SizedBox(width: 13),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 7),
                       Text(
                         label,
                         style: AlmaType.button.copyWith(
                           fontSize: 12.5,
+                          // **Обычное начертание, не полужирное.** Пилюля —
+                          // тихое событие; кричат только кнопки действия.
+                          // Золотую искру даёт эмблема, а не жирность букв.
+                          fontWeight: FontWeight.w400,
+                          fontVariations: const [FontVariation('wght', 400)],
                           // 15 при кегле 12.5 — строка Golos Text при
                           // `line-height:normal`. Это она, а не звезда в 13,
                           // держит высоту чипа: 10 + 15 + 10 = 35.
