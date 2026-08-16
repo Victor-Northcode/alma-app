@@ -456,11 +456,47 @@ class _SystemsTab extends StatelessWidget {
     final shell = context.findAncestorStateOfType<_CabinetShellState>()!;
     return Navigator(
       key: shell._systemsNav,
+      // **Признак чтения гасит навигатор, а не пять условий в пяти файлах.**
+      //
+      // Пергаментным бар делает `readingNow`, и поднимает его страница главы.
+      // Гасили его до сих пор в трёх разных местах — `dispose` главы,
+      // перестройка каркаса, смена вкладки, — и всё равно оставался четвёртый
+      // путь, на котором не гасил никто: прочесть написанную главу, вернуться
+      // и открыть ночную. Список глав под снятой главой не перестраивается, и
+      // светлый бар оставался поверх ночи. Владелец приносил этот баг четыре
+      // раза в разных обличьях.
+      //
+      // Уход с главы — это всегда движение навигатора, и другого способа с неё
+      // уйти нет. Поэтому наблюдатель гасит признак на любом переходе, а глава,
+      // оставшаяся наверху с готовым текстом, поднимает его снова сама.
+      observers: [_ChapterExit()],
       onGenerateRoute: (settings) => CupertinoPageRoute(
         builder: (context) => SystemsScreen(onOpenSystem: shell._openSystem),
       ),
     );
   }
+}
+
+/// Гасит признак чтения на любом движении навигатора вкладки «Мои системы».
+///
+/// Гасит, но не поднимает: поднять его вправе только страница главы, которая
+/// знает, дочитан ли её текст. Наблюдатель отвечает ровно за одно — что при
+/// уходе с главы бар перестаёт быть пергаментным, каким бы путём с неё ни
+/// ушли.
+class _ChapterExit extends NavigatorObserver {
+  void _dim() => readingNow.value = false;
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previous) => _dim();
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previous) => _dim();
+
+  @override
+  void didRemove(Route<dynamic> route, Route<dynamic>? previous) => _dim();
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) => _dim();
 }
 
 /// Страница, которую `PageView` не выбрасывает, уехав от неё.
