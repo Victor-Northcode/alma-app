@@ -2323,6 +2323,23 @@
   "@paywallWithdrawn": {
     "description": "from Paywall/paywall.withdrawn"
   },
+  "pillSheetCta": "See the plans · from {price}",
+  "@pillSheetCta": {
+    "description": "from Pill/pill.sheetCta",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "pillSheetFootnote": "One-time doors exist too · cancel any time in your Apple ID settings",
+  "@pillSheetFootnote": {
+    "description": "from Pill/pill.sheetFootnote"
+  },
+  "pillSheetSub": "Your chart is already calculated — and always free. The plan opens the writing.",
+  "@pillSheetSub": {
+    "description": "from Pill/pill.sheetSub"
+  },
   "scrAddPersonBirthTime": "their birth time",
   "@scrAddPersonBirthTime": {
     "description": "from Screens/scr.addPerson.birthTime"

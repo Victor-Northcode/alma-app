@@ -183,7 +183,9 @@ class _SystemScreenState extends State<SystemScreen> {
         ? 26.0
         : facts.isNotEmpty
             ? 22.0
-            : _result == null
+            // Заготовка колеса отбивает себя сама нижним полем, как и готовый
+            // рисунок; отбивка нужна только там, где над оглавлением пусто.
+            : _result == null && !_loading
                 ? 10.0
                 : 0.0;
     return ScreenScaffold(
@@ -219,6 +221,18 @@ class _SystemScreenState extends State<SystemScreen> {
                 },
               _ => const SizedBox.shrink(),
             },
+          )
+        else if (_loading)
+          // **Пока система считается, на её месте стоит колесо, а не дыра.**
+          // Экран открывался пустым небом с одной строкой «минуту» внизу —
+          // ровно тот случай, о котором сказано «эти экраны мы вообще не
+          // сделали». В макете (s28) здесь кольцо в масштабе будущего
+          // рисунка, и золотая дуга по нему пишется и стирается: видно, что
+          // работа идёт. Позиций оно не показывает — их ещё нет, и выдумывать
+          // их нельзя.
+          const Padding(
+            padding: EdgeInsets.only(top: 6, bottom: 10),
+            child: Center(child: ChartPlaceholder()),
           ),
         if (_needsPartner) ...[
           // Колесо отношений рисовать не из чего, пока второго человека нет,
@@ -276,12 +290,19 @@ class _SystemScreenState extends State<SystemScreen> {
           l.cabChapters,
           trailing: _chapters?.total.toString(),
           children: [
-            if (_loading)
+            if (_loading) ...[
+              // «Минуту» стоит там же, где в макете: сразу под линейкой
+              // раздела, по центру, с отбивкой 10 сверху и 6 снизу — а под
+              // ней три заготовки строк оглавления. Одна фраза посреди
+              // сорока точек пустоты не говорила, что грузится именно
+              // оглавление; три строки на своих местах говорят.
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
+                padding: const EdgeInsets.only(top: 10, bottom: 6),
                 child: Center(
                     child: Text(l.stateLoadingShort, style: AlmaType.meta)),
-              )
+              ),
+              for (var i = 0; i < 3; i++) _waitingRow(i),
+            ]
             else if (_failure != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
@@ -551,6 +572,62 @@ class _SystemScreenState extends State<SystemScreen> {
         ]),
         ...children,
       ],
+    );
+  }
+
+  /// Место одной главы, пока оглавление в пути.
+  ///
+  /// Геометрия и числа — из макета (s28): отбивка 16 сверху и снизу, та же
+  /// волосяная черта под строкой, метка 22×14 на месте римской цифры, под
+  /// заголовком строка вопроса. Ширины заготовок разные (56/44/60 % и
+  /// 78/64/70 %) — ровный частокол одинаковых полос читается как таблица, а
+  /// не как оглавление. Блик идёт сверху вниз со сдвигом 0.1 с.
+  ///
+  /// Колонка под метку — 44 точки, как у настоящей строки: когда придут
+  /// заголовки, они встанут ровно туда, где стояли заготовки, и список не
+  /// дёрнется.
+  Widget _waitingRow(int i) {
+    const title = [0.56, 0.44, 0.60];
+    const question = [0.78, 0.64, 0.70];
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 44,
+            child: WaitingBar(
+              height: 14,
+              width: 22,
+              tone: WaitingTone.gold,
+              delay: Duration(milliseconds: i * 300),
+            ),
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WaitingBar(
+                  height: 14,
+                  widthFactor: title[i],
+                  tone: WaitingTone.strong,
+                  delay: Duration(milliseconds: i * 300 + 100),
+                ),
+                const SizedBox(height: 8),
+                WaitingBar(
+                  height: 11,
+                  widthFactor: question[i],
+                  tone: WaitingTone.faint,
+                  delay: Duration(milliseconds: i * 300 + 200),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

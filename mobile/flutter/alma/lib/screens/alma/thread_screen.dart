@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/sky/night_sky.dart';
@@ -82,14 +81,17 @@ class _ThreadScreenState extends State<ThreadScreen> {
               child: Text(l.stateLoadingShort, style: AlmaType.meta),
             )
           else
+            // **Расстояние между репликами принадлежит реплике, а не экрану.**
+            //
+            // Здесь поверх [ChatTurnView] лежал ещё `gapLarge` снизу, и та же
+            // переписка в архиве шла с шагом 42–48 точек вместо 14–20 живой
+            // ленты (s7): разговор, разложенный вдвое реже, читается не тем же
+            // разговором. Виджет один — пусть и ритм будет один.
             for (final turn in turns)
-              Padding(
-                padding: const EdgeInsets.only(bottom: AlmaMetrics.gapLarge),
-                child: ChatTurnView(
-                  mine: turn.mine,
-                  body: turn.body,
-                  citedFactors: turn.citedFactors,
-                ),
+              ChatTurnView(
+                mine: turn.mine,
+                body: turn.body,
+                citedFactors: turn.citedFactors,
               ),
         ],
       ),

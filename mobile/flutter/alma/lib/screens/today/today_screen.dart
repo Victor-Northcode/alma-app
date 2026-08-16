@@ -17,6 +17,7 @@ import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 import '../offer_screen.dart';
+import '../systems/writing_art.dart';
 import 'today_model.dart';
 
 /// Первая страница кабинета: сегодняшнее небо против карты рождения.
@@ -232,14 +233,36 @@ class _DaySection extends StatelessWidget {
   List<Widget> _voice(L l) {
     switch (model.line) {
       case LoadRunning():
+        // **Ожидание — это страница, а не строка.** Здесь стояли неподвижная
+        // точка и подпись «читаю твою карту» над пустотой, и полминуты это
+        // выглядело сломанным экраном. В макете (s27) на месте будущего текста
+        // лежат заготовки строк, по которым идёт блик: человек видит, сколько
+        // текста придёт и куда он ляжет, ещё до первого слова.
+        //
+        // Числа макета: отбивка 24 сверху и 18 снизу у строки присутствия,
+        // строки высотой 15 через 13, ширины 100/94/62 %, блик 1.9 с линейно
+        // со сдвигом 0.15 с на строку.
         return [
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.only(top: 24, bottom: 18),
             child: Row(children: [
-              const _AlmaPresence(size: 24),
+              const WaitingDot(size: 24),
               const SizedBox(width: 12),
               Text(l.cabReadingChart, style: AlmaType.meta),
             ]),
+          ),
+          const WaitingBar(height: 15),
+          const SizedBox(height: 13),
+          const WaitingBar(
+            height: 15,
+            widthFactor: 0.94,
+            delay: Duration(milliseconds: 150),
+          ),
+          const SizedBox(height: 13),
+          const WaitingBar(
+            height: 15,
+            widthFactor: 0.62,
+            delay: Duration(milliseconds: 300),
           ),
         ];
       case LoadDone<ReadingResponse>(value: final answer):
@@ -275,6 +298,36 @@ class _DaySection extends StatelessWidget {
   /// не может написать ни один гороскоп по знаку Солнца.
   List<Widget> _areas(L l) {
     final sky = model.sky;
+    // Пока небо считается, области стоят заготовками — по макету s27: золотая
+    // метка 52×11 и строка под ней, отбивка 30 у первой группы и 22 у
+    // остальных (первая получает 26, потому что четыре точки над ней уже
+    // отдал `build`). Заготовка ничего не обещает про содержание: она держит
+    // место, чтобы страница не прыгнула, когда придут настоящие строки.
+    if (sky is LoadRunning<CalcResult>) {
+      return [
+        for (var i = 0; i < 4; i++)
+          Padding(
+            padding: EdgeInsets.only(top: i == 0 ? 26 : 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WaitingBar(
+                  height: 11,
+                  width: 52,
+                  tone: WaitingTone.gold,
+                  delay: Duration(milliseconds: 450 + i * 300),
+                ),
+                const SizedBox(height: 12),
+                WaitingBar(
+                  height: 13,
+                  widthFactor: i.isEven ? 0.84 : 0.70,
+                  delay: Duration(milliseconds: 600 + i * 300),
+                ),
+              ],
+            ),
+          ),
+      ];
+    }
     if (sky is! LoadDone<CalcResult>) return const [];
     final data = sky.value.data;
 
@@ -335,29 +388,6 @@ class _DaySection extends StatelessWidget {
     final day = exact == null ? null : DateTime.tryParse(exact);
     if (day == null) return '$phrase.';
     return '$phrase, ${DateFormat.MMMMd(l.localeName).format(day.toLocal())}.';
-  }
-}
-
-/// Тёплая точка света — присутствие Alma, у того размера, где кольцо снято.
-class _AlmaPresence extends StatelessWidget {
-  const _AlmaPresence({required this.size});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(colors: [
-          AlmaPalette.starFill,
-          AlmaPalette.gold.withValues(alpha: 0.5),
-          AlmaPalette.gold.withValues(alpha: 0.0),
-        ], stops: const [0.0, 0.45, 1.0]),
-      ),
-    );
   }
 }
 

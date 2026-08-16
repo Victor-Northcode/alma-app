@@ -1,11 +1,8 @@
-import 'dart:async';
-import 'dart:math' as math;
-
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'billing/alma_store.dart';
+import 'design/invitation_pill.dart';
 import 'design/metrics.dart';
 import 'design/palette.dart';
 import 'design/tab_bar.dart';
@@ -16,7 +13,6 @@ import 'net/models.dart';
 import 'screens/alma/alma_screen.dart';
 import 'screens/journey/journey_screen.dart';
 import 'screens/launch_screen.dart';
-import 'screens/offer_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
@@ -118,11 +114,66 @@ class _CabinetShellState extends State<CabinetShell> {
   /// же и о том, почему считается расстояние, а не скорость на отпускании.
   double _pushed = 0;
 
+  /// Связь между вкладкой и приглашением «Вся Alma». Что она решает и почему
+  /// это отдельная вещь — в [PillDirector]; здесь только её кормят.
+  final PillDirector _pill = PillDirector();
+
   @override
   void dispose() {
+    _pill.dispose();
     _peek.dispose();
     _pages.dispose();
     super.dispose();
+  }
+
+  /// Где мы сейчас с точки зрения приглашения.
+  ///
+  /// **Список мест, где звать можно, короче списка вкладок, и это решение.**
+  /// Заплатившему — никогда: звать подписчика купить подписку значит показать,
+  /// что мы не знаем, кто перед нами. Над пергаментом главы — никогда: вкладка
+  /// всё ещё «Мои системы», а экран уже документ, и продавать поверх того, за
+  /// что человек только что заплатил вниманием, — худший момент из возможных.
+  /// Поверх шита, витрины или диалога — никогда: наверху чужой маршрут, и
+  /// пилюля оказалась бы под ним или, хуже, над ним.
+  PillSurface? _pillSurface(AlmaSession session, bool reading) {
+    if (session.isSubscriber || !session.hasBirthData) return null;
+    if (!(ModalRoute.of(context)?.isCurrent ?? true)) return null;
+    return switch (_tab) {
+      CabinetTab.today => PillSurface.today,
+      CabinetTab.systems => reading ? null : PillSurface.systems,
+      CabinetTab.alma || CabinetTab.settings => null,
+    };
+  }
+
+  /// Сказать пилюле, где мы, — **после кадра**, а не посреди него.
+  ///
+  /// Прямо из `build` это был бы `setState` у чужого состояния во время
+  /// построения дерева, то есть падение в отладке на первой же смене вкладки.
+  void _aimPill(AlmaSession session, bool reading) {
+    final surface = _pillSurface(session, reading);
+    final bought = session.entitlements.unlocked.isNotEmpty ||
+        session.entitlements.hasPlan;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _pill
+        ..bought = bought
+        ..surface = surface;
+    });
+  }
+
+  /// Едет ли список под пилюлей.
+  ///
+  /// Горизонтальные уведомления сюда приходят от самого `PageView` — смах между
+  /// вкладками это тоже прокрутка, — и считать их движением содержимого нельзя:
+  /// иначе пилюля уезжала бы под бар на каждом переходе между вкладками.
+  bool _watchScroll(ScrollNotification note) {
+    if (note.metrics.axis != Axis.vertical) return false;
+    if (note is ScrollStartNotification) {
+      _pill.scrolling = true;
+    } else if (note is ScrollEndNotification) {
+      _pill.scrolling = false;
+    }
+    return false;
   }
 
   /// Нажатие на бар — то же движение, что смах: страница доезжает сама.
@@ -220,60 +271,60 @@ class _CabinetShellState extends State<CabinetShell> {
       // Каждая вкладка обёрнута в `_Alive`: `PageView` держит живыми только
       // соседние страницы, а здесь все четыре обязаны жить всю жизнь
       // приложения — иначе беседа стирается при уходе на «Сегодня».
-      body: PageView(
-        controller: _pages,
-        onPageChanged: (index) {
-          readingNow.value = false;
-          // Приход на любую вкладку гасит зов бара. На трёх вкладках это ничего
-          // не меняет — он там стоит всегда; на Alma это и есть «бара нет»:
-          // приехал он в прошлый визит или нет, встречает беседа с композером.
-          _peek.hide();
-          setState(() => _tab = CabinetTab.values[index]);
-        },
-        children: [
-          const _Alive(child: TodayScreen()),
-          const _Alive(child: _SystemsTab()),
-          _Alive(child: AlmaScreen(tabs: _peek)),
-          const _Alive(child: SettingsScreen()),
-        ],
-      ),
-      // **Приглашение приходит и уходит, а не стоит.**
-      //
-      // На нативе это золотая пилюля в углу «Сегодня» и «Моих систем»: не
-      // баннер и не всплывающее окно, а маленькая печать. Но печать, которая
-      // на экране всегда, перестаёт быть событием на второй минуте — глаз
-      // научается её не видеть, и она превращается в мебель, которая вдобавок
-      // закрывает угол содержимого. Владелец сказал это прямо: пусть всплывает
-      // в нужный момент, иногда напоминает о себе движением и испаряется.
-      //
-      // Что она делает — в [_InvitationPill]. Здесь решается только одно: **кому
-      // и когда её вообще показывать**. Заплатившему — никогда: звать
-      // подписчика купить подписку значит показать, что мы не знаем, кто перед
-      // нами. Над пергаментом — никогда: вкладка всё ещё «Мои системы», а экран
-      // уже документ, и продавать поверх того, за что человек только что
-      // заплатил вниманием, — худший момент из возможных.
-      floatingActionButton: ValueListenableBuilder<bool>(
+      body: ValueListenableBuilder<bool>(
         valueListenable: readingNow,
-        builder: (context, reading, _) {
-          final invited = !session.isSubscriber &&
-              session.hasBirthData &&
-              !reading &&
-              (_tab == CabinetTab.today || _tab == CabinetTab.systems);
-          return Padding(
-            padding: EdgeInsets.only(bottom: AlmaMetrics.tabBarHeight - 8),
-            child: _InvitationPill(
-              // Смена вкладки — новый момент: отсчёт начинается заново, и
-              // приглашение приходит после того, как экран прочитан, а не
-              // вместе с ним.
-              moment: _tab,
-              allowed: invited,
-              onTap: () {
-                Navigator.of(context).push(CupertinoPageRoute(
-                    builder: (context) => const OfferScreen()));
-              },
+        builder: (context, reading, tabs) {
+          // Приглашение узнаёт о месте здесь, потому что здесь сходятся все
+          // три вещи, которые его решают: вкладка, пергамент и сессия.
+          _aimPill(session, reading);
+          return Listener(
+            // Палец на экране — экран ещё не «уселся»: шесть секунд тишины
+            // начинаются заново. Слушателем, а не жестом: этот палец
+            // принадлежит содержимому, и отнимать его нельзя.
+            behavior: HitTestBehavior.deferToChild,
+            onPointerDown: (_) => _pill.stirred(),
+            child: NotificationListener<ScrollNotification>(
+              onNotification: _watchScroll,
+              child: Stack(
+                children: [
+                  tabs!,
+                  // **Пилюля — запись `Overlay` поверх вкладки, а не строка в
+                  // её списке.** Положенная в прокрутку, она уехала бы вместе с
+                  // текстом; положенная сюда — стоит над содержимым и **под**
+                  // баром вкладок, потому что `bottomNavigationBar` рисуется
+                  // после тела. Бар всегда главнее приглашения.
+                  Positioned.fill(
+                    child: Overlay(
+                      initialEntries: [
+                        OverlayEntry(
+                          builder: (context) => PillLayer(director: _pill),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
+        child: PageView(
+          controller: _pages,
+          onPageChanged: (index) {
+            readingNow.value = false;
+            // Приход на любую вкладку гасит зов бара. На трёх вкладках это
+            // ничего не меняет — он там стоит всегда; на Alma это и есть «бара
+            // нет»: приехал он в прошлый визит или нет, встречает беседа с
+            // композером.
+            _peek.hide();
+            setState(() => _tab = CabinetTab.values[index]);
+          },
+          children: [
+            const _Alive(child: TodayScreen()),
+            const _Alive(child: _SystemsTab()),
+            _Alive(child: AlmaScreen(tabs: _peek)),
+            const _Alive(child: SettingsScreen()),
+          ],
+        ),
       ),
       // **На вкладке Alma бар не стоит, а приезжает.**
       //
@@ -430,173 +481,5 @@ class _AliveState extends State<_Alive> with AutomaticKeepAliveClientMixin {
   Widget build(BuildContext context) {
     super.build(context);
     return widget.child;
-  }
-}
-
-
-/// Золотая пилюля «Вся Alma» — приглашение, которое приходит и уходит.
-///
-/// **Почему у неё есть жизнь, а не только вид.** Пилюля висела в углу
-/// постоянно. Постоянное приглашение перестаёт быть приглашением: на второй
-/// минуте глаз перестаёт его замечать, а угол экрана оно закрывать не
-/// перестаёт. Владелец сформулировал задачу словами «всплывала в нужный
-/// момент… иногда тряслась… и испарялась».
-///
-/// Отсюда три числа и один закон.
-///
-/// * **Шесть секунд молчания после прихода на экран.** Экран сначала читают.
-///   Приглашение, появившееся вместе с содержимым, спорит с ним за первый
-///   взгляд и проигрывает — а проиграв, воспринимается как помеха.
-/// * **Одиннадцать секунд жизни.** Достаточно, чтобы заметить и дотянуться, и
-///   мало, чтобы стать мебелью.
-/// * **Полторы минуты тишины** между появлениями, и не больше трёх появлений
-///   на один приход на вкладку. Четвёртое напоминание за две минуты — это уже
-///   не напоминание.
-///
-/// Закон: **движение только на приходе**. Пилюля вздрагивает, когда появилась,
-/// и ещё раз в середине жизни — так вздрагивает то, что хочет, чтобы его
-/// заметили, а не то, что сломалось. Трясущийся элемент, который трясётся
-/// всегда, читается как ошибка отрисовки.
-///
-/// Уходит она не исчезновением: гаснет, чуть уменьшается и поднимается — то
-/// самое «испаряется». Появление зеркально.
-class _InvitationPill extends StatefulWidget {
-  const _InvitationPill({
-    required this.moment,
-    required this.allowed,
-    required this.onTap,
-  });
-
-  /// Что считается «новым моментом». Меняется — цикл начинается заново.
-  final Object moment;
-
-  /// Можно ли звать вообще: подписчику и над пергаментом — нет.
-  final bool allowed;
-
-  final VoidCallback onTap;
-
-  @override
-  State<_InvitationPill> createState() => _InvitationPillState();
-}
-
-class _InvitationPillState extends State<_InvitationPill>
-    with SingleTickerProviderStateMixin {
-  static const _quiet = Duration(seconds: 6);
-  static const _life = Duration(seconds: 11);
-  static const _rest = Duration(seconds: 90);
-  static const _times = 3;
-
-  late final AnimationController _wobble = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 620),
-  );
-
-  bool _visible = false;
-  int _shown = 0;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _restart();
-  }
-
-  @override
-  void didUpdateWidget(_InvitationPill old) {
-    super.didUpdateWidget(old);
-    if (old.moment != widget.moment) {
-      _restart();
-    } else if (old.allowed != widget.allowed && !widget.allowed) {
-      _timer?.cancel();
-      if (_visible) setState(() => _visible = false);
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _wobble.dispose();
-    super.dispose();
-  }
-
-  void _restart() {
-    _timer?.cancel();
-    _shown = 0;
-    if (_visible) _visible = false;
-    _timer = Timer(_quiet, _appear);
-  }
-
-  void _appear() {
-    if (!mounted || !widget.allowed || _shown >= _times) return;
-    setState(() => _visible = true);
-    _shown += 1;
-    _wobble.forward(from: 0);
-    // Второе вздрагивание в середине жизни: одно на приходе можно и
-    // пропустить, глядя в другую часть экрана.
-    _timer = Timer(_life ~/ 2, () {
-      if (mounted && _visible) _wobble.forward(from: 0);
-      _timer = Timer(_life ~/ 2, _vanish);
-    });
-  }
-
-  void _vanish() {
-    if (!mounted) return;
-    setState(() => _visible = false);
-    if (_shown >= _times) return;
-    _timer = Timer(_rest, _appear);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = L.of(context);
-    return IgnorePointer(
-      ignoring: !_visible || !widget.allowed,
-      child: AnimatedOpacity(
-        opacity: _visible && widget.allowed ? 1 : 0,
-        duration: _visible ? AlmaMotion.ui : AlmaMotion.sheet,
-        curve: AlmaMotion.uiCurve,
-        child: AnimatedSlide(
-          // Испарение — вверх и чуть меньше; приход — оттуда же обратно.
-          offset: _visible ? Offset.zero : const Offset(0, -0.35),
-          duration: _visible ? AlmaMotion.ui : AlmaMotion.sheet,
-          curve: AlmaMotion.uiCurve,
-          child: AnimatedScale(
-            scale: _visible ? 1 : 0.92,
-            duration: _visible ? AlmaMotion.ui : AlmaMotion.sheet,
-            curve: AlmaMotion.uiCurve,
-            child: AnimatedBuilder(
-              animation: _wobble,
-              builder: (context, child) {
-                // Затухающее покачивание: две с половиной волны, амплитуда
-                // тает к концу. Не тряска — кивок.
-                final t = _wobble.value;
-                final decay = (1 - t) * (1 - t);
-                final angle = math.sin(t * math.pi * 5) * 0.055 * decay;
-                return Transform.rotate(angle: angle, child: child);
-              },
-              child: Material(
-                color: AlmaPalette.gold,
-                borderRadius: BorderRadius.circular(999),
-                elevation: 6,
-                child: InkWell(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    widget.onTap();
-                  },
-                  borderRadius: BorderRadius.circular(999),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    child: Text('✦ ${l.cabAllAlmaPill}',
-                        style: AlmaType.meta
-                            .copyWith(color: AlmaPalette.inkOnGold)),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

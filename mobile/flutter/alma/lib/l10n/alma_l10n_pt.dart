@@ -1751,6 +1751,19 @@ class LPt extends L {
       'A Apple retirou essa compra — reembolsada ou revogada — então nada está aberto com ela.';
 
   @override
+  String pillSheetCta(String price) {
+    return 'Ver os planos · a partir de $price';
+  }
+
+  @override
+  String get pillSheetFootnote =>
+      'Também existem portas avulsas · cancele quando quiser nos ajustes do seu ID Apple';
+
+  @override
+  String get pillSheetSub =>
+      'Seu mapa já está calculado — e sempre grátis. O plano abre o que foi escrito.';
+
+  @override
   String get scrAddPersonBirthTime => 'a hora de nascimento';
 
   @override

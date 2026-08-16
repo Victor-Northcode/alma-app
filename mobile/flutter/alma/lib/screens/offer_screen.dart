@@ -53,19 +53,36 @@ import 'legal/legal_text.dart';
 /// голым числом на голом небе. Владелец: «вот этот экран и прочие продажные
 /// экраны вообще нормально не сделаны». Претензия не к словам — к тому, что
 /// продающий экран продукта, у которого весь товар это написанный текст,
-/// выглядел как настройки. Эталоны `s8`, `s37`, `s42`, `s43` называют три вещи,
-/// которых не было ни одной:
+/// выглядел как настройки. Эталоны `s8`, `s37`, `s38`, `s42`, `s43` называют
+/// три вещи, которых не было ни одной:
 ///
-/// * **кадрированный арт** — витрина открывается картиной, а не абзацем
-///   (`_GateBand`, `_DoorCard`);
-/// * **пилюли цен** — цена стоит на своей плашке и ею же показывает выбор
-///   (`_PricePill`), поэтому кружок-радиокнопка убран: два указателя на один
-///   выбор — это не вдвое понятнее;
-/// * **парадная дверь** — за одной системой пришли к её собственной карте в
-///   пергаментной раме, а не к общей картинке (`_DoorCard`).
+/// * **картина в раме** — витрина открывается предметом, а не абзацем
+///   (`_ArtCard`, `_NamePlate`);
+/// * **ступень-плашка** — у ступени своя рамка, и она же показывает выбор
+///   (`_Rung`), поэтому кружок-радиокнопка убран;
+/// * **пилюля цены** — число стоит на своей плашке и повторяет тот же выбор
+///   (`_PricePill`).
 ///
-/// Плюс свечение под золотой кнопкой (`_Glowing`) и филигранная линейка перед
-/// ценами (`_Filigree`) — оба из `s42`/`s43`.
+/// Плюс свечение под золотой кнопкой (`_Glowing`) — из `s42`/`s43`.
+///
+/// ### Второй заход, тот же день
+///
+/// Первый заход арт добавил, но добавил **полосами**: широкий кадр ворот под
+/// лидом и филигрань-разделитель между фактами и ценами. Владелец, глядя
+/// третий раз: «тут всё не так, как в дизайне», «картинки вставлены сырыми
+/// полосами», «в макете это витрина, у нас — документ». Что сделано и почему:
+///
+/// * полоса ворот и карта двери сведены в **одну пергаментную раму** `s43`
+///   (170×240): в эталонах витрины фотографии без рамы нет ни одной, и рама —
+///   это и есть разница между предметом на витрине и куском обоев;
+/// * филигрань **убрана совсем**. Её нет ни на одном из эталонных экранов:
+///   `art-divider` в разметке дизайн-проекта не встречается ни разу. Стояла она
+///   между фактами и лестницей и читалась ровно тем, чем была, — куском чужой
+///   фотографии посреди текста;
+/// * ступени из строк, разделённых волосом, стали плашками `s38`. Причина не
+///   косметическая: единственным указателем выбора была пилюля цены, а цену
+///   печатает App Store, — и на молчащем магазине лестница выходила рядом голых
+///   абзацев без всякого следа выбора.
 class OfferScreen extends StatefulWidget {
   const OfferScreen({super.key, this.system});
 
@@ -86,6 +103,19 @@ class _OfferScreenState extends State<OfferScreen> {
   /// Какая ступень выбрана. `null` значит «первая» — и никогда не самая
   /// дорогая: витрина, открывающаяся преднажатой на годовом за $78.99 у того,
   /// кто ткнул в одну закрытую главу, учит людей закрывать витрины.
+  ///
+  /// **Что здесь «первая», решает [ladderFor], а не этот экран.** С 16 августа
+  /// 2026 лестница подписок стоит снизу вверх — неделя, месяц, год, — и
+  /// предвыбранной оказывается неделя. Решение владельца, и оно отменяет
+  /// прежний порядок с годом во главе: предвыбранный год — якорь-перевёртыш.
+  /// Он не поднимает средний чек, а переворачивает вопрос с «сколько платить»
+  /// на «платить ли вообще»; на этом якоре тонут Nebula и Pattern. Наша школа
+  /// — маленький честный первый платёж, а год продаёт свою математику
+  /// последним, когда цены недели и месяца уже названы. Разовая покупка
+  /// («вся Alma, куплена однажды») лестницей подписок не является и стоит там
+  /// же, где стояла. Целиком довод — в шапке `ladderFor`; переставлять порядок
+  /// здесь, поверх результата лестницы, нельзя: это второе место, которое
+  /// однажды разойдётся с первым.
   LadderKey? _chosen;
 
   @override
@@ -185,9 +215,9 @@ class _OfferScreenState extends State<OfferScreen> {
           // ткнул в закрытую главу на симуляторе без магазина и попал на
           // страницу, всё содержимое которой было «App Store не отвечает».
           _Facts(door: door != null),
-          // Филигрань закрывает рассказ и открывает цены — её место в `s43`
-          // ровно между картиной и пилюлями (y=506, сразу над ними).
-          if (!_loading && rungs.isNotEmpty) const _Filigree(),
+          // `margin-top:10px` у блока лестницы в `s8`. Отбивать её от фактов
+          // сильнее нечем: у ступеней теперь своя рамка, и она сама держит
+          // расстояние.
           const SizedBox(height: 10),
           if (_loading)
             Padding(
@@ -216,12 +246,11 @@ class _OfferScreenState extends State<OfferScreen> {
               ),
             )
           else ...[
-            for (final (i, key) in rungs.indexed)
+            for (final key in rungs)
               _Rung(
                 rung: key,
                 price: _store.price(key),
                 selected: key == chosen,
-                showsRule: i != rungs.length - 1,
                 onTap: _store.busy != null
                     ? null
                     : () => setState(() => _chosen = key),
@@ -275,9 +304,12 @@ class _Dotted extends StatelessWidget {
   Widget build(BuildContext context) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final line in lines)
+          for (final (i, line) in lines.indexed)
             Padding(
-              padding: const EdgeInsets.only(bottom: 7),
+              // Семь точек между строками, но не после последней: в эталоне
+              // `margin-bottom` стоит у всех, кроме неё, и лишний хвост сдвигал
+              // весь следующий блок.
+              padding: EdgeInsets.only(bottom: i == lines.length - 1 ? 0 : 7),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -291,24 +323,30 @@ class _Dotted extends StatelessWidget {
       );
 }
 
-/// Ступень: что это слева, сколько магазин возьмёт справа.
+/// Ступень: плашка с именем и подписью, ценой справа.
 ///
-/// Ни карточки, ни рамки, ни панели. Содержимое стоит на ночи, ступени
-/// разделены волосяной линией.
-///
-/// **Выбор показывает пилюля цены, а не кружок.** Кружок-радиокнопка стоял
+/// **Выбор показывает сама плашка, а не кружок.** Кружок-радиокнопка стоял
 /// слева от каждой строки и был первым, что владелец назвал вслух: ряд пустых
-/// кружков на голом небе читается как анкета, а не как полка. В `s43` выбранный
-/// план — пергаментная пилюля с ценой, невыбранный — та же пилюля обводкой; там
-/// нет ни одного кружка. Пилюля и есть указатель: она стоит там же, куда и так
-/// смотрят, — на цене. Два указателя на один выбор не делают его вдвое яснее,
-/// поэтому кружок убран, а не оставлен рядом.
+/// кружков на голом небе читается как анкета, а не как полка.
+///
+/// **И не одна пилюля цены.** Пилюля из `s43` осталась и по-прежнему говорит о
+/// выборе, но нести его одна она не может: цену печатает App Store, а он
+/// молчит и на симуляторе, и на отвалившейся сети, и до одобрения товаров. В
+/// этом состоянии лестница выходила рядом голых строк, разделённых волосом, —
+/// ровно то, что владелец увидел с третьего раза: «тут всё не так, как в
+/// дизайне», «ступени — голые строки». Указатель выбора, исчезающий вместе с
+/// ценой, — это отсутствующий указатель.
+///
+/// Форма взята у `s38`, где эталон выбирает одно из двух и у каждого варианта
+/// заголовок с подписью: поле 16×20, скругление 18, промежуток 12; выбранное —
+/// обводка `#C9AE6B` и заголовок `#E4D3A2`, невыбранное — обводка
+/// `rgba(237,231,218,.1)` и заголовок `#F6F1E4`. Заливки нет ни у того, ни у
+/// другого: витрина остаётся ночью с предметами на ней, а не панелью.
 class _Rung extends StatelessWidget {
   const _Rung({
     required this.rung,
     required this.price,
     required this.selected,
-    required this.showsRule,
     required this.onTap,
   });
 
@@ -318,51 +356,60 @@ class _Rung extends StatelessWidget {
   /// нельзя выдумывать, это число.
   final String? price;
   final bool selected;
-  final bool showsRule;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Opacity(
-        opacity: onTap == null ? 0.75 : 1,
-        child: Column(children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            child: Row(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Opacity(
+          opacity: onTap == null ? 0.75 : 1,
+          child: AnimatedContainer(
+            duration: AlmaMotion.ui,
+            curve: AlmaMotion.uiCurve,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: selected ? AlmaPalette.gold : AlmaPalette.hairline,
+              ),
+            ),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  // Невыбранная ступень приглушена на шаг — то же, что делает
-                  // эталон (`opacity:.85` на невыбранных строках `s8`/`s37`).
-                  child: AnimatedOpacity(
-                    duration: AlmaMotion.ui,
-                    curve: AlmaMotion.uiCurve,
-                    opacity: selected ? 1 : 0.85,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(rung.title(l), style: AlmaType.headingM),
-                        const SizedBox(height: 4),
-                        Text(rung.note(l), style: AlmaType.meta),
-                      ],
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        rung.title(l),
+                        style: AlmaType.headingM.copyWith(
+                          color: selected
+                              ? AlmaPalette.goldBright
+                              : AlmaPalette.inkLight,
+                        ),
+                      ),
                     ),
-                  ),
+                    // Магазин молчит — колонки нет вовсе. Пустая пилюля обещала
+                    // бы число, которого никто не называл.
+                    if (price != null) ...[
+                      const SizedBox(width: 12),
+                      _PricePill(price: price!, selected: selected),
+                    ],
+                  ],
                 ),
-                // Магазин молчит — колонки нет вовсе. Пустая пилюля обещала бы
-                // число, которого никто не называл.
-                if (price != null) ...[
-                  const SizedBox(width: 12),
-                  _PricePill(price: price!, selected: selected),
-                ],
+                // Подпись во всю ширину плашки, а не в колонку рядом с ценой:
+                // зажатая пилюлей, она уходила в четыре строки и растила
+                // ступень выше картины.
+                const SizedBox(height: 3),
+                Text(rung.note(l), style: AlmaType.meta),
               ],
             ),
           ),
-          if (showsRule) const AlmaHairline(),
-        ]),
+        ),
       ),
     );
   }
@@ -579,9 +626,19 @@ class _RestoreButton extends StatelessWidget {
 /// **Одна картина на экран, и она обязана говорить про этот экран.** За одной
 /// системой пришли — стоит её собственная карта: экран, продающий нумерологию
 /// под общей картинкой ворот, не отличается от экрана, продающего всё. Пришли
-/// за всем — стоят ворота: восемь чужих карт по очереди были бы каруселью, а
-/// две выбранные («солнечное возвращение» и «астрокартография», как в замерах
-/// `s43`) — обещанием именно этих двух из восьми.
+/// за всем — стоят ворота.
+///
+/// **Обе картины — в одной раме, и рама здесь важнее картины.** До 16 августа
+/// 2026 у двух случаев было два разных вида: дверь получала пергаментную карту
+/// `s42`, а «вся Alma» — широкую полосу фотографии с золотым кантом. Владелец о
+/// полосе: «картинки вставлены сырыми полосами, верхняя занимает четверть
+/// экрана». И он прав по существу, а не по вкусу: кадр во всю колонку, кроме
+/// скругления не имеющий формы, читается наклейкой поверх неба — тем более что
+/// внутри у него фотография с собственной перспективой. В эталонах витрины
+/// (`s42`, `s43`) фотографии «просто так» нет ни одной: арт **всегда** внутри
+/// пергаментной рамы, и именно рама делает его предметом на витрине, а не
+/// куском обоев. Поэтому рама одна на оба случая, а разное — только то, что в
+/// ней лежит и как оно подписано.
 class _Crown extends StatelessWidget {
   const _Crown({required this.door});
 
@@ -590,144 +647,178 @@ class _Crown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final art = door == null ? const _GateBand() : _DoorCard(system: door!);
+    final l = L.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 18, bottom: 16),
-      child: art,
-    );
-  }
-}
-
-/// Кадрированный арт: золотые ворота полосой.
-///
-/// Файл — портрет 402×603 (двери целиком, со ступенями). Эталон `s37` берёт из
-/// него полосу 356×150, и это не экономия места: полоса на уровне светящегося
-/// проёма — это дверь, которая **открывается**, а весь кадр целиком — это
-/// фотография закрытой двери. Кадрируем по центру на 62% высоты — там проём,
-/// луч и филигрань оклада; выше идут своды, ниже ступени и книги.
-class _GateBand extends StatelessWidget {
-  const _GateBand();
-
-  static const _radius = 14.0;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(_radius),
-      child: AspectRatio(
-        aspectRatio: 356 / 150,
-        child: Stack(fit: StackFit.expand, children: [
-          Image.asset(
-            AlmaArt.gates,
-            fit: BoxFit.cover,
-            // 62% высоты в системе Flutter, где −1 верх, а 1 низ.
-            alignment: const Alignment(0, 0.24),
-          ),
-          // Кант и лёгкая тень по низу: без них кадр читается наклейкой поверх
-          // неба, а не окном в него.
-          DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(_radius),
-              border:
-                  Border.all(color: AlmaPalette.gold.withValues(alpha: 0.45)),
-              gradient: const LinearGradient(
-                begin: Alignment.center,
-                end: Alignment.bottomCenter,
-                colors: [Color(0x00070A16), Color(0x8C070A16)],
-              ),
-            ),
-          ),
-        ]),
+      // Снизу больше, чем сверху: табличка свисает за нижний край рамы, и
+      // 16 точек, которых хватало карте, она бы вынесла на первую ступень.
+      padding: const EdgeInsets.only(top: 18, bottom: 26),
+      child: _ArtCard(
+        image: door == null ? AlmaArt.gates : AlmaArt.card(door!),
+        // Ворота ничем не названы — им нужна табличка. Карту системы уже
+        // назвал заголовок экрана, и вторая подпись была бы эхом.
+        plate: door == null ? l.cabAllAlmaPill : null,
+        // Звёзды по углам — приём карточной рамы `s42`, и он принадлежит
+        // карте. У ворот вместо них табличка; два украшения на одной раме
+        // спорят.
+        stars: door != null,
       ),
     );
   }
 }
 
-/// Парадная дверь: карта системы в пергаментной раме, парящая над ночью.
+/// Картина витрины в пергаментной раме.
 ///
-/// Порт `s42` — единственного эталона, прошедшего «charm pass». Числа оттуда,
-/// пересчитанные от ширины рамы (в эталоне 224), чтобы рама не разъезжалась на
-/// маленьком телефоне: поле 10, скругление 14, внутренний штрих с отступом 6 и
-/// скруглением 10, четырёхлучевые звёзды 16 по углам с отступом 3.
+/// Порт рамы `s43` — «full access, framed art»: 170×240, поле 8, скругление 12,
+/// внутренний штрих с отступом 5 и скруглением 8 цветом `rgba(168,135,60,.45)`,
+/// картинка со скруглением 6, тень `0 20px 55px rgba(0,0,0,.6)` и золотой волос
+/// по контуру `rgba(201,174,107,.4)`. Всё пересчитано от ширины рамы, чтобы она
+/// не разъезжалась на узком телефоне.
 ///
-/// Ширина — 48% колонки, но не больше 190 точек. В эталоне карта занимает 56%
-/// ширины экрана, и там она **весь** экран; здесь под ней ещё лестница цен, и
-/// герой в 300 точек высотой отправил бы первую цену за нижний край.
-class _DoorCard extends StatelessWidget {
-  const _DoorCard({required this.system});
+/// Ширина — 42.5% колонки, но не больше 170 точек эталона. В `s43` карта
+/// занимает 42% ширины экрана и там она **весь** экран; здесь под ней ещё лид,
+/// три факта и лестница цен, и рама в полный рост эталона отправила бы первую
+/// цену за нижний край.
+///
+/// **Картинка садится `cover` и теряет по краю — так и надо.** Ворота
+/// (402×603) и карты систем (280×420) обе портретные и обе почти той же
+/// пропорции, что просвет рамы; кадрируется несколько процентов по высоте.
+/// Полоса, которая стояла здесь раньше, выбрасывала из ворот две трети кадра.
+class _ArtCard extends StatelessWidget {
+  const _ArtCard({
+    required this.image,
+    required this.plate,
+    required this.stars,
+  });
 
-  final SystemSlug system;
+  final String image;
 
-  /// Пропорция рамы эталона, не картинки: картинка 280×420 садится в неё
-  /// `cover` и теряет по краю — рама важнее, её видно.
-  static const _frame = 224 / 356;
+  /// Табличка под нижним краем рамы. `null` — картину подписывать нечем.
+  final String? plate;
+  final bool stars;
+
+  /// Рама эталона `s43`.
+  static const _w = 170.0;
+  static const _h = 240.0;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, box) {
-      final w = math.min(box.maxWidth * 0.48, 190.0);
-      final k = w / 224; // всё остальное — доли эталонной ширины
+      final w = math.min(box.maxWidth * 0.425, _w);
+      final k = w / _w; // всё остальное — доли эталонной ширины
       return Center(
         child: _Floating(
           child: SizedBox(
             width: w,
-            height: w / _frame,
-            child: Stack(fit: StackFit.expand, children: [
+            height: _h * k,
+            // Табличка свисает ниже рамы — обрезать её нечем и незачем.
+            child: Stack(clipBehavior: Clip.none, fit: StackFit.expand, children: [
               Container(
-                padding: EdgeInsets.all(10 * k),
+                padding: EdgeInsets.all(8 * k),
                 decoration: BoxDecoration(
                   color: AlmaPalette.inkLight,
-                  borderRadius: BorderRadius.circular(14 * k),
+                  borderRadius: BorderRadius.circular(12 * k),
                   border: Border.all(
                       color: AlmaPalette.gold.withValues(alpha: 0.4)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.65),
-                      blurRadius: 70 * k,
-                      offset: Offset(0, 24 * k),
+                      color: Colors.black.withValues(alpha: 0.6),
+                      blurRadius: 55 * k,
+                      offset: Offset(0, 20 * k),
                     ),
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(8 * k),
-                  child: Image.asset(AlmaArt.card(system), fit: BoxFit.cover),
+                  borderRadius: BorderRadius.circular(6 * k),
+                  child: Image.asset(image, fit: BoxFit.cover),
                 ),
               ),
               // Штрих и звёзды — поверх картины: рама принадлежит карте, а не
               // тому, что на ней нарисовано.
               IgnorePointer(
                 child: Padding(
-                  padding: EdgeInsets.all(6 * k),
+                  padding: EdgeInsets.all(5 * k),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10 * k),
+                      borderRadius: BorderRadius.circular(8 * k),
                       border: Border.all(
                           color: AlmaPalette.goldDeep.withValues(alpha: 0.45)),
                     ),
                   ),
                 ),
               ),
-              for (final corner in const [
-                Alignment.topLeft,
-                Alignment.topRight,
-                Alignment.bottomLeft,
-                Alignment.bottomRight,
-              ])
-                Align(
-                  alignment: corner,
-                  child: Padding(
-                    padding: EdgeInsets.all(3 * k),
-                    child: CustomPaint(
-                      size: Size.square(16 * k),
-                      painter: const _CornerStar(),
+              if (stars)
+                for (final corner in const [
+                  Alignment.topLeft,
+                  Alignment.topRight,
+                  Alignment.bottomLeft,
+                  Alignment.bottomRight,
+                ])
+                  Align(
+                    alignment: corner,
+                    child: Padding(
+                      padding: EdgeInsets.all(3 * k),
+                      // Звезда в `s42` — 16 точек на раме шириной 224, то есть
+                      // 7.1% ширины. Держим долю, а не число: на раме 170 звезда
+                      // в 16 точек стала бы кляксой в углу.
+                      child: CustomPaint(
+                        size: Size.square(w * 0.071),
+                        painter: const _CornerStar(),
+                      ),
                     ),
                   ),
+              if (plate != null)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: -16 * k,
+                  child: Center(child: _NamePlate(label: plate!, k: k)),
                 ),
             ]),
           ),
         ),
       );
     });
+  }
+}
+
+/// Табличка под картиной — из `s42`, где ею подписана аркана.
+///
+/// Числа эталона: подложка `#04060E`, золотая обводка `rgba(201,174,107,.7)`,
+/// скругление 6, поле 8×22, засечный 15; вокруг — кант в три точки цвета ночи и
+/// ещё волос золота на 35%, то есть табличка вырезана из неба и обведена
+/// дважды. Подпись **не внутри** картины, как в `s43`: там арт светлый снизу, а
+/// наши ворота там темнее всего, и чернильная строка на них не читалась бы.
+class _NamePlate extends StatelessWidget {
+  const _NamePlate({required this.label, required this.k});
+
+  final String label;
+  final double k;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(3 * k),
+      decoration: BoxDecoration(
+        color: AlmaPalette.voidDark,
+        borderRadius: BorderRadius.circular(9 * k),
+        border:
+            Border.all(color: AlmaPalette.gold.withValues(alpha: 0.35)),
+      ),
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 22 * k, vertical: 8 * k),
+        decoration: BoxDecoration(
+          color: AlmaPalette.voidDark,
+          borderRadius: BorderRadius.circular(6 * k),
+          border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.7)),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AlmaType.headingM.copyWith(fontSize: 15 * k, height: 1.2),
+        ),
+      ),
+    );
   }
 }
 
@@ -809,71 +900,21 @@ class _FloatingState extends State<_Floating>
       );
 }
 
-/// Филигранная линейка между рассказом и ценами.
+/// Пилюля цены — она же второй указатель выбора.
 ///
-/// Файл — снимок броши на синем бархате, **без альфы**. Маской его не положить,
-/// как обещает `art.dart`, поэтому он кадрируется полосой 434×72 (в ней остаётся
-/// сама филигрань, бархат уходит вверх и вниз) и гасится ко всем четырём краям.
+/// Числа `s43`, где стоят ровно две такие пилюли: выбранная — заливка
+/// `#F6F1E4`, число `600 17px` чернилами `#1C1A17`, тень
+/// `0 8px 22px rgba(0,0,0,.4)`; невыбранная — та же форма обводкой
+/// `rgba(201,174,107,.4)` и число слоновой костью. Скругление 999 у обеих.
 ///
-/// **Гасить надо по обеим осям, а не только по горизонтали.** Со сглаженными
-/// концами и резаными верхом-низом на небе оставались две тонкие горизонтальные
-/// линии — край фотографии, который чуть светлее ночи. Видно это только на
-/// снимке экрана рядом с эталоном, но видно каждый раз.
-class _Filigree extends StatelessWidget {
-  const _Filigree();
-
-  /// Прозрачность по краям, непрозрачность в середине — один и тот же профиль
-  /// для обеих осей, разница только в направлении.
-  static Shader _fade(Rect rect, Alignment from, Alignment to, double edge) =>
-      LinearGradient(
-        begin: from,
-        end: to,
-        colors: const [
-          Color(0x00000000),
-          Color(0xFF000000),
-          Color(0xFF000000),
-          Color(0x00000000),
-        ],
-        stops: [0, edge, 1 - edge, 1],
-      ).createShader(rect);
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Padding(
-        padding: const EdgeInsets.only(top: 20, bottom: 2),
-        child: Opacity(
-          opacity: 0.9,
-          child: ShaderMask(
-            blendMode: BlendMode.dstIn,
-            shaderCallback: (rect) =>
-                _fade(rect, Alignment.centerLeft, Alignment.centerRight, 0.22),
-            child: ShaderMask(
-              blendMode: BlendMode.dstIn,
-              shaderCallback: (rect) =>
-                  _fade(rect, Alignment.topCenter, Alignment.bottomCenter, 0.16),
-              child: AspectRatio(
-                aspectRatio: 434 / 72,
-                child: Image.asset(AlmaArt.divider, fit: BoxFit.cover),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Пилюля цены — она же указатель выбора.
-///
-/// Из `s43`: выбранное — пергаментная пилюля с чернильным числом, невыбранное —
-/// та же форма золотой обводкой и слоновой костью внутри.
+/// Поле по горизонтали 16 — своё: в эталоне пилюля тянется на половину экрана
+/// (`flex:1`) и её поле задано только по вертикали, а здесь она обнимает число
+/// в углу ступени.
 ///
 /// **Это не золотая кнопка и не может ею стать.** Дизайн-система запрещает
 /// плоское золото с тёмной подписью (`gold_texture.dart`), и здесь его нет:
-/// заливка — пергамент, единственная светлая поверхность продукта, а не
-/// золотой градиент. Пилюля к тому же не глагол и вдвое ниже кнопки — спутать
-/// её с «купить» не с чем.
+/// заливка — светлая бумага, а не золотой градиент. Пилюля к тому же не глагол
+/// и вдвое ниже кнопки — спутать её с «купить» не с чем.
 class _PricePill extends StatelessWidget {
   const _PricePill({required this.price, required this.selected});
 
@@ -885,9 +926,9 @@ class _PricePill extends StatelessWidget {
     return AnimatedContainer(
       duration: AlmaMotion.ui,
       curve: AlmaMotion.uiCurve,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
       decoration: BoxDecoration(
-        color: selected ? AlmaPalette.parchment : Colors.transparent,
+        color: selected ? AlmaPalette.inkLight : Colors.transparent,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
           color: selected
@@ -906,8 +947,9 @@ class _PricePill extends StatelessWidget {
       ),
       child: Text(
         price,
+        maxLines: 1,
         style: AlmaType.button.copyWith(
-          fontSize: 15,
+          fontSize: 17,
           color: selected ? AlmaPalette.ink : AlmaPalette.inkLight,
         ),
       ),

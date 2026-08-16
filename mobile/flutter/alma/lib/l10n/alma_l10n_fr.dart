@@ -1756,6 +1756,19 @@ class LFr extends L {
       'Apple a repris cet achat — remboursé ou révoqué — donc rien n\'est ouvert avec lui.';
 
   @override
+  String pillSheetCta(String price) {
+    return 'Voir les forfaits · dès $price';
+  }
+
+  @override
+  String get pillSheetFootnote =>
+      'Il existe aussi des portes à l\'unité · annulable à tout moment dans les réglages de ton identifiant Apple';
+
+  @override
+  String get pillSheetSub =>
+      'Ta carte est déjà calculée — et gratuite pour toujours. Le forfait ouvre l\'écrit.';
+
+  @override
   String get scrAddPersonBirthTime => 'son heure de naissance';
 
   @override
@@ -2085,7 +2098,7 @@ class LFr extends L {
   }
 
   @override
-  String get dstDeltaHour => 'une heure';
+  String get dstDeltaHour => '60 minutes';
 
   @override
   String get dstDeltaHalfHour => '30 minutes';

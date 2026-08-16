@@ -1741,6 +1741,19 @@ class LRu extends L {
       'Apple отозвал эту покупку — возврат или отмена, — поэтому под ней ничего не открыто.';
 
   @override
+  String pillSheetCta(String price) {
+    return 'К планам · от $price';
+  }
+
+  @override
+  String get pillSheetFootnote =>
+      'Есть и разовые двери · отменить можно в любой момент в настройках Apple ID';
+
+  @override
+  String get pillSheetSub =>
+      'Твоя карта уже рассчитана — и навсегда бесплатна. План открывает написанное.';
+
+  @override
   String get scrAddPersonBirthTime => 'время рождения';
 
   @override

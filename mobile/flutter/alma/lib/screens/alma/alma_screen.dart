@@ -380,20 +380,7 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
       padding: const EdgeInsets.symmetric(
           horizontal: AlmaMetrics.pad, vertical: AlmaMetrics.gapLarge),
       children: [
-        Center(
-          child: Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(colors: [
-                AlmaPalette.starFill,
-                AlmaPalette.gold.withValues(alpha: 0.5),
-                AlmaPalette.gold.withValues(alpha: 0.0),
-              ], stops: const [0.0, 0.45, 1.0]),
-            ),
-          ),
-        ),
+        const Center(child: _Presence()),
         const SizedBox(height: 18),
         Text(
           session.hasBirthData ? l.scrChatOpening : l.scrChatNoChart,
@@ -436,9 +423,16 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
                         style: AlmaType.body
                             .copyWith(color: AlmaPalette.body.withValues(alpha: 0.9))),
                   ),
-                  const Text('→',
-                      style:
-                          TextStyle(color: AlmaPalette.gold, fontSize: 15)),
+                  // Между строкой и стрелкой на макете 10 (`gap:10px` в s6):
+                  // без зазора стрелка прилипала к последнему слову длинного
+                  // вопроса и читалась его частью, а не указателем строки.
+                  const SizedBox(width: 10),
+                  // Стрелка — тем же текстовым шрифтом, что и вопрос, 15
+                  // пунктов и **полное** золото: `font:15px 'Golos Text';
+                  // color:#C9AE6B`. Без семейства она бралась системным.
+                  Text('→',
+                      style: AlmaType.body.copyWith(
+                          fontSize: 15, color: AlmaPalette.gold)),
                 ]),
               ),
             ),
@@ -461,8 +455,13 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
     final tail = _sending || _refusal != null ? 1 : 0;
     return ListView.builder(
       controller: _scroll,
-      padding: const EdgeInsets.symmetric(
-          horizontal: AlmaMetrics.pad, vertical: AlmaMetrics.gap),
+      // Лента начинается сразу под линейкой шапки: на макете (s7) у неё
+      // `padding:6px 22px 0`, и то же на нативе — `.padding(.top, 6)`.
+      // Стояли общие 16 сверху, и первая реплика проваливалась на десять точек
+      // ниже, чем на эталоне: разговор начинался с дыры. Снизу — `gapLarge`,
+      // чтобы последний ответ не упирался в композер.
+      padding: const EdgeInsets.fromLTRB(
+          AlmaMetrics.pad, 6, AlmaMetrics.pad, AlmaMetrics.gapLarge),
       itemCount: _turns.length + tail,
       itemBuilder: (context, i) {
         if (i == _turns.length) {
@@ -539,8 +538,16 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
                   ),
                 ),
             ],
+            // На макете «earlier» — полужирная метка: `600 10.5px`. Вес у
+            // вариативного шрифта задаётся осью, а не `fontWeight` (см.
+            // `AlmaType`), и без неё слово выходило тоньше стоящей рядом
+            // подписи «ALMA» — два надзаголовка одной строки разного веса.
             child: Text(l.scrChatPast.toUpperCase(),
-                style: AlmaType.tag.copyWith(color: AlmaPalette.gold)),
+                style: AlmaType.tag.copyWith(
+                  color: AlmaPalette.gold,
+                  fontWeight: FontWeight.w600,
+                  fontVariations: const [FontVariation('wght', 600)],
+                )),
           ),
         ],
       ]),
@@ -577,9 +584,25 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// Рост поля и кнопки отправки — 52, скругление 26.
+  ///
+  /// Это **число композера**, а не общий рост полей продукта (54): на макете
+  /// оно стоит дважды, в s6 и в s7 (`height:52px;border-radius:26px` и круг
+  /// `52×52`). Композер — не строка анкеты: он живёт на самой кромке экрана,
+  /// под ним ручка вкладок, и лишние две точки съедают воздух там, где его
+  /// считали по макету.
+  static const double _composerHeight = 52.0;
+
   Widget _composer(L l) {
+    // Счётчик виден на последних трёх вопросах, и в этот момент верх у блока
+    // **свой**: на макете композер без счётчика имеет `padding:12px 22px 6px`
+    // (s6), а со счётчиком — `padding:0 22px 6px` (s7), потому что отступ уже
+    // отдан строке счётчика. Одна и та же дюжина в обоих случаях уводила поле
+    // вниз ровно тогда, когда над ним появлялась ещё одна строка.
+    final counting = _left != null && _left! >= 1 && _left! <= 3;
     return Container(
-      padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 12, AlmaMetrics.pad, 10),
+      padding: EdgeInsets.fromLTRB(
+          AlmaMetrics.pad, counting ? 0 : 12, AlmaMetrics.pad, 6),
       // **Композер парит, а не стоит на полке.**
       //
       // Волосяная линия сверху отрезала его от ленты, и поле читалось как блок
@@ -590,7 +613,7 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
         // цифра над каждым вопросом превращает разговор в счётчик такси.
         // Прижат влево, к началу строки поля, — так он на макете (s7); по
         // центру он читался как заголовок композера, а не как примечание.
-        if (_left != null && _left! >= 1 && _left! <= 3)
+        if (counting)
           Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Text(l.cabQuestionsLeft(_left!),
@@ -598,29 +621,42 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
           ),
         Row(children: [
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            // Рост поля — общий рост полей продукта (54). Раньше здесь стояли
-            // свои 52: на вкладке, где композер остался единственным низом
-            // экрана, собственное число превращается в единственное поле
-            // приложения, которое чуть ниже остальных.
-            height: AlmaMetrics.fieldHeight,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              border: Border.all(color: AlmaPalette.hairline),
-              borderRadius: BorderRadius.circular(AlmaMetrics.fieldHeight / 2),
-            ),
-            child: TextField(
-              controller: _draft,
-              focusNode: _focus,
-              style: AlmaType.body.copyWith(fontSize: 16),
-              decoration: InputDecoration(
-                hintText: l.scrChatPlaceholder,
-                hintStyle: AlmaType.meta,
-                border: InputBorder.none,
+          // **Поле — вся пилюля, а не строка текста внутри неё.**
+          //
+          // Строка ввода сжата до собственной высоты и стоит по центру
+          // пятидесяти двух точек; без этого нажатие в верхнюю или нижнюю
+          // треть обводки не попадало никуда — человек видел поле, тыкал в
+          // него и не получал ни курсора, ни клавиатуры. Пилюля нарисована как
+          // одна цель, и целью обязана быть целиком.
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: _focus.requestFocus,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              height: _composerHeight,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                border: Border.all(color: AlmaPalette.hairline),
+                borderRadius: BorderRadius.circular(_composerHeight / 2),
               ),
-              onSubmitted: _send,
-              textInputAction: TextInputAction.send,
+              child: TextField(
+                controller: _draft,
+                focusNode: _focus,
+                style: AlmaType.body.copyWith(color: AlmaPalette.inkLight),
+                // **Поле само по себе ничего не отмеряет.** Высоту держит
+                // обводка снаружи (52), и материаловские отступы ввода внутри
+                // неё — второй рост: без `isDense` строка приносит свои
+                // шестнадцать точек сверху и снизу и распирает пилюлю изнутри.
+                decoration: InputDecoration(
+                  hintText: l.scrChatPlaceholder,
+                  hintStyle: AlmaType.meta,
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                onSubmitted: _send,
+                textInputAction: TextInputAction.send,
+              ),
             ),
           ),
         ),
@@ -630,22 +666,97 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
         InkResponse(
           onTap: () => _send(_draft.text),
           child: Container(
-            width: AlmaMetrics.fieldHeight,
-            height: AlmaMetrics.fieldHeight,
+            width: _composerHeight,
+            height: _composerHeight,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: AlmaPalette.hairline),
             ),
             child: Center(
+              // `font:19px 'Golos Text';color:rgba(237,231,218,.85)` — то же
+              // семейство, что у остального текста композера; без него стрелка
+              // рисовалась системным шрифтом и была другой формы.
               child: Text('→',
-                  style: TextStyle(
-                      color: AlmaPalette.body.withValues(alpha: 0.85),
-                      fontSize: 19)),
+                  style: AlmaType.body.copyWith(
+                      fontSize: 19,
+                      height: 1.0,
+                      color: AlmaPalette.body.withValues(alpha: 0.85))),
             ),
           ),
         ),
         ]),
       ]),
+    );
+  }
+}
+
+/// Присутствие Alma над вступлением: 56 точек света, которые дышат.
+///
+/// Круг был неподвижен, а на макете (s6) у него стоит `animation:breathe 5s
+/// ease-in-out infinite`, и это единственное, что на пустом экране движется, —
+/// признак того, что собеседница здесь и слушает. Числа оттуда же:
+/// `@keyframes breathe{0%,100%{scale(1);opacity:.92} 50%{scale(1.04);opacity:1}}`,
+/// то есть половина цикла — 2.5 секунды.
+///
+/// Своё дыхание, а не `Breathing` из `arrival.dart`: там амплитуда нарочно на
+/// пределе заметности (масштаб 1.008), потому что дышит **осевший рисунок**
+/// главы, которому нельзя тянуть на себя взгляд. Здесь взгляд тянуть и надо.
+class _Presence extends StatefulWidget {
+  const _Presence();
+
+  @override
+  State<_Presence> createState() => _PresenceState();
+}
+
+class _PresenceState extends State<_Presence>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _breath = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2500),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    // Признак «меньше движения» читается из окружения, а оно доступно только
+    // после первого кадра; при включённом — круг просто стоит.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (!(MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
+        _breath.repeat(reverse: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _breath.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _breath,
+      builder: (context, child) {
+        final t = Curves.easeInOut.transform(_breath.value);
+        return Transform.scale(
+          scale: 1.0 + t * 0.04,
+          child: Opacity(opacity: 0.92 + t * 0.08, child: child),
+        );
+      },
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [
+            AlmaPalette.starFill,
+            AlmaPalette.gold.withValues(alpha: 0.5),
+            AlmaPalette.gold.withValues(alpha: 0.0),
+          ], stops: const [0.0, 0.45, 1.0]),
+        ),
+      ),
     );
   }
 }

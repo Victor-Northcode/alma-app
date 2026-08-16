@@ -57,6 +57,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   _Delete _delete = _Delete.idle;
   final _confirm = TextEditingController();
 
+  /// Где сейчас отмена подписки.
+  ///
+  /// **Тоже два шага, и по другой причине.** У удаления второй шаг защищает от
+  /// промаха; здесь он объясняет. «Cancel any time» напечатано на каждой
+  /// витрине, и человек, дошедший до этой кнопки, боится ровно одного — что
+  /// отмена отберёт оплаченное. Первый шаг говорит, что не отберёт, и называет
+  /// дату; списание останавливает только второй.
+  _Cancel _cancel = _Cancel.idle;
+
   @override
   void dispose() {
     _confirm.dispose();
@@ -124,6 +133,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await session.start(force: true);
     } on AlmaError {
       if (mounted) setState(() => _delete = _Delete.failed);
+    }
+  }
+
+  /// Второй шаг отмены — единственный, который уходит на сервер.
+  ///
+  /// Порядок здесь тот же, что на бэкенде: сначала платёжная система, потом
+  /// наша запись. Поэтому отказ значит «ничего не изменилось» буквально, и
+  /// экрану есть что сказать честного — `cabPlanCancelFailed` обещает ровно
+  /// это, и форма остаётся на месте, чтобы было чем повторить.
+  Future<void> _confirmCancel(AlmaSession session) async {
+    // Язык берётся до запроса: после `await` контекст трогать нельзя, а дата
+    // из ответа нужна набранной по правилам читателя.
+    final locale = L.of(context).localeName;
+    setState(() => _cancel = _Cancel.working);
+    try {
+      final answer = await session.client.cancelSubscription();
+      if (!mounted) return;
+      setState(() => _cancel =
+          _Cancel.done(_instantDate(locale, answer['access_until'] as String?)));
+      // **Права не отзываются, и перечитываем мы не за тем.** Отмена снимает
+      // `renews_at` и не трогает `expires_at`, так что доступ никуда не
+      // денется. Перечитать надо строку выше: пока она говорит «Продлевается 4
+      // марта», человек, только что отменивший подписку, читает это как
+      // «отмена не сработала» — и следующее, что он делает, это звонок в банк.
+      // После перечитывания там встанет «Действует до 4 марта. Продлеваться не
+      // будет», и это уже правда.
+      await _loadPlan();
+    } on ServerRefused catch (refusal) {
+      if (!mounted) return;
+      // 409 — не поломка. Это `cancel_at_store`: подписку продал магазин,
+      // сервер ничего не записал, и правильный ответ — дверь, а не извинение.
+      setState(() =>
+          _cancel = refusal.status == 409 ? _Cancel.atStore : _Cancel.failed);
+    } on AlmaError {
+      if (mounted) setState(() => _cancel = _Cancel.failed);
     }
   }
 
@@ -640,14 +684,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
-      // **Управление подпиской — у того, кто её продал.**
+      // **Управление подпиской — у того, кто её продал, и продавцов два.**
       //
-      // Ни Apple, ни Google не позволяют серверу остановить подписку,
-      // принадлежащую их аккаунту, и локальный флажок «отменено» не
-      // останавливает списание. Поэтому здесь ссылка в магазин, а не кнопка
-      // отмены: `POST /v1/billing/subscription/cancel` на такую подписку
-      // отвечает 409 и ничего не пишет — правильно, — и кнопка туда вела бы к
-      // фразе, показывающей обратно на эту же ссылку.
+      // Ссылка в App Store стоит всегда: для всего купленного в приложении это
+      // единственная дорога — ни Apple, ни Google не позволяют серверу
+      // остановить подписку, принадлежащую их аккаунту, — и Guideline 3.1.2
+      // требует её присутствия. Под ней, и только у подписки, купленной **не**
+      // в магазине, стоит отмена в два нажатия: её платёжное средство держим
+      // мы, и `POST /v1/billing/subscription/cancel` её действительно
+      // останавливает.
       const SizedBox(height: 14),
       AlmaButton(
         kind: AlmaButtonKind.outline,
@@ -664,8 +709,126 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (store) ...[
         const SizedBox(height: 10),
         Text(l.cabManagedByApple, style: AlmaType.meta),
-      ],
+      ] else
+        // **Граница проходит здесь.** Предложить отмену магазинной подписки
+        // внутри приложения — нарушение правил магазина и обещание, которого
+        // мы не можем сдержать: сервер ответит 409 и ничего не запишет.
+        ..._cancelBlock(l, session, row),
     ];
+  }
+
+  /// Отмена веб-подписки в два шага — и первый не отправляет ничего.
+  ///
+  /// Порт `cancelBlock` из `SettingsScreen.swift`. Шаг первый разворачивает
+  /// объяснение: что останавливается, что остаётся, и до какого числа
+  /// остаётся. Шаг второй — та же красная кнопка, и вот она уже уходит на
+  /// сервер. Между ними «Оставить план», и это единственное, что здесь есть от
+  /// удержания: ни скидки, ни «а давай подумаем», ни третьего экрана. Кнопка,
+  /// после которой приходится ещё раз доказывать, что ты правда хочешь уйти, —
+  /// это и есть тот самый тёмный узор, за который выписывают штрафы.
+  List<Widget> _cancelBlock(L l, AlmaSession session, Map<String, dynamic> row) {
+    switch (_cancel) {
+      case _CancelIdle():
+        // Только пока есть что останавливать. У подписки без `renews_at`
+        // следующего списания уже нет — она либо отменена, либо доживает
+        // оплаченный срок, — и сервер ответил бы 404 на кнопку, которую экран
+        // не должен был показывать.
+        if (row['renews_at'] == null) return const [];
+        return [
+          const SizedBox(height: 10),
+          AlmaButton(
+            kind: AlmaButtonKind.danger,
+            fills: false,
+            label: l.cabPlanCancelSubscription,
+            // Первое нажатие не касается сети вовсе: оно разворачивает текст.
+            onTap: () => setState(() => _cancel = _Cancel.confirming),
+          ),
+        ];
+
+      // Форма подтверждения — и она же остаётся стоять при отказе, как у
+      // удаления: у человека, чей запрос не прошёл, должно быть чем повторить,
+      // а не одна строка «не получилось» вместо кнопок.
+      case _CancelConfirming():
+      case _CancelWorking():
+      case _CancelFailed():
+        final working = _cancel is _CancelWorking;
+        // Конец оплаченного периода — `expires_at`, то есть ровно то число,
+        // которое сервер вернёт в `access_until` вторым шагом. Голой датой, а
+        // не фразой: сказать здесь «Действует до …, продлеваться не будет»
+        // нельзя — до второго нажатия подписка продлевается, и это была бы
+        // единственная ложь на экране, который затеян ради доверия.
+        final until = _instantDate(l.localeName, row['expires_at'] as String?);
+        return [
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.cabPlanCancelWhat, style: AlmaType.meta),
+                if (until != null) ...[
+                  const SizedBox(height: 8),
+                  Text(until,
+                      style: AlmaType.numeral
+                          .copyWith(color: AlmaPalette.gold, fontSize: 17)),
+                ],
+                const SizedBox(height: 14),
+                // Wrap, а не Row: два длинных слова рядом («Отменить подписку»
+                // и «Оставить план») на узком экране и при крупном шрифте не
+                // помещаются в строку, и Row вместо переноса рисует полосатое
+                // переполнение.
+                Wrap(spacing: 12, runSpacing: 10, children: [
+                  AlmaButton(
+                    kind: AlmaButtonKind.danger,
+                    fills: false,
+                    label: working
+                        ? l.cabPlanCancelling
+                        : l.cabPlanCancelSubscription,
+                    // Гаснет на время запроса: второе нажатие — вторая отмена.
+                    onTap: working ? null : () => _confirmCancel(session),
+                  ),
+                  AlmaButton(
+                    kind: AlmaButtonKind.veil,
+                    fills: false,
+                    label: l.cabPlanKeepPlan,
+                    onTap:
+                        working ? null : () => setState(() => _cancel = _Cancel.idle),
+                  ),
+                ]),
+                if (_cancel is _CancelFailed) ...[
+                  const SizedBox(height: 10),
+                  Text(l.cabPlanCancelFailed,
+                      style:
+                          AlmaType.meta.copyWith(color: AlmaPalette.disagree)),
+                ],
+              ],
+            ),
+          ),
+        ];
+
+      case final _CancelDone done:
+        return [
+          const SizedBox(height: 12),
+          // Дата — из ответа сервера, а не из строки, которую экран показывал
+          // до запроса: сервер её и считает (`max(expires_at)`), и он один
+          // знает, чем кончилось.
+          Text(
+            done.until != null
+                ? l.cabPlanCancelled(done.until!)
+                : l.cabPlanCancelledNoDate,
+            style: AlmaType.meta,
+          ),
+        ];
+
+      case _CancelAtStore():
+        // 409: подписку продал магазин, и сервер ничего не записал. Досюда
+        // доходит только право без `source` — бэкенд старше этой сборки, —
+        // потому что кнопки отмены у магазинной подписки нет вовсе. Ссылка в
+        // App Store стоит выше, второй такой же здесь не нужно.
+        return [
+          const SizedBox(height: 12),
+          Text(l.cabManagedByApple, style: AlmaType.meta),
+        ];
+    }
   }
 
   /// Подписки нет: что открыто навсегда и чем это было раньше.
@@ -1014,6 +1177,35 @@ class _ExportReady extends _Export {
 
 /// Где удаление аккаунта.
 enum _Delete { idle, confirming, mismatch, working, failed, done }
+
+/// Где отмена подписки.
+///
+/// Запечатанным типом, а не тремя флажками: у `isCancelling`/`cancelFailed`/
+/// `cancelled` восемь сочетаний, шесть из которых бессмыслица вроде «идёт и уже
+/// не получилось». Ровно тот же довод записан в `AccountModel.swift`, где эта
+/// машина состояний живёт на нативе.
+sealed class _Cancel {
+  const _Cancel();
+  static const idle = _CancelIdle();
+  static const confirming = _CancelConfirming();
+  static const working = _CancelWorking();
+  static const failed = _CancelFailed();
+  static const atStore = _CancelAtStore();
+
+  /// Остановлено. Внутри — дата, до которой план остаётся открытым; `null`
+  /// значит, что сервер её не назвал, и тогда экран о ней не говорит.
+  const factory _Cancel.done(String? until) = _CancelDone;
+}
+
+class _CancelIdle extends _Cancel { const _CancelIdle(); }
+class _CancelConfirming extends _Cancel { const _CancelConfirming(); }
+class _CancelWorking extends _Cancel { const _CancelWorking(); }
+class _CancelFailed extends _Cancel { const _CancelFailed(); }
+class _CancelAtStore extends _Cancel { const _CancelAtStore(); }
+class _CancelDone extends _Cancel {
+  const _CancelDone(this.until);
+  final String? until;
+}
 
 
 /// Восстановление покупок в настройках: кнопка и то, чем магазин ответил.

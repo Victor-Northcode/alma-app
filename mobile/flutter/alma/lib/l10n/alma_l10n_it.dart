@@ -1754,6 +1754,19 @@ class LIt extends L {
       'Apple ha ritirato quell\'acquisto — rimborsato o revocato — quindi non c\'è nulla di aperto con esso.';
 
   @override
+  String pillSheetCta(String price) {
+    return 'Vedi i piani · da $price';
+  }
+
+  @override
+  String get pillSheetFootnote =>
+      'Esistono anche porte una tantum · annulla quando vuoi nelle impostazioni dell\'ID Apple';
+
+  @override
+  String get pillSheetSub =>
+      'La tua carta è già calcolata — e sempre gratuita. Il piano apre ciò che è scritto.';
+
+  @override
   String get scrAddPersonBirthTime => 'la sua ora di nascita';
 
   @override

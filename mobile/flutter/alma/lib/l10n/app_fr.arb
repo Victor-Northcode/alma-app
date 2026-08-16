@@ -523,6 +523,9 @@
   "paywallWeeklyNote": "Interprétations actualisées et questions pendant une semaine. Renouvellement hebdomadaire jusqu’à résiliation.",
   "paywallWeeklyTitle": "Toutes les interprétations actualisées, à la semaine",
   "paywallWithdrawn": "Apple a repris cet achat — remboursé ou révoqué — donc rien n'est ouvert avec lui.",
+  "pillSheetCta": "Voir les forfaits · dès {price}",
+  "pillSheetFootnote": "Il existe aussi des portes à l'unité · annulable à tout moment dans les réglages de ton identifiant Apple",
+  "pillSheetSub": "Ta carte est déjà calculée — et gratuite pour toujours. Le forfait ouvre l'écrit.",
   "scrAddPersonBirthTime": "son heure de naissance",
   "scrAddPersonBirthday": "sa date de naissance",
   "scrAddPersonBirthplace": "son lieu de naissance",
@@ -616,6 +619,9 @@
   "dstLater": "La seconde",
   "dstLaterSub": "{time} à l'heure d'hiver · {abbr}, {delta} plus tard",
   "dstFooter": "Si personne ne s'en souvient, choisis l'une ou l'autre — les maisons se décalent de {delta} et tu pourras le changer dans les Réglages.",
-  "dstDeltaHour": "une heure",
+  "dstDeltaHour": "60 minutes",
+  "@dstDeltaHour": {
+    "description": "Цифрами, а не «une heure», — и только во французском. Плейсхолдер {delta} стоит в двух позициях сразу: «les maisons se décalent de {delta}» (dstFooter) требует родительного с предлогом de, «{delta} plus tard» (dstLaterSub) — именительного. «de une heure» не по-французски: перед гласной de сжимается в d', и понадобилась бы вторая форма ключа под каждую позицию. Владелец решил не плодить формы: «60 minutes» начинается с согласного звука, поэтому «de 60 minutes» и «60 minutes plus tard» верны оба, и склейка в час читается так же однозначно, как соседние «30 minutes». Остальные шесть языков не трогаем: у них элизии нет, и «час» / «an hour» / «eine Stunde» / «un'ora» правильны как есть."
+  },
   "dstDeltaHalfHour": "30 minutes"
 }

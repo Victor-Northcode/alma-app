@@ -1746,6 +1746,19 @@ class LEs extends L {
       'Apple ha retirado esa compra — reembolsada o revocada — así que no hay nada abierto con ella.';
 
   @override
+  String pillSheetCta(String price) {
+    return 'Ver los planes · desde $price';
+  }
+
+  @override
+  String get pillSheetFootnote =>
+      'También hay puertas de pago único · cancela cuando quieras en los ajustes de tu Apple ID';
+
+  @override
+  String get pillSheetSub =>
+      'Tu carta ya está calculada — y siempre gratis. El plan abre lo escrito.';
+
+  @override
   String get scrAddPersonBirthTime => 'su hora de nacimiento';
 
   @override

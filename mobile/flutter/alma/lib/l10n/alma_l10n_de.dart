@@ -1755,6 +1755,19 @@ class LDe extends L {
       'Apple hat diesen Kauf zurückgenommen — erstattet oder widerrufen —, deshalb ist damit nichts offen.';
 
   @override
+  String pillSheetCta(String price) {
+    return 'Zu den Plänen · ab $price';
+  }
+
+  @override
+  String get pillSheetFootnote =>
+      'Es gibt auch Einmal-Türen · jederzeit in den Apple-ID-Einstellungen kündbar';
+
+  @override
+  String get pillSheetSub =>
+      'Deine Karte ist schon berechnet — für immer kostenlos. Der Plan öffnet das Geschriebene.';
+
+  @override
   String get scrAddPersonBirthTime => 'ihre Geburtszeit';
 
   @override

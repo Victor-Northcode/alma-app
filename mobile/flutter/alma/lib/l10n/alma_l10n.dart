@@ -3245,6 +3245,24 @@ abstract class L {
   /// **'Apple has taken that purchase back — refunded or revoked — so nothing is open under it.'**
   String get paywallWithdrawn;
 
+  /// from Pill/pill.sheetCta
+  ///
+  /// In en, this message translates to:
+  /// **'See the plans · from {price}'**
+  String pillSheetCta(String price);
+
+  /// from Pill/pill.sheetFootnote
+  ///
+  /// In en, this message translates to:
+  /// **'One-time doors exist too · cancel any time in your Apple ID settings'**
+  String get pillSheetFootnote;
+
+  /// from Pill/pill.sheetSub
+  ///
+  /// In en, this message translates to:
+  /// **'Your chart is already calculated — and always free. The plan opens the writing.'**
+  String get pillSheetSub;
+
   /// from Screens/scr.addPerson.birthTime
   ///
   /// In en, this message translates to:

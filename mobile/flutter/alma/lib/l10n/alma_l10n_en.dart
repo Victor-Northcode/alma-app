@@ -1743,6 +1743,19 @@ class LEn extends L {
       'Apple has taken that purchase back — refunded or revoked — so nothing is open under it.';
 
   @override
+  String pillSheetCta(String price) {
+    return 'See the plans · from $price';
+  }
+
+  @override
+  String get pillSheetFootnote =>
+      'One-time doors exist too · cancel any time in your Apple ID settings';
+
+  @override
+  String get pillSheetSub =>
+      'Your chart is already calculated — and always free. The plan opens the writing.';
+
+  @override
   String get scrAddPersonBirthTime => 'their birth time';
 
   @override
