@@ -620,5 +620,9 @@
   "dstLaterSub": "{time} no horário de inverno · {abbr}, {delta} depois",
   "dstFooter": "Se ninguém lembra, escolha qualquer uma — as casas se deslocam {delta} e você pode mudar depois nos Ajustes.",
   "dstDeltaHour": "uma hora",
-  "dstDeltaHalfHour": "30 minutos"
+  "dstDeltaHalfHour": "30 minutos",
+  "chatReadingHouse": "lendo sua casa {house}…",
+  "chatOpeningBody": "abrindo {body}…",
+  "chatFromChapter": "Leia o capítulo de onde isso vem — {chapter}",
+  "chatNotTemplate": "Respondo a partir do seu mapa, nunca de um modelo."
 }

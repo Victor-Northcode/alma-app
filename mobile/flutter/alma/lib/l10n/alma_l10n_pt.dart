@@ -2099,4 +2099,23 @@ class LPt extends L {
 
   @override
   String get dstDeltaHalfHour => '30 minutos';
+
+  @override
+  String chatReadingHouse(String house) {
+    return 'lendo sua casa $house…';
+  }
+
+  @override
+  String chatOpeningBody(String body) {
+    return 'abrindo $body…';
+  }
+
+  @override
+  String chatFromChapter(String chapter) {
+    return 'Leia o capítulo de onde isso vem — $chapter';
+  }
+
+  @override
+  String get chatNotTemplate =>
+      'Respondo a partir do seu mapa, nunca de um modelo.';
 }

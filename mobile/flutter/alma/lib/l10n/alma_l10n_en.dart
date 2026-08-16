@@ -2088,4 +2088,23 @@ class LEn extends L {
 
   @override
   String get dstDeltaHalfHour => '30 minutes';
+
+  @override
+  String chatReadingHouse(String house) {
+    return 'reading your $house house…';
+  }
+
+  @override
+  String chatOpeningBody(String body) {
+    return 'opening $body…';
+  }
+
+  @override
+  String chatFromChapter(String chapter) {
+    return 'Read the chapter it comes from — $chapter';
+  }
+
+  @override
+  String get chatNotTemplate =>
+      'I answer from your chart, never from a template.';
 }

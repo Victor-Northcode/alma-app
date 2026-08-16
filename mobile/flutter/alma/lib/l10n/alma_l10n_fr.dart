@@ -2106,4 +2106,23 @@ class LFr extends L {
 
   @override
   String get dstDeltaHalfHour => '30 minutes';
+
+  @override
+  String chatReadingHouse(String house) {
+    return 'je lis ta $house maison…';
+  }
+
+  @override
+  String chatOpeningBody(String body) {
+    return 'j\'ouvre $body…';
+  }
+
+  @override
+  String chatFromChapter(String chapter) {
+    return 'Lis le chapitre d\'où ça vient — $chapter';
+  }
+
+  @override
+  String get chatNotTemplate =>
+      'Je réponds depuis ta carte, jamais d\'après un modèle.';
 }

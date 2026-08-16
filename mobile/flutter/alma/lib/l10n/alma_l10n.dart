@@ -3838,6 +3838,30 @@ abstract class L {
   /// In en, this message translates to:
   /// **'30 minutes'**
   String get dstDeltaHalfHour;
+
+  /// from Chat/chat.readingHouse (A2 thinking, real engine stage)
+  ///
+  /// In en, this message translates to:
+  /// **'reading your {house} house…'**
+  String chatReadingHouse(String house);
+
+  /// from Chat/chat.openingBody (A2 thinking, real engine stage)
+  ///
+  /// In en, this message translates to:
+  /// **'opening {body}…'**
+  String chatOpeningBody(String body);
+
+  /// from Chat/chat.fromChapter (A5 chapter link)
+  ///
+  /// In en, this message translates to:
+  /// **'Read the chapter it comes from — {chapter}'**
+  String chatFromChapter(String chapter);
+
+  /// from Chat/chat.notTemplate (A1 quiet line)
+  ///
+  /// In en, this message translates to:
+  /// **'I answer from your chart, never from a template.'**
+  String get chatNotTemplate;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

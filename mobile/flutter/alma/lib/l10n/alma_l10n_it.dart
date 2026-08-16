@@ -2102,4 +2102,22 @@ class LIt extends L {
 
   @override
   String get dstDeltaHalfHour => '30 minuti';
+
+  @override
+  String chatReadingHouse(String house) {
+    return 'leggo la tua $house casa…';
+  }
+
+  @override
+  String chatOpeningBody(String body) {
+    return 'apro $body…';
+  }
+
+  @override
+  String chatFromChapter(String chapter) {
+    return 'Leggi il capitolo da cui viene — $chapter';
+  }
+
+  @override
+  String get chatNotTemplate => 'Rispondo dalla tua carta, mai da un modello.';
 }

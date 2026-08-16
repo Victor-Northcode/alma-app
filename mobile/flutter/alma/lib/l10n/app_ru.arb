@@ -620,5 +620,9 @@
   "dstLaterSub": "{time} по зимнему времени · {abbr}, {delta} спустя",
   "dstFooter": "Если никто не помнит — выбери любое: дома сдвинутся на {delta}, а изменить выбор можно в настройках.",
   "dstDeltaHour": "час",
-  "dstDeltaHalfHour": "30 минут"
+  "dstDeltaHalfHour": "30 минут",
+  "chatReadingHouse": "читаю твой {house} дом…",
+  "chatOpeningBody": "открываю {body}…",
+  "chatFromChapter": "Прочитай главу, из которой это — {chapter}",
+  "chatNotTemplate": "Я отвечаю из твоей карты — никогда по шаблону."
 }

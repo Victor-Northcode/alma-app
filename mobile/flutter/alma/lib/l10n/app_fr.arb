@@ -623,5 +623,9 @@
   "@dstDeltaHour": {
     "description": "Цифрами, а не «une heure», — и только во французском. Плейсхолдер {delta} стоит в двух позициях сразу: «les maisons se décalent de {delta}» (dstFooter) требует родительного с предлогом de, «{delta} plus tard» (dstLaterSub) — именительного. «de une heure» не по-французски: перед гласной de сжимается в d', и понадобилась бы вторая форма ключа под каждую позицию. Владелец решил не плодить формы: «60 minutes» начинается с согласного звука, поэтому «de 60 minutes» и «60 minutes plus tard» верны оба, и склейка в час читается так же однозначно, как соседние «30 minutes». Остальные шесть языков не трогаем: у них элизии нет, и «час» / «an hour» / «eine Stunde» / «un'ora» правильны как есть."
   },
-  "dstDeltaHalfHour": "30 minutes"
+  "dstDeltaHalfHour": "30 minutes",
+  "chatReadingHouse": "je lis ta {house} maison…",
+  "chatOpeningBody": "j'ouvre {body}…",
+  "chatFromChapter": "Lis le chapitre d'où ça vient — {chapter}",
+  "chatNotTemplate": "Je réponds depuis ta carte, jamais d'après un modèle."
 }

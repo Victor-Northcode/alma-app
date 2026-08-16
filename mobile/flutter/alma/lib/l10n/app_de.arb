@@ -620,5 +620,9 @@
   "dstLaterSub": "{time} nach Winterzeit · {abbr}, {delta} später",
   "dstFooter": "Wenn sich niemand erinnert, wähl irgendeine — die Häuser verschieben sich um {delta}, und in den Einstellungen lässt es sich ändern.",
   "dstDeltaHour": "eine Stunde",
-  "dstDeltaHalfHour": "30 Minuten"
+  "dstDeltaHalfHour": "30 Minuten",
+  "chatReadingHouse": "lese dein {house} Haus…",
+  "chatOpeningBody": "öffne {body}…",
+  "chatFromChapter": "Lies das Kapitel dahinter — {chapter}",
+  "chatNotTemplate": "Ich antworte aus deiner Karte — nie aus einer Vorlage."
 }

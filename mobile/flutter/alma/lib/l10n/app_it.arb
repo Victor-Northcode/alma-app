@@ -620,5 +620,9 @@
   "dstLaterSub": "le {time} con l'ora solare · {abbr}, {delta} dopo",
   "dstFooter": "Se nessuno lo ricorda, scegline una — le case si spostano di {delta} e puoi cambiarlo nelle Impostazioni.",
   "dstDeltaHour": "un'ora",
-  "dstDeltaHalfHour": "30 minuti"
+  "dstDeltaHalfHour": "30 minuti",
+  "chatReadingHouse": "leggo la tua {house} casa…",
+  "chatOpeningBody": "apro {body}…",
+  "chatFromChapter": "Leggi il capitolo da cui viene — {chapter}",
+  "chatNotTemplate": "Rispondo dalla tua carta, mai da un modello."
 }

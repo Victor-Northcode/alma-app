@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
+import '../../design/alma_presence.dart';
 import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
@@ -41,7 +42,8 @@ class _Turn {
   final List<String> citedFactors;
 }
 
-class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
+class _AlmaScreenState extends State<AlmaScreen>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   final _draft = TextEditingController();
   final _scroll = ScrollController();
 
@@ -53,6 +55,8 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
 
   final List<_Turn> _turns = [];
   List<String> _openers = const [];
+
+
   String? _threadId;
   bool _sending = false;
 
@@ -181,7 +185,11 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
         if (questions.length >= 3) break;
         questions.add(extra);
       }
-      if (mounted) setState(() => _openers = questions.take(3).toList());
+      if (mounted) {
+        setState(() {
+          _openers = questions.take(3).toList();
+        });
+      }
     } on AlmaError {
       if (mounted) setState(() => _openers = fallback);
     }
@@ -380,14 +388,27 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
       padding: const EdgeInsets.symmetric(
           horizontal: AlmaMetrics.pad, vertical: AlmaMetrics.gapLarge),
       children: [
-        const Center(child: _Presence()),
+        // A1: свет 64 по центру — размер спеки.
+        //
+        // **Наклона на отправку здесь нет, и это не забывчивость.** По §1 свет
+        // на отправку прибавляет 15 % яркости за 240 мс. Но светит он в
+        // приветствии, а приветствие сменяется лентой в тот же кадр, в который
+        // уходит вопрос: `AnimatedBuilder`, слушающий часы наклона, снимается с
+        // дерева прямо посреди анимации, и Флаттер валит экран утверждением
+        // `_elements.contains(element)`. Проверено на симуляторе — падало
+        // ровно на отправке. Чтобы наклон был настоящим, свет обязан пережить
+        // смену состояния, то есть жить выше обоих видов; это перестройка
+        // каркаса экрана, а не правка в одну строку. Сам механизм наклона в
+        // `AlmaPresence.tilt` готов и ждёт её.
+        const Center(child: AlmaPresence(size: AlmaPresence.greeting)),
         const SizedBox(height: 18),
         Text(
           session.hasBirthData ? l.scrChatOpening : l.scrChatNoChart,
           style: AlmaType.voice,
         ),
         const SizedBox(height: 12),
-        Text(l.scrChatRule, style: AlmaType.meta),
+        // Тихая строка под гаснущим разделителем — из спеки, §2 A1.
+        Text(l.chatNotTemplate, style: AlmaType.meta),
         // **Без карты — форма, а не три вопроса.** Вопросы вида «Луна у меня —
         // Дева» человеку без рождения предлагать нечего: они собраны из карты,
         // которой нет. На их месте — то, чем эту карту дают.
@@ -688,198 +709,4 @@ class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
       ]),
     );
   }
-}
-
-/// Присутствие Alma над вступлением: 56 точек света, которые дышат, и круг,
-/// расходящийся от них раз в восемь секунд.
-///
-/// **Это не знак Alma и не должно им быть.** Ромб с восьмиконечной звездой
-/// (`AlmaEmblem`) — марка продукта: он стоит на входе и в церемониальном
-/// диалоге, где представляются. Здесь представляться некому — здесь **слушают**,
-/// и оба эталона говорят это одинаково: макет (s6) ставит сюда
-/// `56px;border-radius:50%;radial-gradient(...)`, натив —
-/// `AlmaPresence(size: 56)` (`AlmaStar.swift`). Ромб на этом месте был бы
-/// логотипом посреди разговора.
-///
-/// **Но пятном градиента присутствие тоже не является.** Порт рисовал ровно
-/// его: три остановки из центра, и знак читался неподвижной кляксой — «не живая
-/// и без орнамента». Живым его делают три вещи, все три с натива:
-///
-/// * свет **не по центру** — `UnitPoint(0.42, 0.38)`, то есть чуть вверх-влево:
-///   ровный радиальный градиент выглядит напечатанным, смещённый — освещённым;
-/// * четыре остановки вместо трёх — `#FFF6DF → #F1DFAE (.34) → золото .45
-///   (.64) → ничего (.80)`: тёплая сердцевина отделена от ореола, а не течёт
-///   в него одним переходом;
-/// * золотая тень радиусом `0.27 × размер` — то, чем свет ложится **на ночь**
-///   вокруг себя.
-///
-/// **Орнамент — расходящееся кольцо**, и оно же ответ на «неживая». Волосяная
-/// окружность идёт от `0.7` до `1.5` от восьмидесяти четырёх точек за восемь
-/// секунд и гаснет с `0.3` до нуля: `AlmaPresence` называет это единственным
-/// местом продукта, где цикл разрешено видеть, — это Alma слушает, и
-/// неподвижность здесь читается зависшим приложением. Место в разметке при
-/// этом остаётся макетное, 56: кольцо рисуется **поверх** своих границ, чтобы
-/// не сдвинуть вниз ни курсив, ни три вопроса — их отбивки сверены с s6 по
-/// кадру.
-///
-/// Дыхание — с макета: `@keyframes breathe{0%,100%{scale(1);opacity:.92}
-/// 50%{scale(1.04);opacity:1}}` при `5s`, то есть половина цикла 2.5 секунды.
-/// Своё, а не `Breathing` из `arrival.dart`: там амплитуда нарочно на пределе
-/// заметности (масштаб 1.008), потому что дышит **осевший рисунок** главы,
-/// которому нельзя тянуть на себя взгляд. Здесь взгляд тянуть и надо.
-class _Presence extends StatefulWidget {
-  const _Presence();
-
-  /// Место в разметке: столько же, сколько у круга на макете.
-  static const size = 56.0;
-
-  /// Поперечник кольца в покое — `outer` натива, полтора размера. От него
-  /// считаются обе крайности расхождения.
-  static const ringBase = size * 1.5;
-
-  /// Куда кольцо уходит в самом конце цикла. Это не оформление, а **площадь
-  /// рисунка**: холст, объявленный по месту в разметке, перерисовывал бы
-  /// пятьдесят шесть точек, а линия к тому времени стоит на ста двадцати
-  /// шести — и от неё оставался бы след на ночи.
-  static const ringMax = ringBase * 1.5;
-
-  @override
-  State<_Presence> createState() => _PresenceState();
-}
-
-class _PresenceState extends State<_Presence> with TickerProviderStateMixin {
-  late final AnimationController _breath = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 2500),
-  );
-
-  /// Восемь секунд на один уход кольца — `timeIntervalSinceReferenceDate / 8`
-  /// на нативе. Линейно и без разворота: круг уходит от центра и не
-  /// возвращается, иначе это не расхождение, а пульсация.
-  late final AnimationController _ring = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 8),
-  );
-
-  @override
-  void initState() {
-    super.initState();
-    // Признак «меньше движения» читается из окружения, а оно доступно только
-    // после первого кадра; при включённом — свет просто стоит, а кольца нет
-    // вовсе. Так же на нативе: `if showsRing && !reduceMotion`.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      if (!(MediaQuery.maybeDisableAnimationsOf(context) ?? false)) {
-        _breath.repeat(reverse: true);
-        _ring.repeat();
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _breath.dispose();
-    _ring.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    return SizedBox.square(
-      dimension: _Presence.size,
-      child: Stack(
-        // Кольцо уходит за 56 точек по построению — вдвое с лишним. Своими
-        // границами `Stack` его резать не должен; лента снаружи всё равно
-        // обрежет по своей кромке, а до неё здесь больше сотни точек.
-        clipBehavior: Clip.none,
-        alignment: Alignment.center,
-        children: [
-          if (!still)
-            Positioned.fill(
-              child: IgnorePointer(
-                child: OverflowBox(
-                  maxWidth: _Presence.ringMax,
-                  maxHeight: _Presence.ringMax,
-                  child: CustomPaint(
-                    painter: _Ripple(_ring),
-                    size: const Size.square(_Presence.ringMax),
-                  ),
-                ),
-              ),
-            ),
-          AnimatedBuilder(
-            animation: _breath,
-            builder: (context, child) {
-              final t = Curves.easeInOut.transform(_breath.value);
-              return Transform.scale(
-                scale: 1.0 + t * 0.04,
-                child: Opacity(opacity: 0.92 + t * 0.08, child: child),
-              );
-            },
-            // Свет несёт **свой** размер, а не берёт его у места в разметке:
-            // `Stack` даёт нестеснённому ребёнку свободные границы, и голая
-            // раскраска без ребёнка садится в них нулём — круг пропадал вовсе,
-            // на кадре оставалось одно кольцо.
-            child: Container(
-              width: _Presence.size,
-              height: _Presence.size,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const RadialGradient(
-                  // `UnitPoint(0.42, 0.38)` натива в координатах Flutter,
-                  // где центр это (0,0), а край (±1): свет чуть выше и левее
-                  // середины круга.
-                  center: Alignment(-0.16, -0.24),
-                  radius: 0.5,
-                  colors: [
-                    Color(0xFFFFF6DF),
-                    Color(0xFFF1DFAE),
-                    Color(0x73C9AE6B),
-                    Color(0x00C9AE6B),
-                  ],
-                  stops: [0.0, 0.34, 0.64, 0.80],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AlmaPalette.goldBright.withValues(alpha: 0.34),
-                    blurRadius: _Presence.size * 0.27,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Кольцо, расходящееся от присутствия.
-///
-/// Рисовальщиком, а не виджетом с `Transform.scale`: окружность выходит за
-/// границы своего места вдвое, и всякий виджет пришлось бы выпускать наружу
-/// через `OverflowBox` — лишний узел ради одной линии в один пиксель.
-class _Ripple extends CustomPainter {
-  _Ripple(this.clock) : super(repaint: clock);
-
-  final Animation<double> clock;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final t = clock.value;
-    // Масштаб 0.7 → 1.5: кольцо рождается внутри свечения и уходит за него.
-    final diameter = _Presence.ringBase * (0.7 + t * 0.8);
-    canvas.drawCircle(
-      size.center(Offset.zero),
-      diameter / 2,
-      Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = AlmaPalette.goldBright.withValues(alpha: 0.3 * (1 - t)),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _Ripple old) => false;
 }

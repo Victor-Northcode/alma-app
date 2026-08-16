@@ -2087,4 +2087,23 @@ class LRu extends L {
 
   @override
   String get dstDeltaHalfHour => '30 минут';
+
+  @override
+  String chatReadingHouse(String house) {
+    return 'читаю твой $house дом…';
+  }
+
+  @override
+  String chatOpeningBody(String body) {
+    return 'открываю $body…';
+  }
+
+  @override
+  String chatFromChapter(String chapter) {
+    return 'Прочитай главу, из которой это — $chapter';
+  }
+
+  @override
+  String get chatNotTemplate =>
+      'Я отвечаю из твоей карты — никогда по шаблону.';
 }

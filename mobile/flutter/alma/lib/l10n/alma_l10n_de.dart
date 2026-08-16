@@ -2103,4 +2103,23 @@ class LDe extends L {
 
   @override
   String get dstDeltaHalfHour => '30 Minuten';
+
+  @override
+  String chatReadingHouse(String house) {
+    return 'lese dein $house Haus…';
+  }
+
+  @override
+  String chatOpeningBody(String body) {
+    return 'öffne $body…';
+  }
+
+  @override
+  String chatFromChapter(String chapter) {
+    return 'Lies das Kapitel dahinter — $chapter';
+  }
+
+  @override
+  String get chatNotTemplate =>
+      'Ich antworte aus deiner Karte — nie aus einer Vorlage.';
 }

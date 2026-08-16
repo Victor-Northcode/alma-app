@@ -2776,5 +2776,36 @@
   "dstDeltaHalfHour": "30 minutes",
   "@dstDeltaHalfHour": {
     "description": "Размер склейки в полчаса — остров Лорд-Хау и подобные."
+  },
+  "chatReadingHouse": "reading your {house} house…",
+  "@chatReadingHouse": {
+    "description": "from Chat/chat.readingHouse (A2 thinking, real engine stage)",
+    "placeholders": {
+      "house": {
+        "type": "String"
+      }
+    }
+  },
+  "chatOpeningBody": "opening {body}…",
+  "@chatOpeningBody": {
+    "description": "from Chat/chat.openingBody (A2 thinking, real engine stage)",
+    "placeholders": {
+      "body": {
+        "type": "String"
+      }
+    }
+  },
+  "chatFromChapter": "Read the chapter it comes from — {chapter}",
+  "@chatFromChapter": {
+    "description": "from Chat/chat.fromChapter (A5 chapter link)",
+    "placeholders": {
+      "chapter": {
+        "type": "String"
+      }
+    }
+  },
+  "chatNotTemplate": "I answer from your chart, never from a template.",
+  "@chatNotTemplate": {
+    "description": "from Chat/chat.notTemplate (A1 quiet line)"
   }
 }

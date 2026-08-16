@@ -2093,4 +2093,23 @@ class LEs extends L {
 
   @override
   String get dstDeltaHalfHour => '30 minutos';
+
+  @override
+  String chatReadingHouse(String house) {
+    return 'leyendo tu casa $house…';
+  }
+
+  @override
+  String chatOpeningBody(String body) {
+    return 'abriendo $body…';
+  }
+
+  @override
+  String chatFromChapter(String chapter) {
+    return 'Lee el capítulo del que viene — $chapter';
+  }
+
+  @override
+  String get chatNotTemplate =>
+      'Respondo desde tu carta, nunca desde una plantilla.';
 }
