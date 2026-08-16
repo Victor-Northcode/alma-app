@@ -29,17 +29,23 @@ from .validator import Paragraph
 
 log = logging.getLogger("alma.ai.writer")
 
-#: Three, and it is the free tier's per-request budget that says so.
+#: Three, and now the budget genuinely pays for three.
 #:
 #: A fourth attempt was tried when the plain-language gate joined the three
 #: existing rejections, because the densest natal chapter was spending attempt
-#: one on a truncation and attempts two and three on dashes. It does not fit:
-#: `cost.Tally.check` holds a whole request to `ceiling(paid=False)`, and four
-#: free-tier generations come to $0.064 against $0.05. Raising that ceiling is a
-#: pricing decision rather than a code one, so the answer here was to make each
-#: attempt land instead — the complaint now quotes the offending paragraph back
-#: rather than naming its index, which is the difference between "fix this
-#: sentence" and "rewrite everything and hope".
+#: one on a truncation and attempts two and three on dashes. The answer then
+#: was to make each attempt land instead — the complaint quotes the offending
+#: paragraph back rather than naming its index, which is the difference between
+#: "fix this sentence" and "rewrite everything and hope". That still holds.
+#:
+#: What did not hold was the arithmetic underneath. `cost.Ledger.check` held a
+#: whole request to *one* `ceiling(paid=False)` while this constant promised
+#: three generations, so a free-tier chapter could afford one and a half: the
+#: second draft the prose gate itself asked for was refused after the model had
+#: written it. A run may now spend `MAX_ATTEMPTS` × the ceiling; each single
+#: call is still bounded by `cost.guard` at 1×, and what an account may spend in
+#: a month is still bounded by `cost.guard_month`, which is the number that
+#: reaches the invoice.
 MAX_ATTEMPTS = 3
 
 #: The line below which we regenerate rather than ship, for a piece that has
@@ -186,12 +192,21 @@ def _can_try_again(attempt: int, tally: cost.Ledger, *, paid: bool, scale: float
     Only the prose gate asks this question. Citation, safety and geometry
     failures refuse regardless of budget, because what they catch is untrue
     rather than unlovely.
+
+    **The two limits have to be the same limit.** This gate used the
+    single-call ceiling while `tally.check` applied that ceiling to the sum, so
+    the gate would permit a second draft that the check then refused *after the
+    model had written it* — a paid-for chapter thrown away and a 503 handed to
+    the reader. That is exactly what `numerology/life-path` did on 16 August
+    2026: $0.0250, gate says yes at $0.05, second draft costs $0.0344, total
+    $0.0594, refused. Both now ask `MAX_ATTEMPTS` × the ceiling, which is what
+    a loop advertising three attempts always needed.
     """
     if attempt >= MAX_ATTEMPTS:
         return False
     if not tally.spends:
         return True
-    limit = cost.ceiling(paid=paid) * scale
+    limit = cost.ceiling(paid=paid) * scale * MAX_ATTEMPTS
     average = tally.dollars / len(tally.spends)
     return tally.dollars + average <= limit
 
@@ -453,6 +468,11 @@ async def write(
     max_tokens = min(8192, chapter.words[1] * per_word + (600 if latin else 1800))
     if not latin:
         max_tokens = max(max_tokens, 4100)
+    #: The allowance this chapter needs whatever the budget thinks, kept apart
+    #: from `max_tokens` because the loop below recomputes that one every
+    #: attempt. Going under this is truncation; the truncation branch raises it
+    #: so a proven need survives the recomputation.
+    floor = max_tokens
     least_paragraphs = chapter.paragraphs[0]
     schema = schema_for(chapter)
 
@@ -469,6 +489,43 @@ async def write(
             result, chapter, offered=offered, complaint=complaint, locale=locale,
             reader_gender=reader_gender,
         )
+        # **Start at the ceiling the budget already pays for, not below it.**
+        #
+        # The arithmetic above sizes the allowance from the target word count,
+        # which was right when the model wrote as soon as it was asked. With
+        # adaptive thinking it reasons first, and an English `natal/core` — 320
+        # words, so 1560 tokens — was truncated on *every* first attempt in the
+        # live log of 16 August 2026. That attempt is not a draft anybody
+        # judged: it is one of three gone before a word exists, and when the
+        # plain-language critic then asked for a second draft the reader got
+        # "Something on our side is not working" on the free sample chapter
+        # that sells the other fifteen.
+        #
+        # Raising it costs nothing. `max_tokens` is an allowance, not a bill —
+        # the comment in the truncation branch below has said so all along —
+        # and the same free-tier call affords 2800.
+        #
+        # **Recomputed every attempt, and allowed to come back down.** A retry
+        # carries the complaint, so its prompt is longer and buys fewer output
+        # tokens for the same money. A first attempt that claimed *exactly* what
+        # the ceiling affords therefore puts the retry over it, and `guard`
+        # refuses — trading truncation for a 503, which is worse. That is not
+        # hypothetical: `transits/active` was refused at $0.0501 against $0.05,
+        # four hundredths of a cent over, on 16 August 2026.
+        #
+        # Reserving a fixed slab of characters was the first attempt at this and
+        # is the wrong shape — it guesses at a complaint whose length nobody
+        # controls. Asking the question again with the prompt actually in hand
+        # needs no guess. `floor` keeps the recomputation from starving a
+        # chapter that genuinely needs the room; when even the floor is beyond
+        # the ceiling, `guard` refuses below, in one voice, as it always did.
+        max_tokens = max(floor, min(8192, cost.affordable_output(
+            model,
+            prompt_chars=len(prompt) + len(system),
+            paid=paid,
+            scale=script_scale,
+            most=8192,
+        )))
         cost.guard(
             model,
             prompt_chars=len(prompt) + len(system),
@@ -563,7 +620,10 @@ async def write(
                 # failure. Ordered rather than jumped: `medium` first, and
                 # `low` only if the model manages to think past even that.
                 if raised > max_tokens:
-                    max_tokens = raised
+                    # Through `floor`, so the recomputation at the top of the
+                    # next attempt cannot quietly undo a raise this call has
+                    # already proven it needs.
+                    max_tokens = floor = raised
                     reason = "ceiling raised to %d" % max_tokens
                 else:
                     effort = "low" if effort == "medium" else "medium"
@@ -580,7 +640,31 @@ async def write(
                 # brief writes into the same wall when the chart is dense, and
                 # the ceiling is an allowance rather than a bill: unused tokens
                 # cost nothing.
-                max_tokens = afford(min(8192, int(max_tokens * 1.3)))
+                raised = afford(min(8192, int(max_tokens * 1.3)))
+                # **When the room cannot grow, the deliberation shrinks.**
+                #
+                # The `wrote_nothing` branch below has had this ladder for a
+                # while; this one did not, and a Cyrillic chapter is exactly
+                # where the difference shows. `natal/core` in Russian was cut
+                # off at 5403, `afford` refused the raise — $0.10 of Sonnet
+                # buys about that many tokens and no more — and the retry ran
+                # into the identical wall with the identical allowance. Two
+                # attempts spent, no chapter, 503 on 16 August 2026.
+                #
+                # Asking for a shorter answer is still right and still done.
+                # It is simply not enough on its own when thinking and prose
+                # together will not fit: `effort` is the only other lever that
+                # changes how the allowance is split, and turning it down beats
+                # paying again for the same overrun.
+                if raised > max_tokens:
+                    max_tokens = floor = raised
+                    reason = "ceiling now %d" % max_tokens
+                else:
+                    effort = "low" if effort == "medium" else "medium"
+                    reason = (
+                        "no ceiling left to buy at %d, thinking turned down to %s"
+                        % (max_tokens, effort)
+                    )
                 complaint = (
                     "Your reply ran past the length limit and was cut off. Write "
                     f"noticeably shorter: at most {chapter.words[1]} words in total "
@@ -588,8 +672,8 @@ async def write(
                     "and cite only the factors each paragraph actually reads from."
                 )
                 log.warning(
-                    "chapter %s/%s attempt %d was truncated, ceiling now %d: %s",
-                    result.system, chapter.slug, attempt, max_tokens, exc,
+                    "chapter %s/%s attempt %d was truncated, %s: %s",
+                    result.system, chapter.slug, attempt, reason, exc,
                 )
             if attempt == MAX_ATTEMPTS:
                 raise
@@ -600,7 +684,7 @@ async def write(
             cache_read_tokens=completion.cache_read_tokens,
             cache_write_tokens=completion.cache_write_tokens,
         ))
-        tally.check(paid=paid, scale=script_scale)
+        tally.check(paid=paid, scale=script_scale, attempts=MAX_ATTEMPTS)
 
         try:
             payload = completion.json()

@@ -150,7 +150,7 @@ async def write(
     script_scale = 1.0 if latin else 2.0
     # The mid model reasons before it writes; the ceiling carries that head
     # room, and Cyrillic carries double — the same words, twice the tokens.
-    max_tokens = 2600 if latin else MAX_TOKENS
+    max_tokens = floor = 2600 if latin else MAX_TOKENS
     tally = cost.Ledger()
     complaint: str | None = None
     #: See the `wrote_nothing` branch: `None` until a call proves it thinks
@@ -159,6 +159,20 @@ async def write(
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         prompt = build_prompt(result, locale=locale, complaint=complaint)
+        # As much of the allowance as the ceiling already pays for — see
+        # `cost.affordable_output`. Unused output tokens cost nothing, so a
+        # ceiling set below what the budget affords buys no saving and only
+        # buys truncation; the 800 characters are headroom for the complaint a
+        # later attempt carries. Raises only, so every refusal below stands.
+        # Recomputed every attempt with the prompt in hand, and allowed back
+        # down: a retry carries the complaint, so it buys fewer output tokens
+        # for the same money, and a first attempt that claimed exactly what the
+        # ceiling affords would put the retry over it. `floor` keeps the
+        # recomputation from starving the call. See `cost.affordable_output`.
+        max_tokens = max(floor, min(MAX_TOKENS, cost.affordable_output(
+            model, prompt_chars=len(prompt) + len(system),
+            paid=False, scale=script_scale, most=MAX_TOKENS,
+        )))
         cost.guard(model, prompt_chars=len(prompt) + len(system), max_output_tokens=max_tokens, paid=False, scale=script_scale)
         try:
             completion: Completion = await provider.complete(
@@ -206,7 +220,7 @@ async def write(
             cache_read_tokens=completion.cache_read_tokens,
             cache_write_tokens=completion.cache_write_tokens,
         ))
-        tally.check(paid=False, scale=script_scale)
+        tally.check(paid=False, scale=script_scale, attempts=MAX_ATTEMPTS)
 
         try:
             payload = completion.json()

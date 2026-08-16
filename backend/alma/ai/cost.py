@@ -118,6 +118,53 @@ def ceiling(*, paid: bool) -> float:
     return config.full_report_budget if paid else config.free_user_budget
 
 
+#: The share of a call's ceiling that `affordable_output` refuses to hand out,
+#: held back for the complaint a retry carries. Twelve per cent buys roughly
+#: 1600 characters of prompt growth on the free tier, against complaints that
+#: have measured 400–500; the slack is deliberate, because the alternative to
+#: too much room is a refused retry.
+RESERVE = 0.12
+
+
+def affordable_output(
+    model: str, *, prompt_chars: int, paid: bool, scale: float = 1.0, most: int
+) -> int:
+    """The largest output allowance this call may hold, never above `most`.
+
+    **`max_tokens` is an allowance, not a bill.** Unused output tokens cost
+    nothing, so asking for less than the ceiling affords buys no saving — it
+    only buys truncation. That distinction was lost in the callers, which
+    computed a ceiling from the target word count and then climbed towards the
+    affordable one in 1.5× steps, paying for a failed generation at each rung.
+
+    Measured on 16 August 2026: an English `natal/core` started at 1560 and was
+    truncated on *every* first attempt in the log — one of three attempts gone
+    before a word was judged, and a 503 for the reader whenever the critic then
+    asked for a second draft. The affordable ceiling for the same call was 2800.
+
+    **`RESERVE` is why this does not return the whole ceiling.** A retry carries
+    the complaint that rejected the draft before it, so its prompt is longer and
+    the same allowance costs more. A call that claimed *exactly* what the
+    ceiling affords therefore puts its own retry over the line, and `guard`
+    refuses it — trading a truncation for a 503, which is worse. That happened
+    to `transits/active` at $0.0501 against $0.05, four hundredths of a cent
+    over, on 16 August 2026. Nobody controls how long a complaint is, so the
+    reserve is a fraction of the ceiling rather than a guess at its length.
+
+    Returns 0 when even a minimal answer is beyond the limit; the caller should
+    let `guard` raise, so the refusal keeps its one voice.
+    """
+    limit = ceiling(paid=paid) * scale * (1.0 - RESERVE)
+    per_input, per_output = price_of(model)
+    if per_output <= 0:
+        return most
+    input_dollars = (prompt_chars // 4) * per_input / 1_000_000
+    room = limit - input_dollars
+    if room <= 0:
+        return 0
+    return max(0, min(most, int(room * 1_000_000 / per_output)))
+
+
 def guard(model: str, *, prompt_chars: int, max_output_tokens: int, paid: bool, scale: float = 1.0) -> float:
     """Refuse a call too expensive to make at all. Returns the estimate.
 
@@ -180,13 +227,51 @@ class Ledger:
         """
         return Spend(model, self.input_tokens, self.output_tokens, self.dollars)
 
-    def check(self, *, paid: bool, scale: float = 1.0) -> None:
-        limit = ceiling(paid=paid) * scale
+    def check(self, *, paid: bool, scale: float = 1.0, attempts: int = 1) -> None:
+        """Refuse a run that has already cost more than its retries may.
+
+        **`attempts` is why this signature grew.** The limit was the
+        *single-call* ceiling applied to the *sum* of every attempt, which is
+        two different questions wearing one number. A generation near the
+        ceiling costs about half of it, so the second draft — the one the
+        plain-language critic itself asks for — was unaffordable by
+        construction: `numerology/life-path` spent $0.0594 against $0.05 across
+        two calls and answered 503 on 16 August 2026. The loop advertised three
+        attempts and the budget funded one and a half.
+
+        So a *run* may cost `attempts` × the single-call ceiling, and the
+        single-call ceiling still bounds each call on its own through `guard`.
+        Nothing here loosens what an account may spend in a month: `guard_month`
+        is the bound that matters for the invoice, and it is untouched.
+        """
+        limit = ceiling(paid=paid) * scale * max(1, attempts)
         if self.dollars > limit:
             raise BudgetExceeded(
                 f"spent ${self.dollars:.4f} against a ${limit:.2f} ceiling "
                 f"across {len(self.spends)} call(s)"
             )
+
+    def affords(
+        self,
+        model: str,
+        *,
+        prompt_chars: int,
+        max_output_tokens: int,
+        paid: bool,
+        scale: float = 1.0,
+        attempts: int = 1,
+    ) -> bool:
+        """Whether one more call of this size fits in what the run may spend.
+
+        Asked *before* the call, because the alternative discards work already
+        paid for: checking the total after a successful attempt can throw away
+        the very chapter it just bought.
+        """
+        limit = ceiling(paid=paid) * scale * max(1, attempts)
+        projected = estimate(
+            model, prompt_chars=prompt_chars, max_output_tokens=max_output_tokens
+        )
+        return self.dollars + projected <= limit
 
     def as_dict(self) -> dict:
         return {

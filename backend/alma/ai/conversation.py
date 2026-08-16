@@ -965,7 +965,7 @@ async def answer(
             cache_read_tokens=completion.cache_read_tokens,
             cache_write_tokens=completion.cache_write_tokens,
         ))
-        ledger.check(paid=paid)
+        ledger.check(paid=paid, attempts=MAX_ATTEMPTS)
 
         try:
             payload = completion.json()

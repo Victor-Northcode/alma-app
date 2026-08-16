@@ -1639,3 +1639,141 @@ def test_the_romanised_name_is_still_allowed() -> None:
 
 def test_the_products_own_name_is_always_allowed() -> None:
     assert validator.russian_latin_leak("Alma читает твою карту.", ()) == []
+
+
+async def test_the_first_attempt_starts_at_the_ceiling_the_budget_affords(natal):
+    """**Не экономия, а гарантированный обрыв.**
+
+    Потолок первой попытки считался от числа слов: 320 слов × 3 + 600 = 1560
+    токенов. Модель с адаптивным размышлением тратит их на рассуждение раньше,
+    чем напишет первое слово, и в живом логе 16.08.2026 английская `natal/core`
+    обрывалась на **каждой** первой попытке. Это не черновик, который кто-то
+    забраковал, — это одна из трёх попыток, потерянная до того, как появился
+    текст; а когда следом придирался языковой критик, читатель получал «что-то
+    у нас не работает» на бесплатной главе, которая продаёт остальные
+    пятнадцать.
+
+    Занижать потолок было незачем: `max_tokens` — это разрешение, а не счёт,
+    неизрасходованные токены не стоят ничего. Тот же бесплатный вызов
+    оплачивает 2800.
+    """
+    chapter = chapters.find("natal", "core")
+    offered = chapters.relevant_factors(chapter, natal.factors)
+    provider = ScriptedProvider(
+        responses=[_reply([("Fine.", offered[:1]), ("Also.", offered[:1])])]
+    )
+
+    await writer.write(
+        result=natal, chapter=chapter, provider=provider, model="claude-sonnet-5"
+    )
+
+    asked = provider.calls[0]["max_tokens"]
+    words_alone = chapter.words[1] * 3 + 600
+    assert asked > words_alone, (
+        f"первая попытка просит {asked} токенов — столько же, сколько считалось "
+        "от числа слов; на размышление не осталось ничего"
+    )
+    # И ни на токен больше, чем потолок цены реально оплачивает: иначе
+    # `cost.guard` откажет вместо обрыва, что для читателя не лучше.
+    assert cost.estimate(
+        "claude-sonnet-5",
+        prompt_chars=len(provider.calls[0]["prompt"]) + len(provider.calls[0]["system"]),
+        max_output_tokens=asked,
+    ) <= cost.ceiling(paid=False)
+
+
+def test_a_run_may_spend_what_its_attempts_cost_and_no_more():
+    """Три попытки по потолку — оплачены; четвёртая — нет.
+
+    Потолок одного вызова остался прежним и по-прежнему стережётся `guard`;
+    выросло только то, что цикл вправе потратить за все свои попытки. Месячный
+    потолок аккаунта — `guard_month` — не тронут, и именно он доходит до счёта.
+    """
+    one_call = cost.ceiling(paid=False)
+    tally = cost.Ledger()
+    for _ in range(writer.MAX_ATTEMPTS):
+        tally.record(cost.Spend("claude-sonnet-5", 0, 0, one_call))
+    tally.check(paid=False, scale=1.0, attempts=writer.MAX_ATTEMPTS)
+
+    tally.record(cost.Spend("claude-sonnet-5", 0, 0, one_call))
+    with pytest.raises(cost.BudgetExceeded):
+        tally.check(paid=False, scale=1.0, attempts=writer.MAX_ATTEMPTS)
+
+    # Умолчание не изменилось: без `attempts` это по-прежнему потолок одного
+    # вызова, применённый к сумме, — на случай вызывающего, которому нужно
+    # именно это.
+    tight = cost.Ledger()
+    tight.record(cost.Spend("claude-sonnet-5", 0, 0, one_call * 1.5))
+    with pytest.raises(cost.BudgetExceeded):
+        tight.check(paid=False, scale=1.0)
+
+
+async def test_the_second_draft_the_prose_gate_asks_for_is_actually_paid_for(natal):
+    """**Цикл обещал три попытки, а бюджет оплачивал полторы.**
+
+    `cost.Ledger.check` прикладывал потолок *одного* вызова к *сумме* всех
+    попыток. Генерация у потолка стоит около его половины, поэтому второй
+    черновик — тот самый, которого требует языковой критик, — был неоплатен по
+    построению: модель его писала, проверка после вызова отказывала, и уже
+    оплаченная глава улетала в корзину. Живой случай 16.08.2026:
+    `numerology/life-path`, «spent $0.0594 against a $0.05 ceiling across 2
+    call(s)» и 503 на экране.
+
+    Здесь оба черновика стоят как настоящие ($0.0276 каждый при потолке $0.05),
+    первый забракован по тире. На старом правиле это `BudgetExceeded`; на новом
+    — глава.
+    """
+    chapter = chapters.find("natal", "core")
+    offered = chapters.relevant_factors(chapter, natal.factors)
+    provider = ScriptedProvider(
+        responses=[
+            _reply([
+                ("Your chart — the whole of it — leans steady.", offered[:1]),
+                ("It also — plainly — asks for room.", offered[:1]),
+            ]),
+            _reply([("Fine.", offered[:1]), ("Also.", offered[:1])]),
+        ],
+        input_tokens=1200,
+        output_tokens=1600,
+    )
+
+    written = await writer.write(
+        result=natal, chapter=chapter, provider=provider, model="claude-sonnet-5"
+    )
+
+    assert written.attempts == 2, "второй черновик должен был состояться"
+    assert written.spend.dollars > cost.ceiling(paid=False), (
+        "проверка обесценилась: две настоящие попытки обязаны стоить дороже "
+        "потолка одного вызова, иначе тест ничего не стережёт"
+    )
+
+
+def test_a_retry_still_fits_after_the_complaint_lengthens_the_prompt():
+    """**Отказ вместо обрыва — это хуже, а не лучше.**
+
+    Разрешение на вывод считается по потолку цены. Повторная попытка несёт
+    претензию, забраковавшую прошлый черновик, поэтому её промпт длиннее и то же
+    разрешение стоит дороже. Попытка, забравшая ровно весь потолок, выталкивает
+    за него собственный повтор — и `cost.guard` его отказывает. Живой случай
+    16.08.2026: `transits/active`, «$0.0501 против потолка $0.05» и 503 на
+    четыре сотых цента.
+
+    Проверено перебором размеров промпта и длин претензии: после первой попытки,
+    взявшей всё, что ей причитается, повтор обязан пройти `guard`.
+    """
+    for model in ("claude-sonnet-5", "claude-opus-5"):
+        for paid in (False, True):
+            for prompt_chars in (3_000, 7_000, 12_000, 20_000):
+                allowance = cost.affordable_output(
+                    model, prompt_chars=prompt_chars, paid=paid, scale=1.0, most=8192
+                )
+                if allowance == 0:
+                    continue
+                for complaint in (200, 500, 900, 1_500):
+                    cost.guard(
+                        model,
+                        prompt_chars=prompt_chars + complaint,
+                        max_output_tokens=allowance,
+                        paid=paid,
+                        scale=1.0,
+                    )
