@@ -116,8 +116,12 @@ class _ChapterScreenState extends State<ChapterScreen> {
         locale: session.locale,
       );
       if (mounted) {
-        // Пергамент появляется вместе с текстом — и бар вместе с ним.
-        readingNow.value = true;
+        // Пергамент появляется вместе с текстом — и бар вместе с ним. Но
+        // только если эта глава ещё наверху: пока она писалась, человек мог
+        // уйти назад или открыть другую, и поднимать пергамент из-под чужой
+        // страницы нельзя.
+        final route = ModalRoute.of(context);
+        if (route == null || route.isCurrent) readingNow.value = true;
         setState(() {
           _list = list;
           _reading = response.reading;
@@ -216,8 +220,17 @@ class _ChapterScreenState extends State<ChapterScreen> {
   Widget build(BuildContext context) {
     // Возврат на вкладку не проходит через загрузку, поэтому признак
     // восстанавливается здесь: пергамент на экране — бар пергаментный.
+    //
+    // **Но только у той главы, которая сейчас наверху.** Открыв вторую главу,
+    // первая остаётся смонтированной под ней в стеке маршрутов и продолжает
+    // перестраиваться — и её `build` снова поднимал признак, хотя на экране
+    // уже другая страница, ещё пишущаяся и потому ночная. Побеждал тот, кто
+    // написал последним, и бар вставал пергаментным поверх ночи: снято на
+    // устройстве, экран «глава пишется, 1 / 3».
+    final route = ModalRoute.of(context);
+    final onTop = route == null || route.isCurrent;
     final onParchment = _reading != null;
-    if (readingNow.value != onParchment) {
+    if (onTop && readingNow.value != onParchment) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) readingNow.value = onParchment;
       });
@@ -291,10 +304,18 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   Widget _page(L l) {
     if (_loading && _reading == null) {
-      // Ожидание — это экран, а не строка. На нативе здесь надпись о том,
-      // откуда берётся текст, и рисунок, собирающий себя всё время письма
-      // (`WritingArt.swift`); в порте стояла одна серая строка посреди ночи,
-      // и минута ожидания читалась как зависшее приложение.
+      // **Самое долгое ожидание в продукте — сорок-девяносто секунд.**
+      //
+      // На нативе здесь надпись о том, откуда берётся текст, и рисунок,
+      // собирающий себя всё время письма (`WritingArt.swift`); в порте
+      // сначала стояла одна серая строка посреди ночи, потом пара тонких дуг
+      // на пустом небе — и то и другое читалось как зависшее приложение.
+      // Теперь рисунок чертит себя целиком, по разметке s29: небо появляется
+      // за 3.2 секунды, дальше по нему ходит перо и всё это медленно
+      // поворачивается — семьдесят секунд на оборот.
+      //
+      // Порядок и отбивки — из макета: фраза курсивом 26/1.2, 36 точек,
+      // рисунок 260, 24 точки, подпись состояния.
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Padding(
@@ -304,14 +325,28 @@ class _ChapterScreenState extends State<ChapterScreen> {
               textAlign: TextAlign.center,
               style: AlmaType.displayL.copyWith(
                 fontSize: 26,
+                height: 1.2,
                 fontStyle: FontStyle.italic,
                 color: AlmaPalette.inkLight,
               ),
             ),
           ),
           const SizedBox(height: 36),
-          // Зерно — сама система: у каждой своё ожидание.
-          WritingArt(seed: widget.system.index),
+          // Зерно — пара «система + глава». Небо у всех сорока одной главы
+          // общее (это макет), семейство фигуры задаёт система — иначе восемь
+          // ожиданий выглядят одной заставкой, — а экземпляр внутри семейства
+          // задаёт сама глава: у натальной карты шестнадцать глав, и все
+          // шестнадцать ждали под одной и той же картинкой по сорок-девяносто
+          // секунд каждая. Зерно берётся из слага, а не из индекса с сервера:
+          // индекс приезжает с оглавлением, то есть уже после первого кадра, и
+          // рисунок сменился бы на глазах у ждущего.
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
+            child: WritingArt(
+              seed: widget.system.index,
+              grain: chapterGrain(widget.system, _showing),
+            ),
+          ),
           const SizedBox(height: 24),
           Text(l.stateWriting, style: AlmaType.meta),
         ]),
