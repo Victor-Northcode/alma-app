@@ -533,12 +533,32 @@ class _AreaRow extends StatelessWidget {
   /// Ближайший контакт или `null` — «здесь сегодня тихо».
   final Map<String, dynamic>? hit;
 
+  /// Дальше этого экран дат не обещает.
+  ///
+  /// **«Jun 13» в августе — обещание не про сегодня.** Движок отдаёт `upcoming`
+  /// на месяцы вперёд, и на живом аккаунте четыре области показали «Jun 13 /
+  /// Sep 14 / May 8 / Jun 9» — колонку дат, к сегодняшнему дню не относящихся
+  /// ни одной. На s1 дата рядом с областью читается как «это случится скоро»,
+  /// и растягивать «скоро» на полгода значит врать оформлением.
+  ///
+  /// Правило владельца: ближе тридцати дней — с датой, дальше — та же строка
+  /// области и та же фраза, но без даты справа. Точные далёкие аспекты живут в
+  /// «Транзитах» (`ahead`/`long`), где у них есть и место, и контекст.
+  static const _horizon = Duration(days: 30);
+
+  /// Дата, если она в пределах горизонта. Прошедшую не трогаем: контакт,
+  /// перешедший точность, всё ещё про эти дни — режется только даль.
+  static DateTime? _dated(DateTime? day) {
+    if (day == null) return null;
+    return day.toLocal().difference(DateTime.now()) <= _horizon ? day : null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final quiet = hit == null;
     final exact = hit?['exact'] as String?;
-    final day = exact == null ? null : DateTime.tryParse(exact);
+    final day = _dated(exact == null ? null : DateTime.tryParse(exact));
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -122,4 +122,77 @@ void main() {
     );
     expect(seen.band, AlmaBand.tabletPortrait);
   });
+
+  group('мета-строка «read from» — режется только хвост дома', () {
+    const style = TextStyle(fontSize: 14);
+
+    double widthOf(String text) => (TextPainter(
+          text: TextSpan(text: text, style: style),
+          maxLines: 1,
+          textDirection: TextDirection.ltr,
+        )..layout())
+        .width;
+
+    test('влезает целиком — не трогаем', () {
+      const line = 'moon 22°07′ ♐︎ · 4th house';
+      expect(
+        AlmaShrink.fitMetaLine(
+            line: line, style: style, maxWidth: widthOf(line) + 10),
+        line,
+      );
+    });
+
+    test('места мало — от дома остаётся номер, знак цел', () {
+      const line = 'moon 22°07′ ♐︎ · 4th house';
+      const head = 'moon 22°07′ ♐︎';
+      final got = AlmaShrink.fitMetaLine(
+        line: line,
+        style: style,
+        // Между «· 4th» и полной строкой: первая ступень не влезает, вторая да.
+        maxWidth: widthOf('$head · 4th') + 1,
+      );
+      expect(got, '$head · 4th');
+      expect(got, startsWith(head), reason: 'тело+градус+знак неделимы');
+    });
+
+    test('места совсем мало — дома нет, но знак остался', () {
+      const head = 'moon 22°07′ ♐︎';
+      expect(
+        AlmaShrink.fitMetaLine(
+          line: '$head · 4th house',
+          style: style,
+          maxWidth: widthOf(head) + 1,
+        ),
+        head,
+      );
+    });
+
+    test('номер берётся с цифрой, а не последним словом', () {
+      // В es/fr/it/pt номер стоит последним: «casa 4», «maison 4». Отброс
+      // последнего слова оставил бы «casa», то есть ничего.
+      const head = 'luna 22°07′ ♐︎';
+      for (final tail in ['4th house', '4-й дом', '4. Haus', 'casa 4', 'maison 4']) {
+        final got = AlmaShrink.fitMetaLine(
+          line: '$head · $tail',
+          style: style,
+          maxWidth: widthOf('$head · $tail') - 1,
+        );
+        expect(got, isNot(contains('house')), reason: tail);
+        expect(got, isNot(endsWith('casa')), reason: tail);
+        expect(got, isNot(endsWith('maison')), reason: tail);
+        if (got.contains('·')) {
+          expect(got, matches(RegExp(r'\d')),
+              reason: 'хвост без цифры не говорит ничего: $tail');
+        }
+      }
+    });
+
+    test('дома нет вовсе — строка не портится', () {
+      const line = 'ascendant 12°03′ ♌︎';
+      expect(
+        AlmaShrink.fitMetaLine(line: line, style: style, maxWidth: 10),
+        line,
+      );
+    });
+  });
 }

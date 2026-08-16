@@ -215,4 +215,27 @@ void main() {
     expect(pill, findsNothing);
     expect(events, isEmpty);
   });
+
+  testWidgets('чип ростом 44, а не лента: высоту держат поля и строка',
+      (tester) async {
+    // **Ошибка, которую этот тест стережёт, уже случалась дважды.** Сперва
+    // `SizedBox(height: 38)` поверх стопки не давал высоты вовсе и пилюля
+    // выходила 121×14 — лента; потом чип в 35 владелец назвал мелким на кадре.
+    // Число здесь одно и оно из решения владельца: 44 = 13 + 18 + 13.
+    final director = PillDirector()..surface = PillSurface.today;
+    await tester.pumpWidget(cabinet(director));
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(pill, findsOneWidget);
+
+    final gold = tester.getSize(find.ancestor(
+      of: pill,
+      matching: find.byType(Padding),
+    ).first);
+    expect(gold.height, closeTo(44, 0.5),
+        reason: 'высота чипа — договорённость с макетом, а не то, '
+            'что решит шрифт');
+    expect(gold.width, greaterThan(gold.height * 2),
+        reason: 'это чип с подписью, а не квадрат');
+  });
 }

@@ -206,6 +206,66 @@ class AlmaShrink {
       size: steps.last,
     );
   }
+
+  /// Мета-строка «read from», ужатая по правилу 4 спеки.
+  ///
+  /// **Тело, градус и знак неделимы; режется только хвост дома.** Обычный
+  /// `TextOverflow.ellipsis` режет там, где кончилась ширина, и на узком экране
+  /// давал «ascendant 12°03′ …» — то есть съедал ровно ту позицию, ради
+  /// названия которой строка и существует. Лестница здесь короткая и вся про
+  /// хвост:
+  ///
+  /// 1. `moon 22°07′ ♐︎ · 4th house` — как есть;
+  /// 2. `moon 22°07′ ♐︎ · 4th` — от дома остаётся номер;
+  /// 3. `moon 22°07′ ♐︎` — дома нет вовсе.
+  ///
+  /// **Про вторую ступень.** Спека называет её «до «· 4th»», и это форма
+  /// английская: по-английски и по-русски номер стоит первым словом («4th
+  /// house», «4-й дом»), а по-испански, по-французски, по-итальянски и
+  /// по-португальски — последним («casa 4», «maison 4»). Отбросить последнее
+  /// слово значило бы оставить в четырёх языках из семи голое «casa», которое
+  /// не говорит ничего. Поэтому берётся слово **с цифрой** — оно и есть
+  /// смысл хвоста в любом из семи, и это выбор из уже написанного каталога, а
+  /// не выдуманное сокращение.
+  ///
+  /// Если не влезает даже тело со знаком — вернётся оно, и многоточие поставит
+  /// сам `Text`. Это не решение рендера, а знак, что строке дали слишком мало
+  /// места: тело+градус+знак обязаны помещаться по построению.
+  static String fitMetaLine({
+    required String line,
+    required TextStyle style,
+    required double maxWidth,
+    TextScaler scaler = TextScaler.noScaling,
+  }) {
+    if (!maxWidth.isFinite || maxWidth <= 0) return line;
+
+    double width(String text) => (TextPainter(
+          text: TextSpan(text: text, style: style),
+          maxLines: 1,
+          textDirection: TextDirection.ltr,
+          textScaler: scaler,
+        )..layout())
+        .width;
+
+    if (width(line) <= maxWidth) return line;
+
+    // Хвост отделён точкой-разделителем — тем же, что ставит `_translated`.
+    const separator = ' · ';
+    final cut = line.lastIndexOf(separator);
+    if (cut < 0) return line;
+
+    final head = line.substring(0, cut);
+    final tail = line.substring(cut + separator.length);
+    final numbered = tail
+        .split(RegExp(r'\s+'))
+        .where((word) => word.contains(RegExp(r'\d')))
+        .join(' ');
+    if (numbered.isNotEmpty && numbered != tail) {
+      final shortened = '$head$separator$numbered';
+      if (width(shortened) <= maxWidth) return shortened;
+    }
+    return head;
+  }
 }
 
 /// Правила, которые зависят от языка, а не от ширины.

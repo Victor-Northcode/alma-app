@@ -563,7 +563,9 @@ class _PillLayerState extends State<PillLayer> with TickerProviderStateMixin {
     final window = MediaQueryData.fromView(View.of(context)).padding.bottom;
     return Positioned(
       right: 16,
-      bottom: AlmaMetrics.tabBarHeight + window + 12,
+      // Подъём над баром 16 (было 12) — вместе с укрупнением: чип в 44
+      // точки на прежней отбивке садился на кромку бара.
+      bottom: AlmaMetrics.tabBarHeight + window + 16,
       child: AnimatedBuilder(
         animation: Listenable.merge([_life, _nod, _away, _body]),
         builder: (context, child) {
@@ -628,7 +630,13 @@ class _Pill extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      behavior: HitTestBehavior.opaque,
+      // **Цель нажатия — само золото, а не прямоугольник вокруг него.**
+      //
+      // `HitTestBehavior.opaque` ловил весь габарит записи `Overlay`, включая
+      // углы за скруглением и пустоту, оставшуюся от ленты 121×14. При высоте
+      // 44 пилюля наконец сама себе цель: палец в 44 точки попадает по золоту,
+      // а прозрачное поле рядом с ним перестаёт воровать нажатия у экрана под
+      // пилюлей. Решение владельца, вместе с укрупнением.
       child: DecoratedBox(
         decoration: BoxDecoration(
           borderRadius: _radius,
@@ -663,34 +671,40 @@ class _Pill extends StatelessWidget {
                   // симуляторе пилюля выходила 121×14 — лента, а не чип, и
                   // владелец увидел ровно это. Высоту теперь задают поля.
                   //
-                  // 10 и 16 — это поля макета 9×15 плюс кант: `DecoratedBox`
-                  // внутри `GoldSurface` рисует кант внутрь коробки, не
-                  // раздвигая её, а в CSS он лежит снаружи полей. От внешнего
-                  // края до буквы получается одинаково.
+                  // **Укрупнена по решению владельца: 44 вместо 35.**
+                  //
+                  // По числам спеки прежний чип был верен, и на кадре всё равно
+                  // читался мелким — «размер дал заметность, крик не нужен».
+                  // Поля 13×18, кегль 14, звезда 15, подъём над баром 16; вес
+                  // остаётся 400. Высота складывается ровно: 13 + 18 + 13 = 44,
+                  // где 18 — строка подписи (см. `height` ниже), а звезда в 15
+                  // в неё умещается и высоту не держит.
                   padding: const EdgeInsets.symmetric(
-                    vertical: 10,
-                    horizontal: 16,
+                    vertical: 13,
+                    horizontal: 18,
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // Место под звезду: она нарисована слоем выше, чтобы
                       // растворение тела её не уносило.
-                      const SizedBox(width: 13),
+                      const SizedBox(width: 15),
                       const SizedBox(width: 7),
                       Text(
                         label,
                         style: AlmaType.button.copyWith(
-                          fontSize: 12.5,
+                          fontSize: 14,
                           // **Обычное начертание, не полужирное.** Пилюля —
                           // тихое событие; кричат только кнопки действия.
                           // Золотую искру даёт эмблема, а не жирность букв.
                           fontWeight: FontWeight.w400,
                           fontVariations: const [FontVariation('wght', 400)],
-                          // 15 при кегле 12.5 — строка Golos Text при
-                          // `line-height:normal`. Это она, а не звезда в 13,
-                          // держит высоту чипа: 10 + 15 + 10 = 35.
-                          height: 15 / 12.5,
+                          // 18 при кегле 14 — это она, а не звезда в 15,
+                          // держит высоту чипа: 13 + 18 + 13 = 44. Строка
+                          // задана числом, а не `line-height:normal`, ровно
+                          // потому, что высота здесь — договорённость с
+                          // макетом, а не то, что решит шрифт.
+                          height: 18 / 14,
                           color: AlmaPalette.inkLight,
                         ),
                       ),
@@ -700,10 +714,12 @@ class _Pill extends StatelessWidget {
               ),
             ),
             Positioned(
-              left: 16,
+              // Ровно горизонтальное поле: звезда стоит там, где кончается
+              // отбивка, и `SizedBox(width: 15)` в строке держит под неё место.
+              left: 18,
               child: Hero(
                 tag: pillEmblemHeroTag,
-                child: const AlmaStarMark(size: 13),
+                child: const AlmaStarMark(size: 15),
               ),
             ),
           ],

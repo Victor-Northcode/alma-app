@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../design/buttons.dart';
+import '../../design/layout.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/plates.dart';
@@ -752,11 +753,25 @@ class _CitedLineState extends State<_CitedLine> {
               style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(CabinetWordsMore.factor(l, widget.factors.first),
-                // Глазу — глиф, голосу — имя знака: та же пара, что в беседе.
+            // Режется только хвост дома — см. `AlmaShrink.fitMetaLine`.
+            // Многоточие здесь съедало знак, то есть саму позицию.
+            child: LayoutBuilder(
+              builder: (context, box) => Text(
+                AlmaShrink.fitMetaLine(
+                  line: CabinetWordsMore.factor(l, widget.factors.first),
+                  style: style,
+                  maxWidth: box.maxWidth,
+                  scaler: MediaQuery.textScalerOf(context),
+                ),
+                // Голосу — полная строка с именем знака и целым домом: у неё
+                // нет ширины, и урезать её не за чем.
                 semanticsLabel:
                     CabinetWordsMore.factorSpoken(l, widget.factors.first),
-                style: style, overflow: TextOverflow.ellipsis),
+                style: style,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ),
           if (rest > 0 && !_open) ...[
             const SizedBox(width: 8),

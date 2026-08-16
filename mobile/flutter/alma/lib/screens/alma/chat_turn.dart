@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../design/layout.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
@@ -121,17 +122,33 @@ class CitationState extends State<Citation> {
         // печаталась как «ascendant …». На нативе цитата читается полностью;
         // она и есть обещание продукта, что ответ прочитан из карты.
         Expanded(
-          child: Text(
-            CabinetWordsMore.factor(l, widget.factors.first),
-            // Глазу — глиф, голосу — имя знака: глиф VoiceOver прочесть
-            // нечем, а позиция и есть весь смысл этой строки.
-            semanticsLabel: CabinetWordsMore.factorSpoken(l, widget.factors.first),
-            style: AlmaType.numeral.copyWith(
+          child: Builder(builder: (context) {
+            final style = AlmaType.numeral.copyWith(
               color: AlmaPalette.gold,
               fontFamilyFallback: AlmaType.glyphFallback,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
+            );
+            // Одна строка, и режется только хвост дома — правило 4 спеки
+            // мета-строки, целиком в `AlmaShrink.fitMetaLine`. Прежнее
+            // многоточие резало по концу ширины и уносило знак.
+            return LayoutBuilder(
+              builder: (context, box) => Text(
+                AlmaShrink.fitMetaLine(
+                  line: CabinetWordsMore.factor(l, widget.factors.first),
+                  style: style,
+                  maxWidth: box.maxWidth,
+                  scaler: MediaQuery.textScalerOf(context),
+                ),
+                // Глазу — глиф, голосу — имя знака: глиф VoiceOver прочесть
+                // нечем, а позиция и есть весь смысл этой строки. Вслух
+                // называется полная строка, включая целый дом.
+                semanticsLabel:
+                    CabinetWordsMore.factorSpoken(l, widget.factors.first),
+                style: style,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          }),
         ),
         // Строка цитаты набрана одним шагом: на макете (s7) у неё `gap:12px`
         // между всеми четырьмя частями — подписью, позицией, «+N» и знаком.
