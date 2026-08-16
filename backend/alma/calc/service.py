@@ -465,6 +465,42 @@ def transits_result(
 
 # ── solar return ───────────────────────────────────────────────────────────
 
+def _return_zone(
+    birth: BirthData, latitude: float | None, longitude: float | None
+) -> str | None:
+    """Зона места, для которого строится соляр, именем IANA.
+
+    Лестница ровно в два шага. Соляр стоит там, куда его перенесли, — значит,
+    зону берём у той точки; не переносили — соляр стоит на месте рождения, и
+    зона у него та, что человек уже назвал, заполняя данные рождения. Второй
+    случай — обычный: перенос сегодня не просит ни один клиент.
+
+    Зона места рождения приходит из профиля, а не считается по координате
+    заново, и это важнее, чем выглядит: `Profile.timezone` — то, с чем уже
+    посчитана сама карта, и второй источник для того же факта развёл бы час
+    возвращения с часом рождения на границе поясов.
+
+    Перенос спрашивает карту часовых поясов, и `None` над океаном — её честный
+    ответ, а не сбой: выдумывать зону значит выдумывать час.
+    """
+    if latitude is None and longitude is None:
+        return birth.timezone
+
+    # Перенос бывает и частичным — одна координата задана, другая нет; берём
+    # ту же пару, что возьмёт движок, иначе зона окажется от другого места.
+    place_lat = birth.latitude if latitude is None else latitude
+    place_lon = birth.longitude if longitude is None else longitude
+    if (place_lat, place_lon) == (birth.latitude, birth.longitude):
+        return birth.timezone
+
+    # Импорт местный: карта поясов за `geo.timezone_at` стоит полсотни мегабайт
+    # резидентной памяти и грузится лениво — платить за неё должен перенос, а
+    # не каждый, кто вообще открыл расчёты.
+    from .. import geo
+
+    return geo.timezone_at(place_lat, place_lon)
+
+
 def solar_return_result(
     birth: BirthData,
     *,
@@ -487,12 +523,20 @@ def solar_return_result(
         year=target,
         latitude=latitude,
         longitude=longitude,
+        place_timezone=_return_zone(birth, latitude, longitude),
         house_system=house_system,
     )
 
     data = {
         "year": result.year,
         "return_at": result.return_utc.isoformat(timespec="minutes"),
+        # Зона того места, для которого построен соляр, и её смещение в момент
+        # возвращения. Вместе они дают экрану право напечатать час: `return_at`
+        # без них — мгновение в UTC, и час из него местным не назовёшь.
+        # Смещением, а не одним именем зоны, потому что базы часовых поясов у
+        # клиентов нет: имя они прочитать могут, а перевести по нему — нет.
+        "return_tz": result.return_tz,
+        "return_offset_minutes": result.return_offset_minutes,
         "relocated": result.relocated,
         "latitude": result.latitude,
         "longitude": result.longitude,

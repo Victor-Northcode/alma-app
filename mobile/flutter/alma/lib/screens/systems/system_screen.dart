@@ -331,15 +331,10 @@ class _SystemScreenState extends State<SystemScreen> {
         return [if (word != null) _fact(l.cabFactElement, word)];
 
       case SystemSlug.solarReturn:
-        // Момент возвращения приезжает мгновением в UTC, а печатается днём:
-        // час без часового пояса — это час, который врёт на полсуток, и натив
-        // отрезает его по той же причине.
         final at = DateTime.tryParse(data['return_at'] as String? ?? '');
         final ruler = data['year_ruler'] as String?;
         return [
-          if (at != null)
-            _fact(l.cabFactReturn,
-                DateFormat.yMMMMd(l.localeName).format(at.toLocal())),
+          if (at != null) _fact(l.cabFactReturn, _returnMoment(l, at, data)),
           if (ruler != null && ruler.isNotEmpty)
             _fact(l.cabFactYearRuler, CabinetWords.body(l, ruler.toLowerCase())),
         ];
@@ -363,6 +358,45 @@ class _SystemScreenState extends State<SystemScreen> {
       default:
         return const [];
     }
+  }
+
+  /// Момент возвращения Солнца — по часам того места, для которого построен
+  /// соляр.
+  ///
+  /// `return_at` — мгновение в UTC, и это всё, что о нём знает движок: Солнце
+  /// возвращается одновременно для всех, а часа и дня у мгновения нет, пока не
+  /// названы чьи-то часы. Обе половины врут по-своему. Напечатать UTC-час
+  /// местным — ошибка до полусуток. Взять из UTC один только день — ошибка на
+  /// сутки: возвращение в 01:21 UTC 11 мая в Сан-Паулу это ещё 10 мая, и эта
+  /// ложь тише первой, оттого и живёт дольше.
+  ///
+  /// Чинит обе зона: бэкенд кладёт рядом с мгновением имя зоны места
+  /// (`return_tz`) и её смещение **в этот момент** (`return_offset_minutes`).
+  /// Смещение приезжает готовым, потому что базы часовых поясов во Flutter
+  /// нет, а вывести его из зоны устройства значит вернуться к той же лжи —
+  /// человек в Берлине читал бы соляр, построенный для Сан-Паулу, по берлинским
+  /// часам. Тем же доводом сервер присылает имена часов на развилке перевода
+  /// времени.
+  ///
+  /// Полей может не быть — сервер старше этой строки, или соляр перенесён в
+  /// точку, чью зону назвать некому. Тогда печатается один день, как печатал
+  /// натив: это статус-кво, а не потеря.
+  String _returnMoment(L l, DateTime at, Map<String, dynamic> data) {
+    final zone = data['return_tz'];
+    final offset = data['return_offset_minutes'];
+    if (zone is! String || zone.isEmpty || offset is! num) {
+      return DateFormat.yMMMMd(l.localeName).format(at.toLocal());
+    }
+    // Стенные часы места: мгновение в UTC, сдвинутое на смещение зоны.
+    // `DateFormat` печатает поля того `DateTime`, который ему дали, и никуда
+    // их больше не переводит, — поэтому сдвинутое значение и есть то, что
+    // должно оказаться на экране.
+    final local = at.toUtc().add(Duration(minutes: offset.round()));
+    // День — тем же форматом, что и раньше; час — `j`, то есть в том виде,
+    // в каком его пишет локаль: 04:12 там, где сутки идут по 24 часа, и
+    // 4:12 AM там, где по 12. Руками этот выбор не делается.
+    return '${DateFormat.yMMMMd(l.localeName).format(local)}'
+        ' · ${DateFormat.jm(l.localeName).format(local)}';
   }
 
   /// «стихия — воздух»: подпись слева строчными, значение справа засечным.

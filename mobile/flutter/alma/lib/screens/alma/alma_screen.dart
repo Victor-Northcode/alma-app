@@ -5,6 +5,7 @@ import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
+import '../../design/tab_bar.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
@@ -23,7 +24,11 @@ import 'thread_screen.dart';
 /// задан. Под каждым ответом стоит цитата позиций: это обещание продукта, и
 /// экран без неё нарушал бы то, что сам продукт печатает о себе.
 class AlmaScreen extends StatefulWidget {
-  const AlmaScreen({super.key});
+  const AlmaScreen({super.key, required this.tabs});
+
+  /// Бар вкладок, который на этой одной вкладке живёт оверлеем. Грабер под
+  /// композером — единственный способ его позвать; см. [TabsPeek].
+  final TabsPeek tabs;
 
   @override
   State<AlmaScreen> createState() => _AlmaScreenState();
@@ -36,7 +41,7 @@ class _Turn {
   final List<String> citedFactors;
 }
 
-class _AlmaScreenState extends State<AlmaScreen> {
+class _AlmaScreenState extends State<AlmaScreen> with WidgetsBindingObserver {
   final _draft = TextEditingController();
   final _scroll = ScrollController();
 
@@ -74,6 +79,21 @@ class _AlmaScreenState extends State<AlmaScreen> {
   List<ChatThreadRef> _past = const [];
   bool _openersLoaded = false;
   bool _threadLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // **Экран смотрит на окно и обязан узнавать, что окно изменилось.**
+    //
+    // Низ этой вкладки считается от окна, а не от `MediaQuery` тела (почему —
+    // в `build`), а `View.of` ни на что не подписывает: без наблюдателя приход
+    // клавиатуры не перестраивал бы экран вовсе — грабер оставался бы стоять
+    // под клавиатурой, и найти это можно было бы только руками на устройстве.
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeMetrics() => setState(() {});
 
   @override
   void didChangeDependencies() {
@@ -269,6 +289,7 @@ class _AlmaScreenState extends State<AlmaScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _draft.dispose();
     _scroll.dispose();
     _focus.dispose();
@@ -279,16 +300,23 @@ class _AlmaScreenState extends State<AlmaScreen> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final session = SessionScope.of(context);
-    // **Композер стоит на баре, а не над ним в воздухе.**
+    // **Низ этой вкладки считается от окна, а не от окружения.**
     //
-    // Отступ считался как высота бара плюс нижняя безопасная зона, и лишние
-    // 34 точки поднимали композер над баром полосой пустой ночи — «выглядит
-    // стрёмно, что он просто в воздухе». Натив в покое отступает ровно на
-    // `AlmaMetrics.tabBarHeight` и ничего к нему не прибавляет
-    // (`AlmaScreen.swift`: `.padding(.bottom, keyboard > 0 ? … : tabBarHeight)`),
-    // потому что домашний индикатор — это место самого бара, а не зазор перед
-    // ним.
-    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    // Оболочка — `Scaffold(extendBody: true)` с баром в `bottomNavigationBar`,
+    // и такой Scaffold кладёт в `MediaQuery` тела полную высоту бара вместе с
+    // домашним индикатором: 86 точек там, где у окна 34. На трёх вкладках это
+    // ровно то, что нужно, — там бар стоит. Здесь его нет: он уехал за кромку
+    // и ждёт зова, а отступ в рост отсутствующего бара оставил бы под
+    // композером полосу пустой ночи — ту самую дыру на месте того, чего нет.
+    // Окно не зависит от того, что с отступом сделали Scaffold и SafeArea по
+    // дороге.
+    //
+    // **Клавиатуру приходится спрашивать там же.** `resizeToAvoidBottomInset`
+    // вычитает её из тела и **стирает** `viewInsets` из его `MediaQuery`:
+    // изнутри её высота всегда ноль. Поднимать композер руками поэтому не
+    // нужно — тело уже стоит на её кромке; нужен сам факт, что она открыта.
+    final view = MediaQueryData.fromView(View.of(context));
+    final typing = view.viewInsets.bottom > 0;
 
     return NightSky(
       mood: SkyMood.reading,
@@ -296,18 +324,10 @@ class _AlmaScreenState extends State<AlmaScreen> {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          // Над клавиатурой, когда она есть; над баром, когда её нет.
-          padding: EdgeInsets.only(
-              bottom: keyboard > 0
-                  ? keyboard - MediaQuery.paddingOf(context).bottom + 8
-                  // 58 + 16: высота бара и воздух над ним. Числа сняты
-                  // измерением — на 58 композер уходил под бар, на 92
-                  // (плюс безопасная зона) висел над ним полосой пустой ночи.
-                  // Бар опустился до 52 точек, а под ним ещё домашний
-                  // индикатор: без него композер налезал на подписи вкладок.
-                  : AlmaMetrics.tabBarHeight +
-                      MediaQuery.paddingOf(context).bottom * 0.5 +
-                      16),
+          // В покое — место домашнего индикатора, и оно **под грабером**:
+          // композер с ручкой садятся на индикатор, а не парят над ним.
+          // При открытой клавиатуре — только воздух над её кромкой.
+          padding: EdgeInsets.only(bottom: typing ? 8 : view.padding.bottom),
           child: Column(children: [
             _header(l),
             Expanded(
@@ -316,6 +336,14 @@ class _AlmaScreenState extends State<AlmaScreen> {
                   : _transcript(l),
             ),
             _limitWall(l, session) ?? _composer(l),
+            // **Грабер — под композером и только когда не пишут.**
+            //
+            // Клавиатура забирает низ экрана целиком: ручка над её кромкой
+            // предлагала бы уйти с вкладки ровно тому, кто набирает вопрос, и
+            // отнимала бы у него строку. Черновик при этом никуда не девается
+            // — он живёт в `_draft`, а не в разметке, — и приезд бара, уход
+            // бара и появление ручки его не касаются.
+            if (!typing) TabsGrabber(peek: widget.tabs),
           ]),
         ),
       ),
@@ -572,11 +600,15 @@ class _AlmaScreenState extends State<AlmaScreen> {
         Expanded(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            height: 52,
+            // Рост поля — общий рост полей продукта (54). Раньше здесь стояли
+            // свои 52: на вкладке, где композер остался единственным низом
+            // экрана, собственное число превращается в единственное поле
+            // приложения, которое чуть ниже остальных.
+            height: AlmaMetrics.fieldHeight,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               border: Border.all(color: AlmaPalette.hairline),
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(AlmaMetrics.fieldHeight / 2),
             ),
             child: TextField(
               controller: _draft,
@@ -598,8 +630,8 @@ class _AlmaScreenState extends State<AlmaScreen> {
         InkResponse(
           onTap: () => _send(_draft.text),
           child: Container(
-            width: 52,
-            height: 52,
+            width: AlmaMetrics.fieldHeight,
+            height: AlmaMetrics.fieldHeight,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(color: AlmaPalette.hairline),

@@ -110,15 +110,33 @@ class _CabinetShellState extends State<CabinetShell> {
   /// вёл палец, и проявляется. Держим стек живым — двигается только слой.
   late final PageController _pages = PageController(initialPage: _tab.index);
 
+  /// Позван ли бар на вкладке Alma. Поднимает грабер внизу беседы, слушает
+  /// оболочка — см. [TabsPeek] о том, почему признак живёт отдельной вещью.
+  late final TabsPeek _peek = TabsPeek();
+
+  /// Сколько уже протянули вниз по самому бару; порог — [TabsPeek.pull], там
+  /// же и о том, почему считается расстояние, а не скорость на отпускании.
+  double _pushed = 0;
+
   @override
   void dispose() {
+    _peek.dispose();
     _pages.dispose();
     super.dispose();
   }
 
   /// Нажатие на бар — то же движение, что смах: страница доезжает сама.
   void _goTo(CabinetTab tab) {
-    if (tab == _tab) return;
+    if (tab == _tab) {
+      // Тап по вкладке, на которой уже стоишь. Идти некуда — но на Alma это
+      // единственный способ сказать бару «спасибо, показал»: он приходил
+      // ответить на вопрос «куда я могу уйти», и ответ получен.
+      _peek.hide();
+      return;
+    }
+    // Уходящую вкладку бар не прогоняет: на трёх остальных он постоянный, и
+    // нырок вниз с возвратом на месте назначения читался бы сбоем. Признак
+    // гасится в `onPageChanged`, когда страница доехала.
     readingNow.value = false;
     _pages.animateToPage(tab.index,
         duration: const Duration(milliseconds: 320), curve: Curves.easeOutCubic);
@@ -206,13 +224,17 @@ class _CabinetShellState extends State<CabinetShell> {
         controller: _pages,
         onPageChanged: (index) {
           readingNow.value = false;
+          // Приход на любую вкладку гасит зов бара. На трёх вкладках это ничего
+          // не меняет — он там стоит всегда; на Alma это и есть «бара нет»:
+          // приехал он в прошлый визит или нет, встречает беседа с композером.
+          _peek.hide();
           setState(() => _tab = CabinetTab.values[index]);
         },
-        children: const [
-          _Alive(child: TodayScreen()),
-          _Alive(child: _SystemsTab()),
-          _Alive(child: AlmaScreen()),
-          _Alive(child: SettingsScreen()),
+        children: [
+          const _Alive(child: TodayScreen()),
+          const _Alive(child: _SystemsTab()),
+          _Alive(child: AlmaScreen(tabs: _peek)),
+          const _Alive(child: SettingsScreen()),
         ],
       ),
       // **Приглашение приходит и уходит, а не стоит.**
@@ -253,10 +275,54 @@ class _CabinetShellState extends State<CabinetShell> {
           );
         },
       ),
-      bottomNavigationBar: CabinetTabBar(
-        current: _tab,
-        // Нажатие идёт тем же путём, что смах: одно движение на оба способа.
-        onSelect: _goTo,
+      // **На вкладке Alma бар не стоит, а приезжает.**
+      //
+      // Решение владельца, а не упущение вёрстки: беседа — комната письма, и
+      // внизу неё поле вопроса главнее переключения вкладок. Бар приходит по
+      // граберу под композером и уходит сам.
+      //
+      // **Он уезжает вниз, а не снимается — и это не украшение.** Scaffold
+      // кладёт высоту `bottomNavigationBar` в `MediaQuery` тела, а тело здесь
+      // одно на все четыре страницы `PageView`. Сняв бар на Alma, мы поменяли
+      // бы отступ снизу разом всем четырём, и три остальные вкладки дёргались
+      // бы на 52 точки в такт чужому жесту. Место в разметке бар держит
+      // всегда; меняется только то, где он нарисован.
+      bottomNavigationBar: ValueListenableBuilder<bool>(
+        valueListenable: _peek,
+        builder: (context, peeking, _) {
+          final away = _tab == CabinetTab.alma && !peeking;
+          Widget bar = CabinetTabBar(
+            current: _tab,
+            // Нажатие идёт тем же путём, что смах: одно движение на оба способа.
+            onSelect: _goTo,
+          );
+          if (_tab == CabinetTab.alma) {
+            bar = Listener(
+              // Палец на баре продлевает жизнь: три секунды считаются от
+              // последнего касания, а не от приезда.
+              onPointerDown: (_) => _peek.keepAwake(),
+              child: GestureDetector(
+                // Смах вниз — «спасибо, не надо». Тапу по вкладке он не мешает:
+                // пока палец стоит на месте, арену выигрывает нажатие.
+                onVerticalDragStart: (_) => _pushed = 0,
+                onVerticalDragUpdate: (details) {
+                  _pushed += details.primaryDelta ?? 0;
+                  if (_pushed >= TabsPeek.pull) _peek.hide();
+                },
+                child: bar,
+              ),
+            );
+          }
+          // Смещение долей собственной высоты: единица уводит бар ровно на
+          // свой рост вместе с полосой домашнего индикатора, и за кромкой от
+          // него не остаётся ни точки.
+          return AnimatedSlide(
+            offset: Offset(0, away ? 1 : 0),
+            duration: AlmaMotion.sheet,
+            curve: AlmaMotion.sheetCurve,
+            child: bar,
+          );
+        },
       ),
     );
   }

@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../l10n/alma_l10n.dart';
 import 'metrics.dart';
@@ -117,6 +119,162 @@ class CabinetTabBar extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Показан ли сейчас бар на вкладке Alma — и что его прогонит.
+///
+/// **Почему у Alma бара нет.** Решение владельца, а не забытая строка: беседа —
+/// комната письма, внизу неё поле вопроса, и на этой одной вкладке композер
+/// главнее переключения вкладок. На трёх остальных бар стоит всегда. Здесь он
+/// приходит по зову и уходит сам.
+///
+/// **Почему это отдельная вещь, а не поле оболочки.** Позвать бар может только
+/// [TabsGrabber] — он нарисован внизу экрана беседы; показывает бар оболочка.
+/// Между ними `PageView` и несколько уровней дерева, и признак — вся связь
+/// между ними. Здесь же и таймер: «уходит сам через три секунды» — свойство
+/// самого состояния, а не чьей-то кнопки. Разложенный по обработчикам, он
+/// однажды не завёлся бы в одном из них, и бар остался бы стоять поверх беседы
+/// именно тем постоянным баром, ради ухода которого всё затеяно.
+class TabsPeek extends ValueNotifier<bool> {
+  TabsPeek() : super(false);
+
+  /// Сколько бар ждёт, прежде чем уйти сам. Трёх секунд хватает прочесть
+  /// четыре подписи и попасть пальцем в нужную; дольше — и он снова
+  /// становится постоянным баром.
+  static const idle = Duration(seconds: 3);
+
+  /// Сколько нужно протянуть **сверх** порога распознавания, чтобы это
+  /// считалось смахом. Восемь точек отделяют движение от дрожи пальца.
+  ///
+  /// **Почему расстояние, а не скорость на отпускании.** Первым и там и там
+  /// стоял `onVerticalDragEnd` с `primaryVelocity`, и он молчал на всяком
+  /// смахе, который не дотягивал до броска: Flutter считает жест броском
+  /// только если последние двадцать замеров прошли больше 18 точек. Медленно
+  /// и коротко поднятый палец — а именно так поднимают ручку, до которой
+  /// сантиметр хода, — не вызывал ничего. Расстояние отвечает на любой смах и
+  /// отвечает сразу, не дожидаясь, пока палец оторвут.
+  ///
+  /// Число одно на оба конца движения: зовут бар с грабера, прогоняют с
+  /// самого бара, и разъехавшиеся пороги читались бы как «вниз он слушается
+  /// хуже, чем вверх».
+  static const pull = 8.0;
+
+  Timer? _timer;
+
+  void reveal() {
+    value = true;
+    _countdown();
+  }
+
+  void hide() {
+    _timer?.cancel();
+    _timer = null;
+    value = false;
+  }
+
+  void toggle() => value ? hide() : reveal();
+
+  /// Палец лёг на бар — отсчёт начинается заново. Уйти из-под руки — то же
+  /// самое, что уйти не вовремя.
+  void keepAwake() {
+    if (value) _countdown();
+  }
+
+  void _countdown() {
+    _timer?.cancel();
+    _timer = Timer(idle, hide);
+  }
+
+  @override
+  void dispose() {
+    // Без этого таймер доживает до срабатывания и трогает `value` у мёртвого
+    // уведомителя — падение в отладке через три секунды после ухода с экрана.
+    _timer?.cancel();
+    super.dispose();
+  }
+}
+
+/// Ручка под композером: единственный способ позвать бар на вкладке Alma.
+///
+/// **Почему она живёт над домашним индикатором, а не у самой кромки.** Смах от
+/// нижней кромки экрана принадлежит системе — это жест «домой», и ручка,
+/// поставленная туда, спорила бы с ним за палец и проигрывала. Отступ на
+/// индикатор экран беседы держит **под** грабером, а не под композером.
+class TabsGrabber extends StatefulWidget {
+  const TabsGrabber({super.key, required this.peek});
+
+  final TabsPeek peek;
+
+  @override
+  State<TabsGrabber> createState() => _TabsGrabberState();
+}
+
+class _TabsGrabberState extends State<TabsGrabber> {
+  /// Кегль подписи под ручкой — 9.5 по слову владельца.
+  static const _captionSize = 9.5;
+
+  /// Место под подпись, которой пока нет. Строка кеглем 9.5 занимает примерно
+  /// столько; резерв держится, чтобы в день, когда владелец даст ключ,
+  /// подпись просто встала на своё место, а не подняла ручку на высоту строки.
+  static const _captionLine = _captionSize * 1.3;
+
+  /// Сколько уже протянуто в текущем жесте; порог — [TabsPeek.pull].
+  double _pulled = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      // Имени у кнопки пока нет: подпись и метка для голоса — одна и та же
+      // ненаписанная строка, и выдумывать её здесь нельзя.
+      child: GestureDetector(
+        // Вся полоса, а не одни три точки высоты: попасть пальцем в ручку
+        // 30×3 невозможно, и незримое поле вокруг неё — это и есть кнопка.
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          HapticFeedback.selectionClick();
+          widget.peek.toggle();
+        },
+        onVerticalDragStart: (_) => _pulled = 0,
+        onVerticalDragUpdate: (details) {
+          _pulled += details.primaryDelta ?? 0;
+          if (_pulled <= -TabsPeek.pull && !widget.peek.value) {
+            _pulled = 0;
+            HapticFeedback.selectionClick();
+            widget.peek.reveal();
+          } else if (_pulled >= TabsPeek.pull && widget.peek.value) {
+            _pulled = 0;
+            widget.peek.hide();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.only(top: 8, bottom: 4),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 30,
+                height: 3,
+                decoration: BoxDecoration(
+                  // Тот же тон, что у погашенной подписи вкладки: грабер и
+                  // есть бар в состоянии покоя, и говорить он должен тем же
+                  // голосом, а не своей собственной прозрачностью.
+                  color: AlmaPalette.muted3,
+                  borderRadius: BorderRadius.circular(1.5),
+                ),
+              ),
+              const SizedBox(height: 5),
+              // Здесь стоит «Swipe up for tabs» кеглем 9.5. Строки в каталоге
+              // нет, переводов владелец не давал — рисовать её самим значит
+              // завести в продукте фразу, которой никто не писал. Ждём ключ
+              // `scrChatSwipeForTabs`; до него — только место под неё.
+              const SizedBox(height: _captionLine),
+            ],
           ),
         ),
       ),

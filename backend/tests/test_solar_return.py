@@ -83,6 +83,72 @@ def test_relocating_moves_the_angles_but_not_the_instant(chart):
         )
 
 
+# ── the zone the moment gets printed in ────────────────────────────────────
+#
+# Возвращение — мгновение, и `return_utc` описывает его полностью. Но экран
+# печатает не мгновение, а час и день, а их без часового пояса не существует:
+# час из UTC врёт до полусуток, день из UTC врёт на сутки. Поэтому рядом с
+# мгновением едет зона места, для которого построен соляр, и её смещение
+# в этот момент.
+
+def test_the_return_says_which_clock_its_hour_belongs_to(chart):
+    """Соляр на месте рождения печатается по часам места рождения."""
+    result = solar_return.compute(natal_chart=chart, birth_moment=_moment(), year=2026)
+    assert result.return_tz == "Europe/Rome"
+    assert result.return_offset_minutes == 60   # 14 марта — ещё CET, до перевода
+
+
+def test_the_offset_is_read_at_the_return_instant_not_from_a_table():
+    """Час перевода часов — настоящая разница на экране, а не мелочь.
+
+    Одна и та же зона у июльского рождения и у мартовского даёт разное
+    смещение, потому что смещение — свойство мгновения, а не места.
+    """
+    summer = _moment(month=7, day=2)
+    summer_chart = natal.compute(moment=summer, **MILAN)
+    result = solar_return.compute(
+        natal_chart=summer_chart, birth_moment=summer, year=2026
+    )
+    assert result.return_tz == "Europe/Rome"
+    assert result.return_offset_minutes == 120  # CEST
+
+
+def test_a_relocated_return_takes_the_zone_of_the_place_it_moved_to(chart):
+    """Перенесённый соляр печатается по часам того места, куда перенесён."""
+    result = solar_return.compute(
+        natal_chart=chart, birth_moment=_moment(), year=2026,
+        latitude=-33.8688, longitude=151.2093, place_timezone="Australia/Sydney",
+    )
+    assert result.relocated is True
+    assert result.return_tz == "Australia/Sydney"
+    assert result.return_offset_minutes == 660  # AEDT в марте
+
+
+def test_a_relocated_return_without_a_zone_says_so_rather_than_guessing(chart):
+    """Зона рождения для перенесённого соляра — не «за неимением лучшего», а ложь.
+
+    Сидней с римской зоной напечатал бы час, которого в Сиднее не было. Когда
+    зону перенесённого места назвать некому, честный ответ — что её нет.
+    """
+    result = solar_return.compute(
+        natal_chart=chart, birth_moment=_moment(), year=2026,
+        latitude=-33.8688, longitude=151.2093,
+    )
+    assert result.return_tz is None
+    assert result.return_offset_minutes is None
+
+
+def test_an_unknown_zone_name_costs_the_hour_and_nothing_else(chart):
+    """Имя, которого нет в базе, не роняет соляр — карта и год остаются верны."""
+    result = solar_return.compute(
+        natal_chart=chart, birth_moment=_moment(), year=2026,
+        place_timezone="Middle/Earth",
+    )
+    assert result.return_tz is None
+    assert result.return_offset_minutes is None
+    assert result.chart.angles is not None
+
+
 # ── the unknown-time refusal ───────────────────────────────────────────────
 
 def test_a_solar_return_is_refused_without_a_birth_time():
@@ -92,6 +158,88 @@ def test_a_solar_return_is_refused_without_a_birth_time():
         solar_return.compute(
             natal_chart=timeless, birth_moment=_moment(hour=None, minute=None), year=2026
         )
+
+
+# ── the zone in the payload the clients read ───────────────────────────────
+#
+# Движок зону только переводит; называет её слой расчёта, и лестница у него в
+# два шага: место, для которого просят соляр, а если его не просили — место
+# рождения. Здесь проверяется вся дорога до `data`, потому что именно `data`
+# видит экран.
+
+def _birth(**overrides):
+    from datetime import date
+
+    from alma.calc import BirthData
+
+    params = dict(
+        date=date(1998, 3, 14), time="04:20",
+        latitude=45.4642, longitude=9.19, timezone="Europe/Rome",
+        place_label="Milan, Italy",
+    )
+    params.update(overrides)
+    return BirthData(**params)
+
+
+def test_the_payload_carries_the_birth_zone_when_the_return_stays_home():
+    from alma.calc import compute
+
+    data = compute("solar-return", _birth(), year=2026).data
+    assert data["return_tz"] == "Europe/Rome"
+    assert data["return_offset_minutes"] == 60
+
+
+def test_the_payload_takes_the_zone_of_the_place_the_return_is_asked_for():
+    """Сохранённое место человека приезжает координатой — зону по ней находит
+    карта часовых поясов, а не имя, которое никто не присылал."""
+    from alma.calc import compute
+
+    data = compute(
+        "solar-return", _birth(), year=2026,
+        latitude=-33.8688, longitude=151.2093,   # Sydney
+    ).data
+    assert data["relocated"] is True
+    assert data["return_tz"] == "Australia/Sydney"
+    assert data["return_offset_minutes"] == 660
+
+
+def test_the_zone_is_what_keeps_the_printed_day_from_lying():
+    """Возвращение в 01:21 UTC 11 мая в Сан-Паулу — это ещё 10 мая.
+
+    Пока в выдаче было одно мгновение в UTC, у экрана не было способа узнать
+    это: он печатал день из UTC и ошибался на сутки — тише, чем ошибка в часе,
+    и потому дольше незамеченным.
+    """
+    from datetime import date, datetime, timedelta
+
+    from alma.calc import compute
+
+    data = compute(
+        "solar-return",
+        _birth(
+            date=date(1995, 5, 11), time="10:05",
+            latitude=-23.5505, longitude=-46.6333,
+            timezone="America/Sao_Paulo", place_label="São Paulo, Brazil",
+        ),
+        year=2026,
+    ).data
+
+    assert data["return_tz"] == "America/Sao_Paulo"
+    utc = datetime.fromisoformat(data["return_at"])
+    local = utc + timedelta(minutes=data["return_offset_minutes"])
+    assert utc.date() == date(2026, 5, 11)
+    assert local.date() == date(2026, 5, 10)
+
+
+def test_a_result_with_the_zone_still_serialises():
+    """`return_tz` — строка, `return_offset_minutes` — int, и оба переживают JSON."""
+    import json
+
+    from alma.calc import compute
+
+    revived = json.loads(compute("solar-return", _birth(), year=2026).to_json())
+    assert revived["data"]["return_tz"] == "Europe/Rome"
+    assert revived["data"]["return_offset_minutes"] == 60
 
 
 # ── derived readings ───────────────────────────────────────────────────────

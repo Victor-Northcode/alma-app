@@ -18,6 +18,7 @@ from __future__ import annotations
 import calendar
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import numpy as np
 
@@ -41,6 +42,22 @@ class SolarReturn:
     year: int
     return_jd: float
     return_utc: datetime
+    #: Часовой пояс места, для которого построен соляр, именем IANA — и его
+    #: смещение **в момент возвращения**, в минутах.
+    #:
+    #: Возвращение — это мгновение, и `return_utc` описывает его полностью и
+    #: честно. Но напечатать мгновение можно только в чьих-то часах: 01:30 UTC
+    #: 11 мая в Сан-Паулу — это 22:30 десятого. Показать UTC-час местным
+    #: значит соврать на величину до полусуток, а взять из UTC один только
+    #: день — соврать датой. Зона чинит обе лжи разом, и считает её здесь тот,
+    #: у кого есть база часовых поясов; у клиентов её нет — ровно тот же довод
+    #: держит `zoneinfo` внутри движка в `AmbiguousLocalTime`.
+    #:
+    #: `None` — настоящее состояние, а не пропуск: зона неизвестна, если соляр
+    #: перенесён в точку, чью зону вызывающий не назвал (над океаном её может
+    #: не быть вовсе). Тогда клиент печатает то, что знает, — день.
+    return_tz: str | None
+    return_offset_minutes: int | None
     natal_sun: float
     chart: NatalChart
     latitude: float
@@ -124,6 +141,29 @@ def return_moment(natal_sun: float, birthday: datetime, year: int) -> float:
     return (low + high) / 2.0
 
 
+def _offset_minutes(zone_name: str | None, instant: datetime) -> int | None:
+    """Смещение зоны от UTC **в этот момент**, в минутах.
+
+    Считается от мгновения, а не от даты и не «летнее/зимнее»: соляр 2026 года
+    в Риме попадает то до перевода часов, то после, и разница — целый час на
+    экране. `zoneinfo` знает историю переводов, поэтому спрашивают её, а не
+    таблицу смещений.
+
+    Минуты, а не часы, потому что +05:45 (Катманду) и +05:30 (Индия) —
+    населённые пояса, и в часах они не целые.
+    """
+    if zone_name is None:
+        return None
+    try:
+        zone = ZoneInfo(zone_name)
+    except (ZoneInfoNotFoundError, ValueError):
+        # Незнакомое имя зоны — не повод уронить весь соляр: карта, ascendant
+        # и год остаются верными, теряется только час на экране.
+        return None
+    offset = instant.astimezone(zone).utcoffset()
+    return int(offset.total_seconds() // 60) if offset is not None else 0
+
+
 def _angular(chart: NatalChart, orb: float = 8.0) -> tuple[str, ...]:
     """Bodies sitting on an angle — the loudest thing in a return chart."""
     if not chart.angles:
@@ -172,6 +212,7 @@ def compute(
     year: int,
     latitude: float | None = None,
     longitude: float | None = None,
+    place_timezone: str | None = None,
     house_system: str = "placidus",
 ) -> SolarReturn:
     """The solar return for one year, cast where the person will be.
@@ -180,6 +221,11 @@ def compute(
     orthodox way to read a year spent somewhere other than the birthplace —
     the Sun returns at the same instant everywhere, but the horizon under it
     is different.
+
+    `place_timezone` — зона того же места, именем IANA. Координату в зону
+    переводит карта часовых поясов, а движок карт не держит: он считает по
+    эфемеридам и не знает, где проходят границы поясов. Поэтому зону называет
+    вызывающий, а движок только переводит в неё мгновение — см. `return_tz`.
     """
     if not natal_chart.time_known:
         raise BirthTimeRequired(
@@ -216,10 +262,26 @@ def compute(
         traditional, modern = zodiac.SIGN_RULERS[rising]
         ruler = modern or traditional
 
+    # Зона по умолчанию — зона рождения, но **только пока соляр стоит на месте
+    # рождения**. Для перенесённого соляра зона рождения — не «за неимением
+    # лучшего», а прямая ложь: перенос в Сидней с зоной Europe/Rome напечатает
+    # час, которого в Сиднее не было. Не названа зона перенесённого места —
+    # значит, она неизвестна, и это говорится вслух через None.
+    zone_name = place_timezone
+    if zone_name is None and not relocated:
+        zone_name = birth_moment.tz_name
+    offset_minutes = _offset_minutes(zone_name, utc)
+    if offset_minutes is None:
+        # Имя, по которому не нашлось зоны, не назовёшь и клиенту: он получит
+        # строку, с которой ничего не сделает, и в лучшем случае промолчит.
+        zone_name = None
+
     return SolarReturn(
         year=year,
         return_jd=jd,
         return_utc=utc,
+        return_tz=zone_name,
+        return_offset_minutes=offset_minutes,
         natal_sun=natal_sun,
         chart=chart,
         latitude=place_lat,
