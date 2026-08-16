@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../design/alma_presence.dart';
 import '../../design/layout.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
@@ -192,5 +193,40 @@ class CitationState extends State<Citation> {
                 )),
           ),
     ]);
+  }
+}
+
+/* ── A2: думание ─────────────────────────────────────────────────────────── */
+
+/// A2 — думание: свет в кольце лучей и строка, называющая расчёт.
+///
+/// **Строка нейтральна, пока движок не отдаёт стадию.** §6 спеки: «"reading
+/// your …" показывается только с настоящими данными; если движок не отдал
+/// контекст — нейтральное `reading your chart…`, никаких выдуманных домов».
+class ThinkingView extends StatelessWidget {
+  const ThinkingView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 18),
+      child: Column(
+        children: [
+          const Center(
+            child: AlmaPresence(
+              size: AlmaPresence.thinking,
+              mood: PresenceMood.thinking,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            l.scrChatThinking,
+            textAlign: TextAlign.center,
+            style: AlmaType.meta.copyWith(color: AlmaPalette.goldBright),
+          ),
+        ],
+      ),
+    );
   }
 }

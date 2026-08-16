@@ -486,12 +486,7 @@ class _AlmaScreenState extends State<AlmaScreen>
       itemCount: _turns.length + tail,
       itemBuilder: (context, i) {
         if (i == _turns.length) {
-          if (_sending) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text(l.cabReadingChart, style: AlmaType.meta),
-            );
-          }
+          if (_sending) return const ThinkingView();
           return _refusalView(l, _refusal!);
         }
         final turn = _turns[i];
