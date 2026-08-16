@@ -668,6 +668,9 @@ class _CitedLineState extends State<_CitedLine> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(CabinetWordsMore.factor(l, widget.factors.first),
+                // Глазу — глиф, голосу — имя знака: та же пара, что в беседе.
+                semanticsLabel:
+                    CabinetWordsMore.factorSpoken(l, widget.factors.first),
                 style: style, overflow: TextOverflow.ellipsis),
           ),
           if (rest > 0 && !_open) ...[
@@ -679,7 +682,9 @@ class _CitedLineState extends State<_CitedLine> {
           for (final factor in widget.factors.skip(1))
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(CabinetWordsMore.factor(l, factor), style: style),
+              child: Text(CabinetWordsMore.factor(l, factor),
+                  semanticsLabel: CabinetWordsMore.factorSpoken(l, factor),
+                  style: style),
             ),
       ]),
     );

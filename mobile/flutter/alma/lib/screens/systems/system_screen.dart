@@ -23,11 +23,12 @@ import 'writing_art.dart';
 /// фактов и сразу оглавление. Оглавление здесь главное: это дорога к главе.
 ///
 /// **Факты выбирает макет, а не полнота выдачи.** У каждой системы напечатано
-/// ровно то, чего её рисунок сказать не может: у карты рождения — стихия
-/// (аркан и имя стоят на самой карте), у соляра — момент возвращения и
-/// управитель года, у астрокартографии — место, число линий и число
-/// пересечений. Нумерология и синтез не показывают строк вовсе: их числа
-/// уже внутри рисунка, и второй раз печатать их значило бы повторяться.
+/// ровно то, чего её рисунок сказать не может: у натальной карты — Солнце,
+/// Луна и Асцендент, у карты рождения — стихия (аркан и имя стоят на самой
+/// карте), у соляра — момент возвращения и управитель года, у
+/// астрокартографии — место, число линий и число пересечений. Нумерология и
+/// синтез не показывают строк вовсе: их числа уже внутри рисунка, и второй раз
+/// печатать их значило бы повторяться.
 class SystemScreen extends StatefulWidget {
   const SystemScreen({super.key, required this.system, required this.onOpenChapter});
 
@@ -345,6 +346,9 @@ class _SystemScreenState extends State<SystemScreen> {
     final data = _result?.data;
     if (data == null) return const [];
     switch (widget.system) {
+      case SystemSlug.natal:
+        return _positions(l, data);
+
       case SystemSlug.birthCard:
         final card = data['personality'];
         final element = card is Map ? card['element'] as String? : null;
@@ -379,6 +383,48 @@ class _SystemScreenState extends State<SystemScreen> {
       default:
         return const [];
     }
+  }
+
+  /// Три строки под колесом натальной карты: Солнце, Луна, Асцендент.
+  ///
+  /// **Это те строки, которые делают колесо «моим» до первого тапа.** Колесо
+  /// без них — красивая диаграмма чьей-то карты: глифы на нём не подписаны, и
+  /// узнать в ней себя нельзя, пока не назван хотя бы один знак. Раньше они
+  /// стояли на экране «Мои системы» (в макете — s3, три строки над списком);
+  /// когда тот экран стал колодой, строки ушли вместе с ним, и вернуть их
+  /// нужно сюда, под сам рисунок, — колода остаётся навигацией, а чтение
+  /// начинается здесь.
+  ///
+  /// Числа и знак — ровно те, что напечатал движок (`formatted`): этот экран
+  /// не второе мнение о позиции. Знак остаётся глифом, как в макете; имя
+  /// знака уходит в подпись для VoiceOver.
+  ///
+  /// Асцендент — не тело, а угол: он живёт в `angles`, дома у него нет по
+  /// определению, и **без времени рождения его нет вовсе** — горизонта не
+  /// существует. Тогда строки просто нет; выдумывать её полуднем значило бы
+  /// напечатать ошибку до 180° тем же уверенным тоном, что и правду.
+  List<Widget> _positions(L l, Map<String, dynamic> data) {
+    final placements = data['placements'];
+    final rows = <Widget>[];
+    for (final key in const ['sun', 'moon']) {
+      final placement = placements is Map ? placements[key] : null;
+      if (placement is! Map) continue;
+      final formatted = placement['formatted'] as String?;
+      if (formatted == null || formatted.isEmpty) continue;
+      final house = (placement['house'] as num?)?.toInt();
+      // Дом есть только там, где есть дома: без времени рождения `house`
+      // приходит пустым, и строка честно кончается знаком.
+      final tail = house == null ? '' : ' · ${CabinetWordsMore.house(l, house)}';
+      rows.add(_fact(CabinetWords.body(l, key), '$formatted$tail', glyphs: true));
+    }
+    final angles = data['angles'];
+    final formatted = angles is Map ? angles['formatted'] : null;
+    final ascendant =
+        formatted is Map ? formatted['ascendant'] as String? : null;
+    if (ascendant != null && ascendant.isNotEmpty) {
+      rows.add(_fact(CabinetWords.body(l, 'ascendant'), ascendant, glyphs: true));
+    }
+    return rows;
   }
 
   /// Момент возвращения Солнца — по часам того места, для которого построен
@@ -421,7 +467,14 @@ class _SystemScreenState extends State<SystemScreen> {
   }
 
   /// «стихия — воздух»: подпись слева строчными, значение справа засечным.
-  Widget _fact(String label, String value) {
+  ///
+  /// `glyphs` включается там, где в значении стоит знак зодиака. Селектор
+  /// начертания U+FE0E Flutter не слушает и берёт цветную эмодзи-плашку,
+  /// поэтому вид знака задаётся шрифтом: `AlmaType.glyphFallback` — тот же
+  /// список символьных шрифтов, которым подписано колесо, чтобы «♓» под
+  /// рисунком и «♓» на самом рисунке были одним знаком. Остальные строки
+  /// глифов не несут и остаются на своём засечном запасном списке.
+  Widget _fact(String label, String value, {bool glyphs = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
@@ -437,9 +490,17 @@ class _SystemScreenState extends State<SystemScreen> {
           Expanded(
             flex: 6,
             child: Text(
-              value,
+              glyphs ? CabinetWordsMore.keepSigns(value) : value,
               textAlign: TextAlign.right,
-              style: AlmaType.numeral.copyWith(fontSize: 17),
+              // Голосу — имя знака: глиф VoiceOver прочесть нечем, а строка
+              // существует ровно затем, чтобы назвать позицию.
+              semanticsLabel: glyphs
+                  ? CabinetWordsMore.spellSigns(L.of(context), value)
+                  : null,
+              style: AlmaType.numeral.copyWith(
+                fontSize: 17,
+                fontFamilyFallback: glyphs ? AlmaType.glyphFallback : null,
+              ),
             ),
           ),
         ],

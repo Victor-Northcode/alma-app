@@ -123,6 +123,9 @@ class CitationState extends State<Citation> {
         Expanded(
           child: Text(
             CabinetWordsMore.factor(l, widget.factors.first),
+            // Глазу — глиф, голосу — имя знака: глиф VoiceOver прочесть
+            // нечем, а позиция и есть весь смысл этой строки.
+            semanticsLabel: CabinetWordsMore.factorSpoken(l, widget.factors.first),
             style: AlmaType.numeral.copyWith(
               color: AlmaPalette.gold,
               fontFamilyFallback: AlmaType.glyphFallback,
@@ -165,6 +168,7 @@ class CitationState extends State<Citation> {
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(CabinetWordsMore.factor(l, factor),
+                semanticsLabel: CabinetWordsMore.factorSpoken(l, factor),
                 style: AlmaType.numeral.copyWith(
                   color: AlmaPalette.gold,
                   fontFamilyFallback: AlmaType.glyphFallback,
