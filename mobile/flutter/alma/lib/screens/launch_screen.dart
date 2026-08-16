@@ -1,31 +1,40 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 
 import '../design/palette.dart';
 import '../design/sky/night_sky.dart';
 import '../design/typography.dart';
 import '../l10n/alma_l10n.dart';
 
-/// Первые секунды приложения: небо, соединяющее само себя.
+/// Первые секунды приложения — S12 «Launch» дизайн-проекта.
 ///
-/// Порт `mobile/ios/Alma/Screens/AlmaLaunch.swift`. До него порт открывался
-/// подменой готового экрана за один кадр — против сервера на той же машине это
-/// длилось десятки миллисекунд и читалось как мигание.
+/// **Здесь нет ничего, кроме того, что есть в макете.** До этой правки экран
+/// рисовал звёздный чертёж: девять узлов, три ветви линий и две кометы,
+/// стягивавшиеся в знак. В S12 такого нет — там знак, слово, волосяная линия и
+/// одна строка внизу. Чертёж был сочинён, а не портирован (в самом макете
+/// разметка карты осталась, но погашена `display:none`), и владелец его снял.
 ///
-/// **Один источник времени и одна кривая.** Все семь движений выведены из
-/// одних часов через `_eased(from, to)` — ease-out cubic, — и это то, что
-/// делает пять разных вещей одним жестом. Линейное нарастание читалось бы как
-/// полоса загрузки.
+/// Пять элементов S12, снятые с эталона на 402×874:
+///
+/// * ореол 130×130 с центром на знаке, `breathe` 4 с;
+/// * знак 56×56 на `y=370`;
+/// * «ALMA» 84×16.5 на `y=456`, разрядка 9;
+/// * волосяная линия 84×1 на `y=503`: заполняется за 3,4 с (`fill84`), и по ней
+///   бежит блик (`shimmerX`, 2,2 с);
+/// * «Written in the sky before you asked.» на `y=789`, `textShimmer` 4,4 с.
+///
+/// Колонка из первых четырёх отцентрована по экрану (56 + 30 + 16.5 + 30 + 1 =
+/// 133.5; на 874 это и даёт знак ровно на 370) — так экран переживёт телефон
+/// другой высоты, чего абсолютные координаты не умеют.
+///
+/// **Заставка не разыгрывает спектакль прихода.** В макете все четыре движения
+/// — бесконечные петли, идущие с первого кадра, а не каскад с фазами. Каскад
+/// был частью того же сочинения.
 ///
 /// **Уход требует двух условий сразу**: сессия готова И прошло положенное
 /// время. На нативе первая версия читала «готово» из замыкания, захватившего
 /// значение на момент создания задачи, — заставка не уходила вовсе. Здесь
 /// решение принимается снаружи, в [_settle], на каждое изменение обоих.
-///
-/// **Знак не вращается и никогда не служит индикатором загрузки** — это тот
-/// самый штамп, ради ухода от которого он рисовался. Роль индикатора несут
-/// дышащая точка и волосяная линия, заполняющаяся за время показа.
 class LaunchScreen extends StatefulWidget {
   const LaunchScreen({super.key, required this.ready, required this.onDone});
 
@@ -41,13 +50,19 @@ class LaunchScreen extends StatefulWidget {
 class _LaunchScreenState extends State<LaunchScreen>
     with SingleTickerProviderStateMixin {
   /// 3,4 секунды — число с натива, и оно выросло с 2,8 не ради скорости: там
-  /// чинили плотность, а не длительность.
-  static const _runtime = 3.4;
+  /// чинили плотность, а не длительность. Столько же длится `fill84`, поэтому
+  /// линия успевает налиться ровно один раз — она и есть счётчик ожидания.
+  static const _dwell = 3.4;
 
-  late final AnimationController _clock = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: (_runtime * 1000) ~/ 1),
-  )..forward();
+  /// Секунды с первого кадра — единственные часы экрана. Каждая петля берёт из
+  /// них свою фазу остатком от своего периода: ровно так это устроено в CSS, и
+  /// четыре независимых контроллера здесь были бы четырьмя способами разойтись.
+  final _seconds = ValueNotifier<double>(0);
+
+  /// Заводится в [initState], а не полем-`late`: поле, которого никто не
+  /// читает в `build`, не создаётся вовсе — часы бы не пошли, а `dispose`
+  /// создал бы их в момент сноса дерева.
+  Ticker? _clock;
 
   bool _dwelt = false;
   bool _handedOver = false;
@@ -55,12 +70,16 @@ class _LaunchScreenState extends State<LaunchScreen>
   @override
   void initState() {
     super.initState();
-    _clock.addStatusListener((status) {
-      if (status == AnimationStatus.completed) {
-        _dwelt = true;
-        _settle();
-      }
-    });
+    _clock = createTicker(_tick)..start();
+  }
+
+  void _tick(Duration elapsed) {
+    final t = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
+    _seconds.value = t;
+    if (!_dwelt && t >= _dwell) {
+      _dwelt = true;
+      _settle();
+    }
   }
 
   @override
@@ -71,7 +90,8 @@ class _LaunchScreenState extends State<LaunchScreen>
 
   @override
   void dispose() {
-    _clock.dispose();
+    _clock?.dispose();
+    _seconds.dispose();
     super.dispose();
   }
 
@@ -81,18 +101,15 @@ class _LaunchScreenState extends State<LaunchScreen>
     widget.onDone();
   }
 
-  /// 0 → 1 между двумя моментами, по ease-out cubic.
-  double _eased(double from, double to, double t) {
-    final raw = ((t - from) / (to - from)).clamp(0.0, 1.0);
-    return 1 - math.pow(1 - raw, 3).toDouble();
-  }
+  /// Фаза петли периода [period] секунд: 0 → 1 и снова 0, как `infinite` в CSS.
+  double _loop(double t, double period) => (t % period) / period;
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     // Сокращённое движение — не «пропустить заставку»: убрать её целиком
-    // значило бы вернуть ту самую вспышку, ради которой она написана.
-    // Рисуется тот же кадр, взятый в конце.
+    // значило бы вернуть ту самую вспышку, ради которой она написана. Рисуется
+    // тот же кадр, только петли стоят.
     final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
     // **Своя material-поверхность.** Без неё Flutter рисует «ALMA» жёлтой с
     // двойным подчёркиванием — тот же артефакт, что был на витрине: экран
@@ -101,325 +118,273 @@ class _LaunchScreenState extends State<LaunchScreen>
       label: l.stateLoadingShort,
       child: Material(
         color: AlmaPalette.night,
-        child: AnimatedBuilder(
-          animation: _clock,
-          builder: (context, _) {
-            final t = still ? _runtime : _clock.value * _runtime;
-            final fold = _eased(1.90, 2.65, t);
-            final bloom = _eased(2.05, 2.85, t);
-            final word = _eased(2.35, 3.05, t);
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                // Небо — **сиблингом, а не фоном**: здесь приходящее небо и
-                // есть содержимое, а фон невозможно увидеть проявляющимся.
-                Opacity(
-                  opacity: still ? 1 : _eased(0, 0.9, t),
-                  // Режим церемонии, и не ради яркости: у кабинетного неба
-                  // своя комета, а две одновременно читаются как погода.
-                  child: const NightSky(
-                    mood: SkyMood.ceremony,
-                    seed: 0x414C4D41,
-                    child: SizedBox.expand(),
-                  ),
-                ),
-                Opacity(
-                  opacity: (1 - fold * 0.97).clamp(0.0, 1.0),
-                  child: Transform.scale(
-                    // Карта не просто гаснет, а стягивается: её втягивают в
-                    // знак, а форма, которая только тускнеет, выглядит
-                    // брошенной, а не разрешившейся.
-                    scale: 1.04 - _eased(0, 0.9, t) * 0.04 - fold * 0.10,
-                    child: SizedBox(
-                      width: 300,
-                      height: 300,
-                      child: CustomPaint(
-                        painter: _StarChart(
-                          lines: _eased(0.35, 1.95, t),
-                          nodes: _eased(0.25, 1.80, t),
-                          comet: _eased(1.20, 2.20, t),
-                          cometTwo: _eased(1.65, 2.60, t),
-                          time: t,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
+        child: Stack(
+          // Без `expand` стопка съёжилась бы по колонке в 84 точки шириной:
+          // единственный неспозиционированный ребёнок здесь — содержимое, и
+          // именно он задал бы размер и небу под собой.
+          fit: StackFit.expand,
+          children: [
+            // Небо кабинета, а не церемонии: у церемонии есть комета, а в S12
+            // через кадр летящего света нет — как нет и чертежа, который её
+            // сюда когда-то привёл.
+            const Positioned.fill(
+              child: NightSky(
+                mood: SkyMood.cabinet,
+                seed: 0x414C4D41,
+                child: SizedBox.expand(),
+              ),
+            ),
+            AnimatedBuilder(
+              animation: _seconds,
+              builder: (context, _) {
+                final t = _seconds.value;
+                return Stack(
+                  alignment: Alignment.center,
                   children: [
-                    Opacity(
-                      opacity: bloom,
-                      child: Transform.scale(
-                        scale: 0.72 + bloom * 0.28,
-                        child: SizedBox(
-                          width: 46,
-                          height: 46,
-                          child: CustomPaint(painter: _Mark(bloom: bloom)),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Opacity(
-                      opacity: word,
-                      child: Transform.translate(
-                        offset: Offset(0, (1 - word) * 7),
-                        child: Text(
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _Sign(breathe: still ? 0 : _loop(t, 4.0)),
+                        const SizedBox(height: 30),
+                        // Поля слева здесь нет, хотя в макете стоит
+                        // `padding-left:9px`: там оно гасит разрядку, которую
+                        // CSS дописывает и после последней буквы. Flutter её не
+                        // дописывает, и то же поле уводило слово вправо на 4,5
+                        // точки — на снимке с симулятора «ALMA» стояла центром
+                        // на 205,5 вместо 201.
+                        Text(
                           'ALMA',
                           style: AlmaType.meta.copyWith(
-                            fontSize: 15,
-                            color: AlmaPalette.parchment.withValues(alpha: 0.9),
-                            // Буквы оседают: разрядка закрывается с
-                            // рассыпанной до набранной — шрифт приходит, а не
-                            // появляется.
-                            letterSpacing: 7 + (1 - word) * 9,
+                            fontSize: 14,
+                            // 16.5 при кегле 14 — строка Golos Text при
+                            // `line-height:normal`; от неё зависит высота всей
+                            // колонки, то есть и место знака на экране.
+                            height: 16.5 / 14,
+                            letterSpacing: 9,
+                            color: AlmaPalette.inkLight.withValues(alpha: 0.95),
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 30),
+                        CustomPaint(
+                          size: const Size(84, 1),
+                          painter: _Hairline(
+                            fill: still
+                                ? 1
+                                : Curves.easeOut.transform(_loop(t, _dwell)),
+                            shimmer: _loop(t, 2.2),
+                            still: still,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 30),
-                    // Самая тихая полоса прогресса, какая бывает: одна золотая
-                    // волосяная линия, без рамки и без процентов.
-                    Opacity(
-                      opacity: _eased(0.55, 1.20, t),
-                      child: SizedBox(
-                        width: 84,
-                        height: 1,
-                        child: Stack(alignment: Alignment.centerLeft, children: [
-                          ColoredBox(
-                            color: AlmaPalette.gold.withValues(alpha: 0.16),
-                            child: const SizedBox(width: 84, height: 1),
+                    // **Обещание — внизу, и это единственная фраза заставки.**
+                    //
+                    // В эталоне оно на `y=789` из 874, то есть у самого низа, а
+                    // не под знаком: знак называет продукт, эта строка объясняет,
+                    // о чём он, и читается уже после.
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 64,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 30),
+                        // `Center` нужен, чтобы блик бежал по ширине строки, а
+                        // не по ширине экрана: в макете фон-градиент лежит на
+                        // строчном `<span>`, обнимающем текст.
+                        child: Center(
+                          child: ShaderMask(
+                            blendMode: BlendMode.srcIn,
+                            shaderCallback: (bounds) =>
+                                _taglineShader(bounds, still ? -1 : t),
+                            child: Text(
+                              l.splashTagline,
+                              textAlign: TextAlign.center,
+                              style: AlmaType.voice.copyWith(
+                                fontSize: 15.5,
+                                height: 21 / 15.5,
+                                // Цвет съест маска; важна только непрозрачность.
+                                color: const Color(0xFFFFFFFF),
+                              ),
+                            ),
                           ),
-                          ColoredBox(
-                            color:
-                                AlmaPalette.goldBright.withValues(alpha: 0.75),
-                            child: SizedBox(
-                                width: 84 * (t / _runtime).clamp(0.0, 1.0),
-                                height: 1),
-                          ),
-                        ]),
+                        ),
                       ),
                     ),
                   ],
-                ),
-                // **Обещание — внизу, и приходит последним.**
-                //
-                // В эталоне оно на `y=789` из 874, то есть у самого низа, а не
-                // под знаком: знак называет продукт, эта строка объясняет, о
-                // чём он, и читается уже после. Курсивным Playfair 15.5 —
-                // единственная фраза заставки, набранная голосом Alma, а не
-                // подписью.
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(34, 0, 34, 62),
-                    child: Opacity(
-                      // Заставка живёт 3.4 секунды; проявление до 3.45 значило
-                      // бы, что строку не успевают увидеть вовсе. Приходит
-                      // вместе с оседающей разрядкой знака и держится.
-                      opacity: still ? 1 : _eased(2.55, 3.05, t),
-                      child: Text(
-                        l.splashTagline,
-                        textAlign: TextAlign.center,
-                        style: AlmaType.voice.copyWith(
-                          fontSize: 15.5,
-                          color: AlmaPalette.inkLight.withValues(alpha: 0.82),
-                        ),
-                      ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Блик, бегущий по строке. В макете это `background-size:220%` и позиция,
+  /// едущая от 120 % до −120 % за 4,4 с; в долях ширины строки это значит, что
+  /// картинка вдвое шире текста проезжает от −1.44 до +1.44 его ширины.
+  ///
+  /// [t] < 0 — «меньше движения»: блик стоит посреди строки.
+  Shader _taglineShader(Rect bounds, double t) {
+    final w = bounds.width;
+    final dx = t < 0 ? -0.6 * w : -1.44 * w + 2.88 * w * _loop(t, 4.4);
+    return LinearGradient(
+      colors: [
+        AlmaPalette.body.withValues(alpha: 0.35),
+        AlmaPalette.starFill,
+        AlmaPalette.body.withValues(alpha: 0.35),
+      ],
+    ).createShader(
+      Rect.fromLTWH(bounds.left + dx, bounds.top, w * 2.2, bounds.height),
+    );
+  }
+}
+
+/// Знак Alma в дышащем ореоле — первые два элемента S12.
+class _Sign extends StatelessWidget {
+  const _Sign({required this.breathe});
+
+  /// Фаза петли `breathe`, 0 → 1 за 4 секунды.
+  final double breathe;
+
+  @override
+  Widget build(BuildContext context) {
+    // 0%,100% → scale(1) opacity .92; 50% → scale(1.04) opacity 1. Между
+    // кадрами CSS ведёт `ease-in-out`, поэтому треугольная волна не годится.
+    final k = Curves.easeInOut
+        .transform(breathe < 0.5 ? breathe * 2 : (1 - breathe) * 2);
+    return SizedBox.square(
+      dimension: 56,
+      // Ореол вдвое шире знака и вылезает за коробку колонки — как
+      // `position:absolute` в макете, где он тоже не занимает места.
+      child: Stack(
+        clipBehavior: Clip.none,
+        alignment: Alignment.center,
+        children: [
+          Positioned(
+            left: (56 - 130) / 2,
+            top: (56 - 130) / 2,
+            width: 130,
+            height: 130,
+            child: Opacity(
+              opacity: 0.92 + 0.08 * k,
+              child: Transform.scale(
+                scale: 1 + 0.04 * k,
+                child: const DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      // `radial-gradient(circle, …)` без указания края
+                      // считает проценты от угла коробки, а не от её стороны:
+                      // 100 % здесь — 65·√2, отсюда радиус 0.707, а не 0.5.
+                      radius: 0.7071,
+                      colors: [
+                        Color(0x4DC9AE6B),
+                        Color(0x14C9AE6B),
+                        Color(0x00C9AE6B),
+                      ],
+                      stops: [0, 0.45, 0.70],
                     ),
                   ),
                 ),
-              ],
-            );
-          },
-        ),
+              ),
+            ),
+          ),
+          const CustomPaint(size: Size(56, 56), painter: _Mark()),
+        ],
       ),
     );
   }
 }
 
-/// Небо, соединяющее себя: девять узлов, три ветви линий и две кометы.
+/// Знак Alma — четырёхлучевая звезда, залитая золотым листом.
 ///
-/// Ни циферблата, ни кольца вокруг — решение владельца: приход это небо,
-/// которое связывает само себя, и ничего нарисованного вокруг.
-class _StarChart extends CustomPainter {
-  _StarChart({
-    required this.lines,
-    required this.nodes,
-    required this.comet,
-    required this.cometTwo,
-    required this.time,
-  });
+/// Ровно тот контур, что в макете (`viewBox 0 0 46 46`), а не «примерно такая
+/// же звезда»: талия у нарисованной по памяти была 0.19 длинного луча вместо
+/// 0.27, и знак выходил тоньше эталонного.
+class _Mark extends CustomPainter {
+  const _Mark();
 
-  final double lines;
-  final double nodes;
-  final double comet;
-  final double cometTwo;
-  final double time;
+  static const _side = 46.0;
 
-  static const _points = [
-    (48.0, 196.0, 3.2), (104.0, 118.0, 4.6), (168.0, 152.0, 3.0),
-    (214.0, 58.0, 5.2), (268.0, 104.0, 3.4), (132.0, 224.0, 3.8),
-    (76.0, 64.0, 2.6), (232.0, 186.0, 3.0), (176.0, 250.0, 2.4),
-  ];
-
-  static const _spine = [
-    Offset(48, 196), Offset(104, 118), Offset(168, 152),
-    Offset(214, 58), Offset(268, 104),
-  ];
-  static const _branch = [Offset(104, 118), Offset(132, 224), Offset(214, 58)];
-  static const _branchTwo = [
-    [Offset(76, 64), Offset(104, 118)],
-    [Offset(232, 186), Offset(268, 104)],
-    [Offset(132, 224), Offset(176, 250)],
-  ];
-
-  /// Ломаная, прочерченная на долю [progress] от своей длины.
-  void _drawTrimmed(Canvas canvas, List<Offset> path, double progress, Paint paint) {
-    if (progress <= 0) return;
-    final lengths = [
-      for (var i = 1; i < path.length; i++) (path[i] - path[i - 1]).distance,
-    ];
-    final total = lengths.fold<double>(0, (a, b) => a + b);
-    var left = total * progress.clamp(0.0, 1.0);
-    for (var i = 1; i < path.length; i++) {
-      final segment = lengths[i - 1];
-      if (left <= 0) return;
-      final part = (left / segment).clamp(0.0, 1.0);
-      canvas.drawLine(
-        path[i - 1],
-        Offset.lerp(path[i - 1], path[i], part)!,
-        paint,
-      );
-      left -= segment;
-    }
-  }
+  static final _path = Path()
+    ..moveTo(46, 23)
+    ..lineTo(27.4, 27.4)
+    ..lineTo(23, 46)
+    ..lineTo(18.6, 27.4)
+    ..lineTo(0, 23)
+    ..lineTo(18.6, 18.6)
+    ..lineTo(23, 0)
+    ..lineTo(27.4, 18.6)
+    ..close();
 
   @override
   void paint(Canvas canvas, Size size) {
-    final stroke = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..strokeCap = StrokeCap.round;
-
-    _drawTrimmed(canvas, _spine, lines,
-        stroke..color = AlmaPalette.gold.withValues(alpha: 0.5));
-    _drawTrimmed(canvas, _branch, (lines * 1.3 - 0.3).clamp(0.0, 1.0),
-        stroke..color = AlmaPalette.gold.withValues(alpha: 0.24));
-    for (final pair in _branchTwo) {
-      _drawTrimmed(canvas, pair, (lines * 1.5 - 0.5).clamp(0.0, 1.0),
-          stroke..color = AlmaPalette.gold.withValues(alpha: 0.18));
-    }
-
-    for (var i = 0; i < _points.length; i++) {
-      final share = i / _points.length;
-      final lit = ((nodes - share * 0.55) / 0.45).clamp(0.0, 1.0);
-      if (lit <= 0) continue;
-      // Мерцание: каждая звезда дышит на своём такте, и собранная карта
-      // выглядит живой, а не напечатанной.
-      final breathe =
-          0.75 + 0.25 * math.sin(time * (1.1 + (i % 4) * 0.4) + i * 2);
-      final (x, y, r) = _points[i];
-      final centre = Offset(x, y);
-      canvas.drawCircle(
-        centre,
-        r * (0.4 + lit * 0.6) * breathe,
-        Paint()
-          ..color = AlmaPalette.starFill.withValues(alpha: lit)
-          ..maskFilter = MaskFilter.blur(BlurStyle.solid, 6 * breathe * 0.35),
-      );
-    }
-
-    // Кольцо вокруг самого яркого узла — оттуда и распускается знак.
-    if (nodes > 0) {
-      canvas.drawCircle(
-        const Offset(214, 58),
-        (30 + (1 - nodes) * 14) / 2,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1
-          ..color = AlmaPalette.goldBright.withValues(alpha: 0.22 * nodes),
-      );
-    }
-
-    _comet(canvas, comet, 90, 28, const Offset(-40, 250), const Offset(340, 40));
-    _comet(canvas, cometTwo, 64, -16, const Offset(330, 210), const Offset(-30, 120));
-  }
-
-  void _comet(Canvas canvas, double phase, double width, double angle,
-      Offset from, Offset to) {
-    if (phase <= 0 || phase >= 1) return;
-    final centre = Offset.lerp(from, to, phase)!;
     canvas.save();
-    canvas.translate(centre.dx, centre.dy);
-    canvas.rotate(angle * math.pi / 180);
-    final rect = Rect.fromCenter(center: Offset.zero, width: width, height: 1.2);
-    canvas.drawRect(
-      rect,
+    canvas.scale(size.width / _side, size.height / _side);
+    canvas.drawPath(
+      _path,
       Paint()
-        ..shader = LinearGradient(colors: [
-          const Color(0x00000000),
-          AlmaPalette.starFill.withValues(alpha: 0.75 * math.sin(phase * math.pi)),
-          const Color(0x00000000),
-        ]).createShader(rect),
+        ..shader = AlmaGradient.goldLeaf
+            .createShader(const Rect.fromLTWH(0, 0, _side, _side)),
     );
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant _StarChart old) =>
-      old.lines != lines || old.nodes != nodes || old.time != time;
+  bool shouldRepaint(covariant _Mark old) => false;
 }
 
-/// Знак Alma — четырёхлучевая звезда, распускающаяся из ярчайшего узла, и
-/// шесть искр, поднятых ею.
-class _Mark extends CustomPainter {
-  _Mark({required this.bloom});
+/// Волосяная линия: самая тихая полоса прогресса, какая бывает. Дорожка,
+/// наливающаяся жила и блик, пробегающий поперёк.
+class _Hairline extends CustomPainter {
+  const _Hairline({
+    required this.fill,
+    required this.shimmer,
+    required this.still,
+  });
 
-  final double bloom;
+  /// Доля залитой дорожки, 0 → 1 за 3,4 с.
+  final double fill;
 
-  static const _motes = [-26.0, 18.0, -12.0, 30.0, -34.0, 8.0];
+  /// Фаза блика, 0 → 1 за 2,2 с.
+  final double shimmer;
+
+  final bool still;
+
+  static const _track = 84.0;
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (var i = 0; i < _motes.length; i++) {
-      final phase = (bloom * 1.4 - i * 0.12).clamp(0.0, 1.0);
-      if (phase <= 0 || phase >= 1) continue;
-      canvas.drawCircle(
-        Offset(size.width / 2 + _motes[i], size.height / 2 + 34 - phase * 74),
-        1.25,
-        Paint()
-          ..color = AlmaPalette.goldBright
-              .withValues(alpha: 0.7 * phase * (1 - phase) * 4 * 0.35),
-      );
-    }
-
-    // Сама звезда: четыре луча, сходящиеся в точку, залитые золотым листом.
-    final c = Offset(size.width / 2, size.height / 2);
-    final r = size.width * 0.5;
-    final path = Path();
-    for (var i = 0; i < 4; i++) {
-      final angle = i * math.pi / 2;
-      final tip = c + Offset(math.cos(angle) * r, math.sin(angle) * r);
-      final left = c +
-          Offset(math.cos(angle + math.pi / 4), math.sin(angle + math.pi / 4)) *
-              (r * 0.19);
-      if (i == 0) {
-        path.moveTo(tip.dx, tip.dy);
-      } else {
-        path.lineTo(tip.dx, tip.dy);
-      }
-      path.lineTo(left.dx, left.dy);
-    }
-    path.close();
-    canvas.drawPath(
-      path,
-      Paint()
-        ..shader = AlmaGradient.goldLeaf.createShader(
-            Rect.fromCircle(center: c, radius: r)),
+    canvas.drawRect(
+      const Rect.fromLTWH(0, 0, _track, 1),
+      Paint()..color = AlmaPalette.gold.withValues(alpha: 0.16),
     );
+    canvas.drawRect(
+      Rect.fromLTWH(0, 0, _track * fill, 1),
+      Paint()..color = AlmaPalette.goldBright.withValues(alpha: 0.75),
+    );
+    if (still) return;
+    // Блик шире линии на пиксель сверху и снизу и едет от −60 до 100 — то
+    // есть входит и выходит за пределы дорожки, а не мигает на месте.
+    // Отсечка держит его в границах, как это делает фон в макете.
+    canvas.save();
+    canvas.clipRect(const Rect.fromLTWH(0, -1, _track, 3));
+    final band = Rect.fromLTWH(-60 + 160 * shimmer, -1, 56, 3);
+    canvas.drawRect(
+      band,
+      Paint()
+        ..shader = LinearGradient(
+          colors: [
+            AlmaPalette.starFill.withValues(alpha: 0),
+            AlmaPalette.starFill.withValues(alpha: 0.8),
+            AlmaPalette.starFill.withValues(alpha: 0),
+          ],
+        ).createShader(band),
+    );
+    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(covariant _Mark old) => old.bloom != bloom;
+  bool shouldRepaint(covariant _Hairline old) =>
+      old.fill != fill || old.shimmer != shimmer || old.still != still;
 }

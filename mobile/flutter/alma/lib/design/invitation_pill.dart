@@ -642,46 +642,61 @@ class _Pill extends StatelessWidget {
             BoxShadow(color: Color(0x2EC9AE6B), blurRadius: 22),
           ],
         ),
-        child: SizedBox(
-          height: 38,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Opacity(
-                opacity: bodyOpacity,
-                child: GoldSurface(
-                  radius: _radius,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Место под звезду: она нарисована слоем выше, чтобы
-                        // растворение тела её не уносило.
-                        const SizedBox(width: 13),
-                        const SizedBox(width: 8),
-                        Text(
-                          label,
-                          style: AlmaType.button.copyWith(
-                            fontSize: 12.5,
-                            height: 1.1,
-                            color: AlmaPalette.inkLight,
-                          ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Opacity(
+              opacity: bodyOpacity,
+              child: GoldSurface(
+                radius: _radius,
+                child: Padding(
+                  // **Размер даёт содержимое, а не коробка.**
+                  //
+                  // Здесь стояла `SizedBox(height: 38)` поверх этой же стопки —
+                  // и не работала: стопка раздаёт детям свободные границы, так
+                  // что золото под текстом вырастало только до его строки. На
+                  // симуляторе пилюля выходила 121×14 — лента, а не чип, и
+                  // владелец увидел ровно это. Высоту теперь задают поля.
+                  //
+                  // 10 и 16 — это поля макета 9×15 плюс кант: `DecoratedBox`
+                  // внутри `GoldSurface` рисует кант внутрь коробки, не
+                  // раздвигая её, а в CSS он лежит снаружи полей. От внешнего
+                  // края до буквы получается одинаково.
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 16,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Место под звезду: она нарисована слоем выше, чтобы
+                      // растворение тела её не уносило.
+                      const SizedBox(width: 13),
+                      const SizedBox(width: 8),
+                      Text(
+                        label,
+                        style: AlmaType.button.copyWith(
+                          fontSize: 12.5,
+                          // 15 при кегле 12.5 — строка Golos Text при
+                          // `line-height:normal`. Это она, а не звезда в 13,
+                          // держит высоту чипа: 10 + 15 + 10 = 35.
+                          height: 15 / 12.5,
+                          color: AlmaPalette.inkLight,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              Positioned(
-                left: 16,
-                child: Hero(
-                  tag: pillEmblemHeroTag,
-                  child: const AlmaStarMark(size: 13),
-                ),
+            ),
+            Positioned(
+              left: 16,
+              child: Hero(
+                tag: pillEmblemHeroTag,
+                child: const AlmaStarMark(size: 13),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
