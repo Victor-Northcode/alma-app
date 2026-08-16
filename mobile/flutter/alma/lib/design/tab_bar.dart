@@ -43,7 +43,18 @@ class CabinetTabBar extends StatelessWidget {
 
     return ValueListenableBuilder<bool>(
       valueListenable: readingNow,
-      builder: (context, reading, _) => _bar(context, l, bottomInset, reading),
+      // **Пергаментным бар бывает только над главой, и решает это вкладка.**
+      //
+      // Признак чтения поднимает страница главы в своём `build`. Глава живёт в
+      // навигаторе своей вкладки и `PageView` её не выбрасывает — значит она
+      // перерисовывается и поднимает флаг снова, уже когда человек ушёл на
+      // «Сегодня». Бар оставался светлым поверх ночи: снято на устройстве.
+      //
+      // Ночной каркас гасил флаг сам, но только когда строился, а живая
+      // страница при смене вкладки не строится. Здесь условие не зависит от
+      // того, кто и когда перерисовался: глава есть только в «Моих системах».
+      builder: (context, reading, _) => _bar(
+          context, l, bottomInset, reading && current == CabinetTab.systems),
     );
   }
 
