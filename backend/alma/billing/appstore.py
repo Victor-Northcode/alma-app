@@ -465,6 +465,23 @@ class Event:
         return None
 
     @property
+    def account_token(self) -> str | None:
+        """`appAccountToken` — единственное наше поле внутри подписи Apple.
+
+        Apple принимает в него только UUID и возвращает его в
+        `JWSTransactionDecodedPayload` дословно, поэтому это ровно то, что нужно
+        расходуемой проверке пары: `productId` у всех покупок пары один и тот же,
+        а вот про кого именно эта — говорит только он.
+
+        Приводится к нижнему регистру, потому что UUID регистронезависим по
+        RFC 4122, а сравнение строк — нет: `appAccountToken`, вернувшийся от
+        Apple в верхнем регистре, не совпал бы с нашей записью, и оплаченный
+        отчёт ушёл бы в «непривязанные» вместо того, чтобы открыться.
+        """
+        value = self.transaction.get("appAccountToken")
+        return str(value).strip().lower() or None if value else None
+
+    @property
     def notification_type(self) -> str:
         value = self.notification.get("notificationType")
         return str(value) if value else ""
@@ -532,6 +549,7 @@ class Event:
             status=self.status,
             renews_at=self.renews_at,
             adjustment=self.adjustment,
+            account_token=self.account_token,
             grants=self._grants,
             revokes=self.notification_type in REVOKING,
             moves_money=bool(self.transaction_id) and self._moves_money,
@@ -672,9 +690,15 @@ IGNORED_REASONS: dict[str, str] = {
         "population is small enough that a person should look at it."
     ),
     "CONSUMPTION_REQUEST": (
-        "Apple asking what a consumable was worth, for a refund decision. We "
-        "sell no consumables — every door is permanent and every plan renews — "
-        "so there is nothing to answer."
+        "Apple asking what a consumable was worth, for a refund decision — and "
+        "since v3 we do sell one, `pair.check`. Deliberately unanswered all the "
+        "same: the reply is a `consumptionRequest` call describing how much of "
+        "the thing the customer used, and the honest answer for a written "
+        "report is 'all of it, the moment it was generated', which is an "
+        "argument against the refund somebody has already asked for. Silence "
+        "lets Apple decide on its own, which for a $4.99 report is the cheaper "
+        "of two ways to be wrong. The refund itself still lands: `REFUND` "
+        "revokes exactly the grant its transaction paid for."
     ),
     "PRICE_INCREASE": (
         "A price change we made in App Store Connect, working its way through "

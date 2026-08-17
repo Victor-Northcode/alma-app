@@ -14,7 +14,8 @@ import '../../net/models.dart';
 import '../../state/ask_alma.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
-import '../today/today_screen.dart' show openOffer;
+import '../../billing/ladder.dart';
+import '../paywall/paywall_router.dart';
 import 'chat_turn.dart';
 import 'thread_screen.dart';
 
@@ -103,6 +104,19 @@ class _AlmaScreenState extends State<AlmaScreen>
   /// нашей — называет, **когда** вопросы вернутся; поэтому стена печатает её, а
   /// свою общую строку оставляет на случай, когда сервер промолчал.
   String? _limitSentence;
+
+  /// Четвёртый вопрос — тот, что упёрся в квоту и **не потерян**.
+  ///
+  /// ТЗ P6 обещает это словами на самом экране («уйдёт, когда ты продолжишь»),
+  /// и обещание держится здесь: вопрос ждёт, пока человек решает, и уходит сам,
+  /// как только подписка открылась. Раньше он просто возвращался в поле, то
+  /// есть держался ровно до первого ухода с экрана.
+  ///
+  /// TODO(v3): удержание живёт в памяти экрана и перезапуск не переживает —
+  /// на холсте состояние «где живёт удержанный вопрос после закрытия» не
+  /// нарисовано вовсе (спека, V7). Пережить перезапуск ему стоило бы, но
+  /// придумывать это молча нельзя.
+  String? _held;
 
   /// Прошлые беседы, свежая первой — то, из чего строится меню «раньше».
   List<ChatThreadRef> _past = const [];
@@ -305,13 +319,14 @@ class _AlmaScreenState extends State<AlmaScreen>
       });
     } on AlmaError catch (error) {
       if (!mounted) return;
+      final limit = _isLimit(error);
       setState(() {
         // **Вопрос возвращается в поле, а не теряется.** Тому, кому только что
         // сказали, что вопросы кончились, не хватало ещё набирать свой вопрос
         // заново.
         _turns.remove(pending);
         _draft.text = message;
-        if (_isLimit(error)) {
+        if (limit) {
           // Лимит — не сообщение в ленте, а **стена**: она встаёт на место
           // композера и продаёт план (s31). Ноль здесь ставим сами, потому что
           // на отказе `questions_left` уже не приходит, а сервер только что
@@ -320,6 +335,10 @@ class _AlmaScreenState extends State<AlmaScreen>
           _limitSentence = error is ServerRefused && error.message.isNotEmpty
               ? error.message
               : null;
+          // Вопрос удержан: с этой секунды он не «набран в поле», а принят и
+          // ждёт. Отсюда его забирает V7 и отправляет сам, как только подписка
+          // открылась.
+          if (!session.isSubscriber) _held = message;
           // У подписчика стены не будет — звать его купить подписку значит
           // показать, что мы не знаем, кто перед нами. Его месячные тридцать
           // тоже кончаются, и тогда фраза сервера (в ней сказано, когда они
@@ -329,6 +348,11 @@ class _AlmaScreenState extends State<AlmaScreen>
           _refusal = error;
         }
       });
+      // **Экран квоты приходит сразу, а не по нажатию на стену.** ТЗ P6:
+      // триггер — отправленный четвёртый вопрос, а не интерес к цене. Мягкий
+      // экран отвечает на действие, которое человек только что совершил, и
+      // держит в руках то, ради чего он его совершил.
+      if (limit && !session.isSubscriber) await _openQuota(message);
     } finally {
       if (mounted) {
         setState(() => _sending = false);
@@ -338,6 +362,36 @@ class _AlmaScreenState extends State<AlmaScreen>
       }
       _scrollDown();
     }
+  }
+
+  /// Квота вопросов — V7, поверхность P6.
+  ///
+  /// **Вопрос не теряется, и это механика, а не обещание вёрстки.** Экран
+  /// получает удержанный вопрос, чтобы показать его над ценой; если подписка
+  /// открылась, он уходит **сам**, тем же путём, что и всякий другой, — без
+  /// повторного набора и без «нажми ещё раз». Отказ удержание не снимает:
+  /// метка обещала «уйдёт, когда продолжишь», и продолжить можно и завтра.
+  Future<void> _openQuota(String question) async {
+    final session = SessionScope.of(context);
+    // Ступень §7: квота задета. Поверхность обязательна — без неё сервер
+    // событие не пишет вовсе.
+    session.client
+        .track(FunnelStage.questionQuotaHit, meta: {'surface': 'p6'});
+    final outcome = await showPaywall(
+      context,
+      const PaywallIntent.questionQuota(),
+      trigger: 'question',
+      question: question,
+    );
+    if (!mounted || outcome != PaywallOutcome.bought) return;
+    // Права уже перечитаны магазином; поле чистится, и вопрос уходит сам.
+    setState(() {
+      _held = null;
+      _draft.clear();
+      _left = null;
+      _limitSentence = null;
+    });
+    await _send(question);
   }
 
   /// Отказ по исчерпанному лимиту. Коды — те же, что перечислены в
@@ -739,7 +793,10 @@ class _AlmaScreenState extends State<AlmaScreen>
           kind: AlmaButtonKind.outline,
           fills: false,
           label: l.cabPlansCta,
-          onTap: () => openOffer(context),
+          // Стена возвращает на **тот же** экран квоты и с тем же вопросом:
+          // человек, закрывший его и передумавший, не должен набирать вопрос
+          // заново — он всё это время удержан.
+          onTap: () => _openQuota(_held ?? _draft.text),
         ),
       ]),
     );

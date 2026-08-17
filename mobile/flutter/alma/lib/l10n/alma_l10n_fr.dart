@@ -2379,4 +2379,130 @@ class LFr extends L {
   @override
   String get paywallV3StateRestoreDone =>
       'Restauré · tout ce que tu as acheté est de nouveau ouvert';
+
+  @override
+  String paywallV3DoorPlateChapter(String numeral) {
+    return 'chapitre $numeral';
+  }
+
+  @override
+  String paywallV3DoorTitleSystem(int count, String system) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chapitres de ta lecture « $system »',
+      one: 'Un chapitre de ta lecture « $system »',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorTitleAll(String system) {
+    return 'Ta lecture « $system » en entier';
+  }
+
+  @override
+  String get paywallV3DoorPitch =>
+      'Écrit à partir de tes propres positions — jamais d\'après un modèle. Le calcul a toujours été gratuit ; ce qui se paie, c\'est l\'écriture.';
+
+  @override
+  String paywallV3DoorCtaUnlock(String price) {
+    return 'Ouvrir et lire · $price';
+  }
+
+  @override
+  String get paywallV3PlansLink => 'Tous les plans';
+
+  @override
+  String get paywallV3SubOverline => 'la couche vivante';
+
+  @override
+  String get paywallV3SubPlateCaption => 'Tout ce qui change chaque jour';
+
+  @override
+  String get paywallV3QuotaHeld => 'gardée — elle partira quand tu continueras';
+
+  @override
+  String get paywallV3QuotaNote =>
+      'Avec l\'abonnement, Alma répond à trente questions par mois — depuis tes propres positions, jamais d\'après un modèle.';
+
+  @override
+  String get paywallV3QuotaAlsoInside => 'aussi à l\'intérieur';
+
+  @override
+  String get paywallV3QuotaAlsoInsideList =>
+      'Les transits et l\'horoscope du jour · ta révolution solaire · une analyse de compatibilité par mois';
+
+  @override
+  String get paywallV3SubRenewalDisclosureQuota =>
+      'Se renouvelle chaque mois · résiliable à tout moment · ta question part dès que ça s\'ouvre';
+
+  @override
+  String get paywallV3PlansOverline => 'tous les plans';
+
+  @override
+  String get paywallV3PlansTitle =>
+      'À toi pour toujours, ou tout ce qui est vivant';
+
+  @override
+  String get paywallV3PlansOneReading => 'Une lecture';
+
+  @override
+  String get paywallV3PlansAllFiveNote =>
+      'Vingt-six chapitres, vingt pour cent de moins';
+
+  @override
+  String get paywallV3PlansPair => 'Une analyse de compatibilité';
+
+  @override
+  String get paywallV3PlansPairNote =>
+      'Quatre chapitres, par personne, autant que tu veux';
+
+  @override
+  String get paywallV3SubTitleShort => 'Toute Alma';
+
+  @override
+  String get paywallV3SubIncludesLine =>
+      'Les transits et l\'horoscope du jour · révolution solaire · une analyse de compatibilité par mois · 30 questions · les cinq lectures tant que l\'abonnement est actif';
+
+  @override
+  String get paywallV3PlansLegal =>
+      'Débité sur ton identifiant Apple à la confirmation · l\'abonnement se renouvelle chaque mois sauf résiliation 24 h avant la fin de la période · les achats uniques ne se renouvellent jamais';
+
+  @override
+  String get paywallV3CancelHeader => 'gérer l\'abonnement';
+
+  @override
+  String get paywallV3CancelCardCaption => 'celle que tu lis le plus';
+
+  @override
+  String paywallV3CancelSaveFact(int chapters, int times, String price) {
+    String _temp0 = intl.Intl.pluralLogic(
+      chapters,
+      locale: localeName,
+      other: 'ces $chapters chapitres',
+      one: 'ce chapitre',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      times,
+      locale: localeName,
+      other: '$times fois',
+      one: 'une fois',
+    );
+    return 'Tu as ouvert $_temp0 $_temp1. Pour $price elles restent lisibles après la fin de l\'abonnement — sans aucun renouvellement.';
+  }
+
+  @override
+  String paywallV3CancelSaveFactPlain(String price) {
+    return 'Pour $price elles restent lisibles après la fin de l\'abonnement — sans aucun renouvellement.';
+  }
+
+  @override
+  String paywallV3CancelNote(String date) {
+    return 'Résilier ouvre les réglages de ton identifiant Apple · ton abonnement court jusqu\'au $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDate =>
+      'Résilier ouvre les réglages de ton identifiant Apple';
 }

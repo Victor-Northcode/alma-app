@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../billing/ladder.dart';
 import '../../design/buttons.dart';
 import '../../design/gilt_page.dart';
 import '../../design/layout.dart';
@@ -16,9 +17,11 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../cabinet_words.dart';
-import '../offer_screen.dart';
+import '../paywall/door_screen.dart';
+import '../paywall/paywall_router.dart';
 import 'people_screen.dart';
 import 'writing_art.dart';
+import '../../state/reading_tally.dart';
 import '../../state/session.dart';
 
 /// Одна глава, на единственной светлой поверхности продукта.
@@ -252,6 +255,11 @@ class _ChapterScreenState extends State<ChapterScreen> {
           _reading = response.reading;
           _advancing = false;
         });
+        // Глава прочитана — счётчик системы на единицу больше. Считается
+        // здесь, а не при открытии экрана: стена и ожидание письма — это не
+        // чтение, а спасение от отмены (V9) обязано предлагать ту систему,
+        // которую действительно читают.
+        ReadingTally.noteOpen(widget.system);
       }
     } on AlmaError catch (error) {
       if (mounted) setState(() => _failure = error);
@@ -285,6 +293,33 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// это и есть то, после чего глава пишется целиком.
   Future<void> _afterOffer() async {
     if (mounted) await _load(relist: true);
+  }
+
+  /// Дверь этой главы — V2, поверхность P2.
+  ///
+  /// **Что показать, решает маршрутизатор, а не глава.** У транзитов и соляра
+  /// двери нет вовсе, и тап по их закрытой главе ведёт на пейволл подписки;
+  /// знать об этом главе незачем — она сообщает намерение и то, что видит
+  /// перед собой: номер главы, её имя, вклейку и число платных глав системы.
+  Future<void> _openDoor() async {
+    final list = _list;
+    final entry = _entry;
+    await showPaywall(
+      context,
+      PaywallIntent.door(widget.system),
+      trigger: 'locked_chapter',
+      // Заголовок двери обещает то, что за ней: платные главы, без
+      // бесплатной. `null` — оглавление не доехало, и число не выдумывается.
+      chapters: list?.chapters.where((chapter) => !chapter.free).length,
+      chapter: entry == null
+          ? null
+          : DoorChapter(
+              numeral: entry.numeral,
+              title: entry.title,
+              plate: AlmaPlates.name(widget.system, entry.slug),
+            ),
+    );
+    await _afterOffer();
   }
 
   ChapterEntry? get _entry {
@@ -544,7 +579,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // Стена — раньше всего остального, включая ожидание: на закрытой главе
     // ждать нечего, а кнопка нужна сразу.
     if (_locked && _reading == null) {
-      return _LockedWall(system: widget.system, onReturned: _afterOffer);
+      return _LockedWall(onOpen: _openDoor);
     }
     if (_writing && _reading == null) {
       // **Самое долгое ожидание в продукте — сорок-девяносто секунд.**
@@ -603,7 +638,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // запроса, и сюда попадает только случай, когда клиент считал главу
     // открытой, а сервер отказал, — право истекло между списком и запросом.
     if (failure is ServerRefused && failure.code == 'locked' && _reading == null) {
-      return _LockedWall(system: widget.system, onReturned: _afterOffer);
+      return _LockedWall(onOpen: _openDoor);
     }
     // **Совместимости нужен второй человек — и дверь к нему, а не фраза в
     // пустоте.**
@@ -652,7 +687,17 @@ class _ChapterScreenState extends State<ChapterScreen> {
                   kind: AlmaButtonKind.outline,
                   fills: false,
                   label: l.cabPlansCta,
-                  onTap: () => _openOffer(context, null),
+                  // Потолок бесплатного письма снимает подписка, а не дверь:
+                  // фраза сервера кончается словами «или прямо сейчас, с
+                  // подпиской», и кнопка обязана вести туда же, куда обещание.
+                  onTap: () async {
+                    await showPaywall(
+                      context,
+                      const PaywallIntent.subscription(),
+                      trigger: 'month_budget',
+                    );
+                    await _afterOffer();
+                  },
                 ),
               ],
             ],
@@ -1038,14 +1083,13 @@ class _EndMark extends StatelessWidget {
 /// обещать на стене то, чего пока не написано, нельзя, поэтому ни строки
 /// текста главы, ни дымки на её месте здесь нет.
 class _LockedWall extends StatelessWidget {
-  const _LockedWall({required this.system, required this.onReturned});
+  const _LockedWall({required this.onOpen});
 
-  final SystemSlug system;
-
-  /// Витрину закрыли. Право могло измениться — экран обязан перепроверить его
-  /// и, если глава куплена, идти за текстом. Без этого купивший возвращался
-  /// на ту же стену, с которой ушёл платить.
-  final Future<void> Function() onReturned;
+  /// Открыть дверь и, вернувшись, перечитать право: оно могло измениться, и
+  /// без перепроверки купивший возвращался на ту же стену, с которой ушёл
+  /// платить. Что именно показать — дверь или пейволл подписки — решает
+  /// маршрутизатор, а не стена.
+  final Future<void> Function() onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -1065,33 +1109,13 @@ class _LockedWall extends StatelessWidget {
             Text(l.cabLockedNote,
                 textAlign: TextAlign.center, style: AlmaType.meta),
             const SizedBox(height: 24),
-            AlmaButton(
-              fills: false,
-              label: l.cabUnlock,
-              onTap: () async {
-                await _openOffer(context, system);
-                await onReturned();
-              },
-            ),
+            AlmaButton(fills: false, label: l.cabUnlock, onTap: onOpen),
           ],
         ),
       ),
     );
   }
 }
-
-/// Открыть витрину этой системы.
-///
-/// Отдельным маршрутом поверх всего, а не листом внутри вкладки: витрина —
-/// это страница, на которую уходят и с которой возвращаются туда же, откуда
-/// пришли, и глава под ней остаётся на своей странице.
-///
-/// Ждёт закрытия витрины: вызывающему нужно знать, когда возвращаться к
-/// вопросу о праве.
-Future<void> _openOffer(BuildContext context, SystemSlug? system) =>
-    Navigator.of(context, rootNavigator: true).push(
-      CupertinoPageRoute(builder: (context) => OfferScreen(system: system)),
-    );
 
 /// «Совместимости нужен второй человек» — с рисунком и дверью к нему.
 ///

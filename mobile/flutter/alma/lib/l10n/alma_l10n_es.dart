@@ -2365,4 +2365,129 @@ class LEs extends L {
   @override
   String get paywallV3StateRestoreDone =>
       'Restaurado · todo lo que compraste vuelve a estar abierto';
+
+  @override
+  String paywallV3DoorPlateChapter(String numeral) {
+    return 'capítulo $numeral';
+  }
+
+  @override
+  String paywallV3DoorTitleSystem(int count, String system) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count capítulos de tu lectura «$system»',
+      one: 'Un capítulo de tu lectura «$system»',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorTitleAll(String system) {
+    return 'Tu lectura «$system» entera';
+  }
+
+  @override
+  String get paywallV3DoorPitch =>
+      'Escrito desde tus propias posiciones — nunca desde una plantilla. El cálculo siempre fue gratis; lo que se paga es lo escrito.';
+
+  @override
+  String paywallV3DoorCtaUnlock(String price) {
+    return 'Abrir y leer · $price';
+  }
+
+  @override
+  String get paywallV3PlansLink => 'Todos los planes';
+
+  @override
+  String get paywallV3SubOverline => 'la capa viva';
+
+  @override
+  String get paywallV3SubPlateCaption => 'Todo lo que cambia cada día';
+
+  @override
+  String get paywallV3QuotaHeld => 'guardada — se enviará cuando continúes';
+
+  @override
+  String get paywallV3QuotaNote =>
+      'Con la suscripción Alma responde treinta al mes — desde tus propias posiciones, nunca desde una plantilla.';
+
+  @override
+  String get paywallV3QuotaAlsoInside => 'también dentro';
+
+  @override
+  String get paywallV3QuotaAlsoInsideList =>
+      'Tránsitos y el horóscopo diario · tu revolución solar · una comprobación de compatibilidad al mes';
+
+  @override
+  String get paywallV3SubRenewalDisclosureQuota =>
+      'Se renueva cada mes · cancela cuando quieras · tu pregunta se envía en cuanto se abre';
+
+  @override
+  String get paywallV3PlansOverline => 'todos los planes';
+
+  @override
+  String get paywallV3PlansTitle => 'Tuyo para siempre, o todo lo vivo';
+
+  @override
+  String get paywallV3PlansOneReading => 'Una lectura';
+
+  @override
+  String get paywallV3PlansAllFiveNote =>
+      'Veintiséis capítulos, veinte por ciento menos';
+
+  @override
+  String get paywallV3PlansPair => 'Un informe de compatibilidad';
+
+  @override
+  String get paywallV3PlansPairNote =>
+      'Cuatro capítulos, por persona, tantos como quieras';
+
+  @override
+  String get paywallV3SubTitleShort => 'Toda Alma';
+
+  @override
+  String get paywallV3SubIncludesLine =>
+      'Tránsitos y el horóscopo diario · revolución solar · una comprobación de compatibilidad al mes · 30 preguntas · las cinco lecturas mientras esté activa';
+
+  @override
+  String get paywallV3PlansLegal =>
+      'Se cobra a tu Apple ID al confirmar · la suscripción se renueva cada mes salvo que la canceles 24 h antes de que acabe el periodo · las compras únicas no se renuevan nunca';
+
+  @override
+  String get paywallV3CancelHeader => 'gestionar suscripción';
+
+  @override
+  String get paywallV3CancelCardCaption => 'la que más lees';
+
+  @override
+  String paywallV3CancelSaveFact(int chapters, int times, String price) {
+    String _temp0 = intl.Intl.pluralLogic(
+      chapters,
+      locale: localeName,
+      other: 'estos $chapters capítulos',
+      one: 'este capítulo',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      times,
+      locale: localeName,
+      other: '$times veces',
+      one: 'una vez',
+    );
+    return 'Has abierto $_temp0 $_temp1. Por $price siguen legibles cuando termine la suscripción — sin renovación, nunca.';
+  }
+
+  @override
+  String paywallV3CancelSaveFactPlain(String price) {
+    return 'Por $price siguen legibles cuando termine la suscripción — sin renovación, nunca.';
+  }
+
+  @override
+  String paywallV3CancelNote(String date) {
+    return 'Cancelar abre los ajustes de tu Apple ID · tu suscripción sigue hasta el $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDate =>
+      'Cancelar abre los ajustes de tu Apple ID';
 }

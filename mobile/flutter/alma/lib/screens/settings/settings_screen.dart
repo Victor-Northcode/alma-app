@@ -16,11 +16,12 @@ import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../notify/push_devices.dart';
-import '../../net/models.dart' show SystemSlug;
+import '../../net/models.dart' show FunnelStage, SystemSlug;
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
 import '../cabinet_words.dart';
-import '../offer_screen.dart';
+import '../paywall/cancel_save_screen.dart';
+import '../paywall/paywall_router.dart';
 import '../legal/legal_screen.dart';
 import 'sign_in_screen.dart';
 import '../legal/legal_text.dart';
@@ -189,6 +190,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } on AlmaError {
       if (mounted) setState(() => _cancel = _Cancel.failed);
     }
+  }
+
+  /// «Управлять подпиской» — и один экран между нажатием и магазином.
+  ///
+  /// **Спасение, а не задержка.** ТЗ P8: перед редиректом в системные настройки
+  /// показывается V9 — «забери свой разбор навсегда», — и показывается он один
+  /// раз за жизнь подписки. Всё остальное здесь про то, куда идти дальше:
+  ///
+  /// * купила дверь — остаёмся на месте. Она пришла сюда за тем, чтобы не
+  ///   платить дальше, и получила ровно это; вытолкнуть её после покупки в
+  ///   настройки Apple значило бы продать и всё равно выпроводить;
+  /// * «просто отменить» — открываем магазин, немедленно и без второго вопроса;
+  /// * оффера не было (спасать нечего, уже показывали) — тоже сразу магазин.
+  ///
+  /// Жест «назад» с V9 не ведёт никуда: это отказ от самого разговора об
+  /// отмене, и додумывать за него «всё-таки открой магазин» мы не вправе.
+  Future<void> _manageSubscription() async {
+    final session = SessionScope.of(context);
+    // Ступень §7: вход в отмену. Она — знаменатель для обеих ступеней
+    // спасения, поэтому уходит до всякого показа.
+    session.client
+        .track(FunnelStage.cancelFlowEntered, meta: {'surface': 'p8'});
+    final outcome = await offerToSave(context);
+    if (!mounted) return;
+    if (outcome == PaywallOutcome.bought) {
+      session.client
+          .track(FunnelStage.saveOfferAccepted, meta: {'surface': 'p8'});
+      // Право изменилось — строка «что открыто» обязана это показать.
+      await session.refreshRights();
+      return;
+    }
+    if (outcome == PaywallOutcome.dismissed) return;
+    await launchUrl(
+      manageSubscriptionUri(_manageUrl),
+      mode: LaunchMode.externalApplication,
+    );
   }
 
   @override
@@ -771,10 +808,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         kind: AlmaButtonKind.outline,
         fills: false,
         label: l.cabManageInStore,
-        onTap: () => launchUrl(
-          manageSubscriptionUri(_manageUrl),
-          mode: LaunchMode.externalApplication,
-        ),
+        onTap: _manageSubscription,
       ),
       // Обещание про кошелёк — только там, где оно правда. У подписки,
       // купленной не в магазине, платёжное средство держим мы, и эта фраза
@@ -936,9 +970,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         kind: AlmaButtonKind.outline,
         fills: false,
         label: l.cabPlansCta,
-        onTap: () => Navigator.of(context, rootNavigator: true).push(
-          CupertinoPageRoute(builder: (_) => const OfferScreen()),
-        ),
+        // Единственный экран каталога, где видно всё, — и открывается он
+        // только по такой вот тихой просьбе, никогда сам.
+        onTap: () => openAllPlans(context),
       ),
     ];
   }

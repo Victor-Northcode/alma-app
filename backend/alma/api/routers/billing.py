@@ -58,12 +58,14 @@ import logging
 from dataclasses import replace
 from datetime import datetime
 
-from fastapi import APIRouter, BackgroundTasks, Body, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Body, HTTPException, Request, Response, status
 from sqlalchemy import select
 
 from ... import funnel, mail, region
 from ...auth import entitlements
 from ...billing import catalogue as prices
+from ...billing import credits as pair_credits
+from ...billing import pairs as pair_intents
 from ...billing.provider import (
     BillingUnavailable,
     EventKind,
@@ -80,6 +82,7 @@ from ...config import billing_adapter, settings
 from ...db.models import (
     Consent,
     Entitlement,
+    Profile,
     Purchase,
     User,
     WebhookEvent,
@@ -550,7 +553,182 @@ async def _ingest(
         raise
 
 
+# ── про кого будет покупка пары, записанное до денег ───────────────────────
+
+
+@router.post("/pair/intent")
+async def open_pair_intent(
+    user: CurrentUser,
+    session: SessionDep,
+    profile_id: str = Body(embed=True),
+) -> dict:
+    """Запомнить, про какого партнёра открывается покупка, и выдать токен.
+
+    **Первый шаг привязки, и единственный, на котором ещё можно отказать.**
+    После оплаты отказывать нельзя: магазин уже списал деньги, и всякий 4xx на
+    той стороне означает «деньги взяты, отчёт не открыт» плюс человек, который
+    спорит с Apple о нашем дизайне идентификаторов. Поэтому и «профиль твой», и
+    «профиль не ты сам» проверяются здесь, до магазинного листа.
+
+    Токен уезжает в `appAccountToken` (iOS) или `obfuscatedProfileId` (Android)
+    и возвращается к нам внутри подписанного пейлоада — см. `billing/pairs.py`
+    о том, почему `profile_id` из тела `/verify` не годится ни при каких
+    обстоятельствах.
+
+    Ответ на «нет такого профиля» и «профиль чужой» намеренно одинаков: разные
+    ответы превратили бы эндпоинт в способ перебирать чужие id.
+    """
+    try:
+        intent = await pair_intents.open_intent(session, user, profile_id)
+    except pair_intents.NotYours as exc:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"error": "no_such_profile", "message": str(exc)},
+        ) from exc
+
+    return {
+        "intent_id": intent.id,
+        # Имя поля магазинное, а не наше: клиент кладёт его именно в
+        # `appAccountToken`/`obfuscatedProfileId`, и одно имя на две платформы
+        # избавляет обе от собственного разбора ответа.
+        "app_account_token": intent.app_account_token,
+        "profile_id": intent.profile_id,
+        "product": "pair.check",
+    }
+
+
+@router.post("/pair/bind")
+async def bind_pair_purchase(
+    user: CurrentUser,
+    session: SessionDep,
+    transaction: str = Body(embed=True),
+    profile_id: str = Body(embed=True),
+) -> dict:
+    """Аварийный путь: привязать оплаченную покупку к партнёру вручную.
+
+    Существует ради одного обещания: **деньги не теряются никогда.** Покупка
+    без токена в подписанном пейлоаде — старый клиент, сбой в приложении между
+    intent'ом и листом — записывается как `unbound`, человек видит экран
+    «к кому применить», и вот этот вызов закрывает её.
+
+    Три проверки, и каждая закрывает свой способ превратить это в бесплатные
+    отчёты:
+
+    * платёж должен быть **этого** аккаунта и за проверку пары — иначе чужая
+      транзакция открывала бы отчёты в своём аккаунте;
+    * профиль должен быть свой и не `is_self` — то же правило, что и в intent;
+    * привязка **однократна**. Второй вызов с другим партнёром получает 409:
+      одна покупка — один отчёт, иначе $4.99 открывали бы столько людей,
+      сколько раз хватило терпения нажать.
+    """
+    purchase = (
+        await session.execute(
+            select(Purchase).where(Purchase.transaction_id == transaction)
+        )
+    ).scalar_one_or_none()
+    if purchase is None or purchase.user_id != user.id:
+        # Один ответ на «нет такой покупки» и «покупка чужая», по той же
+        # причине, что и у профилей: иначе это способ перебирать транзакции.
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"error": "no_such_purchase", "message": "no purchase to bind"},
+        )
+    if purchase.product != PAIR_PRODUCT:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "error": "not_a_pair_purchase",
+                "message": f"{purchase.product!r} does not buy a compatibility report",
+            },
+        )
+    if purchase.refunded_at is not None:
+        # Деньги вернулись — привязывать нечего. Без этой строки непривязанная
+        # покупка становилась бы бесплатным отчётом в один запрос: получить
+        # возврат в магазине, а потом назвать партнёра. `refunded_at` ставится
+        # только на полный возврат, поэтому частичный сюда не попадает — и не
+        # должен: там покупка остаётся покупкой.
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "error": "refunded",
+                "message": "this purchase has been refunded",
+            },
+        )
+
+    held = await entitlements.for_user(session, user)
+    already = next(
+        (
+            row for row in held
+            if row.transaction_id == transaction
+            and row.scope == entitlements.SCOPE_PAIR
+        ),
+        None,
+    )
+    if already is not None:
+        wanted = entitlements.pair_system(profile_id)
+        if already.system == wanted:
+            # Повтор того же самого. Идемпотентно и молча: клиент, который
+            # ретраит после таймаута, не должен получать ошибку за то, что
+            # первая попытка на самом деле удалась.
+            return {"granted": True, "profile_id": profile_id, "status": "already_bound"}
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "error": "already_bound",
+                "message": "this purchase already opened a report about someone else",
+                "profile_id": already.system.removeprefix(entitlements.PAIR_PREFIX),
+            },
+        )
+
+    profile = await session.get(Profile, profile_id)
+    if profile is None or profile.user_id != user.id or profile.is_self:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND,
+            detail={"error": "no_such_profile", "message": "no such profile"},
+        )
+
+    await entitlements.grant(
+        session,
+        user,
+        system=entitlements.pair_system(profile_id),
+        kind="consumable",
+        scope=entitlements.SCOPE_PAIR,
+        transaction_id=transaction,
+        amount_cents=purchase.amount_cents or 0,
+        currency=purchase.currency or "USD",
+        source=purchase.provider or "unknown",
+    )
+    # Статус денег догоняет статус доступа. `unbound` — это состояние «оплачено
+    # и не привязано», и покупка, оставшаяся с ним после успешной привязки,
+    # попала бы в любой отчёт о потерянных платежах как потерянная.
+    purchase.status = "bound"
+    await session.flush()
+    log.info(
+        "account %s bound transaction %s to partner %s by hand",
+        user.id, transaction, profile_id,
+    )
+    return {"granted": True, "profile_id": profile_id, "status": "bound"}
+
+
+@router.get("/credits")
+async def pair_credit_state(user: CurrentUser, session: SessionDep) -> dict:
+    """Сколько проверок пары включено в текущий период и сколько осталось.
+
+    Читается экраном P4, чтобы выбрать между бейджем «входит в подписку» и
+    ценой «$4.99 сверх месячной». Считает сервер, а не клиент: клиент не знает
+    ни границ расчётного периода, ни того, что было потрачено с другого
+    устройства.
+    """
+    return {"pair": await pair_credits.state(session, user)}
+
+
 # ── a purchase the app made, checked against the store that signed it ──────
+
+#: Ключ каталога, чья покупка обязана называть партнёра. Одна константа на
+#: роутер, потому что сравнений с ним теперь три (привязка, разбор токена,
+#: непривязанный ответ), и строка, набранная в одном из трёх с опечаткой,
+#: означала бы молча не выданный оплаченный отчёт.
+PAIR_PRODUCT = "pair.check"
 
 
 @router.post("/iap/verify")
@@ -558,9 +736,15 @@ async def verify_store_purchase(
     user: CurrentUser,
     session: SessionDep,
     background: BackgroundTasks,
+    response: Response,
     platform: str = Body(embed=True),
     product: str = Body(embed=True),
     transaction: str = Body(embed=True),
+    #: Какой intent клиент считает своим. Участвует **только в сверке**:
+    #: партнёр берётся из токена, который подписал магазин, а не отсюда. См.
+    #: `billing/pairs.partner_for` — там же и причина, по которой обратное
+    #: означало бы открытый чужой отчёт за собственные $4.99.
+    intent_id: str | None = Body(default=None, embed=True),
 ) -> dict:
     """Verify one App Store or Play purchase and grant what it bought.
 
@@ -598,6 +782,14 @@ async def verify_store_purchase(
     purchase and the first one wins it. That is the safe direction (nothing is
     granted twice) and it is not the kind direction; the fix is account linking
     rather than a second grant, and it is in `open_problems`.
+
+    **Проверка пары приносит второй вопрос: не «кто платит», а «за кого».**
+    Расходуемый товар покупается многократно, и один и тот же `productId` в
+    двух покупках означает двух разных людей. Ответ берётся из токена, который
+    приложение положило в покупку и **магазин подписал**, — никогда из
+    `profile_id` в теле этого запроса, которого здесь поэтому и нет. Токена не
+    оказалось — деньги записываются, грант не выписывается, ответ 202 и путь
+    `POST /billing/pair/bind`; см. `billing/pairs.py`.
     """
     adapter = _store_adapter(platform)
 
@@ -678,6 +870,24 @@ async def verify_store_purchase(
         )
         event = replace(event, grants=False)
 
+    # **За кого заплачено — из токена, который подписал магазин.**
+    #
+    # Стоит здесь, до `_ingest`, потому что `_apply` внутри него уже вызывает
+    # `entitlement_for`, а тому нужен готовый `partner_id`: грант пары называет
+    # профиль, и назвать его больше неоткуда. `intent_id` из тела идёт следом
+    # только на сверку — правило «стор источник правды» соблюдается тем, что
+    # разошедшийся intent пишет строку в лог и ничего не меняет.
+    if honoured and event.product == PAIR_PRODUCT:
+        event = replace(
+            event,
+            partner_id=await pair_intents.partner_for(
+                session, user,
+                token=event.account_token,
+                intent_id=intent_id,
+                transaction_id=event.transaction_id,
+            ),
+        )
+
     outcome, fresh = await _ingest(session, adapter, event, event.payload, background)
     if not fresh:
         log.info("%s transaction %s was claimed already", platform, event.transaction_id)
@@ -686,17 +896,50 @@ async def verify_store_purchase(
     granted = next(
         (row for row in held if row.transaction_id == event.transaction_id), None
     )
+
+    # **Оплачено и не привязано — не ошибка, а незаконченный шаг.**
+    #
+    # 202, а не 200 и не 4xx. 4xx сказал бы клиенту «покупка не удалась», и
+    # честный клиент не финишировал бы транзакцию — а деньги уже списаны, и
+    # человек остался бы и без отчёта, и без понятного следующего действия.
+    # 200 сказал бы «всё открыто», и клиент показал бы пустой отчёт. 202 — это
+    # ровно то, что произошло: платёж принят, к кому его применить, ещё не
+    # решено, и решается это одним вызовом `POST /billing/pair/bind`.
+    #
+    # Считается **и на повторе тоже**, и это не мелочь: клиент, чья первая
+    # попытка привязки не дошла, ретраит ту же транзакцию, а `already_claimed`
+    # с кодом 200 сказал бы ему «всё в порядке, отчёт открыт». Он не открыт.
+    # Пока гранта нет, ответ обязан оставаться тем же: 202 и путь к привязке.
+    unbound = (
+        honoured
+        and event.product == PAIR_PRODUCT
+        and granted is None
+        and await _mark_unbound(session, event, user)
+    )
+    if unbound:
+        response.status_code = status.HTTP_202_ACCEPTED
+
     return {
         # `not_offered` rather than the ingest outcome, so a client can tell
         # "we recorded your money and granted you nothing on purpose" apart from
         # "somebody else already claimed this transaction". Both leave the
         # purchase unacknowledged, which is what actually matters; they are
         # different sentences to put in front of a person.
-        "status": ("not_offered" if not honoured else outcome) if fresh else "already_claimed",
+        # `unbound` стоит **перед** проверкой на повтор: состояние «оплачено и
+        # не привязано» не перестаёт быть собой оттого, что о нём спросили
+        # второй раз, а `already_claimed` прочитался бы клиентом как успех.
+        "status": (
+            "unbound" if unbound
+            else ("not_offered" if not honoured else outcome) if fresh
+            else "already_claimed"
+        ),
         "platform": platform,
         "product": product,
         "transaction_id": event.transaction_id,
         "subscription_id": event.subscription_id,
+        # Про кого этот платёж, если это удалось выяснить. Клиент показывает по
+        # нему открытый отчёт, а на `None` — экран «к кому применить».
+        "profile_id": event.partner_id,
         # What the client actually needs in order to unlock a screen: not the
         # outcome string, which is for logs, but the list the paywall reads.
         # Returned from the same request so the app never has to guess how long
@@ -708,6 +951,41 @@ async def verify_store_purchase(
             else None
         ),
     }
+
+
+async def _mark_unbound(session, event: NormalisedEvent, user) -> bool:
+    """Пометить платёж как оплаченный и ни к кому не привязанный.
+
+    Отвечает, **этому ли человеку** мы должны отчёт. Проверка владельца здесь
+    обязательна: «гранта нет» верно и для второго аккаунта на одном Apple ID,
+    который предъявил чужую транзакцию, — и предложить ему выбрать партнёра
+    значило бы предложить распорядиться чужой покупкой.
+
+    Статус — единственное, что отличает эту строку от обычной продажи, и он
+    нужен ровно для одного: чтобы её было **видно**. Деньги, за которыми не
+    стоит ни гранта, ни статуса, нельзя ни найти запросом, ни посчитать в
+    сводке, ни вернуть — они просто лежат в таблице и выглядят как успешная
+    продажа. Один запрос `status = 'unbound'` отвечает на вопрос «кому мы
+    должны отчёт» без разбора логов.
+    """
+    if not event.transaction_id:
+        return False
+    purchase = (
+        await session.execute(
+            select(Purchase).where(Purchase.transaction_id == event.transaction_id)
+        )
+    ).scalar_one_or_none()
+    if purchase is None or purchase.user_id != user.id:
+        return False
+    if purchase.status != "unbound":
+        purchase.status = "unbound"
+        await session.flush()
+        log.warning(
+            "transaction %s paid for a pair check and named nobody — recorded "
+            "as unbound, waiting for /billing/pair/bind (account %s)",
+            event.transaction_id, purchase.user_id,
+        )
+    return True
 
 
 def _store_adapter(platform: str) -> StoreProvider:
@@ -822,6 +1100,30 @@ async def _apply(
     if paid and event.kind is EventKind.PAYMENT:
         await _confirm_the_purchase(session, adapter, event, user, purchase, background)
 
+    # Про кого была покупка пары, когда сюда пришла **нотификация**, а не наш
+    # собственный `/iap/verify`.
+    #
+    # Ветка нужна потому, что этот путь существует сам по себе: приложение может
+    # умереть между оплатой и вызовом верификации, и тогда первым (а иногда и
+    # единственным) сообщением о покупке будет `ONE_TIME_CHARGE` от Apple или
+    # `one_time_product` от Google. В нотификации нет ни нашей сессии, ни
+    # `intent_id` — но токен внутри подписанного пейлоада есть, и он отвечает на
+    # тот же вопрос. Без этого честно оплаченный отчёт молча ждал бы, пока
+    # человек догадается перезапустить приложение.
+    if (
+        event.product == PAIR_PRODUCT
+        and event.partner_id is None
+        and event.account_token
+    ):
+        event = replace(
+            event,
+            partner_id=await pair_intents.partner_for(
+                session, user,
+                token=event.account_token,
+                transaction_id=event.transaction_id,
+            ),
+        )
+
     granted = entitlement_for(event) or await _the_plan_we_already_hold(session, event, user)
     if granted is not None:
         await entitlements.grant(
@@ -853,6 +1155,21 @@ async def _apply(
             # processors, that column is the only thing telling them apart.
             source=event.provider,
         )
+        # **Обработчик продления, он же обработчик первой покупки подписки.**
+        #
+        # Единственная новая бизнес-логика Ф0.4, и она сидит здесь, а не в
+        # отдельной ветке по типу события, ровно потому, что «период оплачен»
+        # означает на этом слое одно и то же во всех четырёх случаях: подписался,
+        # продлился, восстановился после отмены, вернулся после истечения. Все
+        # четыре доходят сюда и только сюда — и ни одна из веток ниже (отмена,
+        # dunning, пауза, истечение) сюда не доходит, что и есть требование А5:
+        # в grace period новый кредит не начисляется, а потраченный не отзывается.
+        #
+        # Идемпотентность — внутри `ensure_period`: она открывает строку только
+        # тогда, когда конец периода уехал **вперёд**, так что повторная
+        # доставка того же продления не дарит вторую проверку.
+        if granted.subscription_id:
+            await pair_credits.ensure_period(session, user)
         return f"granted {granted.system}"
 
     if event.revokes:
@@ -878,6 +1195,16 @@ PLAN_NEWS = frozenset({
     EventKind.SUBSCRIPTION_DUNNING,
 })
 
+#: Гранты, которые не кончаются. Дверь, бандл и пара куплены навсегда, и ни
+#: одно событие подписки не имеет к ним отношения — ни истечение, ни отмена, ни
+#: отзыв. Названы одним множеством, потому что спрашивают о них теперь в двух
+#: местах (`_revoke_for` и `_note_the_plan`), а правило одно.
+PERMANENT_SCOPES = frozenset({
+    entitlements.SCOPE_SYSTEM,
+    entitlements.SCOPE_STATIC,
+    entitlements.SCOPE_PAIR,
+})
+
 
 async def _note_the_plan(session, event: NormalisedEvent, user) -> int:
     """Record what a plan event says, without touching what it grants.
@@ -896,6 +1223,14 @@ async def _note_the_plan(session, event: NormalisedEvent, user) -> int:
     noted = 0
     for held in await entitlements.for_user(session, user):
         if held.subscription_id != event.subscription_id:
+            continue
+        if held.scope in PERMANENT_SCOPES:
+            # Тот же запрет, что и в `_revoke_for`, и он тут не теоретический:
+            # `renews_at`, проставленный на дверь, заставил бы экран аккаунта
+            # обещать списание за то, что куплено навсегда, а `status`
+            # подписки — нарисовать её отменяемой. Совпасть по
+            # `subscription_id` они не должны никогда; «не должны» — не причина
+            # не проверять там, где ошибка видна только на чужом экране.
             continue
         if event.status:
             held.status = event.status
@@ -1190,6 +1525,16 @@ async def _owner_of(session, event: NormalisedEvent, purchase) -> User | None:
     """
     if purchase is not None and purchase.user_id:
         return await session.get(User, purchase.user_id)
+    if event.account_token:
+        # Покупка пары, о которой первой сообщила нотификация, а не приложение.
+        # Токен внутри подписанного пейлоада называет наш `PairIntent`, а тот —
+        # аккаунт: единственный случай, когда владелец восстанавливается не из
+        # того, что событие отменяет, а из того, что мы записали до оплаты.
+        # Без него честно оплаченный отчёт лежал бы «без владельца» до тех пор,
+        # пока человек не перезапустит приложение.
+        intent = await pair_intents.by_token(session, event.account_token)
+        if intent is not None:
+            return await session.get(User, intent.user_id)
     if event.subscription_id:
         held = (
             await session.execute(
@@ -1314,6 +1659,20 @@ async def _revoke_for(session, event: NormalisedEvent, user) -> int:
         matches_transaction = bool(
             event.transaction_id and held.transaction_id == event.transaction_id
         )
+        if held.scope in PERMANENT_SCOPES and not matches_transaction:
+            # **Купленное навсегда закрывается только возвратом за него самого.**
+            #
+            # Сюда приходит и истечение подписки, и её отзыв, и рефанд за один
+            # её период — все три называют `subscription_id`, и все три
+            # проходили бы по строке выше, если бы у двери, бандла или пары
+            # когда-нибудь оказался тот же идентификатор (смена схемы у Apple,
+            # ручной грант, миграция). Цена ошибки несимметрична: подписка
+            # истекает у каждого подписчика каждый месяц, а «разбор, купленный
+            # навсегда, остаётся твоим» — это строка над кнопкой на экране
+            # подписки. Одно совпадение — и обещание нарушено молча, у всех
+            # сразу. Возврат именно за эту транзакцию — единственное событие,
+            # которое такой грант закрывает, и оно проверяется отдельно.
+            continue
         if matches_subscription or matches_transaction:
             await entitlements.revoke(session, held)
             revoked += 1

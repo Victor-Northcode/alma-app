@@ -3160,5 +3160,161 @@
   "paywallV3StateRestoreDone": "Restored · everything you bought is open again",
   "@paywallV3StateRestoreDone": {
     "description": "monetization v3 · А11 state.restore_done · W6"
+  },
+  "paywallV3DoorPlateChapter": "chapter {numeral}",
+  "@paywallV3DoorPlateChapter": {
+    "description": "monetization v3 · door.plate_chapter · V2 — римская цифра собирается клиентом",
+    "placeholders": {
+      "numeral": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3DoorTitleSystem": "{count, plural, one{One chapter of your {system}} other{{count} chapters of your {system}}}",
+  "@paywallV3DoorTitleSystem": {
+    "description": "monetization v3 · door.title · V2 — plural + имя системы вставкой в именительном",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3DoorTitleAll": "Your {system}, all of it",
+  "@paywallV3DoorTitleAll": {
+    "description": "monetization v3 · V2 без числа глав — на холсте не нарисовано, минимальный вариант",
+    "placeholders": {
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3DoorPitch": "Written from your own positions — never from a template. The calculation was always free; this is the writing.",
+  "@paywallV3DoorPitch": {
+    "description": "monetization v3 · door.pitch · V2"
+  },
+  "paywallV3DoorCtaUnlock": "Unlock and read · {price}",
+  "@paywallV3DoorCtaUnlock": {
+    "description": "monetization v3 · door.cta · V2 (на V1 своя подпись — paywallV3DoorCta)",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3PlansLink": "All plans",
+  "@paywallV3PlansLink": {
+    "description": "monetization v3 · plans.link · V2/V6"
+  },
+  "paywallV3SubOverline": "the living layer",
+  "@paywallV3SubOverline": {
+    "description": "monetization v3 · sub.overline · V6"
+  },
+  "paywallV3SubPlateCaption": "Everything that changes daily",
+  "@paywallV3SubPlateCaption": {
+    "description": "monetization v3 · sub.plate_caption · V6"
+  },
+  "paywallV3QuotaHeld": "held — will send when you continue",
+  "@paywallV3QuotaHeld": {
+    "description": "monetization v3 · quota.held · V7"
+  },
+  "paywallV3QuotaNote": "Alma answers thirty a month inside the subscription — from your own placements, never from a template.",
+  "@paywallV3QuotaNote": {
+    "description": "monetization v3 · quota.note · V7 — число вопросов словом, кириллица 25 (ТЗ §2)"
+  },
+  "paywallV3QuotaAlsoInside": "also inside",
+  "@paywallV3QuotaAlsoInside": {
+    "description": "monetization v3 · quota.also_inside · V7"
+  },
+  "paywallV3QuotaAlsoInsideList": "Transits and the daily horoscope · your solar return · one compatibility check a month",
+  "@paywallV3QuotaAlsoInsideList": {
+    "description": "monetization v3 · quota.also_inside_list · V7"
+  },
+  "paywallV3SubRenewalDisclosureQuota": "Renews monthly · cancel any time · your question sends the moment it opens",
+  "@paywallV3SubRenewalDisclosureQuota": {
+    "description": "monetization v3 · sub.renewal_disclosure_quota · V7 — третий пункт про отправку вопроса"
+  },
+  "paywallV3PlansOverline": "all plans",
+  "@paywallV3PlansOverline": {
+    "description": "monetization v3 · plans.overline · V8"
+  },
+  "paywallV3PlansTitle": "Yours forever, or everything alive",
+  "@paywallV3PlansTitle": {
+    "description": "monetization v3 · plans.title · V8"
+  },
+  "paywallV3PlansOneReading": "One reading",
+  "@paywallV3PlansOneReading": {
+    "description": "monetization v3 · plans.one_reading · V8"
+  },
+  "paywallV3PlansAllFiveNote": "Twenty-six chapters, twenty per cent off",
+  "@paywallV3PlansAllFiveNote": {
+    "description": "monetization v3 · plans.all_five_note · V8 — 26 платных глав пяти разборов"
+  },
+  "paywallV3PlansPair": "A compatibility report",
+  "@paywallV3PlansPair": {
+    "description": "monetization v3 · plans.pair · V8"
+  },
+  "paywallV3PlansPairNote": "Four chapters, per person, as many as you like",
+  "@paywallV3PlansPairNote": {
+    "description": "monetization v3 · plans.pair_note · V8"
+  },
+  "paywallV3SubTitleShort": "All of Alma",
+  "@paywallV3SubTitleShort": {
+    "description": "monetization v3 · sub.title_short · V8"
+  },
+  "paywallV3SubIncludesLine": "Transits and the daily horoscope · solar return · one compatibility check a month · 30 questions · all five readings while active",
+  "@paywallV3SubIncludesLine": {
+    "description": "monetization v3 · sub.includes_line · V8 — кириллица 25 вопросов (ТЗ §2)"
+  },
+  "paywallV3PlansLegal": "Charged to your Apple ID on confirm · the subscription renews monthly unless cancelled 24 h before the period ends · one-time purchases never renew",
+  "@paywallV3PlansLegal": {
+    "description": "monetization v3 · plans.legal · V8 — сокращать нельзя, требование ревью магазинов"
+  },
+  "paywallV3CancelHeader": "manage subscription",
+  "@paywallV3CancelHeader": {
+    "description": "monetization v3 · cancel.header · V9"
+  },
+  "paywallV3CancelCardCaption": "the one you read most",
+  "@paywallV3CancelCardCaption": {
+    "description": "monetization v3 · cancel.card_caption · V9"
+  },
+  "paywallV3CancelSaveFact": "You have opened {chapters, plural, one{this chapter} other{these {chapters} chapters}} {times, plural, one{once} other{{times} times}}. For {price} they stay readable after the subscription ends — no renewal, ever.",
+  "@paywallV3CancelSaveFact": {
+    "description": "monetization v3 · cancel.save_fact · V9 — два plural-числа из телеметрии",
+    "placeholders": {
+      "chapters": {
+        "type": "int"
+      },
+      "times": {
+        "type": "int"
+      },
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3CancelSaveFactPlain": "For {price} they stay readable after the subscription ends — no renewal, ever.",
+  "@paywallV3CancelSaveFactPlain": {
+    "description": "monetization v3 · V9 без статистики чтения — на холсте не нарисовано",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3CancelNote": "Cancelling opens your Apple ID settings · your subscription runs until {date}",
+  "@paywallV3CancelNote": {
+    "description": "monetization v3 · cancel.note · V9",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3CancelNoteNoDate": "Cancelling opens your Apple ID settings",
+  "@paywallV3CancelNoteNoDate": {
+    "description": "monetization v3 · V9 без даты конца периода — на холсте не нарисовано"
   }
 }

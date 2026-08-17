@@ -12,6 +12,7 @@ import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.BillingClientStateListener
 import com.android.billingclient.api.BillingFlowParams
 import com.android.billingclient.api.BillingResult
+import com.android.billingclient.api.ConsumeParams
 import com.android.billingclient.api.PendingPurchasesParams
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
@@ -19,6 +20,7 @@ import com.android.billingclient.api.PurchasesUpdatedListener
 import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.acknowledgePurchase
+import com.android.billingclient.api.consumePurchase
 import com.android.billingclient.api.queryProductDetails
 import com.android.billingclient.api.queryPurchasesAsync
 import kotlinx.coroutines.CoroutineScope
@@ -471,7 +473,30 @@ class PlayBilling(
                     ).also { if (publish) _status.value = it }
                 }
 
-                if (!purchase.isAcknowledged) acknowledge(purchase)
+                // **Расходуемый товар потребляется, остальные подтверждаются.**
+                //
+                // `consumeAsync` — единственное, что делает разовую покупку
+                // покупаемой снова, и проверка пары обязана покупаться снова:
+                // второй партнёр — это вторые $4.99. Без него Play считает
+                // первую покупку вечной и на второй отвечает
+                // ITEM_ALREADY_OWNED, то есть человек, готовый заплатить,
+                // упирается в отказ магазина, а не в наш экран.
+                //
+                // Ровно наоборот для двери и бандла: потреблённая дверь снова
+                // появляется на витрине, и её купят второй раз за то, что уже
+                // куплено навсегда. Поэтому список — один
+                // (`StoreProducts.CONSUMED_AFTER_GRANT`), и решает он, а не
+                // ветка здесь.
+                //
+                // Потребление, как и подтверждение, происходит **после** того,
+                // как грант подтверждённо лёг на этот аккаунт: потребить
+                // раньше значит снять с Play обязанность вернуть деньги за
+                // покупку, которая у нас ничего не открыла.
+                if (slug in StoreProducts.CONSUMED_AFTER_GRANT) {
+                    consume(purchase)
+                } else if (!purchase.isAcknowledged) {
+                    acknowledge(purchase)
+                }
                 session.onPurchaseVerified(answer.unlocked)
                 val granted = Status.Granted(slug, answer.unlocked)
                 if (publish) _status.value = granted
@@ -497,13 +522,31 @@ class PlayBilling(
         }
     }
 
-    // TODO(Ф0.3): `pair.check` — расходуемый, и его надо **consume**, а не
-    // только acknowledge. `consumeAsync` — то, что делает разовый товар
-    // покупаемым заново; без него человек не сможет проверить второго
-    // партнёра, а Play будет считать первую покупку вечной. Список — в
-    // `StoreProducts.CONSUMED_AFTER_GRANT`, ветка пишется вместе с привязкой
-    // покупки к партнёру (приложение А4): пока грант по паре не выписывается
-    // вовсе, потреблять нечего.
+    /**
+     * Отметить расходуемую покупку потреблённой, чтобы её можно было повторить.
+     *
+     * Потребление заменяет подтверждение, а не дополняет его: Google
+     * документирует `consumeAsync` как подтверждающее покупку заодно, и
+     * отдельный `acknowledgePurchase` перед ним — лишний вызов, который на
+     * уже потреблённом токене отвечает ошибкой.
+     *
+     * Провал — строка в логе и ничего больше, по той же причине, что и у
+     * подтверждения: грант уже выписан на сервере, а непотреблённая покупка
+     * будет заново предъявлена Play при следующем запуске, и `restore`
+     * попробует ещё раз. Худшее, что даёт неудача, — «проверить второго
+     * партнёра» временно недоступно; худшее, что дало бы исключение отсюда, —
+     * оплаченный и не показанный отчёт.
+     */
+    private suspend fun consume(purchase: Purchase) {
+        val params = ConsumeParams.newBuilder()
+            .setPurchaseToken(purchase.purchaseToken)
+            .build()
+        val result = billing.consumePurchase(params)
+        if (result.billingResult.responseCode != BillingClient.BillingResponseCode.OK) {
+            Log.w(TAG, "consume failed: ${result.billingResult.debugMessage}")
+        }
+    }
+
     private suspend fun acknowledge(purchase: Purchase) {
         val params = AcknowledgePurchaseParams.newBuilder()
             .setPurchaseToken(purchase.purchaseToken)

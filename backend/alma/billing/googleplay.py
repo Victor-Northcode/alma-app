@@ -612,6 +612,27 @@ class Event:
         value = self.state.get("regionCode")
         return str(value) if value else None
 
+    @property
+    def account_token(self) -> str | None:
+        """`obfuscatedExternalProfileId` — наш токен, вернувшийся от Google.
+
+        **Профильный, а не аккаунтный, и разница здесь — вся суть.**
+        `obfuscatedExternalAccountId` отвечает на вопрос «чей это Google-аккаунт»
+        и для расходуемой покупки бесполезен: у всех проверок пары одного
+        человека он одинаков. `obfuscatedExternalProfileId` Google описывает как
+        «профиль внутри аккаунта» — то самое место, куда кладут «про кого эта
+        покупка», и именно его приложение заполняет из `/billing/pair/intent`.
+
+        Значение приходит из ответа Play Developer API, то есть от Google, а не
+        из тела запроса клиента. Оговорка из `normalise()` — «грант никогда не
+        читается из поля, которое пишет плательщик» — здесь соблюдена не тем,
+        что поле стало доверенным, а тем, что оно бесполезно для подмены: токен
+        привязан к нашей строке `PairIntent`, и чужой intent принадлежит чужому
+        аккаунту, где `billing.pairs.partner_for` его и отвергнет.
+        """
+        value = self.state.get("obfuscatedExternalProfileId")
+        return str(value).strip().lower() or None if value else None
+
     def normalise(self) -> NormalisedEvent:
         """This event in provider-neutral words.
 
@@ -639,6 +660,7 @@ class Event:
             status=self.status,
             renews_at=self.renews_at,
             adjustment=self.adjustment,
+            account_token=self.account_token,
             grants=self._grants,
             revokes=self.type in REVOKING,
             moves_money=bool(self.transaction_id) and self.type in MONEY_EVENTS,

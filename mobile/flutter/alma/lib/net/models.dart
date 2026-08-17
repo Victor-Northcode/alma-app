@@ -952,7 +952,36 @@ enum FunnelStage {
   offerView('offer_view'),
   checkoutOpened('checkout_opened'),
   purchaseCompleted('purchase_completed'),
-  offerDeclined('offer_declined');
+  offerDeclined('offer_declined'),
+
+  /* ── лестница монетизации v3 (§7 ТЗ) ──────────────────────────────────────
+     Каждая из этих ступеней **обязана** нести `surface` из §3 ТЗ: сервер
+     помечает их `monetization=True` и без поверхности не пишет вовсе
+     (`alma/funnel.py`, `SurfaceMissing`). Поэтому их шлёт маршрутизатор
+     пейволлов, а не экраны: поверхность известна намерению
+     ([PaywallIntent.surfaceCode]), и посчитанная по месту она разойдётся с ним
+     в первый же день, когда два экрана начнут продавать одно и то же.        */
+
+  /// Пейволл показан. `surface`, `sku`, `trigger`.
+  paywallShown('paywall_shown'),
+
+  /// Пейволл закрыт. `method` — крестиком, «не сейчас» или жестом назад.
+  paywallDismissed('paywall_dismissed'),
+
+  /// Поднялся системный лист покупки. Не переименованный `checkout_opened`:
+  /// тот пишет сервер, открывая сессию для браузера, этот — телефон.
+  checkoutStarted('checkout_started'),
+
+  /// Свободные вопросы кончились, и человек отправил следующий.
+  questionQuotaHit('question_quota_hit'),
+
+  /// Вход в отмену подписки — до всякого редиректа в настройки магазина.
+  cancelFlowEntered('cancel_flow_entered'),
+
+  /// Показан и принят оффер спасения. Их отношение и есть «save-оффер спасает
+  /// ≥10% отмен» из §7.
+  saveOfferShown('save_offer_shown'),
+  saveOfferAccepted('save_offer_accepted');
 
   const FunnelStage(this.wire);
 

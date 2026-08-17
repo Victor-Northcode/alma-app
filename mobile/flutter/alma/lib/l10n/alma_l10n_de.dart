@@ -2251,7 +2251,7 @@ class LDe extends L {
 
   @override
   String get paywallV3BundleIncludes =>
-      'Geburtshoroskop · Numerologie · Geburtskarte · Astrokartografie · Synthese';
+      'Geburts­horoskop · Numerologie · Geburtskarte · Astro­kartografie · Synthese';
 
   @override
   String paywallV3BundleCta(String price) {
@@ -2374,5 +2374,131 @@ class LDe extends L {
 
   @override
   String get paywallV3StateRestoreDone =>
-      'Wiederhergestellt · alles, was du gekauft hast, ist wieder offen';
+      'Wieder­hergestellt · alles, was du gekauft hast, ist wieder offen';
+
+  @override
+  String paywallV3DoorPlateChapter(String numeral) {
+    return 'Kapitel $numeral';
+  }
+
+  @override
+  String paywallV3DoorTitleSystem(int count, String system) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Kapitel deiner Deutung „$system“',
+      one: 'Ein Kapitel deiner Deutung „$system“',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorTitleAll(String system) {
+    return 'Deine Deutung „$system“ ganz';
+  }
+
+  @override
+  String get paywallV3DoorPitch =>
+      'Aus deinen eigenen Positionen geschrieben — nie aus einer Vorlage. Die Berechnung war immer kostenlos; verkauft wird das Geschriebene.';
+
+  @override
+  String paywallV3DoorCtaUnlock(String price) {
+    return 'Öffnen und lesen · $price';
+  }
+
+  @override
+  String get paywallV3PlansLink => 'Alle Pläne';
+
+  @override
+  String get paywallV3SubOverline => 'die lebendige Ebene';
+
+  @override
+  String get paywallV3SubPlateCaption => 'Alles, was sich täglich ändert';
+
+  @override
+  String get paywallV3QuotaHeld =>
+      'gehalten — geht raus, sobald du weitermachst';
+
+  @override
+  String get paywallV3QuotaNote =>
+      'Im Abo beantwortet Alma dreißig im Monat — aus deinen eigenen Positionen, nie aus einer Vorlage.';
+
+  @override
+  String get paywallV3QuotaAlsoInside => 'außerdem drin';
+
+  @override
+  String get paywallV3QuotaAlsoInsideList =>
+      'Transite und das tägliche Horoskop · dein Solarhoroskop · ein Partnerschafts-Check im Monat';
+
+  @override
+  String get paywallV3SubRenewalDisclosureQuota =>
+      'Verlängert sich monatlich · jederzeit kündbar · deine Frage geht raus, sobald es offen ist';
+
+  @override
+  String get paywallV3PlansOverline => 'alle Pläne';
+
+  @override
+  String get paywallV3PlansTitle => 'Für immer deins oder alles Lebendige';
+
+  @override
+  String get paywallV3PlansOneReading => 'Eine Deutung';
+
+  @override
+  String get paywallV3PlansAllFiveNote =>
+      'Sechs­undzwanzig Kapitel, zwanzig Prozent günstiger';
+
+  @override
+  String get paywallV3PlansPair => 'Eine Deutung für zwei';
+
+  @override
+  String get paywallV3PlansPairNote =>
+      'Vier Kapitel, pro Person, so viele du willst';
+
+  @override
+  String get paywallV3SubTitleShort => 'Ganz Alma';
+
+  @override
+  String get paywallV3SubIncludesLine =>
+      'Transite und das tägliche Horoskop · Solarhoroskop · ein Partnerschafts-Check im Monat · 30 Fragen · alle fünf Deutungen, solange das Abo läuft';
+
+  @override
+  String get paywallV3PlansLegal =>
+      'Wird bei der Bestätigung über deine Apple ID belastet · das Abo verlängert sich monatlich, wenn es nicht 24 h vor Periodenende gekündigt wird · Einmalkäufe verlängern sich nie';
+
+  @override
+  String get paywallV3CancelHeader => 'Abo verwalten';
+
+  @override
+  String get paywallV3CancelCardCaption => 'die du am meisten liest';
+
+  @override
+  String paywallV3CancelSaveFact(int chapters, int times, String price) {
+    String _temp0 = intl.Intl.pluralLogic(
+      chapters,
+      locale: localeName,
+      other: 'diese $chapters Kapitel',
+      one: 'dieses Kapitel',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      times,
+      locale: localeName,
+      other: '$times Mal',
+      one: 'einmal',
+    );
+    return 'Du hast $_temp0 $_temp1 geöffnet. Für $price bleiben sie nach dem Abo-Ende lesbar — ohne jede Verlängerung.';
+  }
+
+  @override
+  String paywallV3CancelSaveFactPlain(String price) {
+    return 'Für $price bleiben sie nach dem Abo-Ende lesbar — ohne jede Verlängerung.';
+  }
+
+  @override
+  String paywallV3CancelNote(String date) {
+    return 'Kündigen öffnet deine Apple-ID-Einstellungen · dein Abo läuft bis $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDate =>
+      'Kündigen öffnet deine Apple-ID-Einstellungen';
 }

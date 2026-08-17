@@ -33,6 +33,8 @@ from ..db.models import (
     Event,
     MagicLink,
     Memory,
+    PairCredit,
+    PairIntent,
     Profile,
     Purchase,
     Reading,
@@ -183,7 +185,30 @@ async def merge(session: AsyncSession, *, source: User, target: User) -> None:
     # is keyed on (platform, token), so the row moves by itself — but "self-
     # healing" here means the subscriber loses up to a day of the thing they
     # are paying for, and it is the same class of omission as the erase gap.
-    for table in (Entitlement, Reading, ChatThread, Memory, Event, Consent, DeviceToken):
+    # `PairIntent` и `PairCredit` — по той же причине, и обе стоят денег, если
+    # их забыть.
+    #
+    # Открытый `PairIntent`, оставшийся на гостевой строке, — это покупка,
+    # начатая гостем и оплаченная уже вошедшим в аккаунт человеком: токен из
+    # подписанного пейлоада найдёт intent с чужим `user_id`,
+    # `pairs.partner_for` его отвергнет, и оплаченный отчёт уйдёт в
+    # «непривязанные» вместо того, чтобы открыться. А это ровно тот момент, в
+    # который человек чаще всего и входит в аккаунт: приложение просит
+    # зарегистрироваться перед покупкой, чтобы покупка не потерялась.
+    #
+    # `PairCredit`, оставшийся позади, — обратная ошибка: у цели нет строки
+    # текущего периода, `ensure_period` откроет новую, и потраченная месячная
+    # проверка вернётся. Бесплатный отчёт за $0 всякому, кто вошёл в аккаунт
+    # после того, как её потратил.
+    #
+    # Ограничение `pair_credit_period` (user_id, period_start) переносу не
+    # мешает: `period_start` берётся из `granted_at` подписки или из конца
+    # прошлого периода, то есть у двух разных аккаунтов совпасть с точностью до
+    # микросекунды не может.
+    for table in (
+        Entitlement, Reading, ChatThread, Memory, Event, Consent, DeviceToken,
+        PairIntent, PairCredit,
+    ):
         await session.execute(
             update(table).where(table.user_id == source.id).values(user_id=target.id)
         )
@@ -453,7 +478,17 @@ async def erase(session: AsyncSession, user: User) -> None:
         .where(Consent.user_id == user.id, Consent.transaction_id.is_not(None))
         .values(user_id=None)
     )
-    for table in (Reading, ChatThread, Memory, Entitlement, Profile, UsageCounter):
+    # `PairIntent` и `PairCredit` — здесь, а не забыты: обе держат `user_id`, и
+    # правило из шапки `models.py` («таблица с `user_id`, которой нет в этой
+    # функции, — это обещание, нарушенное молча») уже один раз стоило нам
+    # пережившего удаление пуш-токена. `PairIntent` вдобавок называет **чужой**
+    # профиль — id человека, которого пользователь проверял, — так что её
+    # сохранение после Article 17 было бы хранением связи между двумя людьми,
+    # один из которых попросил себя стереть.
+    for table in (
+        Reading, ChatThread, Memory, Entitlement, Profile, UsageCounter,
+        PairIntent, PairCredit,
+    ):
         await session.execute(delete(table).where(table.user_id == user.id))
     await session.execute(delete(Consent).where(Consent.user_id == user.id))
     # Through the funnel's own function rather than a seventh line in the loop

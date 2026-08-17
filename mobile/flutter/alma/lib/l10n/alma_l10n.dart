@@ -4222,6 +4222,174 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Restored · everything you bought is open again'**
   String get paywallV3StateRestoreDone;
+
+  /// monetization v3 · door.plate_chapter · V2 — римская цифра собирается клиентом
+  ///
+  /// In en, this message translates to:
+  /// **'chapter {numeral}'**
+  String paywallV3DoorPlateChapter(String numeral);
+
+  /// monetization v3 · door.title · V2 — plural + имя системы вставкой в именительном
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{One chapter of your {system}} other{{count} chapters of your {system}}}'**
+  String paywallV3DoorTitleSystem(int count, String system);
+
+  /// monetization v3 · V2 без числа глав — на холсте не нарисовано, минимальный вариант
+  ///
+  /// In en, this message translates to:
+  /// **'Your {system}, all of it'**
+  String paywallV3DoorTitleAll(String system);
+
+  /// monetization v3 · door.pitch · V2
+  ///
+  /// In en, this message translates to:
+  /// **'Written from your own positions — never from a template. The calculation was always free; this is the writing.'**
+  String get paywallV3DoorPitch;
+
+  /// monetization v3 · door.cta · V2 (на V1 своя подпись — paywallV3DoorCta)
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock and read · {price}'**
+  String paywallV3DoorCtaUnlock(String price);
+
+  /// monetization v3 · plans.link · V2/V6
+  ///
+  /// In en, this message translates to:
+  /// **'All plans'**
+  String get paywallV3PlansLink;
+
+  /// monetization v3 · sub.overline · V6
+  ///
+  /// In en, this message translates to:
+  /// **'the living layer'**
+  String get paywallV3SubOverline;
+
+  /// monetization v3 · sub.plate_caption · V6
+  ///
+  /// In en, this message translates to:
+  /// **'Everything that changes daily'**
+  String get paywallV3SubPlateCaption;
+
+  /// monetization v3 · quota.held · V7
+  ///
+  /// In en, this message translates to:
+  /// **'held — will send when you continue'**
+  String get paywallV3QuotaHeld;
+
+  /// monetization v3 · quota.note · V7 — число вопросов словом, кириллица 25 (ТЗ §2)
+  ///
+  /// In en, this message translates to:
+  /// **'Alma answers thirty a month inside the subscription — from your own placements, never from a template.'**
+  String get paywallV3QuotaNote;
+
+  /// monetization v3 · quota.also_inside · V7
+  ///
+  /// In en, this message translates to:
+  /// **'also inside'**
+  String get paywallV3QuotaAlsoInside;
+
+  /// monetization v3 · quota.also_inside_list · V7
+  ///
+  /// In en, this message translates to:
+  /// **'Transits and the daily horoscope · your solar return · one compatibility check a month'**
+  String get paywallV3QuotaAlsoInsideList;
+
+  /// monetization v3 · sub.renewal_disclosure_quota · V7 — третий пункт про отправку вопроса
+  ///
+  /// In en, this message translates to:
+  /// **'Renews monthly · cancel any time · your question sends the moment it opens'**
+  String get paywallV3SubRenewalDisclosureQuota;
+
+  /// monetization v3 · plans.overline · V8
+  ///
+  /// In en, this message translates to:
+  /// **'all plans'**
+  String get paywallV3PlansOverline;
+
+  /// monetization v3 · plans.title · V8
+  ///
+  /// In en, this message translates to:
+  /// **'Yours forever, or everything alive'**
+  String get paywallV3PlansTitle;
+
+  /// monetization v3 · plans.one_reading · V8
+  ///
+  /// In en, this message translates to:
+  /// **'One reading'**
+  String get paywallV3PlansOneReading;
+
+  /// monetization v3 · plans.all_five_note · V8 — 26 платных глав пяти разборов
+  ///
+  /// In en, this message translates to:
+  /// **'Twenty-six chapters, twenty per cent off'**
+  String get paywallV3PlansAllFiveNote;
+
+  /// monetization v3 · plans.pair · V8
+  ///
+  /// In en, this message translates to:
+  /// **'A compatibility report'**
+  String get paywallV3PlansPair;
+
+  /// monetization v3 · plans.pair_note · V8
+  ///
+  /// In en, this message translates to:
+  /// **'Four chapters, per person, as many as you like'**
+  String get paywallV3PlansPairNote;
+
+  /// monetization v3 · sub.title_short · V8
+  ///
+  /// In en, this message translates to:
+  /// **'All of Alma'**
+  String get paywallV3SubTitleShort;
+
+  /// monetization v3 · sub.includes_line · V8 — кириллица 25 вопросов (ТЗ §2)
+  ///
+  /// In en, this message translates to:
+  /// **'Transits and the daily horoscope · solar return · one compatibility check a month · 30 questions · all five readings while active'**
+  String get paywallV3SubIncludesLine;
+
+  /// monetization v3 · plans.legal · V8 — сокращать нельзя, требование ревью магазинов
+  ///
+  /// In en, this message translates to:
+  /// **'Charged to your Apple ID on confirm · the subscription renews monthly unless cancelled 24 h before the period ends · one-time purchases never renew'**
+  String get paywallV3PlansLegal;
+
+  /// monetization v3 · cancel.header · V9
+  ///
+  /// In en, this message translates to:
+  /// **'manage subscription'**
+  String get paywallV3CancelHeader;
+
+  /// monetization v3 · cancel.card_caption · V9
+  ///
+  /// In en, this message translates to:
+  /// **'the one you read most'**
+  String get paywallV3CancelCardCaption;
+
+  /// monetization v3 · cancel.save_fact · V9 — два plural-числа из телеметрии
+  ///
+  /// In en, this message translates to:
+  /// **'You have opened {chapters, plural, one{this chapter} other{these {chapters} chapters}} {times, plural, one{once} other{{times} times}}. For {price} they stay readable after the subscription ends — no renewal, ever.'**
+  String paywallV3CancelSaveFact(int chapters, int times, String price);
+
+  /// monetization v3 · V9 без статистики чтения — на холсте не нарисовано
+  ///
+  /// In en, this message translates to:
+  /// **'For {price} they stay readable after the subscription ends — no renewal, ever.'**
+  String paywallV3CancelSaveFactPlain(String price);
+
+  /// monetization v3 · cancel.note · V9
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling opens your Apple ID settings · your subscription runs until {date}'**
+  String paywallV3CancelNote(String date);
+
+  /// monetization v3 · V9 без даты конца периода — на холсте не нарисовано
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling opens your Apple ID settings'**
+  String get paywallV3CancelNoteNoDate;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

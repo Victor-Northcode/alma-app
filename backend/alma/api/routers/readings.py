@@ -428,6 +428,24 @@ async def read(
             },
         )
 
+    # **Месячный кредит подписчика тратится здесь — на первой платной главе про
+    # нового человека, и больше нигде.**
+    #
+    # Почему не в `entitlements.check`: тот вызывается на каждом рендере
+    # оглавления и каждом обновлении хаба, и кредит, списываемый проверкой прав,
+    # утекал бы от одного взгляда на экран. Почему не в `covers`: там нет базы и
+    # нет права на запись. Единственное место, где «человек действительно
+    # получает новый отчёт», — момент перед генерацией, и он здесь.
+    #
+    # Порядок с `access` тоже не случаен: подписка **покрывает** совместимость
+    # (`scope="all"`), поэтому 402 выше до этой строки не доходит, и решение
+    # «включённая проверка или $4.99 сверх» принимается ровно один раз — тут.
+    if payload.system == "compatibility" and pair is not None:
+        if chapter.free:
+            await _teaser_or_paywall(session, user, pair)
+        else:
+            await _pair_credit_or_paywall(session, user, pair)
+
     birth = await resolve_birth(
         session, user, profile_id=payload.profile_id, birth=payload.birth
     )
@@ -460,6 +478,116 @@ async def read(
             )
     finally:
         _prune_lock(lock_key)
+
+
+async def _teaser_or_paywall(session, user, partner_id: str) -> None:
+    """Бесплатный тизер «Притяжение» — до капа, дальше сразу пейволл.
+
+    Тизер стоит нам около 3¢ на человека, и это мало ровно до тех пор, пока
+    людей считают по одному. Аккаунт, добавляющий партнёра за партнёром,
+    тратит бюджет бесплатного тира и не приближается к покупке: тот, кто
+    проверяет десятого человека даром, уже сказал всё, что нужно знать о его
+    готовности платить.
+
+    **Кап — на новых людей в месяц**, и его значение живёт на сервере
+    (`credits.teaser_cap`), чтобы менять его без релиза. Перечитывание уже
+    написанного тизера не стоит ничего и не считается никогда.
+
+    **Освобождён любой, кому этот отчёт и так открыт**, и спрашивается это
+    одним вопросом — «покрыта ли совместимость про этого человека», — а не
+    списком тиров. Список пришлось бы держать в согласии с каталогом, и
+    достаточно одного пропущенного случая (легаси-`live`, старая годовая),
+    чтобы человек, читающий платные главы, упёрся в стену на **бесплатной**.
+    Такая инверсия читается как поломка, потому что она и есть поломка.
+
+    Отказ — 402 с ценой полного разбора, а не ошибка: по А9 превышение
+    заменяет тизер пейволлом, то есть предложением, а не поломкой.
+    """
+    from ...billing import credits as pair_credits
+
+    covered = await entitlements.check(
+        session, user, "compatibility", partner_id=partner_id
+    )
+    if covered.allowed:
+        return
+    if await pair_credits.teaser_allowed(session, user, partner_id):
+        return
+
+    raise HTTPException(
+        status.HTTP_402_PAYMENT_REQUIRED,
+        detail={
+            "error": "teaser_cap",
+            "message": (
+                "the free preview covers one new person a month — the full "
+                "report about the two of you is $4.99 and stays yours"
+            ),
+            "system": "compatibility",
+            "product": "pair.check",
+            "profile_id": partner_id,
+        },
+    )
+
+
+async def _pair_credit_or_paywall(session, user, partner_id: str) -> None:
+    """Пропустить дальше, если отчёт про этого человека уже оплачен или включён.
+
+    Три состояния, и они разные:
+
+    * **грант на эту пару уже есть** — куплен за $4.99 или выдан кредитом в
+      прошлом месяце. Ничего не тратится: отчёт оплачен один раз и читается
+      всегда, включая четыре его главы и все перечитывания;
+    * **гранта нет, кредит периода цел** — тратится кредит и выписывается такой
+      же бессрочный грант. Дальше эта пара навсегда попадает в первый случай, в
+      том числе после отмены подписки: период, в котором её открыли, оплачен;
+    * **гранта нет и кредит потрачен** — 402 с ценой. Это А7 §4, «вторая
+      проверка в том же цикле», и копирайт на экране обязан звучать как «сверх
+      месячной проверки», а не как «нет доступа»: человек платит нам каждый
+      месяц и должен понимать, за что именно доплачивает.
+
+    Свободный человек без подписки сюда не доходит вовсе — его остановил 402
+    выше по течению, потому что покрыть совместимость ему нечем.
+
+    **И четвёртое состояние, ради которого здесь стоит ранний выход:** доступ
+    пришёл не от плана с включёнными проверками. Старая годовая, недельная,
+    легаси-`live` — они покрывают совместимость целиком и были проданы до того,
+    как «одна в месяц» вообще существовала (А6: ничего не отбираем). Считать им
+    кредит значило бы предъявить пейволл человеку, которому мы обещали иначе, и
+    предъявить именно в тот месяц, когда он решает, продлевать ли.
+    """
+    from ...billing import credits as pair_credits
+
+    if partner_id in await entitlements.unlocked_pairs(session, user):
+        return
+
+    if await pair_credits.ensure_period(session, user) is None:
+        log.info(
+            "account %s opens a pair with no credit-bearing plan — access came "
+            "from a grant that predates the monthly allowance, so nothing is "
+            "counted", user.id,
+        )
+        return
+
+    if await pair_credits.spend(session, user, partner_id) is not None:
+        return
+
+    state = await pair_credits.state(session, user)
+    raise HTTPException(
+        status.HTTP_402_PAYMENT_REQUIRED,
+        detail={
+            # Отдельный код ошибки, а не общий `locked`, и это важнее, чем
+            # кажется: экран, который нарисует «купи подписку» подписчику,
+            # выглядит как поломка биллинга и приводит к отмене, а не к покупке.
+            "error": "beyond_monthly_pair",
+            "message": (
+                "this month's included compatibility report has been used — "
+                "another one is $4.99 and stays yours forever"
+            ),
+            "system": "compatibility",
+            "product": "pair.check",
+            "profile_id": partner_id,
+            "period_end": state["period_end"],
+        },
+    )
 
 
 async def _reader_gender(session, user, payload) -> str | None:

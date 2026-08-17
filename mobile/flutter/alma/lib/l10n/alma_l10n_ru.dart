@@ -2238,7 +2238,7 @@ class LRu extends L {
 
   @override
   String get paywallV3BundleIncludes =>
-      'Натальная карта · нумерология · карта рождения · астрокартография · синтез';
+      'Натальная карта · нумерология · карта рождения · астро­картография · синтез';
 
   @override
   String paywallV3BundleCta(String price) {
@@ -2362,4 +2362,134 @@ class LRu extends L {
   @override
   String get paywallV3StateRestoreDone =>
       'Восстановлено · всё купленное снова открыто';
+
+  @override
+  String paywallV3DoorPlateChapter(String numeral) {
+    return 'глава $numeral';
+  }
+
+  @override
+  String paywallV3DoorTitleSystem(int count, String system) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count главы — твой разбор «$system»',
+      many: '$count глав — твой разбор «$system»',
+      few: '$count главы — твой разбор «$system»',
+      one: '$count глава — твой разбор «$system»',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorTitleAll(String system) {
+    return 'Твой разбор «$system» целиком';
+  }
+
+  @override
+  String get paywallV3DoorPitch =>
+      'Написано по твоим собственным положениям — никогда по шаблону. Расчёт всегда был бесплатным; продаётся написанное.';
+
+  @override
+  String paywallV3DoorCtaUnlock(String price) {
+    return 'Открыть и читать · $price';
+  }
+
+  @override
+  String get paywallV3PlansLink => 'Все планы';
+
+  @override
+  String get paywallV3SubOverline => 'живой слой';
+
+  @override
+  String get paywallV3SubPlateCaption => 'Всё, что меняется каждый день';
+
+  @override
+  String get paywallV3QuotaHeld => 'не потерян — уйдёт, когда ты продолжишь';
+
+  @override
+  String get paywallV3QuotaNote =>
+      'В подписке Alma отвечает на двадцать пять вопросов в месяц — по твоим собственным положениям, никогда по шаблону.';
+
+  @override
+  String get paywallV3QuotaAlsoInside => 'ещё внутри';
+
+  @override
+  String get paywallV3QuotaAlsoInsideList =>
+      'Транзиты и ежедневный гороскоп · твой соляр · одна проверка совместимости в месяц';
+
+  @override
+  String get paywallV3SubRenewalDisclosureQuota =>
+      'Продлевается ежемесячно · отменить можно в любой момент · твой вопрос уйдёт, как только откроется';
+
+  @override
+  String get paywallV3PlansOverline => 'все планы';
+
+  @override
+  String get paywallV3PlansTitle => 'Твоё навсегда — или всё живое';
+
+  @override
+  String get paywallV3PlansOneReading => 'Один разбор';
+
+  @override
+  String get paywallV3PlansAllFiveNote =>
+      'Двадцать шесть глав, скидка двадцать процентов';
+
+  @override
+  String get paywallV3PlansPair => 'Разбор вас двоих';
+
+  @override
+  String get paywallV3PlansPairNote =>
+      'Четыре главы, на каждого человека, сколько захочешь';
+
+  @override
+  String get paywallV3SubTitleShort => 'Вся Alma';
+
+  @override
+  String get paywallV3SubIncludesLine =>
+      'Транзиты и ежедневный гороскоп · соляр · одна проверка совместимости в месяц · 25 вопросов · все пять разборов, пока подписка активна';
+
+  @override
+  String get paywallV3PlansLegal =>
+      'Списывается с Apple ID при подтверждении · подписка продлевается ежемесячно, если не отменить за 24 часа до конца периода · разовые покупки не продлеваются никогда';
+
+  @override
+  String get paywallV3CancelHeader => 'управление подпиской';
+
+  @override
+  String get paywallV3CancelCardCaption => 'тот, что ты читаешь чаще всего';
+
+  @override
+  String paywallV3CancelSaveFact(int chapters, int times, String price) {
+    String _temp0 = intl.Intl.pluralLogic(
+      chapters,
+      locale: localeName,
+      other: 'Эти $chapters главы открыты',
+      many: 'Эти $chapters глав открыты',
+      few: 'Эти $chapters главы открыты',
+      one: 'Эта глава открыта',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      times,
+      locale: localeName,
+      other: '$times раза',
+      many: '$times раз',
+      few: '$times раза',
+      one: '$times раз',
+    );
+    return '$_temp0 $_temp1. За $price они останутся читаемыми и после конца подписки — без всякого продления.';
+  }
+
+  @override
+  String paywallV3CancelSaveFactPlain(String price) {
+    return 'За $price они останутся читаемыми и после конца подписки — без всякого продления.';
+  }
+
+  @override
+  String paywallV3CancelNote(String date) {
+    return 'Отмена откроет настройки Apple ID · подписка работает до $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDate => 'Отмена откроет настройки Apple ID';
 }

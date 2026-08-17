@@ -130,8 +130,9 @@ enum LadderKey {
 /// как густо на экране:
 ///
 /// * [PaywallIntent.door] (P1, P2) — тап по закрытой главе статичного разбора;
-/// * [PaywallIntent.subscription] (P5, P6) — тап по закрытому живому слою или
-///   упёршийся в квоту вопрос;
+/// * [PaywallIntent.subscription] (P5) — тап по закрытому живому слою, и
+///   [PaywallIntent.questionQuota] (P6) — упёршийся в квоту вопрос; полка у них
+///   одна, вид разный;
 /// * [PaywallIntent.pair] (P4) — конец бесплатного тизера «Притяжение»;
 /// * [PaywallIntent.plans] (P7) — тихая ссылка «все планы», единственный экран,
 ///   где видно всё;
@@ -168,32 +169,73 @@ enum PaywallSurface { door, subscription, pair, plans, cancelSave }
 class PaywallIntent {
   /// P1/P2: одна система, одна кнопка, никакой лестницы.
   const PaywallIntent.door(SystemSlug this.system)
-      : surface = PaywallSurface.door;
+      : surface = PaywallSurface.door,
+        questions = false;
 
-  /// P5/P6: живой слой или квота вопросов — продаётся только подписка.
+  /// P5: живой слой — продаётся только подписка.
   const PaywallIntent.subscription()
       : system = null,
-        surface = PaywallSurface.subscription;
+        surface = PaywallSurface.subscription,
+        questions = false;
+
+  /// P6: квота вопросов. **Поверхность та же, что у P5, и это не небрежность.**
+  ///
+  /// Поверхностей в ТЗ §6 пять, и шестой здесь не заводится: полка у обоих
+  /// экранов одна и та же — один план, `sub.monthly`, — то есть [ladderFor]
+  /// обязан ответить им одинаково, а разница живёт в **виде**: V6 продаёт
+  /// живой слой тому, кто ткнул в закрытый блок, V7 отвечает на упёршийся в
+  /// квоту вопрос и обязан показать этот вопрос удержанным. Разведи их
+  /// поверхностями — и лестница получит второй способ сказать «месячный
+  /// план», который однажды разойдётся с первым.
+  ///
+  /// Сам текст вопроса сюда не кладётся: намерение — это про товар, а не про
+  /// то, что человек набрал. Вопрос экран получает от того, кто его открыл.
+  const PaywallIntent.questionQuota()
+      : system = null,
+        surface = PaywallSurface.subscription,
+        questions = true;
 
   /// P4: конец тизера пары. Одна цена, $4.99 за отчёт.
   const PaywallIntent.pair()
       : system = null,
-        surface = PaywallSurface.pair;
+        surface = PaywallSurface.pair,
+        questions = false;
 
   /// P7: единственный экран, где видно всё, — «Навсегда» и «Подписка».
   const PaywallIntent.plans()
       : system = null,
-        surface = PaywallSurface.plans;
+        surface = PaywallSurface.plans,
+        questions = false;
 
   /// P8: спасение отмены. Дверь самой читаемой системы, один раз за жизнь
   /// подписки, с кнопкой «просто отменить» такой же силы.
   const PaywallIntent.cancelSave(SystemSlug this.system)
-      : surface = PaywallSurface.cancelSave;
+      : surface = PaywallSurface.cancelSave,
+        questions = false;
 
   /// Система, вокруг которой открыли экран, — у двери и у спасения отмены.
   final SystemSlug? system;
 
   final PaywallSurface surface;
+
+  /// Пришли ли сюда с потраченной квотой вопросов (P6), а не из живого слоя.
+  final bool questions;
+
+  /// Код поверхности §3 ТЗ — тот, которого сервер ждёт в каждом событии
+  /// монетизации (`alma/funnel.py`, `SURFACES`).
+  ///
+  /// **Считается здесь, а не на экране.** Событие `paywall_shown` без
+  /// поверхности сервер не пишет вовсе, а посчитанное по месту оно разойдётся
+  /// с поверхностью ровно тогда, когда появится второй экран, продающий то же
+  /// самое: `p5` и `p6` — две когорты, и склеенные они отвечают на вопрос
+  /// «какая поверхность продаёт» одним числом, то есть никак.
+  String get surfaceCode => switch (surface) {
+        PaywallSurface.door => 'p2',
+        PaywallSurface.subscription => questions ? 'p6' : 'p5',
+        PaywallSurface.pair => 'p4',
+        PaywallSurface.plans => 'p7',
+        PaywallSurface.cancelSave => 'p8',
+      };
 
   /// Показывать ли больше одной ступени. Только на «Всех планах» — принцип 2
   /// ТЗ: одна цена на экране, лестниц из трёх строк не существует нигде ещё.

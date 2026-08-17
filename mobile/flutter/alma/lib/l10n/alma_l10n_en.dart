@@ -2359,4 +2359,129 @@ class LEn extends L {
   @override
   String get paywallV3StateRestoreDone =>
       'Restored · everything you bought is open again';
+
+  @override
+  String paywallV3DoorPlateChapter(String numeral) {
+    return 'chapter $numeral';
+  }
+
+  @override
+  String paywallV3DoorTitleSystem(int count, String system) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chapters of your $system',
+      one: 'One chapter of your $system',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorTitleAll(String system) {
+    return 'Your $system, all of it';
+  }
+
+  @override
+  String get paywallV3DoorPitch =>
+      'Written from your own positions — never from a template. The calculation was always free; this is the writing.';
+
+  @override
+  String paywallV3DoorCtaUnlock(String price) {
+    return 'Unlock and read · $price';
+  }
+
+  @override
+  String get paywallV3PlansLink => 'All plans';
+
+  @override
+  String get paywallV3SubOverline => 'the living layer';
+
+  @override
+  String get paywallV3SubPlateCaption => 'Everything that changes daily';
+
+  @override
+  String get paywallV3QuotaHeld => 'held — will send when you continue';
+
+  @override
+  String get paywallV3QuotaNote =>
+      'Alma answers thirty a month inside the subscription — from your own placements, never from a template.';
+
+  @override
+  String get paywallV3QuotaAlsoInside => 'also inside';
+
+  @override
+  String get paywallV3QuotaAlsoInsideList =>
+      'Transits and the daily horoscope · your solar return · one compatibility check a month';
+
+  @override
+  String get paywallV3SubRenewalDisclosureQuota =>
+      'Renews monthly · cancel any time · your question sends the moment it opens';
+
+  @override
+  String get paywallV3PlansOverline => 'all plans';
+
+  @override
+  String get paywallV3PlansTitle => 'Yours forever, or everything alive';
+
+  @override
+  String get paywallV3PlansOneReading => 'One reading';
+
+  @override
+  String get paywallV3PlansAllFiveNote =>
+      'Twenty-six chapters, twenty per cent off';
+
+  @override
+  String get paywallV3PlansPair => 'A compatibility report';
+
+  @override
+  String get paywallV3PlansPairNote =>
+      'Four chapters, per person, as many as you like';
+
+  @override
+  String get paywallV3SubTitleShort => 'All of Alma';
+
+  @override
+  String get paywallV3SubIncludesLine =>
+      'Transits and the daily horoscope · solar return · one compatibility check a month · 30 questions · all five readings while active';
+
+  @override
+  String get paywallV3PlansLegal =>
+      'Charged to your Apple ID on confirm · the subscription renews monthly unless cancelled 24 h before the period ends · one-time purchases never renew';
+
+  @override
+  String get paywallV3CancelHeader => 'manage subscription';
+
+  @override
+  String get paywallV3CancelCardCaption => 'the one you read most';
+
+  @override
+  String paywallV3CancelSaveFact(int chapters, int times, String price) {
+    String _temp0 = intl.Intl.pluralLogic(
+      chapters,
+      locale: localeName,
+      other: 'these $chapters chapters',
+      one: 'this chapter',
+    );
+    String _temp1 = intl.Intl.pluralLogic(
+      times,
+      locale: localeName,
+      other: '$times times',
+      one: 'once',
+    );
+    return 'You have opened $_temp0 $_temp1. For $price they stay readable after the subscription ends — no renewal, ever.';
+  }
+
+  @override
+  String paywallV3CancelSaveFactPlain(String price) {
+    return 'For $price they stay readable after the subscription ends — no renewal, ever.';
+  }
+
+  @override
+  String paywallV3CancelNote(String date) {
+    return 'Cancelling opens your Apple ID settings · your subscription runs until $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDate =>
+      'Cancelling opens your Apple ID settings';
 }

@@ -17,7 +17,8 @@ import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
-import '../offer_screen.dart';
+import '../../billing/ladder.dart';
+import '../paywall/paywall_router.dart';
 import 'reading_screen.dart';
 import '../systems/writing_art.dart';
 import 'today_model.dart';
@@ -379,7 +380,7 @@ class _HoroscopePanel extends StatelessWidget {
         const SizedBox(height: 6),
         AlmaActionRow(
           label: l.cabHoroscopeOpen,
-          onTap: () => openOffer(context),
+          onTap: () => openSubscription(context),
         ),
       ];
 
@@ -968,16 +969,18 @@ class _MoonPainter extends CustomPainter {
 
 /* ── продажа ────────────────────────────────────────────────────────────── */
 
-/// Открыть витрину планов.
+/// Открыть пейволл подписки — поверхность **P5**.
 ///
-/// `rootNavigator`, потому что вкладка «Мои системы» держит свой стек, а
-/// витрина — страница поверх всего кабинета, включая бар: продажа не должна
-/// оказаться внутри одной вкладки.
-void openOffer(BuildContext context, {SystemSlug? system}) {
-  Navigator.of(context, rootNavigator: true).push(
-    CupertinoPageRoute(builder: (context) => OfferScreen(system: system)),
-  );
-}
+/// **Живое продаётся из живого.** Всё, что закрыто на «Сегодня», — транзиты,
+/// соляр, глубина дня — принадлежит подписке и только ей: дверей у этих систем
+/// в v3 нет, потому что они пересчитываются, и «навсегда» им не обещают. Раньше
+/// отсюда открывалась лестница целиком, то есть на вопрос «что в этом блоке»
+/// продукт отвечал прайс-листом.
+///
+/// [trigger] — по чему тапнули; уходит в воронку ярлыком.
+Future<void> openSubscription(BuildContext context,
+        {String trigger = 'live_block'}) =>
+    showPaywall(context, const PaywallIntent.subscription(), trigger: trigger);
 
 /// План, объяснённый там, где видно, зачем он.
 ///
@@ -1000,11 +1003,10 @@ class _PlanInvitation extends StatelessWidget {
           kind: AlmaButtonKind.outline,
           fills: false,
           label: l.cabPlansCta,
-          // Без системы: приглашение к плану открывает лестницу планами
-          // вперёд. На нативе здесь стоит `.offer(system: .natal)`, и это
-          // ставит первой ступенью натальную дверь — то есть отвечает на
-          // «покажи планы» ценой одной главы.
-          onTap: () => openOffer(context),
+          // Приглашение ведёт на подписку, а не на лестницу: оно стоит в
+          // закрытой секции живого слоя и обещает именно её — «всё открыто,
+          // каждый день». Лестница в v3 открывается только тихой ссылкой.
+          onTap: () => openSubscription(context, trigger: 'today_invite'),
         ),
       ],
     );
