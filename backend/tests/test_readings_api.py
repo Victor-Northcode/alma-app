@@ -406,8 +406,9 @@ def test_a_greeting_does_not_spend_the_one_welcome_question(api, auth_headers, s
 
 
 #: The four values the two shipped clients decode, copied from them rather than
-#: from us: `ChatTurnKind` in `mobile/ios/Alma/Screens/Alma/ChatPieces.swift`
-#: and `mobile/android/app/src/main/kotlin/ai/pazl/alma/ui/screens/ChatTurnKind.kt`.
+#: from us: `ChatTurnKind` in `mobile/flutter/alma/lib/screens/alma/chat_turn.dart`.
+#: Раньше здесь стояли два натива; они сняты 17 августа 2026 — продукт
+#: собирается только из порта.
 #: `care` is in their vocabulary and not in ours on purpose — branch D4 has a
 #: rule in the prompt and no copy in any of the six languages, so nothing may
 #: emit it until somebody writes that copy.

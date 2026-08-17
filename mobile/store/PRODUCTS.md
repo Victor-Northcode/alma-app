@@ -135,15 +135,17 @@ letter and can contain numbers (0-9), lowercase letters (a-z), underscores (_), 
 ### Приставка решена и менять её нельзя
 
 **Владелец, 17 августа 2026: «как в приложении».** Выбор стоял между `alma.` — тем, что просили
-прежние сборки, — и `ai.pazl.alma.`. Приставка живёт в четырёх местах и уже приведена к одному
-значению:
+прежние сборки, — и `ai.pazl.alma.`. Решение необратимо: переименовать товар после публикации не
+даёт ни один магазин.
 
-* `backend/alma/config.py` — `store_product_prefix`, `ALMA_STORE_PRODUCT_PREFIX`
-* `mobile/ios/Alma/Billing/LadderKey.swift` — `static let prefix`
-* `mobile/android/.../billing/StoreProducts.kt` — `const val PREFIX`
+Приставка живёт в двух местах, и оба сверяются `backend/tests/test_store_ids.py`:
+
+* `backend/alma/config.py` — `store_product_prefix`, переменная `ALMA_STORE_PRODUCT_PREFIX`
 * `mobile/flutter/alma/lib/billing/ladder.dart` — `static const prefix`
 
-`backend/tests/test_store_ids.py` падает, когда любые два из них расходятся.
+Мест было четыре. Два нативных зеркала — `LadderKey.swift` и `StoreProducts.kt` — сняты вместе с
+нативными приложениями 17 августа 2026: продукт собирается только из порта, и сторожить совпадение
+с кодом, который никто не запускает, значит держать красный тест ради архива.
 
 ### Пять файлов, а не четыре
 

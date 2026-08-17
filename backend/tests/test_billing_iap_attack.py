@@ -114,21 +114,25 @@ def test_a_withdrawn_product_id_grants_nothing(store_api, auth_headers, apple):
 _MOBILE = Path(__file__).resolve().parents[2] / "mobile"
 
 
-def _platform_literal(source: Path) -> str:
-    """The `platform` value a client hardcodes into its verify body."""
+def _platform_literals(source: Path) -> set[str]:
+    """Каждое имя платформы, которое клиент вшивает в тело верификации.
+
+    **Читался порознь у двух нативов, теперь у одного порта.** Нативные
+    приложения сняты 17 августа 2026; их строки жили в разных файлах, поэтому
+    тест ходил по двум путям и брал из каждого по одному литералу. В порте обе
+    платформы названы одной строкой (`Platform.isIOS ? … : …`), и правильный
+    вопрос к ней — не «какая», а «каждая ли из названных известна серверу».
+    """
     text = source.read_text()
-    match = re.search(r"platform\s*[:=]\s*\"([a-z]+)\"", text)
-    assert match is not None, f"no platform literal found in {source}"
-    return match.group(1)
+    found = set(re.findall(r"'(appstore|googleplay)'", text))
+    assert found, f"no platform literal found in {source}"
+    return found
 
 
 @pytest.mark.parametrize(
     "source",
-    [
-        _MOBILE / "android/app/src/main/kotlin/ai/pazl/alma/data/AlmaClient.kt",
-        _MOBILE / "ios/Alma/Billing/BillingAPI.swift",
-    ],
-    ids=["android", "ios"],
+    [_MOBILE / "flutter/alma/lib/billing/alma_store.dart"],
+    ids=["flutter"],
 )
 def test_the_platform_name_each_client_sends_resolves_to_an_adapter(source):
     """A store name this backend does not answer is money taken for nothing.
@@ -147,14 +151,22 @@ def test_the_platform_name_each_client_sends_resolves_to_an_adapter(source):
     """
     from alma.billing.provider import BillingUnavailable, provider_for
 
-    platform = _platform_literal(source)
-    try:
-        provider_for(platform)
-    except BillingUnavailable as exc:
-        pytest.fail(
-            f"{source.name} sends platform={platform!r} and /v1/billing/iap/verify "
-            f"answers 400 unknown_platform to it: {exc}"
-        )
+    platforms = _platform_literals(source)
+    # Обе, а не первая попавшаяся: порт называет их одной строкой, и молчаливо
+    # проверив только одну, тест пропустил бы ровно тот случай, ради которого
+    # написан — вторую платформу, о которой сервер не знает.
+    assert platforms == {"appstore", "googleplay"}, (
+        f"{source.name} называет платформы {sorted(platforms)}, а сервер "
+        "отвечает двум — appstore и googleplay"
+    )
+    for platform in sorted(platforms):
+        try:
+            provider_for(platform)
+        except BillingUnavailable as exc:
+            pytest.fail(
+                f"{source.name} sends platform={platform!r} and "
+                f"/v1/billing/iap/verify answers 400 unknown_platform: {exc}"
+            )
 
 
 def test_the_store_refusals_are_distinguishable_from_a_dead_session(store_api, auth_headers):

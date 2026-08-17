@@ -749,21 +749,18 @@ def test_both_apps_send_the_header_this_server_reads():
     from alma.api.deps import ANON_ID_HEADER
 
     root = Path(__file__).resolve().parents[2] / "mobile"
+    # **Один клиент, а не два.** Нативы сняты 17 августа 2026; продукт
+    # собирается только из порта. Пропуск «приложения нет в этой копии» здесь
+    # больше не годится: порт есть всегда, и его отсутствие — поломка дерева.
     clients = {
-        "iOS": (
-            root / "ios" / "Alma" / "Networking" / "AlmaClient.swift",
-            r'static let anonHeader = "([^"]+)"',
-        ),
-        "Android": (
-            root / "android" / "app" / "src" / "main" / "kotlin" / "ai" / "pazl" / "alma"
-            / "data" / "AlmaHttp.kt",
-            r'const val ANON_HEADER = "([^"]+)"',
+        "Flutter": (
+            root / "flutter" / "alma" / "lib" / "net" / "alma_client.dart",
+            r"static const anonHeader = '([^']+)'",
         ),
     }
 
     for platform, (source, pattern) in clients.items():
-        if not source.exists():
-            pytest.skip(f"the {platform} app is not in this checkout")
+        assert source.exists(), f"{platform}: {source} пропал из дерева"
         declared = re.search(pattern, source.read_text(encoding="utf-8"))
         assert declared, f"{platform} no longer declares the anonymous-id header"
         assert declared.group(1).lower() == ANON_ID_HEADER.lower(), platform
@@ -816,25 +813,18 @@ def test_neither_app_calls_a_minting_route_before_it_has_a_token():
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[2] / "mobile"
+    # См. выше: клиент один.
     apps = {
-        "iOS": (
-            root / "ios" / "Alma" / "State" / "AlmaSessionModel.swift",
-            "func start() async {",
-            "guard client.hasAccount else {",
-            "client.session()",
-        ),
-        "Android": (
-            root / "android" / "app" / "src" / "main" / "kotlin" / "ai" / "pazl" / "alma"
-            / "core" / "SessionHolder.kt",
-            "fun start(",
-            "!client.hasSession",
-            "client.session()",
+        "Flutter": (
+            root / "flutter" / "alma" / "lib" / "state" / "session.dart",
+            "Future<void> start(",
+            "if (!await client.hasAccount)",
+            "client.refresh()",
         ),
     }
 
     for platform, (source, launch, guard, mints) in apps.items():
-        if not source.exists():
-            pytest.skip(f"the {platform} app is not in this checkout")
+        assert source.exists(), f"{platform}: {source} пропал из дерева"
         text = source.read_text(encoding="utf-8")
 
         for marker in (launch, guard, mints):
@@ -844,10 +834,26 @@ def test_neither_app_calls_a_minting_route_before_it_has_a_token():
             f"{platform}: the launch path reaches a minting call before it has "
             "checked whether this install already has a token"
         )
-        # And the guard has to *stop*, not merely observe. A branch that logs
-        # and falls through is the bug with a comment on it.
-        assert "return" in text[text.index(guard) : text.index(mints)], (
-            f"{platform}: the token check does not return before the minting call"
+        # **И проверка обязана распоряжаться вызовом, а не просто стоять
+        # перед ним.** У нативов это выражалось ранним выходом (`guard … else
+        # { return }`), и тест искал слово `return` между проверкой и вызовом.
+        # В порте форма другая и по смыслу строже: чеканящий вызов стоит
+        # **внутри** проверки — `if (!await client.hasAccount) await
+        # client.refresh();`, — то есть он вообще не выполняется, когда токен
+        # уже есть. Искать здесь `return` значило бы сторожить синтаксис
+        # снятого приложения.
+        #
+        # Проверяем то же самое по существу: между проверкой и вызовом нет
+        # ничего, кроме `await` — они одна инструкция, и разорвать их, не
+        # тронув эту строку, нельзя.
+        between = text[text.index(guard) + len(guard) : text.index(mints)]
+        assert between.strip() in ("", "await"), (
+            f"{platform}: между проверкой токена и чеканящим вызовом появилось "
+            f"{between.strip()!r} — вызов больше не принадлежит проверке"
+        )
+        # И ни одного такого вызова выше проверки.
+        assert mints not in text[: text.index(guard)], (
+            f"{platform}: {mints!r} зовётся до того, как спрошено, есть ли токен"
         )
 
 

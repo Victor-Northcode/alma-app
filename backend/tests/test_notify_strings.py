@@ -17,6 +17,7 @@ step with the one.
 from __future__ import annotations
 
 import re
+import json
 from pathlib import Path
 
 import pytest
@@ -25,7 +26,17 @@ from alma.engine.transits import NATAL_WEIGHT, TRANSIT_ORBS
 from alma.i18n.placements import LOCALES, PLACEMENTS, placement
 from alma.notify import message
 
-ANDROID = Path(__file__).resolve().parents[2] / "mobile/android/app/src/main/res"
+#: Каталог строк клиента. **Порт, а не натив.**
+#:
+#: Читалcя `mobile/android/.../res`, пока Android был отдельным приложением. С
+#: 17 августа 2026 продукт один и написан на Flutter, нативы сняты, и зеркал у
+#: сервера снова два: он сам и порт.
+#:
+#: Переписать было обязательно, а не «можно бы». Сверка молча пропускалась,
+#: если каталога нет (`pytest.skip`), — то есть, удалив натив, мы бы не уронили
+#: ни одного теста и **потеряли бы сторожа, ничего не заметив**. Именно этот
+#: сторож поймал расхождение, ради которого файл и написан.
+FLUTTER = Path(__file__).resolve().parents[2] / "mobile/flutter/alma/lib/l10n"
 
 #: What the client calls the placements it shows, and what we call them.
 #:
@@ -37,10 +48,10 @@ ANDROID = Path(__file__).resolve().parents[2] / "mobile/android/app/src/main/res
 #: chart and in a push about that chart is exactly the pair this file exists
 #: to hold together, so the list is now every such word rather than three.
 SHARED = {
-    "cabinet_sun": "sun",
-    "cabinet_moon": "moon",
-    "cabinet_ascendant": "ascendant",
-    "body_true_node": "true_node",
+    "cabBodySun": "sun",
+    "cabBodyMoon": "moon",
+    "cabBodyAscendant": "ascendant",
+    "cabBodyTrueNode": "true_node",
 }
 
 #: Android's directory suffix per locale. `values` with no suffix is English.
@@ -50,10 +61,13 @@ SHARED = {
 #: `values-ru` since the seventh locale landed — but this map never grew the
 #: row, so the entire Russian half of "one source, two mirrors" was asserted
 #: nowhere. That is how the node drifted without a red test.
-ANDROID_DIRS = {
-    "en": "values", "es": "values-es", "de": "values-de",
-    "it": "values-it", "fr": "values-fr", "pt-BR": "values-pt-rBR",
-    "ru": "values-ru",
+#: Локаль → файл каталога. У порта имена проще нативных: `values-pt-rBR`
+#: превратился в `app_pt.arb`, и седьмая строка больше не может потеряться при
+#: добавлении языка — файл называется так же, как локаль.
+FLUTTER_FILES = {
+    "en": "app_en.arb", "es": "app_es.arb", "de": "app_de.arb",
+    "it": "app_it.arb", "fr": "app_fr.arb", "pt-BR": "app_pt.arb",
+    "ru": "app_ru.arb",
 }
 
 
@@ -139,7 +153,7 @@ def test_the_valve_line_reads_as_a_quiet_week_rather_than_an_announcement():
     assert "%3$@" not in line, "a quiet week is not about a moment, so it carries no time"
 
 
-@pytest.mark.parametrize("locale", sorted(ANDROID_DIRS))
+@pytest.mark.parametrize("locale", sorted(FLUTTER_FILES))
 def test_the_server_agrees_with_the_words_the_app_already_shows(locale):
     """One source, two mirrors — asserted rather than hoped for.
 
@@ -148,14 +162,14 @@ def test_the_server_agrees_with_the_words_the_app_already_shows(locale):
     different word from the screen it opens, the person would reasonably
     conclude they were two different things.
     """
-    path = ANDROID / ANDROID_DIRS[locale] / "strings.xml"
-    if not path.is_file():
-        pytest.skip("the Android client is not in this checkout")
-    body = path.read_text()
-    for android_key, ours in SHARED.items():
-        found = re.search(rf'<string name="{android_key}">(.*?)</string>', body)
-        assert found, f"{android_key} is gone from {path.name}"
-        assert found.group(1) == PLACEMENTS[ours][locale], (
-            f"{ours} in {locale}: the app says {found.group(1)!r} and the "
+    path = FLUTTER / FLUTTER_FILES[locale]
+    # Пропуска здесь больше нет намеренно. Порт — единственный клиент продукта;
+    # его каталога не может не быть, и «нет файла» это поломка дерева, а не
+    # обстоятельство, под которое сторожу следует прогибаться.
+    catalogue = json.loads(path.read_text(encoding="utf-8"))
+    for key, ours in SHARED.items():
+        assert key in catalogue, f"{key} is gone from {path.name}"
+        assert catalogue[key] == PLACEMENTS[ours][locale], (
+            f"{ours} in {locale}: the app says {catalogue[key]!r} and the "
             f"server would send {PLACEMENTS[ours][locale]!r}"
         )

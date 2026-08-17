@@ -47,9 +47,7 @@ from alma.config import settings
 #: The repository root, from `backend/tests/` upward.
 ROOT = Path(__file__).resolve().parents[2]
 
-LADDER_KEY = ROOT / "mobile/ios/Alma/Billing/LadderKey.swift"
-STORE_PRODUCTS = ROOT / "mobile/android/app/src/main/kotlin/ai/pazl/alma/billing/StoreProducts.kt"
-STOREKIT = ROOT / "mobile/ios/Alma.storekit"
+STOREKIT = ROOT / "mobile/flutter/alma/ios/Alma.storekit"
 PRODUCTS_MD = ROOT / "mobile/store/PRODUCTS.md"
 FLUTTER_LADDER = ROOT / "mobile/flutter/alma/lib/billing/ladder.dart"
 
@@ -57,7 +55,7 @@ FLUTTER_LADDER = ROOT / "mobile/flutter/alma/lib/billing/ladder.dart"
 #: checkout of the backend alone has nothing to read. Skipping is honest;
 #: failing would train somebody to ignore a red suite.
 requires_mobile = pytest.mark.skipif(
-    not (LADDER_KEY.exists() and STORE_PRODUCTS.exists() and STOREKIT.exists()),
+    not (FLUTTER_LADDER.exists() and STOREKIT.exists()),
     reason="the mobile sources are not in this checkout",
 )
 
@@ -65,22 +63,6 @@ requires_mobile = pytest.mark.skipif(
 def catalogue_keys() -> set[str]:
     return set(PRODUCTS)
 
-
-def ladder_keys() -> set[str]:
-    """The `case`s of `LadderKey`, whose raw value is the catalogue key.
-
-    A case with no `= "…"` is its own name, which is why the fallback is the
-    identifier — though in v3 every case carries a raw value, because no
-    catalogue key is a legal Swift identifier any more.
-    """
-    source = LADDER_KEY.read_text()
-    # Only the enum body: `var` and `func` below it mention no cases, but a
-    # doc-comment further down might.
-    body = source.split("enum LadderKey", 1)[1]
-    found: set[str] = set()
-    for name, raw in re.findall(r'^\s*case\s+(\w+)(?:\s*=\s*"([^"]+)")?', body, re.M):
-        found.add(raw or name)
-    return found
 
 
 def flutter_keys() -> set[str]:
@@ -90,28 +72,6 @@ def flutter_keys() -> set[str]:
     return set(re.findall(r"^\s*\w+\('([a-z.\-]+)'", body, re.M))
 
 
-def android_keys() -> set[str]:
-    """Every catalogue key Android names.
-
-    `AlmaSystem.ALL` is deliberately not folded in any more: a system slug is
-    not a product, and `StoreProducts.productId("natal")` now produces an id no
-    console has.
-    """
-    source = STORE_PRODUCTS.read_text()
-    consts = set(re.findall(r'const val \w+: String = "([a-z.\-_]+)"', source))
-    consts.discard(settings().store_product_prefix)  # PREFIX is not a key
-    return consts
-
-
-def android_all_set() -> set[str]:
-    """What `StoreProducts.ALL` actually enumerates, by constant name."""
-    source = STORE_PRODUCTS.read_text()
-    block = re.search(r"val ALL: Set<String> =\s*(.+?)\n\n", source, re.S)
-    assert block, "StoreProducts.ALL is no longer in the shape this test reads"
-    names = set(re.findall(r"\b([A-Z][A-Z_]+)\b", block.group(1)))
-    names.discard("ALL")
-    literal = dict(re.findall(r'const val (\w+): String = "([a-z.\-_]+)"', source))
-    return {literal[n] for n in names if n in literal}
 
 
 def storekit_ids() -> set[str]:
@@ -145,25 +105,12 @@ def id_for(key: str, prefix: str) -> str:
     return prefix + key.replace("-", "_")
 
 
-@requires_mobile
-def test_the_ios_ladder_knows_every_row_it_can_sell() -> None:
-    assert ladder_keys() == catalogue_keys()
-
 
 @requires_mobile
 def test_the_flutter_ladder_knows_every_row_it_can_sell() -> None:
     assert flutter_keys() == catalogue_keys()
 
 
-@requires_mobile
-def test_the_android_constants_know_every_catalogue_row() -> None:
-    assert android_keys() == catalogue_keys()
-
-
-@requires_mobile
-def test_androids_all_set_holds_what_it_says_it_holds() -> None:
-    # It says: "Every key backend/alma/billing/catalogue.py knows."
-    assert android_all_set() == catalogue_keys()
 
 
 @requires_mobile
@@ -213,8 +160,13 @@ def test_the_sheet_somebody_types_from_lists_every_catalogue_row() -> None:
 
 
 @requires_mobile
-def test_the_prefix_has_one_value_in_three_places() -> None:
+def test_the_prefix_has_one_value_in_two_places() -> None:
+    """Сервер и порт. Нативов больше нет — их строки сняты вместе с ними.
+
+    Мест было пять, стало три, и это не ослабление: те два зеркала принадлежали
+    приложениям, которых продукт больше не собирает. Сверять их значило бы
+    сторожить совпадение с кодом, который никто не запускает.
+    """
     prefix = settings().store_product_prefix
-    assert f'static let prefix = "{prefix}"' in LADDER_KEY.read_text()
-    assert f'const val PREFIX: String = "{prefix}"' in STORE_PRODUCTS.read_text()
     assert f"static const prefix = '{prefix}'" in FLUTTER_LADDER.read_text()
+    assert prefix in PRODUCTS_MD.read_text()
