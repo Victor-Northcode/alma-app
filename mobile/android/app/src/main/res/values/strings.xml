@@ -320,7 +320,7 @@
     <string-array name="journey_rules">
         <item>One chapter at a time. Sixteen at once is noise.</item>
         <item>When two systems disagree, don\'t pick a winner. That\'s the material.</item>
-        <item>Ask me in your own words. Three questions are free.</item>
+        <item>Ask in your own words. Your first question is free.</item>
     </string-array>
     <string name="paywall_unverified">Google took the payment and we can’t confirm it yet. Nothing is lost — it opens by itself as soon as we can, and if we never can, Google refunds it within three days.</string>
     <string name="cabinet_good_afternoon">Good afternoon,</string>
@@ -589,4 +589,18 @@
     <string name="journey_gender_male">Male</string>
     <string name="journey_gender_skip">Prefer not to say</string>
     <string name="all_alma_pill">All of Alma</string>
+
+    <!-- The daylight-saving fork: the clock went back that night and the wall
+         time happened twice. Ported from the Flutter catalogues, where these
+         ten strings were already translated into all seven languages. -->
+    <string name="journey_dst_overline">about your birth time</string>
+    <string name="journey_dst_title">That night, %1$s happened twice</string>
+    <string name="journey_dst_body">Clocks were set back in %1$s on %2$s. Alma will not flip a coin about your sky — which %3$s is yours?</string>
+    <string name="journey_dst_earlier">The earlier one</string>
+    <string name="journey_dst_earlier_sub">%1$s on the summer clock · %2$s</string>
+    <string name="journey_dst_later">The later one</string>
+    <string name="journey_dst_later_sub">%1$s on the winter clock · %2$s, %3$s after</string>
+    <string name="journey_dst_footer">If nobody remembers, pick either — the houses shift by %1$s and you can change it in Settings.</string>
+    <string name="journey_dst_delta_hour">an hour</string>
+    <string name="journey_dst_delta_half_hour">30 minutes</string>
 </resources>

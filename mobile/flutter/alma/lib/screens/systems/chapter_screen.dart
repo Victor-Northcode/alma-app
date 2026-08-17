@@ -35,10 +35,26 @@ import '../../state/session.dart';
 /// задемпфированной резинки. Android-порт в своё время сравнивал те же метки с
 /// сырой протяжкой — и то же движение руки листало там и не листало на iOS.
 class ChapterScreen extends StatefulWidget {
-  const ChapterScreen({super.key, required this.system, required this.chapter});
+  const ChapterScreen({
+    super.key,
+    required this.system,
+    required this.chapter,
+    this.partner,
+  });
 
   final SystemSlug system;
   final String chapter;
+
+  /// Кого сравнивать — для глав совместимости.
+  ///
+  /// **Экран обязан уметь это сказать, иначе он ломается на втором человеке.**
+  /// Сервер подставляет партнёра сам, но только пока сохранённый человек ровно
+  /// один; при двух и более он отвечает 422 `partner_required` — и тот, у кого
+  /// людей уже двое, читал «добавь человека». `null` значит «не сказано», и
+  /// тогда берётся тот же человек, против которого экран системы посчитал
+  /// колесо ([_partnerId]): текст главы и рисунок над оглавлением обязаны быть
+  /// про одну и ту же пару.
+  final Profile? partner;
 
   @override
   State<ChapterScreen> createState() => _ChapterScreenState();
@@ -208,6 +224,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
         system: widget.system,
         chapter: _showing,
         locale: session.locale,
+        partnerProfileId: _partnerId(session),
       );
       if (mounted) {
         // Пергамент появляется вместе с текстом — и бар вместе с ним. Но
@@ -231,6 +248,21 @@ class _ChapterScreenState extends State<ChapterScreen> {
         });
       }
     }
+  }
+
+  /// Кого сравнивать в этой главе — и только для совместимости.
+  ///
+  /// **Первый сохранённый, а не «сервер разберётся».** Разберётся он ровно до
+  /// второго человека: `_partner` в `readings.py` подставляет партнёра только
+  /// при `len(others) == 1`, иначе 422. При этом экран системы считает колесо
+  /// против `session.people.firstOrNull` — здесь то же правило слово в слово,
+  /// потому что глава и рисунок над её оглавлением обязаны быть про одну пару.
+  ///
+  /// Пусто, когда людей нет вовсе: тогда 422 приходит по делу, и экран рисует
+  /// дверь «добавить человека», а не молчит.
+  String? _partnerId(AlmaSession session) {
+    if (widget.system != SystemSlug.compatibility) return null;
+    return (widget.partner ?? session.people.firstOrNull)?.id;
   }
 
   /// Вернулись с витрины. Право могло измениться — перечитываем оглавление у

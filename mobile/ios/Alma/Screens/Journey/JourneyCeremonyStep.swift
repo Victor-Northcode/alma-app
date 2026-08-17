@@ -24,6 +24,10 @@ struct StepCeremony: View {
     /// Which beat is showing, 1…8.
     @State private var beat: Int = 1
 
+    /// The eight have played out. Kept apart from leaving, because leaving also
+    /// waits on the save — see `leaveIfBothFinished`.
+    @State private var played = false
+
     private static let beats = 8
 
     var body: some View {
@@ -77,6 +81,25 @@ struct StepCeremony: View {
             journey.begin(with: session)
             await play()
         }
+        // Two parties can be the last to finish and neither knows which it is:
+        // the beats are a fixed nine and a half seconds, the save is not, and a
+        // scene that walked out before the server answered would land somebody
+        // in an empty cabinet. Whichever arrives second calls this and leaves.
+        .onChange(of: played) { _, _ in leaveIfBothFinished() }
+        .onChange(of: journey.working) { _, _ in leaveIfBothFinished() }
+        .onChange(of: journey.fork == nil) { _, _ in leaveIfBothFinished() }
+    }
+
+    /// Already on the way out. Two parties race to call the line below and both
+    /// may win in the same runloop turn; a second `onNext` would push the tail
+    /// of the journey twice.
+    @State private var leaving = false
+
+    private func leaveIfBothFinished() {
+        guard played, !journey.working, journey.fork == nil, !leaving else { return }
+        leaving = true
+        AlmaHaptics.arrival()
+        onNext()
     }
 
     /// The eight beats, then a held breath, then the portrait.
@@ -87,6 +110,11 @@ struct StepCeremony: View {
     /// — which is what happens the moment somebody taps "skip the ceremony".
     private func play() async {
         for next in 2...Self.beats {
+            // **The fork pauses the beats; it does not restart them.** `beat`
+            // survives the wait, so answering the question resumes the ceremony
+            // where it stood rather than replaying nine seconds somebody has
+            // already watched.
+            await waitOutTheFork()
             guard (try? await Task.sleep(for: .milliseconds(1150))) != nil else { return }
             withAnimation(AlmaMotion.ui) { beat = next }
             // One soft tick per system lighting — the sky arriving in the
@@ -94,9 +122,22 @@ struct StepCeremony: View {
             // times, because eight things are genuinely happening.
             AlmaHaptics.tick()
         }
+        await waitOutTheFork()
         guard (try? await Task.sleep(for: .milliseconds(1400))) != nil else { return }
-        AlmaHaptics.arrival()
-        onNext()
+        played = true
+        leaveIfBothFinished()
+    }
+
+    /// Stand still while a question is on screen.
+    ///
+    /// Polled rather than awaited on a continuation because there is exactly one
+    /// waiter and the wait is measured in the seconds a person takes to read two
+    /// options — a quarter-second granularity is invisible, and a continuation
+    /// stored in the model would be one more thing to leak if the cover closes.
+    private func waitOutTheFork() async {
+        while journey.fork != nil {
+            guard (try? await Task.sleep(for: .milliseconds(250))) != nil else { return }
+        }
     }
 
     private var progressBar: some View {

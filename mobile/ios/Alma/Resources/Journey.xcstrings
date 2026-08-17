@@ -1822,6 +1822,486 @@
         }
       }
     },
+    "journey.dst.body": {
+      "comment": "%1$@ city, %2$@ the date the clocks changed, %3$@ the wall-clock time.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am %2$@ wurden in %1$@ die Uhren zurück­gestellt. Alma wirft über deinen Himmel keine Münze — welche %3$@ ist deine?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clocks were set back in %1$@ on %2$@. Alma will not flip a coin about your sky — which %3$@ is yours?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El %2$@ en %1$@ se atrasaron los relojes. Alma no echará tu cielo a cara o cruz — ¿cuál de las %3$@ es la tuya?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le %2$@ à %1$@, les horloges ont été reculées. Alma ne jouera pas ton ciel à pile ou face — quel %3$@ est le tien ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il %2$@ a %1$@ gli orologi sono stati portati indietro. Alma non tira una moneta sul tuo cielo — quale %3$@ è la tua?"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em %2$@, em %1$@, os relógios foram atrasados. A Alma não vai tirar seu céu na moeda — qual %3$@ é o seu?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ в %1$@ переводили часы назад. Alma не станет подбрасывать монетку о твоём небе — какое из двух %3$@ твоё?"
+          }
+        }
+      }
+    },
+    "journey.dst.deltaHalfHour": {
+      "comment": "The gap between the two instants, where the zone shifts by half an hour.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 Minuten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 minutes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 minutos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 minutes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 minuti"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 minutos"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 минут"
+          }
+        }
+      }
+    },
+    "journey.dst.deltaHour": {
+      "comment": "The gap between the two instants, when it is a whole hour.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "eine Stunde"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "an hour"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "una hora"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "60 minutes"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "un'ora"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "uma hora"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "час"
+          }
+        }
+      }
+    },
+    "journey.dst.earlier": {
+      "comment": "The first of the two instants.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die frühere"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier one"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La primera"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La première"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La prima"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A primeira"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Более раннее"
+          }
+        }
+      }
+    },
+    "journey.dst.earlierSub": {
+      "comment": "%1$@ the wall-clock time, %2$@ the zone abbreviation that night.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nach Sommerzeit · %2$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ on the summer clock · %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "las %1$@ en horario de verano · %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ à l'heure d'été · %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "le %1$@ con l'ora legale · %2$@"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no horário de verão · %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ по летнему времени · %2$@"
+          }
+        }
+      }
+    },
+    "journey.dst.footer": {
+      "comment": "%1$@ the gap in words. Nobody is left without an exit.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn sich niemand erinnert, wähl irgendeine — die Häuser verschieben sich um %1$@, und in den Einstellungen lässt es sich ändern."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If nobody remembers, pick either — the houses shift by %1$@ and you can change it in Settings."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si nadie lo recuerda, elige cualquiera — las casas se desplazan %1$@ y puedes cambiarlo en Ajustes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si personne ne s'en souvient, choisis l'une ou l'autre — les maisons se décalent de %1$@ et tu pourras le changer dans les Réglages."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se nessuno lo ricorda, scegline una — le case si spostano di %1$@ e puoi cambiarlo nelle Impostazioni."
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se ninguém lembra, escolha qualquer uma — as casas se deslocam %1$@ e você pode mudar depois nos Ajustes."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Если никто не помнит — выбери любое: дома сдвинутся на %1$@, а изменить выбор можно в настройках."
+          }
+        }
+      }
+    },
+    "journey.dst.later": {
+      "comment": "The second of the two instants.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die spätere"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The later one"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La segunda"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La seconde"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La seconda"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A segunda"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Более позднее"
+          }
+        }
+      }
+    },
+    "journey.dst.laterSub": {
+      "comment": "%1$@ the wall-clock time, %2$@ the zone abbreviation, %3$@ the gap in words.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nach Winterzeit · %2$@, %3$@ später"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ on the winter clock · %2$@, %3$@ after"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "las %1$@ en horario de invierno · %2$@, %3$@ después"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ à l'heure d'hiver · %2$@, %3$@ plus tard"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "le %1$@ con l'ora solare · %2$@, %3$@ dopo"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no horário de inverno · %2$@, %3$@ depois"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ по зимнему времени · %2$@, %3$@ спустя"
+          }
+        }
+      }
+    },
+    "journey.dst.overline": {
+      "comment": "The overline over the daylight-saving fork.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "über deine Geburtszeit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "about your birth time"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sobre tu hora de nacimiento"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sur ton heure de naissance"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sulla tua ora di nascita"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sobre sua hora de nascimento"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "о времени твоего рождения"
+          }
+        }
+      }
+    },
+    "journey.dst.title": {
+      "comment": "%1$@ is the wall-clock time they gave.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In jener Nacht gab es %1$@ zweimal"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That night, %1$@ happened twice"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esa noche, las %1$@ ocurrieron dos veces"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette nuit-là, %1$@ a existé deux fois"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quella notte le %1$@ sono esistite due volte"
+          }
+        },
+        "pt-BR": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naquela noite, %1$@ aconteceu duas vezes"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "В ту ночь %1$@ было дважды"
+          }
+        }
+      }
+    },
     "journey.freeChapterLabel": {
       "comment": "Above the one chapter of the matched system that costs nothing.",
       "extractionState": "manual",

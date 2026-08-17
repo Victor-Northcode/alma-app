@@ -627,5 +627,14 @@
   "chatReadingHouse": "je lis ta {house} maison…",
   "chatOpeningBody": "j'ouvre {body}…",
   "chatFromChapter": "Lis le chapitre d'où ça vient — {chapter}",
-  "chatNotTemplate": "Je réponds depuis ta carte, jamais d'après un modèle."
+  "chatNotTemplate": "Je réponds depuis ta carte, jamais d'après un modèle.",
+  "scrChatSwipeForTabs": "Balaie vers le haut pour les onglets",
+  "cabCompatTwoSkies": "Deux ciels, une comparaison",
+  "cabCompatBulletContacts": "Chaque contact entre les deux cartes, avec son orbe exact",
+  "cabCompatBulletHouses": "Où leurs planètes tombent dans tes maisons — et les tiennes dans les leurs",
+  "cabCompatBulletComposite": "La carte propre de la relation — le ciel de vous deux en un seul",
+  "cabLegalEffective": "En vigueur depuis le {p1}",
+  "cabPlanDeleteMismatchGuest": "Ce n'est pas le code de ce compte.",
+  "paywallArtCaption": "Chaque chapitre s'ouvre sur sa propre planche — peinte pour ce jeu.",
+  "cabPlanCancelPeriodEnds": "Ton forfait reste actif jusqu'au {date}."
 }

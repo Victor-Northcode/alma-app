@@ -313,7 +313,7 @@
     <string-array name="journey_rules">
         <item>Un capítulo cada vez. Dieciséis de golpe es ruido.</item>
         <item>Cuando dos sistemas no coinciden, no elijas ganador. Ahí está el material.</item>
-        <item>Pregúntame con tus palabras. Tres preguntas son gratis.</item>
+        <item>Pregunta con tus palabras. La primera pregunta es gratis.</item>
     </string-array>
     <string name="paywall_unverified">Google ya ha cobrado el pago y todavía no hemos podido confirmarlo. No se pierde nada — se abre solo en cuanto podamos, y si nunca podemos, Google te lo devuelve en tres días.</string>
     <string name="cabinet_good_afternoon">Buenas tardes,</string>
@@ -530,4 +530,15 @@
     <string name="journey_gender_male">Hombre</string>
     <string name="journey_gender_skip">Prefiero no decirlo</string>
     <string name="all_alma_pill">Toda Alma</string>
+
+    <string name="journey_dst_overline">sobre tu hora de nacimiento</string>
+    <string name="journey_dst_title">Esa noche, las %1$s ocurrieron dos veces</string>
+    <string name="journey_dst_body">El %2$s en %1$s se atrasaron los relojes. Alma no echará tu cielo a cara o cruz — ¿cuál de las %3$s es la tuya?</string>
+    <string name="journey_dst_earlier">La primera</string>
+    <string name="journey_dst_earlier_sub">las %1$s en horario de verano · %2$s</string>
+    <string name="journey_dst_later">La segunda</string>
+    <string name="journey_dst_later_sub">las %1$s en horario de invierno · %2$s, %3$s después</string>
+    <string name="journey_dst_footer">Si nadie lo recuerda, elige cualquiera — las casas se desplazan %1$s y puedes cambiarlo en Ajustes.</string>
+    <string name="journey_dst_delta_hour">una hora</string>
+    <string name="journey_dst_delta_half_hour">30 minutos</string>
 </resources>

@@ -37,7 +37,17 @@ enum AlmaError: Error, Sendable, Equatable {
 
     /// 409 `ambiguous_birth_time`. The clock went back and the local time they
     /// gave happened twice. Both instants are offered; the person picks.
-    case ambiguousBirthTime(message: String, options: [AmbiguityOption])
+    ///
+    /// **A question, not a fault.** It is the one refusal in this enum the
+    /// server raises on purpose: it will not flip a coin about a sky, because a
+    /// coin flipped here lands in the houses, in the solar return and in a chart
+    /// somebody is later asked to pay for.
+    case ambiguousBirthTime(message: String, fork: BirthTimeFork)
+
+    /// 422 `partner_required`. A compatibility reading with nobody to read it
+    /// against. Its own case because the answer is a door — the people screen —
+    /// and `.invalid` renders its message as flat text with nothing to tap.
+    case partnerRequired(message: String)
 
     /// The free three-a-day, or a door's fifteen, are used up.
     case questionLimit(message: String, allowance: Int)
@@ -93,6 +103,41 @@ enum AlmaError: Error, Sendable, Equatable {
         let choice: String
         /// The resolved UTC instant, ISO-8601.
         let utc: String
+        /// What the clock was called that night — CEST, CET, EDT.
+        ///
+        /// The only thing that tells two identical wall-clock times apart on a
+        /// screen, and it has to come from the server: a phone carries no
+        /// zone-history database to work out which abbreviation was in force in
+        /// 1988.
+        var abbreviation: String = ""
+        /// This instant's offset from UTC, in hours.
+        var offsetHours: Double = 0
+    }
+
+    /// Everything the fork screen needs to ask its question.
+    ///
+    /// A type rather than a bare array because the screen needs what a plain
+    /// refusal does not carry: two instants with the names the clock wore that
+    /// night, and the date it moved. Without it those would be a sentence that
+    /// had to be parsed back apart.
+    struct BirthTimeFork: Sendable, Equatable, Codable {
+        let options: [AmbiguityOption]
+        /// `YYYY-MM-DD`, or empty when the server did not name it — the screen
+        /// then asks without the date rather than inventing one.
+        var transitionLocalDate: String = ""
+
+        var earlier: AmbiguityOption? { options.first { $0.choice == "earlier" } }
+        var later: AmbiguityOption? { options.first { $0.choice == "later" } }
+
+        /// How far apart the two instants are, in hours.
+        ///
+        /// A number and not the word "hour": half-hour transitions exist — Lord
+        /// Howe Island and its like — and a caption confidently naming an hour
+        /// would simply be untrue there.
+        var gapHours: Double? {
+            guard let earlier, let later else { return nil }
+            return earlier.offsetHours - later.offsetHours
+        }
     }
 }
 
@@ -109,6 +154,7 @@ extension AlmaError {
         case .locked(_, _, let message),
              .needsBirthTime(let message),
              .ambiguousBirthTime(let message, _),
+             .partnerRequired(let message),
              .questionLimit(let message, _),
              .needsEmail(let message),
              .unauthenticated(let message),
@@ -155,8 +201,9 @@ extension AlmaError {
         case .offline, .unavailable, .http, .malformedResponse: true
         // `.refused` is not retryable: asking the same question again produces
         // the same refusal, and on the chat route it has already been charged.
-        case .locked, .needsBirthTime, .ambiguousBirthTime, .questionLimit,
-             .needsEmail, .unauthenticated, .accountDeleted, .invalid, .refused: false
+        case .locked, .needsBirthTime, .ambiguousBirthTime, .partnerRequired,
+             .questionLimit, .needsEmail, .unauthenticated, .accountDeleted,
+             .invalid, .refused: false
         }
     }
 }

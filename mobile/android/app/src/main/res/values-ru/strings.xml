@@ -213,7 +213,7 @@
     <string name="paywall_archive_note">Все восемь систем — одна покупка.</string>
     <string name="paywall_archive_upgrade_note">Цена уже учитывает купленную систему.</string>
     <string name="paywall_everything_year">Вся Alma — на год</string>
-    <string name="paywall_everything_month">Вся Alma — на месяц</string>
+    <string name="paywall_everything_month">Всё живое — на месяц</string>
     <string name="paywall_one_time_note">Один платёж.</string>
     <string name="paywall_renews_year">Продлевается каждый год, пока не отменишь, в Google Play.</string>
     <string name="paywall_renews_month">Продлевается каждый месяц, пока не отменишь, в Google Play.</string>
@@ -296,7 +296,7 @@
     <string-array name="journey_rules">
         <item>По одной главе за раз. Шестнадцать сразу — это шум.</item>
         <item>Когда две системы расходятся, не выбирай победителя. Это и есть материал.</item>
-        <item>Спрашивай меня своими словами. Три вопроса бесплатно.</item>
+        <item>Спрашивай своими словами. Первый вопрос — бесплатно.</item>
     </string-array>
     <string name="paywall_unverified">Google Play принял платёж, но покупку пока не удалось подтвердить. Доступ откроется после подтверждения; если этого не произойдёт, напиши нам или в поддержку Google Play.</string>
     <string name="cabinet_good_afternoon">Добрый день,</string>
@@ -507,4 +507,15 @@
     <string name="journey_gender_male">Мужской</string>
     <string name="journey_gender_skip">Не скажу</string>
     <string name="all_alma_pill">Вся Alma</string>
+
+    <string name="journey_dst_overline">о времени твоего рождения</string>
+    <string name="journey_dst_title">В ту ночь %1$s было дважды</string>
+    <string name="journey_dst_body">%2$s в %1$s переводили часы назад. Alma не станет подбрасывать монетку о твоём небе — какое из двух %3$s твоё?</string>
+    <string name="journey_dst_earlier">Более раннее</string>
+    <string name="journey_dst_earlier_sub">%1$s по летнему времени · %2$s</string>
+    <string name="journey_dst_later">Более позднее</string>
+    <string name="journey_dst_later_sub">%1$s по зимнему времени · %2$s, %3$s спустя</string>
+    <string name="journey_dst_footer">Если никто не помнит — выбери любое: дома сдвинутся на %1$s, а изменить выбор можно в настройках.</string>
+    <string name="journey_dst_delta_hour">час</string>
+    <string name="journey_dst_delta_half_hour">30 минут</string>
 </resources>

@@ -3862,6 +3862,60 @@ abstract class L {
   /// In en, this message translates to:
   /// **'I answer from your chart, never from a template.'**
   String get chatNotTemplate;
+
+  /// Подпись под ручкой вкладок в чате, кегль 9.5, и голосовая метка самой ручки — одна строка на двоих: ручку 30×3 пальцем не найти, а VoiceOver до сих пор называл кнопку никак. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe up for tabs'**
+  String get scrChatSwipeForTabs;
+
+  /// S23, заголовок над обещанием совместимости: экран без второго человека — приглашение, а не ошибка, и начинаться он должен с титула. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Two skies, one comparison'**
+  String get cabCompatTwoSkies;
+
+  /// S23, первый из трёх пунктов о том, что будет посчитано, когда второй человек появится. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Every contact between the two charts, with its exact orb'**
+  String get cabCompatBulletContacts;
+
+  /// S23, второй пункт. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Where their planets land in your houses — and yours in theirs'**
+  String get cabCompatBulletHouses;
+
+  /// S23, третий пункт. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'The relationship\'s own chart — the sky of the two of you as one'**
+  String get cabCompatBulletComposite;
+
+  /// Дата вступления документа в силу (S40). {p1} — дата, прогнанная через DateFormat локали, а не вписанная в текст словами: тело документа по-английски, а строка над ним читается на семи языках. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective {p1}'**
+  String cabLegalEffective(String p1);
+
+  /// Отказ удалить аккаунт гостю. Гость заводился кодом, а не адресом, и общий cabPlanDeleteMismatch звал бы его сверить адрес, которого у него нет. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'That is not the code on this account.'**
+  String get cabPlanDeleteMismatchGuest;
+
+  /// Подпись под картиной на витрине (S42/S43): картина там не украшение, и подпись говорит, что вклейка написана под эту главу. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Every chapter opens with its own plate — painted for this deck.'**
+  String get paywallArtCaption;
+
+  /// Первый шаг отмены: оплаченный период дослуживает. {date} — из каталога подписок, локализованная. strings-batch2.md.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan stays active until {date}.'**
+  String cabPlanCancelPeriodEnds(String date);
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

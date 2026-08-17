@@ -2120,4 +2120,40 @@ class LIt extends L {
 
   @override
   String get chatNotTemplate => 'Rispondo dalla tua carta, mai da un modello.';
+
+  @override
+  String get scrChatSwipeForTabs => 'Scorri in su per le schede';
+
+  @override
+  String get cabCompatTwoSkies => 'Due cieli, un confronto';
+
+  @override
+  String get cabCompatBulletContacts =>
+      'Ogni contatto tra le due carte, con il suo orbe esatto';
+
+  @override
+  String get cabCompatBulletHouses =>
+      'Dove i loro pianeti cadono nelle tue case — e i tuoi nelle loro';
+
+  @override
+  String get cabCompatBulletComposite =>
+      'La carta propria della relazione — il cielo di voi due come uno';
+
+  @override
+  String cabLegalEffective(String p1) {
+    return 'In vigore dal $p1';
+  }
+
+  @override
+  String get cabPlanDeleteMismatchGuest =>
+      'Questo non è il codice di questo account.';
+
+  @override
+  String get paywallArtCaption =>
+      'Ogni capitolo si apre con la sua tavola — dipinta per questo mazzo.';
+
+  @override
+  String cabPlanCancelPeriodEnds(String date) {
+    return 'Il tuo piano resta attivo fino al $date.';
+  }
 }

@@ -43,6 +43,13 @@ struct JourneyFlow: View {
                 .transition(.opacity)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        // **The fork lies over the journey rather than in place of it.**
+        //
+        // Replacing the scene tears it down, and a torn-down ceremony is a reset
+        // one: the beats would start again from the first line once the question
+        // was answered. It covers the header too, deliberately — the numeral
+        // there counts questionnaire steps, and this is not one of them.
+        .overlay { forkOverlay }
         // The web caps the scene at 520 points and centres it. Irrelevant on a
         // phone and the difference between a designed screen and a stretched
         // one on an iPad.
@@ -109,6 +116,27 @@ struct JourneyFlow: View {
         .almaPadding()
         .padding(.top, 12)
         .padding(.bottom, 4)
+    }
+
+    // MARK: — the question that is not a step
+
+    @ViewBuilder
+    private var forkOverlay: some View {
+        if let fork = journey.fork {
+            JourneyForkStep(
+                fork: fork,
+                time: journey.wallClock,
+                city: journey.place?.label ?? "",
+                onChoose: { choice in journey.answer(choice, with: session) },
+                onBack: { withAnimation(.easeInOut(duration: 0.28)) { journey.leaveFork() } }
+            )
+            // The question covers the scene rather than replacing it: the
+            // ceremony lives on underneath, but two texts cannot be read at
+            // once — and the fill is what stops a finger reaching the scene it
+            // is standing on.
+            .background(Color.almaNight.opacity(0.96))
+            .transition(.opacity)
+        }
     }
 
     // MARK: — the eight

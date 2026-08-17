@@ -313,7 +313,7 @@
     <string-array name="journey_rules">
         <item>Ein Kapitel nach dem anderen. Sechzehn auf einmal sind Lärm.</item>
         <item>Wenn zwei Systeme sich widersprechen, kür keinen Sieger. Genau da liegt das Material.</item>
-        <item>Frag mich mit deinen eigenen Worten. Drei Fragen sind gratis.</item>
+        <item>Frag mit deinen eigenen Worten. Die erste Frage ist kostenlos.</item>
     </string-array>
     <string name="paywall_unverified">Google hat die Zahlung eingezogen und wir konnten sie noch nicht bestätigen. Nichts ist verloren — es öffnet sich von selbst, sobald wir können, und wenn wir es nie können, erstattet Google innerhalb von drei Tagen.</string>
     <string name="cabinet_good_afternoon">Guten Tag,</string>
@@ -530,4 +530,15 @@
     <string name="journey_gender_male">Männlich</string>
     <string name="journey_gender_skip">Sage ich nicht</string>
     <string name="all_alma_pill">Ganz Alma</string>
+
+    <string name="journey_dst_overline">über deine Geburtszeit</string>
+    <string name="journey_dst_title">In jener Nacht gab es %1$s zweimal</string>
+    <string name="journey_dst_body">Am %2$s wurden in %1$s die Uhren zurück­gestellt. Alma wirft über deinen Himmel keine Münze — welche %3$s ist deine?</string>
+    <string name="journey_dst_earlier">Die frühere</string>
+    <string name="journey_dst_earlier_sub">%1$s nach Sommerzeit · %2$s</string>
+    <string name="journey_dst_later">Die spätere</string>
+    <string name="journey_dst_later_sub">%1$s nach Winterzeit · %2$s, %3$s später</string>
+    <string name="journey_dst_footer">Wenn sich niemand erinnert, wähl irgendeine — die Häuser verschieben sich um %1$s, und in den Einstellungen lässt es sich ändern.</string>
+    <string name="journey_dst_delta_hour">eine Stunde</string>
+    <string name="journey_dst_delta_half_hour">30 Minuten</string>
 </resources>

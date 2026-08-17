@@ -86,6 +86,46 @@ class AlmaHttpClassifyTest {
         assertEquals("1988-10-30T01:30:00+00:00", failure.options[1].utc)
     }
 
+    /**
+     * The zone names and the offsets were on the wire and were not being read,
+     * which left the fork screen showing the same time twice with nothing to
+     * tell the two apart. This is what that regression looked like from here.
+     */
+    @Test
+    fun `an ambiguous birth time carries the clock names and the night it changed`() {
+        val body = """
+            {"detail":{"error":"ambiguous_birth_time","message":"that time happened twice",
+                       "timezone":"Europe/Berlin","transition_local_date":"1988-10-30",
+                       "options":[{"choice":"earlier","utc":"1988-10-30T00:30:00+00:00",
+                                   "abbreviation":"CEST","offset_hours":2.0},
+                                  {"choice":"later","utc":"1988-10-30T01:30:00+00:00",
+                                   "abbreviation":"CET","offset_hours":1.0}]}}
+        """.trimIndent()
+
+        val failure = AlmaHttp.classify(409, body) as ApiFailure.AmbiguousTime
+
+        assertEquals("1988-10-30", failure.transitionLocalDate)
+        assertEquals("CEST", failure.earlier?.abbreviation)
+        assertEquals("CET", failure.later?.abbreviation)
+        // One hour apart, so the caption says "an hour" rather than the
+        // half-hour wording zones like Lord Howe need.
+        assertEquals(1.0, failure.gapHours!!, 0.001)
+    }
+
+    /**
+     * A 422 whose answer is a door. Without its own case it landed on `Invalid`,
+     * whose message a chapter prints as flat text with nothing to tap.
+     */
+    @Test
+    fun `compatibility without a second person is its own failure`() {
+        val failure = AlmaHttp.classify(
+            422,
+            """{"detail":{"error":"partner_required","message":"Добавьте второго человека."}}""",
+        )
+        assertTrue(failure is ApiFailure.PartnerRequired)
+        assertEquals("Добавьте второго человека.", failure.message)
+    }
+
     @Test
     fun `the question limit carries the allowance it is limited to`() {
         val failure = AlmaHttp.classify(

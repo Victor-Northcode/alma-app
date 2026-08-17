@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -41,6 +42,14 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   Map<String, dynamic>? _daily;
   Map<String, dynamic>? _plan;
+
+  /// Куда сервер велит идти отменять подписку — `manage_url` с полки.
+  ///
+  /// Заполняют его только магазинные переходники; у Paddle и Dodo подписку
+  /// останавливаем мы сами, и поля в ответе нет вовсе. `null` поэтому значит
+  /// «сервер не назвал адреса», а не «не успели спросить».
+  String? _manageUrl;
+
   bool _started = false;
 
   /// Не «нет данных», а «спросили и не ответили». Раздел, который просто
@@ -193,13 +202,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadPlan() async {
     setState(() => _planFailed = false);
+    final session = SessionScope.of(context);
     try {
-      final plan = await SessionScope.of(context).client.entitlements();
+      final plan = await session.client.entitlements();
       if (mounted) setState(() => _plan = plan);
     } catch (_) {
       if (mounted) setState(() => _planFailed = _plan == null);
     }
+    // **Адрес отмены — отдельным тихим запросом, и только у подписчика.**
+    //
+    // `manage_url` лежит на полке (`GET /v1/billing/catalogue`), а не в правах,
+    // и нужен он ровно одной кнопке — той, что стоит под живой подпиской.
+    // Спрашивать его у того, у кого подписки нет, значит класть лишний запрос
+    // на каждое открытие настроек ради кнопки, которой там не будет.
+    //
+    // Отказ не делает раздел плана сломанным: без адреса кнопка ведёт в магазин
+    // своей платформы, и для всего купленного внутри приложения это и есть
+    // верный ответ.
+    if (!mounted || !_hasSubscription) return;
+    try {
+      final shelf = await session.client.catalogue(locale: session.locale);
+      if (mounted) setState(() => _manageUrl = shelf.manageUrl);
+    } catch (_) {
+      // Молча: у кнопки есть чем ответить и без сервера.
+    }
   }
+
+  /// Есть ли живая подписка — тот же вопрос, по которому раздел плана решает,
+  /// рисовать ли кнопку магазина. Разовые покупки не считаются: у купленной
+  /// навсегда двери отменять нечего.
+  bool get _hasSubscription =>
+      (((_plan?['entitlements'] as List?) ?? const []).whereType<Map>()).any(
+          (row) => row['active'] == true && row['kind'] != 'one_time');
 
 
   /// Что стоит под строкой выгрузки.
@@ -699,7 +733,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         fills: false,
         label: l.cabManageInStore,
         onTap: () => launchUrl(
-          Uri.parse('https://apps.apple.com/account/subscriptions'),
+          manageSubscriptionUri(_manageUrl),
           mode: LaunchMode.externalApplication,
         ),
       ),
@@ -927,6 +961,46 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (parsed == null) return null;
     return DateFormat.yMMMMd(locale).format(parsed.toLocal());
   }
+}
+
+/// Куда ведёт «управлять подпиской».
+///
+/// **Сначала слово сервера, потом платформа — и никогда чужой магазин.**
+/// Кнопка была прибита к `apps.apple.com/account/subscriptions` без всякой
+/// развилки, то есть на Android она открывала App Store: человеку, который
+/// хочет перестать платить, показывали магазин, где его подписки нет. Хуже
+/// отсутствующей кнопки — только кнопка, ведущая не туда.
+///
+/// [published] — `manage_url` с полки (`GET /v1/billing/catalogue`). Он верен
+/// первым, потому что знает больше нас: Play-адаптер дописывает туда
+/// `?package=…`, то есть открывает нужную строку, а не общий список
+/// (`googleplay.py:1132`). Заполняют его только магазинные переходники, и
+/// пустое значение — обычное состояние (на Paddle и Dodo подписку
+/// останавливает наш собственный `/subscription/cancel`), а не поломка.
+///
+/// Адреса запасного пути — те же константы, что стоят на сервере
+/// (`appstore.py:138`, `googleplay.py:119`) и в нативах. Ни один магазин не
+/// даёт серверу остановить чужую подписку, поэтому Guideline 3.1.2 и правила
+/// Play требуют, чтобы ссылка была, — а сборка без сети обязана назвать её
+/// сама.
+///
+/// [onAndroid] существует ради проверки: `Platform.isAndroid` на машине, где
+/// гоняют тесты, отвечает «нет» вместе с `Platform.isIOS`, и правило было бы
+/// нечем прижать.
+Uri manageSubscriptionUri(String? published, {bool? onAndroid}) {
+  final named = published?.trim() ?? '';
+  if (named.isNotEmpty) {
+    final parsed = Uri.tryParse(named);
+    // Только абсолютный адрес: обрывок вроде «subscriptions» открыть нечем, и
+    // молча ничего не сделавшая кнопка хуже, чем кнопка в общий список.
+    if (parsed != null && parsed.hasScheme && parsed.host.isNotEmpty) {
+      return parsed;
+    }
+  }
+  final android = onAndroid ?? (!kIsWeb && Platform.isAndroid);
+  return Uri.parse(android
+      ? 'https://play.google.com/store/account/subscriptions'
+      : 'https://apps.apple.com/account/subscriptions');
 }
 
 /// Раздел: золотая подпись, гаснущая линейка и строки под ней.

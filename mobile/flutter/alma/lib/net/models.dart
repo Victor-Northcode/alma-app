@@ -631,6 +631,81 @@ class ReadingResponse {
 
 /* ── беседа ────────────────────────────────────────────────────────────── */
 
+/// Что Alma сейчас сделала — в отличие от того, что она нашла.
+///
+/// Порт `ChatTurnKind` с обоих нативов (`ChatPieces.swift:27`,
+/// `ChatTurnKind.kt:28`); значения — те же четыре строки провода, что называет
+/// сервер (`alma/ai/conversation.py`, `WIRE_KINDS`).
+///
+/// **Баг, ради невозможности которого этот тип существует.** Раньше реплика
+/// несла один булев `answered_from_chart`, и клиенты штамповали «НЕ ИЗ ТВОЕЙ
+/// КАРТЫ» всякий раз, когда он был `false`. Поле оказалось про две разные вещи
+/// — «я посмотрела карту, и она об этом молчит» и «эта реплика вообще ничего о
+/// тебе не утверждает», — так что приветствие, которое второе, помечалось как
+/// первое: человеку, написавшему «привет», сообщали, что его «привет» не найден
+/// в его карте.
+///
+/// **Незнакомое значение — не ошибка.** Новая ветка таксономии с сервера свежее
+/// сборки обязана выродиться в «просто реплику», а не в сбой разбора посреди
+/// чужого разговора. Поэтому по проводу едет строка, а [of] ничего не бросает.
+enum ChatTurnKind {
+  /// Утверждение об этом человеке, прочитанное из его позиций. Единственный
+  /// вид, обязанный показать цитаты, — в них и вся разница между Alma и
+  /// чат-ботом в шляпе астролога.
+  reading('reading'),
+
+  /// Карту она прочла, и карте про это сказать нечего. Словами она это уже
+  /// сказала; экран добавляет тихую строку, чтобы общий ответ не приняли за
+  /// чтение.
+  chartSilent('chart_silent'),
+
+  /// Реплика, которая ни о ком ничего не утверждает: приветствие, спасибо,
+  /// вопрос о том, что она умеет, письмо на языке, на котором мы ещё не пишем.
+  /// **Никогда не подписывается** — здесь нечего уточнять.
+  conversation('conversation'),
+
+  /// Беда, вопрос о здоровье — группа D таксономии. Рисуется прозой, и ничем
+  /// не украшается: тому, кто только что написал, что ему плохо, не выдают
+  /// строку служебных пометок.
+  care('care');
+
+  const ChatTurnKind(this.wire);
+
+  /// Имя на проводе. Сервер шлёт именно эти строки — не внутренние
+  /// `reading | silent | aside`, которыми он их зовёт у себя.
+  final String wire;
+
+  /// Что рисовать — из того, что сервер на самом деле прислал.
+  ///
+  /// **Интересна здесь именно ветка без поля**, потому что старый ответ не
+  /// умеет отличить приветствие от молчащей карты — ровно та двусмысленность,
+  /// ради снятия которой `turn_kind` и появился. С цитатами это чтение. Без них
+  /// кандидатов два: «она поздоровалась», где подпись — ложь, и «карта молчит»,
+  /// где правила беседы и так велят ей сказать это своими словами, то есть
+  /// подпись — повтор. Выбор [conversation] меняет ложь на повтор, и это
+  /// правильная сторона размена; оставленный здесь [chartSilent] — это тот
+  /// самый кадр из отчёта об ошибке.
+  ///
+  /// Следствие, которое стоит назвать вслух: **тихая строка появляется только
+  /// тогда, когда сервер назвал вид.** Молчание на проводе покупает молчание на
+  /// экране. `answered_from_chart` не спрашивается здесь намеренно.
+  static ChatTurnKind of(String? raw, {required List<String> citedFactors}) {
+    for (final kind in ChatTurnKind.values) {
+      if (kind.wire == raw) return kind;
+    }
+    return citedFactors.isEmpty ? conversation : reading;
+  }
+
+  /// Место ли строке «прочитано из» под этим ответом. Цитаты показываются
+  /// везде, где они есть, — [care], назвавший позицию, всё-таки сделал
+  /// утверждение, — с единственным исключением: [conversation] не утверждает
+  /// ничего, и всё, что он процитировал, — украшение.
+  bool get showsCitations => this != conversation;
+
+  /// Место ли честной приписке под этим ответом.
+  bool get showsChartSilentNote => this == chartSilent;
+}
+
 /// Ответ Alma на один вопрос. Форма снята с живого `/v1/chat`:
 /// `{thread_id, message: {id, role, body, cited_factors, turn_kind}, …}`.
 class ChatReply {
@@ -638,11 +713,16 @@ class ChatReply {
     required this.threadId,
     required this.body,
     required this.citedFactors,
+    this.kind = ChatTurnKind.conversation,
     this.questionsLeft,
   });
 
   final String? threadId;
   final String body;
+
+  /// Что это была за реплика. Разбирается из `turn_kind`, а когда его нет — из
+  /// того же, из чего его выводят нативы: наличия цитат.
+  final ChatTurnKind kind;
 
   /// Позиции, из которых прочитан ответ. Обещание продукта: каждый ответ их
   /// называет, и лента обязана их показывать.
@@ -656,12 +736,14 @@ class ChatReply {
 
   factory ChatReply.fromJson(Map<String, dynamic> json) {
     final message = (json['message'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final cited = (message['cited_factors'] as List? ?? const [])
+        .map((e) => e.toString())
+        .toList();
     return ChatReply(
       threadId: json['thread_id'] as String?,
       body: message['body'] as String? ?? '',
-      citedFactors: (message['cited_factors'] as List? ?? const [])
-          .map((e) => e as String)
-          .toList(),
+      citedFactors: cited,
+      kind: ChatTurnKind.of(message['turn_kind'] as String?, citedFactors: cited),
       questionsLeft: (json['questions_left'] as num?)?.toInt(),
     );
   }
@@ -686,19 +768,38 @@ class ChatThreadRef {
 /// Роль сервер называет `user` и `alma` — не `assistant`; выдумывать второе
 /// значит рисовать все ответы Alma как реплики человека.
 class ChatTurn {
-  const ChatTurn({required this.mine, required this.body, required this.citedFactors});
+  const ChatTurn({
+    required this.mine,
+    required this.body,
+    required this.citedFactors,
+    this.kind = ChatTurnKind.conversation,
+  });
 
   final bool mine;
   final String body;
   final List<String> citedFactors;
 
-  factory ChatTurn.fromJson(Map<String, dynamic> json) => ChatTurn(
-        mine: (json['role'] as String?) == 'user',
-        body: json['body'] as String? ?? '',
-        citedFactors: ((json['cited_factors'] as List?) ?? const [])
-            .map((f) => f.toString())
-            .toList(),
-      );
+  /// Тот же вид реплики, что и у живого ответа.
+  ///
+  /// **Одна вью — одно правило, и разбор обязан быть один.** `GET
+  /// /v1/chat/threads/{id}` отдаёт `turn_kind` наравне с живым `/v1/chat`
+  /// (`readings.py:1180`), и пока порт его не читал ни там, ни там, разницы не
+  /// было видно. Стоит разобрать его только в живой ленте — и то же сообщение
+  /// после перезапуска нарисуется без тихой строки: ровно тот баг, из-за
+  /// которого на нативе вьюху и сделали общей.
+  final ChatTurnKind kind;
+
+  factory ChatTurn.fromJson(Map<String, dynamic> json) {
+    final cited = ((json['cited_factors'] as List?) ?? const [])
+        .map((f) => f.toString())
+        .toList();
+    return ChatTurn(
+      mine: (json['role'] as String?) == 'user',
+      body: json['body'] as String? ?? '',
+      citedFactors: cited,
+      kind: ChatTurnKind.of(json['turn_kind'] as String?, citedFactors: cited),
+    );
+  }
 }
 
 
@@ -742,6 +843,33 @@ class Entitlements {
             .whereType<Map>()
             .map((row) => row.cast<String, dynamic>())
             .toList(),
+      );
+}
+
+/// Полка целиком: строки прайса и адрес, по которому подписку останавливают.
+///
+/// **`manage_url` — единственное поле каталога, которого клиент не знает сам.**
+/// Его заполняют только магазинные переходники (`appstore.py`,
+/// `googleplay.py`); у Paddle и Dodo подписку останавливает наш же
+/// `POST /v1/billing/subscription/cancel`, и адреса там нет вовсе — проверено
+/// живым каталогом на 8018, где стоит Dodo. Пустое значение поэтому нормальное
+/// состояние, а не отказ: оно значит «продаём не через магазин».
+class Catalogue {
+  const Catalogue({required this.plans, this.manageUrl});
+
+  final List<Plan> plans;
+
+  /// Куда идти отменять, когда это не мы. Пусто — значит некуда, и решать
+  /// придётся по платформе.
+  final String? manageUrl;
+
+  factory Catalogue.fromJson(Map<String, dynamic> json) => Catalogue(
+        plans: ((json['items'] as List?) ?? const [])
+            .map((row) => Plan.fromJson((row as Map).cast<String, dynamic>()))
+            .toList(),
+        manageUrl: (json['manage_url'] as String?)?.trim().isNotEmpty == true
+            ? (json['manage_url'] as String).trim()
+            : null,
       );
 }
 

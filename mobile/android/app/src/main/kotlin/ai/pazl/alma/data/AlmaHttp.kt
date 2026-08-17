@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -234,7 +235,13 @@ internal object AlmaHttp {
             "ambiguous_birth_time" -> return ApiFailure.AmbiguousTime(
                 message = message,
                 options = detail.options(),
+                transitionLocalDate = detail.string("transition_local_date").orEmpty(),
             )
+
+            // Compatibility with nobody saved. A 422, so it landed on `Invalid`
+            // and the chapter printed the sentence with no way to act on it —
+            // while the one thing that resolves it is a screen this app has.
+            "partner_required" -> return ApiFailure.PartnerRequired(message)
 
             "question_limit" -> return ApiFailure.QuestionLimit(
                 message = message,
@@ -329,12 +336,21 @@ internal object AlmaHttp {
     private fun JsonObject.int(key: String): Int? =
         runCatching { this[key]?.jsonPrimitive?.intOrNull }.getOrNull()
 
+    private fun JsonObject.double(key: String): Double? =
+        runCatching { this[key]?.jsonPrimitive?.doubleOrNull }.getOrNull()
+
     private fun JsonObject.options(): List<AmbiguityOption> = runCatching {
         (this["options"] as? JsonArray)?.map { element ->
             val row = element.jsonObject
             AmbiguityOption(
                 choice = row.string("choice").orEmpty(),
                 utc = row.string("utc").orEmpty(),
+                // The zone names and offsets were on the wire from the day
+                // `calc/service.py` grew one builder for this body, and were
+                // simply not read. Without them the fork screen shows the same
+                // time twice with nothing to choose between.
+                abbreviation = row.string("abbreviation").orEmpty(),
+                offsetHours = row.double("offset_hours") ?: 0.0,
             )
         }.orEmpty()
     }.getOrDefault(emptyList())

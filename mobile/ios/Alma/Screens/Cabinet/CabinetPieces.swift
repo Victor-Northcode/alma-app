@@ -303,13 +303,40 @@ struct ActionRow: View {
 /// apology with a retry button on it.
 struct NeedMore: View {
 
-    let message: LocalizedStringResource
+    private let message: Text
     let actionTitle: LocalizedStringResource
     let action: () -> Void
 
+    init(
+        message: LocalizedStringResource,
+        actionTitle: LocalizedStringResource,
+        action: @escaping () -> Void
+    ) {
+        self.message = Text(message)
+        self.actionTitle = actionTitle
+        self.action = action
+    }
+
+    /// The same prompt, where the sentence comes from the server rather than
+    /// from a catalogue.
+    ///
+    /// A few refusals arrive already translated — `partner_required` is written
+    /// by `i18n_replies` in the reader's own language — and re-saying them in
+    /// our words would replace a sentence about *their* situation with a
+    /// general one.
+    init(
+        verbatim message: String,
+        actionTitle: LocalizedStringResource,
+        action: @escaping () -> Void
+    ) {
+        self.message = Text(verbatim: message)
+        self.actionTitle = actionTitle
+        self.action = action
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(message)
+            message
                 .almaVoice()
                 .almaReadingWidth()
 

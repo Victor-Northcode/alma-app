@@ -2122,4 +2122,40 @@ class LDe extends L {
   @override
   String get chatNotTemplate =>
       'Ich antworte aus deiner Karte — nie aus einer Vorlage.';
+
+  @override
+  String get scrChatSwipeForTabs => 'Nach oben wischen für Tabs';
+
+  @override
+  String get cabCompatTwoSkies => 'Zwei Himmel, ein Vergleich';
+
+  @override
+  String get cabCompatBulletContacts =>
+      'Jeder Kontakt zwischen den beiden Karten — mit exaktem Orbis';
+
+  @override
+  String get cabCompatBulletHouses =>
+      'Wo ihre Planeten in deine Häuser fallen — und deine in ihre';
+
+  @override
+  String get cabCompatBulletComposite =>
+      'Die eigene Karte der Beziehung — der Himmel von euch beiden als einer';
+
+  @override
+  String cabLegalEffective(String p1) {
+    return 'Gültig ab $p1';
+  }
+
+  @override
+  String get cabPlanDeleteMismatchGuest =>
+      'Das ist nicht der Code dieses Kontos.';
+
+  @override
+  String get paywallArtCaption =>
+      'Jedes Kapitel öffnet mit einer eigenen Tafel — gemalt für dieses Deck.';
+
+  @override
+  String cabPlanCancelPeriodEnds(String date) {
+    return 'Dein Plan bleibt bis $date aktiv.';
+  }
 }

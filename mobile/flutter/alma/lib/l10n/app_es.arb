@@ -624,5 +624,14 @@
   "chatReadingHouse": "leyendo tu casa {house}…",
   "chatOpeningBody": "abriendo {body}…",
   "chatFromChapter": "Lee el capítulo del que viene — {chapter}",
-  "chatNotTemplate": "Respondo desde tu carta, nunca desde una plantilla."
+  "chatNotTemplate": "Respondo desde tu carta, nunca desde una plantilla.",
+  "scrChatSwipeForTabs": "Desliza hacia arriba para las pestañas",
+  "cabCompatTwoSkies": "Dos cielos, una comparación",
+  "cabCompatBulletContacts": "Cada contacto entre las dos cartas, con su orbe exacto",
+  "cabCompatBulletHouses": "Dónde caen sus planetas en tus casas — y los tuyos en las suyas",
+  "cabCompatBulletComposite": "La carta propia de la relación — el cielo de ustedes dos como uno",
+  "cabLegalEffective": "En vigor desde {p1}",
+  "cabPlanDeleteMismatchGuest": "Ese no es el código de esta cuenta.",
+  "paywallArtCaption": "Cada capítulo se abre con su propia lámina — pintada para esta baraja.",
+  "cabPlanCancelPeriodEnds": "Tu plan sigue activo hasta {date}."
 }

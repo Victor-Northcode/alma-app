@@ -624,5 +624,14 @@
   "chatReadingHouse": "lese dein {house} Haus…",
   "chatOpeningBody": "öffne {body}…",
   "chatFromChapter": "Lies das Kapitel dahinter — {chapter}",
-  "chatNotTemplate": "Ich antworte aus deiner Karte — nie aus einer Vorlage."
+  "chatNotTemplate": "Ich antworte aus deiner Karte — nie aus einer Vorlage.",
+  "scrChatSwipeForTabs": "Nach oben wischen für Tabs",
+  "cabCompatTwoSkies": "Zwei Himmel, ein Vergleich",
+  "cabCompatBulletContacts": "Jeder Kontakt zwischen den beiden Karten — mit exaktem Orbis",
+  "cabCompatBulletHouses": "Wo ihre Planeten in deine Häuser fallen — und deine in ihre",
+  "cabCompatBulletComposite": "Die eigene Karte der Beziehung — der Himmel von euch beiden als einer",
+  "cabLegalEffective": "Gültig ab {p1}",
+  "cabPlanDeleteMismatchGuest": "Das ist nicht der Code dieses Kontos.",
+  "paywallArtCaption": "Jedes Kapitel öffnet mit einer eigenen Tafel — gemalt für dieses Deck.",
+  "cabPlanCancelPeriodEnds": "Dein Plan bleibt bis {date} aktiv."
 }

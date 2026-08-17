@@ -22,12 +22,25 @@ int cancelCalls = 0;
 /// и это обязано быть одно и то же число.
 const periodEnds = '2027-03-04T00:00:00Z';
 
+/// Куда стучался экран — по строке на запрос.
+late List<String> calls;
+
 /// Настройки подписчика. [source] — кто продал подписку, и это единственная
 /// разница между двумя мирами: `appstore` отменяет Apple, `paddle` — мы.
-AlmaClient settingsClient({required String source, bool cancelFails = false}) {
+///
+/// [subscribed] снимает подписку совсем: у такого человека кнопки магазина нет,
+/// и спрашивать у сервера адрес отмены не за чем.
+AlmaClient settingsClient({
+  required String source,
+  bool cancelFails = false,
+  bool subscribed = true,
+  String? manageUrl,
+}) {
   cancelCalls = 0;
+  calls = [];
   final transport = MockClient((request) async {
     final path = request.url.path;
+    calls.add('${request.method} $path');
     Object body;
     if (path == '/v1/auth/refresh') {
       body = {'token': 't1', 'user_id': 'u1', 'is_guest': true, 'locale': 'en'};
@@ -48,17 +61,26 @@ AlmaClient settingsClient({required String source, bool cancelFails = false}) {
       body = {
         'unlocked': ['natal'],
         'entitlements': [
-          {
-            'active': true,
-            'kind': 'monthly',
-            'scope': 'all',
-            'system': '*',
-            'source': source,
-            'renews_at': periodEnds,
-            'expires_at': periodEnds,
-          }
+          if (subscribed)
+            {
+              'active': true,
+              'kind': 'monthly',
+              'scope': 'all',
+              'system': '*',
+              'source': source,
+              'renews_at': periodEnds,
+              'expires_at': periodEnds,
+            }
         ],
         'currency': 'USD',
+      };
+    } else if (path == '/v1/billing/catalogue') {
+      // Форма полки — с живого сервера: `manage_url` кладут только магазинные
+      // переходники, у Paddle и Dodo его в ответе нет вовсе.
+      body = {
+        'items': <Map<String, dynamic>>[],
+        'currency': 'USD',
+        'manage_url': ?manageUrl,
       };
     } else if (path == '/v1/billing/subscription/cancel') {
       cancelCalls++;
@@ -218,5 +240,67 @@ void main() {
     expect(find.textContaining('nothing has changed'), findsOneWidget);
     expect(find.text('Cancel subscription'), findsOneWidget);
     expect(find.text('Keep my plan'), findsOneWidget);
+  });
+
+  /// Куда ведёт «управлять подпиской».
+  ///
+  /// Кнопка была прибита к `apps.apple.com/account/subscriptions` без развилки
+  /// по платформе: на Android она открывала магазин, в котором подписки этого
+  /// человека нет. Правило проверяется здесь, а не нажатием, потому что дефект
+  /// был не в кнопке, а в единственном адресе, который она знала.
+  group('адрес отмены', () {
+    testWidgets('у подписчика экран спрашивает адрес у сервера',
+        (tester) async {
+      // Главное здесь — что `manage_url` вообще читается: до этой правки его не
+      // читал никто (`grep manageUrl` по порту был пуст), и кнопка знала ровно
+      // один адрес — App Store, на любом телефоне.
+      await openSettings(
+          tester,
+          settingsClient(
+            source: 'googleplay',
+            manageUrl:
+                'https://play.google.com/store/account/subscriptions?package=ai.pazl.alma',
+          ));
+
+      expect(calls, contains('GET /v1/billing/catalogue'));
+    });
+
+    testWidgets('без подписки полку за адресом не дёргают', (tester) async {
+      await openSettings(
+          tester, settingsClient(source: 'paddle', subscribed: false));
+
+      expect(calls.contains('GET /v1/billing/catalogue'), isFalse,
+          reason: 'кнопки магазина здесь нет — значит, и адрес ни к чему');
+    });
+
+    test('слово сервера сильнее платформы', () {
+      // Play-адаптер дописывает `?package=…` и открывает нужную строку, а не
+      // общий список (`googleplay.py`). Клиент такого сам не знает.
+      const published =
+          'https://play.google.com/store/account/subscriptions?package=ai.pazl.alma';
+      expect(manageSubscriptionUri(published, onAndroid: true).toString(),
+          published);
+      // И на iPhone тоже: адрес отдаёт тот магазин, который продал.
+      expect(manageSubscriptionUri(published, onAndroid: false).toString(),
+          published);
+    });
+
+    test('без слова сервера — магазин своей платформы', () {
+      // Paddle и Dodo `manage_url` не отдают вовсе: там отменяет наш
+      // `/subscription/cancel`, — так что пусто это норма, а не поломка.
+      expect(manageSubscriptionUri(null, onAndroid: true).host,
+          'play.google.com');
+      expect(manageSubscriptionUri('', onAndroid: false).host,
+          'apps.apple.com');
+      expect(manageSubscriptionUri('   ', onAndroid: true).toString(),
+          'https://play.google.com/store/account/subscriptions');
+    });
+
+    test('обрывок вместо адреса не превращается в мёртвую кнопку', () {
+      // Открыть «subscriptions» нечем, и молча ничего не сделавшая кнопка хуже
+      // кнопки в общий список магазина.
+      expect(manageSubscriptionUri('subscriptions', onAndroid: true).host,
+          'play.google.com');
+    });
   });
 }

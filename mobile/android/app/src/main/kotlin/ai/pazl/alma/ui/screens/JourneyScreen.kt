@@ -103,8 +103,14 @@ fun JourneyScreen(
 
     val step by vm.step.collectAsStateWithLifecycle()
     val draft by vm.draft.collectAsStateWithLifecycle()
+    val fork by vm.fork.collectAsStateWithLifecycle()
+    val saving by vm.saving.collectAsStateWithLifecycle()
 
     BackHandler(enabled = step.canGoBack) { vm.back() }
+    // The fork is not a step, so `canGoBack` does not know about it — but the
+    // system gesture has to mean the same thing there as the arrow does: back
+    // to the time, question dropped, rather than out of the app mid-ceremony.
+    BackHandler(enabled = fork != null) { vm.leaveFork() }
 
     NightSky(config = JourneySky) {
         Column(
@@ -129,8 +135,31 @@ fun JourneyScreen(
                 JourneyStep.Place -> PlaceStep(vm)
                 // The last step: the ceremony computes everything under its
                 // animation and lands straight in My Systems.
-                JourneyStep.Ceremony -> CeremonyStep(onBegin = vm::beginCeremony, onDone = onFinished)
+                JourneyStep.Ceremony -> CeremonyStep(
+                    onBegin = vm::beginCeremony,
+                    onDone = onFinished,
+                    paused = fork != null,
+                    holding = saving || fork != null,
+                )
             }
+        }
+
+        // **The fork lies over the ceremony rather than in place of it.**
+        //
+        // Replacing the scene unmounts it, and an unmounted ceremony is a reset
+        // one: the beats would start again from the first line after the
+        // question was answered. It is drawn last so it is on top, and it is
+        // outside the column above so it can cover the header as well — the
+        // numeral there counts questionnaire steps, and this is not one.
+        val standing = fork
+        if (standing != null) {
+            JourneyFork(
+                fork = standing,
+                wallClock = draft.wallClock,
+                city = draft.place?.label.orEmpty(),
+                onChoose = vm::answerFork,
+                onBack = vm::leaveFork,
+            )
         }
     }
 }

@@ -187,7 +187,11 @@ class _JourneyScreenState extends State<JourneyScreen> {
         placeId: place.id,
         name: _name.text.trim().isEmpty ? null : _name.text.trim(),
         onAmbiguous: _fold,
-      ), gender: _gender);
+        // Язык **запроса**, а не аккаунта: сессия принимает язык телефона у
+        // себя сразу, а на сервер он уезжает отдельной необязательной записью.
+        // Отказ этой ручки обязан прийти на том языке, на котором человек
+        // сейчас читает анкету.
+      ), locale: session.locale, gender: _gender);
       if (_name.text.trim().isNotEmpty) {
         await session.client.setDisplayName(_name.text.trim());
       }

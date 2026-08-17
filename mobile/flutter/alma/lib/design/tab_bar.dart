@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import '../l10n/alma_l10n.dart';
 import 'metrics.dart';
 import 'palette.dart';
+import 'typography.dart';
 
 /// Четыре вкладки кабинета.
 enum CabinetTab {
@@ -218,20 +219,24 @@ class _TabsGrabberState extends State<TabsGrabber> {
   /// Кегль подписи под ручкой — 9.5 по слову владельца.
   static const _captionSize = 9.5;
 
-  /// Место под подпись, которой пока нет. Строка кеглем 9.5 занимает примерно
-  /// столько; резерв держится, чтобы в день, когда владелец даст ключ,
-  /// подпись просто встала на своё место, а не подняла ручку на высоту строки.
-  static const _captionLine = _captionSize * 1.3;
+  /// Интерлиньяж подписи. Раньше на это число был отведён пустой `SizedBox` —
+  /// резерв под ненаписанную строку; теперь высоту держит сама строка, и
+  /// ручка стоит там же, где стояла.
+  static const _captionHeight = 1.3;
 
   /// Сколько уже протянуто в текущем жесте; порог — [TabsPeek.pull].
   double _pulled = 0;
 
   @override
   Widget build(BuildContext context) {
+    final caption = L.of(context).scrChatSwipeForTabs;
+
     return Semantics(
       button: true,
-      // Имени у кнопки пока нет: подпись и метка для голоса — одна и та же
-      // ненаписанная строка, и выдумывать её здесь нельзя.
+      // Подпись и голосовая метка — одна строка на двоих, и намеренно. Ручка
+      // 30×3 не имеет ни формы, ни имени: VoiceOver называл её «кнопка», и
+      // единственный способ позвать бар в чате был не найден на ощупь.
+      label: caption,
       child: GestureDetector(
         // Вся полоса, а не одни три точки высоты: попасть пальцем в ручку
         // 30×3 невозможно, и незримое поле вокруг неё — это и есть кнопка.
@@ -269,11 +274,27 @@ class _TabsGrabberState extends State<TabsGrabber> {
                 ),
               ),
               const SizedBox(height: 5),
-              // Здесь стоит «Swipe up for tabs» кеглем 9.5. Строки в каталоге
-              // нет, переводов владелец не давал — рисовать её самим значит
-              // завести в продукте фразу, которой никто не писал. Ждём ключ
-              // `scrChatSwipeForTabs`; до него — только место под неё.
-              const SizedBox(height: _captionLine),
+              // Голосу эта строка уже отдана меткой выше, и второй раз читать
+              // её вслух незачем: узел один, а текста в нём было бы два.
+              ExcludeSemantics(
+                child: Text(
+                  caption,
+                  // Одной строкой и с многоточием: подпись стоит между
+                  // композером и домашним индикатором, и вторая строка здесь
+                  // не помещается ни в один язык — она подняла бы ручку.
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  // Разрядка .6 и прозрачность .45 — с холста (S7): подпись
+                  // тише погашенной ручки, потому что ручку ищут пальцем, а
+                  // подпись читают один раз и запоминают жест.
+                  style: AlmaType.meta.copyWith(
+                    fontSize: _captionSize,
+                    height: _captionHeight,
+                    letterSpacing: 0.6,
+                    color: AlmaPalette.body.withValues(alpha: 0.45),
+                  ),
+                ),
+              ),
             ],
           ),
         ),

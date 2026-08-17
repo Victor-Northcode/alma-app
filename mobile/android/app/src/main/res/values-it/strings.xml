@@ -313,7 +313,7 @@
     <string-array name="journey_rules">
         <item>Un capitolo alla volta. Sedici insieme sono rumore.</item>
         <item>Quando due sistemi litigano, non scegliere un vincitore. È lì il materiale.</item>
-        <item>Chiedimi con parole tue. Tre domande sono gratis.</item>
+        <item>Chiedi con parole tue. La prima domanda è gratis.</item>
     </string-array>
     <string name="paywall_unverified">Google ha già incassato il pagamento e non siamo ancora riusciti a confermarlo. Non si perde nulla — si apre da solo appena possiamo, e se non ci riusciamo mai, Google te lo rimborsa entro tre giorni.</string>
     <string name="cabinet_good_afternoon">Buon pomeriggio,</string>
@@ -530,4 +530,15 @@
     <string name="journey_gender_male">Uomo</string>
     <string name="journey_gender_skip">Preferisco non dirlo</string>
     <string name="all_alma_pill">Tutta Alma</string>
+
+    <string name="journey_dst_overline">sulla tua ora di nascita</string>
+    <string name="journey_dst_title">Quella notte le %1$s sono esistite due volte</string>
+    <string name="journey_dst_body">Il %2$s a %1$s gli orologi sono stati portati indietro. Alma non tira una moneta sul tuo cielo — quale %3$s è la tua?</string>
+    <string name="journey_dst_earlier">La prima</string>
+    <string name="journey_dst_earlier_sub">le %1$s con l\'ora legale · %2$s</string>
+    <string name="journey_dst_later">La seconda</string>
+    <string name="journey_dst_later_sub">le %1$s con l\'ora solare · %2$s, %3$s dopo</string>
+    <string name="journey_dst_footer">Se nessuno lo ricorda, scegline una — le case si spostano di %1$s e puoi cambiarlo nelle Impostazioni.</string>
+    <string name="journey_dst_delta_hour">un\'ora</string>
+    <string name="journey_dst_delta_half_hour">30 minuti</string>
 </resources>

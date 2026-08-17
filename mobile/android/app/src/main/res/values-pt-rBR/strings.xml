@@ -225,7 +225,7 @@
     <string name="paywall_archive_note">Os oito sistemas em um único pagamento.</string>
     <string name="paywall_archive_upgrade_note">O resto do arquivo. O que você pagou pela porta já está descontado.</string>
     <string name="paywall_everything_year">Alma completa por um ano</string>
-    <string name="paywall_everything_month">Alma completa, mês a mês</string>
+    <string name="paywall_everything_month">Tudo o que se move, mês a mês</string>
     <string name="paywall_one_time_note">Um único pagamento.</string>
     <string name="paywall_renews_year">Renova todo ano até você cancelar, no Google Play.</string>
     <string name="paywall_renews_month">Renova todo mês até você cancelar, no Google Play.</string>
@@ -313,7 +313,7 @@
     <string-array name="journey_rules">
         <item>Um capítulo por vez. Dezesseis de uma vez é barulho.</item>
         <item>Quando dois sistemas discordam, não escolha um vencedor. O material está aí.</item>
-        <item>Me pergunte com suas palavras. Três perguntas são de graça.</item>
+        <item>Pergunte com suas palavras. A primeira pergunta é grátis.</item>
     </string-array>
     <string name="paywall_unverified">O Google já cobrou o pagamento e ainda não conseguimos confirmar. Nada se perde — abre sozinho assim que der, e se nunca der, o Google devolve em até três dias.</string>
     <string name="cabinet_good_afternoon">Boa tarde,</string>
@@ -530,4 +530,15 @@
     <string name="journey_gender_male">Masculino</string>
     <string name="journey_gender_skip">Prefiro não dizer</string>
     <string name="all_alma_pill">Toda a Alma</string>
+
+    <string name="journey_dst_overline">sobre sua hora de nascimento</string>
+    <string name="journey_dst_title">Naquela noite, %1$s aconteceu duas vezes</string>
+    <string name="journey_dst_body">Em %2$s, em %1$s, os relógios foram atrasados. A Alma não vai tirar seu céu na moeda — qual %3$s é o seu?</string>
+    <string name="journey_dst_earlier">A primeira</string>
+    <string name="journey_dst_earlier_sub">%1$s no horário de verão · %2$s</string>
+    <string name="journey_dst_later">A segunda</string>
+    <string name="journey_dst_later_sub">%1$s no horário de inverno · %2$s, %3$s depois</string>
+    <string name="journey_dst_footer">Se ninguém lembra, escolha qualquer uma — as casas se deslocam %1$s e você pode mudar depois nos Ajustes.</string>
+    <string name="journey_dst_delta_hour">uma hora</string>
+    <string name="journey_dst_delta_half_hour">30 minutos</string>
 </resources>

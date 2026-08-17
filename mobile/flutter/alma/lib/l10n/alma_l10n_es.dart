@@ -2112,4 +2112,40 @@ class LEs extends L {
   @override
   String get chatNotTemplate =>
       'Respondo desde tu carta, nunca desde una plantilla.';
+
+  @override
+  String get scrChatSwipeForTabs => 'Desliza hacia arriba para las pestañas';
+
+  @override
+  String get cabCompatTwoSkies => 'Dos cielos, una comparación';
+
+  @override
+  String get cabCompatBulletContacts =>
+      'Cada contacto entre las dos cartas, con su orbe exacto';
+
+  @override
+  String get cabCompatBulletHouses =>
+      'Dónde caen sus planetas en tus casas — y los tuyos en las suyas';
+
+  @override
+  String get cabCompatBulletComposite =>
+      'La carta propia de la relación — el cielo de ustedes dos como uno';
+
+  @override
+  String cabLegalEffective(String p1) {
+    return 'En vigor desde $p1';
+  }
+
+  @override
+  String get cabPlanDeleteMismatchGuest =>
+      'Ese no es el código de esta cuenta.';
+
+  @override
+  String get paywallArtCaption =>
+      'Cada capítulo se abre con su propia lámina — pintada para esta baraja.';
+
+  @override
+  String cabPlanCancelPeriodEnds(String date) {
+    return 'Tu plan sigue activo hasta $date.';
+  }
 }

@@ -683,9 +683,30 @@ final class AlmaClient: Sendable {
             let options = (object?["options"]?.arrayValue ?? []).compactMap { item -> AlmaError.AmbiguityOption? in
                 guard let choice = item["choice"]?.stringValue, let utc = item["utc"]?.stringValue
                 else { return nil }
-                return AlmaError.AmbiguityOption(choice: choice, utc: utc)
+                // The zone names and the offsets have been on the wire since
+                // `calc/service.py` grew one builder for this body, and were
+                // simply never read. Without them the fork shows the same time
+                // twice with nothing to choose between.
+                return AlmaError.AmbiguityOption(
+                    choice: choice,
+                    utc: utc,
+                    abbreviation: item["abbreviation"]?.stringValue ?? "",
+                    offsetHours: item["offset_hours"]?.doubleValue ?? 0
+                )
             }
-            return .ambiguousBirthTime(message: message, options: options)
+            return .ambiguousBirthTime(
+                message: message,
+                fork: AlmaError.BirthTimeFork(
+                    options: options,
+                    transitionLocalDate: object?["transition_local_date"]?.stringValue ?? ""
+                )
+            )
+        // Compatibility with nobody saved. A 422, so without this branch it
+        // landed on `.invalid` and a chapter printed the sentence with no way
+        // to act on it — while the one thing that resolves it is a screen this
+        // app already has.
+        case "partner_required":
+            return .partnerRequired(message: message)
         case "question_limit":
             return .questionLimit(message: message, allowance: object?["allowance"]?.intValue ?? 0)
         case "ai_unavailable", "billing_unavailable", "budget_exceeded", "place_index_missing":

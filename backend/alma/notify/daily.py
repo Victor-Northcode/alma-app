@@ -291,7 +291,9 @@ def _selector() -> Callable:
 
     The contract, which `alma/daily/` owns and this module only consumes:
 
-        async def candidates(session, user, *, on: date) -> Sequence[Candidate]
+        async def candidates(
+            session, user, *, on: date, zone: ZoneInfo | None = None
+        ) -> Sequence[Candidate]
 
     Everything the sky offers this person on that local date, unfiltered by
     weight, each item carrying `transiting`, `natal`, `aspect`, `weight`,
@@ -299,6 +301,15 @@ def _selector() -> Callable:
     is theirs and the cadence is this package's**, which is why the caps below
     can be tested without an ephemeris and the ephemeris can be tested without
     a calendar.
+
+    **The zone travels with the date, and that is not a convenience.** A local
+    date is meaningless without the clock it was read on, and the two packages
+    do not rank the rungs the same way: `rules.zone_for` puts a zone chosen in
+    settings above the device's, `daily/clock.zone_for` follows
+    `THE-DAILY.md §3.3` and puts the device first. Whoever holds the device rows
+    resolves once — this package — and the other is told the answer. Letting the
+    selection package decide again would bracket the day on the *birth* zone,
+    which is the rung that is wrong by however many hours somebody has moved.
 
     Resolved once at the start of a run and refused loudly when absent, rather
     than caught per user. A job that cannot ask what today contains has nothing
@@ -309,7 +320,7 @@ def _selector() -> Callable:
     except ImportError as exc:
         raise PushUnavailable(
             "the daily selection package is not available "
-            f"({exc}). `alma.daily.candidates(session, user, on=…)` is what "
+            f"({exc}). `alma.daily.candidates(session, user, on=…, zone=…)` is what "
             "decides what today contains; without it this job would run to "
             "completion and send nothing, which is the failure that looks "
             "exactly like success."
@@ -638,7 +649,10 @@ async def _one(
         local=recipient.local,
         hour=recipient.hour,
         history=past,
-        candidates=await candidates(session, recipient.user, on=day),
+        # The zone goes with the day. `day` was resolved on `recipient.zone`,
+        # and the selection package would otherwise bracket it on the birth
+        # zone — the one rung that is wrong for everybody who has moved.
+        candidates=await candidates(session, recipient.user, on=day, zone=recipient.zone),
         now=moment,
     )
     if not decision.send or decision.chosen is None:

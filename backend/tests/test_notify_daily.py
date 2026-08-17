@@ -89,11 +89,14 @@ class Vendor:
         return self.receipt
 
 
-async def one_contact(session, user, *, on):
+# `zone` is part of the contract in `daily._selector`: the sender resolves the
+# ladder once and hands the answer to the selection package, so a stand-in that
+# refused it would pass here and fail against the real one.
+async def one_contact(session, user, *, on, zone=None):
     return [Contact()]
 
 
-async def nothing(session, user, *, on):
+async def nothing(session, user, *, on, zone=None):
     return []
 
 
@@ -126,7 +129,12 @@ async def subscriber(
         id=new_id(),
         provider="guest",
         locale="en",
-        last_seen_at=utcnow() - timedelta(days=seen_days_ago),
+        # Counted back from `WHEN`, which is the `now` every run in this file is
+        # given, not from the real clock. Measured against the wall it was a
+        # dated bomb: `seen_days_ago=70` stopped being 70 days before the run on
+        # the day the real date drifted past `WHEN`, and the dormancy test went
+        # red on a calendar boundary with nothing in the product changed.
+        last_seen_at=WHEN - timedelta(days=seen_days_ago),
         daily_push=preference,
     )
     session.add(user)
@@ -647,7 +655,7 @@ def test_one_broken_chart_does_not_starve_everybody_behind_it(db):
     vendor = Vendor()
     seen: list[str] = []
 
-    async def poison(session, user, *, on):
+    async def poison(session, user, *, on, zone=None):
         seen.append(user.id)
         if len(seen) == 1:
             raise ValueError("this chart has impossible coordinates")

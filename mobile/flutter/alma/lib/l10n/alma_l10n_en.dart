@@ -2107,4 +2107,40 @@ class LEn extends L {
   @override
   String get chatNotTemplate =>
       'I answer from your chart, never from a template.';
+
+  @override
+  String get scrChatSwipeForTabs => 'Swipe up for tabs';
+
+  @override
+  String get cabCompatTwoSkies => 'Two skies, one comparison';
+
+  @override
+  String get cabCompatBulletContacts =>
+      'Every contact between the two charts, with its exact orb';
+
+  @override
+  String get cabCompatBulletHouses =>
+      'Where their planets land in your houses — and yours in theirs';
+
+  @override
+  String get cabCompatBulletComposite =>
+      'The relationship\'s own chart — the sky of the two of you as one';
+
+  @override
+  String cabLegalEffective(String p1) {
+    return 'Effective $p1';
+  }
+
+  @override
+  String get cabPlanDeleteMismatchGuest =>
+      'That is not the code on this account.';
+
+  @override
+  String get paywallArtCaption =>
+      'Every chapter opens with its own plate — painted for this deck.';
+
+  @override
+  String cabPlanCancelPeriodEnds(String date) {
+    return 'Your plan stays active until $date.';
+  }
 }

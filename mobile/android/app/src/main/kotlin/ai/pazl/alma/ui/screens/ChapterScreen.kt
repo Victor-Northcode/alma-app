@@ -5,19 +5,25 @@ import ai.pazl.alma.core.AppContainer
 import ai.pazl.alma.core.ScreenState
 import ai.pazl.alma.core.SessionHolder
 import ai.pazl.alma.data.AlmaClient
+import ai.pazl.alma.data.AlmaSystem
 import ai.pazl.alma.data.ApiFailure
 import ai.pazl.alma.data.ApiResult
 import ai.pazl.alma.data.dto.ChapterEntryDto
 import ai.pazl.alma.data.dto.ReadingDto
 import ai.pazl.alma.data.dto.ReadingRequest
+import ai.pazl.alma.ui.components.AlmaPlates
 import ai.pazl.alma.ui.components.GoldButton
 import ai.pazl.alma.ui.components.Overline
+import ai.pazl.alma.ui.components.PlateArch
+import ai.pazl.alma.ui.components.PlateStore
+import ai.pazl.alma.ui.components.QuietButton
 import ai.pazl.alma.ui.components.StateHost
 import ai.pazl.alma.ui.components.WritingArt
 import ai.pazl.alma.ui.components.Waiting
 import ai.pazl.alma.ui.sky.NightSky
 import ai.pazl.alma.ui.sky.SkyConfig
 import ai.pazl.alma.ui.theme.AlmaPalette
+import ai.pazl.alma.ui.theme.AlmaSpacing
 import ai.pazl.alma.ui.theme.AlmaTheme
 import ai.pazl.alma.ui.theme.PillShape
 import androidx.compose.foundation.background
@@ -67,6 +73,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.Job
@@ -111,6 +118,11 @@ fun ChapterScreen(
      */
     onPlans: () -> Unit,
     onOpenChapter: (String) -> Unit,
+    /**
+     * The way to the second person a compatibility chapter cannot be written
+     * without. See [NeedsPartner] for why it is a door and not a sentence.
+     */
+    onAddPerson: () -> Unit,
     onBack: () -> Unit,
 ) {
     val vm: ChapterViewModel = viewModel(key = "$system/$chapter") {
@@ -140,14 +152,33 @@ fun ChapterScreen(
             }
         } else {
             StateHost(state, onRetry = vm::reload) { chapterView ->
-                Box(Modifier.fillMaxSize().background(AlmaPalette.ParchmentGradient)) {
-                    ChapterBody(
-                        chapterView,
-                        onOffer = onOffer,
-                        onPlans = onPlans,
-                        onOpenChapter = onOpenChapter,
-                        onBack = onBack,
-                    )
+                val missingPartner = chapterView.failure as? ApiFailure.PartnerRequired
+                if (chapterView.reading == null && missingPartner != null) {
+                    // Coming back from the people screen is the one moment this
+                    // request's answer can have changed, so it is the one moment
+                    // worth asking again — and only in this branch, because
+                    // re-requesting an ordinary chapter on every return would
+                    // ask a language model to write something already written.
+                    var left by remember { mutableStateOf(false) }
+                    LifecycleResumeEffect(Unit) {
+                        if (left) vm.reload()
+                        onPauseOrDispose { left = true }
+                    }
+                    // No parchment here, and that is the rule the sheet already
+                    // follows everywhere else: the document appears when the
+                    // chapter does, and this chapter does not exist yet.
+                    NeedsPartner(message = missingPartner.message, onAddPerson = onAddPerson)
+                } else {
+                    Box(Modifier.fillMaxSize().background(AlmaPalette.ParchmentGradient)) {
+                        ChapterBody(
+                            chapterView,
+                            plates = container.plates,
+                            onOffer = onOffer,
+                            onPlans = onPlans,
+                            onOpenChapter = onOpenChapter,
+                            onBack = onBack,
+                        )
+                    }
                 }
             }
         }
@@ -260,8 +291,11 @@ class ChapterViewModel(
 
             // Nothing to show and no paywall to show instead: the screen failed
             // rather than pretending to be an empty chapter. `Locked` is not
-            // that case — it is the whole point of the sheet below.
-            if (list == null && written == null && failure !is ApiFailure.Locked) {
+            // that case — it is the whole point of the sheet below, and neither
+            // is `PartnerRequired`, which has a door of its own.
+            if (list == null && written == null &&
+                failure !is ApiFailure.Locked && failure !is ApiFailure.PartnerRequired
+            ) {
                 _state.value = ScreenState.Failed(
                     failure ?: (chapters as ApiResult.Err).failure
                 )
@@ -319,6 +353,7 @@ private val InkGold = Color(0xFF7A6129)
 @Composable
 private fun ChapterBody(
     chapter: ChapterView,
+    plates: PlateStore,
     onOffer: () -> Unit,
     onPlans: () -> Unit,
     onOpenChapter: (String) -> Unit,
@@ -373,7 +408,27 @@ private fun ChapterBody(
     ) {
         ReaderBar(chapter, onBack)
 
+        // **The plate is the first thing a chapter shows.**
+        //
+        // The map of all forty-one chapters existed, the endpoint existed, the
+        // disk cache existed — and no chapter on this platform had ever drawn
+        // one. In the canvas (`s5`) it stands over the overline, 150×188,
+        // centred, and that is where it stands here.
+        //
+        // Chapters whose art is not drawn yet show their Roman numeral in the
+        // same frame rather than a gap: the six holes are known and marked, and
+        // filling one with somebody else's painting would be worse than the
+        // hole — a picture about the wrong thing, on a chapter that was paid for.
         Spacer(Modifier.height(20.dp))
+        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            PlateArch(
+                store = plates,
+                plate = AlmaPlates.name(chapter.system, chapter.slug),
+                numeral = chapter.entry?.numeral.orEmpty(),
+            )
+        }
+
+        Spacer(Modifier.height(26.dp))
         Text(
             text = listOfNotNull(chapter.entry?.numeral, name.lowercase()).joinToString(" · "),
             style = AlmaTheme.type.overline.copy(color = InkGold),
@@ -567,6 +622,47 @@ private fun ChapterBody(
         }
 
         Spacer(Modifier.height(36.dp))
+    }
+}
+
+/**
+ * Compatibility needs a second person — and a door to one, not a sentence.
+ *
+ * The server answers `422 partner_required` here, which landed in the generic
+ * `Invalid` branch and printed as grey text in the middle of the page: the one
+ * action that resolves it was named by the sentence and offered nowhere. The
+ * system screen has drawn this case as a picture, a line and a button since it
+ * was built, and a chapter of the same system has no business behaving
+ * differently.
+ *
+ * [message] is the server's own, already in the reader's language — `readings.py`
+ * translates it through `i18n_replies` precisely so the client does not have to
+ * invent a sentence here.
+ *
+ * The drawing is the natal one, deliberately. Compatibility's own canvas is a
+ * lattice, and an empty lattice on the screen that says "there is nobody here
+ * yet" reads as a broken table rather than as two orbits that have not met.
+ */
+@Composable
+private fun NeedsPartner(message: String, onAddPerson: () -> Unit) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.padding(horizontal = AlmaSpacing.Pad),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            WritingArt(AlmaSystem.NATAL)
+            Spacer(Modifier.height(24.dp))
+            Text(
+                text = message.ifBlank { stringResource(R.string.people_lead) },
+                style = AlmaTheme.type.meta.copy(color = AlmaPalette.Muted),
+                textAlign = TextAlign.Center,
+            )
+            Spacer(Modifier.height(20.dp))
+            QuietButton(
+                text = stringResource(R.string.cabinet_add_person),
+                onClick = onAddPerson,
+            )
+        }
     }
 }
 

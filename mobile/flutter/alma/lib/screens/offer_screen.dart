@@ -190,7 +190,9 @@ class _OfferScreenState extends State<OfferScreen> {
       final shelf = await session.client.catalogue(locale: session.locale);
       if (mounted) {
         setState(() {
-          _shelf = shelf;
+          // Витрине нужны строки прайса; `manage_url` с той же полки читают
+          // настройки — здесь отменять нечего, здесь покупают.
+          _shelf = shelf.plans;
           _loading = false;
         });
       }

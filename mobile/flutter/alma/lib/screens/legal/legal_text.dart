@@ -1,8 +1,17 @@
 /// Пять юридических документов — в самом приложении, а не по ссылке.
 ///
 /// Порт `mobile/ios/Alma/Screens/Settings/LegalText.swift`, слово в слово:
-/// текст перенесён машинно и сверен по числу блоков — 72 абзаца, 6 списков,
-/// 5 фактов, 5 незаполненных фактов, 3 пропуска, 36 разделов.
+/// 37 разделов, 72 абзаца, 6 списков на 25 пунктов, 5 фактов,
+/// 5 незаполненных фактов, 3 пропуска.
+///
+/// **Пункты списков считаются отдельно, и не зря.** Прежняя сверка считала
+/// только блоки — а список остаётся одним блоком, из скольких бы пунктов он ни
+/// состоял. Так и разошлись: из терминов выпал пункт про атаку на сервис, из
+/// возвратов — четыре случая, при которых Alma поддерживает запрос без спора
+/// («не сгенерировалось», «списали дважды», «списали после отмены», «сбой стоил
+/// оплаченного месяца»), а заголовок раздела о четырнадцати днях пропал, и его
+/// пять абзацев ушли в предыдущий раздел. Числа сходились, текста не было.
+/// Тест `test/legal_text_test.dart` ловит теперь именно это.
 ///
 /// **Почему они здесь, а не за ссылкой.** Guideline 3.1.2 требует рабочую
 /// ссылку на условия и политику с того экрана, где продаётся подписка, а 5.1.1
@@ -137,6 +146,7 @@ class LegalText {
           'Enter your own birth data honestly. A guessed birth time produces a chart that is entirely plausible and completely wrong, and Alma cannot tell the difference.',
           'If you enter someone else\'s birth data for a compatibility reading, ask them first. It is their birth data, not yours.',
           'Do not scrape Alma, resell its readings, or present them as a product of your own. What Alma writes for you is yours to keep, print, quote and share.',
+          'Do not attack the service or try to reach other people\'s charts.',
         ]),
       ]),
       LegalSection('What we owe you', [
@@ -232,7 +242,11 @@ class LegalText {
       LegalSection('Where we support the request without arguing', [
         LegalBlock.para('These are our faults, or your right, and neither is a judgement call:'),
         LegalBlock.points([
+          'The reading never generated, or generated and would not open.',
           'The chart was wrong because of an error on our side rather than a birth time you were unsure of.',
+          'You were charged twice for the same thing.',
+          'You were charged after cancelling.',
+          'An outage of ours cost you a subscription month you had paid for.',
           'You changed your mind within fourteen days — see the withdrawal right below, which we do not treat as waived.',
         ]),
         LegalBlock.para('You do not have to prove any of this to us. If the record shows it, we say so to Apple, and we tell you we have.'),
@@ -240,6 +254,8 @@ class LegalText {
       LegalSection('Nothing is written until you open it', [
         LegalBlock.para('A chapter is generated the first time you open it, not at the moment you pay. The archive is forty-one chapters across eight systems, eight of which are the free samples anybody can read; buying it opens the other thirty-three, and opening them is not the same as writing them. Each one is written when you go to it, from your chart as it stands then, and stored so that it says the same thing every time afterwards.'),
         LegalBlock.para('That is the reason this page can say what it says next. At the second your card is charged, nothing has been delivered — and a promise that you have given up a right over text nobody has written yet is not a promise anybody should be asked to keep.'),
+      ]),
+      LegalSection('The 14-day withdrawal right, which we do not treat as waived', [
         LegalBlock.para('In the EU and the UK you have fourteen days to change your mind about something bought online. Digital content can be an exception to that, but only when three things have happened: you expressly agreed that we start immediately, you acknowledged that starting immediately costs you the right, and you were sent confirmation of both on something durable.'),
         LegalBlock.para('Through the App Store, Apple runs the purchase sheet and Apple sends the receipt — we do not control any of the three, and we are not going to stand on a waiver we did not obtain. If you tell us within fourteen days of buying that you have changed your mind, we support a full refund with Apple and we do not ask you why.'),
         LegalBlock.para('When the whole price comes back, what it bought closes: the archive stops opening, or the system you bought stops opening. Money back with the reading kept is not a refund, it is a hundred percent discount, and we would rather refuse the second than pretend it is the first.'),

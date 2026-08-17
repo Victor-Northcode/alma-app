@@ -624,5 +624,14 @@
   "chatReadingHouse": "читаю твой {house} дом…",
   "chatOpeningBody": "открываю {body}…",
   "chatFromChapter": "Прочитай главу, из которой это — {chapter}",
-  "chatNotTemplate": "Я отвечаю из твоей карты — никогда по шаблону."
+  "chatNotTemplate": "Я отвечаю из твоей карты — никогда по шаблону.",
+  "scrChatSwipeForTabs": "Смахни вверх — вкладки",
+  "cabCompatTwoSkies": "Два неба — одно сравнение",
+  "cabCompatBulletContacts": "Каждый контакт между двумя картами — с точным орбисом",
+  "cabCompatBulletHouses": "Куда их планеты попадают в твои дома — и твои в их",
+  "cabCompatBulletComposite": "Собственная карта отношений — небо вас двоих как одно",
+  "cabLegalEffective": "Действует с {p1}",
+  "cabPlanDeleteMismatchGuest": "Это не код этого аккаунта.",
+  "paywallArtCaption": "Каждая глава открывается своей вклейкой — нарисованной для этой колоды.",
+  "cabPlanCancelPeriodEnds": "План действует до {date}."
 }

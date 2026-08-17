@@ -162,6 +162,74 @@ enum JourneyL10n {
     static let unknownTime = LocalizedStringResource(
         "journey.capture.unknownTime", defaultValue: "I don't know my birth time", table: table)
 
+    // MARK: — the daylight-saving fork
+    //
+    // Not a step, and it has no numeral: it can only arrive after "Build my
+    // sky", when the calculation runs into a wall clock that happened twice,
+    // and numbering it would claim a part of the questionnaire that does not
+    // exist. The overline says what it is about instead.
+    //
+    // The wording is the Flutter port's, copied across rather than
+    // re-translated: all ten strings already existed there in all seven
+    // languages, and two translations of one sentence is one of them going
+    // stale.
+
+    static let dstOverline = LocalizedStringResource(
+        "journey.dst.overline", defaultValue: "about your birth time", table: table)
+
+    static func dstTitle(_ time: String) -> LocalizedStringResource {
+        LocalizedStringResource(
+            "journey.dst.title", defaultValue: "That night, \(time) happened twice", table: table)
+    }
+
+    static func dstBody(city: String, date: String, time: String) -> LocalizedStringResource {
+        LocalizedStringResource(
+            "journey.dst.body",
+            defaultValue: """
+                Clocks were set back in \(city) on \(date). Alma will not flip a coin about your \
+                sky — which \(time) is yours?
+                """,
+            table: table)
+    }
+
+    static let dstEarlier = LocalizedStringResource(
+        "journey.dst.earlier", defaultValue: "The earlier one", table: table)
+
+    static func dstEarlierSub(time: String, abbreviation: String) -> LocalizedStringResource {
+        LocalizedStringResource(
+            "journey.dst.earlierSub",
+            defaultValue: "\(time) on the summer clock · \(abbreviation)", table: table)
+    }
+
+    static let dstLater = LocalizedStringResource(
+        "journey.dst.later", defaultValue: "The later one", table: table)
+
+    static func dstLaterSub(
+        time: String, abbreviation: String, delta: String
+    ) -> LocalizedStringResource {
+        LocalizedStringResource(
+            "journey.dst.laterSub",
+            defaultValue: "\(time) on the winter clock · \(abbreviation), \(delta) after",
+            table: table)
+    }
+
+    static func dstFooter(_ delta: String) -> LocalizedStringResource {
+        LocalizedStringResource(
+            "journey.dst.footer",
+            defaultValue: """
+                If nobody remembers, pick either — the houses shift by \(delta) and you can change \
+                it in Settings.
+                """,
+            table: table)
+    }
+
+    /// How far apart the two instants are, in words. Half-hour transitions
+    /// exist, so the sentence cannot hardcode an hour.
+    static let dstDeltaHour = LocalizedStringResource(
+        "journey.dst.deltaHour", defaultValue: "an hour", table: table)
+    static let dstDeltaHalfHour = LocalizedStringResource(
+        "journey.dst.deltaHalfHour", defaultValue: "30 minutes", table: table)
+
     // MARK: — V · the place
 
     static let placeTitle = LocalizedStringResource(

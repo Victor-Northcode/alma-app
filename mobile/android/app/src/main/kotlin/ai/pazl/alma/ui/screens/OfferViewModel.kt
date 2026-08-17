@@ -191,11 +191,17 @@ class OfferViewModel(
     /**
      * They said no.
      *
-     * Recorded, and nothing else. The web app also spends its single stored
-     * downsell here, and this does not: the answer to `POST /billing/declined`
-     * is a one-time offer that has to be *shown* to be worth anything, and this
-     * screen is closing. Spending it into a screen that is going away would
-     * burn the one nudge the product allows itself and show nobody anything.
+     * Recorded in the funnel, and nothing else. `POST /billing/declined` is not
+     * called from here — and not from anywhere else either. The web sheet this
+     * comment used to name as the surface that spends the single stored
+     * downsell went with the rest of the cabinet, iOS never had the call, and
+     * [ai.pazl.alma.data.AlmaClient.declined] is a wrapper with no caller.
+     *
+     * Calling it here would still be wrong: the answer is a one-time offer that
+     * has to be *shown* to be worth anything, and this runs as the screen is
+     * going away, so it would burn the one nudge the product allows itself and
+     * show nobody anything. Which surface earns it is the owner's decision and
+     * it is still open — `docs/REMAINING.md §III.29`.
      */
     fun declined() {
         val product = state.value.dataOrNull()?.selected?.slug ?: wanted ?: "archive"

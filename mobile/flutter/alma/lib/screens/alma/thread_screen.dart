@@ -92,6 +92,12 @@ class _ThreadScreenState extends State<ThreadScreen> {
                 mine: turn.mine,
                 body: turn.body,
                 citedFactors: turn.citedFactors,
+                // Вид реплики приезжает и в сохранённой беседе — сервер отдаёт
+                // `turn_kind` и здесь. Не передать его тут значило бы вернуть
+                // ровно то расхождение, ради снятия которого вью общая: одно и
+                // то же сообщение с тихой строкой в живой ленте и без неё после
+                // перезапуска.
+                kind: turn.kind,
               ),
         ],
       ),

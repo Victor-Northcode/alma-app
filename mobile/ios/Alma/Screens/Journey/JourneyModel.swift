@@ -86,6 +86,9 @@ final class JourneyModel {
         portrait = .loading
         savedProfile = nil
         announced = false
+        fork = nil
+        fold = nil
+        working = false
     }
 
     // MARK: — what has been collected
@@ -133,6 +136,33 @@ final class JourneyModel {
     /// Set once the birth is saved, so that a skipped-and-returned-to ceremony
     /// does not save a second profile.
     private(set) var savedProfile: Profile?
+
+    // MARK: — the daylight-saving fork
+
+    /// The question the sky asked back, when it did.
+    ///
+    /// **An interrupt in the ceremony, not a step of the journey.** It can only
+    /// arrive after "Build my sky", so it has no numeral of its own; the beats
+    /// behind it pause rather than reset, and the arrow on it leads back to the
+    /// time step.
+    ///
+    /// Non-nil means the ceremony is holding: nothing is saved and nothing is
+    /// computed until `answer(_:)` is called.
+    private(set) var fork: AlmaError.BirthTimeFork?
+
+    /// Which of the two instants was chosen — `"earlier"` or `"later"`, the
+    /// server's own words, echoed back untouched as `on_ambiguous`.
+    ///
+    /// It rides along in the profile, so the question is answered once rather
+    /// than at every calculation from here on.
+    private(set) var fold: String?
+
+    /// Whether the save is still in flight.
+    ///
+    /// The ceremony is a fixed nine and a half seconds and the network is not,
+    /// so whichever of the two finishes second is the one that leaves. Walking
+    /// out on a slow connection lands somebody in an empty cabinet.
+    private(set) var working = false
 
     // MARK: — derived
 
@@ -203,9 +233,20 @@ final class JourneyModel {
             timezone: place.timezone,
             placeLabel: place.label,
             placeId: place.id,
-            name: trimmed.isEmpty ? nil : trimmed
+            name: trimmed.isEmpty ? nil : trimmed,
+            // Nil until the fork has been answered, which is what makes the
+            // server raise the question instead of guessing. Afterwards it
+            // travels with the birth and the question is never asked again.
+            onAmbiguous: fold
         )
     }
+
+    /// The time the person named, as the fork's sentences print it.
+    ///
+    /// `twentyFourHour` rather than the three fields: this is the exact string
+    /// that travelled to the server, and the fork's question is about *that*
+    /// string — quoting anything else would ask about a time nobody sent.
+    var wallClock: String { twentyFourHour ?? "" }
 
     /// The clock, converted once. The arithmetic itself is on `Meridiem`, so the
     /// add-a-person form uses the same one rather than a second copy.
@@ -248,10 +289,15 @@ final class JourneyModel {
     /// should still be saved.
     func begin(with session: AlmaSessionModel) {
         guard work == nil else { return }
+        // Raised here rather than inside the task: the ceremony reads it to
+        // decide whether it may leave, and a flag raised one hop later is a
+        // flag the ceremony's first frame reads as "nothing running".
+        working = true
         work = Task { await self.run(with: session) }
     }
 
     private func run(with session: AlmaSessionModel) async {
+        defer { working = false }
         if savedProfile == nil {
             // The quiz completes here and not at the portrait. Every question
             // has been answered by the time the ceremony runs; the portrait is
@@ -270,6 +316,15 @@ final class JourneyModel {
 
             do {
                 savedProfile = try await session.saveOwnBirth(birth, gender: gender)
+            } catch .ambiguousBirthTime(_, let asked) {
+                // Not a refusal — a question. The ceremony holds and waits for
+                // an answer instead of failing the journey, and the portrait is
+                // left untouched so that answering resumes rather than restarts.
+                fork = asked
+                // Dropped so that `begin` may run again once the fork is
+                // answered; nothing has been saved, so there is nothing to undo.
+                work = nil
+                return
             } catch {
                 portrait = .failed(error)
                 return
@@ -277,6 +332,25 @@ final class JourneyModel {
         }
 
         await loadPortrait(with: session)
+    }
+
+    /// The fork is answered: keep the choice and run the save again with it.
+    func answer(_ choice: String, with session: AlmaSessionModel) {
+        fold = choice
+        fork = nil
+        begin(with: session)
+    }
+
+    /// The arrow out of the fork: back to the time step, question dropped.
+    ///
+    /// Somebody who cannot answer it can change the minute they gave, and a
+    /// different minute may not be ambiguous at all. The answer is cleared with
+    /// the question, so the next save asks again rather than carrying a choice
+    /// nobody made.
+    func leaveFork() {
+        fold = nil
+        fork = nil
+        step = .time
     }
 
     /// The in-flight save-and-read. See `begin(with:)` for why it lives here.

@@ -2807,5 +2807,51 @@
   "chatNotTemplate": "I answer from your chart, never from a template.",
   "@chatNotTemplate": {
     "description": "from Chat/chat.notTemplate (A1 quiet line)"
+  },
+  "scrChatSwipeForTabs": "Swipe up for tabs",
+  "@scrChatSwipeForTabs": {
+    "description": "Подпись под ручкой вкладок в чате, кегль 9.5, и голосовая метка самой ручки — одна строка на двоих: ручку 30×3 пальцем не найти, а VoiceOver до сих пор называл кнопку никак. strings-batch2.md."
+  },
+  "cabCompatTwoSkies": "Two skies, one comparison",
+  "@cabCompatTwoSkies": {
+    "description": "S23, заголовок над обещанием совместимости: экран без второго человека — приглашение, а не ошибка, и начинаться он должен с титула. strings-batch2.md."
+  },
+  "cabCompatBulletContacts": "Every contact between the two charts, with its exact orb",
+  "@cabCompatBulletContacts": {
+    "description": "S23, первый из трёх пунктов о том, что будет посчитано, когда второй человек появится. strings-batch2.md."
+  },
+  "cabCompatBulletHouses": "Where their planets land in your houses — and yours in theirs",
+  "@cabCompatBulletHouses": {
+    "description": "S23, второй пункт. strings-batch2.md."
+  },
+  "cabCompatBulletComposite": "The relationship's own chart — the sky of the two of you as one",
+  "@cabCompatBulletComposite": {
+    "description": "S23, третий пункт. strings-batch2.md."
+  },
+  "cabLegalEffective": "Effective {p1}",
+  "@cabLegalEffective": {
+    "description": "Дата вступления документа в силу (S40). {p1} — дата, прогнанная через DateFormat локали, а не вписанная в текст словами: тело документа по-английски, а строка над ним читается на семи языках. strings-batch2.md.",
+    "placeholders": {
+      "p1": {
+        "type": "String"
+      }
+    }
+  },
+  "cabPlanDeleteMismatchGuest": "That is not the code on this account.",
+  "@cabPlanDeleteMismatchGuest": {
+    "description": "Отказ удалить аккаунт гостю. Гость заводился кодом, а не адресом, и общий cabPlanDeleteMismatch звал бы его сверить адрес, которого у него нет. strings-batch2.md."
+  },
+  "paywallArtCaption": "Every chapter opens with its own plate — painted for this deck.",
+  "@paywallArtCaption": {
+    "description": "Подпись под картиной на витрине (S42/S43): картина там не украшение, и подпись говорит, что вклейка написана под эту главу. strings-batch2.md."
+  },
+  "cabPlanCancelPeriodEnds": "Your plan stays active until {date}.",
+  "@cabPlanCancelPeriodEnds": {
+    "description": "Первый шаг отмены: оплаченный период дослуживает. {date} — из каталога подписок, локализованная. strings-batch2.md.",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
   }
 }

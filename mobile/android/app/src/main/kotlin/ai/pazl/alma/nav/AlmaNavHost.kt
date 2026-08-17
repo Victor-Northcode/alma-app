@@ -5,6 +5,8 @@ import ai.pazl.alma.data.AlmaSystem
 import ai.pazl.alma.ui.screens.AlmaScreen
 import ai.pazl.alma.ui.screens.ChapterScreen
 import ai.pazl.alma.ui.screens.JourneyScreen
+import ai.pazl.alma.ui.screens.LegalDocument
+import ai.pazl.alma.ui.screens.LegalScreen
 import ai.pazl.alma.ui.screens.OfferScreen
 import ai.pazl.alma.ui.screens.PeopleScreen
 import ai.pazl.alma.ui.screens.SettingsScreen
@@ -281,6 +283,20 @@ fun AlmaNavHost(
                     // daily belongs to — a transits door grants chapters, not
                     // the daily — and "See the plans" means the plans.
                     onOffer = { navController.navigate(Routes.offer()) },
+                    onLegal = { document -> navController.navigate(Routes.legal(document.slug)) },
+                )
+            }
+
+            // The five documents. A push inside the graph rather than a browser
+            // intent: the text ships with the binary, so this is the one screen
+            // that opens with no network and cannot fail.
+            composable(
+                route = Routes.LEGAL,
+                arguments = listOf(navArgument(Routes.ARG_DOCUMENT) { type = NavType.StringType }),
+            ) { entry ->
+                LegalScreen(
+                    document = LegalDocument.of(entry.arguments?.getString(Routes.ARG_DOCUMENT)),
+                    onBack = { navController.popBackStack() },
                 )
             }
 
@@ -341,6 +357,10 @@ fun AlmaNavHost(
                             popUpTo(Routes.CHAPTER) { inclusive = true }
                         }
                     },
+                    // Pushed, not replaced: coming back from the people screen
+                    // has to land on the chapter that asked for the person, and
+                    // that chapter reloads itself when it is resumed.
+                    onAddPerson = { navController.navigate(Routes.PEOPLE) },
                     onBack = { navController.popBackStack() },
                 )
             }

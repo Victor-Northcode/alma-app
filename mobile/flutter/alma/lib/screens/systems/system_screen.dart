@@ -246,6 +246,17 @@ class _SystemScreenState extends State<SystemScreen> {
           // утверждает: две дуги, которые ещё не встретились.
           const Center(child: WritingArt(size: 220, seed: 0)),
           const SizedBox(height: 10),
+          // Титул над обещанием. Без него экран начинался с оправдания —
+          // «нужен второй человек», — и читался поломкой. С ним он говорит,
+          // что здесь будет, и приглашение стоит под обещанием, а не вместо.
+          Center(
+            child: Text(
+              l.cabCompatTwoSkies,
+              textAlign: TextAlign.center,
+              style: AlmaType.displayL.copyWith(fontSize: 22, height: 1.2),
+            ),
+          ),
+          const SizedBox(height: 8),
           // По центру и в колонку шириной 300 — как в макете: это обещание
           // системы, а не примечание под рисунком.
           Center(
@@ -274,6 +285,15 @@ class _SystemScreenState extends State<SystemScreen> {
                   style: AlmaType.button.copyWith(color: AlmaPalette.goldBright)),
             ),
           ),
+          const SizedBox(height: 16),
+          // Три пункта — под кнопкой, а не над ней, и это порядок с холста:
+          // человек уже согласился или уже отказался к моменту, когда читает
+          // подробности, и подробности не должны стоять у него на пути.
+          _compatBullet(l.cabCompatBulletContacts),
+          const SizedBox(height: 7),
+          _compatBullet(l.cabCompatBulletHouses),
+          const SizedBox(height: 7),
+          _compatBullet(l.cabCompatBulletComposite),
         ]
         else if (_computeFailure case final error?)
           Padding(
@@ -464,6 +484,30 @@ class _SystemScreenState extends State<SystemScreen> {
     // 4:12 AM там, где по 12. Руками этот выбор не делается.
     return '${DateFormat.yMMMMd(l.localeName).format(local)}'
         ' · ${DateFormat.jm(l.localeName).format(local)}';
+  }
+
+  /// Пункт списка «что будет посчитано» на S23.
+  ///
+  /// Точка отбивается сверху на 6, а не центрируется по строке: пункты в две
+  /// строки здесь обычное дело в немецком и русском, и кружок, севший на
+  /// середину двухстрочного пункта, читается маркером не того абзаца.
+  Widget _compatBullet(String text) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 6),
+          width: 4,
+          height: 4,
+          decoration: BoxDecoration(
+            color: AlmaPalette.gold.withValues(alpha: 0.7),
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Text(text, style: AlmaType.meta)),
+      ],
+    );
   }
 
   /// «стихия — воздух»: подпись слева строчными, значение справа засечным.

@@ -54,7 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 /**
  * The paywall — the one screen in this app that takes money.
  *
- * It is the same sheet as `src/components/cabinet/Paywall.tsx`, in the same
+ * It is the same sheet as the web checkout it was ported from, in the same
  * order, with the same pre-selection: the door for the system the person
  * reached for, then the archive, then the year. Somebody who tapped a locked
  * chapter arrives with that chapter's system selected, and somebody who arrived
@@ -63,7 +63,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  * questions" and a `?: "natal"` in that position offers a natal purchase to
  * people who already own natal.
  *
- * ## Three things the web sheet has that this one does not
+ * ## Three things that web sheet had that this one does not
+ *
+ * Past tense on purpose: the browser stopped serving a paywall at all. The
+ * cabinet it belonged to — tabs, hub, reader, chat, settings, the sheet and its
+ * downsell — was deleted, and `src/` is the storefront now (the header of
+ * `src/app/screens.css` records what went). The three differences below are
+ * still why this screen is not a copy; they are recorded against that design,
+ * not against anything a browser runs today.
  *
  * **The two consent boxes and the email field.** On the web we are the seller:
  * the buyer waives a 14-day withdrawal right so the writing can begin now, and
@@ -80,9 +87,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  * product missing from the Play Console is not shown rather than shown at our
  * price.
  *
- * **The downsell.** The web shows one soft nudge after a refusal. Here the
- * screen is closing, and `POST /billing/declined` spends a stored, one-time
- * offer that has to be seen to be worth anything.
+ * **The downsell.** Nobody spends it — not this screen, and not the web sheet
+ * this comment used to credit with spending it. `POST /billing/declined` hands
+ * back a stored, one-time offer that is worth something only if it is *seen*,
+ * and the moment a refusal happens here is the moment this screen is going
+ * away. So the binding exists and has no caller ([ai.pazl.alma.data.AlmaClient.declined]),
+ * which is a decision left open rather than a wire somebody forgot: which
+ * surface gets that single nudge is the owner's call — `docs/REMAINING.md
+ * §III.29`.
  *
  * Nothing on this screen unlocks anything. A grant closes it, and the grant
  * comes from the server having asked Google.

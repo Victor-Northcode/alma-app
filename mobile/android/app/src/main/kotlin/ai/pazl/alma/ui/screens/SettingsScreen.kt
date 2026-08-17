@@ -86,6 +86,7 @@ fun SettingsScreen(
     container: AppContainer,
     onSignIn: () -> Unit,
     onOffer: () -> Unit,
+    onLegal: (LegalDocument) -> Unit,
 ) {
     val vm: SettingsViewModel = viewModel {
         SettingsViewModel(
@@ -126,6 +127,7 @@ fun SettingsScreen(
                 container = container,
                 onSignIn = onSignIn,
                 onOffer = onOffer,
+                onLegal = onLegal,
             )
         }
     }
@@ -140,6 +142,7 @@ private fun SettingsBody(
     container: AppContainer,
     onSignIn: () -> Unit,
     onOffer: () -> Unit,
+    onLegal: (LegalDocument) -> Unit,
 ) {
     val isGuest = settings.account?.isGuest != false
     val email = settings.account?.email.orEmpty()
@@ -218,7 +221,7 @@ private fun SettingsBody(
         MeasurementSwitch(vm)
 
         Spacer(Modifier.height(30.dp))
-        DataAndLegal(settings, vm, onSignIn)
+        DataAndLegal(settings, vm, onSignIn, onLegal)
 
         Spacer(Modifier.height(30.dp))
         Text(text = stringResource(R.string.settings_fine_print), style = AlmaTheme.type.meta)
@@ -583,6 +586,7 @@ private fun DataAndLegal(
     settings: SettingsView,
     vm: SettingsViewModel,
     onSignIn: () -> Unit,
+    onLegal: (LegalDocument) -> Unit,
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -667,27 +671,29 @@ private fun DataAndLegal(
     )
 
     Spacer(Modifier.height(22.dp))
-    // Five documents, five routes. The labels are translated so the row reads in
-    // the person's own language; the documents themselves are English until they
-    // have been reviewed against the law of each country, which is the one place
-    // a translation would do more harm than good.
+    // Five documents, five routes — inside the app.
+    //
+    // These five used to hand `$Site/$path` to a browser, and `alma.pazl.ai`
+    // answers NXDOMAIN: every one of them opened an error page, in the app Play
+    // is being asked to review, from the section a reviewer opens first. The
+    // text ships in the binary now (see `LegalText`), so there is no host to be
+    // down and no network to be off.
+    //
+    // The labels are translated so the row reads in the person's own language;
+    // the documents themselves are English until they have been reviewed
+    // against the law of each country, which is the one place a translation
+    // would do more harm than good.
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        listOf(
-            stringResource(R.string.legal_terms) to "terms",
-            stringResource(R.string.legal_privacy) to "privacy",
-            stringResource(R.string.legal_refunds) to "refunds",
-            stringResource(R.string.legal_subscription_terms) to "subscription-terms",
-            stringResource(R.string.legal_imprint) to "imprint",
-        ).forEach { (label, path) ->
+        LegalDocument.entries.forEach { document ->
             Text(
-                text = label,
+                text = stringResource(document.title),
                 style = AlmaTheme.type.meta,
                 color = AlmaPalette.Gold,
-                modifier = Modifier.clickable(role = Role.Button) { context.openWeb("$Site/$path") },
+                modifier = Modifier.clickable(role = Role.Button) { onLegal(document) },
             )
         }
     }
@@ -895,7 +901,17 @@ private fun Note(text: String, colour: Color = AlmaPalette.Muted) {
 
 /* ── leaving the app ───────────────────────────────────────────────────── */
 
-/** Where the five legal documents live. The same host the magic link uses. */
+/**
+ * The web app's host — the same one the magic link uses.
+ *
+ * The five legal documents no longer go through here: they are in the binary,
+ * because this host does not resolve. The account-deletion page still does, and
+ * has to, because Play Console asks for a URL a person can open in a browser
+ * while signed out and without the app. That link is dead for the same reason
+ * the other five were, and it is a hosting problem rather than a client one — an
+ * in-app screen cannot satisfy a requirement whose whole point is that it works
+ * without the app.
+ */
 private const val Site = "https://alma.pazl.ai"
 
 /**

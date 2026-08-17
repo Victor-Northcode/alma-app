@@ -376,8 +376,23 @@ class AlmaClient {
   /// безличные обороты. Анкета спрашивает об этом вторым шагом и до этой
   /// правки никуда не отправляла — человек отвечал, а письмо всё равно
   /// обходило его пол стороной.
+  ///
+  /// **[locale] — язык *отказа*, а не язык профиля**, и обязателен он поэтому.
+  /// Единственный ответ, который эта ручка отдаёт словами читателю, — 402
+  /// `partner_limit` («одно сохранённое сравнение — бесплатно»), и сервер берёт
+  /// его язык отсюда (`api/schemas.py`, `ProfileInput.locale`). Без поля он
+  /// откатывается на `user.locale`, а у свежего гостя там ещё стоит язык
+  /// чеканки: наш `PATCH /v1/account` уходит без ожидания и приземляется когда
+  /// успеет. То есть первому гостю — тому, кто добавляет второго человека в
+  /// первые же минуты, — отказ приходил по-английски. Проверено на живом 8018:
+  /// то же тело с `"locale":"ru"` и `"de"` отвечает по-русски и по-немецки.
+  ///
+  /// Поле стоит здесь, а не в [BirthInput], потому что и на сервере оно живёт
+  /// на `ProfileInput`, а не на `BirthInput`: рождение — это дата и место, а не
+  /// язык того, кто его вводит.
   Future<Profile> saveProfile(
     BirthInput birth, {
+    required String locale,
     bool isSelf = true,
     String? relation,
     String? gender,
@@ -385,6 +400,7 @@ class AlmaClient {
     final body = await _post('/v1/profiles', {
       ...birth.toJson(),
       'is_self': isSelf,
+      'locale': locale,
       'relation': ?relation,
       'gender': ?gender,
     });
@@ -467,14 +483,33 @@ class AlmaClient {
 
   /// Глава. Несёт [writingTimeout]: если её ещё не писали, модель сейчас будет
   /// молча работать почти минуту.
+  ///
+  /// **[partnerProfileId] — кого с кем читать, и без него глава совместимости
+  /// ломается ровно там, где человек сделал всё правильно.** Сервер умеет
+  /// подставить второго сам, но только пока сохранённый человек **ровно один**
+  /// (`readings.py`, `_partner`); при двух и более он отвечает 422
+  /// `partner_required`, и экран рисует «добавьте человека» тому, у кого их уже
+  /// двое. Имя поля снято с `ReadingRequest.partner_profile_id` и проверено на
+  /// живом 8018: выдуманный идентификатор отвечает 404 «no such profile» — то
+  /// есть поле читается, — а запрос без него на аккаунте без пары даёт 422 с
+  /// переведённой фразой.
+  ///
+  /// Остальным системам поле не нужно, и слать его им незачем: сервер его там
+  /// игнорирует, но запрос, несущий лишнее, врёт о том, что ему важно.
   Future<ReadingResponse> reading({
     required SystemSlug system,
     required String chapter,
     required String locale,
+    String? partnerProfileId,
   }) async =>
       ReadingResponse.fromJson(await _post(
         '/v1/readings',
-        {'system': system.path, 'chapter': chapter, 'locale': locale},
+        {
+          'system': system.path,
+          'chapter': chapter,
+          'locale': locale,
+          'partner_profile_id': ?partnerProfileId,
+        },
         timeout: writingTimeout,
       ));
 
@@ -491,13 +526,14 @@ class AlmaClient {
   /// Полка: что вообще продаётся и почём. Цена приходит с сервера — здесь
   /// её не считают и не переводят в валюту, иначе на витрине и в чеке
   /// оказались бы два разных числа.
-  Future<List<Plan>> catalogue({required String locale}) async {
-    final body = await _get('/v1/billing/catalogue?locale=$locale');
-    final rows = (body['items'] as List?) ?? const [];
-    return rows
-        .map((row) => Plan.fromJson((row as Map).cast<String, dynamic>()))
-        .toList();
-  }
+  ///
+  /// Отдаёт полку целиком, а не один список строк: у той же ручки лежит
+  /// `manage_url` — адрес, по которому останавливают магазинную подписку, — и
+  /// настройки читают его отсюда. Пока метод возвращал только `items`, это поле
+  /// не читалось нигде, и кнопка «управлять подпиской» вела в App Store с
+  /// любого телефона.
+  Future<Catalogue> catalogue({required String locale}) async =>
+      Catalogue.fromJson(await _get('/v1/billing/catalogue?locale=$locale'));
 
   Future<Map<String, dynamic>> entitlements() async =>
       _get('/v1/billing/entitlements');

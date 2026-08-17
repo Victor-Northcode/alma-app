@@ -78,8 +78,16 @@ final class AlmaSessionModel {
 
     let client: AlmaClient
 
+    /// The chapter plates, cached on disk for the life of the install.
+    ///
+    /// Here rather than on the chapter screen because the cache is the point: a
+    /// store created per chapter is a store with an empty cache every time a
+    /// chapter opens, which is the download it exists to avoid.
+    let plates: PlateStore
+
     init(client: AlmaClient = AlmaClient()) {
         self.client = client
+        self.plates = PlateStore(baseURL: client.baseURL)
     }
 
     // MARK: — launch

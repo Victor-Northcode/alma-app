@@ -20,24 +20,28 @@ deletes the tokens rather than setting a flag something remembers to check.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, HTTPException, Request, status
+from fastapi import APIRouter, Body, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 
 from ...auth import entitlements
 from ...geo import is_known_timezone
 from ...notify import rules, tokens
-from ..deps import CurrentUser, SessionDep
+from ..deps import CurrentUser, DeviceTimezone, SessionDep
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
-#: The header a client sends to say which zone the *device* is in, as opposed
-#: to the zone somebody was born in. `docs/PUSH.md §3` and `THE-DAILY.md §6.8`
-#: both ask `alma/api/deps.py` for this as a request-wide dependency, so that
-#: every call refreshes it and a person who moves is caught within a day.
-#: That file belongs to another workflow; until it lands, this route reads the
-#: header itself, which covers the registration call — the one that matters,
-#: because the client re-registers on every launch.
-TIMEZONE_HEADER = "X-Alma-Timezone"
+#: The device's own zone now arrives the way `docs/PUSH.md §3` and
+#: `THE-DAILY.md §6.8` asked for it — as a request-wide dependency,
+#: `deps.device_timezone`, reading `X-Alma-Timezone` and dropping silently what
+#: it cannot resolve. This route no longer reads a header, and that is the
+#: point of moving it: the zone belongs to every call rather than to this one.
+#:
+#: What stays here is the other half of the ask, **persisting** it: the job that
+#: sends at 08:00 local runs on a server at 03:00 with no request to read from,
+#: so the zone has to be on the device row before then. Registration is the
+#: right place for that write because the client re-registers on every launch,
+#: which is what keeps somebody who has flown from being woken on the old clock
+#: for more than a day.
 
 
 class DeviceIn(BaseModel):
@@ -73,24 +77,32 @@ class SettingsIn(BaseModel):
     timezone: str | None = Field(default=None, max_length=64)
 
 
-def _zone_from(payload_zone: str | None, request: Request) -> str | None:
+def _zone_from(payload_zone: str | None, device_zone: str | None) -> str | None:
     """The device's zone, from the body or the header, or nothing.
 
-    Validated through `geo.is_known_timezone` and **ignored silently when
-    unrecognised**, exactly as the country header is. A client on an old
+    The body wins when it carries one, because a client that names the zone in
+    the registration it is making is being more specific than a header it
+    attaches to everything.
+
+    Only the body arm is validated here: a request body is not a request
+    property, so no dependency sees it, while the header arrives already
+    checked from `deps.device_timezone`. Both are **ignored silently when
+    unrecognised**, exactly as the country header is — a client on an old
     Android with a stale tzdata should lose the optimisation, not the
     registration.
     """
-    for value in (payload_zone, request.headers.get(TIMEZONE_HEADER)):
-        candidate = (value or "").strip()
-        if candidate and is_known_timezone(candidate):
-            return candidate
-    return None
+    candidate = (payload_zone or "").strip()
+    if candidate and is_known_timezone(candidate):
+        return candidate
+    return device_zone
 
 
 @router.post("/devices", status_code=status.HTTP_201_CREATED)
 async def register(
-    payload: DeviceIn, request: Request, user: CurrentUser, session: SessionDep
+    payload: DeviceIn,
+    device_zone: DeviceTimezone,
+    user: CurrentUser,
+    session: SessionDep,
 ) -> DeviceOut:
     """Record this install, or refresh what we already knew about it.
 
@@ -106,7 +118,7 @@ async def register(
             platform=payload.platform,
             token=payload.token,
             environment=payload.environment,
-            timezone=_zone_from(payload.timezone, request),
+            timezone=_zone_from(payload.timezone, device_zone),
             locale=payload.locale,
             app_version=payload.app_version,
             os_version=payload.os_version,

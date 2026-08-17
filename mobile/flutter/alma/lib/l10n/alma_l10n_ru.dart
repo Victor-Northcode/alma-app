@@ -2106,4 +2106,39 @@ class LRu extends L {
   @override
   String get chatNotTemplate =>
       'Я отвечаю из твоей карты — никогда по шаблону.';
+
+  @override
+  String get scrChatSwipeForTabs => 'Смахни вверх — вкладки';
+
+  @override
+  String get cabCompatTwoSkies => 'Два неба — одно сравнение';
+
+  @override
+  String get cabCompatBulletContacts =>
+      'Каждый контакт между двумя картами — с точным орбисом';
+
+  @override
+  String get cabCompatBulletHouses =>
+      'Куда их планеты попадают в твои дома — и твои в их';
+
+  @override
+  String get cabCompatBulletComposite =>
+      'Собственная карта отношений — небо вас двоих как одно';
+
+  @override
+  String cabLegalEffective(String p1) {
+    return 'Действует с $p1';
+  }
+
+  @override
+  String get cabPlanDeleteMismatchGuest => 'Это не код этого аккаунта.';
+
+  @override
+  String get paywallArtCaption =>
+      'Каждая глава открывается своей вклейкой — нарисованной для этой колоды.';
+
+  @override
+  String cabPlanCancelPeriodEnds(String date) {
+    return 'План действует до $date.';
+  }
 }

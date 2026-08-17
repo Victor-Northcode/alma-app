@@ -80,6 +80,35 @@ class JourneyViewModel(
     private val _portrait = MutableStateFlow<ScreenState<Portrait>>(ScreenState.Loading)
     val portrait: StateFlow<ScreenState<Portrait>> = _portrait.asStateFlow()
 
+    /* ── the daylight-saving fork ──────────────────────────────────────── */
+
+    /**
+     * The question the sky asked back, when it did.
+     *
+     * **An interrupt in the ceremony, not a step of the journey.** It can only
+     * arrive after "Build my sky", when the calculation has run into a wall
+     * clock that happened twice, so it has no numeral of its own — numbering it
+     * "VII / VI" would claim a part of the questionnaire that does not exist.
+     * The beats behind it pause rather than reset.
+     *
+     * Non-null means the ceremony is holding: nothing is saved and nothing is
+     * computed until [answerFork] is called.
+     */
+    private val _fork = MutableStateFlow<ApiFailure.AmbiguousTime?>(null)
+    val fork: StateFlow<ApiFailure.AmbiguousTime?> = _fork.asStateFlow()
+
+    /**
+     * Which of the two instants was chosen, `"earlier"` or `"later"`.
+     *
+     * Rides along in the profile, so the answer is given once rather than at
+     * every calculation from here on.
+     */
+    private var fold: String? = null
+
+    /** True once the save has come back, however it came back. */
+    private val _saving = MutableStateFlow(false)
+    val saving: StateFlow<Boolean> = _saving.asStateFlow()
+
     /* ── funnel ────────────────────────────────────────────────────────── */
 
     /**
@@ -264,11 +293,16 @@ class JourneyViewModel(
      * ceremony's whole budget on waiting.
      */
     private fun loadPortrait() {
+        // Set here rather than inside the coroutine: the ceremony reads it to
+        // decide whether it may leave, and a flag raised one dispatch later is
+        // a flag the first frame of the ceremony sees as "nothing running".
+        _saving.value = true
         viewModelScope.launch {
             _portrait.value = ScreenState.Loading
 
             val birth = _draft.value.toBirthInput()
             if (birth == null) {
+                _saving.value = false
                 // Reachable only by a bug in this app: the place step will not
                 // let anybody past without a place and the date step will not
                 // let anybody past without a real date.
@@ -282,13 +316,32 @@ class JourneyViewModel(
             // arrives in it — the account's stored locale may still be the
             // minting default at this point in a first run.
             val spoken = java.util.Locale.getDefault().toLanguageTag()
-            when (val saved = client.saveProfile(birth.copy(locale = spoken, gender = _draft.value.gender))) {
+            val request = birth.copy(
+                locale = spoken,
+                gender = _draft.value.gender,
+                // Null until the fork has been answered, which is what makes
+                // the server raise the question instead of guessing. After the
+                // answer it rides along and the question is never asked again.
+                onAmbiguous = fold,
+            )
+            when (val saved = client.saveProfile(request)) {
                 is ApiResult.Err -> {
-                    _portrait.value = ScreenState.Failed(saved.failure)
+                    val failure = saved.failure
+                    _saving.value = false
+                    if (failure is ApiFailure.AmbiguousTime) {
+                        // Not a refusal — a question. The ceremony holds and
+                        // waits for an answer instead of failing the journey,
+                        // and the portrait stays untouched so that answering
+                        // resumes rather than restarts.
+                        _fork.value = failure
+                    } else {
+                        _portrait.value = ScreenState.Failed(failure)
+                    }
                     return@launch
                 }
                 is ApiResult.Ok -> session.onProfileSaved(saved.data)
             }
+            _saving.value = false
 
             // No `birth` in the request: these read the profile that was just
             // saved, which is the same thing every cabinet screen will do
@@ -333,6 +386,34 @@ class JourneyViewModel(
 
     /** Try the save and the three readings again. Safe: a second self replaces the first. */
     fun retryPortrait() = loadPortrait()
+
+    /**
+     * The fork is answered: keep the choice and run the save again with it.
+     *
+     * [choice] is the server's own word — `"earlier"` or `"later"` — echoed
+     * back untouched as `on_ambiguous`, so nothing here has to know which
+     * instant either of them is.
+     */
+    fun answerFork(choice: String) {
+        fold = choice
+        _fork.value = null
+        loadPortrait()
+    }
+
+    /**
+     * The arrow out of the fork: back to the time step, question dropped.
+     *
+     * Somebody who cannot answer it can change the minute they gave, and a
+     * different minute may not be ambiguous at all. The answer is cleared with
+     * the question so the next save asks again rather than carrying a choice
+     * that was never made.
+     */
+    fun leaveFork() {
+        fold = null
+        _fork.value = null
+        ceremonyBegun = false
+        _step.value = JourneyStep.Time
+    }
 
     private companion object {
         /**
@@ -478,6 +559,15 @@ data class JourneyDraft(
             }
             return "%02d:%02d".format(hours, minute!!)
         }
+
+    /**
+     * The time the person named, as the daylight-saving fork prints it.
+     *
+     * [birthTime] rather than the three fields: this is the exact string that
+     * travelled to the server, and the fork's question is about that string —
+     * quoting anything else would ask about a time nobody sent.
+     */
+    val wallClock: String get() = birthTime.orEmpty()
 
     /** Which system the offer at the end is about. The natal chart, for everybody. */
     val system: String get() = AlmaSystem.NATAL

@@ -210,6 +210,26 @@ struct ChapterScreen: View {
     @ViewBuilder
     private func heading(_ model: ChapterModel) -> some View {
         VStack(alignment: .leading, spacing: 12) {
+            // **The plate is the first thing a chapter shows.**
+            //
+            // The map of all forty-one chapters existed, the endpoint existed,
+            // the disk cache existed — and no chapter on this platform had ever
+            // drawn one. In the canvas (`s5`) it stands over the overline,
+            // 150×188, centred, and that is where it stands here.
+            //
+            // Chapters whose art is not drawn yet show their Roman numeral in
+            // the same frame rather than a gap: the six holes are known and
+            // marked, and filling one with somebody else's painting would be
+            // worse than the hole — a picture about the wrong thing, on a
+            // chapter that was paid for.
+            PlateArch(
+                store: session.plates,
+                plate: AlmaPlates.name(system, chapter: showing),
+                numeral: model.entry?.numeral ?? ""
+            )
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.bottom, 14)
+
             HStack(spacing: 10) {
                 if let entry = model.entry {
                     Text(verbatim: entry.numeral).almaOverline()
@@ -511,6 +531,28 @@ struct ChapterScreen: View {
                 actionTitle: L10nCabinet.addBirthTime
             ) {
                 router.openJourney()
+            }
+
+        // **Compatibility needs a second person — and a door to one, not a
+        // sentence.**
+        //
+        // The server's 422 landed on `.invalid` below and printed as flat text
+        // in the middle of the page: the one action that resolves it was named
+        // by the sentence and offered nowhere. `SystemScreen` has drawn this
+        // case as a line and a button since it was built, and a chapter of the
+        // same system has no business behaving differently.
+        //
+        // The message is the server's own and already in the reader's language
+        // — `readings.py` translates it through `i18n_replies` precisely so a
+        // client does not have to invent a sentence here.
+        case .partnerRequired(let message):
+            NeedMore(
+                verbatim: message.isEmpty
+                    ? String(localized: L10nCabinet.compatNeedsPerson)
+                    : message,
+                actionTitle: L10nCabinet.addAPerson
+            ) {
+                router.push(.people)
             }
 
         case .invalid(let message):

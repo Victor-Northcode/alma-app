@@ -15,11 +15,20 @@ a person born in Auckland who now lives in Berlin has `Profile.timezone ==
 "Pacific/Auckland"` and no part of the system knows they moved. Using it as the
 delivery clock sends a good-morning piece at 20:00.
 
-The device zone that fixes this does not arrive yet — it needs the
-`X-Alma-Timezone` header contracted from `alma/api/deps.py`, which another
-workflow owns. So the ladder is written now, with the top rung empty, rather
-than written later once every caller has already reached for `profile.timezone`
-directly.
+The device zone that fixes this has arrived. `alma/api/deps.py` contracts the
+`X-Alma-Timezone` header as `deps.device_timezone`, and `POST
+/v1/notifications/devices` persists it on the device row — which is the half
+that matters here, because the send job runs on a server at 03:00 and has no
+request to read a header from.
+
+**This package does not climb that ladder twice.** `zone_for` below still takes
+all three rungs, and `alma/notify` resolves them once per recipient and hands
+the answer down to `service.candidates`. Two ladders over the same person is a
+bug with a long fuse: `notify/rules.zone_for` deliberately ranks a zone chosen
+in settings *above* the device's, this one follows `THE-DAILY.md §3.3` and
+ranks the device first, and a person with an override would then have their day
+bracketed by one clock and their morning chosen by another — the piece filed
+under yesterday, sent today, silently.
 """
 
 from __future__ import annotations

@@ -10,6 +10,7 @@ import 'design/typography.dart';
 import 'l10n/alma_l10n.dart';
 import 'net/alma_client.dart';
 import 'net/models.dart';
+import 'notify/push_devices.dart';
 import 'screens/alma/alma_screen.dart';
 import 'screens/journey/journey_screen.dart';
 import 'screens/launch_screen.dart';
@@ -59,6 +60,19 @@ class _AlmaAppState extends State<AlmaApp> {
     // откроет витрину; на нативе строчка стоит там же — в `RootView`, под
     // `.tint`, по той же причине.
     AlmaStore.shared.attach(_session);
+    // **Уведомления здороваются на каждом запуске, а не однажды.**
+    //
+    // Строка устройства на сервере хранит `last_seen_at`, и та, которую никто
+    // не подтвердил девяносто дней, сметается (`notify/tokens.py`) — то есть
+    // подписчик, спросивший однажды и получивший разрешение, через три месяца
+    // тихо перестал бы получать оплаченное. Тот же вызов чинит часовой пояс
+    // тому, кто переехал, и снимает устройство с учёта, если разрешение
+    // отозвали в настройках телефона. Ничего не спрашивает: системное окно
+    // показывает только экран пред-вопроса.
+    //
+    // После `whenReady`, а не рядом с ним: до готовности сессии токена
+    // аккаунта ещё нет, а запрос без токена сервер встретил бы новым гостем.
+    _session.whenReady().then((_) => AlmaPush.instance.sync(widget.client));
     // Счёт запусков для карточки «сохрани карту»: считается здесь, потому что
     // здесь и есть запуск. Внутри карточки это был бы счёт визитов на экран.
     noteLaunch();

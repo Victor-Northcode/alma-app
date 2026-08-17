@@ -6,6 +6,7 @@ import ai.pazl.alma.data.Measurement
 import ai.pazl.alma.data.TokenStore
 import ai.pazl.alma.notify.DailyController
 import ai.pazl.alma.notify.NoPushTransport
+import ai.pazl.alma.ui.components.PlateStore
 import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -51,6 +52,15 @@ class AppContainer(context: Context) {
     val client: AlmaClient = AlmaClient.create(tokens, measurement = measurement)
 
     val session: SessionHolder = SessionHolder(client, appScope)
+
+    /**
+     * The chapter plates, cached on disk for the life of the install.
+     *
+     * On the container rather than in a `ViewModel` because the cache is the
+     * point: a store per chapter screen is a store with an empty cache every
+     * time a chapter opens, which is the download this class exists to avoid.
+     */
+    val plates: PlateStore = PlateStore(context)
 
     val billing: PlayBilling = PlayBilling(context, client, session, appScope)
 

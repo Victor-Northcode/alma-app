@@ -52,7 +52,7 @@
     <string name="cabinet_pull_to_turn">Continue de tirer</string>
     <string name="cabinet_hold_to_turn">Maintiens pour l\'ouvrir</string>
     <string name="cabinet_horoscope_today">ton horoscope du jour</string>
-    <string name="cabinet_horoscope_locked">Ton horoscope du jour est rédigé chaque matin à partir de ton thème natal et fait partie de l\\'abonnement.</string>
+    <string name="cabinet_horoscope_locked">Ton horoscope du jour est rédigé chaque matin à partir de ton thème natal et fait partie de l\'abonnement.</string>
     <string name="cabinet_horoscope_open">Ouvrir l\'horoscope</string>
     <string name="cabinet_area_quiet">Rien d\'exact ici aujourd\'hui.</string>
     <string name="cabinet_area_work">Travail</string>
@@ -92,7 +92,7 @@
     <string name="state_writing">J\'écris ce chapitre…</string>
     <string name="state_writing_note">Il est écrit une fois, et il dira la même chose demain.</string>
     <string name="state_locked_note">Rédigé à partir de tes propres positions la première fois que tu l\'ouvres — ton thème, jamais un modèle.</string>
-    <string name="synthesis_title">Là où trois systèmes s\\'accordent sur toi</string>
+    <string name="synthesis_title">Là où trois systèmes s\'accordent sur toi</string>
     <string name="synthesis_lead">Quand trois systèmes montrent le même schéma, il mérite d’être regardé de plus près. Quand deux divergent, cette tension peut aussi être révélatrice.</string>
     <string name="synthesis_agree">%1$d s\'accordent</string>
     <string name="synthesis_disagree">%1$d se contredisent</string>
@@ -142,7 +142,7 @@
     <string name="settings_language">langue</string>
     <string name="settings_language_note">Alma écrit dans cette langue. L\'interface suit ton téléphone.</string>
     <string name="settings_letters">lettres</string>
-    <string name="settings_letters_note">Alma en envoie trois : ton lien de connexion, un reçu pour tes achats et un avertissement trois jours avant le renouvellement d\\'un abonnement. Ces messages concernent uniquement tes actions. Il n\\'y a pas de newsletter, donc aucune désinscription à effectuer.</string>
+    <string name="settings_letters_note">Alma en envoie trois : ton lien de connexion, un reçu pour tes achats et un avertissement trois jours avant le renouvellement d\'un abonnement. Ces messages concernent uniquement tes actions. Il n\'y a pas de newsletter, donc aucune désinscription à effectuer.</string>
     <string name="settings_plan">formule</string>
     <string name="settings_everything_monthly">Tout, chaque mois</string>
     <string name="settings_annual_plan">Tout, pendant un an</string>
@@ -154,14 +154,14 @@
     <string name="settings_runs_until">Actif jusqu\'au %1$s. Il ne se renouvellera pas.</string>
     <string name="settings_plan_ended">Ton abonnement a pris fin le %1$s.</string>
     <string name="settings_cancel_subscription">Résilier l\'abonnement</string>
-    <string name="settings_cancel_what">Le prochain prélèvement n\\'aura pas lieu. Tout ce que tu as déjà payé reste accessible jusqu\\'à la fin de la période — une résiliation n\\'est pas un remboursement, et rien ne t\\'est retiré.</string>
+    <string name="settings_cancel_what">Le prochain prélèvement n\'aura pas lieu. Tout ce que tu as déjà payé reste accessible jusqu\'à la fin de la période — une résiliation n\'est pas un remboursement, et rien ne t\'est retiré.</string>
     <string name="settings_cancelling">Arrêt du prochain prélèvement…</string>
     <string name="settings_cancelled">Résilié. Ton abonnement reste ouvert jusqu\'au %1$s.</string>
     <string name="settings_cancelled_no_date">Résilié. Plus rien ne sera prélevé.</string>
     <string name="settings_cancel_failed">Nous n\'avons pas pu joindre le prestataire de paiement, rien n\'a donc été modifié. Réessaie dans un instant.</string>
     <string name="settings_keep_plan">Garder mon abonnement</string>
     <string name="settings_manage_in_play">Gérer dans Google Play</string>
-    <string name="settings_manage_note">Un abonnement acheté dans l\\'app appartient à ton compte Google. Tu peux le résilier uniquement dans Google Play.</string>
+    <string name="settings_manage_note">Un abonnement acheté dans l\'app appartient à ton compte Google. Tu peux le résilier uniquement dans Google Play.</string>
     <string name="settings_data_legal">données et mentions légales</string>
     <string name="settings_export">Exporter mes données</string>
     <string name="settings_exporting">Préparation de ton fichier…</string>
@@ -313,7 +313,7 @@
     <string-array name="journey_rules">
         <item>Un chapitre à la fois. Seize d\'un coup, c\'est du bruit.</item>
         <item>Quand deux systèmes se contredisent, ne choisis pas de gagnant. C\'est là qu\'est la matière.</item>
-        <item>Demande-moi avec tes mots. Trois questions sont gratuites.</item>
+        <item>Pose tes questions avec tes propres mots. La première est offerte.</item>
     </string-array>
     <string name="paywall_unverified">Google a prélevé le paiement et nous n\'avons pas encore pu le confirmer. Rien n\'est perdu — cela s\'ouvre tout seul dès que possible, et si nous n\'y arrivons jamais, Google te rembourse sous trois jours.</string>
     <string name="cabinet_good_afternoon">Bon après-midi,</string>
@@ -380,7 +380,7 @@
     <string name="daily_action_quieter_done">Moins. Seulement les lents désormais — quelques fois par an.</string>
     <string name="daily_action_turn_off">Désactiver</string>
     <string name="daily_action_turned_off">Désactivé. Aujourd\'hui reste là chaque fois que tu l\'ouvres.</string>
-    <string name="daily_ask_body">Une notification à l\\'heure choisie les jours où une influence devient exacte dans ton thème. Environ une fois par semaine, jamais la nuit. Tu peux la désactiver directement depuis la notification.</string>
+    <string name="daily_ask_body">Une notification à l\'heure choisie les jours où une influence devient exacte dans ton thème. Environ une fois par semaine, jamais la nuit. Tu peux la désactiver directement depuis la notification.</string>
     <string name="daily_ask_no">Pas maintenant</string>
     <string name="daily_ask_title">Préviens-moi le matin où cela arrive</string>
     <string name="daily_ask_yes">Oui, préviens-moi</string>
@@ -530,4 +530,15 @@
     <string name="journey_gender_male">Homme</string>
     <string name="journey_gender_skip">Je préfère ne pas dire</string>
     <string name="all_alma_pill">Toute Alma</string>
+
+    <string name="journey_dst_overline">sur ton heure de naissance</string>
+    <string name="journey_dst_title">Cette nuit-là, %1$s a existé deux fois</string>
+    <string name="journey_dst_body">Le %2$s à %1$s, les horloges ont été reculées. Alma ne jouera pas ton ciel à pile ou face — quel %3$s est le tien ?</string>
+    <string name="journey_dst_earlier">La première</string>
+    <string name="journey_dst_earlier_sub">%1$s à l\'heure d\'été · %2$s</string>
+    <string name="journey_dst_later">La seconde</string>
+    <string name="journey_dst_later_sub">%1$s à l\'heure d\'hiver · %2$s, %3$s plus tard</string>
+    <string name="journey_dst_footer">Si personne ne s\'en souvient, choisis l\'une ou l\'autre — les maisons se décalent de %1$s et tu pourras le changer dans les Réglages.</string>
+    <string name="journey_dst_delta_hour">60 minutes</string>
+    <string name="journey_dst_delta_half_hour">30 minutes</string>
 </resources>

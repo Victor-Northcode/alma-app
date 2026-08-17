@@ -2118,4 +2118,39 @@ class LPt extends L {
   @override
   String get chatNotTemplate =>
       'Respondo a partir do seu mapa, nunca de um modelo.';
+
+  @override
+  String get scrChatSwipeForTabs => 'Deslize para cima para as abas';
+
+  @override
+  String get cabCompatTwoSkies => 'Dois céus, uma comparação';
+
+  @override
+  String get cabCompatBulletContacts =>
+      'Cada contato entre os dois mapas, com seu orbe exato';
+
+  @override
+  String get cabCompatBulletHouses =>
+      'Onde os planetas da outra pessoa caem nas suas casas — e os seus nas dela';
+
+  @override
+  String get cabCompatBulletComposite =>
+      'O mapa próprio da relação — o céu de vocês dois como um só';
+
+  @override
+  String cabLegalEffective(String p1) {
+    return 'Em vigor desde $p1';
+  }
+
+  @override
+  String get cabPlanDeleteMismatchGuest => 'Este não é o código desta conta.';
+
+  @override
+  String get paywallArtCaption =>
+      'Cada capítulo abre com sua própria lâmina — pintada para este baralho.';
+
+  @override
+  String cabPlanCancelPeriodEnds(String date) {
+    return 'Seu plano continua ativo até $date.';
+  }
 }

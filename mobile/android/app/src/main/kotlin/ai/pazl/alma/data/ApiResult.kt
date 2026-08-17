@@ -60,7 +60,45 @@ sealed interface ApiFailure {
     data class AmbiguousTime(
         override val message: String,
         val options: List<AmbiguityOption>,
-    ) : ApiFailure
+        /**
+         * The night the clocks moved, `YYYY-MM-DD`, or empty when the server
+         * did not name it. The fork asks its question without the date rather
+         * than inventing one.
+         */
+        val transitionLocalDate: String = "",
+    ) : ApiFailure {
+
+        fun option(choice: String): AmbiguityOption? = options.firstOrNull { it.choice == choice }
+
+        val earlier: AmbiguityOption? get() = option("earlier")
+        val later: AmbiguityOption? get() = option("later")
+
+        /**
+         * How far apart the two instants are, in hours.
+         *
+         * A number rather than the word "hour" because half-hour transitions
+         * exist — Lord Howe Island and its like — and a sentence that names an
+         * hour would simply be untrue there.
+         */
+        val gapHours: Double?
+            get() {
+                val first = earlier ?: return null
+                val second = later ?: return null
+                return first.offsetHours - second.offsetHours
+            }
+    }
+
+    /**
+     * A compatibility reading was asked for and there is nobody to read it
+     * against.
+     *
+     * A 422 like [Invalid], and its own case for the same reason
+     * [NeedsBirthTime] is: the answer is a door, not an apology. Without it
+     * `readings.py`'s sentence landed in the generic branch and a reader met a
+     * line of grey text where the one action that could help should have been.
+     */
+    @Immutable
+    data class PartnerRequired(override val message: String) : ApiFailure
 
     /** Out of questions for today, or for the month. [allowance] is what they get. */
     @Immutable
@@ -173,6 +211,16 @@ data class AmbiguityOption(
     val choice: String,
     /** The instant itself, ISO-8601 UTC. */
     val utc: String,
+    /**
+     * What the clock was called that night — CEST, CET, EDT.
+     *
+     * The only thing that tells two identical wall-clock times apart on screen,
+     * and it has to come from the server: a phone has no zone-history database
+     * to work out which abbreviation was in force in 1988.
+     */
+    val abbreviation: String = "",
+    /** The offset from UTC of this instant, in hours. */
+    val offsetHours: Double = 0.0,
 )
 
 /* ── narrowing helpers ─────────────────────────────────────────────────── */

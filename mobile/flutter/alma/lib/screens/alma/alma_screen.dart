@@ -41,10 +41,21 @@ class _Turn {
     required this.body,
     this.citedFactors = const [],
     this.arriving = false,
+    this.kind,
   });
   final bool mine;
   final String body;
   final List<String> citedFactors;
+
+  /// Какого рода этот ответ: чтение, тихий отказ карты, разговор или забота.
+  ///
+  /// **Живая лента получила это последней, и потому отдельной строкой.** Разбор
+  /// `turn_kind` и правила показа приехали вместе, но архив беседы подключили
+  /// сразу, а здесь поле некуда было положить — файл в тот момент правили под
+  /// свет. Пока поля не было, тихий ответ рисовался как обычный: `care` — это
+  /// проза без цитаты, и приписывать ей «прочитано из» значит обещать
+  /// основание там, где Alma намеренно говорит от себя.
+  final ChatTurnKind? kind;
 
   /// Ответ пришёл в эту сессию и ещё не оседал — см. `ChatTurnView.arriving`.
   final bool arriving;
@@ -96,6 +107,26 @@ class _AlmaScreenState extends State<AlmaScreen>
   List<ChatThreadRef> _past = const [];
   bool _openersLoaded = false;
   bool _threadLoaded = false;
+
+  /// **Наклон света на отправку.** §1 спеки: «На отправку вопроса свет
+  /// „наклоняется“: яркость +15 % за 240 мс»; §4 повторяет длительность в
+  /// словаре движения. Это единственная реакция света на действие человека —
+  /// всё остальное он делает сам, на своих часах.
+  ///
+  /// Часы живут на экране, а не в самом свете: наклон обязан пережить и
+  /// отправку, и смену приветствия лентой (см. [_presence]).
+  late final AnimationController _tilt = AnimationController(
+    vsync: this,
+    duration: AlmaMotion.ui,
+  );
+
+  /// Куда сесть свету в приветствии (A1) и в думании (A2).
+  ///
+  /// Свет один, а мест два, и живёт он **выше** обоих состояний — см.
+  /// [_presence]. Состояния объявляют только место и размер: приветствие —
+  /// дырку 64 по центру, думание — дырку в коробку кольца 110.
+  final LayerLink _greetingSlot = LayerLink();
+  final LayerLink _thinkingSlot = LayerLink();
 
   @override
   void initState() {
@@ -159,6 +190,7 @@ class _AlmaScreenState extends State<AlmaScreen>
                 mine: t.mine,
                 body: t.body,
                 citedFactors: t.citedFactors,
+                kind: t.kind,
               )));
       });
       _scrollDown();
@@ -232,6 +264,10 @@ class _AlmaScreenState extends State<AlmaScreen>
       _sending = true;
       _draft.clear();
     });
+    // Свет откликается на ушедший вопрос — тот же жест, что поворот головы на
+    // голос. Наклон держится, пока она не ответила: голова, повернувшаяся на
+    // зов и тут же отвернувшаяся, — это не «слушаю», а «дёрнулась».
+    _tilt.forward();
     _scrollDown();
     try {
       final reply = await session.client.ask(
@@ -247,6 +283,7 @@ class _AlmaScreenState extends State<AlmaScreen>
           mine: false,
           body: reply.body,
           citedFactors: reply.citedFactors,
+          kind: reply.kind,
           arriving: true,
         ));
       });
@@ -277,7 +314,12 @@ class _AlmaScreenState extends State<AlmaScreen>
         }
       });
     } finally {
-      if (mounted) setState(() => _sending = false);
+      if (mounted) {
+        setState(() => _sending = false);
+        // Она ответила — свет отпускает наклон и возвращается к своему
+        // дыханию.
+        _tilt.reverse();
+      }
       _scrollDown();
     }
   }
@@ -322,6 +364,7 @@ class _AlmaScreenState extends State<AlmaScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _tilt.dispose();
     _draft.dispose();
     _scroll.dispose();
     _focus.dispose();
@@ -363,9 +406,22 @@ class _AlmaScreenState extends State<AlmaScreen>
           child: Column(children: [
             _header(l),
             Expanded(
-              child: _turns.isEmpty
-                  ? _opening(l, session)
-                  : _transcript(l),
+              // Свет лежит **поверх** состояния и не входит в его разметку:
+              // ниже он не сможет пережить смену приветствия лентой, а пережить
+              // обязан — см. [_presence].
+              child: Stack(children: [
+                Positioned.fill(
+                  child: _turns.isEmpty ? _opening(l, session) : _transcript(l),
+                ),
+                // **Оба ребёнка размещены — иначе стопка мерилась бы по
+                // свету.** `Stack` берёт размер у неразмещённого ребёнка, а
+                // колонка выше выдаёт ширину свободной (её выравнивание — по
+                // центру): беседа получала ровно 64 точки ширины — рост
+                // приветственного света — и ответ рассыпался в столбик из
+                // одного слова. Свету место здесь безразлично: он всё равно
+                // рисуется там, где нашлась его дырка.
+                Positioned(left: 0, top: 0, child: _presence()),
+              ]),
             ),
             _limitWall(l, session) ?? _composer(l),
             // **Грабер — под композером и только когда не пишут.**
@@ -377,6 +433,46 @@ class _AlmaScreenState extends State<AlmaScreen>
             // бара и появление ручки его не касаются.
             if (!typing) TabsGrabber(peek: widget.tabs),
           ]),
+        ),
+      ),
+    );
+  }
+
+  /// **Свет один на всю беседу и живёт выше её состояний.**
+  ///
+  /// Он принадлежал каждому состоянию отдельно: приветствие рисовало свой свет
+  /// 64, думание — свой 70 в кольце. Отправка вопроса меняет приветствие лентой
+  /// **в том же кадре**, в котором свет должен наклониться, — и наклонять было
+  /// нечего: виджет с часами наклона снимался с дерева прямо посреди анимации.
+  /// Поэтому свет вынесен в каркас, а состояния оставили себе только место и
+  /// размер: приветствие — дырку по центру, думание — дырку в коробку кольца.
+  ///
+  /// Место берётся [LayerLink]'ом, а не отступом. Дырка живёт внутри списка и
+  /// ездит вместе с ним, а свет висит поверх — связать их числом значит на
+  /// каждом кадре мерить чужую прокрутку; `CompositedTransformFollower`
+  /// переносит свет туда, где нарисовалась дырка, сам. Слота два, а не один
+  /// [LayerLink] на оба: в кадре пересменки старая дырка ещё жива, а новая уже
+  /// родилась, и один линк на двоих упал бы утверждением о двух ведущих слоях.
+  ///
+  /// Заодно это то, ради чего дыхание не перезапускается сменой настроения
+  /// (`_AlmaPresenceState._sync`): свет один и тот же, он не рождается заново —
+  /// он переходит из ожидания в работу.
+  Widget _presence() {
+    final thinking = _sending;
+    return IgnorePointer(
+      child: CompositedTransformFollower(
+        link: thinking ? _thinkingSlot : _greetingSlot,
+        // Дырки нет — свет не рисуется вовсе. В осевшей ленте своего света у
+        // экрана нет: там его место в шапке каждого ответа, и тот принадлежит
+        // ответу (§7: «при скролле треда шапочный свет не следует»).
+        showWhenUnlinked: false,
+        child: AnimatedBuilder(
+          animation: _tilt,
+          builder: (context, _) => AlmaPresence(
+            size: thinking ? AlmaPresence.thinking : AlmaPresence.greeting,
+            mood: thinking ? PresenceMood.thinking : PresenceMood.calm,
+            tilt: _tilt.value,
+          ),
         ),
       ),
     );
@@ -412,19 +508,15 @@ class _AlmaScreenState extends State<AlmaScreen>
       padding: const EdgeInsets.symmetric(
           horizontal: AlmaMetrics.pad, vertical: AlmaMetrics.gapLarge),
       children: [
-        // A1: свет 64 по центру — размер спеки.
-        //
-        // **Наклона на отправку здесь нет, и это не забывчивость.** По §1 свет
-        // на отправку прибавляет 15 % яркости за 240 мс. Но светит он в
-        // приветствии, а приветствие сменяется лентой в тот же кадр, в который
-        // уходит вопрос: `AnimatedBuilder`, слушающий часы наклона, снимается с
-        // дерева прямо посреди анимации, и Флаттер валит экран утверждением
-        // `_elements.contains(element)`. Проверено на симуляторе — падало
-        // ровно на отправке. Чтобы наклон был настоящим, свет обязан пережить
-        // смену состояния, то есть жить выше обоих видов; это перестройка
-        // каркаса экрана, а не правка в одну строку. Сам механизм наклона в
-        // `AlmaPresence.tilt` готов и ждёт её.
-        const Center(child: AlmaPresence(size: AlmaPresence.greeting)),
+        // A1: место света 64 по центру — размер спеки. Сам свет живёт в
+        // каркасе экрана ([_presence]) и садится сюда; приветствию остаётся
+        // объявить, где и какого он тут размера.
+        Center(
+          child: CompositedTransformTarget(
+            link: _greetingSlot,
+            child: const SizedBox.square(dimension: AlmaPresence.greeting),
+          ),
+        ),
         const SizedBox(height: 18),
         Text(
           session.hasBirthData ? l.scrChatOpening : l.scrChatNoChart,
@@ -510,7 +602,7 @@ class _AlmaScreenState extends State<AlmaScreen>
       itemCount: _turns.length + tail,
       itemBuilder: (context, i) {
         if (i == _turns.length) {
-          if (_sending) return ThinkingView(stage: _stage);
+          if (_sending) return ThinkingView(stage: _stage, slot: _thinkingSlot);
           return _refusalView(l, _refusal!);
         }
         final turn = _turns[i];
@@ -518,6 +610,7 @@ class _AlmaScreenState extends State<AlmaScreen>
           mine: turn.mine,
           body: turn.body,
           citedFactors: turn.citedFactors,
+          kind: turn.kind,
           // Оседает только ответ, пришедший в эту сессию и последним.
           arriving: turn.arriving && i == _turns.length - 1,
         );

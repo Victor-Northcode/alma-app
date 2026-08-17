@@ -1202,6 +1202,55 @@ def test_the_notify_job_gets_the_candidates_it_declares_it_needs(db, a_day_with)
         assert candidate.weight > 0
 
 
+def test_the_zone_the_sender_resolved_is_the_one_the_day_is_bracketed_on(
+    db, a_day_with, monkeypatch
+):
+    """The device's clock has to survive the hand-off, or the daily is birth-timed.
+
+    `Profile.timezone` is where somebody was *born*, and for everybody who has
+    moved it is wrong by however many hours they flew. The sender holds the
+    device rows, resolves the ladder once and passes the answer; deciding again
+    in here would put the day's boundaries back on the birth clock while the
+    morning was chosen on another, and the piece would be filed under a day it
+    was not sent on.
+
+    Both halves are asserted. Dropping the argument silently is the way this
+    regresses, and it regresses green: the fallback keeps every other test
+    passing.
+    """
+    seen: list[ZoneInfo] = []
+    real = clock.day_bounds
+
+    def spy(on, zone):
+        seen.append(zone)
+        return real(on, zone)
+
+    monkeypatch.setattr(clock, "day_bounds", spy)
+
+    async def given(session):
+        user, _ = await _person(session)
+        return await service.candidates(
+            session, user, on=a_day_with, zone=ZoneInfo("Pacific/Auckland")
+        )
+
+    db(given)
+    assert seen and set(seen) == {ZoneInfo("Pacific/Auckland")}, (
+        "the zone the caller resolved was ignored somewhere below"
+    )
+
+    seen.clear()
+
+    async def omitted(session):
+        user, _ = await _person(session)
+        return await service.candidates(session, user, on=a_day_with)
+
+    db(omitted)
+    assert seen and set(seen) == {ZoneInfo(BIRTH.timezone)}, (
+        "without a zone the ladder here still has to resolve — a direct caller "
+        "and a test have no device table to ask"
+    )
+
+
 def test_candidates_are_unfiltered_and_the_cadence_module_does_the_filtering(
     db, a_day_with, calendar
 ):

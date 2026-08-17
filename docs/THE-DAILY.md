@@ -376,6 +376,12 @@ edit it; ask for this:
 Persisting it, not just reading it, is the point: the notification job runs at 03:00 on a
 server and has no request to read a header from.
 
+**Landed.** `deps.device_timezone` is that dependency, and `POST /v1/notifications/devices`
+does the persisting. The ladder is climbed once, by `notify/rules.zone_for`, and the answer
+is handed to `daily.candidates(…, zone=…)` — the selection package does not re-derive it,
+because the two ladders rank the rungs differently and a person with an override would
+otherwise have their day bracketed on one clock and their morning chosen on another.
+
 ### 3.3 The honest default and the fallback ladder
 
 In order of preference, first one that resolves wins:
@@ -752,7 +758,8 @@ coded against these as contracts:
 1. **`deps.py`** — an `X-Alma-Timezone` request header, IANA identifier, validated through
    the existing `geo.is_known_timezone()`, ignored silently when absent or unknown. Same
    shape as the country header. Persisted to the device row, not just read per-request,
-   because the notification job has no request to read.
+   because the notification job has no request to read. **Landed** as
+   `deps.device_timezone`; see the note at the end of §3.2.
 2. **`accounts.py`** — the notification preference (three positions), the delivery hour, and
    the timezone override, on the user rather than the profile. A person has one phone and
    several charts; the preference belongs to the phone's owner.

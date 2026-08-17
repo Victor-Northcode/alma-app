@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../design/alma_presence.dart';
+import '../../design/arrival.dart';
 import '../../design/layout.dart';
+import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
+import '../../net/models.dart' show ChatTurnKind;
 import '../cabinet_words.dart';
 
 /// Одна реплика беседы — **одна на два экрана**.
@@ -19,12 +22,26 @@ class ChatTurnView extends StatefulWidget {
     required this.mine,
     required this.body,
     this.citedFactors = const [],
+    this.kind,
     this.arriving = false,
   });
 
   final bool mine;
   final String body;
   final List<String> citedFactors;
+
+  /// Что это была за реплика — четыре вида таксономии, а не «ответ или нет».
+  ///
+  /// **Из-за отсутствия этого поля порт терял два вида из четырёх.** Заботливый
+  /// ответ (`care`) и молчащая карта (`chart_silent`) рисовались как обычное
+  /// чтение: у первого под словами «мне тяжело» вставала строка служебных
+  /// пометок, у второй пропадала честная приписка о том, что ответ не из карты.
+  /// Правила рисования взяты у нативов буква в букву — `ChatPieces.swift:85`
+  /// и `ChatTurnKind.kt:67`.
+  ///
+  /// `null` — «звавший не сказал»; тогда вид выводится из цитат ровно так же,
+  /// как его выводит [ChatTurnKind.of] на старом ответе без `turn_kind`.
+  final ChatTurnKind? kind;
 
   /// Ответ пришёл только что и обязан осесть, а не появиться готовым.
   ///
@@ -40,10 +57,28 @@ class ChatTurnView extends StatefulWidget {
 
 class _ChatTurnViewState extends State<ChatTurnView>
     with TickerProviderStateMixin {
-  /// Часы каскада. Длительность — 70 мс на строку.
+  /// Вход шапки: свет 26, «alma», линейка и мета-строка «read from».
+  ///
+  /// **У источника есть свой вход, и речь начинается после него.** Шапка
+  /// появлялась готовой — в том же кадре, что и первая строка ответа, — и
+  /// обещание продукта «сперва источник, потом речь» держалось только со
+  /// второй строки. 240 мс — из спеки, §4: «A3: мета-строка появляется
+  /// 240 мс»; та же длительность у всего, что в этом продукте меняет
+  /// состояние ([AlmaMotion.ui]).
+  late final AnimationController _dawn = AnimationController(
+    vsync: this,
+    duration: AlmaMotion.ui,
+  );
+
+  late final CurvedAnimation _dawnEased =
+      CurvedAnimation(parent: _dawn, curve: AlmaMotion.uiCurve);
+
+  /// Часы каскада. Длительность — 70 мс на строку (§4), и считаются в них все
+  /// ступени, включая тление первой строки и опережение ведущей: иначе длинный
+  /// ответ проходил бы каскад быстрее короткого.
   late final AnimationController _settle = AnimationController(
     vsync: this,
-    duration: Duration(milliseconds: 70 * _lines),
+    duration: Duration(milliseconds: 70 * (_lines + _ahead + _ember)),
   );
 
   /// Линейка под «alma» дорисовывается последней: 34 % → 100 % за 420 мс.
@@ -52,11 +87,24 @@ class _ChatTurnViewState extends State<ChatTurnView>
     duration: const Duration(milliseconds: 420),
   );
 
+  /// Опережение ведущей строки: пока первая проявилась, третья ещё тлеет.
+  static const _ahead = 3;
+
+  /// **Отставание первой строки на старте — то, чем держится «сперва
+  /// источник».** Каскад начинался с нуля, а при нулевом отставании строка
+  /// рисуется непрозрачной: пауза перед `_settle.forward()` откладывала только
+  /// строки со второй, а первая вставала вместе с шапкой в одном кадре с ней.
+  /// Две ступени — это A3 «первая строка тлеет», и по лестнице §2 они дают ей
+  /// 0.22 (в спеке названо .18; разницу в четыре сотых альфы порт не заводит
+  /// вторым числом).
+  static const _ember = 2;
+
   /// Прогресс каскада **в строках**: строке надо знать, на сколько она отстала
-  /// от ведущей. Ведущая идёт с опережением на три — пока первая проявилась,
-  /// третья ещё тлеет.
-  late final Animation<double> _cascade =
-      _settle.drive(Tween(begin: 0, end: (_lines + 3).toDouble()));
+  /// от ведущей.
+  late final Animation<double> _cascade = _settle.drive(Tween(
+    begin: -_ember.toDouble(),
+    end: (_lines + _ahead).toDouble(),
+  ));
 
   /// Грубая оценка числа строк — только чтобы назначить длительность. Точную
   /// разбивку делает [_SettlingParagraph] на своей ширине.
@@ -66,10 +114,14 @@ class _ChatTurnViewState extends State<ChatTurnView>
   String get body => widget.body;
   List<String> get citedFactors => widget.citedFactors;
 
+  ChatTurnKind get kind =>
+      widget.kind ?? ChatTurnKind.of(null, citedFactors: citedFactors);
+
   @override
   void initState() {
     super.initState();
     if (!widget.arriving) {
+      _dawn.value = 1;
       _settle.value = 1;
       _rule.value = 1;
       return;
@@ -78,12 +130,16 @@ class _ChatTurnViewState extends State<ChatTurnView>
       if (!mounted) return;
       // Reduced motion: каскада нет, всё встаёт готовым.
       if (MediaQuery.maybeDisableAnimationsOf(context) ?? false) {
+        _dawn.value = 1;
         _settle.value = 1;
         _rule.value = 1;
         return;
       }
-      // A3: мета-строка появляется за 240 мс, и только потом идут строки.
-      Future<void>.delayed(const Duration(milliseconds: 240), () {
+      // **Порядок и есть обещание.** Шапка с цитатой (240 мс) → строки
+      // каскадом (70 мс на строку) → линейка (420 мс). Раньше здесь стояла
+      // голая пауза `Future.delayed(240)`: она отмеряла те же 240 мс, но
+      // откладывать ей было нечего — шапка всё это время уже стояла готовой.
+      _dawn.forward().whenComplete(() {
         if (!mounted) return;
         _settle.forward().whenComplete(() {
           if (mounted) _rule.forward();
@@ -94,6 +150,8 @@ class _ChatTurnViewState extends State<ChatTurnView>
 
   @override
   void dispose() {
+    _dawnEased.dispose();
+    _dawn.dispose();
     _settle.dispose();
     _rule.dispose();
     super.dispose();
@@ -102,19 +160,45 @@ class _ChatTurnViewState extends State<ChatTurnView>
   @override
   Widget build(BuildContext context) {
     if (mine) {
-      // Реплика человека — справа и в пузыре, и пузырь никогда не во всю
-      // ширину: иначе он перестаёт читаться как чья-то отдельная фраза.
-      return Align(
-        alignment: Alignment.centerRight,
-        child: Container(
-          margin: const EdgeInsets.only(top: 14, left: 48),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          constraints: const BoxConstraints(maxWidth: 300),
-          decoration: BoxDecoration(
-            color: AlmaPalette.veilStrong,
-            borderRadius: BorderRadius.circular(18),
+      // **Своя реплика тоже входит, а не возникает рывком.**
+      //
+      // Вход есть у каждой реплики на нативе, включая собственную:
+      // `AlmaScreen.swift:196` вешает `.riseIn(0)` на весь `ForEach`
+      // сообщений. Здесь пузырь появлялся в одном кадре готовым — единственное
+      // место беседы, где ничего не оседает, и потому самое заметное: человек
+      // отпускает кнопку, и его слова щёлкают на экран.
+      //
+      // Числа не свои: [RiseIn] — уже перенесённый `Arrival.swift` (проявление
+      // 0→1 с подъёмом 16 точек кривой `arrive` за 0.55 с). Второго входа с
+      // другими числами продукт не заводит — «одна кривая на всё, что
+      // приходит».
+      //
+      // **Спека и натив здесь расходятся, и выбран натив.** `chat-spec.md` §4
+      // отмеряет «пузырь оседает 240 мс», `Arrival.swift` — 0.55 с. Взято
+      // второе: вход своей реплики ничем не отличается от входа любого другого
+      // содержания, и заводить ему собственную длительность значит завести в
+      // словаре движения второе «приходящее содержание». Число спеки живёт
+      // рядом — те же 240 мс у наклона света и у входа шапки, — так что
+      // разойтись им есть куда.
+      //
+      // Без оглядки на `arriving`: перечитанная беседа входит так же, одним
+      // тихим проявлением, — ровно как на нативе, где `.riseIn(0)` стоит и на
+      // поднятых с сервера сообщениях.
+      return RiseIn(
+        // Реплика человека — справа и в пузыре, и пузырь никогда не во всю
+        // ширину: иначе он перестаёт читаться как чья-то отдельная фраза.
+        child: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            margin: const EdgeInsets.only(top: 14, left: 48),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            constraints: const BoxConstraints(maxWidth: 300),
+            decoration: BoxDecoration(
+              color: AlmaPalette.veilStrong,
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Text(body, style: AlmaType.body),
           ),
-          child: Text(body, style: AlmaType.body),
         ),
       );
     }
@@ -122,36 +206,58 @@ class _ChatTurnViewState extends State<ChatTurnView>
     return Padding(
       padding: const EdgeInsets.only(top: 20),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        // **A3: источник первым.** Шапка со светом 26 и мета-строка «read
-        // from» встают ДО текста — «она открыла карту, потом заговорила».
-        // Раньше цитата стояла под ответом: человек сперва читал слова, а
-        // потом узнавал, откуда они, — порядок обратный обещанию продукта.
-        Row(children: [
-          const AlmaPresence(size: AlmaPresence.inHeader),
-          const SizedBox(width: 10),
-          Text(l.tabAlma.toUpperCase(), style: AlmaType.overline),
-          const SizedBox(width: 12),
-          Expanded(
-            // Линейка дорисовывается последней, когда строки уже осели: это
-            // подпись под сказанным, а не полоска загрузки.
-            child: AnimatedBuilder(
-              animation: _rule,
-              builder: (context, child) => FractionallySizedBox(
-                alignment: Alignment.centerLeft,
-                widthFactor: 0.34 + 0.66 * _rule.value,
-                child: child,
+        // **A3: источник первым — и у источника есть свой вход.** Шапка со
+        // светом 26 и мета-строка «read from» встают ДО текста — «она открыла
+        // карту, потом заговорила». Раньше цитата стояла под ответом: человек
+        // сперва читал слова, а потом узнавал, откуда они, — порядок обратный
+        // обещанию продукта.
+        //
+        // Шапка и цитата проявляются **одним куском**: это одно высказывание —
+        // «вот откуда я читаю», — и разъехавшись на два входа оно перестало бы
+        // читаться как одно. Проявление, без подъёма: подъём на 16 точек — то,
+        // чем в этот продукт приходит *содержание* ([RiseIn]), а шапка не
+        // приходит, она зажигается.
+        AnimatedBuilder(
+          animation: _dawnEased,
+          builder: (context, child) =>
+              Opacity(opacity: _dawnEased.value, child: child),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const AlmaPresence(size: AlmaPresence.inHeader),
+              const SizedBox(width: 10),
+              Text(l.tabAlma.toUpperCase(), style: AlmaType.overline),
+              const SizedBox(width: 12),
+              Expanded(
+                // Линейка дорисовывается последней, когда строки уже осели: это
+                // подпись под сказанным, а не полоска загрузки.
+                child: AnimatedBuilder(
+                  animation: _rule,
+                  builder: (context, child) => FractionallySizedBox(
+                    alignment: Alignment.centerLeft,
+                    widthFactor: 0.34 + 0.66 * _rule.value,
+                    child: child,
+                  ),
+                  child: Container(
+                    height: 1,
+                    decoration: BoxDecoration(gradient: AlmaGradient.fadedRule),
+                  ),
+                ),
               ),
-              child: Container(
-                height: 1,
-                decoration: BoxDecoration(gradient: AlmaGradient.fadedRule),
-              ),
-            ),
-          ),
-        ]),
-        if (citedFactors.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Citation(factors: citedFactors),
-        ],
+            ]),
+            // **Цитата — там, где есть что цитировать, и только там, где это
+            // утверждение.** `conversation` не утверждает ни о ком ничего:
+            // приветствие, спасибо, вопрос «что ты умеешь». Позиции, которые
+            // такой ответ случайно назвал, — украшение, и подписывать ими
+            // «прочитано из» значит выдавать вежливость за чтение карты.
+            // Правило нативов дословно: показывается всем видам, кроме беседы,
+            // — заботливый ответ, назвавший позицию, утверждение всё-таки
+            // сделал.
+            if (kind.showsCitations && citedFactors.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Citation(factors: citedFactors),
+            ],
+          ]),
+        ),
         // **Абзацы — отдельными строками, а не пустой строкой внутри одной.**
         //
         // Тело склеивалось через `\n\n`, и между абзацами вставала пустая
@@ -179,6 +285,21 @@ class _ChatTurnViewState extends State<ChatTurnView>
           }
           return blocks;
         }(),
+        // **Честная приписка — фраза, а не бирка.** Только у `chart_silent`:
+        // карту она прочла, и карте про это сказать нечего. Прежняя `НЕ ИЗ
+        // ТВОЕЙ КАРТЫ» прописными читалась как предупреждение о соответствии,
+        // приклеенное к чужому разговору, и вставала в том числе под
+        // приветствиями — там она была ещё и неправдой. Здесь её нет вовсе ни у
+        // беседы, ни у заботы: тому, кто только что написал, что ему плохо, не
+        // выдают строку пометок.
+        //
+        // Отбивка 12 — как на iOS: 10 стойки плюс собственные 2 у строки
+        // (`ChatPieces.swift:149`). Под текстом, а не над ним: это примечание к
+        // сказанному, в отличие от цитаты, которая по A3 стоит первой.
+        if (kind.showsChartSilentNote) ...[
+          const SizedBox(height: 12),
+          Text(l.scrChatSilent, style: AlmaType.meta),
+        ],
       ]),
     );
   }
@@ -329,9 +450,17 @@ class ThinkingStage {
 
 /// A2 — думание: свет в кольце лучей, тлеющая строка, позиции под ней.
 class ThinkingView extends StatefulWidget {
-  const ThinkingView({super.key, this.stage = const ThinkingStage()});
+  const ThinkingView({super.key, this.stage = const ThinkingStage(), this.slot});
 
   final ThinkingStage stage;
+
+  /// Место, куда садится **чужой** свет — тот, что живёт в каркасе экрана.
+  ///
+  /// Свет один на всю беседу и переживает смену приветствия лентой (см.
+  /// `AlmaScreen`), поэтому думание не заводит свой, а только объявляет, где и
+  /// какого размера ему стоять. `null` — свет ничей и рисуется свой: так вью
+  /// остаётся собранной и вне экрана чата.
+  final LayerLink? slot;
 
   @override
   State<ThinkingView> createState() => _ThinkingViewState();
@@ -375,11 +504,19 @@ class _ThinkingViewState extends State<ThinkingView>
       padding: const EdgeInsets.symmetric(vertical: 18),
       child: Column(
         children: [
-          const Center(
-            child: AlmaPresence(
-              size: AlmaPresence.thinking,
-              mood: PresenceMood.thinking,
-            ),
+          Center(
+            child: widget.slot == null
+                ? const AlmaPresence(
+                    size: AlmaPresence.thinking,
+                    mood: PresenceMood.thinking,
+                  )
+                // Дырка ровно в коробку кольца: свет каркаса садится в неё
+                // левым верхним углом, и разъехаться им нечем.
+                : CompositedTransformTarget(
+                    link: widget.slot!,
+                    child: const SizedBox.square(
+                        dimension: AlmaPresence.thinkingRing),
+                  ),
           ),
           const SizedBox(height: 14),
           // Строка тлеет, а не мигает: пульс ходит между .55 и 1. Анимация

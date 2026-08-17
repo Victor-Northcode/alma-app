@@ -648,6 +648,8 @@ listed once in each file on purpose, so that whoever reads either one knows the 
   and has no request to read a header from. Separately: the register and delete routes want
   `require_account` as it already stands — a token is only useful joined to a user — so no
   change is needed for that half, and it is named here so nobody adds a second dependency.
+  **Landed** as `deps.device_timezone`, with the persisting done by
+  `POST /v1/notifications/devices`; `THE-DAILY.md §3.2` carries the detail.
 - **`alma/auth/accounts.py`** — the notification preference (`THE-DAILY.md §5.1`'s three
   positions), the delivery hour and the timezone override belong on the **user**, not the
   profile: a person has one phone and several charts. And `erase` must walk the token table,

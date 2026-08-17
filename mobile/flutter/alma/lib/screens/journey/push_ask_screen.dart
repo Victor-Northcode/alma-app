@@ -7,6 +7,8 @@ import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
+import '../../notify/push_devices.dart';
+import '../../state/session.dart';
 
 /// Пред-вопрос про уведомления — `s39`, «Push pre-ask — before the system
 /// dialog».
@@ -23,22 +25,47 @@ import '../../l10n/alma_l10n.dart';
 /// окне; тот, кто выбирает «Not now», уходит, не потратив единственную попытку,
 /// — и его можно спросить снова.
 ///
-/// **Настоящего запроса разрешения здесь пока нет — это задача №58.** Кнопка
-/// «Yes, tell me» сейчас просто ведёт дальше по хвосту путешествия: ни
-/// `UNUserNotificationCenter`, ни регистрации токена в порте ещё не появилось, и
-/// звать несуществующую обвязку значило бы отвечать ошибкой на главное действие
-/// экрана. Когда №58 сделают, менять здесь надо ровно одно место — [_yes];
-/// весь остальной экран уже на своём месте и уже показывается в правильной
-/// точке хвоста.
-class PushAskScreen extends StatelessWidget {
+/// **Дальше — системное окно и токен.** Нажатие на «Yes, tell me» зовёт
+/// [AlmaPush.ask]: разрешение у системы, токен устройства у APNs, устройство на
+/// сервер. Порядок именно такой и переставить его нельзя — вся причина
+/// существования этого экрана в том, что наш вопрос повторяемый, а системный
+/// нет.
+class PushAskScreen extends StatefulWidget {
   const PushAskScreen({super.key});
 
-  /// Согласие получено. Пока — только выход дальше по хвосту.
+  @override
+  State<PushAskScreen> createState() => _PushAskScreenState();
+}
+
+class _PushAskScreenState extends State<PushAskScreen> {
+  /// Идёт разговор с системой. Кнопка на это время гаснет: второе нажатие
+  /// показало бы второе системное окно поверх первого.
+  bool _asking = false;
+
+  /// Согласие получено — теперь его надо потратить.
   ///
-  /// Здесь появится системный запрос разрешения и регистрация токена (№58).
-  /// Порядок будет тот же: сначала это окно, потом системное, и только по его
-  /// ответу — токен на сервер.
-  void _yes(BuildContext context) => Navigator.of(context).maybePop();
+  /// **Экран закрывается при любом ответе, и это не безразличие.** Guideline
+  /// 5.1.2(i) требует, чтобы отказ ничего не менял в продукте: «Сегодня»
+  /// покажет то же чтение, а уведомление было указателем на него. Сообщение об
+  /// отказе посреди прихода было бы уговариванием, которого §5.5 прямо просит
+  /// не устраивать; своё место у этой строки есть — «Каждое утро» в настройках,
+  /// и там же лежит `daily.status.denied`.
+  Future<void> _yes() async {
+    if (_asking) return;
+    setState(() => _asking = true);
+    // Клиент берётся до `await`: после него `context` может уже не
+    // принадлежать дереву.
+    final client = SessionScope.of(context).client;
+    final navigator = Navigator.of(context);
+    try {
+      await AlmaPush.instance.ask(client);
+    } finally {
+      if (mounted) {
+        setState(() => _asking = false);
+        navigator.maybePop();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -79,13 +106,15 @@ class PushAskScreen extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              AlmaButton(label: l.dailyAskYes, onTap: () => _yes(context)),
+              AlmaButton(label: l.dailyAskYes, onTap: _asking ? null : _yes),
               const SizedBox(height: 12),
               // «Не сейчас» слышно, и это существенно: тихий отказ здесь стоит
               // дешевле, чем «Не разрешать» в системном окне, — второе
-              // необратимо, первое нет.
+              // необратимо, первое нет. Системного окна этот путь **не
+              // показывает вовсе**: единственная попытка остаётся неистраченной,
+              // и спросить снова можно будет из настроек.
               GestureDetector(
-                onTap: () => Navigator.of(context).maybePop(),
+                onTap: _asking ? null : () => Navigator.of(context).maybePop(),
                 behavior: HitTestBehavior.opaque,
                 child: Padding(
                   padding:

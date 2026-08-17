@@ -469,24 +469,43 @@ private fun SuggestionNote(text: String) {
  * and it says so honestly there.
  */
 @Composable
-internal fun ColumnScope.CeremonyStep(onBegin: () -> Unit, onDone: () -> Unit) {
+internal fun ColumnScope.CeremonyStep(
+    onBegin: () -> Unit,
+    onDone: () -> Unit,
+    /**
+     * A question is standing over the scene — the daylight-saving fork.
+     *
+     * **The beats pause; they do not restart.** [index] survives, so answering
+     * the question resumes the ceremony where it stood rather than replaying
+     * nine seconds somebody has already watched.
+     */
+    paused: Boolean = false,
+    /**
+     * The save has not answered yet.
+     *
+     * The ceremony is a fixed nine and a half seconds and the network is not,
+     * so whichever finishes second is the one that leaves. Walking out on a
+     * slow connection lands somebody in an empty cabinet.
+     */
+    holding: Boolean = false,
+) {
     val labels = stringArrayResource(R.array.journey_ceremony_labels)
     val lines = stringArrayResource(R.array.journey_ceremony_lines)
     var index by remember { mutableIntStateOf(0) }
+    var played by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     // Asking rather than doing: the ViewModel decides whether this is the first
     // time, so a rotation mid-ceremony does not save the birth twice.
     LaunchedEffect(Unit) { onBegin() }
 
-    LaunchedEffect(index) {
+    LaunchedEffect(index, paused) {
+        if (paused) return@LaunchedEffect
         if (index >= labels.lastIndex) {
             // A beat on the last line before the portrait, so the ceremony ends
             // rather than stops.
             delay(1_400)
-            // The arrival: the chart is about to be revealed.
-            AlmaHaptics.arrival(context)
-            onDone()
+            played = true
         } else {
             delay(1_150)
             index += 1
@@ -494,6 +513,13 @@ internal fun ColumnScope.CeremonyStep(onBegin: () -> Unit, onDone: () -> Unit) {
             // hand, eight times, because eight things genuinely happen here.
             AlmaHaptics.tick(context)
         }
+    }
+
+    LaunchedEffect(played, paused, holding) {
+        if (!played || paused || holding) return@LaunchedEffect
+        // The arrival: the chart is about to be revealed.
+        AlmaHaptics.arrival(context)
+        onDone()
     }
 
     // Laid out by hand rather than through `JourneyScene`: the line Alma is

@@ -204,6 +204,43 @@ def test_a_change_it_cannot_make_is_refused_rather_than_skipped():
         _add_column_sql(connection, table, table.c.python_default_only)
 
 
+def test_a_column_no_model_declares_is_named_and_its_rows_are_left_alone(
+    old_database, caplog
+):
+    """The half of a rename this module cannot see, and must not act on.
+
+    A renamed column reaches here as two facts that look identical to a fresh
+    column and an old one: the new name is added empty, the old name keeps every
+    row. Dropping the old one would be the module doing exactly what its
+    docstring forbids, and staying silent about it was the real gap — the boot
+    log said the migration succeeded, and it had done half the work.
+
+    Both halves are asserted, and the data one is the one that matters: the
+    value has to still be there afterwards.
+    """
+    import logging
+
+    async def work():
+        async with old_database.engine().begin() as connection:
+            await connection.execute(
+                text("ALTER TABLE purchase ADD COLUMN buyer_note VARCHAR(64)")
+            )
+            await connection.execute(
+                text("UPDATE purchase SET buyer_note = 'do not lose me'")
+            )
+        await old_database.create_all()
+        async with old_database.session_factory()() as session:
+            kept = await session.execute(text("SELECT buyer_note FROM purchase"))
+            return kept.scalar_one()
+
+    with caplog.at_level(logging.WARNING, logger="alma.db.migrate"):
+        assert run_async(work) == "do not lose me"
+
+    assert any(
+        "purchase.buyer_note" in record.getMessage() for record in caplog.records
+    ), "a column the models do not know about has to be named at boot, once"
+
+
 @pytest.fixture
 def database_without_the_anonymous_funnel(tmp_path, monkeypatch):
     """A database whose `event` table predates anybody being measured anonymously.

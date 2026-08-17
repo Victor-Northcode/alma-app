@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Возможность «Push Notifications». Без неё iOS отвечает на
+	     registerForRemoteNotifications не токеном, а отказом в
+	     didFailToRegisterForRemoteNotificationsWithError — то есть ломается на
+	     устройстве, а не при отправке (docs/PUSH.md §1.2).
+
+	     Значение development, и меняться руками оно не должно: Xcode
+	     подставляет production сам, когда сборку подписывают профилем
+	     распространения. Отсюда и ловушка §1.8 — токены TestFlight
+	     производственные, сколько бы TestFlight ни назывался тестированием, — и
+	     поэтому среда, которую клиент называет серверу, берётся из
+	     конфигурации сборки (kReleaseMode в push_devices.dart), а не отсюда.
+
+	     Возможность обязана быть включена и на App ID в учётной записи Apple —
+	     это шаг владельца, и до него сборка на устройство подписываться не
+	     будет. Симулятору профиль не нужен. -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

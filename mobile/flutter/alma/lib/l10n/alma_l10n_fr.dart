@@ -2125,4 +2125,40 @@ class LFr extends L {
   @override
   String get chatNotTemplate =>
       'Je réponds depuis ta carte, jamais d\'après un modèle.';
+
+  @override
+  String get scrChatSwipeForTabs => 'Balaie vers le haut pour les onglets';
+
+  @override
+  String get cabCompatTwoSkies => 'Deux ciels, une comparaison';
+
+  @override
+  String get cabCompatBulletContacts =>
+      'Chaque contact entre les deux cartes, avec son orbe exact';
+
+  @override
+  String get cabCompatBulletHouses =>
+      'Où leurs planètes tombent dans tes maisons — et les tiennes dans les leurs';
+
+  @override
+  String get cabCompatBulletComposite =>
+      'La carte propre de la relation — le ciel de vous deux en un seul';
+
+  @override
+  String cabLegalEffective(String p1) {
+    return 'En vigueur depuis le $p1';
+  }
+
+  @override
+  String get cabPlanDeleteMismatchGuest =>
+      'Ce n\'est pas le code de ce compte.';
+
+  @override
+  String get paywallArtCaption =>
+      'Chaque chapitre s\'ouvre sur sa propre planche — peinte pour ce jeu.';
+
+  @override
+  String cabPlanCancelPeriodEnds(String date) {
+    return 'Ton forfait reste actif jusqu\'au $date.';
+  }
 }

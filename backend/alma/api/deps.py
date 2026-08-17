@@ -51,6 +51,7 @@ from ..auth.accounts import AccountDeleted
 from ..calc import BirthData
 from ..db import User, get_session
 from ..db.models import Profile
+from ..geo import is_known_timezone
 from .schemas import BirthInput
 
 #: The header a client reads to pick up a freshly minted guest token.
@@ -155,6 +156,54 @@ async def edge_country(request: Request, response: Response) -> str | None:
 #: one pass both through `region.resolve`, which prefers this — see the security
 #: note there.
 EdgeCountry = Annotated[str | None, Depends(edge_country)]
+
+
+#: The header a client *sends* to say which zone the **device** is in, as
+#: opposed to the zone somebody was born in. All three clients already attach it
+#: to every call — `AlmaClient.swift`, `alma_client.dart` and `AlmaHttp.kt` each
+#: hold the same name against `TimeZone.current` and its two equivalents — so
+#: this arrives on requests that have nothing to do with notifications, which is
+#: the point of taking it here rather than in one route.
+DEVICE_TIMEZONE_HEADER = "X-Alma-Timezone"
+
+
+async def device_timezone(
+    x_alma_timezone: Annotated[str | None, Header()] = None,
+) -> str | None:
+    """Which clock this installation is on, or `None`.
+
+    A dependency rather than a line in one route, because `docs/PUSH.md §3` and
+    `THE-DAILY.md §6.8` both asked for it here and the reason is not tidiness:
+    the zone is a property of the request, every call carries it, and a person
+    who flies is caught by whichever call they make first rather than by the one
+    route that happened to read the header itself.
+
+    **`Profile.timezone` is the birth zone and is not this.** Somebody born in
+    Auckland who now lives in Berlin has `Profile.timezone == "Pacific/Auckland"`
+    and nothing else in the system knows they moved; using it as the delivery
+    clock sends a good-morning piece at 20:00 (`THE-DAILY.md §3.1`). This header
+    is the only thing that knows better.
+
+    Nothing here fails. Absent, blank, or a zone this machine's `tzdata` has
+    never heard of all come back as `None`, exactly as the country header does:
+    a client on an old Android should lose the optimisation, not the request.
+
+    **Reading it is half the contract; the other half is persisting it.** The
+    job that sends at 08:00 local runs at 03:00 on a server with no request to
+    read a header from, so `POST /v1/notifications/devices` writes this onto the
+    device row — see `notify/tokens.register`. That is also why there is no
+    `Vary` here, unlike `edge_country`: no cacheable GET's body depends on it.
+    """
+    candidate = (x_alma_timezone or "").strip()
+    if candidate and is_known_timezone(candidate):
+        return candidate
+    return None
+
+
+#: The device's own zone, validated, or `None`. The ladder that decides which
+#: clock actually wins — this, then a zone chosen in settings, then birth —
+#: lives in `notify/rules.zone_for`, not here.
+DeviceTimezone = Annotated[str | None, Depends(device_timezone)]
 
 
 async def visitor(

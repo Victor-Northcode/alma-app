@@ -504,7 +504,9 @@ async def self_profile(session: AsyncSession, user: User):
     return rows[0] if rows else None
 
 
-async def candidates(session: AsyncSession, user: User, *, on: date):
+async def candidates(
+    session: AsyncSession, user: User, *, on: date, zone: ZoneInfo | None = None
+):
     """Everything the sky offers this person on this local date, unfiltered.
 
     A three-day scan rather than the year `piece_for` is given, and the reason
@@ -520,15 +522,25 @@ async def candidates(session: AsyncSession, user: User, *, on: date):
     Returns `[]` for a person with no saved birth rather than raising. The job
     walks a list of device tokens and one profile-less account must not stop
     the run.
+
+    **`zone` is the sender's answer, not a preference.** `on` is a date the
+    caller already resolved in somebody's clock, and bracketing it in a
+    different one is how a piece gets filed under the wrong day. The sender has
+    the better answer — it holds the device rows, so its ladder reaches the
+    rung this one cannot: `Profile.timezone` is the *birth* zone, and for
+    everybody who has moved it is wrong by however many hours they flew. Left
+    out, the ladder here still resolves, which keeps a direct caller and a test
+    honest without a device table.
     """
     profile = await self_profile(session, user)
     if profile is None:
         return []
 
     birth = birth_of(profile)
-    zone, _source = clock.zone_for(
-        chosen=getattr(user, "daily_timezone", None), birth=profile.timezone
-    )
+    if zone is None:
+        zone, _source = clock.zone_for(
+            chosen=getattr(user, "daily_timezone", None), birth=profile.timezone
+        )
     start_jd, end_jd = clock.day_bounds(on, zone)
     hits = transits.scan(
         chart_for(birth),

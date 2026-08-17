@@ -79,6 +79,21 @@ object Routes {
     fun offer(system: String? = null): String = "offer?system=${system.orEmpty()}"
 
     const val ARG_SYSTEM = "system"
+
+    /**
+     * One of the five legal documents, read in the app rather than in a browser.
+     *
+     * A route rather than five, for the same reason the system screens are one:
+     * the document is an argument, and the slugs are the web app's own paths, so
+     * `legal/subscription-terms` names the same page on every platform. It used
+     * to be an `ACTION_VIEW` at `https://alma.pazl.ai/subscription-terms`, and
+     * that host does not exist.
+     */
+    const val LEGAL = "legal/{document}"
+
+    fun legal(document: String): String = "legal/$document"
+
+    const val ARG_DOCUMENT = "document"
 }
 
 /**
