@@ -2182,4 +2182,181 @@ class LEn extends L {
 
   @override
   String get readerTextSize => 'Text size';
+
+  @override
+  String paywallV3DoorTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more chapters',
+      one: 'One more chapter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorPrice(String price) {
+    return '$price · forever';
+  }
+
+  @override
+  String get paywallV3DoorForever => 'Yours forever · no subscription';
+
+  @override
+  String paywallV3DoorChaptersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chapters',
+      one: '$count chapter',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorCta(String price) {
+    return 'Open the whole reading · $price';
+  }
+
+  @override
+  String paywallV3DoorBundleLink(String price) {
+    return 'All five readings — $price';
+  }
+
+  @override
+  String get paywallV3BundleTitle => 'All five readings';
+
+  @override
+  String paywallV3BundlePrice(String price) {
+    return '$price · forever';
+  }
+
+  @override
+  String get paywallV3BundleSaving => 'Twenty per cent off';
+
+  @override
+  String get paywallV3BundleIncludes =>
+      'Natal · numerology · birth card · astrocartography · synthesis';
+
+  @override
+  String paywallV3BundleCta(String price) {
+    return 'Open all five · $price';
+  }
+
+  @override
+  String get paywallV3PairInputTitle => 'Who are we reading together?';
+
+  @override
+  String get paywallV3PairInputName => 'His name';
+
+  @override
+  String get paywallV3PairInputDate => 'Date of birth';
+
+  @override
+  String get paywallV3PairTeaserTitle => 'What pulls you towards each other';
+
+  @override
+  String paywallV3PairTeaserCta(String price) {
+    return 'The full reading · $price';
+  }
+
+  @override
+  String paywallV3PairPrice(String price) {
+    return '$price · forever';
+  }
+
+  @override
+  String get paywallV3PairForever => 'Stays yours forever';
+
+  @override
+  String get paywallV3PairIncludedBadge => 'included in your month';
+
+  @override
+  String get paywallV3PairBeyondCredit =>
+      'Beyond your monthly check · stays yours forever';
+
+  @override
+  String get paywallV3PairMyPairsTitle => 'My pairs';
+
+  @override
+  String paywallV3PairCheckAnother(String price) {
+    return 'Check someone else · $price';
+  }
+
+  @override
+  String get paywallV3SubTitle =>
+      'The sky keeps moving. Alma keeps reading it.';
+
+  @override
+  String paywallV3SubPrice(String price) {
+    return '$price / month';
+  }
+
+  @override
+  String get paywallV3SubRenewalDisclosure =>
+      'Renews monthly · cancel any time in your Apple ID settings';
+
+  @override
+  String get paywallV3SubIncludesTransits =>
+      'Transits and the morning horoscope, written from your chart';
+
+  @override
+  String get paywallV3SubIncludesSolar =>
+      'Your solar return, rewritten each birthday';
+
+  @override
+  String get paywallV3SubIncludesPair => 'One full compatibility check a month';
+
+  @override
+  String get paywallV3SubIncludesQuestions =>
+      'Thirty questions for Alma · all five readings while active';
+
+  @override
+  String get paywallV3SubForeverStays =>
+      'Readings bought forever stay yours even without a subscription.';
+
+  @override
+  String paywallV3SubCta(String price) {
+    return 'All of Alma · $price / month';
+  }
+
+  @override
+  String get paywallV3QuotaTitle =>
+      'Three questions a month is where free ends';
+
+  @override
+  String paywallV3QuotaCta(String price) {
+    return 'Ask on · $price / month';
+  }
+
+  @override
+  String get paywallV3PlansGroupForever => 'forever';
+
+  @override
+  String get paywallV3PlansGroupSubscription => 'subscription';
+
+  @override
+  String get paywallV3PlansDividerNote =>
+      'What you bought forever does not disappear if you cancel.';
+
+  @override
+  String get paywallV3CancelSaveTitle => 'Take your reading with you';
+
+  @override
+  String paywallV3CancelSaveCta(String price) {
+    return 'Keep it forever · $price';
+  }
+
+  @override
+  String get paywallV3CancelJustCancel => 'Just cancel';
+
+  @override
+  String get paywallV3StateProcessing => 'Your purchase is going through';
+
+  @override
+  String get paywallV3StateErrorRetry => 'Try again now';
+
+  @override
+  String get paywallV3StateRestoreDone =>
+      'Restored · everything you bought is open again';
 }

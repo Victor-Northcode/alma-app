@@ -2180,4 +2180,186 @@ class LRu extends L {
 
   @override
   String get readerTextSize => 'Размер текста';
+
+  @override
+  String paywallV3DoorTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Ещё $count главы',
+      many: 'Ещё $count глав',
+      few: 'Ещё $count главы',
+      one: 'Ещё $count глава',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorPrice(String price) {
+    return '$price · навсегда';
+  }
+
+  @override
+  String get paywallV3DoorForever => 'Твоё навсегда · без подписки';
+
+  @override
+  String paywallV3DoorChaptersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count главы',
+      many: '$count глав',
+      few: '$count главы',
+      one: '$count глава',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorCta(String price) {
+    return 'Открыть весь разбор · $price';
+  }
+
+  @override
+  String paywallV3DoorBundleLink(String price) {
+    return 'Все пять разборов — $price';
+  }
+
+  @override
+  String get paywallV3BundleTitle => 'Все пять разборов';
+
+  @override
+  String paywallV3BundlePrice(String price) {
+    return '$price · навсегда';
+  }
+
+  @override
+  String get paywallV3BundleSaving => 'Скидка двадцать процентов';
+
+  @override
+  String get paywallV3BundleIncludes =>
+      'Натальная карта · нумерология · карта рождения · астрокартография · синтез';
+
+  @override
+  String paywallV3BundleCta(String price) {
+    return 'Открыть все пять · $price';
+  }
+
+  @override
+  String get paywallV3PairInputTitle => 'Кого мы читаем вместе?';
+
+  @override
+  String get paywallV3PairInputName => 'Его имя';
+
+  @override
+  String get paywallV3PairInputDate => 'Дата рождения';
+
+  @override
+  String get paywallV3PairTeaserTitle => 'Что тянет вас друг к другу';
+
+  @override
+  String paywallV3PairTeaserCta(String price) {
+    return 'Полный разбор · $price';
+  }
+
+  @override
+  String paywallV3PairPrice(String price) {
+    return '$price · навсегда';
+  }
+
+  @override
+  String get paywallV3PairForever => 'Останется твоим навсегда';
+
+  @override
+  String get paywallV3PairIncludedBadge => 'входит в твой месяц';
+
+  @override
+  String get paywallV3PairBeyondCredit =>
+      'Сверх месячной проверки · останется твоим навсегда';
+
+  @override
+  String get paywallV3PairMyPairsTitle => 'Мои пары';
+
+  @override
+  String paywallV3PairCheckAnother(String price) {
+    return 'Проверить кого-то ещё · $price';
+  }
+
+  @override
+  String get paywallV3SubTitle =>
+      'Небо продолжает двигаться. Alma продолжает его читать.';
+
+  @override
+  String paywallV3SubPrice(String price) {
+    return '$price / месяц';
+  }
+
+  @override
+  String get paywallV3SubRenewalDisclosure =>
+      'Продлевается ежемесячно · отменить можно в любой момент в настройках Apple ID';
+
+  @override
+  String get paywallV3SubIncludesTransits =>
+      'Транзиты и утренний гороскоп, написанные по твоей карте';
+
+  @override
+  String get paywallV3SubIncludesSolar =>
+      'Твой соляр, переписанный к каждому дню рождения';
+
+  @override
+  String get paywallV3SubIncludesPair =>
+      'Одна полная проверка совместимости в месяц';
+
+  @override
+  String get paywallV3SubIncludesQuestions =>
+      'Двадцать пять вопросов к Alma · все пять разборов, пока подписка активна';
+
+  @override
+  String get paywallV3SubForeverStays =>
+      'Разборы, купленные навсегда, остаются твоими и без подписки.';
+
+  @override
+  String paywallV3SubCta(String price) {
+    return 'Вся Alma · $price / месяц';
+  }
+
+  @override
+  String get paywallV3QuotaTitle =>
+      'Три вопроса в месяц — там, где заканчивается бесплатное';
+
+  @override
+  String paywallV3QuotaCta(String price) {
+    return 'Спрашивать дальше · $price / месяц';
+  }
+
+  @override
+  String get paywallV3PlansGroupForever => 'навсегда';
+
+  @override
+  String get paywallV3PlansGroupSubscription => 'подписка';
+
+  @override
+  String get paywallV3PlansDividerNote =>
+      'Купленное навсегда не исчезает, если ты отменишь подписку.';
+
+  @override
+  String get paywallV3CancelSaveTitle => 'Забери свой разбор с собой';
+
+  @override
+  String paywallV3CancelSaveCta(String price) {
+    return 'Оставить навсегда · $price';
+  }
+
+  @override
+  String get paywallV3CancelJustCancel => 'Просто отменить';
+
+  @override
+  String get paywallV3StateProcessing => 'Твоя покупка проходит';
+
+  @override
+  String get paywallV3StateErrorRetry => 'Попробовать сейчас';
+
+  @override
+  String get paywallV3StateRestoreDone =>
+      'Восстановлено · всё купленное снова открыто';
 }

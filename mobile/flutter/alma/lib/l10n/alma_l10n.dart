@@ -3970,6 +3970,258 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Text size'**
   String get readerTextSize;
+
+  /// monetization v3 · А11 door.title · V1/V2
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{One more chapter} other{{count} more chapters}}'**
+  String paywallV3DoorTitle(int count);
+
+  /// monetization v3 · А11 door.price · V1/V2
+  ///
+  /// In en, this message translates to:
+  /// **'{price} · forever'**
+  String paywallV3DoorPrice(String price);
+
+  /// monetization v3 · А11 door.forever · V1/V2
+  ///
+  /// In en, this message translates to:
+  /// **'Yours forever · no subscription'**
+  String get paywallV3DoorForever;
+
+  /// monetization v3 · А11 door.chapters_count · V1/V2/W3/W5
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} chapter} other{{count} chapters}}'**
+  String paywallV3DoorChaptersCount(int count);
+
+  /// monetization v3 · А11 door.cta · V1/V2
+  ///
+  /// In en, this message translates to:
+  /// **'Open the whole reading · {price}'**
+  String paywallV3DoorCta(String price);
+
+  /// monetization v3 · А11 door.bundle_link · V1
+  ///
+  /// In en, this message translates to:
+  /// **'All five readings — {price}'**
+  String paywallV3DoorBundleLink(String price);
+
+  /// monetization v3 · А11 bundle.title · V3/V8
+  ///
+  /// In en, this message translates to:
+  /// **'All five readings'**
+  String get paywallV3BundleTitle;
+
+  /// monetization v3 · А11 bundle.price · V3/V8
+  ///
+  /// In en, this message translates to:
+  /// **'{price} · forever'**
+  String paywallV3BundlePrice(String price);
+
+  /// monetization v3 · А11 bundle.saving · V3/V8
+  ///
+  /// In en, this message translates to:
+  /// **'Twenty per cent off'**
+  String get paywallV3BundleSaving;
+
+  /// monetization v3 · А11 bundle.includes · V3/V8
+  ///
+  /// In en, this message translates to:
+  /// **'Natal · numerology · birth card · astrocartography · synthesis'**
+  String get paywallV3BundleIncludes;
+
+  /// monetization v3 · А11 bundle.cta · V3/V8
+  ///
+  /// In en, this message translates to:
+  /// **'Open all five · {price}'**
+  String paywallV3BundleCta(String price);
+
+  /// monetization v3 · А11 pair.input_title · W2
+  ///
+  /// In en, this message translates to:
+  /// **'Who are we reading together?'**
+  String get paywallV3PairInputTitle;
+
+  /// monetization v3 · А11 pair.input_name · W2
+  ///
+  /// In en, this message translates to:
+  /// **'His name'**
+  String get paywallV3PairInputName;
+
+  /// monetization v3 · А11 pair.input_date · W2
+  ///
+  /// In en, this message translates to:
+  /// **'Date of birth'**
+  String get paywallV3PairInputDate;
+
+  /// monetization v3 · А11 pair.teaser_title · V4
+  ///
+  /// In en, this message translates to:
+  /// **'What pulls you towards each other'**
+  String get paywallV3PairTeaserTitle;
+
+  /// monetization v3 · А11 pair.teaser_cta · V4
+  ///
+  /// In en, this message translates to:
+  /// **'The full reading · {price}'**
+  String paywallV3PairTeaserCta(String price);
+
+  /// monetization v3 · А11 pair.price · V4/V5
+  ///
+  /// In en, this message translates to:
+  /// **'{price} · forever'**
+  String paywallV3PairPrice(String price);
+
+  /// monetization v3 · А11 pair.forever · V4
+  ///
+  /// In en, this message translates to:
+  /// **'Stays yours forever'**
+  String get paywallV3PairForever;
+
+  /// monetization v3 · А11 pair.included_badge · V4/V5
+  ///
+  /// In en, this message translates to:
+  /// **'included in your month'**
+  String get paywallV3PairIncludedBadge;
+
+  /// monetization v3 · А11 pair.beyond_credit · V5
+  ///
+  /// In en, this message translates to:
+  /// **'Beyond your monthly check · stays yours forever'**
+  String get paywallV3PairBeyondCredit;
+
+  /// monetization v3 · А11 pair.my_pairs_title · V5
+  ///
+  /// In en, this message translates to:
+  /// **'My pairs'**
+  String get paywallV3PairMyPairsTitle;
+
+  /// monetization v3 · А11 pair.check_another · V5
+  ///
+  /// In en, this message translates to:
+  /// **'Check someone else · {price}'**
+  String paywallV3PairCheckAnother(String price);
+
+  /// monetization v3 · А11 sub.title · V6
+  ///
+  /// In en, this message translates to:
+  /// **'The sky keeps moving. Alma keeps reading it.'**
+  String get paywallV3SubTitle;
+
+  /// monetization v3 · А11 sub.price · V6/V7/V8
+  ///
+  /// In en, this message translates to:
+  /// **'{price} / month'**
+  String paywallV3SubPrice(String price);
+
+  /// monetization v3 · А11 sub.renewal_disclosure · V6/V7/V8
+  ///
+  /// In en, this message translates to:
+  /// **'Renews monthly · cancel any time in your Apple ID settings'**
+  String get paywallV3SubRenewalDisclosure;
+
+  /// monetization v3 · А11 sub.includes_transits · V6/V8
+  ///
+  /// In en, this message translates to:
+  /// **'Transits and the morning horoscope, written from your chart'**
+  String get paywallV3SubIncludesTransits;
+
+  /// monetization v3 · А11 sub.includes_solar · V6/V8
+  ///
+  /// In en, this message translates to:
+  /// **'Your solar return, rewritten each birthday'**
+  String get paywallV3SubIncludesSolar;
+
+  /// monetization v3 · А11 sub.includes_pair · V6/V8
+  ///
+  /// In en, this message translates to:
+  /// **'One full compatibility check a month'**
+  String get paywallV3SubIncludesPair;
+
+  /// monetization v3 · А11 sub.includes_questions · V6/V8
+  ///
+  /// In en, this message translates to:
+  /// **'Thirty questions for Alma · all five readings while active'**
+  String get paywallV3SubIncludesQuestions;
+
+  /// monetization v3 · А11 sub.forever_stays · V6/V8
+  ///
+  /// In en, this message translates to:
+  /// **'Readings bought forever stay yours even without a subscription.'**
+  String get paywallV3SubForeverStays;
+
+  /// monetization v3 · А11 sub.cta · V6
+  ///
+  /// In en, this message translates to:
+  /// **'All of Alma · {price} / month'**
+  String paywallV3SubCta(String price);
+
+  /// monetization v3 · А11 quota.title · V7
+  ///
+  /// In en, this message translates to:
+  /// **'Three questions a month is where free ends'**
+  String get paywallV3QuotaTitle;
+
+  /// monetization v3 · А11 quota.cta · V7
+  ///
+  /// In en, this message translates to:
+  /// **'Ask on · {price} / month'**
+  String paywallV3QuotaCta(String price);
+
+  /// monetization v3 · А11 plans.group_forever · V8
+  ///
+  /// In en, this message translates to:
+  /// **'forever'**
+  String get paywallV3PlansGroupForever;
+
+  /// monetization v3 · А11 plans.group_subscription · V8
+  ///
+  /// In en, this message translates to:
+  /// **'subscription'**
+  String get paywallV3PlansGroupSubscription;
+
+  /// monetization v3 · А11 plans.divider_note · V8
+  ///
+  /// In en, this message translates to:
+  /// **'What you bought forever does not disappear if you cancel.'**
+  String get paywallV3PlansDividerNote;
+
+  /// monetization v3 · А11 cancel.save_title · V9
+  ///
+  /// In en, this message translates to:
+  /// **'Take your reading with you'**
+  String get paywallV3CancelSaveTitle;
+
+  /// monetization v3 · А11 cancel.save_cta · V9
+  ///
+  /// In en, this message translates to:
+  /// **'Keep it forever · {price}'**
+  String paywallV3CancelSaveCta(String price);
+
+  /// monetization v3 · А11 cancel.just_cancel · V9
+  ///
+  /// In en, this message translates to:
+  /// **'Just cancel'**
+  String get paywallV3CancelJustCancel;
+
+  /// monetization v3 · А11 state.processing · W6
+  ///
+  /// In en, this message translates to:
+  /// **'Your purchase is going through'**
+  String get paywallV3StateProcessing;
+
+  /// monetization v3 · А11 state.error_retry · W6
+  ///
+  /// In en, this message translates to:
+  /// **'Try again now'**
+  String get paywallV3StateErrorRetry;
+
+  /// monetization v3 · А11 state.restore_done · W6
+  ///
+  /// In en, this message translates to:
+  /// **'Restored · everything you bought is open again'**
+  String get paywallV3StateRestoreDone;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -2922,5 +2922,243 @@
   "readerTextSize": "Text size",
   "@readerTextSize": {
     "description": "today-reading-spec §6 · readerTextSize"
+  },
+  "paywallV3DoorTitle": "{count, plural, one{One more chapter} other{{count} more chapters}}",
+  "@paywallV3DoorTitle": {
+    "description": "monetization v3 · А11 door.title · V1/V2",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paywallV3DoorPrice": "{price} · forever",
+  "@paywallV3DoorPrice": {
+    "description": "monetization v3 · А11 door.price · V1/V2",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3DoorForever": "Yours forever · no subscription",
+  "@paywallV3DoorForever": {
+    "description": "monetization v3 · А11 door.forever · V1/V2"
+  },
+  "paywallV3DoorChaptersCount": "{count, plural, one{{count} chapter} other{{count} chapters}}",
+  "@paywallV3DoorChaptersCount": {
+    "description": "monetization v3 · А11 door.chapters_count · V1/V2/W3/W5",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paywallV3DoorCta": "Open the whole reading · {price}",
+  "@paywallV3DoorCta": {
+    "description": "monetization v3 · А11 door.cta · V1/V2",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3DoorBundleLink": "All five readings — {price}",
+  "@paywallV3DoorBundleLink": {
+    "description": "monetization v3 · А11 door.bundle_link · V1",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3BundleTitle": "All five readings",
+  "@paywallV3BundleTitle": {
+    "description": "monetization v3 · А11 bundle.title · V3/V8"
+  },
+  "paywallV3BundlePrice": "{price} · forever",
+  "@paywallV3BundlePrice": {
+    "description": "monetization v3 · А11 bundle.price · V3/V8",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3BundleSaving": "Twenty per cent off",
+  "@paywallV3BundleSaving": {
+    "description": "monetization v3 · А11 bundle.saving · V3/V8"
+  },
+  "paywallV3BundleIncludes": "Natal · numerology · birth card · astrocartography · synthesis",
+  "@paywallV3BundleIncludes": {
+    "description": "monetization v3 · А11 bundle.includes · V3/V8"
+  },
+  "paywallV3BundleCta": "Open all five · {price}",
+  "@paywallV3BundleCta": {
+    "description": "monetization v3 · А11 bundle.cta · V3/V8",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3PairInputTitle": "Who are we reading together?",
+  "@paywallV3PairInputTitle": {
+    "description": "monetization v3 · А11 pair.input_title · W2"
+  },
+  "paywallV3PairInputName": "His name",
+  "@paywallV3PairInputName": {
+    "description": "monetization v3 · А11 pair.input_name · W2"
+  },
+  "paywallV3PairInputDate": "Date of birth",
+  "@paywallV3PairInputDate": {
+    "description": "monetization v3 · А11 pair.input_date · W2"
+  },
+  "paywallV3PairTeaserTitle": "What pulls you towards each other",
+  "@paywallV3PairTeaserTitle": {
+    "description": "monetization v3 · А11 pair.teaser_title · V4"
+  },
+  "paywallV3PairTeaserCta": "The full reading · {price}",
+  "@paywallV3PairTeaserCta": {
+    "description": "monetization v3 · А11 pair.teaser_cta · V4",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3PairPrice": "{price} · forever",
+  "@paywallV3PairPrice": {
+    "description": "monetization v3 · А11 pair.price · V4/V5",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3PairForever": "Stays yours forever",
+  "@paywallV3PairForever": {
+    "description": "monetization v3 · А11 pair.forever · V4"
+  },
+  "paywallV3PairIncludedBadge": "included in your month",
+  "@paywallV3PairIncludedBadge": {
+    "description": "monetization v3 · А11 pair.included_badge · V4/V5"
+  },
+  "paywallV3PairBeyondCredit": "Beyond your monthly check · stays yours forever",
+  "@paywallV3PairBeyondCredit": {
+    "description": "monetization v3 · А11 pair.beyond_credit · V5"
+  },
+  "paywallV3PairMyPairsTitle": "My pairs",
+  "@paywallV3PairMyPairsTitle": {
+    "description": "monetization v3 · А11 pair.my_pairs_title · V5"
+  },
+  "paywallV3PairCheckAnother": "Check someone else · {price}",
+  "@paywallV3PairCheckAnother": {
+    "description": "monetization v3 · А11 pair.check_another · V5",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3SubTitle": "The sky keeps moving. Alma keeps reading it.",
+  "@paywallV3SubTitle": {
+    "description": "monetization v3 · А11 sub.title · V6"
+  },
+  "paywallV3SubPrice": "{price} / month",
+  "@paywallV3SubPrice": {
+    "description": "monetization v3 · А11 sub.price · V6/V7/V8",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3SubRenewalDisclosure": "Renews monthly · cancel any time in your Apple ID settings",
+  "@paywallV3SubRenewalDisclosure": {
+    "description": "monetization v3 · А11 sub.renewal_disclosure · V6/V7/V8"
+  },
+  "paywallV3SubIncludesTransits": "Transits and the morning horoscope, written from your chart",
+  "@paywallV3SubIncludesTransits": {
+    "description": "monetization v3 · А11 sub.includes_transits · V6/V8"
+  },
+  "paywallV3SubIncludesSolar": "Your solar return, rewritten each birthday",
+  "@paywallV3SubIncludesSolar": {
+    "description": "monetization v3 · А11 sub.includes_solar · V6/V8"
+  },
+  "paywallV3SubIncludesPair": "One full compatibility check a month",
+  "@paywallV3SubIncludesPair": {
+    "description": "monetization v3 · А11 sub.includes_pair · V6/V8"
+  },
+  "paywallV3SubIncludesQuestions": "Thirty questions for Alma · all five readings while active",
+  "@paywallV3SubIncludesQuestions": {
+    "description": "monetization v3 · А11 sub.includes_questions · V6/V8"
+  },
+  "paywallV3SubForeverStays": "Readings bought forever stay yours even without a subscription.",
+  "@paywallV3SubForeverStays": {
+    "description": "monetization v3 · А11 sub.forever_stays · V6/V8"
+  },
+  "paywallV3SubCta": "All of Alma · {price} / month",
+  "@paywallV3SubCta": {
+    "description": "monetization v3 · А11 sub.cta · V6",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3QuotaTitle": "Three questions a month is where free ends",
+  "@paywallV3QuotaTitle": {
+    "description": "monetization v3 · А11 quota.title · V7"
+  },
+  "paywallV3QuotaCta": "Ask on · {price} / month",
+  "@paywallV3QuotaCta": {
+    "description": "monetization v3 · А11 quota.cta · V7",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3PlansGroupForever": "forever",
+  "@paywallV3PlansGroupForever": {
+    "description": "monetization v3 · А11 plans.group_forever · V8"
+  },
+  "paywallV3PlansGroupSubscription": "subscription",
+  "@paywallV3PlansGroupSubscription": {
+    "description": "monetization v3 · А11 plans.group_subscription · V8"
+  },
+  "paywallV3PlansDividerNote": "What you bought forever does not disappear if you cancel.",
+  "@paywallV3PlansDividerNote": {
+    "description": "monetization v3 · А11 plans.divider_note · V8"
+  },
+  "paywallV3CancelSaveTitle": "Take your reading with you",
+  "@paywallV3CancelSaveTitle": {
+    "description": "monetization v3 · А11 cancel.save_title · V9"
+  },
+  "paywallV3CancelSaveCta": "Keep it forever · {price}",
+  "@paywallV3CancelSaveCta": {
+    "description": "monetization v3 · А11 cancel.save_cta · V9",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3CancelJustCancel": "Just cancel",
+  "@paywallV3CancelJustCancel": {
+    "description": "monetization v3 · А11 cancel.just_cancel · V9"
+  },
+  "paywallV3StateProcessing": "Your purchase is going through",
+  "@paywallV3StateProcessing": {
+    "description": "monetization v3 · А11 state.processing · W6"
+  },
+  "paywallV3StateErrorRetry": "Try again now",
+  "@paywallV3StateErrorRetry": {
+    "description": "monetization v3 · А11 state.error_retry · W6"
+  },
+  "paywallV3StateRestoreDone": "Restored · everything you bought is open again",
+  "@paywallV3StateRestoreDone": {
+    "description": "monetization v3 · А11 state.restore_done · W6"
   }
 }

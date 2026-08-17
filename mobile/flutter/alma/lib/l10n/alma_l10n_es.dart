@@ -2187,4 +2187,182 @@ class LEs extends L {
 
   @override
   String get readerTextSize => 'Tamaño del texto';
+
+  @override
+  String paywallV3DoorTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count capítulos más',
+      one: 'Un capítulo más',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorPrice(String price) {
+    return '$price · para siempre';
+  }
+
+  @override
+  String get paywallV3DoorForever => 'Tuyo para siempre · sin suscripción';
+
+  @override
+  String paywallV3DoorChaptersCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count capítulos',
+      one: '$count capítulo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorCta(String price) {
+    return 'Abrir la lectura entera · $price';
+  }
+
+  @override
+  String paywallV3DoorBundleLink(String price) {
+    return 'Las cinco lecturas — $price';
+  }
+
+  @override
+  String get paywallV3BundleTitle => 'Las cinco lecturas';
+
+  @override
+  String paywallV3BundlePrice(String price) {
+    return '$price · para siempre';
+  }
+
+  @override
+  String get paywallV3BundleSaving => 'Un veinte por ciento menos';
+
+  @override
+  String get paywallV3BundleIncludes =>
+      'Carta natal · numerología · carta de nacimiento · astrocartografía · síntesis';
+
+  @override
+  String paywallV3BundleCta(String price) {
+    return 'Abrir las cinco · $price';
+  }
+
+  @override
+  String get paywallV3PairInputTitle => '¿A quién leemos juntos?';
+
+  @override
+  String get paywallV3PairInputName => 'Su nombre';
+
+  @override
+  String get paywallV3PairInputDate => 'Fecha de nacimiento';
+
+  @override
+  String get paywallV3PairTeaserTitle => 'Lo que atrae a los dos';
+
+  @override
+  String paywallV3PairTeaserCta(String price) {
+    return 'La lectura completa · $price';
+  }
+
+  @override
+  String paywallV3PairPrice(String price) {
+    return '$price · para siempre';
+  }
+
+  @override
+  String get paywallV3PairForever => 'Se queda tuya para siempre';
+
+  @override
+  String get paywallV3PairIncludedBadge => 'incluida en tu mes';
+
+  @override
+  String get paywallV3PairBeyondCredit =>
+      'Más allá de tu análisis mensual · se queda tuya para siempre';
+
+  @override
+  String get paywallV3PairMyPairsTitle => 'Mis parejas';
+
+  @override
+  String paywallV3PairCheckAnother(String price) {
+    return 'Analizar a otra persona · $price';
+  }
+
+  @override
+  String get paywallV3SubTitle =>
+      'El cielo sigue moviéndose. Alma sigue leyéndolo.';
+
+  @override
+  String paywallV3SubPrice(String price) {
+    return '$price / mes';
+  }
+
+  @override
+  String get paywallV3SubRenewalDisclosure =>
+      'Se renueva cada mes · puedes cancelar cuando quieras en los ajustes de tu Apple ID';
+
+  @override
+  String get paywallV3SubIncludesTransits =>
+      'Tránsitos y el horóscopo de la mañana, escritos desde tu carta';
+
+  @override
+  String get paywallV3SubIncludesSolar =>
+      'Tu revolución solar, reescrita cada cumpleaños';
+
+  @override
+  String get paywallV3SubIncludesPair =>
+      'Un análisis completo de compatibilidad al mes';
+
+  @override
+  String get paywallV3SubIncludesQuestions =>
+      'Treinta preguntas para Alma · las cinco lecturas mientras esté activa';
+
+  @override
+  String get paywallV3SubForeverStays =>
+      'Las lecturas compradas para siempre siguen siendo tuyas incluso sin suscripción.';
+
+  @override
+  String paywallV3SubCta(String price) {
+    return 'Toda Alma · $price / mes';
+  }
+
+  @override
+  String get paywallV3QuotaTitle =>
+      'Tres preguntas al mes es donde termina lo gratis';
+
+  @override
+  String paywallV3QuotaCta(String price) {
+    return 'Seguir preguntando · $price / mes';
+  }
+
+  @override
+  String get paywallV3PlansGroupForever => 'para siempre';
+
+  @override
+  String get paywallV3PlansGroupSubscription => 'suscripción';
+
+  @override
+  String get paywallV3PlansDividerNote =>
+      'Lo que compraste para siempre no desaparece si cancelas.';
+
+  @override
+  String get paywallV3CancelSaveTitle => 'Llévate tu lectura contigo';
+
+  @override
+  String paywallV3CancelSaveCta(String price) {
+    return 'Conservarla para siempre · $price';
+  }
+
+  @override
+  String get paywallV3CancelJustCancel => 'Solo cancelar';
+
+  @override
+  String get paywallV3StateProcessing => 'Tu compra se está procesando';
+
+  @override
+  String get paywallV3StateErrorRetry => 'Intentarlo ahora';
+
+  @override
+  String get paywallV3StateRestoreDone =>
+      'Restaurado · todo lo que compraste vuelve a estar abierto';
 }
