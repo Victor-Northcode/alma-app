@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../design/buttons.dart';
@@ -8,6 +10,7 @@ import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
+import '../../net/providers_sign_in.dart';
 import '../../state/session.dart';
 
 /// Вход в аккаунт.
@@ -28,16 +31,6 @@ import '../../state/session.dart';
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
-  /// Кнопки Apple и Google **за флагом**.
-  ///
-  /// Обе требуют нативной обвязки, которой в порте пока нет: Google — своего
-  /// клиента и `URL scheme`, Apple — заявки в возможностях цели. Кнопка,
-  /// нарисованная поверх отсутствующей обвязки, отвечала бы ошибкой на каждое
-  /// нажатие, а это хуже её отсутствия: неработающая кнопка входа читается как
-  /// «аккаунт сломан». Ссылка на почту работает по-настоящему.
-  static bool get providersReady =>
-      const String.fromEnvironment('ALMA_SIGNIN_PROVIDERS') == '1';
-
   @override
   State<SignInScreen> createState() => _SignInScreenState();
 }
@@ -54,10 +47,90 @@ class _SignInScreenState extends State<SignInScreen> {
   /// — в продакшне сервер его не присылает вовсе, и блок не появляется.
   String? _debugToken;
 
+  /// Какие двери этот сервер умеет открывать. Оба `false`, пока он не ответил:
+  /// кнопка, мигнувшая и исчезнувшая, хуже кнопки, появившейся на полсекунды
+  /// позже.
+  bool _apple = false;
+  bool _google = false;
+
+  /// Какой провайдер сейчас спрашивает у системы — `'apple'`, `'google'` или
+  /// `null`. Гасит **обе** кнопки: два системных окна разом не открываются, и
+  /// второе нажатие в ожидании первого — это заявка, которую некому принять.
+  String? _provider;
+
+  bool _asked = false;
+
   @override
   void initState() {
     super.initState();
     _email.addListener(_refresh);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // `SessionScope` из `initState` недоступен — ловушка, записанная в
+    // `docs/WORKING.md`: исключение уходит в невозвращённое будущее, и экран
+    // молча стоит вечно.
+    if (_asked) return;
+    _asked = true;
+    unawaited(_askProviders());
+  }
+
+  /// Спросить сервер, что он умеет. Молчание — не «умеет всё».
+  ///
+  /// Отказ сети оставляет обе кнопки скрытыми и **не показывает ошибку**:
+  /// человек пришёл сюда войти по почте, поле для почты на месте, и красная
+  /// строка про недоступные провайдеры сообщила бы о поломке там, где её нет.
+  Future<void> _askProviders() async {
+    try {
+      final can = await SessionScope.of(context).client.authProviders();
+      if (!mounted) return;
+      setState(() {
+        _apple = (can['apple'] ?? false) && AlmaProviders.appleShows;
+        _google = can['google'] ?? false;
+      });
+    } catch (_) {
+      // Тишина намеренная — см. выше.
+    }
+  }
+
+  /// Войти через провайдера. `null` от обвязки — человек передумал.
+  Future<void> _viaProvider(String which) async {
+    if (_provider != null) return;
+    setState(() {
+      _provider = which;
+      _notice = null;
+    });
+    final l = L.of(context);
+    final session = SessionScope.of(context);
+    final navigator = Navigator.of(context);
+    try {
+      final info = which == 'apple'
+          ? await AlmaProviders.apple(session.client)
+          : await AlmaProviders.google(session.client);
+      if (!mounted) return;
+      if (info == null) {
+        setState(() => _provider = null);
+        return;
+      }
+      // Токен уже в связке — его положил туда сам клиент. Осталось
+      // перечитать аккаунт целиком: до этой секунды экран под нами показывал
+      // гостя, а теперь там другой человек. Та же строка, что у входа по
+      // ссылке, и по той же причине.
+      await session.start(force: true);
+      if (!mounted) return;
+      navigator.maybePop();
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _provider = null;
+        _noticeBad = true;
+        _notice = error is ServerRefused && error.message.isNotEmpty
+            ? error.message
+            : l.scrSignInFailed;
+      });
+    }
   }
 
   @override
@@ -187,7 +260,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   shortLabel: l.scrSignInSendLinkShort,
                   onTap: _emailLooksReal && !_working ? _sendLink : null,
                 ),
-                if (SignInScreen.providersReady) ...[
+                if (_apple || _google) ...[
                   const SizedBox(height: 26),
                   Text(l.scrSignInOrWith,
                       textAlign: TextAlign.center,
@@ -195,7 +268,12 @@ class _SignInScreenState extends State<SignInScreen> {
                           fontSize: 12,
                           color: AlmaPalette.body.withValues(alpha: 0.5))),
                   const SizedBox(height: 14),
-                  const _Providers(),
+                  _Providers(
+                    apple: _apple,
+                    google: _google,
+                    busy: _provider,
+                    onTap: _viaProvider,
+                  ),
                 ],
                 if (_debugToken != null) ...[
                   const SizedBox(height: 26),
@@ -259,37 +337,91 @@ class _SignInScreenState extends State<SignInScreen> {
 /// одна на всю ширину; здесь их две по 169 точек, и полная фраза туда не
 /// встаёт. Что это вход, говорит связка «или войди через» над ними.
 class _Providers extends StatelessWidget {
-  const _Providers();
+  const _Providers({
+    required this.apple,
+    required this.google,
+    required this.busy,
+    required this.onTap,
+  });
+
+  final bool apple;
+  final bool google;
+
+  /// Какой провайдер сейчас разговаривает с системой, или `null`.
+  final String? busy;
+  final void Function(String which) onTap;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(children: [
-      Expanded(child: _Provider(label: 'Apple')),
-      SizedBox(width: 12),
-      Expanded(child: _Provider(label: 'Google')),
-    ]);
+    final buttons = <Widget>[
+      // **Порядок не алфавитный.** Apple первым там, где он есть: на iOS это
+      // вход, который система показывает своим листом и который Apple требует
+      // предлагать наравне с чужими провайдерами (Guideline 4.8).
+      if (apple)
+        _Provider(
+          label: 'Apple',
+          working: busy == 'apple',
+          onTap: busy == null ? () => onTap('apple') : null,
+        ),
+      if (google)
+        _Provider(
+          label: 'Google',
+          working: busy == 'google',
+          onTap: busy == null ? () => onTap('google') : null,
+        ),
+    ];
+    // Одна доступная дверь занимает строку целиком, а не половину с дырой
+    // рядом: на Android Apple не показывается вовсе, и ряд из одной кнопки в
+    // пол-экрана читался бы как «вторая не загрузилась».
+    return Row(
+      children: [
+        for (final (index, button) in buttons.indexed) ...[
+          if (index > 0) const SizedBox(width: 12),
+          Expanded(child: button),
+        ],
+      ],
+    );
   }
 }
 
 class _Provider extends StatelessWidget {
-  const _Provider({required this.label});
+  const _Provider({required this.label, required this.working, this.onTap});
 
   final String label;
+  final bool working;
+  final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) => Container(
-        height: 54,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: const Color(0xFF0C0E18),
-          borderRadius: BorderRadius.circular(27),
-          border: Border.all(color: const Color(0x24EDE7DA)),
+  Widget build(BuildContext context) => GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          height: 54,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: const Color(0xFF0C0E18),
+            borderRadius: BorderRadius.circular(27),
+            border: Border.all(color: const Color(0x24EDE7DA)),
+          ),
+          // Ожидание — на самой кнопке, а не поверх экрана: системный лист
+          // Apple или окно выбора аккаунта Google приходит не мгновенно, и
+          // кнопка, ничем не ответившая на нажатие, получает второе.
+          child: working
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: AlmaPalette.gold),
+                )
+              : Text(label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AlmaType.button.copyWith(
+                      fontSize: 15,
+                      color: onTap == null
+                          ? AlmaPalette.muted3
+                          : AlmaPalette.inkLight)),
         ),
-        child: Text(label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AlmaType.button
-                .copyWith(fontSize: 15, color: AlmaPalette.inkLight)),
       );
 }
 

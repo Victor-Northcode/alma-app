@@ -302,6 +302,25 @@ class AlmaClient {
   Future<AlmaSessionInfo> consumeMagicLink(String token) async =>
       _adopt(await _post('/v1/auth/magic-link/consume', {'token': token}));
 
+  /// Какие двери этот сервер умеет открывать: `google`, `apple`, `email`.
+  ///
+  /// **Спрашиваем, а не угадываем.** Обе ручки провайдеров отвечают 401 без
+  /// своего идентификатора клиента — токен нечем проверить, значит нельзя ему
+  /// верить, — и кнопка, нарисованная поверх такой ручки, отвечала бы ошибкой
+  /// на каждое нажатие. Человек, увидевший её, решит не «сервер настроен
+  /// наполовину», а «мой аккаунт сломан».
+  ///
+  /// Раньше это был флаг сборки, который надо было переключить руками в тот же
+  /// час, когда ключи вписали в окружение сервера, — в двух местах, ничего друг
+  /// о друге не знающих. Теперь кнопка появляется сама.
+  Future<Map<String, bool>> authProviders() async {
+    final body = await _get('/v1/auth/providers');
+    return {
+      for (final key in const ['google', 'apple', 'email'])
+        key: body[key] == true,
+    };
+  }
+
   Future<AlmaSessionInfo> signInWithGoogle(String credential) async =>
       _adopt(await _post('/v1/auth/google', {'credential': credential}));
 

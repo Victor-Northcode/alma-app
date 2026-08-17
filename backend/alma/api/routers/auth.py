@@ -46,6 +46,39 @@ def _session_out(user: User) -> SessionOut:
     )
 
 
+@router.get("/providers")
+async def providers() -> dict:
+    """Which ways in this deployment can actually verify.
+
+    **A sign-in button over an unverifiable provider is worse than no button.**
+    Both `/auth/google` and `/auth/apple` answer 401 without their client id —
+    the token cannot be checked, so it must not be trusted — and the app that
+    drew the button anyway would answer every tap with an error. A person
+    reading that error does not conclude «this deployment is misconfigured»;
+    they conclude their account is broken.
+
+    So the client asks instead of guessing. Until now it guessed at build time:
+    a `--dart-define` flag that had to be flipped by hand in the same hour the
+    credentials were pasted into the server's environment, in two places that
+    know nothing about each other. Here the button appears the moment
+    `GOOGLE_CLIENT_ID` or `APPLE_CLIENT_ID` is set, and disappears if it is
+    unset again.
+
+    No token required: this says nothing about anybody. It is the shape of the
+    door, not who is behind it.
+    """
+    config = settings()
+    return {
+        "google": bool(config.google_client_id),
+        "apple": bool(config.apple_client_id),
+        # Почта — не провайдер, но для экрана это третья дверь, и она тоже
+        # может быть закрыта: без ключа почтовика ссылка никуда не уйдёт.
+        # Локальная разработка — исключение: сервер возвращает токен в ответе,
+        # и войти можно без единой настройки.
+        "email": bool(config.resend_api_key) or config.debug,
+    }
+
+
 @router.get("/session", response_model=SessionOut)
 async def whoami(user: CurrentUser) -> SessionOut:
     """Who this token belongs to — and a guest account if it belonged to nobody."""
