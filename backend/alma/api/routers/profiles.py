@@ -85,9 +85,21 @@ async def create_profile(
         ).scalars().all()
         tier = await _ent.tier_of(session, user)
         if tier != "subscriber":
-            access = await _ent.check(session, user, "compatibility", chapter=None)
-            owns_door = access.allowed and access.kind not in (None, "free")
-            limit = 2 if owns_door else 1
+            # **Ступень читается по купленным парам, а не по двери
+            # совместимости.** Двери у совместимости в v3 нет: отчёт покупается
+            # на конкретного человека (`pair.check` → грант `pair:{id}`), и
+            # спросить `check(system="compatibility")` без партнёра больше
+            # нельзя — это ошибка вызова, а не отсутствие прав. Смысл лестницы
+            # сохранён дословно: один сохранённый партнёр бесплатно, второй —
+            # тому, кто уже заплатил хотя бы за один разбор пары.
+            #
+            # TODO(Ф0.3): по ТЗ P4 злоупотребление бесплатным слоем ограничивает
+            # серверный кап тизеров (3/мес, приложение А9), а не число
+            # сохранённых профилей. Когда кап появится, эту лестницу надо
+            # пересмотреть целиком — сейчас она сохраняется как есть, чтобы
+            # смена каталога не стала заодно и сменой продуктового правила.
+            has_bought_a_pair = bool(await _ent.unlocked_pairs(session, user))
+            limit = 2 if has_bought_a_pair else 1
             if len(others) >= limit:
                 raise HTTPException(
                     status.HTTP_402_PAYMENT_REQUIRED,

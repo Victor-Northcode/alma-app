@@ -1,10 +1,18 @@
 """The paywall's rules, tested as rules rather than as arithmetic.
 
-Each test here names a decision that money depends on: what an upgrade credit
-is worth, what a subscription does *not* include, and which of three tiers a
+Each test here names a decision that money depends on: how wide each grant
+reaches, what a subscription does *not* include, and which of three tiers a
 person is in. None of them re-runs the implementation and compares it to
 itself — the numbers are derived from the catalogue and the definitions, so a
 change that quietly reverses a rule fails here instead of in a bank statement.
+
+**Что отсюда убрано и почему.** Первая треть файла проверяла кредитный добор:
+самая дорогая покупка внутри тридцатидневного окна, потолок кредита, отказ
+считать кредит через валюту. Монетизация v3 сняла с продажи и `archive`, и
+`archive-upgrade`, и `archive-bump` — значит нет цены, в которую этот кредит
+можно было бы превратить, — а вместе с ними ушли `annual_credit`,
+`list_price_cents` и `CREDIT_*`. Тесты удалены целиком, а не закомментированы:
+закомментированный тест — это обещание вернуться, которого никто не давал.
 """
 
 from __future__ import annotations
@@ -47,187 +55,6 @@ def db(tmp_path, monkeypatch):
     config_module.settings.cache_clear()
 
 
-DOOR_CENTS = entitlements.list_price_cents("natal")
-
-
-# ── the upgrade credit ─────────────────────────────────────────────────────
-
-def test_the_credit_is_the_largest_purchase_and_not_the_sum(db, monkeypatch):
-    """Buying twice does not credit twice.
-
-    Summing put someone who bought a door and then a second one close enough
-    to the year's price that the year's generation cost stopped being covered.
-    The promise is that we hand back the reading they already paid for — one
-    of them, the biggest. The two prices are invented here rather than taken
-    from the catalogue, which prices every door the same: with equal prices
-    the sum and the maximum can be told apart, but a rule that returned the
-    *first* purchase would pass anyway.
-    """
-    prices = {"natal": 500, "transits": 1_200}
-    monkeypatch.setattr(
-        entitlements, "list_price_cents", lambda system, currency="USD", *, scope=None: prices[system]
-    )
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        # The dearer one second, so "the last one wins" fails too.
-        for index, system in enumerate(("natal", "transits")):
-            await entitlements.grant(
-                session, user, system=system, kind="one_time", transaction_id=f"t{index}"
-            )
-        first_order = await entitlements.annual_credit(session, user)
-
-        other = await accounts.create_guest(session)
-        for index, system in enumerate(("transits", "natal")):
-            await entitlements.grant(
-                session, other, system=system, kind="one_time", transaction_id=f"o{index}"
-            )
-        return first_order, await entitlements.annual_credit(session, other)
-
-    assert db(work) == (1_200, 1_200)
-
-
-def test_a_second_purchase_does_not_raise_the_credit(db):
-    """Told through the real catalogue, where every door costs the same."""
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="natal", kind="one_time", transaction_id="t1"
-        )
-        after_one = await entitlements.annual_credit(session, user)
-        await entitlements.grant(
-            session, user, system="transits", kind="one_time", transaction_id="t2"
-        )
-        return after_one, await entitlements.annual_credit(session, user)
-
-    after_one, after_two = db(work)
-    assert after_one == DOOR_CENTS
-    assert after_two == after_one
-
-
-def test_the_credit_stops_at_the_cap(db, monkeypatch):
-    """However dear the thing bought, the credit has a ceiling."""
-    monkeypatch.setattr(
-        entitlements, "list_price_cents", lambda system, currency="USD", *, scope=None: 9_999
-    )
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="natal", kind="one_time", transaction_id="t1"
-        )
-        return await entitlements.annual_credit(session, user)
-
-    assert db(work) == entitlements.CREDIT_CAP_CENTS
-
-
-def test_the_cap_is_a_price_and_not_a_number_of_cents(db, monkeypatch):
-    """2999 øre is three dollars. The cap has to mean the same thing everywhere.
-
-    So it is quoted per currency from the band the catalogue prices it on,
-    and a euro buyer's cap is the euro price of that band rather than the US
-    integer wearing a euro sign.
-    """
-    from alma.billing.catalogue import PRODUCTS
-
-    band = next(
-        item for item in PRODUCTS.values() if item.band == entitlements.CREDIT_CAP_BAND
-    )
-    monkeypatch.setattr(
-        entitlements, "list_price_cents", lambda system, currency="USD", *, scope=None: 999_999
-    )
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="natal", kind="one_time",
-            transaction_id="t1", currency="EUR",
-        )
-        return await entitlements.annual_credit(session, user, currency="EUR")
-
-    capped = db(work)
-    assert capped == band.cents_in("EUR")
-    assert capped != band.cents
-
-
-def test_a_purchase_in_another_currency_does_not_credit(db):
-    """A credit is subtracted, never converted.
-
-    NOK 109 taken off a $78.99 plan reads as $109 and buys the year for
-    nothing, so a purchase charged in one currency simply does not count
-    toward a price quoted in another.
-    """
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="natal", kind="one_time",
-            transaction_id="t1", currency="NOK",
-        )
-        return (
-            await entitlements.annual_credit(session, user),
-            await entitlements.annual_credit(session, user, currency="NOK"),
-        )
-
-    against_dollars, against_kroner = db(work)
-    assert against_dollars == 0
-    assert against_kroner == entitlements.list_price_cents("natal", "NOK")
-
-
-def test_only_purchases_inside_the_window_credit(db):
-    """The window is about recency, and a purchase outside it carries nothing."""
-    window = entitlements.CREDIT_WINDOW
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        stale = await entitlements.grant(
-            session, user, system="natal", kind="one_time", transaction_id="t1"
-        )
-        stale.granted_at = utcnow() - window - timedelta(minutes=1)
-        await session.flush()
-        outside = await entitlements.annual_credit(session, user)
-
-        stale.granted_at = utcnow() - window + timedelta(minutes=1)
-        await session.flush()
-        return outside, await entitlements.annual_credit(session, user)
-
-    assert db(work) == (0, DOOR_CENTS)
-
-
-def test_the_credit_ignores_what_the_processor_collected(db):
-    """We credit our published price, not the total the processor took.
-
-    `amount_cents` is the grand total, so it carries the tax that has already
-    gone to a tax authority. Crediting it refunds someone else's tax out of
-    our own margin, on a reading the buyer still has.
-    """
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="natal", kind="one_time", transaction_id="t1",
-            amount_cents=DOOR_CENTS * 3,
-        )
-        return await entitlements.annual_credit(session, user)
-
-    assert db(work) == DOOR_CENTS
-
-
-def test_a_grant_of_something_we_do_not_sell_is_not_money_back(db):
-    """An entitlement nobody was charged for cannot become a discount."""
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="a-system-we-do-not-sell", kind="one_time",
-            transaction_id="t1", amount_cents=4_900,
-        )
-        return await entitlements.annual_credit(session, user)
-
-    assert db(work) == 0
-
-
 # ── the three tiers ────────────────────────────────────────────────────────
 
 def test_a_person_with_nothing_is_free(db):
@@ -254,8 +81,8 @@ def test_a_live_plan_makes_a_subscriber_and_an_expired_one_does_not(db):
     async def work(session):
         user = await accounts.create_guest(session)
         plan = await entitlements.grant(
-            session, user, system="*", kind=EntitlementKind.annual.value,
-            transaction_id="t1",
+            session, user, system="*", kind=EntitlementKind.monthly.value,
+            subscription_id="sub_1", duration=timedelta(days=31),
         )
         while_live = await entitlements.tier_of(session, user)
 
@@ -303,8 +130,8 @@ def test_a_subscriber_who_also_bought_something_is_still_a_subscriber(db):
             session, user, system="natal", kind="one_time", transaction_id="t1"
         )
         await entitlements.grant(
-            session, user, system="*", kind=EntitlementKind.annual.value,
-            transaction_id="t2",
+            session, user, system="*", kind=EntitlementKind.monthly.value,
+            subscription_id="sub_1", duration=timedelta(days=31),
         )
         return await entitlements.tier_of(session, user)
 
@@ -360,10 +187,15 @@ def test_a_live_subscription_does_not_unlock_the_archive(db):
         user = await accounts.create_guest(session)
         await entitlements.grant(
             session, user, system=entitlements.SCOPE_LIVE,
-            kind=EntitlementKind.annual.value, subscription_id="sub_1",
+            kind=EntitlementKind.monthly.value, subscription_id="sub_1",
+            duration=timedelta(days=31),
         )
         unlocked = await entitlements.unlocked_systems(session, user)
-        opens = await entitlements.check(session, user, sorted(living)[0])
+        # `transits`, а не первая по алфавиту живая система: первая —
+        # `compatibility`, а её `check` без партнёра справедливо считает
+        # ошибкой вызова. Спрашивать здесь надо про систему, у которой вопрос
+        # «открыта ли» вообще имеет ответ без второго человека.
+        opens = await entitlements.check(session, user, "transits")
         stays_shut = await entitlements.check(session, user, sorted(archive)[0])
         return unlocked, opens.allowed, stays_shut.allowed
 
@@ -396,7 +228,7 @@ def test_a_live_plan_spelled_the_way_the_catalogue_spells_it(db):
         return (
             await entitlements.unlocked_systems(session, user),
             (await entitlements.check(session, user, "natal")).allowed,
-            (await entitlements.check(session, user, sorted(living)[0])).reason,
+            (await entitlements.check(session, user, "transits")).reason,
         )
 
     unlocked, natal, reason = db(work)
@@ -407,101 +239,227 @@ def test_a_live_plan_spelled_the_way_the_catalogue_spells_it(db):
 
 # ── which prices may be put in front of whom ───────────────────────────────
 
-def test_the_shelf_is_offered_to_anybody(db):
+def test_every_shelf_price_is_offered_to_anybody(db):
+    """Условных цен в v3 нет, значит вся полка предлагается всем."""
+    from alma.billing.catalogue import PRODUCTS
+
     async def work(session):
         user = await accounts.create_guest(session)
         return {
             key: await entitlements.may_be_offered(session, user, key)
-            for key in ("natal", "archive", "monthly", "annual")
+            for key in PRODUCTS
         }
 
-    assert all(db(work).values())
+    answers = db(work)
+    assert len(answers) == 8
+    assert all(answers.values()), answers
 
 
-def test_the_upgrade_is_not_offered_to_somebody_with_nothing_to_upgrade(db):
-    """It is the archive at nine dollars off. Offered to a stranger it is a
-    discount off a purchase they have not made — and the checkout accepted it
-    by name, so anyone who read the catalogue response could take it."""
+def test_a_product_we_do_not_sell_is_refused_by_name(db):
+    """Чекаут и `/iap/verify` принимают имя товара от клиента, а клиент — не та
+    сторона, которой мы верим.
+
+    Тест переписан из проверки условных цен (`archive-upgrade`,
+    `archive-bump`), которых больше нет. Проверяемое правило то же и оно
+    единственное, что осталось от того механизма: имя, которого нет на полке,
+    отвергается по имени, а не тем, что мы его не нарисовали.
+    """
+
     async def work(session):
         user = await accounts.create_guest(session)
-        return await entitlements.may_be_offered(session, user, "archive-upgrade")
+        return [
+            await entitlements.may_be_offered(session, user, key)
+            # Ключи прежней полки, слаг системы вместо ключа каталога и просто
+            # выдумка: все три — то, что приходит от пересобранного клиента.
+            for key in ("archive", "archive-upgrade", "natal", "door.transits", "")
+        ]
 
-    assert db(work) is False
-
-
-def test_the_upgrade_is_offered_to_somebody_who_bought_a_door(db):
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="natal", kind=EntitlementKind.one_time.value,
-            transaction_id="t1",
-        )
-        return await entitlements.may_be_offered(session, user, "archive-upgrade")
-
-    assert db(work) is True
+    assert db(work) == [False, False, False, False, False]
 
 
-def test_the_upgrade_is_not_offered_to_somebody_who_already_owns_everything(db):
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system=entitlements.EVERYTHING,
-            kind=EntitlementKind.one_time.value, transaction_id="t1",
-        )
-        return await entitlements.may_be_offered(session, user, "archive-upgrade")
+# ── бандл: пять статичных систем, и ни одной живой ─────────────────────────
 
-    assert db(work) is False
+def test_the_bundle_opens_the_five_static_systems_and_nothing_else(db):
+    """Транзиты и соляр пересчитываются, и продать их «навсегда» за $19.99
+    значит отдать подписку одним платежом."""
+    living = entitlements.living_systems() & set(SYSTEMS)
 
-
-def test_the_in_checkout_bump_is_never_offered_on_its_own(db):
-    """899 + 2999 is a cent under the shelf. 2999 alone is the shelf less nine
-    dollars, for the same grant, and this checkout sells one product at a
-    time."""
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="natal", kind=EntitlementKind.one_time.value,
-            transaction_id="t1",
-        )
-        return await entitlements.may_be_offered(session, user, "archive-bump")
-
-    assert db(work) is False
-
-
-def test_a_subscriber_who_bought_a_door_may_still_upgrade(db):
-    """A rental is not the archive, so it does not disqualify anybody."""
     async def work(session):
         user = await accounts.create_guest(session)
         await entitlements.grant(
             session, user, system=entitlements.EVERYTHING,
-            kind=EntitlementKind.monthly.value, scope=entitlements.SCOPE_LIVE,
-            subscription_id="sub_1", duration=timedelta(days=31),
-        )
-        await entitlements.grant(
-            session, user, system="natal", kind=EntitlementKind.one_time.value,
+            kind=EntitlementKind.one_time.value, scope=entitlements.SCOPE_STATIC,
             transaction_id="t1",
         )
-        return await entitlements.may_be_offered(session, user, "archive-upgrade")
+        return (
+            await entitlements.unlocked_systems(session, user),
+            (await entitlements.check(session, user, "natal")).allowed,
+            (await entitlements.check(session, user, "transits")).allowed,
+        )
 
-    assert db(work) is True
+    unlocked, natal, transits = db(work)
+    assert unlocked == entitlements.STATIC_SYSTEMS
+    assert natal is True
+    assert transits is False
+    assert not (entitlements.STATIC_SYSTEMS & living), (
+        "статичная система, которая ещё и живая, — это дверь, продающая подписку"
+    )
 
 
-def test_a_credit_is_looked_up_by_key_and_not_by_dict_order(db):
-    """Five products share the slug "*". A scan answered with whichever came
-    first in the literal, so moving the monthly above the archive would have
-    changed every archive holder's credit from $38.99 to $9.99 in silence."""
+def test_the_bundle_owner_is_an_owner_and_not_a_subscriber(db):
+    """Иначе $19.99 однократно покупают подписочные квоты чата навсегда."""
+
+    async def work(session):
+        user = await accounts.create_guest(session)
+        await entitlements.grant(
+            session, user, system=entitlements.EVERYTHING,
+            kind=EntitlementKind.one_time.value, scope=entitlements.SCOPE_STATIC,
+            transaction_id="t1",
+        )
+        return await entitlements.tier_of(session, user)
+
+    assert db(work) == "owner"
+
+
+def test_the_static_systems_are_exactly_the_doors_on_the_shelf(db):
+    """Бандл обещает «все пять разборов». Пять — это те пять, что продаются
+    дверьми, и разойтись эти два списка не могут: бандл, открывающий четыре
+    двери из пяти, — это возврат денег и объяснение в поддержке."""
     from alma.billing.catalogue import PRODUCTS
 
-    sharing = [key for key, item in PRODUCTS.items() if item.slug == entitlements.EVERYTHING]
-    assert len(sharing) > 1, "the ambiguity this guards against still exists"
+    doors = {
+        item.slug
+        for item in PRODUCTS.values()
+        if item.scope == entitlements.SCOPE_SYSTEM
+    }
+    assert doors == entitlements.STATIC_SYSTEMS
+    assert entitlements.STATIC_SYSTEMS <= set(SYSTEMS)
 
-    assert entitlements.list_price_cents(
-        entitlements.EVERYTHING, scope=entitlements.SCOPE_ALL
-    ) == PRODUCTS["archive"].cents
-    # A rental is not a purchase, so there is nothing to hand back.
-    assert entitlements.list_price_cents(
-        entitlements.EVERYTHING, scope=entitlements.SCOPE_LIVE
-    ) == 0
+
+# ── пара: покупается человек, а не система ─────────────────────────────────
+
+def test_a_pair_grant_opens_that_partner_and_no_other(db):
+    """Грант называет один профиль. Открыть им систему значило бы продать все
+    пары разом за $4.99."""
+
+    async def work(session):
+        user = await accounts.create_guest(session)
+        await entitlements.grant(
+            session, user, system=entitlements.pair_system("p1"),
+            kind="consumable", transaction_id="t1",
+        )
+        return (
+            (await entitlements.check(
+                session, user, "compatibility", partner_id="p1")).allowed,
+            (await entitlements.check(
+                session, user, "compatibility", partner_id="p2")).allowed,
+            (await entitlements.check(session, user, "natal")).allowed,
+        )
+
+    assert db(work) == (True, False, False)
+
+
+def test_a_pair_grant_derives_its_scope_from_the_system_it_names(db):
+    """`grant` — единственный писатель `scope`. Строка `pair:{id}`, записанная
+    со `scope="system"`, не совпала бы ни с одним запросом: `covers` сравнивает
+    пары только внутри своей ветки."""
+
+    async def work(session):
+        user = await accounts.create_guest(session)
+        row = await entitlements.grant(
+            session, user, system=entitlements.pair_system("p1"),
+            kind="consumable", transaction_id="t1",
+        )
+        return row.scope
+
+    assert db(work) == entitlements.SCOPE_PAIR
+
+
+def test_a_pair_never_appears_in_the_unlocked_systems(db):
+    """Хаб и `check()` обязаны сойтись. Одно `compatibility` в общем списке
+    означало бы «открыта совместимость», то есть про всех, — и второй партнёр
+    упёрся бы в пейволл на системе, нарисованной открытой."""
+
+    async def work(session):
+        user = await accounts.create_guest(session)
+        await entitlements.grant(
+            session, user, system=entitlements.pair_system("p1"),
+            kind="consumable", transaction_id="t1",
+        )
+        return (
+            await entitlements.unlocked_systems(session, user),
+            await entitlements.unlocked_pairs(session, user),
+        )
+
+    unlocked, pairs = db(work)
+    assert unlocked == set()
+    assert pairs == ["p1"]
+
+
+def test_a_revoked_pair_disappears_from_my_pairs(db):
+    """Рефанд отчёта закрывает отчёт — А7, случай 6."""
+
+    async def work(session):
+        user = await accounts.create_guest(session)
+        row = await entitlements.grant(
+            session, user, system=entitlements.pair_system("p1"),
+            kind="consumable", transaction_id="t1",
+        )
+        await entitlements.revoke(session, row)
+        return await entitlements.unlocked_pairs(session, user)
+
+    assert db(work) == []
+
+
+def test_compatibility_without_a_partner_is_a_caller_error_not_a_refusal(db):
+    """400, а не 402: «нет прав» и «не сказано, про кого» — разные состояния, и
+    показать пейволл человеку, который уже купил этот отчёт, хуже, чем упасть."""
+
+    async def work(session):
+        user = await accounts.create_guest(session)
+        try:
+            await entitlements.check(session, user, "compatibility")
+        except entitlements.PartnerRequired as exc:
+            return str(exc)
+        return None
+
+    message = db(work)
+    assert message is not None and "partner_id" in message
+
+
+def test_the_free_pair_chapter_needs_no_partner(db):
+    """Бесплатная глава бесплатна для всех, и «про кого она» её открытости не
+    меняет. Требование партнёра стоит после бесплатных веток именно поэтому:
+    иначе оглавление совместимости падало бы у всякого, у кого нет партнёра."""
+    from alma.ai.chapters import free_chapters
+
+    sample = next(iter(free_chapters("compatibility")))
+
+    async def work(session):
+        user = await accounts.create_guest(session)
+        return await entitlements.check(
+            session, user, "compatibility", chapter=sample
+        )
+
+    assert db(work).allowed is True
+
+
+def test_a_subscription_opens_every_pair_while_it_lasts(db):
+    """`scope="all"` шире пары по построению, и это правильно: подписка в v3
+    продаёт всё. Кредит («одна проверка в месяц») — про генерацию нового
+    отчёта, а не про чтение уже написанного, и живёт в Ф0.4."""
+
+    async def work(session):
+        user = await accounts.create_guest(session)
+        await entitlements.grant(
+            session, user, system=entitlements.EVERYTHING,
+            kind=EntitlementKind.monthly.value, subscription_id="sub_1",
+            duration=timedelta(days=31),
+        )
+        return (await entitlements.check(
+            session, user, "compatibility", partner_id="anyone")).allowed
+
+    assert db(work) is True
 
 
 def test_a_cancelled_subscription_closes_what_it_opened(db):
@@ -509,7 +467,8 @@ def test_a_cancelled_subscription_closes_what_it_opened(db):
         user = await accounts.create_guest(session)
         plan = await entitlements.grant(
             session, user, system=entitlements.SCOPE_LIVE,
-            kind=EntitlementKind.annual.value, subscription_id="sub_1",
+            kind=EntitlementKind.monthly.value, subscription_id="sub_1",
+            duration=timedelta(days=31),
         )
         await entitlements.revoke(session, plan)
         return await entitlements.unlocked_systems(session, user)
@@ -549,12 +508,12 @@ def test_a_renewal_extends_one_row_rather_than_writing_another(db):
     async def work(session):
         user = await accounts.create_guest(session)
         first = await entitlements.grant(
-            session, user, system=entitlements.SCOPE_LIVE, kind="annual",
+            session, user, system=entitlements.SCOPE_LIVE, kind="monthly",
             subscription_id="sub_1", transaction_id="txn_1", duration=month,
         )
         first_expiry = first.expires_at
         second = await entitlements.grant(
-            session, user, system=entitlements.SCOPE_LIVE, kind="annual",
+            session, user, system=entitlements.SCOPE_LIVE, kind="monthly",
             subscription_id="sub_1", transaction_id="txn_2", duration=month,
         )
         rows = (
@@ -576,13 +535,13 @@ def test_a_lapsed_subscription_does_not_get_backdated_time(db):
     async def work(session):
         user = await accounts.create_guest(session)
         plan = await entitlements.grant(
-            session, user, system=entitlements.SCOPE_LIVE, kind="annual",
+            session, user, system=entitlements.SCOPE_LIVE, kind="monthly",
             subscription_id="sub_1", duration=month,
         )
         plan.expires_at = utcnow() - timedelta(days=90)
         await session.flush()
         resumed = await entitlements.grant(
-            session, user, system=entitlements.SCOPE_LIVE, kind="annual",
+            session, user, system=entitlements.SCOPE_LIVE, kind="monthly",
             subscription_id="sub_1", duration=month,
         )
         return resumed.expires_at - utcnow()
@@ -596,11 +555,11 @@ def test_a_plan_change_moves_the_scope_instead_of_keeping_both(db):
     async def work(session):
         user = await accounts.create_guest(session)
         await entitlements.grant(
-            session, user, system=entitlements.SCOPE_LIVE, kind="annual",
+            session, user, system=entitlements.SCOPE_LIVE, kind="monthly",
             subscription_id="sub_1", duration=timedelta(days=30),
         )
         await entitlements.grant(
-            session, user, system=entitlements.EVERYTHING, kind="annual",
+            session, user, system=entitlements.EVERYTHING, kind="monthly",
             subscription_id="sub_1", duration=timedelta(days=30),
         )
         rows = await entitlements.for_user(session, user)
@@ -622,8 +581,18 @@ def test_no_whole_system_is_free_but_one_chapter_of_each_still_is(db):
         results = {}
         for system in BY_SYSTEM:
             sample = next(iter(free_chapters(system)))
-            whole = await entitlements.check(session, user, system)
-            opened = await entitlements.check(session, user, system, chapter=sample)
+            # Совместимости нужен партнёр — и бесплатной главе он не нужен:
+            # `check` отвечает про бесплатную главу до того, как спросит имя.
+            # Здесь передаётся тот же несуществующий профиль в обе стороны,
+            # чтобы «система целиком закрыта» осталось вопросом про права, а не
+            # про то, назвали ли партнёра.
+            partner = "nobody" if system == "compatibility" else None
+            whole = await entitlements.check(
+                session, user, system, partner_id=partner
+            )
+            opened = await entitlements.check(
+                session, user, system, chapter=sample, partner_id=partner
+            )
             results[system] = (whole.allowed, opened.allowed)
         return results
 

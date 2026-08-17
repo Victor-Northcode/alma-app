@@ -56,7 +56,7 @@ def _paddle_event(event_type: str = "transaction.completed", **data) -> dict:
     body = {
         "id": "txn_1",
         "currency_code": "USD",
-        "custom_data": stamp("user-1", "natal"),
+        "custom_data": stamp("user-1", "door.natal"),
         "details": {"totals": {"grand_total": "899"}},
         "billing_details": {"address": {"country_code": "IT"}},
     }
@@ -96,7 +96,7 @@ def test_normalising_loses_nothing_the_entitlement_layer_needs():
 
     assert normalised.provider == "paddle"
     assert normalised.owner_id == "user-1"
-    assert normalised.product == "natal"
+    assert normalised.product == "door.natal"
     assert normalised.transaction_id == "txn_1"
     assert normalised.amount_cents == 899
     assert normalised.currency == "USD"
@@ -116,7 +116,7 @@ def test_an_adapter_produces_exactly_a_grant_and_nothing_else():
         id="evt_1",
         type="whatever.that.processor.calls.it",
         kind=EventKind.PAYMENT,
-        product="annual",
+        product="sub.monthly",
         subscription_id="sub_9",
         grants=True,
     )
@@ -125,7 +125,7 @@ def test_an_adapter_produces_exactly_a_grant_and_nothing_else():
     assert isinstance(granted, Grant)
     assert granted.system == "*"
     assert granted.scope == "all"
-    assert granted.duration.days == 365
+    assert granted.duration.days == 31
     assert granted.subscription_id == "sub_9"
 
 
@@ -143,6 +143,15 @@ def test_a_recurring_plan_is_recognised_by_its_interval_not_by_its_name():
                 product=key, grants=True,
             )
         )
+        if item.scope == "pair":
+            # Единственная строка полки, которая **намеренно** не выписывает
+            # грант отсюда: отчёт по паре обязан назвать партнёра
+            # (`pair:{profile_id}`), а прайс-лист его не знает — знает
+            # PairIntent, фаза Ф0.3. Выписать что-нибудь здесь значило бы
+            # записать `system="compatibility"`, то есть открыть отчёты про
+            # всех партнёров сразу за одну покупку в $4.99.
+            assert granted is None, key
+            continue
         assert granted is not None, key
         assert (granted.duration is not None) == bool(item.interval), key
 
@@ -294,11 +303,11 @@ def test_the_protocol_refuses_an_unsigned_body_the_same_way_the_module_does():
 async def test_a_session_quotes_the_price_the_catalogue_holds(configured):
     """What the paywall shows and what the card is charged are one number."""
     session = await adapter.PaddleProvider().open_session(
-        product="natal", user_id="user-1", currency="EUR", country="DE"
+        product="door.natal", user_id="user-1", currency="EUR", country="DE"
     )
     assert isinstance(session, SessionHandle)
-    assert session.cents == prices.PRODUCTS["natal"].cents_in("EUR")
-    assert session.display == prices.PRODUCTS["natal"].display("EUR")
+    assert session.cents == prices.PRODUCTS["door.natal"].cents_in("EUR")
+    assert session.display == prices.PRODUCTS["door.natal"].display("EUR")
 
 
 async def test_a_session_carries_the_owner_sealed_and_never_the_email(configured):
@@ -315,11 +324,11 @@ async def test_a_session_carries_the_owner_sealed_and_never_the_email(configured
     dashboard can be attributed by hand; the third is what makes them ours.
     """
     session = await adapter.PaddleProvider().open_session(
-        product="natal", user_id="user-7", currency="USD", email="buyer@example.com"
+        product="door.natal", user_id="user-7", currency="USD", email="buyer@example.com"
     )
     assert session.custom_data["user_id"] == "user-7"
-    assert session.custom_data["product"] == "natal"
-    assert sealed_owner(session.custom_data) == ("user-7", "natal")
+    assert session.custom_data["product"] == "door.natal"
+    assert sealed_owner(session.custom_data) == ("user-7", "door.natal")
     assert "buyer@example.com" not in str(session.to_client())
 
 
@@ -331,22 +340,28 @@ def test_metadata_nobody_sealed_names_nobody():
     on an account that never opened the checkout, and reading a product out of
     one is how $8.99 buys the $38.99 archive.
     """
-    assert sealed_owner({"user_id": "user-1", "product": "archive"}) == (None, None)
+    assert sealed_owner({"user_id": "user-1", "product": "bundle.static"}) == (None, None)
     assert sealed_owner({}) == (None, None)
     assert sealed_owner(None) == (None, None)
 
-    honest = stamp("user-1", "natal")
-    assert sealed_owner(honest) == ("user-1", "natal")
+    honest = stamp("user-1", "door.natal")
+    assert sealed_owner(honest) == ("user-1", "door.natal")
     # ...and neither half can be edited afterwards while keeping the seal.
-    assert sealed_owner({**honest, "product": "archive"}) == (None, None)
+    assert sealed_owner({**honest, "product": "bundle.static"}) == (None, None)
     assert sealed_owner({**honest, "user_id": "user-2"}) == (None, None)
 
 
 async def test_a_product_not_sold_in_a_market_is_refused_rather_than_priced(configured):
-    """The five purchasing-power markets carry the archive and the year only."""
+    """Отказ, а не откат к долларовой сумме.
+
+    Полка v3 продаётся во всех тринадцати валютах, поэтому пример взят с
+    непрайсенного рынка — Швеции, — а не с бразильского: раньше PPP-рынки не
+    получали дверь, теперь получают. Правило то же и оно структурное: цены нет
+    — значит отказ, а не число, которого никто не выбирал.
+    """
     with pytest.raises(prices.NotSold):
         await adapter.PaddleProvider().open_session(
-            product="natal", user_id="user-1", currency="BRL", country="BR"
+            product="door.natal", user_id="user-1", currency="SEK", country="SE"
         )
 
 
@@ -360,7 +375,7 @@ async def test_a_session_cannot_be_opened_without_credentials(monkeypatch):
     try:
         with pytest.raises(BillingUnavailable):
             await adapter.PaddleProvider().open_session(
-                product="natal", user_id="user-1", currency="USD"
+                product="door.natal", user_id="user-1", currency="USD"
             )
     finally:
         config_module.settings.cache_clear()
@@ -374,7 +389,7 @@ def test_a_client_is_never_handed_a_null_identifier():
     dead button rather than as an error anybody gets told about.
     """
     dodo_shaped = SessionHandle(
-        provider="some-processor", product="natal", currency="USD",
+        provider="some-processor", product="door.natal", currency="USD",
         cents=899, display="$8.99", custom_data={"user_id": "u"},
         url="https://checkout.example/pay/abc",
     )
@@ -540,12 +555,12 @@ def test_a_pinned_identifier_beats_the_convention(monkeypatch):
     from alma.billing.provider import store_product_id, store_slug
 
     pinned = replace(
-        prices.PRODUCTS["natal"], processor_ids={"appstore": "alma.natal_v2"}
+        prices.PRODUCTS["door.natal"], processor_ids={"appstore": "alma.natal_v2"}
     )
-    monkeypatch.setitem(prices.PRODUCTS, "natal", pinned)
+    monkeypatch.setitem(prices.PRODUCTS, "door.natal", pinned)
 
-    assert store_product_id("natal", processor="appstore") == "alma.natal_v2"
-    assert store_slug("alma.natal_v2", processor="appstore") == "natal"
+    assert store_product_id("door.natal", processor="appstore") == "alma.natal_v2"
+    assert store_slug("alma.natal_v2", processor="appstore") == "door.natal"
     # ...and the convention still answers for every other row, so pinning one
     # product does not require pinning all of them.
     # Префикс выбран владельцем 17 августа 2026 — `ai.pazl.alma.`, как у самого
@@ -553,7 +568,7 @@ def test_a_pinned_identifier_beats_the_convention(monkeypatch):
     # из настроек намеренно: строка написана буквами ровно затем, чтобы смена
     # префикса ломала этот тест и требовала человека. Решение необратимо после
     # первой публикации, и молчаливо разъехаться оно не должно.
-    assert store_product_id("archive", processor="appstore") == "ai.pazl.alma.archive"
+    assert store_product_id("bundle.static", processor="appstore") == "ai.pazl.alma.bundle.static"
 
 
 def test_the_prefix_is_configuration_rather_than_a_literal(monkeypatch):
@@ -563,8 +578,8 @@ def test_the_prefix_is_configuration_rather_than_a_literal(monkeypatch):
     monkeypatch.setenv("ALMA_STORE_PRODUCT_PREFIX", "co.example.alma.")
     config_module.settings.cache_clear()
     try:
-        assert store_product_id("natal", processor="appstore") == "co.example.alma.natal"
-        assert store_slug("alma.natal", processor="appstore") is None
+        assert store_product_id("door.natal", processor="appstore") == "co.example.alma.door.natal"
+        assert store_slug("ai.pazl.alma.door.natal", processor="appstore") is None
     finally:
         config_module.settings.cache_clear()
 

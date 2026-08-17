@@ -25,7 +25,13 @@ from ...calc.cache import compute_cached
 from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...db.models import Profile
 from ..cache import result_cache
-from ..deps import CurrentUser, SessionDep, birth_from_input, resolve_birth
+from ..deps import (
+    CurrentUser,
+    SessionDep,
+    birth_from_input,
+    partner_profile_id,
+    resolve_birth,
+)
 from ..schemas import (
     CalcRequest,
     CompatibilityRequest,
@@ -94,8 +100,21 @@ async def _run(system: str, birth: BirthData, **options) -> CalcResult:
         ) from exc
 
 
-async def _respond(session, user, system: str, result: CalcResult, chapter=None) -> dict:
-    access = await entitlements.check(session, user, system, chapter=chapter)
+async def _respond(
+    session, user, system: str, result: CalcResult, chapter=None, partner_id=None
+) -> dict:
+    if system == "compatibility" and partner_id is None:
+        # Партнёра назвать нечем: его прислали «сырой» датой, а не профилем.
+        # Спрашивать `check` в этом состоянии нельзя — она справедливо считает
+        # безымянную пару ошибкой вызова, — а ответ и так известен: гранту не к
+        # чему привязаться, значит написанные главы закрыты. Расчёт при этом
+        # отдаётся целиком, как и у всех остальных систем: считать мы не
+        # продаём.
+        access = entitlements.PAIR_WITHOUT_PROFILE
+    else:
+        access = await entitlements.check(
+            session, user, system, chapter=chapter, partner_id=partner_id
+        )
     payload = result.as_dict()
     payload["access"] = access.as_dict()
 
@@ -199,7 +218,12 @@ async def compatibility(
     result = await _run(
         "compatibility", birth, other=other, house_system=payload.house_system
     )
-    return await _respond(session, user, "compatibility", result)
+    # Партнёр — тот, кого назвал запрос; если он назван датой, а не профилем,
+    # `None` уходит дальше сознательно: см. `_respond`.
+    return await _respond(
+        session, user, "compatibility", result,
+        partner_id=await partner_profile_id(session, user, payload.other_profile_id),
+    )
 
 
 @router.post("/astrocartography")

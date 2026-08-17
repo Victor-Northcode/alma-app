@@ -79,7 +79,7 @@ def _receipt(**changed) -> mail.Receipt:
     fields = {
         "email": "sofia@example.com",
         "locale": "en",
-        "product": "natal",
+        "product": "door.natal",
         "amount_cents": 899,
         "currency": "USD",
         "paid_at": datetime(2026, 8, 6, 11, 30, tzinfo=timezone.utc),
@@ -106,9 +106,9 @@ def test_every_locale_gets_every_element_a_confirmation_must_contain(outbox, loc
     them is not a confirmation of a contract, and a waiver resting on it is a
     waiver a buyer can set aside.
     """
-    letter = _letter(outbox, _receipt(locale=locale, product="archive", amount_cents=3899))
+    letter = _letter(outbox, _receipt(locale=locale, product="bundle.static", amount_cents=3899))
     body = letter["html"]
-    name = mail.RECEIPT_PRODUCTS[locale]["archive"]
+    name = mail.RECEIPT_PRODUCTS[locale]["bundle.static"]
     copy = mail.RECEIPT_COPY[locale]
 
     assert letter["to"] == ["sofia@example.com"]
@@ -148,7 +148,7 @@ def test_a_year_is_not_told_the_same_story_as_a_reading(outbox, locale):
     is owed a pro-rata refund under Art. 14(3), and this is the letter that has
     to tell them so — in the same language, without them having to ask.
     """
-    plan = _letter(outbox, _receipt(locale=locale, product="annual",
+    plan = _letter(outbox, _receipt(locale=locale, product="sub.monthly",
                                     amount_cents=7899, recurring=True))["html"]
     once = _letter(outbox, _receipt(locale=locale))["html"]
     copy = mail.RECEIPT_COPY[locale]
@@ -271,7 +271,7 @@ def test_the_amount_is_what_the_statement_will_say(outbox):
 def test_a_brazilian_is_shown_a_brazilian_price(outbox):
     """R$219,00 and not "R$219.00" — the same rule the renewal notice keeps."""
     body = _letter(
-        outbox, _receipt(locale="pt-BR", product="annual", amount_cents=21900,
+        outbox, _receipt(locale="pt-BR", product="sub.monthly", amount_cents=21900,
                          currency="BRL", recurring=True)
     )["html"]
     assert "R$ 219" in body
@@ -343,7 +343,7 @@ def _post_webhook(api, payload: dict):
 
 
 def _purchase_event(
-    *, event_id: str, user_id: str, product: str = "natal",
+    *, event_id: str, user_id: str, product: str = "door.natal",
     total: str = "899", subscription_id: str | None = None,
     buyer_email: str | None = None,
 ) -> dict:
@@ -405,7 +405,7 @@ def test_a_purchase_is_confirmed_in_writing(paid_api, auth_headers, receipts):
     written = receipts[0]
     assert written.email == "sofia@example.com"
     assert written.locale == "it"
-    assert written.product == "natal"
+    assert written.product == "door.natal"
     assert written.amount_cents == 899
     assert written.merchant == "Paddle.com Market Ltd"
     assert written.reference == "txn_evt_1"
@@ -517,7 +517,7 @@ def test_opening_a_checkout_confirms_nothing(paid_api, auth_headers, receipts):
     decide.
     """
     _signed_in(paid_api, auth_headers)
-    paid_api.post("/v1/billing/checkout", json={"product": "natal"}, headers=auth_headers)
+    paid_api.post("/v1/billing/checkout", json={"product": "door.natal"}, headers=auth_headers)
     assert receipts == []
 
 
@@ -533,10 +533,10 @@ def test_a_subscription_receipt_says_the_year_can_still_be_withdrawn_from(
     user_id = _signed_in(paid_api, auth_headers)
     _post_webhook(
         paid_api,
-        _purchase_event(event_id="evt_year", user_id=user_id, product="annual",
+        _purchase_event(event_id="evt_year", user_id=user_id, product="sub.monthly",
                         total="7899", subscription_id="sub_1"),
     )
-    assert [(r.product, r.recurring) for r in receipts] == [("annual", True)]
+    assert [(r.product, r.recurring) for r in receipts] == [("sub.monthly", True)]
 
 
 def test_a_refund_is_not_a_purchase_to_confirm(paid_api, auth_headers, receipts):
@@ -616,7 +616,7 @@ def test_what_the_buyer_ticked_is_what_the_letter_quotes(sellable, auth_headers,
     user_id = _signed_in(sellable, auth_headers)
     opened = sellable.post(
         "/v1/billing/checkout",
-        json={"product": "natal", "consent": CONSENT_BODY},
+        json={"product": "door.natal", "consent": CONSENT_BODY},
         headers=auth_headers,
     )
     assert opened.status_code == 200
@@ -641,7 +641,7 @@ def test_a_checkout_that_asked_for_nothing_confirms_nothing(
     withdrawal right still stands.
     """
     user_id = _signed_in(sellable, auth_headers)
-    sellable.post("/v1/billing/checkout", json={"product": "natal"}, headers=auth_headers)
+    sellable.post("/v1/billing/checkout", json={"product": "door.natal"}, headers=auth_headers)
     _post_webhook(sellable, _purchase_event(event_id="evt_silent", user_id=user_id))
 
     assert [r.consent for r in receipts] == [None]
@@ -658,7 +658,7 @@ def test_half_a_consent_is_not_a_consent(sellable, auth_headers, receipts):
     user_id = _signed_in(sellable, auth_headers)
     sellable.post(
         "/v1/billing/checkout",
-        json={"product": "natal", "consent": {
+        json={"product": "door.natal", "consent": {
             "locale": "de",
             "statements": [CONSENT_BODY["statements"][0], {"key": "withdrawal_waived"}],
         }},
@@ -683,14 +683,14 @@ def test_a_renewal_does_not_reuse_last_year_s_ticked_boxes(
     user_id = _signed_in(sellable, auth_headers)
     sellable.post(
         "/v1/billing/checkout",
-        json={"product": "annual", "consent": CONSENT_BODY},
+        json={"product": "sub.monthly", "consent": CONSENT_BODY},
         headers=auth_headers,
     )
     _post_webhook(sellable, _purchase_event(
-        event_id="evt_y1", user_id=user_id, product="annual",
+        event_id="evt_y1", user_id=user_id, product="sub.monthly",
         total="7899", subscription_id="sub_year"))
     _post_webhook(sellable, _purchase_event(
-        event_id="evt_y2", user_id=user_id, product="annual",
+        event_id="evt_y2", user_id=user_id, product="sub.monthly",
         total="7899", subscription_id="sub_year"))
 
     assert len(receipts) == 2

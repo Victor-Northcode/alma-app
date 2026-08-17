@@ -52,10 +52,8 @@ void main() {
     // Цены магазина: в тестовой среде App Store молчит, а без цен нет ни
     // кнопки, ни абзаца о продлении — то есть нет того, что не влезало.
     AlmaStore.shared.seedPrices({
-      LadderKey.weekly: _product('alma.weekly', r'$4.99', 4.99),
-      LadderKey.monthly: _product('alma.monthly', r'$9.99', 9.99),
-      LadderKey.annual: _product('alma.annual', r'$78.99', 78.99),
-      LadderKey.archive: _product('alma.archive', r'$149.99', 149.99),
+      for (final key in LadderKey.values)
+        key: _product(key.storeProductId, _price[key]!, _raw[key]!),
     });
   });
 
@@ -101,18 +99,22 @@ void main() {
 
   testWidgets('планы — строки списка: рамок нет, цена справа', (tester) async {
     await _open(tester, const Size(402, 3000));
-    // Четыре строки: неделя → месяц → год → все восемь систем.
+    // Полка v3: пять дверей → бандл → пара → подписка.
     for (final title in const [
-      'All live features, weekly',
-      'Everything live, monthly',
-      'Everything, for a year',
+      'Natal chart',
+      'Numerology',
+      'Birth Card',
+      'Astrocartography',
+      'Cross-synthesis',
       'All eight systems',
+      'Compatibility',
+      'Everything live, monthly',
     ]) {
       expect(find.text(title), findsOneWidget, reason: title);
     }
     // Цена стоит правее заголовка — колонкой, а не пилюлей под ним.
-    final title = tester.getRect(find.text('All live features, weekly'));
-    final price = tester.getRect(find.text(r'$4.99'));
+    final title = tester.getRect(find.text('Natal chart'));
+    final price = tester.getRect(find.text(r'$4.99').first);
     expect(price.left, greaterThan(title.right),
         reason: 'цена обязана стоять справа в своей колонке');
     // **Арта на лестнице нет вовсе.** Картина живёт на `s46` и баннером в
@@ -138,18 +140,43 @@ void main() {
             BorderSide.none &&
         ((w.decoration as BoxDecoration).border as Border).bottom ==
             BorderSide.none);
-    // Четыре строки, три волоса: у первой его нет.
-    expect(hairlines, findsNWidgets(3),
+    // Восемь строк, семь волосов: у первой его нет.
+    expect(hairlines, findsNWidgets(7),
         reason: 'строки списка обязаны разделяться волосом, а не рамкой');
   });
 }
+
+/// Цены полки v3, ровно как в `backend/alma/billing/catalogue.py`. Написаны
+/// руками, а не выведены из каталога: тест, который берёт ожидание оттуда же,
+/// откуда берёт факт, проходит при любой полке.
+const _price = <LadderKey, String>{
+  LadderKey.natal: r'$4.99',
+  LadderKey.numerology: r'$4.99',
+  LadderKey.birthCard: r'$4.99',
+  LadderKey.astrocartography: r'$4.99',
+  LadderKey.synthesis: r'$4.99',
+  LadderKey.pairCheck: r'$4.99',
+  LadderKey.bundleStatic: r'$19.99',
+  LadderKey.subMonthly: r'$9.99',
+};
+
+const _raw = <LadderKey, double>{
+  LadderKey.natal: 4.99,
+  LadderKey.numerology: 4.99,
+  LadderKey.birthCard: 4.99,
+  LadderKey.astrocartography: 4.99,
+  LadderKey.synthesis: 4.99,
+  LadderKey.pairCheck: 4.99,
+  LadderKey.bundleStatic: 19.99,
+  LadderKey.subMonthly: 9.99,
+};
 
 Map<String, dynamic> _plan(String slug, String kind, String display) => {
       'slug': slug,
       'name': slug,
       'kind': kind,
       'display': display,
-      'interval': kind,
+      'interval': kind == 'monthly' ? 'month' : '',
       'scope': 'all',
       'offered': 'shelf',
     };
@@ -214,10 +241,9 @@ AlmaClient _client() {
       // уходит в ветку «всё уже открыто», и мерить становится нечего.
       body = {
         'items': [
-          _plan('weekly', 'weekly', r'$4.99'),
-          _plan('monthly', 'monthly', r'$9.99'),
-          _plan('annual', 'annual', r'$78.99'),
-          _plan('archive', 'one_time', r'$149.99'),
+          for (final key in LadderKey.values)
+            _plan(key.slug, key.isSubscription ? 'monthly' : 'one_time',
+                _price[key]!),
         ],
       };
     } else if (path == '/v1/billing/entitlements') {

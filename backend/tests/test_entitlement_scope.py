@@ -19,11 +19,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 
+from alma.auth.entitlements import STATIC_SYSTEMS
 from alma.billing.catalogue import LIVING_SYSTEMS
 from alma.db.models import Entitlement, EntitlementKind, utcnow
 
 
-def _grant(*, kind: str = EntitlementKind.annual.value, **kwargs) -> Entitlement:
+def _grant(*, kind: str = EntitlementKind.monthly.value, **kwargs) -> Entitlement:
     """An entitlement as it exists before any INSERT.
 
     Column defaults are applied by the database, not the constructor, so
@@ -107,6 +108,70 @@ def test_a_system_scope_is_still_bounded_by_the_system_it_names():
     assert not grant.covers("transits")
 
 
+# ── the bundle ─────────────────────────────────────────────────────────────
+
+def test_the_bundle_covers_the_five_readings_that_never_change():
+    """Что куплено за $19.99, куплено навсегда, и потому это только статичное."""
+    grant = _grant(system="*", scope="static", kind=EntitlementKind.one_time.value)
+    for system in STATIC_SYSTEMS:
+        assert grant.covers(system), f"the bundle must cover {system}"
+
+
+def test_the_bundle_does_not_reach_what_recomputes():
+    """Иначе один платёж навсегда открывает то, что пересчитывается каждый день,
+    — то есть подписку, за которую не берут денег."""
+    grant = _grant(system="*", scope="static", kind=EntitlementKind.one_time.value)
+    for system in LIVING_SYSTEMS:
+        assert not grant.covers(system), f"the bundle must not reach {system}"
+
+
+def test_the_two_sets_do_not_overlap():
+    """Система, которая одновременно статична и жива, — это дверь, продающая
+    подписку, и заметить это в проде можно только по выручке."""
+    assert not (STATIC_SYSTEMS & LIVING_SYSTEMS)
+
+
+def test_the_bundle_ignores_the_system_column_it_was_written_with():
+    """Ширину решает `scope`, а не `system`. Строка бандла пишется с `"*"`, и
+    если бы сентинел спрашивался раньше scope, бандл открыл бы транзиты."""
+    grant = _grant(system="*", scope="static", kind=EntitlementKind.one_time.value)
+    assert grant.covers("natal")
+    assert not grant.covers("transits")
+    assert not grant.covers("something-we-have-not-built")
+
+
+# ── the pair ───────────────────────────────────────────────────────────────
+
+def test_a_pair_grant_covers_that_partner_and_nobody_else():
+    grant = _grant(system="pair:p1", scope="pair", kind="consumable")
+    assert grant.covers("compatibility", partner_id="p1")
+    assert not grant.covers("compatibility", partner_id="p2")
+
+
+def test_a_pair_grant_does_not_leak_into_another_system():
+    """Проверяются обе половины условия. Без сравнения системы грант пары открыл
+    бы натал, без сравнения партнёра — все пары разом за одну покупку."""
+    grant = _grant(system="pair:p1", scope="pair", kind="consumable")
+    assert not grant.covers("natal", partner_id="p1")
+    assert not grant.covers("synthesis", partner_id="p1")
+
+
+def test_a_pair_grant_answers_no_when_nobody_is_named():
+    """Безымянный вопрос до `covers` доходить не должен — `entitlements.check`
+    ловит его раньше и отвечает 400. Но если дошёл, ответ «нет»: `pair:p1`
+    не равно `pair:None`, и молча открыться грант не может."""
+    grant = _grant(system="pair:p1", scope="pair", kind="consumable")
+    assert not grant.covers("compatibility")
+
+
+def test_a_revoked_pair_covers_nothing():
+    """Рефанд закрывает отчёт: scope решает *что* открыто, никогда — *открыто ли*."""
+    grant = _grant(
+        system="pair:p1", scope="pair", kind="consumable", revoked_at=utcnow()
+    )
+    assert not grant.covers("compatibility", partner_id="p1")
+
+
 # ── what was removed ───────────────────────────────────────────────────────
 
 def test_there_is_no_trial_kind():
@@ -117,6 +182,14 @@ def test_there_is_no_trial_kind():
     revocable state with no code to revoke it is permanent free access.
     """
     assert not hasattr(EntitlementKind, "trial")
+
+
+def test_there_are_no_weekly_or_annual_kinds_any_more():
+    """Оба сняты вместе с подписками (ТЗ §2). Оставленный член перечисления —
+    это вид гранта, который ничто не выписывает, ничто не продлевает и ничто не
+    истекает; попасть в него можно только руками, а выйти нельзя."""
+    assert not hasattr(EntitlementKind, "weekly")
+    assert not hasattr(EntitlementKind, "annual")
 
 
 def test_the_enum_names_exactly_the_kinds_the_catalogue_sells():

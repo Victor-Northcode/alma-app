@@ -102,7 +102,7 @@ def test_a_signature_from_the_wrong_secret_buys_nothing(paid_api, auth_headers):
     me = _who(paid_api, auth_headers)
     answer = _deliver(
         paid_api,
-        _purchase(event_id="evt_forged", user_id=me, product="archive"),
+        _purchase(event_id="evt_forged", user_id=me, product="bundle.static"),
         secret="not-the-secret",
     )
     assert answer.status_code == 401
@@ -112,7 +112,7 @@ def test_a_signature_from_the_wrong_secret_buys_nothing(paid_api, auth_headers):
 def test_an_unsigned_delivery_buys_nothing(paid_api, auth_headers):
     me = _who(paid_api, auth_headers)
     answer = _deliver(
-        paid_api, _purchase(event_id="evt_bare", user_id=me, product="archive"), headers={}
+        paid_api, _purchase(event_id="evt_bare", user_id=me, product="bundle.static"), headers={}
     )
     assert answer.status_code == 401
     assert _held(paid_api, auth_headers)["unlocked"] == []
@@ -127,11 +127,11 @@ def test_a_body_edited_after_signing_buys_nothing(paid_api, auth_headers):
     for the most expensive one.
     """
     me = _who(paid_api, auth_headers)
-    honest = _purchase(event_id="evt_edit", user_id=me, product="natal")
+    honest = _purchase(event_id="evt_edit", user_id=me, product="door.natal")
     signature = _sign(json.dumps(honest).encode())
 
     greedy = json.loads(json.dumps(honest))
-    greedy["data"]["custom_data"]["product"] = "archive"
+    greedy["data"]["custom_data"]["product"] = "bundle.static"
     answer = paid_api.post(
         "/v1/billing/webhook",
         content=json.dumps(greedy).encode(),
@@ -144,7 +144,7 @@ def test_a_body_edited_after_signing_buys_nothing(paid_api, auth_headers):
 def test_a_captured_delivery_replayed_grants_once(paid_api, auth_headers):
     """At-least-once delivery is the processor's promise; once is ours."""
     me = _who(paid_api, auth_headers)
-    payload = _purchase(event_id="evt_replay", user_id=me, product="natal")
+    payload = _purchase(event_id="evt_replay", user_id=me, product="door.natal")
     body = json.dumps(payload).encode()
     signature = _sign(body)
 
@@ -159,7 +159,7 @@ def test_a_captured_delivery_replayed_grants_once(paid_api, auth_headers):
 def test_a_delivery_replayed_tomorrow_is_refused(paid_api, auth_headers):
     """A valid signature lifted from a proxy log is still a replay."""
     me = _who(paid_api, auth_headers)
-    payload = _purchase(event_id="evt_stale", user_id=me, product="archive")
+    payload = _purchase(event_id="evt_stale", user_id=me, product="bundle.static")
     answer = _deliver(paid_api, payload, at=int(time.time()) - 86_400)
     assert answer.status_code == 401
     assert "replay" in answer.json()["detail"]
@@ -174,7 +174,7 @@ def test_the_same_purchase_under_a_fresh_event_id_is_refused(paid_api, auth_head
     incrementing the one field the duplicate check reads.
     """
     me = _who(paid_api, auth_headers)
-    payload = _purchase(event_id="evt_once", user_id=me, product="natal")
+    payload = _purchase(event_id="evt_once", user_id=me, product="door.natal")
     body = json.dumps(payload).encode()
     signature = _sign(body)
     assert paid_api.post(
@@ -208,13 +208,13 @@ def test_the_checkout_hands_the_browser_metadata_it_cannot_rewrite(paid_api, aut
     attribute — and beside them is the seal that makes them ours.
     """
     opened = paid_api.post(
-        "/v1/billing/checkout", json={"product": "natal"}, headers=auth_headers
+        "/v1/billing/checkout", json={"product": "door.natal"}, headers=auth_headers
     )
     assert opened.status_code == 200
     body = opened.json()
-    assert body["custom_data"]["product"] == "natal"
+    assert body["custom_data"]["product"] == "door.natal"
     assert body["custom_data"][SEAL_FIELD], "the browser was handed metadata it could rewrite"
-    assert body["cents"] == 599
+    assert body["cents"] == 499
 
 
 def test_a_door_cannot_be_relabelled_as_the_archive(paid_api, auth_headers):
@@ -233,7 +233,7 @@ def test_a_door_cannot_be_relabelled_as_the_archive(paid_api, auth_headers):
     me = _who(paid_api, auth_headers)
     answer = _deliver(
         paid_api,
-        _purchase(event_id="evt_relabel", user_id=me, product="archive",
+        _purchase(event_id="evt_relabel", user_id=me, product="bundle.static",
                   cents="899", sealed=False),
     )
     assert answer.status_code == 200
@@ -258,7 +258,7 @@ def test_a_sealed_checkout_paid_at_another_price_grants_nothing(paid_api, auth_h
     me = _who(paid_api, auth_headers)
     answer = _deliver(
         paid_api,
-        _purchase(event_id="evt_underpaid", user_id=me, product="archive", cents="899"),
+        _purchase(event_id="evt_underpaid", user_id=me, product="bundle.static", cents="899"),
     )
     assert answer.status_code == 200
     assert "granted" not in answer.json()["status"]
@@ -283,7 +283,7 @@ def test_a_door_cannot_be_relabelled_as_a_year(paid_api, auth_headers):
         _purchase(
             event_id="evt_year",
             user_id=me,
-            product="annual",
+            product="sub.monthly",
             cents="899",
             subscription_id="sub_free_year",
             sealed=False,
@@ -293,9 +293,9 @@ def test_a_door_cannot_be_relabelled_as_a_year(paid_api, auth_headers):
 
     held = _held(paid_api, auth_headers)
     kinds = {row["kind"] for row in held["entitlements"]}
-    assert "annual" not in kinds, (
-        "899 cents bought an annual grant — the kind and the scope were taken "
-        "from a field the browser controls"
+    assert kinds == set(), (
+        "899 cents bought a plan — the kind and the scope were taken from a "
+        "field the browser controls"
     )
 
 
@@ -344,7 +344,7 @@ def test_a_payment_cannot_be_pointed_at_somebody_else(paid_api, api, auth_header
 
     _deliver(
         paid_api,
-        _purchase(event_id="evt_sideways", user_id=stranger, product="natal", sealed=False),
+        _purchase(event_id="evt_sideways", user_id=stranger, product="door.natal", sealed=False),
     )
     assert _held(paid_api, stranger_headers)["unlocked"] == [], (
         "a grant landed on an account named only by the payer's browser"
@@ -362,7 +362,7 @@ def test_a_payment_with_no_metadata_of_ours_is_kept_and_grants_nothing(paid_api,
     me = _who(paid_api, auth_headers)
     answer = _deliver(
         paid_api,
-        _purchase(event_id="evt_bare_meta", user_id=me, product="natal", sealed=False),
+        _purchase(event_id="evt_bare_meta", user_id=me, product="door.natal", sealed=False),
     )
     assert answer.status_code == 200
     assert "without an owner" in answer.json()["status"]
@@ -393,7 +393,7 @@ def test_one_month_of_money_extends_a_plan_by_one_month(paid_api, auth_headers):
             _purchase(
                 event_id=f"evt_double_{index}",
                 user_id=me,
-                product="monthly",
+                product="sub.monthly",
                 cents="999",
                 transaction_id="txn_one_charge",
                 event_type=kind,
@@ -425,17 +425,19 @@ def test_a_product_that_is_not_on_the_shelf_is_refused(paid_api, auth_headers):
         assert answer.status_code == 404, slug
 
 
-def test_the_upgrade_price_is_refused_to_somebody_who_owns_no_door(paid_api, auth_headers):
-    """`archive-upgrade` is the shelf price less the door already paid for.
-
-    Claimed without a door it is simply the archive for $30 — the credit half
-    of the promise, taken without the purchase half.
+def test_a_withdrawn_price_is_refused_by_name(paid_api, auth_headers):
+    """Раньше здесь проверялась условная цена `archive-upgrade`: полка минус
+    уже оплаченная дверь, заявленная тем, кто двери не покупал, то есть архив
+    за $30. Условных цен в v3 нет, но правило то же и оно единственное, что от
+    того механизма осталось: ключ, которого нет на полке, отказывается по
+    имени — и приходит он именно от пересобранного клиента или от старой
+    сборки, которая ещё помнит снятые SKU.
     """
-    answer = paid_api.post(
-        "/v1/billing/checkout", json={"product": "archive-upgrade"}, headers=auth_headers
-    )
-    assert answer.status_code == 404
-    assert answer.json()["detail"]["error"] == "not_offered"
+    for slug in ("archive", "archive-upgrade", "archive-bump", "annual", "weekly"):
+        answer = paid_api.post(
+            "/v1/billing/checkout", json={"product": slug}, headers=auth_headers
+        )
+        assert answer.status_code == 404, slug
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -471,7 +473,7 @@ def test_cancelling_cannot_be_aimed_at_a_subscription_you_do_not_own(paid_api, a
                 "id": "sub_victims",
                 "status": "active",
                 "currency_code": "USD",
-                "custom_data": stamp(victim["user_id"], "monthly"),
+                "custom_data": stamp(victim["user_id"], "sub.monthly"),
             },
         },
     )
@@ -546,7 +548,7 @@ def test_a_dodo_delivery_signed_with_the_wrong_key_buys_nothing(dodo_api, auth_h
     me = _who(dodo_api, auth_headers)
     answer = _dodo_deliver(
         dodo_api,
-        _dodo_payment(payment_id="pay_1", user_id=me, product="archive"),
+        _dodo_payment(payment_id="pay_1", user_id=me, product="bundle.static"),
         webhook_id="wh_forged",
         secret="whsec_" + base64.b64encode(b"not-the-key").decode(),
     )
@@ -558,7 +560,7 @@ def test_a_dodo_webhook_id_swapped_after_signing_buys_nothing(dodo_api, auth_hea
     """`webhook-id` is inside the signed message, and that is what stops a
     captured delivery being spent again under a fresh idempotency key."""
     me = _who(dodo_api, auth_headers)
-    payload = _dodo_payment(payment_id="pay_2", user_id=me, product="natal")
+    payload = _dodo_payment(payment_id="pay_2", user_id=me, product="door.natal")
     body = json.dumps(payload).encode()
     headers = _dodo_headers("wh_original", body)
     assert dodo_api.post("/v1/billing/webhook", content=body, headers=headers).status_code == 200
@@ -579,7 +581,7 @@ def test_a_dodo_renewal_is_granted_once_not_twice(dodo_api, auth_headers):
     me = _who(dodo_api, auth_headers)
     _dodo_deliver(
         dodo_api,
-        _dodo_payment(payment_id="pay_r1", user_id=me, product="monthly", cents=999,
+        _dodo_payment(payment_id="pay_r1", user_id=me, product="sub.monthly", cents=999,
                       subscription_id="sub_dodo"),
         webhook_id="wh_r1",
     )
@@ -589,7 +591,7 @@ def test_a_dodo_renewal_is_granted_once_not_twice(dodo_api, auth_headers):
         "data": {
             "payload_type": "Subscription", "subscription_id": "sub_dodo",
             "status": "active", "currency": "USD",
-            "metadata": stamp(me, "monthly"),
+            "metadata": stamp(me, "sub.monthly"),
         },
     }
     _dodo_deliver(dodo_api, renewed, webhook_id="wh_r2")
@@ -603,7 +605,7 @@ def test_a_dodo_renewal_is_granted_once_not_twice(dodo_api, auth_headers):
 def test_two_dodo_deliveries_of_one_event_grant_once(dodo_api, auth_headers):
     """A retry carries the same `webhook-id`, and the same body identity."""
     me = _who(dodo_api, auth_headers)
-    payload = _dodo_payment(payment_id="pay_3", user_id=me, product="natal")
+    payload = _dodo_payment(payment_id="pay_3", user_id=me, product="door.natal")
     _dodo_deliver(dodo_api, payload, webhook_id="wh_retry")
     second = _dodo_deliver(dodo_api, payload, webhook_id="wh_retry")
     assert second.json()["status"] == "already processed"
@@ -622,7 +624,7 @@ def test_the_dodo_idempotency_key_is_the_one_dodo_sent(dodo_api, auth_headers):
     from sqlalchemy import select
 
     me = _who(dodo_api, auth_headers)
-    payload = _dodo_payment(payment_id="pay_4", user_id=me, product="natal")
+    payload = _dodo_payment(payment_id="pay_4", user_id=me, product="door.natal")
     _dodo_deliver(dodo_api, payload, webhook_id="wh_the_real_id")
 
     from alma.db.models import WebhookEvent
@@ -658,7 +660,7 @@ def test_a_dodo_retry_of_one_event_cannot_grant_a_second_period(dodo_api, auth_h
         "data": {
             "payload_type": "Subscription", "subscription_id": "sub_retry",
             "status": "active", "currency": "USD",
-            "metadata": stamp(me, "monthly"),
+            "metadata": stamp(me, "sub.monthly"),
         },
     }
     assert _dodo_deliver(dodo_api, first, webhook_id="wh_retried").status_code == 200
@@ -685,8 +687,8 @@ def test_nothing_the_browser_can_call_grants_anything(paid_api, auth_headers):
     ever writes a grant, the signature on the webhook stops being the thing
     that decides who has paid.
     """
-    paid_api.post("/v1/billing/checkout", json={"product": "natal"}, headers=auth_headers)
-    paid_api.post("/v1/billing/checkout", json={"product": "annual"}, headers=auth_headers)
+    paid_api.post("/v1/billing/checkout", json={"product": "door.natal"}, headers=auth_headers)
+    paid_api.post("/v1/billing/checkout", json={"product": "sub.monthly"}, headers=auth_headers)
     paid_api.post("/v1/billing/declined", json={"system": "natal"}, headers=auth_headers)
     paid_api.post("/v1/billing/declined", json={"system": "natal"}, headers=auth_headers)
     paid_api.get("/v1/billing/catalogue", headers=auth_headers)
@@ -727,7 +729,7 @@ def test_a_renewal_extends_the_plan_even_when_the_seal_no_longer_verifies(
                 "id": "sub_rotate",
                 "status": "active",
                 "currency_code": "USD",
-                "custom_data": stamp(me, "monthly"),
+                "custom_data": stamp(me, "sub.monthly"),
             },
         },
     ).status_code == 200
@@ -739,7 +741,7 @@ def test_a_renewal_extends_the_plan_even_when_the_seal_no_longer_verifies(
     stale = _purchase(
         event_id="evt_renewal",
         user_id=me,
-        product="monthly",
+        product="sub.monthly",
         cents="999",
         subscription_id="sub_rotate",
         sealed=False,
@@ -763,7 +765,7 @@ def test_a_renewal_we_hold_no_plan_for_grants_nothing(paid_api, api, auth_header
         _purchase(
             event_id="evt_ghost_renewal",
             user_id=me,
-            product="annual",
+            product="sub.monthly",
             cents="999",
             subscription_id="sub_nobody_holds",
             sealed=False,
@@ -787,7 +789,7 @@ def test_a_renewal_charged_less_than_the_plan_costs_extends_nothing(paid_api, au
                 "id": "sub_year_cheap",
                 "status": "active",
                 "currency_code": "USD",
-                "custom_data": stamp(me, "annual"),
+                "custom_data": stamp(me, "sub.monthly"),
             },
         },
     )
@@ -800,7 +802,7 @@ def test_a_renewal_charged_less_than_the_plan_costs_extends_nothing(paid_api, au
         _purchase(
             event_id="evt_year_cheap",
             user_id=me,
-            product="annual",
+            product="sub.monthly",
             cents="100",
             subscription_id="sub_year_cheap",
             sealed=False,

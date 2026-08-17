@@ -111,10 +111,19 @@ class EntitlementKind(str, enum.Enum):
     catalogue's own kinds so the two cannot separate again.
     """
 
-    one_time = "one_time"      # a single system or the archive, bought outright
-    weekly = "weekly"          # the living systems, rented by the week
-    monthly = "monthly"        # the living systems, rented by the month
-    annual = "annual"          # everything, for a year
+    one_time = "one_time"      # одна система или бандл из пяти, куплено навсегда
+    #: Один отчёт по одной паре. Расходуемый в магазине — покупается столько
+    #: раз, сколько партнёров человек проверит, — но выданный **грант**
+    #: бессрочен: отчёт, за который заплачено, остаётся читаемым навсегда.
+    #: Расходуется покупка, а не доступ.
+    consumable = "consumable"
+    monthly = "monthly"        # всё, пока подписка жива
+    # `weekly` и `annual` сняты вместе с самими подписками (ТЗ §2, монетизация
+    # v3). Удалены, а не оставлены «на всякий случай»: тест держит этот список
+    # равным видам из каталога, и лишний член означал бы вид гранта, который
+    # ничто не выписывает, ничто не продлевает и ничто не истекает — то есть
+    # состояние, в которое можно попасть только руками и из которого нет
+    # выхода. На момент удаления таких грантов в базе не было ни одного.
     # There is deliberately no `trial`. Nothing in the product issues one, and
     # a kind that exists only in this enum reads to the next person as a
     # feature that already works: they grant it, and the paywall acquires a
@@ -304,22 +313,36 @@ class Entitlement(Base):
 
     user: Mapped[User] = relationship(back_populates="entitlements")
 
-    def covers(self, system: str, *, chapter: str | None = None, at: datetime | None = None) -> bool:
+    def covers(
+        self,
+        system: str,
+        *,
+        chapter: str | None = None,
+        partner_id: str | None = None,
+        at: datetime | None = None,
+    ) -> bool:
         """Whether this entitlement opens a system, or one chapter of one.
 
-        `system` on the row is either "*" (everything), a system slug, or the
-        "slug:chapter" form a single-chapter purchase writes. A system-level
-        grant covers every chapter in it; a chapter-level grant covers exactly
-        one and must not leak into the rest.
+        `system` on the row is either "*" (everything), a system slug, the
+        "slug:chapter" form a single-chapter purchase writes, or the
+        "pair:{profile_id}" form a compatibility purchase writes. A
+        system-level grant covers every chapter in it; a chapter-level grant
+        covers exactly one and must not leak into the rest.
 
-        `scope` overrides that shape where a subscription needs a different
-        one. "all" is an everything-grant said outright instead of inferred
-        from a "*". "live" is the recurring plan, and it covers only the
-        systems that are worth paying for repeatedly because they change with
-        the date — the transits, the solar return, compatibility. It must not
-        reach the natal chart: a chart that is true forever, handed over for
-        one month's subscription, is a chart somebody rents once and keeps,
-        and the recurring revenue never recurs.
+        `scope` overrides that shape where a plan needs a different one. "all"
+        is an everything-grant said outright instead of inferred from a "*".
+        "static" is the bundle: the five readings that are fixed at birth, and
+        deliberately not the two that recompute — a transit reading sold once
+        and kept is a subscription we forgot to charge for. "pair" is one
+        report about one person. "live" is the legacy recurring plan and covers
+        only the systems that change with the date.
+
+        **Порядок веток здесь — то же правило, что в `entitlements.covers` и
+        `unlocked_systems`, и по той же причине.** Все три спрашивают scope до
+        легаси-сентинела `system == "*"`: подписка выписывается с `system="*"`,
+        и если сентинел проверить раньше, хаб и вход в главу ответят по-разному
+        про одну и ту же строку. Новый scope добавляется во все три места сразу
+        или ни в одно.
         """
         moment = as_utc(at) or utcnow()
         if self.revoked_at is not None:
@@ -328,6 +351,12 @@ class Entitlement(Base):
         if expires is not None and expires <= moment:
             return False
 
+        if self.scope == "pair":
+            # Оплачен отчёт про конкретного человека, а не система. Сравнение
+            # идёт по обеим половинам: без проверки `system == "compatibility"`
+            # грант пары открыл бы натал, без проверки имени партнёра — все
+            # пары разом за одну покупку.
+            return system == "compatibility" and self.system == f"pair:{partner_id}"
         if self.scope == "live":
             # Imported inside the method rather than at module scope: what is
             # on sale is the catalogue's business, and the schema has to stay
@@ -335,6 +364,14 @@ class Entitlement(Base):
             from ..billing.catalogue import LIVING_SYSTEMS
 
             return system in LIVING_SYSTEMS
+        if self.scope == "static":
+            # Импорт внутри метода и из `auth`, а не из каталога: «какие
+            # системы статичны» — свойство самих систем, а не полки, и держать
+            # ответ в двух местах значит однажды продать бандл, который
+            # открывает четыре разбора из пяти.
+            from ..auth.entitlements import STATIC_SYSTEMS
+
+            return system in STATIC_SYSTEMS
         if self.scope == "all":
             return True
 

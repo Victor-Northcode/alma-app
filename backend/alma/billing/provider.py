@@ -922,6 +922,25 @@ def entitlement_for(event: NormalisedEvent) -> Grant | None:
     if not _the_money_covers_it(event, product):
         return None
 
+    if product.scope == "pair":
+        # **Отчёт по паре здесь не выписывается, и это не забывчивость.**
+        # Грант пары обязан называть партнёра — `pair:{profile_id}`, — а прайс
+        # лист партнёра не знает и знать не может: его называет PairIntent,
+        # созданный до открытия магазинного листа, и сверяется он с токеном из
+        # подписанного пейслоада (приложение А4, фаза Ф0.3). Выписать что-нибудь
+        # отсюда — значит записать грант с `system="compatibility"`, то есть
+        # открыть отчёты про **всех** партнёров за одну покупку в $4.99.
+        #
+        # None здесь означает «деньги записаны, доступ не выдан», и это ровно
+        # тот аварийный путь, который А4 называет `status="unbound"`: клиент не
+        # финиширует транзакцию, магазин возвращает деньги сам.
+        log.warning(
+            "%s bought a pair check and nothing granted it: the partner comes "
+            "from a PairIntent, which this build does not have yet (event %s)",
+            event.product, event.id,
+        )
+        return None
+
     if product.interval:
         return Grant(
             system=product.slug,

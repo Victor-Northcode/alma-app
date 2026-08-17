@@ -92,29 +92,6 @@ log = logging.getLogger("alma.api.billing")
 router = APIRouter(prefix="/billing", tags=["billing"])
 
 
-async def _credit_for(session, user, currency: str) -> int:
-    """What this person's recent purchase is worth, in the currency being priced.
-
-    Two things every caller has to get right, so they are settled here once.
-
-    The currency has to be passed. `annual_credit` skips any entitlement
-    charged in another currency — a credit is never converted — so calling it
-    without one asked for USD and answered zero for every buyer outside the
-    United States. Twelve of the thirteen priced currencies, a published
-    promise silently withheld, and a well-formed `0` in the response so that
-    nothing looked wrong.
-
-    And a credit only means something where there is a price that realises it.
-    `archive-upgrade` is that price and it is the only one, so qualification is
-    asked here rather than inferred from the number being non-zero: somebody
-    who already owns the archive has a large credit and nothing on the ladder
-    to spend it on.
-    """
-    if not await entitlements.may_be_offered(session, user, "archive-upgrade"):
-        return 0
-    return await entitlements.annual_credit(session, user, currency=currency)
-
-
 @router.get("/catalogue")
 async def price_list(
     user: Visitor,
@@ -153,21 +130,16 @@ async def price_list(
     the funnel could never join to the visit that created it, and the first
     conversion rate read zero on a perfectly healthy first visit.
 
-    Nothing in the response changes. The two values read off the user are a
-    recent purchase's credit and the systems already unlocked, and both are
-    empty for an account that was minted a microsecond ago — so a caller with no
-    account is answered with exactly what a freshly minted one would have been
-    answered with, without the row. That is why no test moves.
+    Nothing in the response depends on there being an account: the price list
+    is the same shelf for everybody, and the only per-person value left is the
+    `unlocked` set further down, which is empty for an account minted a
+    microsecond ago. (Кредитная подстановка, ради которой сюда раньше
+    приходилось звать пользователя ещё раз, снята вместе с самими доборами —
+    монетизация v3, ТЗ §2.)
     """
     where = region.resolve(stated=country, edge=edge)
     currency = prices.currency_for(where)
-    # `0` and `[]` rather than a branch further down, so the two questions that
-    # need a person are asked in one place and the rest of the function does not
-    # have to know that there might not be one.
-    credit = 0 if user is None else await _credit_for(session, user, currency)
-    listing = prices.catalogue(
-        country=where, credit_cents=credit, credit_currency=currency
-    )
+    listing = prices.catalogue(country=where)
     adapter = billing_adapter()
     # Which processor is running, and whether it can create a session without
     # an email address. Both are read by the offer screen *before* anybody
@@ -262,10 +234,13 @@ async def checkout(
     except ValueError as exc:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
-    # A conditional price is refused by name, not merely left out of the list.
-    # `archive-bump` and `archive-upgrade` write the same everything-grant the
-    # $38.99 archive writes; while this endpoint took any key, a guest could
-    # buy the archive for nine dollars less with one request.
+    # Товар не с полки отказывается по имени, а не просто не попадает в список.
+    # Условных цен в v3 нет, так что сегодня проверка пропускает все восемь
+    # строк, — и она всё равно стоит здесь, потому что закрывала уже случавшуюся
+    # дыру: `archive-bump` за $29.99 выдавал тот же грант, что архив за $38.99, а
+    # этот эндпоинт принимал любой ключ по имени, то есть архив покупался на
+    # девять долларов дешевле одним запросом. Первый же A/B по цене бандла
+    # (ТЗ §7) заводит вторую цену на один и тот же грант.
     if not await entitlements.may_be_offered(session, user, product):
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
@@ -667,59 +642,39 @@ async def verify_store_purchase(
     # out of a signature or an API call; this comes out of the session token.
     event = replace(event, owner_id=user.id)
 
-    # The conditional-price rule, which `/billing/checkout` enforces at line 225
-    # and this endpoint did not.
+    # Правило «продаём только то, что на полке», которое `/billing/checkout`
+    # соблюдает и этот эндпоинт когда-то не соблюдал.
     #
-    # `archive-upgrade` is the shelf price *less a door already paid for*, and
-    # `archive-bump` is the same discount taken inside another checkout. Both
-    # write the identical everything-grant the $38.99 archive writes. StoreKit
-    # will sell any product id that exists in App Store Connect to anyone who
-    # asks for it — and `alma.archive_upgrade` has to exist there, because the
-    # server substitutes it onto the shelf for a door owner and Apple has no
-    # discount mechanism for a non-consumable — so the client-side filter in
-    # `Storefront.offers` decides only what is *drawn*, never what can be bought.
+    # Магазин продаст любой идентификатор, заведённый в консоли, любому, кто его
+    # назовёт: клиентские фильтры (`Storefront.offers`, `StoreProducts.sellable`)
+    # решают только, что **нарисовано**, и пересобранная сборка их не спрашивает.
+    # Поэтому сервер спрашивает сам.
     #
-    # **It is checked against the slug the store signed**, not the one the
-    # client claimed: the claimed one is already checked by `verify_purchase`,
-    # and reading it here would be trusting the request twice.
+    # **Проверяется слаг, который подписал магазин**, а не тот, что назвал
+    # клиент: клиентский уже проверен в `verify_purchase`, и читать его тут
+    # значит поверить запросу дважды.
     #
-    # **It refuses the grant and keeps the money**, and those are two separate
-    # decisions that an earlier version of this block ran together.
+    # **Грант отзывается, деньги остаются** — два разных решения, и ранняя
+    # версия этого блока смешивала их. Отказать в *платеже* нельзя: магазин уже
+    # взял деньги, и 4xx здесь — это деньги ни за что и человек, спорящий с
+    # Apple про наш дизайн идентификаторов. Поэтому событие всё равно
+    # проглатывается, деньги записываются, transaction_id закрепляется за
+    # аккаунтом, чтобы повтор не попробовал ещё раз.
     #
-    # Refusing the *payment* with a 4xx would be wrong for the reason that
-    # version gave: the store has already taken it, so a refusal here is money
-    # collected for nothing and a person left arguing with Apple about a
-    # product-id design that is ours. So the event is still ingested, the money
-    # is still recorded, and the transaction id is still filed against this
-    # account so a replay cannot try again.
+    # Снятие `grants` — самый узкий доступный рычаг: `entitlement_for` и так
+    # отвечает `None` на негрантящее событие, так что второй копии правила о
+    # scope здесь не появляется.
     #
-    # But that version then *also* declined to constrain the grant, and only
-    # logged — which meant $29.99 bought $38.99 of goods on a first purchase.
-    # `alma.archive_upgrade` has to exist in both consoles (the server
-    # substitutes it onto the shelf for a door owner, and neither store has a
-    # conditional price), so both clients can be asked for it by id by anybody
-    # who repackages them, and the client-side filters — `Storefront.offers`,
-    # `StoreProducts.NEVER_ALONE` — decide only what is *drawn*.
-    #
-    # Clearing `grants` is the narrowest lever available: `entitlement_for`
-    # already answers `None` for an event that does not grant, so nothing is
-    # written and no second copy of the scope rule appears here. What the buyer
-    # is left holding is what they held before, which for the account this
-    # protects against is nothing.
-    #
-    # The remedy for somebody who genuinely paid is the store's own, and it is
-    # already wired: the response says `not_offered`, neither client can see the
-    # grant it expected, so neither acknowledges (Android) or finishes (iOS) the
-    # transaction — and Google auto-refunds an unacknowledged purchase after
-    # three days. Money back, nothing granted, and a loud line for
-    # reconciliation in between.
+    # Лекарство для того, кто честно заплатил, — магазинное и уже подключено:
+    # в ответе `not_offered`, ни один клиент не видит ожидаемого гранта, значит
+    # ни один не подтверждает (Android) и не финиширует (iOS) транзакцию, а
+    # Google возвращает неподтверждённую покупку через три дня.
     honoured = await entitlements.may_be_offered(session, user, event.product)
     if not honoured:
         log.warning(
-            "account %s claimed the conditional price %r on %s without qualifying "
-            "for it (transaction %s) — money recorded, grant refused; %r is the "
-            "archive at a discount nobody earned",
-            user.id, event.product, platform, event.transaction_id, event.product,
+            "account %s claimed %r on %s, which is not a price on this shelf "
+            "(transaction %s) — money recorded, grant refused",
+            user.id, event.product, platform, event.transaction_id,
         )
         event = replace(event, grants=False)
 
@@ -1568,20 +1523,33 @@ def _downsell(system: str | None, currency: str) -> dict | None:
     """The cheapest thing we can honestly offer this person here.
 
     The door for what they declined, if we sell it in their currency;
-    otherwise the cheapest shelf price that is sold there, which in the
-    purchasing-power markets is the archive. `None` when nothing qualifies.
+    otherwise the cheapest one-time price that is sold there. `None` when
+    nothing qualifies.
+
+    **Сравнивается `item.slug`, а не ключ каталога.** До v3 они совпадали, и
+    строка читалась как «дверь той системы, от которой отказались»; с ключами
+    вида `door.natal` то же сравнение молча перестало совпадать хоть с чем-то, и
+    человеку, отказавшемуся от нумерологии, предлагали бы первую строку словаря.
+
+    `pair.check` исключён намеренно: чтобы предложить проверку пары, нужен
+    партнёр, а здесь неизвестно, есть ли он вообще. Предложить $4.99 «проверить
+    вас двоих» тому, кто только что закрыл разбор про себя, — это оффер, который
+    он не может принять.
     """
     candidates = [
         (key, item)
         for key, item in prices.PRODUCTS.items()
-        if item.on_the_shelf and item.sold_in(currency) and not item.interval
+        if item.on_the_shelf
+        and item.sold_in(currency)
+        and not item.interval
+        and item.scope != entitlements.SCOPE_PAIR
     ]
     if not candidates:
         return None
 
     key, item = min(
         candidates,
-        key=lambda pair: (pair[0] != system, pair[1].cents_in(currency)),
+        key=lambda pair: (pair[1].slug != system, pair[1].cents_in(currency)),
     )
     return {
         "slug": key,
@@ -1601,6 +1569,11 @@ async def held(
     rows = await entitlements.for_user(session, user)
     return {
         "unlocked": sorted(await entitlements.unlocked_systems(session, user)),
+        # Пары отдельным списком, а не строкой в `unlocked`: там — «какие
+        # системы открыты», здесь — «про кого уже написано». Слить их значит
+        # сказать хабу «совместимость открыта», то есть про всех, тогда как
+        # оплачены конкретные люди.
+        "unlocked_pairs": sorted(await entitlements.unlocked_pairs(session, user)),
         "entitlements": [
             {
                 "system": e.system,
@@ -1639,5 +1612,8 @@ async def held(
             for e in rows
         ],
         "currency": currency,
-        "annual_credit_cents": await _credit_for(session, user, currency),
+        # `annual_credit_cents` ушло вместе с кредитными доборами (v3, ТЗ §2).
+        # Клиенты читают его как необязательное поле с нулём по умолчанию, так
+        # что отсутствие ключа для них — то же самое, что ноль, который они
+        # получали последние недели.
     }

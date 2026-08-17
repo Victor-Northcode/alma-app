@@ -187,7 +187,7 @@ def test_a_free_chapter_is_written_by_the_mid_model(api, auth_headers, scripted)
 def test_a_paid_chapter_is_written_by_the_strong_model(api, auth_headers, scripted, monkeypatch):
     from alma.auth import entitlements
 
-    async def owns_it(session, user, system, *, chapter=None, at=None):
+    async def owns_it(session, user, system, *, chapter=None, partner_id=None, at=None):
         return entitlements.Access(True, "bought in the test", kind="one_time")
 
     monkeypatch.setattr(entitlements, "check", owns_it)

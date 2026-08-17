@@ -2,14 +2,20 @@
 
 A price is the one number in this codebase that a refactor must never be able
 to move quietly, so most of this file is a second, independent copy of the
-ladder. That duplication is deliberate: a golden test that derived its
+shelf. That duplication is deliberate: a golden test that derived its
 expectations from `REGIONAL_CENTS` would pass for any table at all.
 
-The rest asserts the rules the table has to obey — that the upgrade costs
-exactly the shelf less the door, that deciding at the checkout is never the
-worse deal, that a year of months costs more than the year, and that a
-product we do not sell in a currency is refused rather than priced in dollars
-with the local symbol in front of it.
+The rest asserts the rules the table has to obey — that five doors cost more
+than the bundle, that the bundle costs less than a quarter of a year of the
+plan, and that a product we do not sell in a currency is refused rather than
+priced in dollars with the local symbol in front of it.
+
+**Что отсюда убрано.** Треть файла проверяла кредитную лестницу: что апгрейд
+равен полке минус дверь в каждой валюте, что решать в чекауте никогда не
+хуже, что кредит подставляет товар вместо цены. Монетизация v3 сняла с
+продажи `archive`, `archive-bump` и `archive-upgrade` целиком (ТЗ §2), так что
+проверять нечего — не «пока нечего», а нечего. Тесты удалены, а не
+закомментированы.
 """
 
 from __future__ import annotations
@@ -23,24 +29,28 @@ from alma.calc import SYSTEMS
 #: Every published amount, written out by hand. If a change to the mechanism
 #: moves any of these, that is the test failing on purpose.
 GOLDEN: dict[str, dict[str, int]] = {
-    "USD": {"weekly": 499, "door": 599, "archive": 3899, "archive-bump": 2999,
-            "archive-upgrade": 3300, "monthly": 999, "annual": 7899},
-    "EUR": {"weekly": 549, "door": 649, "archive": 4099, "archive-bump": 3149, "archive-upgrade": 3450, "monthly": 1049, "annual": 8299},
-    "GBP": {"weekly": 499, "door": 599, "archive": 3999, "archive-bump": 3099, "archive-upgrade": 3400, "monthly": 999, "annual": 7999},
-    "CHF": {"weekly": 590, "door": 690, "archive": 4590, "archive-bump": 3490, "archive-upgrade": 3900, "monthly": 1190, "annual": 9290},
-    "AUD": {"weekly": 799, "door": 999, "archive": 5999, "archive-bump": 4499, "archive-upgrade": 5000, "monthly": 1599, "annual": 12499},
-    "CAD": {"weekly": 749, "door": 899, "archive": 5499, "archive-bump": 4199, "archive-upgrade": 4600, "monthly": 1399, "annual": 10999},
-    "NOK": {"weekly": 5900, "door": 7900, "archive": 44900, "archive-bump": 33900, "archive-upgrade": 37000, "monthly": 10900, "annual": 89900},
-    "DKK": {"weekly": 3900, "door": 4900, "archive": 29900, "archive-bump": 22300, "archive-upgrade": 25000, "monthly": 7900, "annual": 61900},
-    "BRL": {"archive": 9990, "annual": 21900},
-    "MXN": {"archive": 42900, "annual": 86900},
-    "PLN": {"archive": 8499, "annual": 17499},
-    "TRY": {"archive": 50900, "annual": 102900},
-    "INR": {"archive": 84900, "annual": 174900},
+    "USD": {"door": 499, "pair": 499, "bundle": 1999, "monthly": 999},
+    "EUR": {"door": 549, "pair": 549, "bundle": 2099, "monthly": 1049},
+    "GBP": {"door": 499, "pair": 499, "bundle": 1999, "monthly": 999},
+    "CHF": {"door": 590, "pair": 590, "bundle": 2390, "monthly": 1190},
+    "AUD": {"door": 799, "pair": 799, "bundle": 3199, "monthly": 1599},
+    "CAD": {"door": 749, "pair": 749, "bundle": 2799, "monthly": 1399},
+    "NOK": {"door": 5900, "pair": 5900, "bundle": 21900, "monthly": 10900},
+    "DKK": {"door": 3900, "pair": 3900, "bundle": 15900, "monthly": 7900},
+    "BRL": {"door": 1290, "pair": 1290, "bundle": 5190, "monthly": 2590},
+    "MXN": {"door": 5900, "pair": 5900, "bundle": 21900, "monthly": 10900},
+    "PLN": {"door": 1099, "pair": 1099, "bundle": 4399, "monthly": 2199},
+    "TRY": {"door": 6900, "pair": 6900, "bundle": 25900, "monthly": 12900},
+    "INR": {"door": 10900, "pair": 10900, "bundle": 43900, "monthly": 21900},
 }
 
-#: The markets that get the archive and the year and nothing else.
-PPP = ("BRL", "MXN", "PLN", "TRY", "INR")
+#: Пять систем, которые продаются дверьми. Написаны руками по той же причине,
+#: что и цены: список, взятый из каталога, подтвердил бы любой каталог.
+STATIC = ("natal", "numerology", "birth-card", "astrocartography", "synthesis")
+
+#: И три, которых на полке нет. Транзиты и соляр пересчитываются, поэтому
+#: продаются только подпиской; совместимость покупается на человека.
+NOT_A_DOOR = ("transits", "solar-return", "compatibility")
 
 
 def _cents(currency: str, band: str) -> int:
@@ -49,7 +59,20 @@ def _cents(currency: str, band: str) -> int:
     return item.cents_in(currency)
 
 
-# ── the ladder, pinned ─────────────────────────────────────────────────────
+# ── the shelf, pinned ──────────────────────────────────────────────────────
+
+def test_the_shelf_is_the_eight_rows_v3_decided_on():
+    assert list(prices.PRODUCTS) == [
+        "door.natal",
+        "door.numerology",
+        "door.birth-card",
+        "door.astrocartography",
+        "door.synthesis",
+        "pair.check",
+        "bundle.static",
+        "sub.monthly",
+    ]
+
 
 @pytest.mark.parametrize("currency", sorted(GOLDEN))
 def test_every_published_price_is_the_price_we_decided(currency: str):
@@ -70,93 +93,86 @@ def test_no_currency_carries_a_price_we_did_not_decide():
 
 def test_the_door_is_one_price_for_every_system():
     """A price that varied by system would vary by quiz answer."""
-    doors = {slug: prices.PRODUCTS[slug] for slug in SYSTEMS}
-    assert {item.cents for item in doors.values()} == {599}
+    doors = {
+        key: item for key, item in prices.PRODUCTS.items() if item.band == "door"
+    }
+    assert len(doors) == 5
+    assert {item.cents for item in doors.values()} == {499}
     assert {item.scope for item in doors.values()} == {"system"}
+    assert {item.slug for item in doors.values()} == set(STATIC)
 
 
-def test_every_system_can_be_bought_and_nothing_else_claims_to_be_one():
+def test_the_three_systems_that_move_have_no_door():
+    """Разбор, который пересчитывается, проданный «навсегда», — это подписка,
+    за которую забыли брать деньги. Совместимость продаётся `pair.check`, то
+    есть на конкретного человека, а не системой."""
+    doors = {item.slug for item in prices.PRODUCTS.values() if item.band == "door"}
+    for system in NOT_A_DOOR:
+        assert system not in doors, f"{system} is being sold as a permanent door"
+    assert set(STATIC) | set(NOT_A_DOOR) == set(SYSTEMS)
+
+
+def test_a_catalogue_key_is_never_mistaken_for_a_system_slug():
+    """В v3 они разошлись, и это единственная причина, по которой
+    `store_product_id` даёт `ai.pazl.alma.door.natal`, а не `…alma.natal`.
+    Слаг, случайно оказавшийся ключом, — это покупка, которая верифицируется и
+    не выдаёт ничего."""
     for system in SYSTEMS:
-        assert prices.product(system).slug == system
-    for slug, item in prices.PRODUCTS.items():
-        if item.scope == "system":
-            assert slug in SYSTEMS, f"{slug} is priced as a system but is not one"
-        else:
-            assert item.slug == "*", f"{slug} unlocks {item.slug!r} rather than everything"
+        assert system not in prices.PRODUCTS, (
+            f"{system!r} is both a system and a catalogue key again"
+        )
+    for key in prices.PRODUCTS:
+        assert "." in key, f"{key} does not name what kind of product it is"
 
 
 # ── the rules the table has to obey ────────────────────────────────────────
 
-def test_the_upgrade_is_the_shelf_less_the_door_in_every_market():
-    """The whole promise of the upgrade: deciding late costs the same total.
-
-    If this drifts by so much as a cent, a person who bought a door and came
-    back pays a different price for the archive than the person who bought it
-    outright, and the difference is the reason they write in.
-    """
+def test_five_doors_cost_more_than_the_bundle_in_every_market():
+    """Иначе бандл бессмыслен: платить за пять по одной было бы дешевле, а
+    «скидка 20%» в копирайте — неправдой, за которую снимают с полки."""
     for currency, table in GOLDEN.items():
-        if "door" not in table:
-            continue
-        assert table["archive-upgrade"] == table["archive"] - table["door"], currency
+        assert table["door"] * 5 > table["bundle"], currency
 
 
-def test_deciding_at_the_checkout_is_never_the_worse_deal():
-    """The bump has to beat the shelf, and beat coming back later.
-
-    Otherwise the in-checkout offer is a trap: it reads as a saving and is a
-    surcharge, and the buyer finds out on the second invoice.
-    """
+def test_the_bundle_costs_less_than_three_months_of_the_plan():
+    """Иначе он не якорь. Бандл существует, чтобы подписка читалась дёшево, а
+    не чтобы быть второй подпиской, купленной одним платежом."""
     for currency, table in GOLDEN.items():
-        if "door" not in table:
-            continue
-        assert table["door"] + table["archive-bump"] <= table["archive"], currency
-        assert table["archive-bump"] < table["archive-upgrade"], currency
+        assert table["bundle"] < table["monthly"] * 3, currency
 
 
-def test_a_year_of_months_costs_more_than_the_year():
-    """A monthly cheaper than the annual over twelve months sells against itself."""
+def test_the_pair_costs_the_same_as_a_door():
+    """Одна цена импульса: и дверь, и проверка пары продаются в момент
+    «зацепило», и разная цена на двух таких экранах читается как ошибка."""
     for currency, table in GOLDEN.items():
-        if "monthly" not in table:
-            continue
-        assert table["monthly"] * 12 > table["annual"], currency
+        assert table["pair"] == table["door"], currency
 
 
-def test_the_ladder_climbs_in_every_currency():
+def test_the_shelf_climbs_in_every_currency():
     for currency, table in GOLDEN.items():
-        rungs = [table[band] for band in ("door", "archive", "annual") if band in table]
+        rungs = [table["door"], table["monthly"], table["bundle"]]
         assert rungs == sorted(rungs), currency
 
 
-def test_a_ppp_market_is_offered_the_archive_and_the_year_and_nothing_else():
-    """At a PPP-fair door, tax plus the flat processor fee takes a third of it."""
-    for currency in PPP:
-        assert set(prices.REGIONAL_CENTS[currency]) == {"archive", "annual"}
+def test_every_market_is_offered_the_whole_shelf():
+    """PPP-рынки впервые получают всё. Прежний отказ держался на фиксированной
+    комиссии за транзакцию, которой у магазинов нет: доля, которая остаётся
+    нам, одинакова и на R$12.90, и на R$99.90."""
+    for currency in prices.REGIONAL_CENTS:
         offered = {
-            slug for slug, item in prices.PRODUCTS.items() if item.sold_in(currency)
+            key for key, item in prices.PRODUCTS.items() if item.sold_in(currency)
         }
-        assert offered == {"archive", "annual"}, currency
+        assert offered == set(prices.PRODUCTS), currency
 
 
 # ── a product we do not sell is refused, never priced in dollars ───────────
 
-def test_a_product_not_sold_here_refuses_instead_of_charging_the_us_price():
-    """The defect this replaced: the door fell through to its USD amount.
-
-    A Brazilian was shown R$8.99 for a door priced at nothing, and the only
-    thing standing between that and a charge was the client not asking.
-    """
-    with pytest.raises(NotSold):
-        prices.PRODUCTS["natal"].cents_in("BRL")
-    with pytest.raises(NotSold):
-        prices.PRODUCTS["monthly"].display("INR")
-    assert prices.PRODUCTS["natal"].sold_in("BRL") is False
-
-
 def test_an_unpriced_currency_refuses_rather_than_answering_in_dollars():
-    """Sweden is not priced. Asking for a Swedish price must not return 599."""
+    """Sweden is not priced. Asking for a Swedish price must not return 499."""
     assert "SEK" not in prices.REGIONAL_CENTS
     with pytest.raises(NotSold):
-        prices.PRODUCTS["archive"].cents_in("SEK")
+        prices.PRODUCTS["bundle.static"].cents_in("SEK")
+    assert prices.PRODUCTS["bundle.static"].sold_in("SEK") is False
 
 
 def test_a_band_nobody_priced_cannot_borrow_the_us_amount():
@@ -180,26 +196,26 @@ def test_every_country_we_bill_has_a_price_list_and_a_way_to_write_it():
 # ── a price a human would recognise ────────────────────────────────────────
 
 def test_every_currency_renders_a_price_its_readers_would_recognise():
-    archive = prices.PRODUCTS["archive"]
-    assert archive.display("USD") == "$38.99"
-    assert archive.display("EUR") == "€40,99"
-    assert archive.display("GBP") == "£39.99"
-    assert archive.display("CHF") == "CHF 45.90"
-    assert archive.display("AUD") == "A$59.99"
-    assert archive.display("CAD") == "C$54.99"
-    assert archive.display("NOK") == "kr 449"
-    assert archive.display("DKK") == "kr 299"
-    assert archive.display("BRL") == "R$ 99,90"
-    assert archive.display("MXN") == "MX$429"
-    assert archive.display("PLN") == "84,99 zł"
-    assert archive.display("TRY") == "₺509"
-    assert archive.display("INR") == "₹849"
+    bundle = prices.PRODUCTS["bundle.static"]
+    assert bundle.display("USD") == "$19.99"
+    assert bundle.display("EUR") == "€20,99"
+    assert bundle.display("GBP") == "£19.99"
+    assert bundle.display("CHF") == "CHF 23.90"
+    assert bundle.display("AUD") == "A$31.99"
+    assert bundle.display("CAD") == "C$27.99"
+    assert bundle.display("NOK") == "kr 219"
+    assert bundle.display("DKK") == "kr 159"
+    assert bundle.display("BRL") == "R$ 51,90"
+    assert bundle.display("MXN") == "MX$219"
+    assert bundle.display("PLN") == "43,99 zł"
+    assert bundle.display("TRY") == "₺259"
+    assert bundle.display("INR") == "₹439"
 
 
 def test_the_symbol_goes_where_the_market_puts_it():
-    """A Pole shown "zł84,99" is being shown a currency on the wrong end."""
-    assert prices.format_price(8499, "PLN").endswith("zł")
-    assert prices.format_price(8499, "EUR").startswith("€")
+    """A Pole shown "zł43,99" is being shown a currency on the wrong end."""
+    assert prices.format_price(4399, "PLN").endswith("zł")
+    assert prices.format_price(4399, "EUR").startswith("€")
 
 
 def test_an_unknown_currency_still_says_which_currency_it_is():
@@ -207,98 +223,45 @@ def test_an_unknown_currency_still_says_which_currency_it_is():
     assert prices.format_price(1499, "SEK") == "SEK 14.99"
 
 
-def test_the_old_rounding_machine_could_not_have_produced_this_ladder():
+def test_the_old_rounding_machine_could_not_have_produced_this_shelf():
     """Why the multiplier architecture had to go, stated as a fact.
 
     `_to_price_point` snaps anything between ten and two hundred units onto an
-    x9.90 ending. The shelf price and the annual are neither, so no amount of
-    tuning the multipliers could ever have reached them.
+    x9.90 ending, so the bundle at 1999 comes back as 1990 — a price nobody
+    chose, three doors' worth of margin away from one that was.
     """
-    assert prices._to_price_point(3899) != 3899
-    assert prices._to_price_point(7899) != 7899
+    assert prices._to_price_point(1999) != 1999
+    assert prices._to_price_point(2099) != 2099
 
 
-# ── the credit ─────────────────────────────────────────────────────────────
+# ── what a client is given ─────────────────────────────────────────────────
 
 def test_every_price_published_is_a_price_a_price_id_can_take():
     """Nothing in the list is computed out of another number.
 
-    This is the rule the whole credit mechanism turns on. The list used to
-    publish `payable_cents` — a price minus a credit — while the checkout
-    opened the overlay against the full price id, so two shipped surfaces
-    stated an amount that would never be charged. Every entry now names a
-    catalogue key, and its `cents` is that key's own amount in that currency.
+    The list used to publish `payable_cents` — a price minus a credit — while
+    the checkout opened the overlay against the full price id, so two shipped
+    surfaces stated an amount that would never be charged. Every entry now
+    names a catalogue key, and its `cents` is that key's own amount in that
+    currency.
     """
     for currency, country in (("USD", "US"), ("EUR", "DE"), ("BRL", "BR")):
-        listing = prices.catalogue(country=country, credit_cents=899, credit_currency=currency)
+        listing = prices.catalogue(country=country)
         for item in listing["items"]:
             assert item["cents"] == prices.PRODUCTS[item["slug"]].cents_in(currency)
             assert "payable_cents" not in item
+            assert "credit_cents" not in item
 
-
-def test_a_credit_substitutes_the_upgrade_for_the_shelf_price():
-    """Someone who bought a door is shown the upgrade where the archive was.
-
-    The upgrade is a real price id at the shelf price less the door, so what
-    the paywall says is what the card is charged. `replaces` is there so the
-    interface can explain the lower number instead of inventing a struck-out
-    price of its own.
-    """
-    listing = prices.catalogue(credit_cents=899, credit_currency="USD")
-    slugs = [item["slug"] for item in listing["items"]]
-    assert "archive-upgrade" in slugs and "archive" not in slugs
-
-    upgrade = next(item for item in listing["items"] if item["slug"] == "archive-upgrade")
-    assert upgrade["cents"] == prices.PRODUCTS["archive-upgrade"].cents
-    assert upgrade["replaces"] == "archive"
-    assert upgrade["credit_cents"] == prices.PRODUCTS["archive"].cents - upgrade["cents"]
-
-
-def test_the_substitution_is_the_door_taken_off_in_every_market():
-    """The upgrade is worth exactly one door wherever both are sold."""
-    for currency, country in (("USD", "US"), ("EUR", "DE"), ("GBP", "GB"), ("NOK", "NO")):
-        listing = prices.catalogue(country=country, credit_cents=1, credit_currency=currency)
-        upgrade = next(item for item in listing["items"] if item["slug"] == "archive-upgrade")
-        door = prices.PRODUCTS["natal"].cents_in(currency)
-        archive = prices.PRODUCTS["archive"].cents_in(currency)
-        assert archive - upgrade["cents"] == door, currency
-        assert upgrade["credit_cents"] == door
-
-
-def test_a_credit_earned_in_one_currency_is_not_spent_against_another():
-    """kr 109 is about ten dollars, and would otherwise read as a $109 credit.
-
-    Refusing it is the safe direction: the buyer can be given the credit by
-    hand, whereas an upgrade handed out for nothing is gone.
-    """
-    listing = prices.catalogue(credit_cents=10900, credit_currency="NOK")
-    slugs = [item["slug"] for item in listing["items"]]
-    assert "archive" in slugs and "archive-upgrade" not in slugs
-
-
-def test_a_market_with_no_upgrade_band_keeps_its_shelf_price():
-    """Brazil is sold the archive and the year and nothing else.
-
-    A substitution there would have to invent a price, which is what this
-    module refuses to do anywhere else either.
-    """
-    listing = prices.catalogue(country="BR", credit_cents=9990, credit_currency="BRL")
-    assert [item["slug"] for item in listing["items"]] == ["archive", "annual"]
-
-
-# ── what a client is given ─────────────────────────────────────────────────
 
 def test_a_recurring_plan_is_never_rendered_as_a_single_payment():
     """The defect this replaced: the list filtered the annual out and carried
     no interval, so the first monthly plan added would have been drawn as a
     one-time purchase."""
     listing = prices.catalogue()
-    monthly = next(item for item in listing["items"] if item["slug"] == "monthly")
-    annual = next(item for item in listing["items"] if item["slug"] == "annual")
-    assert (monthly["kind"], monthly["interval"]) == ("monthly", "month")
-    assert (annual["kind"], annual["interval"]) == ("annual", "year")
+    plan = next(item for item in listing["items"] if item["slug"] == "sub.monthly")
+    assert (plan["kind"], plan["interval"]) == ("monthly", "month")
     for item in listing["items"]:
-        if item["kind"] == "one_time":
+        if item["kind"] != "monthly":
             assert item["interval"] == "", item["slug"]
 
 
@@ -309,33 +272,56 @@ def test_the_list_is_whatever_is_on_the_shelf_rather_than_a_hardcoded_shape():
     ]
 
 
-def test_a_conditional_price_is_never_listed():
-    """`archive-bump` and `archive-upgrade` grant what `archive` grants.
-
-    They cost nine dollars less, so listing them published a cheaper way to
-    buy the same thing to anyone who read the response — no purchase, no
-    qualification, one HTTP call. `offered` used to say so and stop nothing.
-    """
-    for country in (None, "DE", "GB", "BR"):
-        slugs = {item["slug"] for item in prices.catalogue(country=country)["items"]}
-        assert "archive-bump" not in slugs
-        assert "archive-upgrade" not in slugs
-
-    conditional = [key for key, item in prices.PRODUCTS.items() if not item.on_the_shelf]
-    assert conditional == ["archive-bump", "archive-upgrade"]
+def test_the_catalogue_carries_the_scope_each_row_grants():
+    """Клиент рисует по нему разные вещи: `pair` — это отчёт про человека, а не
+    система, и строка, пришедшая без scope, была бы нарисована дверью."""
+    scopes = {
+        item["slug"]: item["scope"] for item in prices.catalogue()["items"]
+    }
+    assert scopes["door.natal"] == "system"
+    assert scopes["pair.check"] == "pair"
+    assert scopes["bundle.static"] == "static"
+    assert scopes["sub.monthly"] == "all"
 
 
-def test_a_brazilian_is_shown_only_what_is_sold_in_brazil():
+def test_a_brazilian_is_shown_the_whole_shelf_in_reais():
     listing = prices.catalogue(country="BR")
     assert listing["currency"] == "BRL"
-    assert [item["slug"] for item in listing["items"]] == ["archive", "annual"]
-    assert listing["annual"]["display"] == "R$ 219"
+    assert len(listing["items"]) == 8
+    plan = next(item for item in listing["items"] if item["slug"] == "sub.monthly")
+    assert plan["display"] == "R$ 25,90"
 
 
-# ── the monthly's scope ────────────────────────────────────────────────────
+def test_the_catalogue_no_longer_publishes_an_annual_alias():
+    """Ключ-алиас `annual` показывал ту же строку вторым именем и уходит вместе
+    с годовой подпиской. Оставленный пустым он читался бы как «план не
+    продаётся» на витрине, где план — единственная подписка."""
+    assert "annual" not in prices.catalogue()
 
-def test_the_monthly_rents_only_the_systems_that_move():
-    """A natal chart bought monthly is rent on a number fixed at birth."""
+
+# ── the subscription ───────────────────────────────────────────────────────
+
+def test_the_subscription_sells_everything_while_it_lasts():
+    """`live` был про то, что подписка снимала только движущееся. В v3 она
+    продаёт всё, и строка «купленное навсегда остаётся твоим» в P5 существует
+    именно потому, что `all` истекает, а `system` и `static` — нет."""
+    plan = prices.PRODUCTS["sub.monthly"]
+    assert plan.scope == "all"
+    assert plan.interval == "month"
+    assert plan.pair_credits_monthly == 1
+
+
+def test_only_the_subscription_carries_a_pair_credit():
+    """«Одна проверка в месяц» — обещание подписки. Кредит на разовом товаре
+    был бы обещанием, которое никто не сбрасывает."""
+    for key, item in prices.PRODUCTS.items():
+        if key == "sub.monthly":
+            continue
+        assert item.pair_credits_monthly == 0, key
+
+
+def test_the_living_systems_are_still_named_for_the_daily_note():
+    """Список остался, хотя подписка больше не «только живое»: на нём держатся
+    гранты `scope="live"` и утренняя заметка."""
     assert prices.LIVING_SYSTEMS <= set(SYSTEMS)
-    assert prices.PRODUCTS["monthly"].scope == "live"
     assert prices.LIVING_SYSTEMS == {"transits", "solar-return", "compatibility"}

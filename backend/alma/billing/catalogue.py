@@ -21,26 +21,37 @@ Two other rules are worth stating because both were bugs:
   $8.99 door. Asking for a price that does not exist raises `NotSold`; the old
   code answered with the US number, which is how a Brazilian nearly got billed
   R$8.99 for a door priced R$0.
-* **A credit is a product, not a discount.** Someone who buys one reading,
-  likes it, and upgrades inside the window should not pay for that reading
-  twice — and the only way to keep that promise is a price id that already
-  carries the reduced amount. `archive-upgrade` is exactly that: the shelf
-  price less the door, in every currency where both are sold, so the person
-  who decides late pays what the person who decided at the checkout paid.
+* **Каталог не считает цену из другой цены.** Ни скидок, ни доборов, ни
+  `payable_cents`: каждая строка называет сумму, которую действительно
+  спишут. До v3 здесь жила кредитная лестница — `archive-upgrade` по цене
+  полки минус дверь, `archive-bump` внутри чужого чекаута, — и она стоила
+  двух отдельных багов: витрина печатала число, которое процессор не взял бы,
+  а по имени продукта можно было купить архив на девять долларов дешевле.
+  В v3 её нет вовсе (ТЗ §2, решение владельца от 17.08.2026: старую
+  монетизацию не консервируем, а вычищаем), и вместе с ней ушли `WITHDRAWN_CENTS`,
+  `annual_credit` и подстановка товара в `catalogue()`.
 
-  This used to be arithmetic instead. `catalogue()` published a
-  `payable_cents` per product — the price minus a credit — while the checkout
-  opened the processor's overlay against the full price id, with no discount
-  and no custom amount. Two shipped surfaces stated a number that would never
-  be charged, which is the shape of a chargeback and of a consumer-protection
-  complaint. Nothing here computes a price out of another price any more: the
-  qualifying buyer is offered the upgrade *instead of* the shelf item, and
-  what they are shown is what the price id takes.
+**Ключ словаря — это идентификатор товара в сторах, а не слаг системы.**
+Решение v3 и единственное место, где о нём написано. До v3 ключ `PRODUCTS`
+совпадал со слагом системы (`"natal"`), и это работало ровно пока полка была
+«восемь дверей плюс архив». В v3 полка разнородная: пять дверей, бандл, пара и
+подписка — «натал» перестал быть именем товара и стал именем того, что товар
+открывает. Поэтому:
 
-**The window is thirty days**, not the seven this file used to claim. The
-upgrade is offered after a reading has been read and thought about, and a week
-put the offer in front of people who had not finished the thing they bought.
-`CREDIT_WINDOW` in `auth/entitlements.py` is the one place it is a number.
+* **ключ** — `door.natal`, `pair.check`, `bundle.static`, `sub.monthly`. Он же,
+  с приставкой из `settings().store_product_prefix` и дефисами, заменёнными на
+  подчёркивания, — идентификатор в App Store Connect и Play Console:
+  `ai.pazl.alma.door.natal`, `ai.pazl.alma.door.birth_card`. Правило и обратное
+  преобразование живут в `provider.store_product_id` / `store_slug` и не
+  изменились: они всегда работали с ключом, а не со слагом;
+* **`Product.slug`** остался тем, чем был, — системой, которую товар открывает
+  (`"*"` для бандла и подписки). Разводить их пришлось потому, что иначе
+  идентификатор в консоли зависел бы от того, как называется наша система, а
+  переименовать его после публикации не даст ни один магазин.
+
+Цена ошибки, если кто-то снова их сольёт: `store_slug` вернёт ключ, которого
+нет в `PRODUCTS`, покупка отработает и не выдаст ничего — деньги взяты, глава
+закрыта, и ни один лог об этом не скажет.
 """
 
 from __future__ import annotations
@@ -64,11 +75,24 @@ class Product:
 
     slug: str            # the system it unlocks, or "*" for everything
     name: str
-    kind: str            # "one_time" | "monthly" | "annual"
+    #: "one_time" | "consumable" | "monthly". Пишется в `Entitlement.kind`,
+    #: поэтому список обязан совпадать с `EntitlementKind` — это пинается
+    #: тестом. `consumable` завели под `pair.check`: он покупается многократно,
+    #: и магазин обязан позволить купить его снова, а разовая дверь — нет.
+    kind: str
     cents: int           # USD minor units — what a US buyer is charged
     band: str            # which row of REGIONAL_CENTS prices it
     interval: str = ""   # "" | "month" | "year" — empty means it does not renew
-    scope: str = "system"  # "system" | "all" | "live"
+    #: Ширина гранта, теми же словами, что и колонка `Entitlement.scope`:
+    #: "system" (одна система) | "static" (пять статичных) | "pair" (одна пара)
+    #: | "all" (всё, пока подписка жива) | "live" (легаси, новых не выписываем).
+    scope: str = "system"
+    #: Сколько проверок совместимости включено в один расчётный период. Поле
+    #: товара, а не конфига: «что входит в подписку» — решение о том, что мы
+    #: продаём, и оно обязано стоять рядом с ценой, иначе цена и обещание
+    #: правятся в двух местах и однажды разойдутся. Ноль у всего, что не
+    #: подписка. Начисление кредита — Ф0.4, здесь только объявление.
+    pair_credits_monthly: int = 0
     #: Where in the funnel this price is allowed to appear. "shelf" is the
     #: public list; "in-checkout" exists only as an upsell inside another
     #: checkout; "after-door" is offered once, to someone who already bought a
@@ -110,14 +134,16 @@ class Product:
     def on_the_shelf(self) -> bool:
         """Whether this price may be listed and sold on its own.
 
-        The conditional prices are not merely "shown elsewhere": they are
-        cheaper than the shelf item they stand in for, and each of them
-        granted exactly what the shelf item grants. `archive-bump` at $29.99
-        and `archive` at $38.99 both write an everything-grant, so while the
-        list rendered all thirteen keys and the checkout accepted any of them
-        by name, anyone who read one HTTP response could buy the archive for
-        nine dollars less. This property is the gate that stops that; the
-        `offered` field was only ever a note about intent.
+        **В v3 все восемь строк отвечают True, и механизм всё равно остаётся.**
+        Он существует не ради текущей полки, а ради того класса ошибок, который
+        уже случался: условная цена (`archive-bump` за $29.99 против архива за
+        $38.99) выдавала ровно то же, что и полочная, а чекаут принимал любой
+        ключ по имени — то есть архив покупался на девять долларов дешевле одним
+        HTTP-запросом. Поле `offered` тогда лишь документировало намерение и не
+        останавливало ничего; свойство — останавливает.
+
+        Возвращать его придётся в первый же A/B с ценой бандла (ТЗ §7), и
+        дешевле держать ворота закрытыми, чем строить их заново под давлением.
         """
         return self.offered == "shelf"
 
@@ -143,86 +169,86 @@ class Product:
         return format_price(self.cents_in(currency), currency)
 
 
-#: The three systems that change with time, and therefore the only ones a
-#: recurring plan can honestly sell — a natal chart bought monthly would be
-#: rent on a number that has not moved since birth. Imported by the paywall
-#: and by the entitlement check for the `"live"` scope.
+#: The three systems that change with time. Imported by the paywall, by the
+#: daily note, and by the entitlement check for the legacy `"live"` scope.
+#:
+#: **В v3 это уже не «что продаёт подписка».** Подписка продаёт всё
+#: (`sub.monthly`, `scope="all"`), и живой слой — только та её часть, которую
+#: нельзя купить навсегда: транзиты пересчитываются каждый день, соляр — к
+#: каждому дню рождения. Список остаётся, потому что на нём держатся два
+#: живых потребителя: `Entitlement.covers` для грантов со `scope="live"`
+#: (новых не выписываем, старые обязаны продолжать работать) и утренняя
+#: заметка, которая решает по нему, что показывать бесплатно.
 LIVING_SYSTEMS: frozenset[str] = frozenset({"transits", "solar-return", "compatibility"})
 
 #: The price bands. Every currency table is keyed by these, and a product
 #: names the one it sits on rather than carrying its own foreign amounts —
-#: eight doors at the same price should be one row to edit, not eight to keep
+#: five doors at the same price should be one row to edit, not five to keep
 #: in agreement.
-BANDS: tuple[str, ...] = (
-    "door",
-    "archive",
-    "archive-bump",
-    "archive-upgrade",
-    "weekly",
-    "monthly",
-    "annual",
-)
+#:
+#: `door` и `pair` стоят одинаково ($4.99) и всё-таки разведены на две полосы.
+#: Довод: одинаковая цена у них — следствие позиционирования, а не одна цена
+#: двух видов одного товара. Дверь покупается один раз и навсегда, проверка
+#: пары — расходуемая и покупается многократно; ТЗ §7 планирует A/B по цене, и
+#: общая полоса означала бы, что сдвиг одной цены молча тянет за собой пять
+#: чужих. Тринадцать продублированных чисел — плата за то, что этого не
+#: случится.
+BANDS: tuple[str, ...] = ("door", "pair", "bundle", "monthly")
 
-_DOOR_CENTS = 599
+_DOOR_CENTS = 499
+_PAIR_CENTS = 499
 
-#: The catalogue. One price for every door: the quiz decides which system a
-#: person is offered, so a price that varied by system would be a price that
-#: varied by quiz answer, and the eight differentiated prices we used to
-#: publish were an invitation to answer the quiz again for a cheaper reading.
+#: Полка v3 — восемь строк, и ровно эти восемь заводятся в консолях.
+#:
+#: Одна цена на все двери: квиз решает, какую систему человеку предложат
+#: первой, так что цена, зависящая от системы, — это цена, зависящая от ответа
+#: в квизе, и приглашение пройти квиз ещё раз ради разбора подешевле.
+#:
+#: Транзитов, соляра и совместимости среди дверей нет намеренно (ТЗ §2):
+#: транзиты — движок ежедневного гороскопа, соляр переписывается к каждому дню
+#: рождения, и продать их «навсегда» значит продать подписку без подписки.
+#: Совместимость продаётся поштучно, `pair.check`, потому что покупается не
+#: система, а отчёт про конкретного человека.
 PRODUCTS: dict[str, Product] = {
-    "natal": Product("natal", "Natal chart", "one_time", _DOOR_CENTS, band="door"),
-    "numerology": Product("numerology", "Numerology", "one_time", _DOOR_CENTS, band="door"),
-    "birth-card": Product("birth-card", "Birth Card", "one_time", _DOOR_CENTS, band="door"),
-    "transits": Product("transits", "Transits", "one_time", _DOOR_CENTS, band="door"),
-    "solar-return": Product("solar-return", "Solar return", "one_time", _DOOR_CENTS, band="door"),
-    "compatibility": Product("compatibility", "Compatibility", "one_time", _DOOR_CENTS, band="door"),
-    "astrocartography": Product(
+    "door.natal": Product("natal", "Natal chart", "one_time", _DOOR_CENTS, band="door"),
+    "door.numerology": Product(
+        "numerology", "Numerology", "one_time", _DOOR_CENTS, band="door"
+    ),
+    "door.birth-card": Product(
+        "birth-card", "Birth Card", "one_time", _DOOR_CENTS, band="door"
+    ),
+    "door.astrocartography": Product(
         "astrocartography", "Astrocartography", "one_time", _DOOR_CENTS, band="door"
     ),
-    "synthesis": Product("synthesis", "Cross-synthesis", "one_time", _DOOR_CENTS, band="door"),
-    # The shelf. Bought outright and kept, because what is sold is a written
-    # interpretation of numbers that do not change.
-    "archive": Product(
-        "*", "The whole archive", "one_time", 3899, band="archive", scope="all"
+    "door.synthesis": Product(
+        "synthesis", "Cross-synthesis", "one_time", _DOOR_CENTS, band="door"
     ),
-    # The rest of the archive, added to a door *in the same checkout*. It is a
-    # cent under the door plus the upgrade, so that deciding now is never the
-    # worse deal and deciding later is never punished. It is not a standalone
-    # archive at $29.99 and must never be sold as one — 899 + 2999 = 3898 is
-    # the sum that is one cent under the shelf, and a bump bought alone is the
-    # shelf item at nine dollars off. `on_the_shelf` is what enforces that.
-    "archive-bump": Product(
-        "*", "The rest of the archive", "one_time", 2999,
-        band="archive-bump", scope="all", offered="in-checkout",
+    # Расходуемый: один отчёт про одну пару, покупается столько раз, сколько
+    # партнёров человек проверит. `slug` здесь — система, к которой отчёт
+    # относится, и **не** то, что будет записано в грант: грант пары называется
+    # `pair:{profile_id}`, а какой это профиль, знает только PairIntent (А4,
+    # фаза Ф0.3). Поэтому `provider.entitlement_for` отказывается выписывать
+    # что-либо по `scope="pair"` — см. комментарий там; ошибка стоила бы
+    # открытой совместимости со всеми партнёрами сразу за $4.99.
+    "pair.check": Product(
+        "compatibility", "One compatibility report", "consumable", _PAIR_CENTS,
+        band="pair", scope="pair",
     ),
-    # The shelf price less the door already paid. Offered once, to someone who
-    # already bought a door — which is the whole of the credit promise, turned
-    # into a price id instead of into arithmetic nobody charges.
-    "archive-upgrade": Product(
-        # 3899 archive − 599 door. Derived by hand and pinned by a test rather
-        # than computed here, because the number on this line must equal the
-        # number on the store's price id, and only a person can put it there.
-        "*", "The rest of the archive", "one_time", 3300,
-        band="archive-upgrade", scope="all", offered="after-door",
+    # Пять статичных разборов разом. Цена — решение владельца от 17.08.2026;
+    # два инварианта, которые её держат, пинаются тестами в `test_prices.py`:
+    # сумма пяти дверей должна быть больше бандла (иначе бандл бессмыслен) и
+    # бандл — меньше трёх месяцев подписки (иначе он не якорь, а вторая
+    # подписка).
+    "bundle.static": Product(
+        "*", "All five readings", "one_time", 1999, band="bundle", scope="static"
     ),
-    # The only recurring things worth renting are the ones that move: transits,
-    # the solar return, compatibility. Everything else stays a purchase.
-    #
-    # The week exists because the category's engine is the impatient buyer:
-    # the competitor set ships €6.99/week as its main plan. Ours is priced to
-    # be the honest version of the same impulse — try the living layer for
-    # one week, keep the plan if the mornings earn it.
-    "weekly": Product(
-        "*", "Everything live, weekly", "weekly", 499,
-        band="weekly", interval="week", scope="live",
-    ),
-    "monthly": Product(
-        "*", "Everything live, monthly", "monthly", 999,
-        band="monthly", interval="month", scope="live",
-    ),
-    "annual": Product(
-        "*", "Everything, for a year", "annual", 7899,
-        band="annual", interval="year", scope="all",
+    # Единственная подписка. `scope="all"`, а не `"live"`: v3 продаёт «всё, пока
+    # платишь» — живой слой плюс статичные разборы, — и это ровно то, что
+    # обещает копирайт P5. Строка «купленное навсегда остаётся твоим» рядом с
+    # кнопкой существует потому, что `all` истекает, а `system`/`static` — нет.
+    "sub.monthly": Product(
+        "*", "Everything, monthly", "monthly", 999,
+        band="monthly", interval="month", scope="all", pair_credits_monthly=1,
     ),
 }
 
@@ -232,63 +258,56 @@ PRODUCTS: dict[str, Product] = {
 #:
 #: USD is absent on purpose: `Product.cents` is the US price and there must be
 #: exactly one place holding it.
+#:
+#: **Откуда взялись числа v3, по полосам — чтобы это можно было проверить, а не
+#: принять на веру.**
+#:
+#: * `monthly` не тронут: $9.99 в v3 те же $9.99, что и раньше, значит вся
+#:   строка остаётся ровно такой, какой её выбрал человек под каждый рынок;
+#: * `door` и `pair` — это **уже принятые** точки $4.99: столько стоила
+#:   недельная подписка, и её локальные цены выбирались под ту же сумму. Мы
+#:   переиспользуем решение, а не изобретаем новое;
+#: * `bundle` — единственная **выведенная** полоса: два месяца подписки,
+#:   округлённые до окончания, принятого на рынке (€20.99, CHF 23.90, kr 219).
+#:   $19.99 = 2 × $9.99 в США, и та же пропорция удерживает якорь везде;
+#: * PPP-рынки (BRL, MXN, PLN, TRY, INR) впервые получают дверь и подписку.
+#:   Прежний отказ держался на фиксированной комиссии за транзакцию, которой у
+#:   магазинов нет: Apple и Google берут процент и только процент, так что доля,
+#:   которая остаётся нам, одинакова и на R$12.90, и на R$99.90. Разбор — в
+#:   `mobile/store/PRODUCTS.md` §5; числа $9.99 взяты оттуда же, дверь — 5/6 от
+#:   выведенной там двери $5.99.
+#:
+#: **Выведенное — не значит утверждённое.** Полосу `bundle` и пять строк PPP
+#: обязан подтвердить владелец, и подтверждать их надо **до** того, как товар
+#: будет сохранён в консоли: у Apple цена берётся из сетки готовых точек, и если
+#: точки нет, берут ближайшую — и тем же коммитом вписывают её сюда, иначе
+#: витрина назовёт сумму, которой магазин не возьмёт.
 REGIONAL_CENTS: dict[str, dict[str, int]] = {
     # VAT-neutral: at these points the net after 19–25% EU VAT lands within 1%
     # of the US net, which is the definition of "the same price" rather than a
     # discount or a surcharge.
-    "EUR": {
-        "weekly": 549,
-        "door": 649, "archive": 4099, "archive-bump": 3149,
-        "archive-upgrade": 3450, "monthly": 1049, "annual": 8299,
-    },
+    "EUR": {"door": 549, "pair": 549, "bundle": 2099, "monthly": 1049},
     # UK consumers pay roughly 8% above the US for digital subscriptions and
     # the market is used to it.
-    "GBP": {
-        "weekly": 499,
-        "door": 599, "archive": 3999, "archive-bump": 3099,
-        "archive-upgrade": 3400, "monthly": 999, "annual": 7999,
-    },
+    "GBP": {"door": 499, "pair": 499, "bundle": 1999, "monthly": 999},
     # Switzerland was not in COUNTRY_CURRENCY at all, so Swiss buyers were
     # billed raw USD — the single most under-priced market we had. Swiss VAT is
     # 8.1%, not 20%, and Swiss consumers pay 1.25–1.65x the US price for
     # digital subscriptions (Spotify CHF 15.95 against $11.99; Netflix
     # CHF 22.90 against $17.99). These points net about 135% of the US net.
-    "CHF": {
-        "weekly": 590,
-        "door": 690, "archive": 4590, "archive-bump": 3490,
-        "archive-upgrade": 3900, "monthly": 1190, "annual": 9290,
-    },
-    "AUD": {
-        "weekly": 799,
-        "door": 999, "archive": 5999, "archive-bump": 4499,
-        "archive-upgrade": 5000, "monthly": 1599, "annual": 12499,
-    },
-    "CAD": {
-        "weekly": 749,
-        "door": 899, "archive": 5499, "archive-bump": 4199,
-        "archive-upgrade": 4600, "monthly": 1399, "annual": 10999,
-    },
-    "NOK": {
-        "weekly": 5900,
-        "door": 7900, "archive": 44900, "archive-bump": 33900,
-        "archive-upgrade": 37000, "monthly": 10900, "annual": 89900,
-    },
-    "DKK": {
-        "weekly": 3900,
-        "door": 4900, "archive": 29900, "archive-bump": 22300,
-        "archive-upgrade": 25000, "monthly": 7900, "annual": 61900,
-    },
-    # Purchasing-power markets: the archive and the year, and nothing else.
-    # A PPP-fair door is small enough that local VAT plus the flat per-
-    # transaction fee takes a quarter to a third of it, so the door would be
-    # sold at a loss on the second-cheapest thing we make. Offering fewer
-    # products at an honest price beats offering all of them at a price that
-    # is really the US one.
-    "BRL": {"archive": 9990, "annual": 21900},
-    "MXN": {"archive": 42900, "annual": 86900},
-    "PLN": {"archive": 8499, "annual": 17499},
-    "TRY": {"archive": 50900, "annual": 102900},
-    "INR": {"archive": 84900, "annual": 174900},
+    "CHF": {"door": 590, "pair": 590, "bundle": 2390, "monthly": 1190},
+    "AUD": {"door": 799, "pair": 799, "bundle": 3199, "monthly": 1599},
+    "CAD": {"door": 749, "pair": 749, "bundle": 2799, "monthly": 1399},
+    "NOK": {"door": 5900, "pair": 5900, "bundle": 21900, "monthly": 10900},
+    "DKK": {"door": 3900, "pair": 3900, "bundle": 15900, "monthly": 7900},
+    # Purchasing-power markets. Полная полка, а не две строки: см. вывод выше —
+    # у магазина нет фиксированной комиссии, из-за которой дешёвый товар был
+    # структурно хуже дорогого.
+    "BRL": {"door": 1290, "pair": 1290, "bundle": 5190, "monthly": 2590},
+    "MXN": {"door": 5900, "pair": 5900, "bundle": 21900, "monthly": 10900},
+    "PLN": {"door": 1099, "pair": 1099, "bundle": 4399, "monthly": 2199},
+    "TRY": {"door": 6900, "pair": 6900, "bundle": 25900, "monthly": 12900},
+    "INR": {"door": 10900, "pair": 10900, "bundle": 43900, "monthly": 21900},
 }
 
 
@@ -389,23 +408,30 @@ def currency_for(country: str | None) -> str:
     return COUNTRY_CURRENCY.get((country or "").upper(), "USD")
 
 
-def product(slug: str) -> Product:
+def product(key: str) -> Product:
+    """Одна строка полки по её **ключу** (`door.natal`), не по слагу системы.
+
+    Названо `key`, а не `slug`, с тех пор как эти два перестали совпадать: в v3
+    `PRODUCTS["door.natal"].slug == "natal"`, и вызов `product("natal")` теперь
+    честно падает вместо того, чтобы случайно попасть в товар.
+    """
     try:
-        return PRODUCTS[slug]
+        return PRODUCTS[key]
     except KeyError:
-        raise ValueError(f"nothing on sale called {slug!r}") from None
+        raise ValueError(f"nothing on sale called {key!r}") from None
 
 
 def by_price_id(price_id: str, processor: str | None = None) -> str | None:
     """Which catalogue **key** carries this processor identifier.
 
-    The key, not the `Product`, because five products share the slug `"*"` and
-    a caller holding only the object has to guess its way back to a key. The
-    guess that was there — `found.slug if found.kind == "one_time" else
-    "annual"` — was wrong in both directions on the same line: an archive
+    The key, not the `Product`, because more than one product shares the slug
+    `"*"` and a caller holding only the object has to guess its way back to a
+    key. The guess that was there — `found.slug if found.kind == "one_time"
+    else "annual"` — was wrong in both directions on the same line: an archive
     lookup produced `"*"`, which is not a key, so the payment was recorded and
     nothing granted; a monthly lookup produced `"annual"`, so a month's price
-    bought a year.
+    bought a year. В v3 ключ и слаг разошлись у **всех** строк, не только у
+    `"*"`, — тем более нечего угадывать.
 
     `processor` narrows the search to one processor's identifiers, which is what
     an adapter should pass: two processors could in principle issue the same
@@ -424,21 +450,6 @@ def by_price_id(price_id: str, processor: str | None = None) -> str | None:
     return None
 
 
-#: What we no longer publish but may still owe a credit against.
-#:
-#: The single chapter was sold in task #21 at $4.99 and withdrawn when this
-#: ladder replaced it. Its price is kept because a credit has to be a number we
-#: actually advertised: falling back to `Entitlement.amount_cents` would credit
-#: the processor's grand total, which carries sales tax we have already handed
-#: to a tax authority, and refunding that out of margin on a reading the buyer
-#: keeps is a worse answer than crediting nothing. USD only, because a chapter
-#: price in any other currency was produced by the multiplier this file
-#: deleted, and a number nobody chose is not a number we can hand back.
-WITHDRAWN_CENTS: dict[str, dict[str, int]] = {
-    "chapter": {"USD": 499},
-}
-
-
 def _entry(key: str, item: Product, currency: str) -> dict:
     return {
         "slug": key,
@@ -453,60 +464,32 @@ def _entry(key: str, item: Product, currency: str) -> dict:
     }
 
 
-def catalogue(
-    *,
-    country: str | None = None,
-    credit_cents: int = 0,
-    credit_currency: str = "USD",
-) -> dict:
+def catalogue(*, country: str | None = None) -> dict:
     """The price list a client renders. Every number in it is a number we take.
 
-    Only the shelf appears. The conditional prices used to be listed too, and
-    since each of them grants exactly what the shelf item it stands in for
-    grants, listing them published a cheaper way to buy the same thing to
-    anyone who read the response.
-
-    A qualifying credit does not discount a price here; it **substitutes a
-    product**. Someone who bought a door inside the window is shown
-    `archive-upgrade` where the archive would have been, because that is a real
-    price id at exactly the shelf price less the door, so the amount on the
-    paywall is the amount on the card. Arithmetic in this function could only
-    ever have produced a number the processor would not honour.
+    Only the shelf appears — `on_the_shelf` is the gate, and in v3 it lets all
+    eight rows through. Оно всё равно спрашивается: витрина, которая печатает
+    `PRODUCTS` целиком, — это витрина, которая опубликует первую же условную
+    цену в тот день, когда её заведут.
 
     Each entry carries its own `kind`, `interval` and `scope`. This used to
     render one hardcoded annual block and filter the annual out of the list, so
     the moment a second recurring plan existed it would have been drawn as a
     one-time purchase — a subscription sold as a single payment is a chargeback
     with a delay on it.
+
+    **Кредита здесь больше нет ни в каком виде.** Подстановка `archive-upgrade`
+    вместо `archive` ушла вместе с самими товарами (ТЗ §2), а с ней — параметры
+    `credit_cents`/`credit_currency` и ключ-алиас `annual`. Возвращать сюда
+    арифметику нельзя: цена, посчитанная в этой функции, — это цена, которой нет
+    ни на одном идентификаторе товара, то есть число, которое магазин не возьмёт.
     """
     currency = currency_for(country)
-    # A credit is denominated in the currency it was paid in and we are told
-    # which that was. If it does not match what we are about to price, it is
-    # refused rather than compared: NOK 109 set against a $78.99 plan reads as
-    # a $109 credit and would substitute an upgrade the buyer has not earned.
-    spendable = credit_cents if credit_currency == currency else 0
-    upgrade = PRODUCTS["archive-upgrade"]
-    substitute = spendable > 0 and upgrade.sold_in(currency)
-
-    items: list[dict] = []
-    for key, item in PRODUCTS.items():
-        if not item.on_the_shelf or not item.sold_in(currency):
-            continue
-        if key == "archive" and substitute:
-            entry = _entry("archive-upgrade", upgrade, currency)
-            # Named so the interface can say *why* this is cheaper rather than
-            # inventing a struck-through price of its own.
-            entry["replaces"] = "archive"
-            entry["credit_cents"] = item.cents_in(currency) - entry["cents"]
-            items.append(entry)
-            continue
-        items.append(_entry(key, item, currency))
-
-    listing: dict = {"currency": currency, "items": items}
-    # A transitional alias, not a second source of truth: it is the same dict
-    # object that is already in `items`. The interface still reads
-    # `catalogue.annual`; this key goes when it reads `items` instead.
-    annual = next((entry for entry in items if entry["slug"] == "annual"), None)
-    if annual is not None:
-        listing["annual"] = annual
-    return listing
+    return {
+        "currency": currency,
+        "items": [
+            _entry(key, item, currency)
+            for key, item in PRODUCTS.items()
+            if item.on_the_shelf and item.sold_in(currency)
+        ],
+    }

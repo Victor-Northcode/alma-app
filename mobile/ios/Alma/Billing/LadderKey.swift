@@ -14,39 +14,59 @@ import Foundation
 /// (Contrast `HubEntry.slug`, which fails to decode on purpose — a ninth system
 /// is an app release, a thirteenth price is not.)
 ///
-/// **`archive-bump` is deliberately absent.** It exists only as an upsell inside
-/// another checkout, and there is no such thing when the store owns the sheet:
-/// Apple shows one product per confirmation. The backend still prices it and
-/// still refuses to offer it on the shelf, so nothing here has to enforce that
-/// twice — but a build that started fetching `alma.archive_bump` from StoreKit
-/// would be asking for a product that should never be created in App Store
-/// Connect.
+/// **The raw value is the catalogue key, and the catalogue key is no longer a
+/// system slug.** In v3 the shelf is not "eight doors and an archive" any more,
+/// so `natal` stopped being the name of a *product* and became the name of what
+/// a product opens. The key is `door.natal`; the system is a separate property
+/// below, and it has to be, because `SystemSlug(rawValue: "door.natal")` is nil
+/// — a rung that could not name its system would render with no title.
+///
+/// **Only the three systems that never change have doors.** Transits and the
+/// solar return recompute — a transit reading sold "permanently" is a
+/// subscription nobody charged for — and compatibility is bought one partner at
+/// a time as `pair.check`, not as a system. That is why five doors here and not
+/// eight.
 enum LadderKey: String, CaseIterable, Sendable, Hashable, Identifiable {
 
-    case natal
-    case numerology
-    case birthCard = "birth-card"
-    case transits
-    case solarReturn = "solar-return"
-    case compatibility
-    case astrocartography
-    case synthesis
+    case natal = "door.natal"
+    case numerology = "door.numerology"
+    case birthCard = "door.birth-card"
+    case astrocartography = "door.astrocartography"
+    case synthesis = "door.synthesis"
 
-    /// All forty-one chapters, bought outright.
-    case archive
-    /// The archive at the shelf price less a door already paid for. The server
-    /// substitutes it for `archive` and says so with `replaces`; the client
-    /// never computes the discount.
-    case archiveUpgrade = "archive-upgrade"
+    /// One compatibility report, about one person. Consumable in App Store
+    /// Connect: it is bought again for every partner, and a non-consumable
+    /// could only ever be bought once.
+    case pairCheck = "pair.check"
 
-    case weekly
-    case monthly
-    case annual
+    /// All five readings that never change, bought outright.
+    case bundleStatic = "bundle.static"
+
+    /// Everything, for as long as it is paid for.
+    case subMonthly = "sub.monthly"
 
     var id: String { rawValue }
 
     /// The system this rung opens, or `nil` when it opens more than one.
-    var system: SystemSlug? { SystemSlug(rawValue: rawValue) }
+    ///
+    /// A stored map rather than `SystemSlug(rawValue:)` over the raw value,
+    /// which is what it used to be: the key carries a `door.` prefix now, so
+    /// the old expression answered nil for every rung on the shelf.
+    var system: SystemSlug? {
+        switch self {
+        case .natal: .natal
+        case .numerology: .numerology
+        case .birthCard: .birthCard
+        case .astrocartography: .astrocartography
+        case .synthesis: .synthesis
+        // Deliberately nil, and not `.compatibility`. A pair check does not
+        // open the compatibility *system* — it opens one report about one
+        // person — and answering with the system here is how a screen ends up
+        // drawing "compatibility unlocked" after one purchase.
+        case .pairCheck: nil
+        case .bundleStatic, .subMonthly: nil
+        }
+    }
 
     /// Whether Apple will bill this again. It decides which disclosure sits
     /// above the button — a recurring charge somebody was not told about is the
@@ -54,29 +74,24 @@ enum LadderKey: String, CaseIterable, Sendable, Hashable, Identifiable {
     /// statement to be adjacent to the payment action rather than in the terms.
     var isSubscription: Bool {
         switch self {
-        case .weekly, .monthly, .annual: true
+        case .subMonthly: true
         default: false
         }
     }
 
     var title: LocalizedStringResource {
         switch self {
-        case .archive: PaywallL10n.archiveTitle
-        case .archiveUpgrade: PaywallL10n.upgradeTitle
-        case .weekly: PaywallL10n.weeklyTitle
-        case .monthly: PaywallL10n.monthlyTitle
-        case .annual: PaywallL10n.annualTitle
+        case .bundleStatic: PaywallL10n.archiveTitle
+        case .pairCheck: PaywallL10n.systemName(.compatibility)
+        case .subMonthly: PaywallL10n.monthlyTitle
         default: PaywallL10n.systemName(system ?? .natal)
         }
     }
 
     var note: LocalizedStringResource {
         switch self {
-        case .archive: PaywallL10n.archiveNote
-        case .archiveUpgrade: PaywallL10n.upgradeNote
-        case .weekly: PaywallL10n.weeklyNote
-        case .monthly: PaywallL10n.monthlyNote
-        case .annual: PaywallL10n.annualNote
+        case .bundleStatic: PaywallL10n.archiveNote
+        case .subMonthly: PaywallL10n.monthlyNote
         default: PaywallL10n.doorNote
         }
     }
@@ -93,9 +108,11 @@ enum LadderKey: String, CaseIterable, Sendable, Hashable, Identifiable {
     /// the paywall in one country. One rule, stated twice — here and in Python —
     /// and a test on each side is cheaper than a table.
     ///
-    /// The rule: the catalogue key, prefixed with `alma.`, with hyphens replaced
-    /// by underscores, because neither App Store Connect nor the Play Console
-    /// accepts a hyphen in a product identifier.
+    /// The rule: the catalogue key, prefixed with `ai.pazl.alma.`, with hyphens
+    /// replaced by underscores, because neither App Store Connect nor the Play
+    /// Console accepts a hyphen in a product identifier. Периоды они принимают
+    /// оба, поэтому `door.birth-card` становится `ai.pazl.alma.door.birth_card`
+    /// и разбирается обратно однозначно.
     var storeProductID: String { Self.prefix + rawValue.replacingOccurrences(of: "-", with: "_") }
 
     /// The inverse, for a transaction arriving from the store rather than from a

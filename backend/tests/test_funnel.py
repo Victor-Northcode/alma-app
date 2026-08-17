@@ -70,7 +70,7 @@ def test_the_browser_cannot_report_a_purchase(api, auth_headers):
     """Money is known at the webhook. Anything else is a number anyone can set."""
     refused = api.post(
         "/v1/events",
-        json={"stage": "purchase", "properties": {"product": "archive"}},
+        json={"stage": "purchase", "properties": {"product": "bundle.static"}},
         headers=auth_headers,
     )
     assert refused.status_code == 422
@@ -562,11 +562,11 @@ def test_a_label_long_enough_to_be_a_sentence_is_dropped_whole(api, auth_headers
     """A label is a slug. Half of somebody's address is still their address."""
     sent = api.post(
         "/v1/events",
-        json={"stage": "offer_view", "meta": {"variant": "x" * 200, "product": "annual"}},
+        json={"stage": "offer_view", "meta": {"variant": "x" * 200, "product": "sub.monthly"}},
         headers=auth_headers,
     )
     assert sent.status_code == 200
-    assert _events(api)[0].properties == {"product": "annual"}
+    assert _events(api)[0].properties == {"product": "sub.monthly"}
 
 
 def test_a_label_that_is_something_a_person_typed_never_reaches_the_table(api, auth_headers):
@@ -592,14 +592,14 @@ def test_a_label_that_is_something_a_person_typed_never_reaches_the_table(api, a
                 "variant": "Sofia Bianchi",
                 "how": "sofia@example.com",
                 "chapter": "why am I like this",
-                "product": "annual",
+                "product": "sub.monthly",
             },
         },
         headers=auth_headers,
     )
     assert sent.status_code == 200, sent.json()
     # The good label survives: one bad dimension must never cost the rung.
-    assert _events(api)[0].properties == {"product": "annual"}
+    assert _events(api)[0].properties == {"product": "sub.monthly"}
 
 
 def test_the_two_ends_of_the_wire_keep_the_same_values(api, auth_headers):
@@ -685,7 +685,7 @@ def test_the_client_that_ships_is_the_client_that_is_accepted(api, auth_headers)
     for stage in stages:
         sent = api.post(
             "/v1/events",
-            json={"stage": stage, "meta": {"product": "archive"}},
+            json={"stage": stage, "meta": {"product": "bundle.static"}},
             headers=auth_headers,
         )
         assert sent.status_code == 200, (stage, sent.json())
@@ -879,7 +879,7 @@ def test_a_checkout_is_recorded_by_the_server_that_opened_it(api, auth_headers, 
     monkeypatch.setattr(router, "billing_adapter", lambda *_, **__: Opens())
     try:
         opened = api.post(
-            "/v1/billing/checkout", json={"product": "natal"}, headers=auth_headers
+            "/v1/billing/checkout", json={"product": "door.natal"}, headers=auth_headers
         )
         assert opened.status_code == 200
     finally:
@@ -887,7 +887,7 @@ def test_a_checkout_is_recorded_by_the_server_that_opened_it(api, auth_headers, 
 
     rows = _events(api)
     assert [(row.name, row.properties.get("product")) for row in rows] == [
-        ("checkout_opened", "natal")
+        ("checkout_opened", "door.natal")
     ]
 
 
@@ -895,11 +895,11 @@ def test_the_column_name_works_on_the_wire_too(api, auth_headers):
     """`properties` is what the column is called, so a caller may send that."""
     sent = api.post(
         "/v1/events",
-        json={"stage": "offer_view", "properties": {"product": "annual"}},
+        json={"stage": "offer_view", "properties": {"product": "sub.monthly"}},
         headers=auth_headers,
     )
     assert sent.status_code == 200
-    assert _events(api)[0].properties == {"product": "annual"}
+    assert _events(api)[0].properties == {"product": "sub.monthly"}
 
 
 # ── лестница монетизации (§7 ТЗ v3) ───────────────────────────────────────
@@ -1080,12 +1080,12 @@ def test_the_ladders_labels_belong_to_the_ladder_and_not_to_the_rest(api, auth_h
 
     older = api.post(
         "/v1/events",
-        json={"stage": "offer_view", "meta": {"sku": "sub.monthly", "product": "annual"}},
+        json={"stage": "offer_view", "meta": {"sku": "sub.monthly", "product": "sub.monthly"}},
         headers=auth_headers,
     )
     assert older.status_code == 200
     stored = [row for row in _events(api) if row.name == "offer_view"]
-    assert stored[0].properties == {"product": "annual"}
+    assert stored[0].properties == {"product": "sub.monthly"}
 
 
 def test_the_two_allowlists_do_not_overlap():
@@ -1294,7 +1294,7 @@ def test_a_purchase_is_counted_from_the_money_not_from_a_beacon(db):
                 user_id=buyer.id,
                 provider="paddle",
                 transaction_id="txn_paid",
-                product="archive",
+                product="bundle.static",
                 status="transaction.completed",
                 amount_cents=3899,
                 currency="USD",
@@ -1310,7 +1310,7 @@ def test_a_purchase_is_counted_from_the_money_not_from_a_beacon(db):
                 user_id=buyer.id,
                 provider="paddle",
                 transaction_id="txn_pending",
-                product="archive",
+                product="bundle.static",
                 status="pending",
                 amount_cents=3899,
                 currency="USD",
@@ -1339,7 +1339,7 @@ def test_declined_is_measured_against_the_checkout_not_against_buying(db):
         session.add(
             Purchase(
                 id=new_id(), user_id=buyer.id, provider="paddle",
-                transaction_id="txn_1", product="natal", status="completed",
+                transaction_id="txn_1", product="door.natal", status="completed",
                 amount_cents=899, currency="USD", completed_at=utcnow(),
             )
         )
@@ -1369,7 +1369,7 @@ def test_an_overlay_that_finished_with_no_money_behind_it_is_visible(db):
         session.add(
             Purchase(
                 id=new_id(), user_id=paid.id, provider="paddle",
-                transaction_id="txn_real", product="archive", status="completed",
+                transaction_id="txn_real", product="bundle.static", status="completed",
                 amount_cents=3899, currency="USD", completed_at=utcnow(),
             )
         )
@@ -1398,7 +1398,7 @@ def test_a_buyer_whose_browser_said_nothing_is_still_a_sale(db):
         session.add(
             Purchase(
                 id=new_id(), user_id=quiet.id, provider="dodo",
-                transaction_id="txn_quiet", product="annual", status="completed",
+                transaction_id="txn_quiet", product="sub.monthly", status="completed",
                 amount_cents=7899, currency="USD", completed_at=utcnow(),
             )
         )

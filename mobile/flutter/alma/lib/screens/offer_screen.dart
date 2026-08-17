@@ -207,14 +207,17 @@ class _OfferScreenState extends State<OfferScreen> {
   /// главы, натальную карту не продают второй раз: [ladderFor] эту ступень всё
   /// равно уберёт, и остался бы экран, озаглавленный системой, которую он не
   /// продаёт.
+  /// **Временная развязка на время Ф0.** Витрина под системой (`s37`,
+  /// `journeyStep`) в v3 отменена: по ТЗ §3 после расчёта сразу открывается
+  /// бесплатная глава I, а цена появляется в её конце — то есть дверью. Пока
+  /// новые экраны P1–P8 не написаны (фаза Ф1), шаг путешествия открывает ту же
+  /// дверь, что и тап по закрытой главе, а не собственную лестницу.
   PaywallIntent _intentFor(Entitlements held) {
     final system = widget.system;
     if (system == null || held.opened(system)) {
-      return const PaywallIntent.everything();
+      return const PaywallIntent.plans();
     }
-    return widget.journeyStep
-        ? PaywallIntent.showcase(system)
-        : PaywallIntent.door(system);
+    return PaywallIntent.door(system);
   }
 
   /// Уйти отсюда. Отдельная ступень воронки, а не просто выход: человек,

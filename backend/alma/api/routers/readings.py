@@ -53,7 +53,13 @@ from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...config import settings
 from ...db.models import ChatMessage, ChatThread, Memory, Reading, UsageCounter, utcnow
 from ..cache import result_cache
-from ..deps import CurrentUser, SessionDep, get_provider, resolve_birth
+from ..deps import (
+    CurrentUser,
+    SessionDep,
+    get_provider,
+    partner_profile_id,
+    resolve_birth,
+)
 from ..schemas import ChatRequest, ReadingRequest
 
 log = logging.getLogger("alma.api.readings")
@@ -256,6 +262,12 @@ async def list_chapters(
     #: learn two conventions for the same fact. A GET has no body to put it
     #: in, so it is a query parameter and nothing else changes.
     locale: str = Query(default="en", max_length=i18n.MAX_TAG),
+    #: Про кого оглавление, когда система — совместимость. Отчёт по паре
+    #: покупается на одного человека, поэтому «открыта ли глава» без имени
+    #: партнёра — вопрос без ответа; с одним сохранённым партнёром он
+    #: подставляется сам (`partner_profile_id`), с несколькими его надо назвать.
+    #: Необязательный: для семи остальных систем он бессмыслен.
+    partner_profile_id_: str | None = Query(default=None, alias="partner_profile_id"),
 ) -> dict:
     """The table of contents, with what is open and what is written.
 
@@ -285,9 +297,28 @@ async def list_chapters(
         ).scalars().all()
     }
 
+    # Один раз на оглавление, а не по главе: партнёр у всех строк один, а
+    # запрос в базу за ним — нет.
+    partner = (
+        await partner_profile_id(session, user, partner_profile_id_)
+        if system == "compatibility"
+        else None
+    )
+
+    # Пара, которую нечем назвать (партнёров ноль или несколько, и ни один не
+    # передан): платные главы закрыты — гранту не к чему привязаться, — а
+    # бесплатная остаётся бесплатной, она такая для всех и партнёра не требует.
+    unnameable = system == "compatibility" and partner is None
+
     listing = []
     for chapter in defined:
-        access = await entitlements.check(session, user, system, chapter=chapter.slug)
+        access = (
+            entitlements.PAIR_WITHOUT_PROFILE
+            if unnameable and not chapter.free
+            else await entitlements.check(
+                session, user, system, chapter=chapter.slug, partner_id=partner
+            )
+        )
         words = i18n.chapter_words(system, chapter.slug, locale=language)
         listing.append(
             {
@@ -370,7 +401,22 @@ async def read(
     # Ответ тот же 402 `locked`, что стоял здесь до превью: клиент рисует
     # стену S26 (заголовок, объяснение, одна кнопка) и, зная право заранее из
     # оглавления, обычно даже не доходит до этого запроса.
-    access = await entitlements.check(session, user, payload.system, chapter=chapter.slug)
+    # Про кого пишем, когда пишем про пару. Мягкий разбор: строгий («партнёров
+    # несколько, назови») стоит ниже, в `_partner`, и обязан остаться там —
+    # иначе неоплативший человек с двумя партнёрами получит 422 вместо
+    # пейволла и не узнает, что глава вообще продаётся.
+    pair = (
+        await partner_profile_id(session, user, payload.partner_profile_id)
+        if payload.system == "compatibility"
+        else None
+    )
+    access = (
+        entitlements.PAIR_WITHOUT_PROFILE
+        if payload.system == "compatibility" and pair is None and not chapter.free
+        else await entitlements.check(
+            session, user, payload.system, chapter=chapter.slug, partner_id=pair
+        )
+    )
     if not access.allowed and not chapter.free:
         raise HTTPException(
             status.HTTP_402_PAYMENT_REQUIRED,
@@ -1195,6 +1241,13 @@ async def chat(
     """One turn of conversation, answered only from the chart."""
     _cheap, mid, strong = models()
     tier = await entitlements.tier_of(session, user)
+    # **Сегодня это всегда False, и оставлено оно намеренно.** Недельная
+    # подписка снята с продажи вместе со всей прежней полкой (ТЗ §2), кинда
+    # `weekly` больше нет ни в каталоге, ни в `EntitlementKind`, ни одной такой
+    # строки в базе нет. Механизм порции по недельному сроку не выпилен, потому
+    # что ТЗ §8 прямо оставляет неделю как возможный A/B после данных по
+    # удержанию, а восстанавливать снесённую квоту под давлением эксперимента —
+    # это как раз тот случай, когда её делают «примерно как было».
     weekly = await entitlements.has_kind(session, user, "weekly")
     allowance = _allowance(tier, mid=mid, locale=payload.locale, weekly=weekly)
 

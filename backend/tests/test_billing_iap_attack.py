@@ -42,70 +42,69 @@ def _verify(api, headers, *, transaction: str, product: str, platform: str = "ap
 
 
 # ══════════════════════════════════════════════════════════════════════════
-#  The conditional price, bought by somebody who never earned it
+#  A price the server does not offer, bought by naming it
 # ══════════════════════════════════════════════════════════════════════════
 
 
-def test_archive_upgrade_is_refused_to_an_account_holding_no_door(
-    store_api, auth_headers, apple
+def test_a_price_that_is_not_on_the_shelf_grants_nothing(
+    store_api, auth_headers, apple, monkeypatch
 ):
-    """$33.00 must not buy the $38.99 archive for a first-time buyer.
+    """Магазин продаст любой идентификатор, заведённый в консоли.
 
-    `archive-upgrade` is the shelf price *less a door already paid for*. It
-    writes the identical everything-grant the archive writes, so an account
-    that never bought a door and buys the upgrade directly has bought the
-    archive at $5.99 off.
+    Здесь стояли два теста — `archive-upgrade` за $33.00 и `archive-bump` за
+    $29.99, — и оба ловили одно: цена, которая выдаёт то же, что полочная, но
+    стоит дешевле, купленная по имени тем, кто её не заслужил. Условных цен в v3
+    нет, так что строка снимается с полки прямо здесь, ровно как её снимет
+    первый A/B по цене бандла (ТЗ §7).
 
-    Both store clients refuse to open a sheet for it unless the server put it
-    on their own catalogue — but that is a client-side lock on a product id
-    that exists in the console regardless, which is exactly the class of rule
-    `may_be_offered` was written to stop trusting the client about. Today the
-    router calls `may_be_offered` and only *logs* when it answers False.
-
-    The grant is the thing to refuse, not the money: the store has already
-    taken it by the time this runs, so the honest server answer is to keep the
-    payment, grant the credit the buyer is actually entitled to (nothing wider
-    than a door), and reconcile — never to write the everything-grant.
+    Что проверяется — со стороны нападающего: клиентские фильтры
+    (`Storefront.offers`, `StoreProducts.sellable`) решают только, что
+    **нарисовано**, и ни один из них не переживает пересобранный APK. Единственное,
+    что стоит между чужим идентификатором и грантом, — сервер.
     """
+    import dataclasses
+
+    from alma.billing import catalogue as prices
+
+    monkeypatch.setitem(
+        prices.PRODUCTS,
+        "bundle.static",
+        dataclasses.replace(prices.PRODUCTS["bundle.static"], offered="in-checkout"),
+    )
     token = _sign(
-        _transaction(product="archive-upgrade", transaction_id="2000000500009001", price=33000),
+        _transaction(
+            product="bundle.static", transaction_id="2000000500009001", price=19990
+        ),
         apple["key"],
         apple["chain"],
     )
-    response = _verify(store_api, auth_headers, transaction=token, product="archive-upgrade")
+    response = _verify(store_api, auth_headers, transaction=token, product="bundle.static")
 
     unlocked = store_api.get("/v1/billing/entitlements", headers=auth_headers).json()["unlocked"]
-    assert len(unlocked) < 8, (
-        "an account with no door bought archive-upgrade and now holds "
-        f"everything: {unlocked} (verify answered {response.status_code} "
-        f"{response.json()})"
-    )
-
-
-def test_archive_bump_is_refused_outright(store_api, auth_headers, apple):
-    """$29.99 must never buy the archive, in any account state.
-
-    `archive-bump` is priced to exist only as the second line of another
-    checkout — 599 + 2999 is a cent under the shelf — and `may_be_offered`
-    says it is *never* offerable on its own. A store has no equivalent of an
-    in-checkout upsell, so if the id is ever created in the console this is
-    the only thing between it and a direct purchase of the archive at nine
-    dollars off. The Android client refuses it twice (`StoreProducts.NEVER_ALONE`,
-    checked again inside `PlayBilling.purchase`) and neither of those refusals
-    survives a repackaged APK.
-    """
-    token = _sign(
-        _transaction(product="archive-bump", transaction_id="2000000500009002", price=29990),
-        apple["key"],
-        apple["chain"],
-    )
-    response = _verify(store_api, auth_headers, transaction=token, product="archive-bump")
-
-    unlocked = store_api.get("/v1/billing/entitlements", headers=auth_headers).json()["unlocked"]
-    assert len(unlocked) < 8, (
-        "archive-bump bought on its own granted the whole archive: "
+    assert unlocked == [], (
+        "a price the server does not offer was bought by name and granted "
         f"{unlocked} (verify answered {response.status_code} {response.json()})"
     )
+
+
+def test_a_withdrawn_product_id_grants_nothing(store_api, auth_headers, apple):
+    """Идентификатор снятой полки, подписанный магазином, — реальный случай.
+
+    Аккаунт в App Store может нести покупку товара из прежнего прайс-листа, а
+    старая сборка приложения — попросить его по имени. Такой платёж надо
+    записать и не выдать по нему ничего: `store_slug` отвечает `None` для
+    ключа, которого нет в каталоге, и это единственное, что стоит между
+    снятым SKU и грантом, который он когда-то выдавал.
+    """
+    token = _sign(
+        _transaction(product="archive", transaction_id="2000000500009002", price=38990),
+        apple["key"],
+        apple["chain"],
+    )
+    _verify(store_api, auth_headers, transaction=token, product="archive")
+
+    unlocked = store_api.get("/v1/billing/entitlements", headers=auth_headers).json()["unlocked"]
+    assert unlocked == [], f"a withdrawn SKU still granted {unlocked}"
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -172,7 +171,7 @@ def test_the_store_refusals_are_distinguishable_from_a_dead_session(store_api, a
     store refusal always names itself in `detail.error`.
     """
     response = _verify(
-        store_api, auth_headers, transaction="not-a-jws", product="natal"
+        store_api, auth_headers, transaction="not-a-jws", product="door.natal"
     )
     detail = response.json()["detail"]
     assert isinstance(detail, dict), detail

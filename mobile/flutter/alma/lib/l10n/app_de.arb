@@ -652,7 +652,7 @@
   "paywallV3BundleTitle": "Alle fünf Deutungen",
   "paywallV3BundlePrice": "{price} · für immer",
   "paywallV3BundleSaving": "Zwanzig Prozent günstiger",
-  "paywallV3BundleIncludes": "Geburtshoroskop · Numerologie · Geburtskarte · Astrokartografie · Synthese",
+  "paywallV3BundleIncludes": "Geburts­horoskop · Numerologie · Geburtskarte · Astro­kartografie · Synthese",
   "paywallV3BundleCta": "Alle fünf öffnen · {price}",
   "paywallV3PairInputTitle": "Wen lesen wir zusammen?",
   "paywallV3PairInputName": "Sein Name",
@@ -684,5 +684,5 @@
   "paywallV3CancelJustCancel": "Einfach kündigen",
   "paywallV3StateProcessing": "Dein Kauf geht gerade durch",
   "paywallV3StateErrorRetry": "Jetzt erneut versuchen",
-  "paywallV3StateRestoreDone": "Wiederhergestellt · alles, was du gekauft hast, ist wieder offen"
+  "paywallV3StateRestoreDone": "Wieder­hergestellt · alles, was du gekauft hast, ist wieder offen"
 }

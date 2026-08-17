@@ -136,18 +136,26 @@ def test_the_resolved_country_reaches_the_price_list(country: str, currency: str
     assert listing["currency"] == currency
 
 
-def test_a_market_that_does_not_sell_a_door_does_not_list_one():
-    """The five purchasing-power markets carry the archive and the year and
-    nothing else, because a PPP-fair door is eaten by local VAT plus the flat
-    per-transaction fee. Now that a country actually arrives, this stops being
-    theoretical: a landing page that lists a door price to somebody in Brazil is
-    listing something no store will sell them."""
+def test_a_market_gets_the_shelf_priced_in_its_own_currency():
+    """Раньше здесь проверялось обратное: пять PPP-рынков получали архив и год
+    и больше ничего, потому что фиксированная комиссия за транзакцию съедала
+    дешёвый товар. У магазинов такой комиссии нет — доля, которая остаётся нам,
+    одинакова на любой цене, — так что отказ снят (`mobile/store/PRODUCTS.md`
+    §5), и Бразилия видит ту же полку в реалах.
+
+    Правило, ради которого тест существует, не изменилось и проверяется тем же:
+    в списке нет ни одной цены, которой на этом рынке не назначено. Витрина,
+    печатающая долларовую сумму бразильцу, называет число, которого магазин не
+    возьмёт."""
     brazil = prices.catalogue(country="BR")
-    slugs = {item["slug"] for item in brazil["items"]}
-    assert slugs == {"archive", "annual"}
+    assert brazil["currency"] == "BRL"
+    assert {item["slug"] for item in brazil["items"]} == set(prices.PRODUCTS)
+    for item in brazil["items"]:
+        assert item["cents"] == prices.PRODUCTS[item["slug"]].cents_in("BRL")
+        assert item["cents"] != prices.PRODUCTS[item["slug"]].cents, item["slug"]
 
     home = prices.catalogue(country="US")
-    assert "natal" in {item["slug"] for item in home["items"]}
+    assert "door.natal" in {item["slug"] for item in home["items"]}
 
 
 # ── over HTTP, which is where it has to be true ────────────────────────────

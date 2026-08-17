@@ -18,10 +18,17 @@ The rules, and **the order they are asked in is itself a rule**:
   owned and was refused when they opened it. Every function here that walks
   entitlements asks scope before the sentinel, and they are the same order on
   purpose.
-* A live subscription covers the systems that keep moving — and nothing in
-  the archive, which is bought once and kept.
 * A one-time purchase covers exactly the system it was bought for, forever,
   or exactly the one chapter when a chapter is what was bought.
+* Бандл (`static`) покрывает пять статичных систем и ничего больше: транзиты
+  и соляр пересчитываются, и продать их «навсегда» — значит продать подписку,
+  не взяв за неё денег.
+* Совместимость покупается **не системой, а человеком**: грант `pair` называет
+  один профиль (`pair:{profile_id}`) и открывает отчёт только про него. Это
+  единственный scope, который не отвечает на вопрос «открыта ли система», и
+  поэтому единственный, которого нет в `unlocked_systems` — см. `unlocked_pairs`.
+* A live subscription covers the systems that keep moving. Легаси: ни один
+  товар v3 такого гранта не выписывает, но старые строки обязаны работать.
 * One chapter of every system is free, named by the chapter definitions
   rather than by a second list here.
 
@@ -66,18 +73,46 @@ from ..db.models import Entitlement, EntitlementKind, User, as_utc, utcnow
 #: system for a campaign should be a one-line, one-place decision.
 FREE_SYSTEMS: frozenset[str] = frozenset()
 
-#: How wide a grant is, spelled the way the `scope` column spells it. Three
-#: values and no more: one system, everything, or the living systems a
-#: subscription rents. Named here because a paywall that compares against a
-#: bare string is a paywall one typo away from opening.
-SCOPE_SYSTEM = "system"
-SCOPE_ALL = "all"
+#: How wide a grant is, spelled the way the `scope` column spells it. Named
+#: here because a paywall that compares against a bare string is a paywall one
+#: typo away from opening.
+SCOPE_SYSTEM = "system"   # одна система, навсегда — дверь
+SCOPE_STATIC = "static"   # пять статичных разборов, навсегда — бандл
+SCOPE_PAIR = "pair"       # один отчёт по одной паре, навсегда
+SCOPE_ALL = "all"         # всё, пока подписка жива
+#: Легаси и навсегда: `live` покрывал только движущиеся системы. Новых таких
+#: грантов не выписывается ни одним товаром v3, но слово остаётся в коде — тот
+#: день, когда его удалят, станет днём, когда старый подписчик получит отказ на
+#: главе, за которую заплатил.
 SCOPE_LIVE = "live"
+
+#: Пять систем, которые не меняются после рождения, — ровно то, что открывает
+#: `bundle.static`, и ровно то, что продаётся дверьми по одной.
+#:
+#: Список здесь, а не в каталоге (в отличие от `LIVING_SYSTEMS`), и это
+#: осознанная асимметрия: «что входит в подписку» — вопрос о том, что мы
+#: продаём, а «что такое статичная система» — свойство самих систем: натал,
+#: нумерология и карта рождения не станут живыми от смены полки. Тест держит
+#: его равным множеству дверей, так что разойтись с каталогом он не может.
+STATIC_SYSTEMS: frozenset[str] = frozenset(
+    {"natal", "numerology", "birth-card", "astrocartography", "synthesis"}
+)
 
 #: The older spelling of an everything-grant, written in the `system` column
 #: before `scope` existed. Still accepted on the way in and still understood
 #: on the way out, because rows written under it are in the database.
 EVERYTHING = "*"
+
+#: Приставка, которой грант пары называет своего партнёра: `pair:{profile_id}`.
+#: Одно место, потому что строка собирается на записи гранта и разбирается на
+#: проверке доступа, и опечатка в одной из двух половин — это оплаченный отчёт,
+#: который не открывается.
+PAIR_PREFIX = "pair:"
+
+
+def pair_system(partner_id: str) -> str:
+    """Что пишется в `Entitlement.system` для купленной пары."""
+    return f"{PAIR_PREFIX}{partner_id}"
 
 
 #: Within a paid system, one chapter stays open as the sample. Which one is
@@ -90,27 +125,13 @@ def free_chapters(system: str) -> frozenset[str]:
     return declared(system) if system in BY_SYSTEM else frozenset()
 
 
-#: A one-time purchase inside this window counts toward the plan that
-#: supersedes it. A month rather than a week: the upgrade prompt is shown
-#: after a reading has been read and thought about, and a week put the offer
-#: in front of people who had not finished the thing they bought yet.
-CREDIT_WINDOW = timedelta(days=30)
-
-#: And no further, however much was bought — the credit is never worth more
-#: than the price at which we would have sold the whole archive inside a
-#: checkout. Held as a *band* and not only as a number, because a cap written
-#: as cents means a different amount in every currency: 2999 øre is $3.
-CREDIT_CAP_BAND = "archive-bump"
-CREDIT_CAP_CENTS = 2999
-
-
 @dataclass(frozen=True, slots=True)
 class Access:
     """Whether a person may read something, and why."""
 
     allowed: bool
     reason: str
-    kind: str | None = None            # "free" | "one_time" | "annual"
+    kind: str | None = None            # "free" | "one_time" | "consumable" | "monthly"
     expires_at: datetime | None = None
 
     def as_dict(self) -> dict:
@@ -120,6 +141,18 @@ class Access:
             "kind": self.kind,
             "expires_at": self.expires_at.isoformat() if self.expires_at else None,
         }
+
+
+#: Ответ про пару, которую невозможно назвать: партнёр передан «сырой» датой
+#: рождения и профиля у него нет, либо профилей несколько и ни один не назван.
+#:
+#: Это **не** ошибка вызова, поэтому и не `PartnerRequired`: у человека без
+#: сохранённого профиля не может быть гранта `pair:{id}` — не к чему его
+#: привязать, — так что «закрыто» здесь правда, а не отговорка. Ответ живёт
+#: константой, а не собирается на месте, чтобы формулировка про пары была в
+#: одном файле с правилом про пары: два разных «закрыто» на двух экранах — это
+#: два разных объяснения одного и того же отказа.
+PAIR_WITHOUT_PROFILE = Access(False, "compatibility opens one saved partner at a time")
 
 
 def living_systems() -> frozenset[str]:
@@ -189,15 +222,33 @@ async def for_user(session: AsyncSession, user: User) -> list[Entitlement]:
     return list(result.scalars().all())
 
 
+class PartnerRequired(ValueError):
+    """`compatibility` спросили без партнёра, о котором идёт речь.
+
+    Не «нет доступа», а неправильный вызов, и разница видна на HTTP: 400, не
+    402. Совместимость в v3 покупается поштучно (`pair.check` → грант
+    `pair:{profile_id}`), поэтому «можно ли читать совместимость» — вопрос без
+    ответа, пока не сказано, с кем. Ответить на него `False` значило бы
+    показать пейволл человеку, который уже заплатил за этот самый отчёт, и
+    отличить такой отказ от честного было бы нечем.
+    """
+
+
 async def check(
     session: AsyncSession,
     user: User,
     system: str,
     *,
     chapter: str | None = None,
+    partner_id: str | None = None,
     at: datetime | None = None,
 ) -> Access:
-    """The single authority on whether this person may read this thing."""
+    """The single authority on whether this person may read this thing.
+
+    `partner_id` обязателен для `compatibility` и бессмыслен для всего
+    остального: отчёт по паре покупается на одного конкретного партнёра, и
+    грант называет именно его.
+    """
     moment = at or utcnow()
 
     if system in FREE_SYSTEMS:
@@ -205,18 +256,37 @@ async def check(
     if chapter and chapter in free_chapters(system):
         return Access(True, "this chapter is free", kind="free")
 
+    # Требование партнёра стоит **после** бесплатных веток намеренно. Первая
+    # глава совместимости бесплатна для всех, и «про кого она» её открытость не
+    # меняет — то есть на этот вопрос ответ есть и без имени. Не отвечает без
+    # имени только платная глава, и вот там молчание — уже ошибка вызова.
+    if system == "compatibility" and partner_id is None:
+        raise PartnerRequired(
+            "compatibility is bought one partner at a time: check() needs the "
+            "partner_id whose report is being opened"
+        )
+
     for entitlement in await for_user(session, user):
-        if not entitlement.covers(system, chapter=chapter, at=moment):
+        if not entitlement.covers(
+            system, chapter=chapter, partner_id=partner_id, at=moment
+        ):
             continue
         # Scope first, in the order `covers` and `unlocked_systems` ask it: a
         # live plan is granted with `system="*"`, so testing the everything
         # sentinel first would tell a monthly subscriber they hold the annual
         # plan — on the screen where they are deciding whether it is worth it.
+        # `pair` и `static` встали перед сентинелом по той же причине и с той
+        # же ценой ошибки: оба пишутся с `system`, который сентинелу не
+        # соответствует, но порядок здесь — правило, а не совпадение.
         return Access(
             True,
             "covered by your subscription"
             if entitlement.scope == SCOPE_LIVE
-            else "covered by your annual plan"
+            else "this pair is yours"
+            if entitlement.scope == SCOPE_PAIR
+            else "covered by the five readings you bought"
+            if entitlement.scope == SCOPE_STATIC
+            else "covered by your plan"
             if entitlement.scope == SCOPE_ALL or entitlement.system == EVERYTHING
             else "you own this chapter"
             if ":" in entitlement.system
@@ -252,6 +322,17 @@ async def unlocked_systems(session: AsyncSession, user: User) -> set[str]:
         if entitlement.scope == SCOPE_LIVE:
             unlocked |= living_systems() & everything
             continue
+        if entitlement.scope == SCOPE_PAIR:
+            # **Пара намеренно не добавляет `compatibility` в общий сет.**
+            # Доступ поштучный: куплен отчёт про одного человека, а не система.
+            # Открыть её здесь значило бы нарисовать в хабе «совместимость
+            # открыта», и следующий же партнёр упёрся бы в пейволл — то самое
+            # расхождение хаба и `check()`, ради которого весь этот порядок
+            # проверок и написан. Список пар отдаётся отдельно, `unlocked_pairs`.
+            continue
+        if entitlement.scope == SCOPE_STATIC:
+            unlocked |= STATIC_SYSTEMS & everything
+            continue
         if entitlement.scope == SCOPE_ALL or entitlement.system == EVERYTHING:
             return everything
         # A single chapter does not unlock its system on the hub — it is one
@@ -260,6 +341,35 @@ async def unlocked_systems(session: AsyncSession, user: User) -> set[str]:
         if ":" not in entitlement.system:
             unlocked.add(entitlement.system)
     return unlocked
+
+
+async def unlocked_pairs(session: AsyncSession, user: User) -> list[str]:
+    """Профили партнёров, чьи отчёты уже оплачены — для экрана «Мои пары».
+
+    Отдельный ответ, а не строка в `unlocked_systems`, ровно потому, что это
+    другой вопрос: там — «какие системы открыты», здесь — «про кого написано».
+    Слить их нельзя: одно `compatibility` в общем сете означало бы «открыта
+    совместимость», то есть про всех, а куплены — конкретные люди.
+
+    Источник правды — гранты, а не история покупок магазина: расходуемые товары
+    Apple через restore не возвращает, так что список, построенный по StoreKit,
+    после переустановки был бы пуст, хотя человек заплатил.
+    """
+    moment = utcnow()
+    found: list[str] = []
+    for entitlement in await for_user(session, user):
+        if not is_in_force(entitlement, moment):
+            continue
+        if entitlement.scope != SCOPE_PAIR:
+            continue
+        if not entitlement.system.startswith(PAIR_PREFIX):
+            # Грант пары, который не называет партнёра, ничего не открывает —
+            # он не совпадёт ни с одним `pair:{id}` в `covers`. Пропускаем
+            # молча: строка есть, читать по ней нечего, и падать на ней значит
+            # уронить весь хаб из-за одной кривой записи.
+            continue
+        found.append(entitlement.system[len(PAIR_PREFIX):])
+    return found
 
 
 async def tier_of(session: AsyncSession, user: User, *, at: datetime | None = None) -> str:
@@ -276,6 +386,17 @@ async def tier_of(session: AsyncSession, user: User, *, at: datetime | None = No
     have stopped selling — reads as free. This number decides how much of our
     money a person may spend on generation, and only a kind we know we were
     paid for may raise it.
+
+    **Владелец бандла — `owner`, а не `subscriber`, и это тоже решается здесь.**
+    Бандл продаётся как `kind="one_time"`, поэтому попадает в ветку ниже сам
+    собой; писать его отдельной строкой не надо, а вот проверить — надо, и тест
+    это делает. Цена ошибки: `subscriber` — это подписочные квоты чата
+    (`subscriber_questions_per_month`) каждый месяц до конца жизни аккаунта, за
+    один платёж в $19.99.
+
+    `consumable` (`pair.check`) намеренно не поднимает тир ни до чего. Куплен
+    один отчёт, а не доступ; отчёт стоит нам один раз, а квота чата — каждый
+    месяц.
     """
     moment = at or utcnow()
     recurring = subscription_kinds()
@@ -310,46 +431,25 @@ async def may_be_offered(
 ) -> bool:
     """Whether this person may be sold the catalogue product named `key`.
 
-    Every shelf price is always offerable. The conditional ones are the whole
-    reason this exists: `archive-bump` and `archive-upgrade` grant exactly what
-    `archive` grants and cost nine dollars less, so while the checkout accepted
-    any key by name, one HTTP call bought the archive at a discount nobody had
-    earned. `Product.offered` documented the intent and enforced nothing.
+    **Два отказа, и оба нужны.** Первый — ключ, которого мы не продаём: чекаут
+    и `/iap/verify` принимают имя товара от клиента, а клиент — не сторона,
+    которой мы верим. Второй — цена не с полки.
 
-    `archive-bump` is never offerable here. It is the second line item inside a
-    door checkout — 899 + 2999 is a cent under the shelf — and this checkout
-    sells one product at a time, so on its own it is simply the archive at a
-    discount. It becomes offerable the day the checkout can carry two items.
+    Условных цен в v3 нет, так что сегодня функция отвечает True на все восемь
+    строк. Она остаётся потому, что закрывает уже случавшуюся дыру: `archive-bump`
+    за $29.99 выдавал ровно то же, что архив за $38.99, и пока чекаут принимал
+    любой ключ по имени, архив покупался одним HTTP-запросом на девять долларов
+    дешевле. `Product.offered` тогда лишь описывал намерение; проверка —
+    останавливает. Первый же A/B по цене бандла (ТЗ §7) заведёт вторую цену на
+    один и тот же грант, и ворота понадобятся снова.
 
-    `archive-upgrade` is the credit promise: it is the shelf price less the
-    door, so it is offerable exactly when there is a door to have been paid
-    for and nothing wider already held.
+    `at` больше не используется — держать его в сигнатуре дешевле, чем править
+    всех вызывающих ради параметра, который вернётся вместе с условной ценой.
     """
     from ..billing.catalogue import PRODUCTS
 
     item = PRODUCTS.get(key)
-    if item is None:
-        return False
-    if item.on_the_shelf:
-        return True
-    if key != "archive-upgrade":
-        return False
-
-    moment = at or utcnow()
-    holds_a_door = False
-    for entitlement in await for_user(session, user):
-        if not is_in_force(entitlement, moment):
-            continue
-        # Scope before the sentinel, as everywhere else: a live plan is granted
-        # with `system="*"`, and reading that as an everything-grant would tell
-        # a subscriber who bought a door that they already own the archive.
-        if entitlement.scope == SCOPE_LIVE:
-            continue
-        if entitlement.scope == SCOPE_ALL or entitlement.system == EVERYTHING:
-            return False
-        if entitlement.kind == EntitlementKind.one_time.value and ":" not in entitlement.system:
-            holds_a_door = True
-    return holds_a_door
+    return item is not None and item.on_the_shelf
 
 
 async def grant(
@@ -392,9 +492,12 @@ async def grant(
     or the hub and the paywall disagree about the same purchase.
     """
     moment = utcnow()
-    span = duration or (
-        timedelta(days=365) if kind == EntitlementKind.annual.value else None
-    )
+    # Никаких сроков по умолчанию от вида гранта. Здесь стоял «год для
+    # `annual`» — единственный вид, которому длительность угадывалась, — и он
+    # ушёл вместе с годовой подпиской. Длительность теперь либо назвал
+    # вызывающий, либо её нет; проверка ниже ловит второй случай там, где он
+    # опасен.
+    span = duration
     if span is None and kind in subscription_kinds():
         # No expiry means forever, and forever is what a subscription is sold
         # *instead of*. A monthly plan granted with no duration would be a
@@ -407,6 +510,11 @@ async def grant(
     width = scope or (
         SCOPE_ALL if system == EVERYTHING
         else SCOPE_LIVE if system == SCOPE_LIVE
+        # Пара выводится из формы `system`, как и всё остальное здесь: грант,
+        # названный `pair:{id}` и записанный со `scope="system"`, не совпал бы
+        # ни с одним запросом — `covers` сравнивает `pair`-гранты только внутри
+        # своей ветки, — и отчёт, за который заплачено, не открылся бы.
+        else SCOPE_PAIR if system.startswith(PAIR_PREFIX)
         else SCOPE_SYSTEM
     )
 
@@ -518,138 +626,3 @@ async def revoke(session: AsyncSession, entitlement: Entitlement) -> None:
     """Used on refund and chargeback. The row stays; access stops."""
     entitlement.revoked_at = utcnow()
     await session.flush()
-
-
-def list_price_cents(system: str, currency: str = "USD", *, scope: str | None = None) -> int:
-    """What we ask for the thing an entitlement unlocked, in `currency`.
-
-    Resolved to a catalogue **key**, never by scanning for a product whose
-    `slug` matches. Five products share the slug `"*"` — the archive, the two
-    upgrade bands, the monthly and the annual — so a scan answered with
-    whichever of them came first in the dict literal. That is a money lookup
-    decided by the order somebody happened to type the catalogue in: moving
-    the monthly above the archive would have quietly changed every archive
-    holder's credit from $38.99 to $9.99, and nothing would have failed.
-
-    Zero for anything we do not sell in that currency, and zero for anything
-    we never published a price for at all. Both are deliberate: a credit has
-    to be a number we advertised, because it is set against a price id that
-    carries that number, and inventing one is how the two stop matching.
-    """
-    from ..billing.catalogue import PRODUCTS, WITHDRAWN_CENTS, NotSold
-
-    if ":" in system:
-        # A chapter grant names its pair ("natal:core"). The chapter SKU has
-        # been withdrawn, so its price lives in the withdrawn table rather
-        # than in PRODUCTS — see the comment there for why not `amount_cents`.
-        return WITHDRAWN_CENTS.get("chapter", {}).get(currency, 0)
-
-    if scope == SCOPE_LIVE:
-        # Scope before the sentinel, as everywhere else. A live plan is granted
-        # with `system="*"`, so reading the sentinel first would value a
-        # month's rental at the archive's price and hand it back as credit.
-        return 0
-    if scope == SCOPE_ALL or system == EVERYTHING:
-        item = PRODUCTS.get("archive")
-    else:
-        item = PRODUCTS.get(system)
-        if item is not None and item.scope != SCOPE_SYSTEM:
-            # `system` matched a key that is not a door — one of the
-            # everything-bands named in the system column by hand. Not a door
-            # and not the archive, so there is nothing published to hand back.
-            item = None
-    if item is None:
-        return 0
-    try:
-        return item.cents_in(currency)
-    except NotSold:
-        return 0
-
-
-def _cap_cents(currency: str) -> int | None:
-    """The most a credit may be worth here, or `None` where nothing caps it.
-
-    `None` rather than a large number: in the purchasing-power markets we
-    sell no upgrade band at all, and the only one-time purchase on offer
-    there is one we are content to credit in full. A sentinel amount would
-    have to be a number of cents, which is the thing this avoids.
-    """
-    from ..billing.catalogue import PRODUCTS, NotSold
-
-    for item in PRODUCTS.values():
-        if item.band != CREDIT_CAP_BAND:
-            continue
-        try:
-            return item.cents_in(currency)
-        except NotSold:
-            return None
-    return CREDIT_CAP_CENTS if currency == "USD" else None
-
-
-async def annual_credit(
-    session: AsyncSession,
-    user: User,
-    *,
-    currency: str = "USD",
-    at: datetime | None = None,
-) -> int:
-    """How much of a recent one-time purchase counts toward the plan above it.
-
-    Someone who buys a single reading, likes it, and upgrades within the month
-    should not pay for that reading twice. Anything older than the window is a
-    separate decision they already made and does not carry.
-
-    **The largest qualifying purchase, not the sum.** Summing was generous in
-    a way that ran past the margin: someone who bought the door and then the
-    in-checkout upgrade credited both against the year and paid a little over
-    forty dollars for it, which for a European buyer — whose price carries VAT
-    inside it — lands under the floor where a year of generation is covered.
-    Refunding the reading they already bought is the promise; refunding every
-    reading they ever bought is a different and unfunded one. A second
-    purchase therefore does not raise the credit.
-
-    **Capped, and the cap is a price rather than a number.** `CREDIT_CAP_BAND`
-    is the band we would have charged to add the whole archive inside a
-    checkout, so the cap means the same thing in every currency it is quoted
-    in. A cap held only as US cents would have been 2999 øre in Norway.
-
-    **Only purchases charged in the currency being priced.** A credit is never
-    converted — `catalogue.catalogue` refuses one whose currency does not
-    match, and nothing anywhere multiplies it by a regional factor any more —
-    so a purchase made in another currency is skipped rather than compared.
-    NOK 109 set against a $78.99 plan reads as $109 and buys the year for
-    nothing.
-
-    What the answer is *for* is one decision: whether this person qualifies to
-    be shown `archive-upgrade` in place of the archive, and by how much it is
-    lower. It is not subtracted from a price at request time — a discount
-    computed here is a number no price id carries and no processor charges.
-
-    **The credit is our list price, not the total the processor collected.**
-    `Entitlement.amount_cents` is the grand total, which carries the sales tax
-    we have already handed to a tax authority; crediting it refunds that tax
-    out of our own margin, on a reading the buyer keeps. The list price is the
-    number we published, it is the number on the price id the upgrade will be
-    charged against, and in the markets where the published price is already
-    tax-inclusive it is the same figure the buyer paid — so this is the only
-    choice that is honest in every market rather than in one.
-    """
-    moment = at or utcnow()
-    cutoff = moment - CREDIT_WINDOW
-
-    best = 0
-    for entitlement in await for_user(session, user):
-        if entitlement.kind != EntitlementKind.one_time.value:
-            continue
-        if entitlement.currency != currency:
-            continue
-        granted = as_utc(entitlement.granted_at)
-        if granted is None or granted < cutoff:
-            continue
-        best = max(
-            best,
-            list_price_cents(entitlement.system, currency, scope=entitlement.scope),
-        )
-
-    cap = _cap_cents(currency)
-    return best if cap is None else min(best, cap)

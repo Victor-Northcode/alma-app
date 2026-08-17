@@ -353,6 +353,41 @@ async def load_profile(session: AsyncSession, user: User, profile_id: str) -> Pr
     return profile
 
 
+async def partner_profile_id(
+    session: AsyncSession, user: User, stated: str | None = None
+) -> str | None:
+    """О ком идёт речь, когда речь о совместимости, — или `None`.
+
+    Совместимость в v3 покупается поштучно: грант называет один профиль
+    (`pair:{profile_id}`), поэтому вопрос «открыта ли совместимость» без
+    названного партнёра — вопрос без ответа. Эта функция и есть то место, где
+    он получает ответ до того, как его зададут `entitlements.check`.
+
+    **Мягкая, а не строгая: она не поднимает исключений.** Строгий разбор
+    («партнёров ноль» / «партнёров несколько, назови») уже стоит в
+    `readings._partner` и должен срабатывать *после* проверки прав, иначе
+    неоплативший человек с двумя партнёрами получит 422 вместо пейволла и не
+    узнает, что глава вообще продаётся.
+
+    Один сохранённый партнёр — подавляющее большинство аккаунтов, и тогда он
+    единственный возможный ответ. Несколько без названного id — `None`: угадать
+    значит открыть отчёт про не того человека.
+    """
+    if stated:
+        return stated
+
+    from sqlalchemy import select
+
+    others = (
+        await session.execute(
+            select(Profile.id)
+            .where(Profile.user_id == user.id, Profile.is_self.is_(False))
+            .limit(2)
+        )
+    ).scalars().all()
+    return others[0] if len(others) == 1 else None
+
+
 async def resolve_birth(
     session: AsyncSession,
     user: User,

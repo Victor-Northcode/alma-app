@@ -66,7 +66,7 @@ def _payment(
     event_type: str = "payment.succeeded",
     *,
     user_id: str | None = "user-1",
-    product: str | None = "natal",
+    product: str | None = "door.natal",
     total: int = 899,
     subscription_id: str | None = None,
 ) -> dict:
@@ -128,7 +128,7 @@ def _subscription(
     event_type: str,
     *,
     user_id: str | None = "user-1",
-    product: str = "monthly",
+    product: str = "sub.monthly",
     status: str = "active",
     subscription_id: str = "sub_1",
 ) -> dict:
@@ -435,9 +435,9 @@ def test_the_owner_and_product_are_read_from_dodo_s_metadata():
     The names on the far side of the seam are identical, which is the only
     reason `entitlement_for` and the webhook handler can be written once.
     """
-    event = parse(_payment(user_id="user-42", product="archive"))
+    event = parse(_payment(user_id="user-42", product="bundle.static"))
     assert event.user_id == "user-42"
-    assert event.product_slug == "archive"
+    assert event.product_slug == "bundle.static"
 
 
 def test_a_metadata_value_that_returns_as_a_number_still_finds_its_user():
@@ -566,22 +566,23 @@ def test_the_factory_hands_back_this_adapter_when_the_configuration_asks():
 # ── every event in the table ───────────────────────────────────────────────
 
 def test_a_succeeded_payment_grants_the_product():
-    grant = entitlement_for(parse(_payment(product="natal")))
+    grant = entitlement_for(parse(_payment(product="door.natal")))
     assert (grant.system, grant.kind, grant.duration) == ("natal", "one_time", None)
     assert grant.scope == "system"
 
 
-def test_an_annual_purchase_grants_everything_for_a_year():
-    grant = entitlement_for(parse(_payment(product="annual", total=7899)))
-    assert grant.system == "*" and grant.kind == "annual"
+def test_a_plan_purchase_grants_everything_for_the_period_it_paid_for():
+    grant = entitlement_for(parse(_payment(product="sub.monthly", total=999)))
+    assert grant.system == "*" and grant.kind == "monthly"
     assert grant.scope == "all"
-    assert grant.duration.days == 365
+    assert grant.duration is not None and 28 <= grant.duration.days <= 31
 
 
 def test_an_activated_subscription_grants_its_plan_and_carries_its_id():
     grant = entitlement_for(parse(_subscription("subscription.active")))
     assert grant.kind == "monthly"
-    assert grant.scope == "live"
+    # `all`, а не `live`: подписка v3 продаёт всё, пока за неё платят.
+    assert grant.scope == "all"
     assert grant.subscription_id == "sub_1"
     assert grant.duration is not None and 28 <= grant.duration.days <= 31
 
@@ -607,10 +608,10 @@ def test_a_renewal_payment_does_not_grant_a_second_period():
     granting on both would hand out two months for one month's money — every
     month, silently, with the row drifting further ahead of the payments.
     """
-    both = parse(_payment(product="monthly", total=999, subscription_id="sub_1"))
+    both = parse(_payment(product="sub.monthly", total=999, subscription_id="sub_1"))
     assert entitlement_for(both) is None
 
-    alone = parse(_payment(product="natal"))
+    alone = parse(_payment(product="door.natal"))
     assert entitlement_for(alone) is not None
 
 
@@ -625,6 +626,11 @@ def test_every_recurring_product_is_granted_with_an_expiry():
         # Priced at what the catalogue asks: a money event carrying less than
         # the product costs grants nothing.
         grant = entitlement_for(parse(_payment(product=key, total=item.cents)))
+        if item.scope == "pair":
+            # Единственная строка, которая намеренно не грантит отсюда:
+            # партнёра называет PairIntent (А4, Ф0.3), не прайс-лист.
+            assert grant is None, key
+            continue
         assert grant is not None, key
         if item.interval:
             assert grant.duration is not None, key
@@ -799,7 +805,7 @@ def test_the_normalised_event_speaks_our_words_and_not_dodo_s():
     """Every field the handler reads, filled from a shape it never sees."""
     event = parse(_subscription("subscription.active")).normalise()
     assert event.owner_id == "user-1"
-    assert event.product == "monthly"
+    assert event.product == "sub.monthly"
     assert event.subscription_id == "sub_1"
     assert event.country == "DE"
     assert event.status == "active"
@@ -895,10 +901,10 @@ def listed_on_dodo(monkeypatch):
     """
     import dataclasses
 
-    natal = prices.PRODUCTS["natal"]
+    natal = prices.PRODUCTS["door.natal"]
     monkeypatch.setitem(
         prices.PRODUCTS,
-        "natal",
+        "door.natal",
         dataclasses.replace(natal, processor_ids={"dodo": "pdt_natal"}),
     )
 
@@ -914,12 +920,12 @@ async def test_a_session_carries_no_price_the_client_could_change(recorder, list
     provider = dodo.DodoProvider(dodo.DodoClient(api_key="k"))
 
     handle = await provider.open_session(
-        product="natal", user_id="user-1", currency="USD", country="IT",
+        product="door.natal", user_id="user-1", currency="USD", country="IT",
     )
     body = handle.to_client()
     assert body["checkout_url"] == "https://checkout.dodo/x"
     assert "price_id" not in body
-    assert body["cents"] == prices.PRODUCTS["natal"].cents
+    assert body["cents"] == prices.PRODUCTS["door.natal"].cents
 
     # Nor does the browser get the metadata at all: it is sealed into a
     # session the server created, and `to_client` drops the field rather than
@@ -928,7 +934,7 @@ async def test_a_session_carries_no_price_the_client_could_change(recorder, list
 
     _method, _url, sent = recorder.calls[0]
     assert sent["metadata"]["user_id"] == "user-1"
-    assert sent["metadata"]["product"] == "natal"
+    assert sent["metadata"]["product"] == "door.natal"
     # ...and it carries our own signature over that pair, so a copy that came
     # back altered would be read as metadata we did not write.
     assert sent["metadata"][provider_module.SEAL_FIELD]
@@ -946,7 +952,7 @@ async def test_a_product_with_no_dodo_identifier_refuses_rather_than_guessing(re
     """
     provider = dodo.DodoProvider(dodo.DodoClient(api_key="k"))
     with pytest.raises(dodo.BillingUnavailable, match="processor_ids"):
-        await provider.open_session(product="natal", user_id="user-1", currency="USD")
+        await provider.open_session(product="door.natal", user_id="user-1", currency="USD")
     assert recorder.calls == []
 
 
@@ -961,30 +967,39 @@ def test_one_processor_s_identifier_is_never_read_as_another_s():
     from alma.billing.catalogue import by_price_id
 
     clash = dataclasses.replace(
-        prices.PRODUCTS["natal"], processor_ids={"paddle": "id_the_same"}
+        prices.PRODUCTS["door.natal"], processor_ids={"paddle": "id_the_same"}
     )
-    saved = prices.PRODUCTS["natal"]
-    prices.PRODUCTS["natal"] = clash
+    saved = prices.PRODUCTS["door.natal"]
+    prices.PRODUCTS["door.natal"] = clash
     try:
-        assert by_price_id("id_the_same", "paddle") == "natal"
+        assert by_price_id("id_the_same", "paddle") == "door.natal"
         assert by_price_id("id_the_same", "dodo") is None
         # A support tool holding an identifier and not knowing where it came
         # from still gets an answer.
-        assert by_price_id("id_the_same") == "natal"
+        assert by_price_id("id_the_same") == "door.natal"
         assert by_price_id("") is None
     finally:
-        prices.PRODUCTS["natal"] = saved
+        prices.PRODUCTS["door.natal"] = saved
 
 
-async def test_a_price_that_does_not_exist_is_refused_before_the_network(recorder):
-    """The five purchasing-power markets carry the archive and the year only.
+async def test_a_price_that_does_not_exist_is_refused_before_the_network(
+    recorder, monkeypatch, listed_on_dodo
+):
+    """Цены нет — отказ, и он не стоит похода к процессору.
 
-    That is the ordinary path there, not an edge case, and it must not cost a
-    round trip to a processor to discover.
+    Раньше примером служила Бразилия: PPP-рынки не получали дверь. В v3 полка
+    продаётся во всех тринадцати валютах, поэтому полосу убирают здесь руками —
+    ровно как это сделает первая же правка `REGIONAL_CENTS`. Проверяемое правило
+    не изменилось и оно структурное: отсутствие цены — это отказ, а не число,
+    которого никто не выбирал, и узнаётся оно до сети.
     """
+    monkeypatch.setitem(
+        prices.REGIONAL_CENTS, "BRL",
+        {k: v for k, v in prices.REGIONAL_CENTS["BRL"].items() if k != "door"},
+    )
     provider = dodo.DodoProvider(dodo.DodoClient(api_key="k"))
     with pytest.raises(prices.NotSold):
-        await provider.open_session(product="natal", user_id="user-1", currency="BRL")
+        await provider.open_session(product="door.natal", user_id="user-1", currency="BRL")
     assert recorder.calls == []
 
 

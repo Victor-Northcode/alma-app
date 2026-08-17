@@ -76,8 +76,8 @@ def _second_account(api) -> dict:
 # ══════════════════════════════════════════════════════════════════════════
 
 def test_a_verified_purchase_unlocks_the_system_it_bought(store_api, auth_headers, apple):
-    token = _sign(_transaction(product="natal"), apple["key"], apple["chain"])
-    response = _verify(store_api, auth_headers, transaction=token, product="natal")
+    token = _sign(_transaction(product="door.natal"), apple["key"], apple["chain"])
+    response = _verify(store_api, auth_headers, transaction=token, product="door.natal")
 
     assert response.status_code == 200
     body = response.json()
@@ -95,7 +95,7 @@ def test_a_verified_purchase_unlocks_the_system_it_bought(store_api, auth_header
 def test_a_subscription_reports_when_access_runs_out(store_api, auth_headers, apple):
     token = _sign(
         _transaction(
-            product="monthly",
+            product="sub.monthly",
             transaction_id="2000000500000010",
             kind="Auto-Renewable Subscription",
             price=9990,
@@ -104,7 +104,7 @@ def test_a_subscription_reports_when_access_runs_out(store_api, auth_headers, ap
         apple["key"],
         apple["chain"],
     )
-    body = _verify(store_api, auth_headers, transaction=token, product="monthly").json()
+    body = _verify(store_api, auth_headers, transaction=token, product="sub.monthly").json()
 
     assert body["subscription_id"] == "2000000500000010"
     # The sentence the settings screen has to be able to say. A recurring grant
@@ -131,9 +131,9 @@ def test_a_replayed_transaction_grants_once(store_api, auth_headers, apple):
     from alma.db.models import Entitlement, Purchase
     from alma.db.session import session_factory
 
-    token = _sign(_transaction(product="natal"), apple["key"], apple["chain"])
-    first = _verify(store_api, auth_headers, transaction=token, product="natal")
-    second = _verify(store_api, auth_headers, transaction=token, product="natal")
+    token = _sign(_transaction(product="door.natal"), apple["key"], apple["chain"])
+    first = _verify(store_api, auth_headers, transaction=token, product="door.natal")
+    second = _verify(store_api, auth_headers, transaction=token, product="door.natal")
 
     assert first.status_code == second.status_code == 200
     assert first.json()["status"] == "granted natal"
@@ -162,11 +162,11 @@ def test_a_transaction_already_claimed_by_another_account_grants_nothing(
     one and is told they hold nothing. The fix is account linking, not a second
     grant — see `open_problems`.
     """
-    token = _sign(_transaction(product="natal"), apple["key"], apple["chain"])
-    _verify(store_api, auth_headers, transaction=token, product="natal")
+    token = _sign(_transaction(product="door.natal"), apple["key"], apple["chain"])
+    _verify(store_api, auth_headers, transaction=token, product="door.natal")
 
     other = _second_account(store_api)
-    response = _verify(store_api, other, transaction=token, product="natal")
+    response = _verify(store_api, other, transaction=token, product="door.natal")
 
     assert response.status_code == 200
     assert response.json()["status"] == "already_claimed"
@@ -180,7 +180,7 @@ def test_a_transaction_already_claimed_by_another_account_grants_nothing(
 
 def test_a_forged_transaction_is_a_401(store_api, auth_headers, apple):
     forged = _sign(_transaction(), apple["rogue_key"], apple["rogue_chain"])
-    response = _verify(store_api, auth_headers, transaction=forged, product="natal")
+    response = _verify(store_api, auth_headers, transaction=forged, product="door.natal")
 
     assert response.status_code == 401
     assert response.json()["detail"]["error"] == "invalid_transaction"
@@ -190,7 +190,7 @@ def test_a_forged_transaction_is_a_401(store_api, auth_headers, apple):
 def test_another_apps_purchase_is_a_401(store_api, auth_headers, apple):
     """A real Apple signature over a real purchase of somebody else's product."""
     token = _sign(_transaction(bundle="com.someone.else"), apple["key"], apple["chain"])
-    response = _verify(store_api, auth_headers, transaction=token, product="natal")
+    response = _verify(store_api, auth_headers, transaction=token, product="door.natal")
 
     assert response.status_code == 401
     assert _held(store_api, auth_headers)["unlocked"] == []
@@ -201,8 +201,8 @@ def test_claiming_the_archive_for_a_door_is_a_409(store_api, auth_headers, apple
 
     $5.99 paid, $38.99 claimed. Nothing is granted and nothing is recorded.
     """
-    token = _sign(_transaction(product="natal"), apple["key"], apple["chain"])
-    response = _verify(store_api, auth_headers, transaction=token, product="archive")
+    token = _sign(_transaction(product="door.natal"), apple["key"], apple["chain"])
+    response = _verify(store_api, auth_headers, transaction=token, product="bundle.static")
 
     assert response.status_code == 409
     assert response.json()["detail"]["error"] == "product_mismatch"
@@ -217,7 +217,7 @@ def test_a_revoked_transaction_is_a_409_rather_than_a_401(store_api, auth_header
     whose refund went through.
     """
     token = _sign(_transaction(revoked=True), apple["key"], apple["chain"])
-    response = _verify(store_api, auth_headers, transaction=token, product="natal")
+    response = _verify(store_api, auth_headers, transaction=token, product="door.natal")
 
     assert response.status_code == 409
     assert response.json()["detail"]["error"] == "purchase_incomplete"
@@ -231,7 +231,7 @@ def test_a_product_we_do_not_sell_is_a_404(store_api, auth_headers, apple):
 
 def test_a_platform_this_build_does_not_ship_is_a_400(store_api, auth_headers):
     response = _verify(
-        store_api, auth_headers, transaction="x", product="natal", platform="amazon"
+        store_api, auth_headers, transaction="x", product="door.natal", platform="amazon"
     )
     assert response.status_code == 400
     assert response.json()["detail"]["error"] == "unknown_platform"
@@ -246,7 +246,7 @@ def test_a_card_processor_is_refused_by_name(store_api, auth_headers):
     device.
     """
     response = _verify(
-        store_api, auth_headers, transaction="x", product="natal", platform="paddle"
+        store_api, auth_headers, transaction="x", product="door.natal", platform="paddle"
     )
     assert response.status_code == 400
     assert response.json()["detail"]["error"] == "not_a_store"
@@ -259,7 +259,7 @@ def test_a_store_with_no_credentials_is_a_503(api, auth_headers, apple):
     state a half-finished deploy is in.
     """
     token = _sign(_transaction(), apple["key"], apple["chain"])
-    response = _verify(api, auth_headers, transaction=token, product="natal")
+    response = _verify(api, auth_headers, transaction=token, product="door.natal")
 
     assert response.status_code == 503
     assert response.json()["detail"]["error"] == "billing_unavailable"
@@ -292,12 +292,12 @@ def test_a_notification_for_a_purchase_already_verified_grants_nothing_more(
     from alma.db.models import Entitlement
     from alma.db.session import session_factory
 
-    transaction = _transaction(product="natal")
+    transaction = _transaction(product="door.natal")
     _verify(
         notified_api,
         auth_headers,
         transaction=_sign(transaction, apple["key"], apple["chain"]),
-        product="natal",
+        product="door.natal",
     )
     response = _notify(
         notified_api, _notification(apple, kind="ONE_TIME_CHARGE", transaction=transaction)
@@ -327,7 +327,7 @@ def test_a_renewal_extends_the_plan_it_belongs_to(notified_api, auth_headers, ap
     from alma.db.session import session_factory
 
     plan = dict(
-        product="monthly",
+        product="sub.monthly",
         kind="Auto-Renewable Subscription",
         original="2000000500000020",
         price=9990,
@@ -341,7 +341,7 @@ def test_a_renewal_extends_the_plan_it_belongs_to(notified_api, auth_headers, ap
             apple["key"],
             apple["chain"],
         ),
-        product="monthly",
+        product="sub.monthly",
     )
 
     async def _plan():
@@ -383,7 +383,7 @@ def test_a_cancellation_leaves_the_paid_period_alone(notified_api, auth_headers,
     from alma.db.session import session_factory
 
     plan = dict(
-        product="monthly",
+        product="sub.monthly",
         kind="Auto-Renewable Subscription",
         original="2000000500000030",
         price=9990,
@@ -397,7 +397,7 @@ def test_a_cancellation_leaves_the_paid_period_alone(notified_api, auth_headers,
             apple["key"],
             apple["chain"],
         ),
-        product="monthly",
+        product="sub.monthly",
     )
 
     async def _plan():
@@ -423,9 +423,11 @@ def test_a_cancellation_leaves_the_paid_period_alone(notified_api, auth_headers,
     assert expiry_after == expiry_before, "cancelling is not refunding"
     assert revoked is None
     assert renews_after is None
-    assert _held(notified_api, auth_headers)["unlocked"] == sorted(
-        ["transits", "solar-return", "compatibility"]
-    )
+    # Подписка v3 открывает всё, пока жива, — поэтому проверяется не ширина, а
+    # то, что отмена её не сузила: оплаченный период дочитывается целиком.
+    from alma.calc import SYSTEMS
+
+    assert _held(notified_api, auth_headers)["unlocked"] == sorted(SYSTEMS)
 
 
 def test_a_refund_closes_what_it_paid_for(notified_api, auth_headers, apple):
@@ -434,12 +436,12 @@ def test_a_refund_closes_what_it_paid_for(notified_api, auth_headers, apple):
     And it has to find the purchase it undoes from our own rows, because a
     refund carries none of our metadata — nothing does on a store.
     """
-    transaction = _transaction(product="natal")
+    transaction = _transaction(product="door.natal")
     _verify(
         notified_api,
         auth_headers,
         transaction=_sign(transaction, apple["key"], apple["chain"]),
-        product="natal",
+        product="door.natal",
     )
     assert _held(notified_api, auth_headers)["unlocked"] == ["natal"]
 
@@ -502,7 +504,7 @@ def test_cancelling_a_store_subscription_hands_back_a_link(
         auth_headers,
         transaction=_sign(
             _transaction(
-                product="monthly",
+                product="sub.monthly",
                 transaction_id="2000000500000040",
                 kind="Auto-Renewable Subscription",
                 price=9990,
@@ -511,7 +513,7 @@ def test_cancelling_a_store_subscription_hands_back_a_link(
             apple["key"],
             apple["chain"],
         ),
-        product="monthly",
+        product="sub.monthly",
     )
 
     response = notified_api.post("/v1/billing/subscription/cancel", headers=auth_headers)
@@ -568,7 +570,7 @@ def test_the_first_period_of_a_plan_is_granted_once_not_twice(
     from alma.db.session import session_factory
 
     plan = dict(
-        product="monthly",
+        product="sub.monthly",
         transaction_id="2000000500000060",
         kind="Auto-Renewable Subscription",
         original="2000000500000060",
@@ -581,7 +583,7 @@ def test_the_first_period_of_a_plan_is_granted_once_not_twice(
         notified_api,
         auth_headers,
         transaction=_sign(transaction, apple["key"], apple["chain"]),
-        product="monthly",
+        product="sub.monthly",
     )
 
     async def _expiry():
@@ -617,53 +619,54 @@ def test_the_first_period_of_a_plan_is_granted_once_not_twice(
 #  A conditional price claimed by somebody who has not earned it
 # ══════════════════════════════════════════════════════════════════════════
 
-def test_a_conditional_price_claimed_without_qualifying_grants_nothing(
-    store_api, auth_headers, apple, caplog
+def test_a_price_that_is_not_on_the_shelf_takes_the_money_and_grants_nothing(
+    store_api, auth_headers, apple, caplog, monkeypatch
 ):
-    """`archive-upgrade` is the shelf price less a door already paid for.
+    """Магазин продаст любой идентификатор, заведённый в консоли, — значит
+    решать, что выдать, обязан сервер.
 
-    This test used to assert the opposite of what it asserts now, and the
-    change is worth explaining rather than hiding in a diff. Its old name was
-    `..._is_not_silent`, and its old body accepted the everything-grant so long
-    as a warning was logged beside it — on the argument that Apple has already
-    taken the money by the time this runs, so refusing is payment collected for
-    nothing.
+    Тест переписан, а не удалён. Раньше он ловил `archive-upgrade`: полка минус
+    уже оплаченная дверь, заявленная тем, кто двери не покупал, то есть архив за
+    $33.00. Условных цен в v3 нет, поэтому строка снимается с полки прямо здесь
+    — ровно так же, как её снимет первый A/B по цене бандла (ТЗ §7), где две
+    цены снова будут выдавать один и тот же грант.
 
-    Half of that argument is right and it is kept: the money is not refused.
-    The event is ingested, the payment is recorded, the transaction id is filed
-    so a replay cannot try again, and the response is a 200.
-
-    The other half conflated two separable decisions. Taking the payment does
-    not oblige us to write the grant, and writing it meant $33.00 bought the
-    $38.99 archive on a first purchase — the exact exploit `may_be_offered`
-    exists to close, closed on the web checkout and left open on the two
-    platforms where the store will sell any product id that exists.
-
-    So the grant is refused and the buyer is made whole by the store rather than
-    by us: neither client can see what it expected in `unlocked`, so neither
-    acknowledges the purchase, and Google refunds an unacknowledged purchase
-    after three days. See `tests/test_billing_iap_attack.py`, which pins the
-    same rule from the attacker's side.
+    Правило, которое проверяется, состоит из двух отдельных решений, и раньше их
+    смешивали. **Деньги не возвращаются здесь:** Apple их уже взяла, событие
+    проглатывается, платёж записывается, transaction_id закрепляется, ответ 200.
+    **Грант при этом не выписывается:** взять платёж не значит обязаться выдать
+    товар. Человека делает целым магазин, а не мы: клиент не видит ожидаемого
+    гранта, значит не финиширует транзакцию, и Google возвращает деньги за
+    неподтверждённую покупку через три дня.
     """
+    import dataclasses
     import logging
 
-    token = _sign(_transaction(product="archive-upgrade"), apple["key"], apple["chain"])
+    from alma.billing import catalogue as prices
+
+    monkeypatch.setitem(
+        prices.PRODUCTS,
+        "bundle.static",
+        dataclasses.replace(prices.PRODUCTS["bundle.static"], offered="in-checkout"),
+    )
+
+    token = _sign(_transaction(product="bundle.static"), apple["key"], apple["chain"])
 
     with caplog.at_level(logging.WARNING, logger="alma.api.routers.billing"):
         response = _verify(
-            store_api, auth_headers, transaction=token, product="archive-upgrade"
+            store_api, auth_headers, transaction=token, product="bundle.static"
         )
 
     assert response.status_code == 200, "the money moved; it is not refused"
     body = response.json()
     assert body["status"] == "not_offered", body
     assert body["unlocked"] == [], (
-        "an account holding no door bought archive-upgrade and was granted "
+        "a price that is not on the shelf was bought by name and granted "
         f"{body['unlocked']}"
     )
     assert any(
-        "without qualifying" in record.getMessage() for record in caplog.records
-    ), "a discount nobody earned must not be silent"
+        "not a price on this shelf" in record.getMessage() for record in caplog.records
+    ), "a grant refused in silence is a support ticket nobody can answer"
 
     held = store_api.get("/v1/billing/entitlements", headers=auth_headers).json()
     assert held["unlocked"] == [], held

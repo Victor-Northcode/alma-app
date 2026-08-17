@@ -183,7 +183,7 @@ def _voided_notification(*, order: str = ORDER, refund_type: int = 1) -> dict:
 
 def _subscription_state(
     *,
-    product: str = "monthly",
+    product: str = "sub.monthly",
     state: str = "SUBSCRIPTION_STATE_ACTIVE",
     order: str = f"{ORDER}..3",
     units: int = 9,
@@ -349,7 +349,7 @@ async def test_a_token_google_does_not_recognise_is_refused():
     forger" and "try again" — are not a call a status code should make.
     """
     with pytest.raises(BillingUnavailable, match="404"):
-        await _adapter().verify_purchase(transaction="tok_forged", product="natal")
+        await _adapter().verify_purchase(transaction="tok_forged", product="door.natal")
 
 
 async def test_a_product_mismatch_is_refused():
@@ -359,9 +359,13 @@ async def test_a_product_mismatch_is_refused():
     so the only lie left is the claim. Google's answer about the token is what
     refuses it.
     """
-    adapter = _adapter(subscription=_subscription_state(product="monthly"))
-    with pytest.raises(ProductMismatch, match="monthly"):
-        await adapter.verify_purchase(transaction="tok_abc", product="annual")
+    # Google говорит, что токен принадлежит двери, а клиент заявляет подписку.
+    # Подписка в v3 одна, так что «купил дешёвую подписку, заявил дорогую»
+    # больше не разыграть — но подмена по-прежнему возможна между строками
+    # полки, и отбивается она ответом Google про токен, а не доверием клиенту.
+    adapter = _adapter(subscription=_subscription_state(product="door.natal"))
+    with pytest.raises(ProductMismatch, match="sub.monthly"):
+        await adapter.verify_purchase(transaction="tok_abc", product="sub.monthly")
 
 
 async def test_a_pending_purchase_is_not_yet_rather_than_forged():
@@ -373,19 +377,19 @@ async def test_a_pending_purchase_is_not_yet_rather_than_forged():
     """
     adapter = _adapter(product=_product_state(purchase_state=2))
     with pytest.raises(PurchaseIncomplete, match="pending"):
-        await adapter.verify_purchase(transaction="tok_one", product="natal")
+        await adapter.verify_purchase(transaction="tok_one", product="door.natal")
 
 
 async def test_a_cancelled_one_time_purchase_is_refused():
     adapter = _adapter(product=_product_state(purchase_state=1))
     with pytest.raises(PurchaseIncomplete):
-        await adapter.verify_purchase(transaction="tok_one", product="natal")
+        await adapter.verify_purchase(transaction="tok_one", product="door.natal")
 
 
 async def test_an_expired_subscription_token_is_refused():
     adapter = _adapter(subscription=_subscription_state(state="SUBSCRIPTION_STATE_EXPIRED"))
     with pytest.raises(PurchaseIncomplete, match="EXPIRED"):
-        await adapter.verify_purchase(transaction="tok_abc", product="monthly")
+        await adapter.verify_purchase(transaction="tok_abc", product="sub.monthly")
 
 
 async def test_the_catalogue_decides_which_endpoint_is_asked():
@@ -398,15 +402,15 @@ async def test_the_catalogue_decides_which_endpoint_is_asked():
     """
     subscriptions = FakePlay(subscription=_subscription_state())
     await GooglePlayProvider(client=subscriptions).verify_purchase(
-        transaction="tok_abc", product="monthly"
+        transaction="tok_abc", product="sub.monthly"
     )
     assert [name for name, _ in subscriptions.calls] == ["subscription"]
 
     products = FakePlay(product=_product_state())
     await GooglePlayProvider(client=products).verify_purchase(
-        transaction="tok_one", product="natal"
+        transaction="tok_one", product="door.natal"
     )
-    assert products.calls == [("product", store_product_id("natal", processor="googleplay"))]
+    assert products.calls == [("product", store_product_id("door.natal", processor="googleplay"))]
 
 
 async def test_a_door_purchase_grants_its_system_and_records_no_price():
@@ -418,7 +422,7 @@ async def test_a_door_purchase_grants_its_system_and_records_no_price():
     a price will fail this test and be noticed.
     """
     adapter = _adapter(product=_product_state())
-    event = await adapter.verify_purchase(transaction="tok_one", product="natal")
+    event = await adapter.verify_purchase(transaction="tok_one", product="door.natal")
 
     assert event.provider == "googleplay"
     assert event.transaction_id == ORDER
@@ -438,7 +442,7 @@ async def test_a_door_purchase_grants_its_system_and_records_no_price():
 async def test_a_subscription_price_is_read_as_units_and_nanos():
     """$9.99 is 9 units and 990 000 000 nanos. Reading only the units is $9.00."""
     adapter = _adapter(subscription=_subscription_state(units=9, nanos=990_000_000))
-    event = await adapter.verify_purchase(transaction="tok_abc", product="monthly")
+    event = await adapter.verify_purchase(transaction="tok_abc", product="sub.monthly")
     assert (event.amount_cents, event.currency) == (999, "USD")
 
 
@@ -451,7 +455,7 @@ async def test_a_subscription_purchase_carries_the_id_every_renewal_will_share()
     works.
     """
     adapter = _adapter(subscription=_subscription_state(order=f"{ORDER}..0"))
-    event = await adapter.verify_purchase(transaction="tok_abc", product="monthly")
+    event = await adapter.verify_purchase(transaction="tok_abc", product="sub.monthly")
 
     assert event.subscription_id == ORDER
     assert event.transaction_id == f"{ORDER}..0"
@@ -461,7 +465,8 @@ async def test_a_subscription_purchase_carries_the_id_every_renewal_will_share()
 
     grant = grant_for(event)
     assert grant.subscription_id == ORDER
-    assert grant.scope == "live"
+    # `all`, а не `live`: подписка v3 продаёт всё, пока активна.
+    assert grant.scope == "all"
     assert grant.duration is not None and 28 <= grant.duration.days <= 31
 
 
@@ -587,11 +592,11 @@ async def test_a_partial_void_does_not_close_the_grant():
 
 async def test_a_one_time_purchase_notification_grants():
     adapter = _adapter(product=_product_state())
-    sku = store_product_id("natal", processor="googleplay")
+    sku = store_product_id("door.natal", processor="googleplay")
     event = await adapter.enrich(adapter.parse(_push(_one_time_notification(1, sku=sku))))
 
     assert event.kind is EventKind.PAYMENT
-    assert event.product == "natal"
+    assert event.product == "door.natal"
     assert event.grants is True
     assert entitlement_for.__doc__  # the delegation is documented, not duplicated
 
@@ -661,7 +666,7 @@ def test_the_vocabulary_is_shared_and_not_merely_similar():
 async def test_there_is_no_server_created_checkout():
     with pytest.raises(BillingUnavailable, match="Play Billing"):
         await GooglePlayProvider().open_session(
-            product="natal", user_id="u1", currency="USD"
+            product="door.natal", user_id="u1", currency="USD"
         )
 
 

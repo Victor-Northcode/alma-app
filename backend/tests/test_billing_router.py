@@ -70,7 +70,7 @@ def _subscription_event(
     event_id: str,
     subscription_id: str,
     user_id: str | None = None,
-    product: str = "monthly",
+    product: str = "sub.monthly",
     next_billed_at: str | None = None,
 ) -> dict:
     """A subscription-lifecycle event: the plan's id in `data.id`, no payment."""
@@ -86,7 +86,7 @@ def _subscription_event(
     return {"event_id": event_id, "event_type": event_type, "data": data}
 
 
-def _purchase_event(*, event_id: str, user_id: str, product: str = "natal") -> dict:
+def _purchase_event(*, event_id: str, user_id: str, product: str = "door.natal") -> dict:
     return {
         "event_id": event_id,
         "event_type": "transaction.completed",
@@ -358,7 +358,7 @@ def test_a_grant_records_which_processor_paid_for_it(other_processor, auth_heade
         {
             "event_id": "evt_paid",
             "event_type": "payment.succeeded",
-            "data": {"user_id": user_id, "product": "natal", "payment_id": "pay_1"},
+            "data": {"user_id": user_id, "product": "door.natal", "payment_id": "pay_1"},
         },
         headers={name: "x" for name in THREE_HEADERS},
     )
@@ -387,14 +387,14 @@ def test_a_processor_that_needs_an_email_says_so_before_the_button(
     path for the funnel this product is built around.
     """
     refused = other_processor.post(
-        "/v1/billing/checkout", json={"product": "natal"}, headers=auth_headers
+        "/v1/billing/checkout", json={"product": "door.natal"}, headers=auth_headers
     )
     assert refused.status_code == 400
     assert refused.json()["detail"]["error"] == "email_required"
 
     typo = other_processor.post(
         "/v1/billing/checkout",
-        json={"product": "natal", "email": "sofia.example.com"},
+        json={"product": "door.natal", "email": "sofia.example.com"},
         headers=auth_headers,
     )
     assert typo.status_code == 400, "an address with no @ is not an address"
@@ -412,12 +412,12 @@ def test_a_session_selling_processor_hands_back_no_price_identifier(
     """
     body = other_processor.post(
         "/v1/billing/checkout",
-        json={"product": "natal", "email": "sofia@example.com"},
+        json={"product": "door.natal", "email": "sofia@example.com"},
         headers=auth_headers,
     ).json()
 
     assert body["provider"] == "not-paddle"
-    assert body["checkout_url"] == "https://checkout.example/natal"
+    assert body["checkout_url"] == "https://checkout.example/door.natal"
     assert "price_id" not in body
     assert body["cents"] == 899
 
@@ -463,7 +463,7 @@ def cancel_refused(monkeypatch) -> None:
     monkeypatch.setattr(PaddleProvider, "cancel_subscription", stub)
 
 
-def _subscribe(api, headers, *, subscription_id: str = "sub_1", product: str = "monthly"):
+def _subscribe(api, headers, *, subscription_id: str = "sub_1", product: str = "sub.monthly"):
     user_id = _session(api, headers)
     response = _post_webhook(
         api,
@@ -636,7 +636,7 @@ def test_a_cancellation_reaches_the_plan_it_names_and_leaves_the_other_one(
             event_id="evt_on_year",
             subscription_id="sub_year",
             user_id=user_id,
-            product="annual",
+            product="sub.monthly",
         ),
     )
     assert len(_held(paid_api, auth_headers)["entitlements"]) == 2
@@ -651,13 +651,20 @@ def test_a_cancellation_reaches_the_plan_it_names_and_leaves_the_other_one(
     )
     assert response.json()["status"] == "noted 1"
 
-    rows = {row["kind"]: row for row in _held(paid_api, auth_headers)["entitlements"]}
-    assert set(rows) == {"monthly", "annual"}
+    rows = _held(paid_api, auth_headers)["entitlements"]
+    assert len(rows) == 2
+    # Раньше строки различались видом (`monthly` против `annual`). Подписка в v3
+    # одна, поэтому две живые подписки — это два **разных** `subscription_id` с
+    # одним видом, и это ровно тот случай, который тест и должен ловить: он
+    # проверяет, что отмена нашла строку по идентификатору, а не прошлась по
+    # всем правам подряд. Различаем их обещанием списать.
+    cancelled = [row for row in rows if row["renews_at"] is None]
+    running = [row for row in rows if row["renews_at"] is not None]
+    assert len(cancelled) == 1 and len(running) == 1
     # The cancelled one stops renewing and keeps running; the other is untouched.
-    assert rows["annual"]["renews_at"] is None
-    assert rows["annual"]["active"] is True
-    assert rows["monthly"]["renews_at"] is not None
-    assert rows["monthly"]["active"] is True
+    assert cancelled[0]["active"] is True
+    assert running[0]["active"] is True
+    assert {row["kind"] for row in rows} == {"monthly"}
 
 
 def test_a_cancellation_for_a_subscription_we_do_not_hold_revokes_nothing(

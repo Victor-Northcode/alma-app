@@ -35,7 +35,7 @@ def _event(
     *,
     event_id: str = "evt_1",
     user_id: str | None = "user-1",
-    product: str = "natal",
+    product: str = "door.natal",
     total: str = "899",
 ) -> dict:
     return {
@@ -115,30 +115,36 @@ def test_the_comparison_is_constant_time():
 # ── event interpretation ───────────────────────────────────────────────────
 
 def test_a_completed_transaction_grants_the_product():
-    grant = entitlement_for(parse(_event(product="natal")))
+    grant = entitlement_for(parse(_event(product="door.natal")))
     assert (grant.system, grant.kind, grant.duration) == ("natal", "one_time", None)
     assert grant.scope == "system"
 
 
-def test_an_annual_purchase_grants_everything_for_a_year():
-    grant = entitlement_for(parse(_event(product="annual", total="7899")))
-    assert grant.system == "*" and grant.kind == "annual"
-    assert grant.scope == "all"
-    assert grant.duration.days == 365
-
-
-def test_a_month_bought_is_a_month_granted_and_not_the_archive_forever():
+def test_a_month_bought_is_a_month_granted_and_not_the_shelf_forever():
     """The defect this replaces cost $29 of goods for $9.99, permanently.
 
     `entitlement_for` branched on `kind == "annual"` and let everything else
-    fall through to a one-time grant with no expiry. The monthly's slug is
-    "*", so a month's payment wrote an everything-grant that never lapsed, had
-    no subscription id to cancel against, and reported itself as working.
+    fall through to a one-time grant with no expiry. The plan's slug is "*", so
+    a month's payment wrote an everything-grant that never lapsed, had no
+    subscription id to cancel against, and reported itself as working.
+
+    `scope` теперь `all`, а не `live`: подписка v3 продаёт всё, пока за неё
+    платят. Срок — единственное, что отличает её от бандла, и он проверяется
+    здесь же.
     """
-    grant = entitlement_for(parse(_event(product="monthly", total="999")))
-    assert grant.kind == "monthly"
-    assert grant.scope == "live"
+    grant = entitlement_for(parse(_event(product="sub.monthly", total="999")))
+    assert grant.system == "*" and grant.kind == "monthly"
+    assert grant.scope == "all"
     assert grant.duration is not None and 28 <= grant.duration.days <= 31
+
+
+def test_the_bundle_is_bought_once_and_never_expires():
+    """Пара к тесту выше: та же строка `system="*"`, и всё отличие — в scope и в
+    сроке. Бандл со сроком был бы подпиской, подписка без срока — платежом,
+    который больше никогда не надо делать."""
+    grant = entitlement_for(parse(_event(product="bundle.static", total="1999")))
+    assert (grant.system, grant.kind, grant.duration) == ("*", "one_time", None)
+    assert grant.scope == "static"
 
 
 def test_every_recurring_product_is_granted_with_an_expiry():
@@ -153,6 +159,12 @@ def test_every_recurring_product_is_granted_with_an_expiry():
         # the product costs grants nothing, so passing 899 for everything here
         # would have been the relabelling attack wearing a loop.
         grant = entitlement_for(parse(_event(product=key, total=str(item.cents))))
+        if item.scope == "pair":
+            # Единственная строка, которая намеренно не грантит отсюда: партнёра
+            # называет PairIntent (А4, Ф0.3), а не прайс-лист. См. комментарий в
+            # `provider.entitlement_for`.
+            assert grant is None, key
+            continue
         assert grant is not None, key
         if item.interval:
             assert grant.duration is not None, key
@@ -193,26 +205,32 @@ def test_a_missing_total_does_not_raise():
 
 # ── the catalogue ──────────────────────────────────────────────────────────
 
-def test_every_system_has_a_price():
+def test_every_static_system_has_a_door_and_the_living_ones_have_none():
+    """Раньше здесь стояло «у каждой из восьми систем есть цена». В v3 их пять:
+    транзиты и соляр пересчитываются и продаются только подпиской, а
+    совместимость покупается на человека (`pair.check`), а не системой. Продать
+    любую из этих трёх «навсегда» — значит отдать подписку одним платежом."""
     from alma.calc import SYSTEMS
 
-    for system in SYSTEMS:
-        assert system in prices.PRODUCTS, f"{system} is not on sale"
+    doors = {item.slug for item in prices.PRODUCTS.values() if item.band == "door"}
+    assert doors == {"natal", "numerology", "birth-card", "astrocartography", "synthesis"}
+    assert doors | prices.LIVING_SYSTEMS == set(SYSTEMS)
 
 
 def test_the_prices_match_the_interface():
-    """One door price for every system, one shelf, one year."""
-    assert prices.PRODUCTS["natal"].display() == "$5.99"
-    assert prices.PRODUCTS["synthesis"].display() == "$5.99"
-    assert prices.PRODUCTS["archive"].display() == "$38.99"
-    assert prices.PRODUCTS["annual"].display() == "$78.99"
+    """One door price for every system, one bundle, one plan."""
+    assert prices.PRODUCTS["door.natal"].display() == "$4.99"
+    assert prices.PRODUCTS["door.synthesis"].display() == "$4.99"
+    assert prices.PRODUCTS["pair.check"].display() == "$4.99"
+    assert prices.PRODUCTS["bundle.static"].display() == "$19.99"
+    assert prices.PRODUCTS["sub.monthly"].display() == "$9.99"
 
 
 def test_regional_pricing_is_the_same_price_not_a_discount():
     """Charging US dollars in São Paulo is charging four times as much."""
-    archive = prices.PRODUCTS["archive"]
-    assert archive.cents_in("BRL") > archive.cents_in("USD")
-    assert archive.cents_in("MXN") > archive.cents_in("USD")
+    bundle = prices.PRODUCTS["bundle.static"]
+    assert bundle.cents_in("BRL") > bundle.cents_in("USD")
+    assert bundle.cents_in("MXN") > bundle.cents_in("USD")
 
 
 def test_a_country_maps_to_a_currency():
@@ -223,40 +241,12 @@ def test_a_country_maps_to_a_currency():
     assert prices.currency_for(None) == "USD"
 
 
-def test_a_recent_purchase_buys_the_upgrade_rather_than_a_discount():
-    """Nobody should pay twice for the same reading — and nobody should be
-    quoted a price the processor will not take.
-
-    The credit used to be arithmetic published as `payable_cents` while the
-    checkout opened against the full price id. Now it substitutes a real
-    product, so the amount shown is the amount on the price id.
-    """
-    full = {item["slug"] for item in prices.catalogue()["items"]}
-    credited = prices.catalogue(credit_cents=899)
-    slugs = {item["slug"] for item in credited["items"]}
-
-    assert "archive" in full and "archive-upgrade" not in full
-    assert "archive-upgrade" in slugs and "archive" not in slugs
-    upgrade = next(i for i in credited["items"] if i["slug"] == "archive-upgrade")
-    assert upgrade["cents"] == prices.PRODUCTS["archive"].cents - prices.PRODUCTS["natal"].cents, (
-        "the upgrade is the shelf price less a door, whatever a door currently costs"
-    )
-
-
-def test_a_credit_paid_in_reais_is_not_spent_against_a_dollar_price():
-    """This test used to assert the opposite, and the opposite was the bug.
-
-    It demanded that a Brazilian's credit come back *larger* than the amount
-    paid, which is precisely the double conversion: the money had already been
-    converted at the till, and the catalogue converted it a second time. There
-    is nothing left to convert — a credit either matches the currency being
-    priced or it is not spent.
-    """
-    brazilian = prices.catalogue(country="BR", credit_cents=9990, credit_currency="BRL")
-    assert [item["slug"] for item in brazilian["items"]] == ["archive", "annual"]
-
-    mismatched = prices.catalogue(credit_cents=9990, credit_currency="BRL")
-    assert "archive" in {item["slug"] for item in mismatched["items"]}
+# Здесь стояли два теста кредитного добора — «свежая покупка подставляет
+# `archive-upgrade` вместо архива» и «кредит в реалах не тратится против
+# долларовой цены». Оба удалены вместе с механизмом: v3 сняла с продажи и архив,
+# и обе условные цены (ТЗ §2), а `catalogue()` больше не принимает кредит вовсе.
+# Правило, которое они охраняли — «в списке нет числа, посчитанного из другого
+# числа», — проверяется в `test_prices.py`.
 
 
 def test_an_unknown_product_is_refused():
@@ -294,24 +284,39 @@ def _post_webhook(api, payload: dict, *, signature: str | None = None):
 def test_the_catalogue_is_public(api, auth_headers):
     body = api.get("/v1/billing/catalogue", headers=auth_headers).json()
     assert body["currency"] == "USD"
-    # Eight doors, the archive and the two plans — every shelf price, plans
-    # included, because a plan drawn outside the list is a plan a client
-    # renders as a single payment. The two conditional prices are absent: they
-    # grant what the archive grants and cost nine dollars less.
+    # Пять дверей, пара, бандл и план — вся полка, план в том числе, потому что
+    # план, нарисованный вне списка, — это план, который клиент отрисует
+    # разовым платежом.
     shelf = [key for key, item in prices.PRODUCTS.items() if item.on_the_shelf]
     assert [item["slug"] for item in body["items"]] == shelf
-    assert {item["slug"] for item in body["items"]} >= {"archive", "monthly", "annual"}
-    assert body["annual"]["display"] == "$78.99"
+    assert {item["slug"] for item in body["items"]} == {
+        "door.natal", "door.numerology", "door.birth-card",
+        "door.astrocartography", "door.synthesis",
+        "pair.check", "bundle.static", "sub.monthly",
+    }
+    plan = next(item for item in body["items"] if item["slug"] == "sub.monthly")
+    assert plan["display"] == "$9.99"
 
 
-def test_a_conditional_price_cannot_be_bought_by_naming_it(api, auth_headers):
-    """The $9 hole: `archive-bump` grants exactly what `archive` grants."""
-    for product in ("archive-bump", "archive-upgrade"):
+def test_a_product_that_is_not_on_the_shelf_cannot_be_bought_by_naming_it(api, auth_headers):
+    """Чекаут принимает имя товара от клиента, а клиент — не та сторона, которой
+    мы верим.
+
+    Условных цен в v3 нет, поэтому пример — ключи снятой полки и слаг системы
+    вместо ключа каталога: ровно то, что придёт от пересобранного клиента или
+    от старой сборки. Дыра, ради которой проверка написана, была настоящей:
+    `archive-bump` за $29.99 выдавал то же, что архив за $38.99.
+    """
+    for product in ("archive", "archive-upgrade", "natal", "door.transits"):
         response = api.post(
             "/v1/billing/checkout", json={"product": product}, headers=auth_headers
         )
         assert response.status_code == 404, product
-        assert response.json()["detail"]["error"] == "not_offered"
+        detail = response.json()["detail"]
+        # 404 приходит двумя путями: «такого товара нет вовсе» отвечает строкой,
+        # «такой есть, но не на полке» — телом с кодом. Оба — отказ.
+        if isinstance(detail, dict):
+            assert detail["error"] == "not_offered"
 
 
 def test_the_catalogue_is_localised(api, auth_headers):
@@ -342,7 +347,7 @@ def test_a_valid_webhook_unlocks_the_system(paid_api, auth_headers):
     before = paid_api.get("/v1/billing/entitlements", headers=auth_headers).json()
     assert "natal" not in before["unlocked"]
 
-    response = _post_webhook(paid_api, _event(user_id=user_id, product="natal"))
+    response = _post_webhook(paid_api, _event(user_id=user_id, product="door.natal"))
     assert response.status_code == 200
     assert response.json()["status"] == "granted natal"
 
@@ -366,7 +371,7 @@ def test_a_retried_webhook_does_nothing_the_second_time(paid_api, auth_headers):
 
 def test_an_annual_purchase_unlocks_everything(paid_api, auth_headers):
     user_id = paid_api.get("/v1/auth/session", headers=auth_headers).json()["user_id"]
-    _post_webhook(paid_api, _event(user_id=user_id, product="annual", total="7899"))
+    _post_webhook(paid_api, _event(user_id=user_id, product="sub.monthly", total="7899"))
 
     unlocked = paid_api.get("/v1/billing/entitlements", headers=auth_headers).json()["unlocked"]
     assert len(unlocked) == 8
@@ -379,7 +384,7 @@ def test_a_purchase_actually_opens_the_reading(paid_api, auth_headers):
     locked = paid_api.get("/v1/readings/natal/chapters", headers=auth_headers).json()
     assert sum(1 for c in locked["chapters"] if c["open"]) == 1
 
-    _post_webhook(paid_api, _event(user_id=user_id, product="natal"))
+    _post_webhook(paid_api, _event(user_id=user_id, product="door.natal"))
 
     opened = paid_api.get("/v1/readings/natal/chapters", headers=auth_headers).json()
     assert all(c["open"] for c in opened["chapters"])
@@ -397,25 +402,30 @@ def test_a_refund_closes_it_again(paid_api, auth_headers):
     assert "natal" not in after["unlocked"]
 
 
-def test_a_month_bought_does_not_buy_the_archive(paid_api, auth_headers):
-    """$9.99 once, the whole $38.99 archive forever — reproduced end to end.
+def test_a_month_bought_is_a_month_and_not_a_permanent_grant(paid_api, auth_headers):
+    """$9.99 once, everything forever — reproduced end to end.
 
     `entitlement_for` had a branch for "annual" and nothing for the monthly,
     so the payment fell through to a permanent one-time grant of `system="*"`.
     Nothing reported it: the row simply kept working.
+
+    В v3 подписка честно открывает всё (`scope="all"`), поэтому проверяется не
+    ширина, а **срок**: он и есть единственное, что отличает подписку от
+    бандла, и именно его отсутствие стоило бы нам всей регулярной выручки.
     """
+    from alma.calc import SYSTEMS
+
     user_id = paid_api.get("/v1/auth/session", headers=auth_headers).json()["user_id"]
     _post_webhook(
-        paid_api, _event(user_id=user_id, product="monthly", total="999")
+        paid_api, _event(user_id=user_id, product="sub.monthly", total="999")
     )
 
     body = paid_api.get("/v1/billing/entitlements", headers=auth_headers).json()
-    assert set(body["unlocked"]) == set(prices.LIVING_SYSTEMS)
-    assert "natal" not in body["unlocked"]
+    assert set(body["unlocked"]) == set(SYSTEMS)
 
     row = body["entitlements"][0]
     assert row["kind"] == "monthly"
-    assert row["scope"] == "live"
+    assert row["scope"] == "all"
     assert row["expires_at"] is not None, "a subscription with no expiry never renews"
     assert row["active"] is True
 
@@ -426,7 +436,7 @@ def _subscription_event(
     event_id: str,
     user_id: str | None = None,
     subscription_id: str = "sub_1",
-    product: str = "monthly",
+    product: str = "sub.monthly",
     transaction_id: str | None = None,
 ) -> dict:
     """A subscription-lifecycle event: the plan's id in `data.id`, no payment."""
@@ -530,7 +540,7 @@ def test_a_subscriber_is_told_their_subscription_is_active(paid_api, auth_header
     already wondering whether to cancel told them it was not working.
     """
     user_id = paid_api.get("/v1/auth/session", headers=auth_headers).json()["user_id"]
-    _post_webhook(paid_api, _event(user_id=user_id, product="monthly", total="999"))
+    _post_webhook(paid_api, _event(user_id=user_id, product="sub.monthly", total="999"))
 
     body = paid_api.get("/v1/billing/entitlements", headers=auth_headers).json()
     assert [row["active"] for row in body["entitlements"]] == [True]
@@ -589,12 +599,12 @@ def test_a_partial_refund_reduces_the_charge_and_takes_nothing_away(paid_api, au
     partial refund from a full one or a credit from a chargeback.
     """
     user_id = paid_api.get("/v1/auth/session", headers=auth_headers).json()["user_id"]
-    _post_webhook(paid_api, _event(user_id=user_id, event_id="evt_buy", total="3899",
-                                   product="archive"))
+    _post_webhook(paid_api, _event(user_id=user_id, event_id="evt_buy", total="1999",
+                                   product="bundle.static"))
     _post_webhook(paid_api, _adjustment(kind="partial", total="500"))
 
     after = paid_api.get("/v1/billing/entitlements", headers=auth_headers).json()
-    assert len(after["unlocked"]) == 8, "a partial refund closed the archive"
+    assert len(after["unlocked"]) == 5, "a partial refund closed the bundle"
 
 
 def test_a_refund_is_not_stored_as_a_second_purchase(paid_api, auth_headers):
@@ -611,7 +621,7 @@ def test_a_refund_is_not_stored_as_a_second_purchase(paid_api, auth_headers):
 
     user_id = paid_api.get("/v1/auth/session", headers=auth_headers).json()["user_id"]
     _post_webhook(paid_api, _event(user_id=user_id, event_id="evt_buy", total="3899",
-                                   product="archive"))
+                                   product="bundle.static"))
     _post_webhook(paid_api, _adjustment(kind="partial", total="500"))
 
     async def read():
@@ -677,7 +687,7 @@ def test_the_checkout_no_longer_demands_an_account(paid_api, auth_headers):
     reinstating the wall has to come here and argue with it.
     """
     response = paid_api.post(
-        "/v1/billing/checkout", json={"product": "natal"}, headers=auth_headers
+        "/v1/billing/checkout", json={"product": "door.natal"}, headers=auth_headers
     )
     assert response.status_code != 401
 
@@ -692,11 +702,11 @@ def test_a_checkout_carries_the_owner_in_custom_data(paid_api, auth_headers):
     signed_in = {"Authorization": f"Bearer {session['token']}"}
 
     body = paid_api.post(
-        "/v1/billing/checkout", json={"product": "natal"}, headers=signed_in
+        "/v1/billing/checkout", json={"product": "door.natal"}, headers=signed_in
     ).json()
     assert body["custom_data"]["user_id"] == session["user_id"]
-    assert body["custom_data"]["product"] == "natal"
-    assert body["cents"] == 599
+    assert body["custom_data"]["product"] == "door.natal"
+    assert body["cents"] == 499
 
 
 def test_the_downsell_is_offered_exactly_once(api, auth_headers):
@@ -712,19 +722,34 @@ def test_the_downsell_is_offered_exactly_once(api, auth_headers):
 
 
 def test_the_downsell_offers_the_door_that_was_declined(api, auth_headers):
-    """The eight doors are one price now, so "the cheapest" is not an answer.
+    """The doors are one price now, so "the cheapest" is not an answer.
 
     `min(PRODUCTS, key=cents)` resolved to whichever door came first in the
-    dict literal, so a person who declined a compatibility reading was offered
-    a natal chart at the price they had just refused — the one downsell this
+    dict literal, so a person who declined a numerology reading was offered a
+    natal chart at the price they had just refused — the one downsell this
     product allows, spent on a stranger's product by an accident of insertion
     order.
+
+    Совместимость сюда больше не годится примером: двери у неё нет, а
+    `pair.check` исключён из даунселла намеренно — предложить проверку пары
+    можно только тому, у кого партнёр есть, а здесь это неизвестно.
     """
     offer = api.post(
-        "/v1/billing/declined", json={"system": "compatibility"}, headers=auth_headers
+        "/v1/billing/declined", json={"system": "numerology"}, headers=auth_headers
     ).json()["offer"]
-    assert offer["slug"] == "compatibility"
-    assert offer["cents"] == prices.PRODUCTS["compatibility"].cents
+    assert offer["slug"] == "door.numerology"
+    assert offer["system"] == "numerology"
+    assert offer["cents"] == prices.PRODUCTS["door.numerology"].cents
+
+
+def test_the_downsell_never_offers_a_pair_check(api, auth_headers):
+    """Единственный оффер, который человек получит, нельзя тратить на товар,
+    который он не может принять: проверка пары требует партнёра, а здесь не
+    известно, есть ли он вообще."""
+    offer = api.post(
+        "/v1/billing/declined", json={"system": "transits"}, headers=auth_headers
+    ).json()["offer"]
+    assert offer["slug"] != "pair.check"
 
 
 def test_the_downsell_is_priced_in_the_currency_the_person_would_pay_in(api, auth_headers):
@@ -738,37 +763,49 @@ def test_the_downsell_is_priced_in_the_currency_the_person_would_pay_in(api, aut
         headers=auth_headers,
     ).json()["offer"]
     assert offer["currency"] == "EUR"
-    assert offer["cents"] == prices.PRODUCTS["natal"].cents_in("EUR")
+    assert offer["cents"] == prices.PRODUCTS["door.natal"].cents_in("EUR")
     assert offer["display"].startswith("€")
 
 
-def test_a_market_with_no_door_is_offered_something_that_exists_there(api, auth_headers):
-    """Brazil carries the archive and the year and no doors at all.
-
-    Offering a door there sent the person to a checkout that raised NotSold,
-    and it burned the one offer they were ever going to get.
+def test_a_downsell_is_priced_in_the_market_it_is_offered_in(api, auth_headers):
+    """Бразилия теперь получает всю полку (`PRODUCTS.md` §5), поэтому прежний
+    случай «на этом рынке двери нет вовсе» исчез. Правило, ради которого тест
+    написан, не изменилось: предлагать можно только то, что на этом рынке
+    продаётся, и по цене этого рынка — иначе человек уходит в чекаут, который
+    отвечает `NotSold`, и сжигает единственный оффер, который у него был.
     """
     body = api.post(
         "/v1/billing/declined",
         json={"system": "natal", "country": "BR"},
         headers=auth_headers,
     ).json()
-    assert body["offer"]["slug"] == "archive"
+    assert body["offer"]["slug"] == "door.natal"
     assert body["offer"]["currency"] == "BRL"
+    assert body["offer"]["cents"] == prices.PRODUCTS["door.natal"].cents_in("BRL")
 
 
-def test_a_product_not_sold_here_is_refused_rather_than_crashing(paid_api, auth_headers):
+def test_a_product_not_sold_here_is_refused_rather_than_crashing(paid_api, auth_headers, monkeypatch):
     """The pricing lines used to sit outside the try, so this was a 500.
 
-    In the five purchasing-power markets the doors are deliberately absent, so
-    this is the ordinary path there rather than an edge case.
+    Прежде отсутствующий товар брался с бразильского рынка: PPP-рынки не
+    получали дверь. В v3 полка продаётся во всех тринадцати валютах, а страна,
+    которой мы цену не назначали, платит в долларах, — так что состояние «здесь
+    это не продаётся» через страну больше не воспроизвести. Оно всё равно
+    достижимо и всё равно обязано быть 404, а не 500: полосу из валюты убирают
+    здесь руками, ровно как это сделает первая же правка `REGIONAL_CENTS`.
     """
+    from alma.billing import catalogue as _prices
+
+    monkeypatch.setitem(
+        _prices.REGIONAL_CENTS, "EUR",
+        {k: v for k, v in _prices.REGIONAL_CENTS["EUR"].items() if k != "door"},
+    )
     response = paid_api.post(
-        "/v1/billing/checkout", json={"product": "natal", "country": "BR"}, headers=auth_headers
+        "/v1/billing/checkout", json={"product": "door.natal", "country": "DE"}, headers=auth_headers
     )
     assert response.status_code == 404
     assert response.json()["detail"]["error"] == "not_sold_here"
-    assert response.json()["detail"]["currency"] == "BRL"
+    assert response.json()["detail"]["currency"] == "EUR"
 
 
 def test_billing_says_so_when_it_is_not_configured(api, auth_headers):
@@ -781,7 +818,7 @@ def test_billing_says_so_when_it_is_not_configured(api, auth_headers):
     ).json()
     signed_in = {"Authorization": f"Bearer {session['token']}"}
 
-    response = api.post("/v1/billing/checkout", json={"product": "natal"}, headers=signed_in)
+    response = api.post("/v1/billing/checkout", json={"product": "door.natal"}, headers=signed_in)
     assert response.status_code == 503
     assert response.json()["detail"]["error"] == "billing_unavailable"
 
@@ -865,12 +902,12 @@ def test_a_guest_can_reach_the_checkout(paid_api, auth_headers):
     buys durability, not permission.
     """
     response = paid_api.post(
-        "/v1/billing/checkout", json={"product": "natal"}, headers=auth_headers
+        "/v1/billing/checkout", json={"product": "door.natal"}, headers=auth_headers
     )
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["custom_data"]["user_id"], "the payment has nobody to attach to"
-    assert body["cents"] == 599
+    assert body["cents"] == 499
 
 
 def test_a_guest_purchase_unlocks_for_that_guest(paid_api, auth_headers):
@@ -878,7 +915,7 @@ def test_a_guest_purchase_unlocks_for_that_guest(paid_api, auth_headers):
     session = paid_api.get("/v1/auth/session", headers=auth_headers).json()
     assert session["is_guest"] is True
 
-    _post_webhook(paid_api, _event(user_id=session["user_id"], product="natal"))
+    _post_webhook(paid_api, _event(user_id=session["user_id"], product="door.natal"))
 
     held = paid_api.get("/v1/billing/entitlements", headers=auth_headers).json()
     assert "natal" in held["unlocked"]
@@ -892,7 +929,7 @@ def test_what_a_guest_bought_survives_signing_in(paid_api, auth_headers):
     cannot lose what was paid for.
     """
     session = paid_api.get("/v1/auth/session", headers=auth_headers).json()
-    _post_webhook(paid_api, _event(user_id=session["user_id"], product="natal"))
+    _post_webhook(paid_api, _event(user_id=session["user_id"], product="door.natal"))
 
     link = paid_api.post(
         "/v1/auth/magic-link", json={"email": "buyer@example.com"}, headers=auth_headers

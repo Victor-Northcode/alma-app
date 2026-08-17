@@ -10,69 +10,94 @@ import com.android.billingclient.api.BillingClient
  *
  * ## Why a translation is needed
  *
- * The backend's catalogue keys are `natal`, `birth-card`, `solar-return`,
- * `archive-upgrade`. The Play Console will not accept a hyphen in a product id,
- * so `backend/alma/billing/provider.py::store_product_id` states the rule the
- * console is filled in by: the catalogue key, with [PREFIX] in front of it and
- * every hyphen turned into an underscore. `alma.birth_card`. It is reversible
- * only because no catalogue key contains an underscore, which is a fact the
- * backend pins with a test and this file pins with another.
+ * The backend's catalogue keys are `door.natal`, `door.birth-card`,
+ * `pair.check`, `sub.monthly`. The Play Console will not accept a hyphen in a
+ * product id, so `backend/alma/billing/provider.py::store_product_id` states the
+ * rule the console is filled in by: the catalogue key, with [PREFIX] in front of
+ * it and every hyphen turned into an underscore.
+ * `ai.pazl.alma.door.birth_card`. It is reversible only because no catalogue key
+ * contains an underscore, which is a fact the backend pins with a test and this
+ * file pins with another.
  *
  * This mattered before anything was sold. `POST /v1/billing/iap/verify` calls
  * `prices.product(product)` on the way in, so handing it the *Play* id answers
- * **404 "nothing on sale called 'alma.natal'"** — a purchase Google has taken
- * money for and a server that grants nothing. The purchase token that comes
- * back from Play carries the Play id; the verify call needs the catalogue slug;
- * [slugFor] is the one place that conversion happens.
+ * **404 "nothing on sale called 'ai.pazl.alma.door.natal'"** — a purchase Google
+ * has taken money for and a server that grants nothing. The purchase token that
+ * comes back from Play carries the Play id; the verify call needs the catalogue
+ * key; [slugFor] is the one place that conversion happens.
  *
- * ## The two rules about what may be sold
+ * ## A catalogue key is not a system slug any more
  *
- * **A conditional price is not a shelf item.** `archive-bump` at $29.99 and
- * `archive` at $38.99 grant exactly the same thing — everything — so a bump
- * bought on its own is the archive at nine dollars off. On the web that is
- * enforced by `Product.on_the_shelf`, which keeps it out of the catalogue
- * response entirely. A store is different and worse: a Play product id exists
- * in the console whether or not our server listed it, so the *app* is the only
- * thing standing between a conditional price and somebody buying it directly.
- * Hence [NEVER_ALONE], checked in [PlayBilling.purchase] rather than only in
- * the paywall — a screen is a place a mistake gets made once and copied.
+ * Until v3 they were the same string — `"natal"` was both the product and the
+ * thing it opened — and the shelf has stopped being shaped that way: five doors,
+ * a pair check, a bundle and a subscription. So `AlmaSystem.NATAL` and
+ * `DOOR_NATAL` are two different constants and [systemFor] is the one place that
+ * maps between them. Handing a system slug to [productId] now produces an id no
+ * console has, which is a purchase sheet that never opens.
  *
- * `archive-upgrade` is not in that set, and the difference is worth stating: it
- * is a real price for a real person, offered *instead of* the archive to
- * somebody who bought a door inside the credit window. The server decides that
- * — it substitutes the row into the catalogue response — so the rule here is
- * [sellable]: nothing is purchasable that this account's own catalogue did not
- * list. Never a hardcoded list of "things we sell".
+ * ## The rule about what may be sold
+ *
+ * A Play product id exists in the console whether or not our server listed it,
+ * so the *app* is the only thing standing between a price and somebody buying it
+ * directly. Hence [sellable]: nothing is purchasable that this account's own
+ * catalogue did not list. Never a hardcoded list of "things we sell" — the
+ * server already decided what is on the shelf in this currency, for this person.
+ *
+ * The set of prices this refuses is empty today; it was not always, and will not
+ * stay so. `archive-bump` at $29.99 granted exactly what the $38.99 archive
+ * granted, so a bump bought alone was the archive at nine dollars off, and the
+ * first A/B on the bundle price puts two prices behind one grant again.
  *
  * ## Where the prefix comes from
  *
- * `ALMA_STORE_PRODUCT_PREFIX`, whose default is `"alma."`. It is a constant
- * here because a client cannot read the server's environment, and the id is
- * needed before any call is made. If a deployment ever changes it, this line
- * changes with it — which is exactly the sort of coupling worth writing down
- * rather than discovering through an empty product sheet.
+ * `ALMA_STORE_PRODUCT_PREFIX`, whose default is `"ai.pazl.alma."`. It is a
+ * constant here because a client cannot read the server's environment, and the
+ * id is needed before any call is made. If a deployment ever changes it, this
+ * line changes with it — which is exactly the sort of coupling worth writing
+ * down rather than discovering through an empty product sheet.
  */
 object StoreProducts {
 
     const val PREFIX: String = "ai.pazl.alma."
 
-    /* ── the five catalogue keys that are not one of the eight systems ── */
+    /* ── the eight catalogue keys, which are the eight store products ── */
 
-    const val ARCHIVE: String = "archive"
-    const val ARCHIVE_BUMP: String = "archive-bump"
-    const val ARCHIVE_UPGRADE: String = "archive-upgrade"
-    const val WEEKLY: String = "weekly"
-    const val MONTHLY: String = "monthly"
-    const val ANNUAL: String = "annual"
+    const val DOOR_NATAL: String = "door.natal"
+    const val DOOR_NUMEROLOGY: String = "door.numerology"
+    const val DOOR_BIRTH_CARD: String = "door.birth-card"
+    const val DOOR_ASTROCARTOGRAPHY: String = "door.astrocartography"
+    const val DOOR_SYNTHESIS: String = "door.synthesis"
 
-    /** Play sells these as `SUBS`; everything else is `INAPP`. */
-    val SUBSCRIPTIONS: Set<String> = setOf(WEEKLY, MONTHLY, ANNUAL)
+    /** One report about one person. Play type `INAPP`, **consumed** after use. */
+    const val PAIR_CHECK: String = "pair.check"
+
+    /** All five readings that never change, bought outright. */
+    const val BUNDLE_STATIC: String = "bundle.static"
+
+    /** Everything, for as long as it is paid for. */
+    const val SUB_MONTHLY: String = "sub.monthly"
+
+    /** Play sells this as `SUBS`; everything else is `INAPP`. */
+    val SUBSCRIPTIONS: Set<String> = setOf(SUB_MONTHLY)
 
     /**
-     * The three systems that move, and therefore the only ones a monthly plan
-     * honestly rents. Mirrors `LIVING_SYSTEMS` in the catalogue: a natal chart
-     * bought monthly would be rent on a number that has not changed since
-     * birth.
+     * The one product Play must **consume** rather than only acknowledge.
+     *
+     * `consumeAsync` is what makes a one-time product buyable again, and that is
+     * exactly right for a pair check and exactly wrong for everything else: a
+     * consumed door would be a permanent unlock the person can be charged for
+     * twice, and an unconsumed pair check makes the second partner unbuyable.
+     */
+    val CONSUMED_AFTER_GRANT: Set<String> = setOf(PAIR_CHECK)
+
+    /**
+     * The three systems that move. Mirrors `LIVING_SYSTEMS` in the catalogue.
+     *
+     * They have no door in v3 and that is the point: transits are recomputed
+     * every day and the solar return is rewritten every birthday, so selling
+     * either "permanently" is selling a subscription without charging for one.
+     * The set survives because the daily note and the subscription paywall both
+     * need to name what only the plan carries.
      */
     val LIVING: Set<String> = setOf(
         AlmaSystem.TRANSITS,
@@ -80,27 +105,64 @@ object StoreProducts {
         AlmaSystem.COMPATIBILITY,
     )
 
-    /**
-     * Priced to exist only inside another checkout. Play has no equivalent of
-     * an in-checkout upsell, so if this id is ever created in the console it is
-     * a product anybody with a modified client could buy on its own — for nine
-     * dollars less than the thing it grants.
-     */
-    val NEVER_ALONE: Set<String> = setOf(ARCHIVE_BUMP)
+    /** The five systems a door or the bundle opens. Mirrors `STATIC_SYSTEMS`. */
+    val STATIC: Set<String> = setOf(
+        AlmaSystem.NATAL,
+        AlmaSystem.NUMEROLOGY,
+        AlmaSystem.BIRTH_CARD,
+        AlmaSystem.ASTROCARTOGRAPHY,
+        AlmaSystem.SYNTHESIS,
+    )
 
     /**
      * Every key `backend/alma/billing/catalogue.py` knows.
      *
-     * `WEEKLY` was added to the catalogue and to [SUBSCRIPTIONS] and missed
-     * here, which is not cosmetic: [slugFor] answers null for anything outside
-     * this set, so a bought weekly subscription would have been read as
-     * somebody else's product, left unacknowledged, and refunded by Google
-     * three days later. `backend/tests/test_store_ids.py` now fails when this
-     * set and the catalogue disagree.
+     * `WEEKLY` was once added to the catalogue and missed here, which is not
+     * cosmetic: [slugFor] answers null for anything outside this set, so a
+     * bought subscription would have been read as somebody else's product, left
+     * unacknowledged, and refunded by Google three days later.
+     * `backend/tests/test_store_ids.py` fails when this set and the catalogue
+     * disagree.
      */
-    val ALL: Set<String> =
-        AlmaSystem.ALL.toSet() +
-            setOf(ARCHIVE, ARCHIVE_BUMP, ARCHIVE_UPGRADE, WEEKLY, MONTHLY, ANNUAL)
+    val ALL: Set<String> = setOf(
+        DOOR_NATAL,
+        DOOR_NUMEROLOGY,
+        DOOR_BIRTH_CARD,
+        DOOR_ASTROCARTOGRAPHY,
+        DOOR_SYNTHESIS,
+        PAIR_CHECK,
+        BUNDLE_STATIC,
+        SUB_MONTHLY,
+    )
+
+    /** Which door opens which system, and back. */
+    private val DOOR_FOR_SYSTEM: Map<String, String> = mapOf(
+        AlmaSystem.NATAL to DOOR_NATAL,
+        AlmaSystem.NUMEROLOGY to DOOR_NUMEROLOGY,
+        AlmaSystem.BIRTH_CARD to DOOR_BIRTH_CARD,
+        AlmaSystem.ASTROCARTOGRAPHY to DOOR_ASTROCARTOGRAPHY,
+        AlmaSystem.SYNTHESIS to DOOR_SYNTHESIS,
+    )
+
+    /** The catalogue key of the door for [system], or null when it has none. */
+    fun doorFor(system: String): String? = DOOR_FOR_SYSTEM[system]
+
+    /**
+     * The system a catalogue key opens, or null when it opens more than one.
+     *
+     * Null for [PAIR_CHECK] deliberately, and not `AlmaSystem.COMPATIBILITY`: a
+     * pair check opens one report about one person, not the system. Answering
+     * with the system is how a hub ends up drawing "compatibility unlocked"
+     * after one purchase and then refusing the second partner.
+     */
+    fun systemFor(slug: String): String? = when (slug) {
+        DOOR_NATAL -> AlmaSystem.NATAL
+        DOOR_NUMEROLOGY -> AlmaSystem.NUMEROLOGY
+        DOOR_BIRTH_CARD -> AlmaSystem.BIRTH_CARD
+        DOOR_ASTROCARTOGRAPHY -> AlmaSystem.ASTROCARTOGRAPHY
+        DOOR_SYNTHESIS -> AlmaSystem.SYNTHESIS
+        else -> null
+    }
 
     /* ── the id rule, both ways ────────────────────────────────────────── */
 
@@ -131,17 +193,13 @@ object StoreProducts {
     /**
      * Whether this app may open a Play sheet for [slug].
      *
-     * Two conditions, and they are different in kind. [NEVER_ALONE] is a
-     * product decision that no server response can override — a conditional
-     * price is cheaper than the shelf item it stands in for, and selling it
-     * alone is selling the shelf item at a discount nobody authorised.
-     * [offered] is this account's own catalogue: the server already decided
-     * what is on the shelf in this currency, for this person, including whether
-     * they qualify for the upgrade price, and an app that sells anything else
-     * is an app that has an opinion about prices.
+     * [offered] is this account's own catalogue: the server already decided what
+     * is on the shelf in this currency, for this person, and an app that sells
+     * anything else is an app that has an opinion about prices. Never a
+     * hardcoded list of "things we sell" — that list is a second copy of the
+     * shelf, and a second copy is the one that goes stale.
      */
-    fun sellable(slug: String, offered: Collection<String>): Boolean =
-        slug !in NEVER_ALONE && slug in offered
+    fun sellable(slug: String, offered: Collection<String>): Boolean = slug in offered
 
     /**
      * Whether the grant a purchase of [slug] should produce is present in
@@ -161,16 +219,20 @@ object StoreProducts {
      * given them their money back has just been switched off by us.
      */
     fun grantLanded(slug: String, unlocked: Collection<String>): Boolean = when (slug) {
-        in AlmaSystem.ALL -> slug in unlocked
-        // Everything-grants. `archive-bump` is here for completeness rather
-        // than because it can be bought — it cannot; see [NEVER_ALONE].
-        ARCHIVE, ARCHIVE_BUMP, ARCHIVE_UPGRADE, ANNUAL -> unlocked.containsAll(AlmaSystem.ALL)
-        MONTHLY -> unlocked.containsAll(LIVING)
-        // A slug this build has never heard of. Not "landed", but not a
-        // refusal either — see the `status` check at the call site, which is
-        // what lets a product added to the server after this release still be
-        // acknowledged on the server's own word.
-        else -> false
+        BUNDLE_STATIC -> unlocked.containsAll(STATIC)
+        SUB_MONTHLY -> unlocked.containsAll(AlmaSystem.ALL)
+        // Пара сюда не попадает намеренно: её грант называет партнёра
+        // (`pair:{profile_id}`) и в `unlocked` не появляется вовсе, потому что
+        // открыта не система, а один отчёт. Проверять её по этому списку значит
+        // никогда не подтвердить покупку — то есть отдать деньги обратно через
+        // трёхдневный авто-рефанд Google у человека, который всё получил.
+        // Подтверждение пары читает `unlocked_pairs`; это фаза Ф0.3.
+        PAIR_CHECK -> false
+        // A slug this build has never heard of, and the five doors, which name
+        // their own system. Not "landed" on its own — see the `status` check at
+        // the call site, which is what lets a product added to the server after
+        // this release still be acknowledged on the server's own word.
+        else -> systemFor(slug)?.let { it in unlocked } ?: false
     }
 
     /**

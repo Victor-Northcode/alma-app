@@ -257,14 +257,20 @@ class PlayBilling(
         details: ProductDetails,
         offerToken: String? = null,
     ) {
-        // The last gate in front of a conditional price, and it is here rather
-        // than only in the paywall on purpose. `archive-bump` grants everything
-        // the archive grants for nine dollars less, and it exists as a Play
-        // product id whether or not our catalogue listed it — so the app is the
+        // The last gate in front of a product id this build does not sell, and
+        // it is here rather than only in the paywall on purpose: a Play product
+        // id exists whether or not our catalogue listed it, so the app is the
         // only thing standing between it and a direct purchase. A screen is a
         // place a rule gets copied wrong; this is the place it cannot be.
+        //
+        // Отдельного списка «никогда в одиночку» больше нет: условные цены
+        // (`archive-bump`) сняты вместе с архивом — монетизация v3. Осталась
+        // проверка, которая и была главной: идентификатор, которого нет в
+        // каталоге этой сборки, не продаётся. Право отказать по составу полки
+        // остаётся у сервера (`entitlements.may_be_offered`) и у
+        // `StoreProducts.sellable`, который читает полку **этого** аккаунта.
         val slug = StoreProducts.slugFor(details.productId)
-        if (slug == null || slug in StoreProducts.NEVER_ALONE) {
+        if (slug == null) {
             Log.w(TAG, "refused to sell ${details.productId} — not a product this app offers")
             _status.value = Status.Failed(
                 slug,
@@ -491,6 +497,13 @@ class PlayBilling(
         }
     }
 
+    // TODO(Ф0.3): `pair.check` — расходуемый, и его надо **consume**, а не
+    // только acknowledge. `consumeAsync` — то, что делает разовый товар
+    // покупаемым заново; без него человек не сможет проверить второго
+    // партнёра, а Play будет считать первую покупку вечной. Список — в
+    // `StoreProducts.CONSUMED_AFTER_GRANT`, ветка пишется вместе с привязкой
+    // покупки к партнёру (приложение А4): пока грант по паре не выписывается
+    // вовсе, потреблять нечего.
     private suspend fun acknowledge(purchase: Purchase) {
         val params = AcknowledgePurchaseParams.newBuilder()
             .setPurchaseToken(purchase.purchaseToken)

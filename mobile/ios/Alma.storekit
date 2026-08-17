@@ -3,153 +3,108 @@
   "nonRenewingSubscriptions": [],
   "products": [
     {
-      "displayPrice": "5.99",
+      "displayPrice": "4.99",
       "familyShareable": false,
       "internalID": "A2901623-3403-54A5-A477-0467AC8849DA",
       "localizations": [
         {
-          "description": "All sixteen chapters of your natal chart, written from your own positions.",
+          "description": "All fifteen paid chapters of your natal chart. Yours permanently.",
           "displayName": "Natal chart",
           "locale": "en_US"
         }
       ],
-      "productID": "ai.pazl.alma.natal",
-      "referenceName": "Natal chart",
+      "productID": "ai.pazl.alma.door.natal",
+      "referenceName": "Door — natal",
       "type": "NonConsumable"
     },
     {
-      "displayPrice": "5.99",
+      "displayPrice": "4.99",
       "familyShareable": false,
       "internalID": "DFABC140-C0E5-5EF4-9E29-412D3B10D9CC",
       "localizations": [
         {
-          "description": "All five numerology chapters, written from your own numbers.",
+          "description": "All four paid numerology chapters. Yours permanently.",
           "displayName": "Numerology",
           "locale": "en_US"
         }
       ],
-      "productID": "ai.pazl.alma.numerology",
-      "referenceName": "Numerology",
+      "productID": "ai.pazl.alma.door.numerology",
+      "referenceName": "Door — numerology",
       "type": "NonConsumable"
     },
     {
-      "displayPrice": "5.99",
+      "displayPrice": "4.99",
       "familyShareable": false,
       "internalID": "4A266138-B516-59A8-94A4-5A1CB7042AE7",
       "localizations": [
         {
-          "description": "All three Birth Card chapters, written from your date.",
+          "description": "Both paid Birth Card chapters. Yours permanently.",
           "displayName": "Birth Card",
           "locale": "en_US"
         }
       ],
-      "productID": "ai.pazl.alma.birth_card",
-      "referenceName": "Birth Card",
+      "productID": "ai.pazl.alma.door.birth_card",
+      "referenceName": "Door — birth card",
       "type": "NonConsumable"
     },
     {
-      "displayPrice": "5.99",
-      "familyShareable": false,
-      "internalID": "D6C4C243-290E-5E18-B2E8-82B060D63DF5",
-      "localizations": [
-        {
-          "description": "All three transit chapters, written from where the sky is now.",
-          "displayName": "Transits",
-          "locale": "en_US"
-        }
-      ],
-      "productID": "ai.pazl.alma.transits",
-      "referenceName": "Transits",
-      "type": "NonConsumable"
-    },
-    {
-      "displayPrice": "5.99",
-      "familyShareable": false,
-      "internalID": "5DC77F91-0A40-5E18-8C02-22AFC72B3C7D",
-      "localizations": [
-        {
-          "description": "All three solar return chapters, read from the minute the Sun returns.",
-          "displayName": "Solar return",
-          "locale": "en_US"
-        }
-      ],
-      "productID": "ai.pazl.alma.solar_return",
-      "referenceName": "Solar return",
-      "type": "NonConsumable"
-    },
-    {
-      "displayPrice": "5.99",
-      "familyShareable": false,
-      "internalID": "C7170409-2050-5820-94B6-C5B3DBD4FC00",
-      "localizations": [
-        {
-          "description": "All four compatibility chapters, read from two charts.",
-          "displayName": "Compatibility",
-          "locale": "en_US"
-        }
-      ],
-      "productID": "ai.pazl.alma.compatibility",
-      "referenceName": "Compatibility",
-      "type": "NonConsumable"
-    },
-    {
-      "displayPrice": "5.99",
+      "displayPrice": "4.99",
       "familyShareable": false,
       "internalID": "B341BD2E-D5A0-5219-933D-1176F5E6128C",
       "localizations": [
         {
-          "description": "All three astrocartography chapters, read from your lines.",
+          "description": "Both paid astrocartography chapters. Yours permanently.",
           "displayName": "Astrocartography",
           "locale": "en_US"
         }
       ],
-      "productID": "ai.pazl.alma.astrocartography",
-      "referenceName": "Astrocartography",
+      "productID": "ai.pazl.alma.door.astrocartography",
+      "referenceName": "Door — astrocartography",
       "type": "NonConsumable"
     },
     {
-      "displayPrice": "5.99",
+      "displayPrice": "4.99",
       "familyShareable": false,
       "internalID": "17E1FC2A-D32D-52F5-AB45-677D60D2C608",
       "localizations": [
         {
-          "description": "All four cross-synthesis chapters — where three systems agree about you and disagree.",
+          "description": "All three paid cross-synthesis chapters. Yours permanently.",
           "displayName": "Cross-synthesis",
           "locale": "en_US"
         }
       ],
-      "productID": "ai.pazl.alma.synthesis",
-      "referenceName": "Cross-synthesis",
+      "productID": "ai.pazl.alma.door.synthesis",
+      "referenceName": "Door — synthesis",
       "type": "NonConsumable"
     },
     {
-      "displayPrice": "38.99",
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "C7170409-2050-5820-94B6-C5B3DBD4FC00",
+      "localizations": [
+        {
+          "description": "The four chapters about you two. Yours permanently.",
+          "displayName": "Compatibility report",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "ai.pazl.alma.pair.check",
+      "referenceName": "Pair — one compatibility report",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "19.99",
       "familyShareable": false,
       "internalID": "C631494E-B8D3-5614-A5AD-6DC459234F0E",
       "localizations": [
         {
-          "description": "All forty-one chapters across all eight systems, bought once and kept.",
-          "displayName": "The whole archive",
+          "description": "All five readings that never change. Yours permanently.",
+          "displayName": "All five readings",
           "locale": "en_US"
         }
       ],
-      "productID": "ai.pazl.alma.archive",
-      "referenceName": "The whole archive",
-      "type": "NonConsumable"
-    },
-    {
-      "displayPrice": "33.00",
-      "familyShareable": false,
-      "internalID": "51AEE528-2964-5DE8-B3EA-24A03F371C7B",
-      "localizations": [
-        {
-          "description": "The whole archive, less what you already paid for one system.",
-          "displayName": "The rest of the archive",
-          "locale": "en_US"
-        }
-      ],
-      "productID": "ai.pazl.alma.archive_upgrade",
-      "referenceName": "The rest of the archive",
+      "productID": "ai.pazl.alma.bundle.static",
+      "referenceName": "Bundle — five static readings",
       "type": "NonConsumable"
     }
   ],
@@ -166,30 +121,8 @@
     {
       "id": "95652208-E93F-545F-BCA9-A8F79F18BD10",
       "localizations": [],
-      "name": "Alma",
+      "name": "alma_access",
       "subscriptions": [
-        {
-          "adHocOffers": [],
-          "codeOffers": [],
-          "displayPrice": "4.99",
-          "familyShareable": false,
-          "groupNumber": 1,
-          "internalID": "30AA51DE-6166-51E6-99B4-AC255C5CADA0",
-          "introductoryOffer": null,
-          "localizations": [
-            {
-              "description": "Transits, the solar return and compatibility while they move, plus thirty questions a month.",
-              "displayName": "Everything live, weekly",
-              "locale": "en_US"
-            }
-          ],
-          "productID": "ai.pazl.alma.weekly",
-          "recurringSubscriptionPeriod": "P1W",
-          "referenceName": "Everything live, weekly",
-          "subscriptionGroupID": "95652208-E93F-545F-BCA9-A8F79F18BD10",
-          "type": "RecurringSubscription",
-          "winbackOffers": []
-        },
         {
           "adHocOffers": [],
           "codeOffers": [],
@@ -200,36 +133,14 @@
           "introductoryOffer": null,
           "localizations": [
             {
-              "description": "Transits, the solar return and compatibility while they move, plus thirty questions a month.",
-              "displayName": "Everything live, monthly",
+              "description": "Every reading, transits, your solar return, one pair a month, 30 questions.",
+              "displayName": "Everything, monthly",
               "locale": "en_US"
             }
           ],
-          "productID": "ai.pazl.alma.monthly",
+          "productID": "ai.pazl.alma.sub.monthly",
           "recurringSubscriptionPeriod": "P1M",
-          "referenceName": "Everything live, monthly",
-          "subscriptionGroupID": "95652208-E93F-545F-BCA9-A8F79F18BD10",
-          "type": "RecurringSubscription",
-          "winbackOffers": []
-        },
-        {
-          "adHocOffers": [],
-          "codeOffers": [],
-          "displayPrice": "78.99",
-          "familyShareable": false,
-          "groupNumber": 1,
-          "internalID": "AC34DB03-D7A1-5409-93AB-2ED05E8A3203",
-          "introductoryOffer": null,
-          "localizations": [
-            {
-              "description": "Every system, every chapter, and the transits as they move.",
-              "displayName": "Everything, for a year",
-              "locale": "en_US"
-            }
-          ],
-          "productID": "ai.pazl.alma.annual",
-          "recurringSubscriptionPeriod": "P1Y",
-          "referenceName": "Everything, for a year",
+          "referenceName": "Subscription — monthly",
           "subscriptionGroupID": "95652208-E93F-545F-BCA9-A8F79F18BD10",
           "type": "RecurringSubscription",
           "winbackOffers": []

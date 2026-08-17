@@ -155,7 +155,7 @@ def _raw(data: bytes) -> str:
 
 def _transaction(
     *,
-    product: str = "natal",
+    product: str = "door.natal",
     transaction_id: str = "2000000500000001",
     original: str | None = None,
     kind: str = "Non-Consumable",
@@ -286,16 +286,16 @@ def test_a_leaf_borrowed_from_apples_chain_does_not_help(apple):
 
 def test_a_tampered_payload_is_refused(apple):
     """One character changed in the product id, after signing."""
-    token = _sign(_transaction(product="natal"), apple["key"], apple["chain"])
+    token = _sign(_transaction(product="door.natal"), apple["key"], apple["chain"])
     header, payload, signature = token.split(".")
     swapped = _segment({**_transaction(), "productId": store_product_id(
-        "archive", processor="appstore"
+        "bundle.static", processor="appstore"
     )})
     with pytest.raises(InvalidSignature, match="signature does not match"):
         decode_transaction(f"{header}.{swapped}.{signature}")
     # ...and the untouched one still verifies, so the assertion above is about
     # the tampering rather than about the fixture being broken.
-    assert decode_transaction(token)["productId"].endswith("natal")
+    assert decode_transaction(token)["productId"].endswith("door.natal")
 
 
 def test_alg_none_is_refused(apple):
@@ -396,9 +396,9 @@ async def test_a_product_mismatch_is_refused(apple):
     Buy the $5.99 door, ask for the $38.99 archive. Apple's signature over
     `productId` is what refuses it.
     """
-    token = _sign(_transaction(product="natal"), apple["key"], apple["chain"])
-    with pytest.raises(ProductMismatch, match="natal"):
-        await AppStoreProvider().verify_purchase(transaction=token, product="archive")
+    token = _sign(_transaction(product="door.natal"), apple["key"], apple["chain"])
+    with pytest.raises(ProductMismatch, match="door.natal"):
+        await AppStoreProvider().verify_purchase(transaction=token, product="bundle.static")
 
 
 async def test_a_product_the_price_list_does_not_sell_is_refused(apple):
@@ -406,7 +406,7 @@ async def test_a_product_the_price_list_does_not_sell_is_refused(apple):
     payload = {**_transaction(), "productId": "alma.something_we_withdrew"}
     token = _sign(payload, apple["key"], apple["chain"])
     with pytest.raises(ProductMismatch):
-        await AppStoreProvider().verify_purchase(transaction=token, product="natal")
+        await AppStoreProvider().verify_purchase(transaction=token, product="door.natal")
 
 
 async def test_a_revoked_transaction_is_refused(apple):
@@ -418,12 +418,12 @@ async def test_a_revoked_transaction_is_refused(apple):
     """
     token = _sign(_transaction(revoked=True), apple["key"], apple["chain"])
     with pytest.raises(PurchaseIncomplete, match="revoked"):
-        await AppStoreProvider().verify_purchase(transaction=token, product="natal")
+        await AppStoreProvider().verify_purchase(transaction=token, product="door.natal")
 
 
 async def test_a_door_purchase_grants_its_system_and_only_that(apple):
-    token = _sign(_transaction(product="natal"), apple["key"], apple["chain"])
-    event = await AppStoreProvider().verify_purchase(transaction=token, product="natal")
+    token = _sign(_transaction(product="door.natal"), apple["key"], apple["chain"])
+    event = await AppStoreProvider().verify_purchase(transaction=token, product="door.natal")
 
     assert event.provider == "appstore"
     assert event.transaction_id == "2000000500000001"
@@ -447,7 +447,7 @@ async def test_a_door_purchase_grants_its_system_and_only_that(apple):
 async def test_a_subscription_purchase_carries_the_id_every_renewal_will_share(apple):
     token = _sign(
         _transaction(
-            product="monthly",
+            product="sub.monthly",
             transaction_id="2000000500000002",
             original="2000000500000002",
             kind="Auto-Renewable Subscription",
@@ -457,13 +457,14 @@ async def test_a_subscription_purchase_carries_the_id_every_renewal_will_share(a
         apple["key"],
         apple["chain"],
     )
-    event = await AppStoreProvider().verify_purchase(transaction=token, product="monthly")
+    event = await AppStoreProvider().verify_purchase(transaction=token, product="sub.monthly")
 
     from alma.billing.provider import entitlement_for as grant_for
 
     grant = grant_for(event)
     assert grant.subscription_id == "2000000500000002"
-    assert grant.scope == "live"
+    # `all`, а не `live`: подписка v3 продаёт всё, пока активна.
+    assert grant.scope == "all"
     assert grant.duration is not None and 28 <= grant.duration.days <= 31
     assert event.renews_at is not None
 
@@ -476,9 +477,9 @@ async def test_the_store_price_is_never_checked_against_our_catalogue(apple):
     is the request-time arithmetic `catalogue.py` exists to forbid. What guards
     the grant instead is the signed product id, which the mismatch tests cover.
     """
-    yen = {**_transaction(product="natal", price=900_000), "currency": "JPY"}
+    yen = {**_transaction(product="door.natal", price=900_000), "currency": "JPY"}
     token = _sign(yen, apple["key"], apple["chain"])
-    event = await AppStoreProvider().verify_purchase(transaction=token, product="natal")
+    event = await AppStoreProvider().verify_purchase(transaction=token, product="door.natal")
 
     from alma.billing.provider import entitlement_for as grant_for
 
@@ -505,7 +506,7 @@ def test_a_renewal_extends_the_same_subscription(apple):
             apple,
             kind="DID_RENEW",
             transaction=_transaction(
-                product="monthly",
+                product="sub.monthly",
                 transaction_id="2000000500000099",
                 original="2000000500000002",
                 kind="Auto-Renewable Subscription",
@@ -538,7 +539,7 @@ def test_a_cancellation_does_not_revoke(apple):
             kind="DID_CHANGE_RENEWAL_STATUS",
             subtype="AUTO_RENEW_DISABLED",
             transaction=_transaction(
-                product="monthly",
+                product="sub.monthly",
                 kind="Auto-Renewable Subscription",
                 expires_in_days=20,
             ),
@@ -564,7 +565,7 @@ def test_turning_renewal_back_on_is_not_a_cancellation_and_grants_nothing(apple)
             kind="DID_CHANGE_RENEWAL_STATUS",
             subtype="AUTO_RENEW_ENABLED",
             transaction=_transaction(
-                product="monthly", kind="Auto-Renewable Subscription", expires_in_days=20
+                product="sub.monthly", kind="Auto-Renewable Subscription", expires_in_days=20
             ),
         )
     ).normalise()
@@ -582,7 +583,7 @@ def test_a_billing_retry_revokes_nothing(apple):
                 kind="DID_FAIL_TO_RENEW",
                 subtype=subtype,
                 transaction=_transaction(
-                    product="monthly", kind="Auto-Renewable Subscription"
+                    product="sub.monthly", kind="Auto-Renewable Subscription"
                 ),
             )
         ).normalise()
@@ -601,7 +602,7 @@ def test_a_refund_closes_the_grant(apple):
         _notification(
             apple,
             kind="REFUND",
-            transaction=_transaction(product="natal"),
+            transaction=_transaction(product="door.natal"),
         )
     ).normalise()
 
@@ -614,7 +615,7 @@ def test_a_refund_closes_the_grant(apple):
 
 def test_family_sharing_being_revoked_takes_access_without_taking_money(apple):
     event = parse(
-        _notification(apple, kind="REVOKE", transaction=_transaction(product="natal"))
+        _notification(apple, kind="REVOKE", transaction=_transaction(product="door.natal"))
     ).normalise()
 
     assert event.revokes is True
@@ -631,7 +632,7 @@ def test_an_expiry_ends_the_plan(apple):
             kind="EXPIRED",
             subtype="VOLUNTARY",
             transaction=_transaction(
-                product="monthly", kind="Auto-Renewable Subscription", expires_in_days=0
+                product="sub.monthly", kind="Auto-Renewable Subscription", expires_in_days=0
             ),
         )
     ).normalise()
@@ -719,7 +720,7 @@ async def test_there_is_no_server_created_checkout():
     """Refused loudly rather than faked into a URL nothing can open."""
     with pytest.raises(BillingUnavailable, match="StoreKit"):
         await AppStoreProvider().open_session(
-            product="natal", user_id="u1", currency="USD"
+            product="door.natal", user_id="u1", currency="USD"
         )
 
 

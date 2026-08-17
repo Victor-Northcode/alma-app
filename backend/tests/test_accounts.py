@@ -219,7 +219,7 @@ def test_the_funnel_rows_of_a_guest_move_with_everything_else(db):
     async def work(session):
         guest = await accounts.create_guest(session)
         session.add(Event(user_id=guest.id, name="landing_view", properties={}))
-        session.add(Consent(user_id=guest.id, product="natal", locale="en",
+        session.add(Consent(user_id=guest.id, product="door.natal", locale="en",
                             transaction_id="txn_3", statements=[]))
         await session.flush()
 
@@ -403,7 +403,7 @@ def test_a_detached_payment_record_no_longer_says_who_bought(db):
         body = {
             "data": {
                 "id": "txn_1",
-                "custom_data": {"user_id": user.id, "product": "archive"},
+                "custom_data": {"user_id": user.id, "product": "bundle.static"},
                 "customer": {"email": "a@example.com", "name": "Sofia Bianchi"},
             }
         }
@@ -452,9 +452,9 @@ def test_a_consent_that_never_became_a_purchase_is_not_evidence_of_anything(db):
     """
     async def work(session):
         user = await accounts.sign_in(session, email="a@example.com", provider="email")
-        session.add(Consent(user_id=user.id, product="natal", locale="en",
+        session.add(Consent(user_id=user.id, product="door.natal", locale="en",
                             statements=[{"key": "immediate_access", "text": "now"}]))
-        session.add(Consent(user_id=user.id, product="archive", locale="en",
+        session.add(Consent(user_id=user.id, product="bundle.static", locale="en",
                             transaction_id="txn_9",
                             statements=[{"key": "immediate_access", "text": "now"}]))
         await session.flush()
@@ -464,7 +464,7 @@ def test_a_consent_that_never_became_a_purchase_is_not_evidence_of_anything(db):
         rows = (await session.execute(select(Consent))).scalars().all()
         return [(row.product, row.user_id) for row in rows]
 
-    assert db(work) == [("archive", None)]
+    assert db(work) == [("bundle.static", None)]
 
 
 def test_a_deleted_account_says_so_rather_than_silently_becoming_someone_new(db):
@@ -591,39 +591,12 @@ def test_a_retried_webhook_does_not_grant_twice(db):
     assert first == second and count == 1
 
 
-def test_a_recent_one_time_purchase_credits_the_annual_upgrade(db):
-    """Credited at our list price for it, which is not what the card was charged.
-
-    See `annual_credit`: the stored amount is the processor's tax-inclusive
-    total, in the buyer's currency, and crediting that refunds tax we have
-    already remitted.
-    """
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        await entitlements.grant(
-            session, user, system="natal", kind="one_time",
-            transaction_id="t5", amount_cents=1499,
-        )
-        return await entitlements.annual_credit(session, user)
-
-    assert db(work) == entitlements.list_price_cents("natal")
-
-
-def test_an_old_purchase_does_not_credit(db):
-    from alma.db.models import utcnow
-
-    async def work(session):
-        user = await accounts.create_guest(session)
-        grant = await entitlements.grant(
-            session, user, system="natal", kind="one_time",
-            transaction_id="t6", amount_cents=1499,
-        )
-        grant.granted_at = utcnow() - entitlements.CREDIT_WINDOW - timedelta(days=1)
-        await session.flush()
-        return await entitlements.annual_credit(session, user)
-
-    assert db(work) == 0
+# Здесь стояли два теста кредитного добора: «свежая разовая покупка засчитывается
+# в апгрейд по нашей прайс-цене» и «покупка старше окна не засчитывается». Оба
+# удалены вместе с самим механизмом — монетизация v3 сняла с продажи `archive`,
+# `archive-upgrade` и `archive-bump` (ТЗ §2), а с ними ушли `annual_credit`,
+# `list_price_cents` и `CREDIT_WINDOW`. Проверять нечего: нет цены, в которую
+# кредит можно превратить.
 
 
 def test_a_free_chapter_opens_inside_a_paid_system(db):

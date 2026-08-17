@@ -837,17 +837,22 @@ class Entitlements {
   /// Слаги систем, открытых прямо сейчас.
   final List<String> unlocked;
 
-  /// Сами права: `active`, `kind` (`one_time` | `weekly` | `monthly` |
-  /// `annual`) и `scope` (`system` | `all` | `live`).
+  /// Сами права: `active`, `kind` (`one_time` | `consumable` | `monthly`) и
+  /// `scope` (`system` | `static` | `pair` | `all` | `live`).
   final List<Map<String, dynamic>> rows;
 
-  bool get hasPlan => rows.any((row) =>
-      row['active'] == true &&
-      const ['weekly', 'monthly', 'annual'].contains(row['kind']));
+  bool get hasPlan =>
+      rows.any((row) => row['active'] == true && row['kind'] == 'monthly');
 
+  /// Куплен ли бандл из пяти разборов.
+  ///
+  /// Читается по `scope == 'static'`, а не по «открыто пять систем»: подписка
+  /// тоже открывает все пять, и спрятать от подписчицы бандл значит спрятать
+  /// ровно то, что она захочет перед отменой. Прежнее условие (`scope == 'all'`
+  /// и разовая покупка) описывало архив $38.99, которого больше нет.
   bool get ownsArchive => rows.any((row) =>
       row['active'] == true &&
-      row['scope'] == 'all' &&
+      row['scope'] == 'static' &&
       row['kind'] == 'one_time');
 
   bool opened(SystemSlug system) => unlocked.contains(system.slug);
