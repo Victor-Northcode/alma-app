@@ -548,7 +548,12 @@ def test_a_pinned_identifier_beats_the_convention(monkeypatch):
     assert store_slug("alma.natal_v2", processor="appstore") == "natal"
     # ...and the convention still answers for every other row, so pinning one
     # product does not require pinning all of them.
-    assert store_product_id("archive", processor="appstore") == "alma.archive"
+    # Префикс выбран владельцем 17 августа 2026 — `ai.pazl.alma.`, как у самого
+    # приложения; см. `config.store_product_prefix`. Здесь он не подставляется
+    # из настроек намеренно: строка написана буквами ровно затем, чтобы смена
+    # префикса ломала этот тест и требовала человека. Решение необратимо после
+    # первой публикации, и молчаливо разъехаться оно не должно.
+    assert store_product_id("archive", processor="appstore") == "ai.pazl.alma.archive"
 
 
 def test_the_prefix_is_configuration_rather_than_a_literal(monkeypatch):

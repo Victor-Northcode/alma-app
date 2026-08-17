@@ -286,7 +286,18 @@ class Settings(BaseSettings):
     #: because neither console accepts a hyphen. See
     #: `billing/provider.py::store_product_id`, which is the one place the rule
     #: lives, and which still lets a pinned `processor_ids` entry win.
-    store_product_prefix: str = Field(default="alma.", alias="ALMA_STORE_PRODUCT_PREFIX")
+    #: **Решено владельцем 17 августа 2026: как в приложении.** Выбор стоял
+    #: между `alma.` — тем, что просили все прежние сборки, — и `ai.pazl.alma.`,
+    #: совпадающим с идентификатором самого приложения. Владелец: «как в
+    #: приложении».
+    #:
+    #: Решение необратимо: ни один магазин не даёт переименовать или
+    #: переиспользовать идентификатор товара после публикации, и цена ошибки —
+    #: второй набор товаров плюс перенос всех, кто уже купил. Менять это
+    #: значение после первой публикации нельзя.
+    store_product_prefix: str = Field(
+        default="ai.pazl.alma.", alias="ALMA_STORE_PRODUCT_PREFIX"
+    )
 
     # ── push ───────────────────────────────────────────────────────────────
     #: Apple's four, and they are one credential rather than four settings.

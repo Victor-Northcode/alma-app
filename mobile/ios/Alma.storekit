@@ -13,7 +13,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.natal",
+      "productID": "ai.pazl.alma.natal",
       "referenceName": "Natal chart",
       "type": "NonConsumable"
     },
@@ -28,7 +28,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.numerology",
+      "productID": "ai.pazl.alma.numerology",
       "referenceName": "Numerology",
       "type": "NonConsumable"
     },
@@ -43,7 +43,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.birth_card",
+      "productID": "ai.pazl.alma.birth_card",
       "referenceName": "Birth Card",
       "type": "NonConsumable"
     },
@@ -58,7 +58,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.transits",
+      "productID": "ai.pazl.alma.transits",
       "referenceName": "Transits",
       "type": "NonConsumable"
     },
@@ -73,7 +73,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.solar_return",
+      "productID": "ai.pazl.alma.solar_return",
       "referenceName": "Solar return",
       "type": "NonConsumable"
     },
@@ -88,7 +88,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.compatibility",
+      "productID": "ai.pazl.alma.compatibility",
       "referenceName": "Compatibility",
       "type": "NonConsumable"
     },
@@ -103,7 +103,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.astrocartography",
+      "productID": "ai.pazl.alma.astrocartography",
       "referenceName": "Astrocartography",
       "type": "NonConsumable"
     },
@@ -118,7 +118,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.synthesis",
+      "productID": "ai.pazl.alma.synthesis",
       "referenceName": "Cross-synthesis",
       "type": "NonConsumable"
     },
@@ -133,7 +133,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.archive",
+      "productID": "ai.pazl.alma.archive",
       "referenceName": "The whole archive",
       "type": "NonConsumable"
     },
@@ -148,7 +148,7 @@
           "locale": "en_US"
         }
       ],
-      "productID": "alma.archive_upgrade",
+      "productID": "ai.pazl.alma.archive_upgrade",
       "referenceName": "The rest of the archive",
       "type": "NonConsumable"
     }
@@ -183,7 +183,7 @@
               "locale": "en_US"
             }
           ],
-          "productID": "alma.weekly",
+          "productID": "ai.pazl.alma.weekly",
           "recurringSubscriptionPeriod": "P1W",
           "referenceName": "Everything live, weekly",
           "subscriptionGroupID": "95652208-E93F-545F-BCA9-A8F79F18BD10",
@@ -205,7 +205,7 @@
               "locale": "en_US"
             }
           ],
-          "productID": "alma.monthly",
+          "productID": "ai.pazl.alma.monthly",
           "recurringSubscriptionPeriod": "P1M",
           "referenceName": "Everything live, monthly",
           "subscriptionGroupID": "95652208-E93F-545F-BCA9-A8F79F18BD10",
@@ -227,7 +227,7 @@
               "locale": "en_US"
             }
           ],
-          "productID": "alma.annual",
+          "productID": "ai.pazl.alma.annual",
           "recurringSubscriptionPeriod": "P1Y",
           "referenceName": "Everything, for a year",
           "subscriptionGroupID": "95652208-E93F-545F-BCA9-A8F79F18BD10",

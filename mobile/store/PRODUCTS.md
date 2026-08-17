@@ -124,9 +124,9 @@ can contain numbers (0-9), lowercase letters (a-z), underscores (_), and periods
 
 The shipped clients and the backend default all use the prefix **`alma.`**:
 
-* `backend/alma/config.py:251` — `store_product_prefix: str = Field(default="alma.", alias="ALMA_STORE_PRODUCT_PREFIX")`
-* `mobile/ios/Alma/Billing/LadderKey.swift:115` — `static let prefix = "alma."`
-* `mobile/android/.../billing/StoreProducts.kt:57` — `const val PREFIX: String = "alma."`
+* `backend/alma/config.py:251` — `store_product_prefix: str = Field(default="ai.pazl.alma.", alias="ALMA_STORE_PRODUCT_PREFIX")`
+* `mobile/ios/Alma/Billing/LadderKey.swift:115` — `static let prefix = "ai.pazl.alma."`
+* `mobile/android/.../billing/StoreProducts.kt:57` — `const val PREFIX: String = "ai.pazl.alma."`
 
 `alma.natal` is a bare, generic string in a namespace we do not own. It is legal on both
 stores and it will work — but it can never be changed afterwards, on either store, and the
@@ -138,7 +138,7 @@ costs a new set of products and every buyer's entitlement.
 **Do all four together or none:**
 
 ```
-ALMA_STORE_PRODUCT_PREFIX=alma.        # deployment environment
+ALMA_STORE_PRODUCT_PREFIX=ai.pazl.alma.        # deployment environment
 LadderKey.prefix       = "alma."       # LadderKey.swift:115
 StoreProducts.PREFIX   = "alma."       # StoreProducts.kt:57
 processor_ids          = see §7                # catalogue.py

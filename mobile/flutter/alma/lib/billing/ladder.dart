@@ -60,7 +60,7 @@ enum LadderKey {
   /// была бы вторым местом, которое однажды разойдётся с консолью. Правило:
   /// ключ каталога с приставкой `alma.`, дефисы заменены подчёркиваниями —
   /// дефис в идентификаторе не принимают ни App Store Connect, ни Play.
-  static const prefix = 'alma.';
+  static const prefix = 'ai.pazl.alma.';
   String get storeProductId => prefix + slug.replaceAll('-', '_');
 
   /// Обратное — для покупки, которая пришла из магазина, а не из нажатой

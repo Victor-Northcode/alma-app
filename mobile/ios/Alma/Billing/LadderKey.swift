@@ -115,7 +115,7 @@ enum LadderKey: String, CaseIterable, Sendable, Hashable, Identifiable {
     /// Changing it is changing every product id in the console, so it is a
     /// constant rather than a build setting: a build setting invites somebody to
     /// change it for one configuration.
-    static let prefix = "alma."
+    static let prefix = "ai.pazl.alma."
 
     /// What to ask `Product.products(for:)` for. Every rung, including the ones
     /// this account cannot be shown — the request is one round trip and the

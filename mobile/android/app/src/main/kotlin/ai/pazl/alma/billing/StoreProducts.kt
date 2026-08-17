@@ -54,7 +54,7 @@ import com.android.billingclient.api.BillingClient
  */
 object StoreProducts {
 
-    const val PREFIX: String = "alma."
+    const val PREFIX: String = "ai.pazl.alma."
 
     /* ── the five catalogue keys that are not one of the eight systems ── */
 
