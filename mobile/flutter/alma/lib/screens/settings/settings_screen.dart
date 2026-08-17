@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
@@ -14,6 +15,7 @@ import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
+import '../../notify/push_devices.dart';
 import '../../net/models.dart' show SystemSlug;
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
@@ -130,6 +132,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     setState(() => _delete = _Delete.working);
     try {
+      // **Сначала устройство, потом аккаунт.** Сервер и сам чистит строки
+      // (`accounts.erase` → `tokens.forget`), но местную запись о токене он
+      // достать не может: она лежит в `shared_preferences` этого телефона и
+      // пережила бы удаление. Следующий гость на том же аппарате получил бы
+      // `sync`, считающий себя уже зарегистрированным, и не отправил бы токен
+      // заново. Отказ сети здесь не должен мешать удалению — оно важнее.
+      try {
+        await AlmaPush.instance.forget(session.client);
+      } catch (_) {}
       await session.client.deleteAccount(confirmation!);
       if (!mounted) return;
       setState(() => _delete = _Delete.done);
@@ -192,6 +203,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _loadDaily() async {
     setState(() => _dailyFailed = false);
+    // Правда о разрешении — в системе, а не в нашей записи (`PUSH.md §5.6`).
+    // Разрешение отзывают в настройках телефона, и приложению об этом никто не
+    // сообщает: без этой проверки выключатель говорил бы «важное по утрам»
+    // поверх отозванного разрешения, и человек ждал бы писем, которых система
+    // не пропустит. Спрашиваем при каждом открытии раздела — ответ локальный и
+    // мгновенный, сети не стоит.
+    unawaited(AlmaPush.instance.allowed.then((yes) {
+      if (mounted) setState(() => _pushDenied = !yes);
+    }));
     try {
       final daily = await SessionScope.of(context).client.dailySettings();
       if (mounted) setState(() => _daily = daily);
@@ -199,6 +219,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (mounted) setState(() => _dailyFailed = _daily == null);
     }
   }
+
+  /// Система уведомления не пропускает, хотя в аккаунте они включены.
+  bool _pushDenied = false;
 
   Future<void> _loadPlan() async {
     setState(() => _planFailed = false);
@@ -564,6 +587,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return [
       _Section(label: l.dailySettingTitle, children: [
+        // Отказ системы — над выбором, а не под ним: он объясняет, почему
+        // выбранное ниже не работает, и объяснение, стоящее после того, что
+        // оно объясняет, читают вторым. Молчим, когда режим «выключено», —
+        // там нечему не приходить.
+        if (_pushDenied && mode != 'off') ...[
+          const SizedBox(height: 14),
+          Text(l.dailyStatusDenied, style: AlmaType.meta),
+          const SizedBox(height: 10),
+          AlmaButton(
+            kind: AlmaButtonKind.veil,
+            fills: false,
+            label: l.dailyStatusOpenSettings,
+            onTap: () => AlmaPush.instance.openSystemSettings(),
+          ),
+          const SizedBox(height: 4),
+        ],
         for (final (value, label) in [
           ('off', l.dailySettingOff),
           ('occasional', l.dailySettingOccasionally),

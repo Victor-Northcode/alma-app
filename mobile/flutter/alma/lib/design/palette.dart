@@ -37,6 +37,11 @@ class AlmaPalette {
   // ── золото ──────────────────────────────────────────────────────────────
   static const gold = Color(0xFFC9AE6B);
   static const goldDeep = Color(0xFFA8873C);
+  // Золото на золочёной бумаге — на ступень темнее пергаментного. Лист главы
+  // (`s51`, `s52`) светлее пергамента и сам золотой прожилками: `goldDeep` на
+  // нём теряет край и читается пятном, а не буквами. Холст пишет надзаголовок
+  // и мета-строку главы именно этим числом.
+  static const goldOnGilt = Color(0xFF8A6F2E);
   static const goldBright = Color(0xFFE4D3A2);
   static const starFill = Color(0xFFF6E7BC);
 

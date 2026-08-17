@@ -1,8 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../design/buttons.dart';
+import '../../design/gilt_page.dart';
 import '../../design/layout.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
@@ -111,6 +114,14 @@ class _ChapterScreenState extends State<ChapterScreen> {
   double _pull = 0;
   bool _armed = false;
 
+  /// Сколько главы прочитано — для нити у правого поля ([GiltThread]).
+  ///
+  /// **Отдельным сигналом, а не полем состояния.** Прокрутка сообщает о себе
+  /// каждый кадр; `setState` на каждый кадр перестраивал бы всю страницу
+  /// вместе со списком абзацев — то есть платил бы разбором текста за
+  /// двухточечную полоску. Слушает её один узел.
+  final ValueNotifier<double> _read = ValueNotifier(0);
+
   /// Второй порог взят и ждёт, когда палец отпустят.
   bool _committed = false;
   bool _advancing = false;
@@ -123,6 +134,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // Признак снимается вместе с экраном: бар возвращается к ночному, даже
     // если ушли жестом назад, а не кнопкой.
     readingNow.value = false;
+    _read.dispose();
     super.dispose();
   }
 
@@ -185,6 +197,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// «закрыто» тому, кто только что заплатил.
   Future<void> _load({bool relist = false}) async {
     final session = SessionScope.of(context);
+    // Нить возвращается в начало вместе со страницей: следующая глава
+    // прочитана на ноль, чем бы ни кончилась предыдущая.
+    _read.value = 0;
     setState(() {
       _loading = true;
       _failure = null;
@@ -377,6 +392,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // Прибавление единицы здесь печатало «2 / 16» на главе I — найдено
     // сравнением с нативным экраном.
     final index = _entry?.index ?? 1;
+    // Читается до `SafeArea`: внутри неё вырез уже съеден, и остатка не
+    // вычислить.
+    final safeTop = MediaQuery.paddingOf(context).top;
 
     return Scaffold(
       backgroundColor: AlmaPalette.night,
@@ -385,7 +403,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // Ночным состояниям главы — ожиданию письма, стене закрытой системы,
       // отказу — полагается то же небо, что «Сегодня» и анкете: на s26 и s29 за
       // содержимым звёзды и туманность. Здесь была ровная заливка ночью, и
-      // экран читался плоским рядом с любым соседним. Пергамент неба не
+      // экран читался плоским рядом с любым соседним. Бумага неба не
       // показывает — там документ, и звёзды под непрозрачным листом стоили бы
       // только кадров на самом длинном чтении продукта.
       //
@@ -398,9 +416,15 @@ class _ChapterScreenState extends State<ChapterScreen> {
         fit: StackFit.expand,
         children: [
           if (onParchment)
-            const DecoratedBox(
-              decoration: BoxDecoration(gradient: AlmaGradient.parchment),
-            )
+            // **Глава лежит на золочёной бумаге, а не на пергаменте.**
+            //
+            // Пергамент — градиент `#EDE3CC→#DFD0AF` — стоял здесь с первого
+            // дня порта и был верен старому холсту (`s5`). Свежий эталон
+            // застилает открытие и чтение главы снимком листа в золочёной раме
+            // (`s51`, `s52`), и это не смена оттенка: у рамы есть габарит, ради
+            // которого у страницы появились поля 52/56 и посадка вклейки в
+            // чистый центр. Правило расхождений холста однозначно — прав холст.
+            const GiltPage()
           else
             // Настроение заведено ровно для этого экрана: поле приглушено и
             // кометы нет, потому что продукт здесь — слова, а свет, идущий
@@ -416,22 +440,38 @@ class _ChapterScreenState extends State<ChapterScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(AlmaMetrics.pad, 10, AlmaMetrics.pad, 0),
-                  child: Row(children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: Icon(Icons.arrow_back,
-                          color: onParchment ? AlmaPalette.inkMuted : AlmaPalette.gold),
-                      padding: EdgeInsets.zero,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$index / $total',
-                      style: AlmaType.numeral.copyWith(
-                        color: onParchment ? AlmaPalette.inkMuted : AlmaPalette.gold,
-                      ),
-                    ),
-                  ]),
+                  // **На бумаге шапка стоит по холсту, на ночи — по общему
+                  // полю.** Отсчёт у холста от верхнего края экрана (88), а
+                  // `SafeArea` уже опустила содержимое на вырез, поэтому здесь
+                  // остаток. `max` — для телефонов с высокой чёлкой: если
+                  // безопасная зона глубже 83 точек, кнопка съезжает вниз
+                  // вместе с ней, а не прячется под неё.
+                  padding: EdgeInsets.fromLTRB(
+                    onParchment ? GiltPage.side - GiltPage.headPad : AlmaMetrics.pad,
+                    onParchment
+                        ? math.max(10, GiltPage.headTop - GiltPage.headPad - safeTop)
+                        : 10,
+                    AlmaMetrics.pad,
+                    0,
+                  ),
+                  child: onParchment
+                      // Счётчика глав рядом со стрелкой на бумаге нет: холст
+                      // печатает его вертикально под нитью прогресса у правого
+                      // поля, и держать два счётчика на одной странице незачем.
+                      ? GiltBack(onTap: () => Navigator.of(context).pop())
+                      : Row(children: [
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.arrow_back,
+                                color: AlmaPalette.gold),
+                            padding: EdgeInsets.zero,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '$index / $total',
+                            style: AlmaType.numeral,
+                          ),
+                        ]),
                 ),
                 Expanded(
                   // Смена главы — снизу вверх с затуханием, той же кривой turn,
@@ -453,15 +493,50 @@ class _ChapterScreenState extends State<ChapterScreen> {
                     ),
                     child: KeyedSubtree(
                       key: ValueKey(_showing),
-                      child: _page(l),
+                      child: onParchment ? _underMargin(_page(l)) : _page(l),
                     ),
                   ),
                 ),
               ],
             ),
           ),
+          // Нить прогресса — поверх содержимого и мимо безопасной зоны: она
+          // стоит по середине высоты **экрана**, как на холсте, и вырез её не
+          // сдвигает. Только на бумаге: прогресса чтения там, где текста ещё
+          // нет, не бывает.
+          if (onParchment) GiltThread(read: _read, counter: '$index / $total'),
         ],
       ),
+    );
+  }
+
+  /// Верхнее поле страницы: строка уходит под него, а не режется об него.
+  ///
+  /// **Что было видно.** Прокрутка обрезается сразу под кнопкой возврата, и на
+  /// срезе оставался ряд половинок букв — верхушки строчных, повисшие в
+  /// сантиметре от кружка со стрелкой. На ночном небе такого не было: там
+  /// текст уходил в тёмное и срез не читался. На золочёной бумаге фон светлый и
+  /// подробный, и разрубленная строка на нём видна первой.
+  ///
+  /// Холст (`s51`, `s52`) держит верхние 142 точки чистой бумагой в обоих
+  /// кадрах — там нет ни строки. Натив ответа не даёт вовсе: золочёной бумаги
+  /// он не знает, глава там лежит на пергаменте. Значит прав холст, и поле
+  /// должно быть полем.
+  ///
+  /// Гасим не фон, а сам текст: бумага лежит отдельным дном стопки, под
+  /// прокруткой, поэтому прозрачность строки открывает лист, а не пустоту.
+  /// Восемнадцать точек — высота одной строчной буквы этого кегля: меньше
+  /// читается как обрезка, больше съедает живую строку.
+  Widget _underMargin(Widget page) {
+    return ShaderMask(
+      shaderCallback: (rect) => const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0x00000000), Color(0xFF000000)],
+        stops: [0.0, 1.0],
+      ).createShader(Rect.fromLTWH(0, rect.top, rect.width, 18)),
+      blendMode: BlendMode.dstIn,
+      child: page,
     );
   }
 
@@ -589,6 +664,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
     if (reading == null) return const SizedBox.shrink();
 
     final next = _next;
+    // ↑ дальше страница; поле верха ей ставит [_underMargin].
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
@@ -596,6 +672,12 @@ class _ChapterScreenState extends State<ChapterScreen> {
         if (!metrics.hasContentDimensions || metrics.maxScrollExtent <= 0) {
           return false;
         }
+        // Нить считает от того же дна, что и порог перелистывания, — и она
+        // обязана дойти до конца ровно там, где страница кончилась, а не
+        // раньше. Дотяжка за дно (`past`) в долю не входит: прочитано и так
+        // всё.
+        _read.value =
+            (metrics.pixels / metrics.maxScrollExtent).clamp(0.0, 1.0);
         final past = metrics.pixels - metrics.maxScrollExtent;
         final byHand = notification is ScrollUpdateNotification &&
             notification.dragDetails != null;
@@ -605,8 +687,32 @@ class _ChapterScreenState extends State<ChapterScreen> {
       child: ListView(
         physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics()),
-        padding: const EdgeInsets.fromLTRB(
-            AlmaMetrics.pad, 8, AlmaMetrics.pad, AlmaMetrics.gapSection),
+        // **Поля страницы — не общие 22, а габарит рамы.**
+        //
+        // Слева 52, справа 56: за этой чертой начинаются золотые завитки, на
+        // которых буквы не читаются, а у правого края вдобавок стоит нить
+        // прогресса со счётчиком. Числа с холста (`s51` — 50/50, `s52` —
+        // 52/56); взята пара `s52`, потому что это кадр с самым длинным
+        // текстом, то есть тот, на котором поля и проверяются.
+        // **Низ считается от бара вкладок, а не общей отбивкой.**
+        //
+        // Здесь стоял `gapSection` (44) — и хвост «↓ Портрет · тяни дальше»
+        // уезжал под полосу вкладок: она 52 плюс домашний индикатор, то есть
+        // 86, и сорока четырёх не хватало. Проверено глазами на симуляторе:
+        // вторая строка хвоста была срезана ровно посередине.
+        //
+        // Формула — та же, что у `screen_scaffold.dart`, вместе с её уроком:
+        // отступ берётся от **окна**, а не от окружения. `Scaffold` с
+        // `extendBody` уже кладёт полную высоту бара в `MediaQuery` тела, и
+        // сложение с ней считает бар дважды. Воздух 22 — из холста: хвост там
+        // стоит на 108 от нижнего края, а 108 − 86 = 22.
+        padding: EdgeInsets.fromLTRB(
+            GiltPage.side,
+            GiltPage.headGap,
+            GiltPage.sideRight,
+            AlmaMetrics.tabBarHeight +
+                MediaQueryData.fromView(View.of(context)).padding.bottom +
+                22),
         children: [
           // **Вклейка — первое, что видно в главе.**
           //
@@ -620,6 +726,10 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // пустоту: дыра в шесть картин известна и помечена, и подменять её
           // чужой картинкой нельзя — вклейка не про то, что человек читает,
           // на платной главе хуже, чем её отсутствие.
+          //
+          // **Посажена в чистый центр листа**, а не просто «по центру экрана»:
+          // теперь у страницы есть поля, и центр колонки 52…56 приходится на
+          // середину бумаги внутри рамы — там же, где вклейка стоит на `s51`.
           Center(
             child: PlateArch(
               store: SessionScope.of(context).plates,
@@ -627,14 +737,21 @@ class _ChapterScreenState extends State<ChapterScreen> {
               numeral: _entry?.numeral ?? '',
             ),
           ),
-          const SizedBox(height: 26),
+          const SizedBox(height: 16),
+          // **Открытие главы выровнено по центру, а не по левому краю.**
+          // Вклейка стоит посреди листа, и надзаголовок с титулом под ней
+          // держат ту же ось — иначе картина висит по центру, а подпись к ней
+          // уезжает влево (`s51`).
           Text(
             '${_entry?.numeral ?? ''} · ${_systemName(l)}'.toLowerCase(),
-            style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep),
+            textAlign: TextAlign.center,
+            style: AlmaType.overline.copyWith(color: AlmaPalette.goldOnGilt),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 9),
           Text(reading.title,
-              style: AlmaType.displayL.copyWith(color: AlmaPalette.ink)),
+              textAlign: TextAlign.center,
+              style: AlmaType.displayL
+                  .copyWith(color: AlmaPalette.ink, height: 1.14)),
           // **Позиции — подпись под главой, а не двенадцать плашек над ней.**
           //
           // Список цитат печатался капсулами во всю ширину: на плотной карте
@@ -646,14 +763,26 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // том, что глава прочитана из карты, — остальные прячутся за счёт.
           if (reading.citedFactors.isNotEmpty) ...[
             const SizedBox(height: 14),
-            _CitedLine(factors: reading.citedFactors, label: l.cabReadFrom),
+            // Мета-строка держит ту же ось, что вклейка и титул, и не шире 280
+            // точек: на холсте она стоит подписью под заголовком, а
+            // растянутая во всю колонку разъезжается на «read from» слева и
+            // «+2» у самого правого поля.
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child:
+                    _CitedLine(factors: reading.citedFactors, label: l.cabReadFrom),
+              ),
+            ),
           ],
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
           Container(
             height: 1,
-            color: AlmaPalette.ink.withValues(alpha: 0.12),
+            color: AlmaPalette.ink.withValues(alpha: 0.13),
           ),
-          const SizedBox(height: 8),
+          // Четыре, а не восемь: у каждого абзаца своя отбивка сверху в 14, и
+          // от линейки до первой строки холст просит восемнадцать.
+          const SizedBox(height: 4),
           // **Размытой пробы здесь больше нет — и это осознанная отмена.**
           //
           // Стояло так: платная глава приезжала написанной целиком, с флагом
@@ -669,28 +798,42 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // написанное есть. Закрытая глава показывает стену (`_LockedWall`),
           // и она честна: заголовок, объяснение, одна кнопка.
           //
-          // Сюда, к пергаменту, попадает только оплаченный текст — целиком.
+          // Сюда, на бумагу, попадает только оплаченный текст — целиком.
+          //
+          // **Кегль вернулся к общему 15.5.** Стояло 17 — число старого холста
+          // (`s5`), где колонка была шириной 358 точек. Колонка сузилась до
+          // 294, и 17 на ней даёт строку в семь-восемь слов: глаз теряет её
+          // конец чаще, чем читает. Холст чтения (`s52`) печатает главу тем же
+          // кеглем, что и весь остальной продукт, с чуть большим интерлиньяжем.
           for (final paragraph in reading.body)
             Padding(
               padding: const EdgeInsets.only(top: 14),
               child: Text(paragraph,
-                  style: AlmaType.body.copyWith(
-                      color: AlmaPalette.ink, fontSize: 17, height: 1.6)),
+                  style: AlmaType.body
+                      .copyWith(color: AlmaPalette.ink, height: 1.62)),
             ),
           if (reading.advice != null) ...[
-            const SizedBox(height: 26),
+            const SizedBox(height: 22),
             Container(
-              padding: const EdgeInsets.only(left: 16),
+              padding: const EdgeInsets.only(left: 15),
               decoration: const BoxDecoration(
                 border: Border(
                     left: BorderSide(color: AlmaPalette.goldDeep, width: 2)),
               ),
               child: Text(
                 reading.advice!,
-                style: AlmaType.voice.copyWith(color: AlmaPalette.ink),
+                style: AlmaType.voice
+                    .copyWith(color: AlmaPalette.ink, fontSize: 18),
               ),
             ),
           ],
+          // **Точка в конце главы.** Звёздочка между двумя гаснущими волосами
+          // — последнее, что стоит на кадре чтения (`s52`): она говорит, что
+          // текст кончился, а не оборвался на середине. Без неё абзац просто
+          // упирается в подсказку о протяжке, и дочитавший не знает, дочитал
+          // ли он.
+          const SizedBox(height: 20),
+          const _EndMark(),
           const SizedBox(height: 34),
           // Хвост: следующая глава и полоса подтверждения. Полоса наливается
           // от 56 до 130 — сколько ещё тянуть, видно, а не угадывается.
@@ -728,6 +871,19 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   Widget _tail(L l, ChapterEntry next) {
     final progress = (_pull / _commitMark).clamp(0.0, 1.0);
+    // **Свечение под хвостом — не украшение, а условие читаемости.**
+    //
+    // Хвост стоит у нижнего края, а нижний край золочёного листа — это уже
+    // рама: завитки, блики, тёмный мрамор за ними. Серая строка попадает на
+    // них и пропадает наполовину. Холст (`s51`, `s52`) решает это ровно так —
+    // два ореола цвета бумаги под самими буквами, а не плашкой под строкой:
+    // плашка на фотографии видна как наклейка.
+    final glow = [
+      Shadow(
+          color: AlmaPalette.inkLight.withValues(alpha: 0.95), blurRadius: 10),
+      Shadow(
+          color: AlmaPalette.inkLight.withValues(alpha: 0.9), blurRadius: 4),
+    ];
     return Column(children: [
       SizedBox(
         width: 64,
@@ -740,13 +896,19 @@ class _ChapterScreenState extends State<ChapterScreen> {
         ]),
       ),
       const SizedBox(height: 12),
-      Text('↓', style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted2)),
+      Text('↓',
+          style: AlmaType.meta
+              .copyWith(color: AlmaPalette.inkMuted2, shadows: glow)),
       const SizedBox(height: 6),
       Text(next.title,
-          style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
+          textAlign: TextAlign.center,
+          style: AlmaType.meta
+              .copyWith(color: AlmaPalette.inkMuted, shadows: glow)),
       const SizedBox(height: 4),
       Text(l.cabPullToTurn,
-          style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted2)),
+          textAlign: TextAlign.center,
+          style: AlmaType.meta
+              .copyWith(color: AlmaPalette.inkMuted2, shadows: glow)),
       const SizedBox(height: 40),
     ]);
   }
@@ -772,8 +934,12 @@ class _CitedLineState extends State<_CitedLine> {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final rest = widget.factors.length - 1;
+    // Золото на ступень темнее пергаментного: `meta-line-spec.md` называет для
+    // пергамента #A8873C, но пергамента под строкой больше нет — под ней
+    // золочёная бумага, светлее и сама с золотом, и холст главы (`s51`)
+    // печатает мета-строку именно #8A6F2E.
     final style = AlmaType.numeral.copyWith(
-      color: AlmaPalette.goldDeep,
+      color: AlmaPalette.goldOnGilt,
       fontFamilyFallback: AlmaType.glyphFallback,
     );
     return GestureDetector(
@@ -782,7 +948,7 @@ class _CitedLineState extends State<_CitedLine> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Text(widget.label.toUpperCase(),
-              style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep)),
+              style: AlmaType.overline.copyWith(color: AlmaPalette.goldOnGilt)),
           const SizedBox(width: 12),
           Expanded(
             // Режется только хвост дома — см. `AlmaShrink.fitMetaLine`.
@@ -823,6 +989,43 @@ class _CitedLineState extends State<_CitedLine> {
   }
 }
 
+
+/// Знак конца главы: звёздочка между двумя волосами, гаснущими к краям.
+///
+/// Не разделитель `AlmaGradient.fadedRule`, хотя и похож: тот гаснет с обоих
+/// концов и делит равных, а этот наливается **к середине** — оба волоса ведут
+/// к звёздочке, потому что она тут главная. Разметка `s52`.
+class _EndMark extends StatelessWidget {
+  const _EndMark();
+
+  @override
+  Widget build(BuildContext context) {
+    final faded = AlmaPalette.goldDeep.withValues(alpha: 0.5);
+    return Row(children: [
+      Expanded(
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [Colors.transparent, faded]),
+          ),
+        ),
+      ),
+      const SizedBox(width: 10),
+      Text('✦',
+          style: AlmaType.numeral
+              .copyWith(fontSize: 9, color: AlmaPalette.goldDeep)),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [faded, Colors.transparent]),
+          ),
+        ),
+      ),
+    ]);
+  }
+}
 
 /// Стена: система не открыта. Причина словами и путь дальше.
 ///

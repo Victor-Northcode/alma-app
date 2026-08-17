@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import 'art.dart';
@@ -10,10 +11,11 @@ import 'typography.dart';
 /// Пергамент (`AlmaGradient.parchment`) был градиентом от края до края: текст на
 /// нём стоял по общему полю 22, потому что мешать ему было нечему. Здесь под
 /// текстом снимок — рваный лист ручной бумаги с золотыми прожилками, лежащий в
-/// барочной золочёной раме на тёмном мраморе (`s51`, `s52`). Рама занимает
-/// внешнюю пятую часть кадра, и слово, попавшее на её завитки, не читается
-/// вовсе. Поэтому у страницы появились поля: содержимое садится в **чистый
-/// центр** листа, а не в габарит экрана.
+/// барочной золочёной раме на тёмном мраморе (`s51`, `s52`). На 402×874 рама
+/// съедает по двадцать с лишним точек с каждого бока и по шестьдесят с лишним
+/// сверху и снизу, и слово, попавшее на её завитки, не читается вовсе. Поэтому
+/// у страницы появились поля: содержимое садится в **чистый центр** листа, а не
+/// в габарит экрана.
 ///
 /// **Почему поля числами, а не долей высоты.** Картинка кладётся `cover` от
 /// верхнего края, то есть её внутренний край плывёт вместе с пропорцией экрана:
@@ -25,7 +27,7 @@ class GiltPage extends StatelessWidget {
   const GiltPage({super.key});
 
   /// Боковое поле до чистого центра листа. Общее поле продукта — 22
-  /// ([AlmaMetrics.pad]); здесь оно втрое шире, и это не «просторнее ради
+  /// (`AlmaMetrics.pad`); здесь оно втрое шире, и это не «просторнее ради
   /// красоты»: 52 — ровно та черта, за которой кончаются завитки рамы.
   static const side = 52.0;
 
@@ -38,6 +40,9 @@ class GiltPage extends StatelessWidget {
   /// Ниже внутренней кромки рамы (67) на двадцать одну точку.
   static const headTop = 88.0;
 
+  /// Верх вклейки: с неё начинается содержимое страницы.
+  static const contentTop = 142.0;
+
   /// Кнопка возврата на бумаге — кружок цвета слоновой кости.
   ///
   /// **Голая стрелка здесь пропадает.** На пергаменте она стояла на ровном
@@ -47,8 +52,17 @@ class GiltPage extends StatelessWidget {
   /// значком.
   static const chip = 34.0;
 
-  /// Отбивка от кнопки до содержимого: 142 (верх вклейки на холсте) − 88 − 34.
-  static const headGap = 20.0;
+  /// Кружок нарисован на 34, а нажимается на 44: меньше сорока четырёх точек
+  /// в этом продукте не бывает ни одна цель. Разница уходит в прозрачное поле
+  /// вокруг кружка — потому отступы ниже считаются от него, а не от кружка.
+  static const hit = 44.0;
+
+  /// Отступ слева и сверху до **поля** кнопки, а не до её кружка.
+  static const headPad = (hit - chip) / 2;
+
+  /// Отбивка от кнопки до содержимого. Не число, а разность двух чисел с
+  /// холста: где кончается поле кнопки и где начинается вклейка.
+  static const headGap = contentTop - (headTop - headPad) - hit;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +84,59 @@ class GiltPage extends StatelessWidget {
         ),
       ),
       child: SizedBox.expand(),
+    );
+  }
+}
+
+/// Кнопка возврата на золочёной бумаге — стрелка в кружке слоновой кости.
+///
+/// Живёт здесь, а не на экране главы: она принадлежит поверхности. Стрелка без
+/// кружка на этом фоне не кнопка, а царапина на золоте, и всякий, кто положит
+/// на бумагу второй экран, получит её вместе с листом.
+class GiltBack extends StatelessWidget {
+  const GiltBack({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        // Поле вокруг кружка ловит палец наравне с ним: невидимое, но нажатие
+        // считает своим — иначе цель была бы 34 точки вместо сорока четырёх.
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: GiltPage.hit,
+          height: GiltPage.hit,
+          child: Center(
+            child: Container(
+              width: GiltPage.chip,
+              height: GiltPage.chip,
+              decoration: BoxDecoration(
+                color: AlmaPalette.inkLight.withValues(alpha: 0.85),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AlmaPalette.goldDeep.withValues(alpha: 0.45),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: AlmaPalette.ink.withValues(alpha: 0.2),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.arrow_back,
+                size: 18,
+                color: AlmaPalette.ink.withValues(alpha: 0.78),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
