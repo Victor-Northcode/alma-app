@@ -1,4 +1,4 @@
-"""The nine stages a person passes through, and how many fell out between them.
+"""The stages a person passes through, and how many fell out between them.
 
 There has been an `event` table since the first migration and nothing has ever
 written a row to it. Every conversion number the pricing work rests on is
@@ -72,6 +72,29 @@ sent a beacon, so every customer with Do Not Track set would vanish out of the
 revenue line. The gap between the middle two is worth watching on its own: an
 overlay that finished with no payment behind it is a webhook that did not
 arrive, and that is a person who paid and got nothing.
+
+**Событие лестницы монетизации без `surface` — отказ, а не строка.** Двенадцать
+имён из §7 ТЗ v3 живут в том же закрытом наборе, что и всё остальное здесь, и
+единственное, чем они отличаются: у каждого обязана быть поверхность из §3 —
+`p1` (конец бесплатной главы), `p5` (живой слой), `p6` (квота) и так далее.
+Причина в том, зачем эти события вообще заводятся. `paywall_shown`, сложенный по
+всем экранам сразу, — это счётчик пейволлов вообще: он не отвечает ни на один
+вопрос, ради которого §7 писался («какая поверхность продаёт, какую убрать»), и
+цена ошибки здесь не «нет одного измерения», а «решение, где стоит следующий
+пейволл, принято по числу, которое ничего не значит». То есть поверхность для
+этих двенадцати — вторая половина имени события, а не его размерность, и правило
+ей достаётся то же, что имени: незнакомая — 422 со списком, отсутствующая — 422
+с указанием на §3, обе — со строкой в лог, потому что маяк своё 422 глотает
+молча и никто его не увидит.
+
+**Значения по умолчанию у неё нет, и это решение, а не пропуск.** Подставить
+`unknown` было бы дешевле для клиента и хуже для всего остального: гейт §А12
+(«все события §7 приходят с `surface`») выполнялся бы формально, в таблице
+появилось бы ведро, означающее «клиент забыл», и ни один отчёт не смог бы
+отличить его от настоящей поверхности. Отказ стоит одного потерянного маяка в
+разработке, где его видно и по логу, и по тестам; значение по умолчанию стоит
+неверного ответа в проде, который выглядит здоровым. Клиент при этом знает, на
+каком он экране, — это ровно то единственное, в чём он не может ошибиться.
 
 **Merges are folded when the funnel is read**, and it is worth being exact
 about which rows need it, because the obvious answer is wrong. `accounts.merge`
@@ -150,6 +173,27 @@ class TooManyEvents(RuntimeError):
     """This caller has written as many events today as it is allowed to."""
 
 
+class SurfaceMissing(ValueError):
+    """Событие лестницы монетизации пришло без `surface`.
+
+    Отказ, а не строка с пустым местом. Эти двенадцать имён (§7 ТЗ) заводились
+    ради сравнения поверхностей между собой; `paywall_shown` без поверхности не
+    ступень, а счётчик пейволлов вообще, и он молча портит ровно тот отчёт,
+    ради которого всё это писалось. Гейт §А12 — «все события §7 приходят с
+    `surface`» — держится здесь, а не в договорённости с клиентом.
+    """
+
+
+class UnknownSurface(ValueError):
+    """Поверхность вне закрытого набора §3.
+
+    Та же болезнь, что у опечатки в имени ступени, и то же лечение: `p1` и
+    `paywall_p1` — две когорты, одна из которых конвертируется в ноль, и в
+    отчёте это выглядит здоровым. `SURFACES` перечислен в теле отказа, чтобы
+    тот, кто ошибся, увидел слова, которые надо было прислать.
+    """
+
+
 @dataclass(frozen=True)
 class Stage:
     """One rung of the funnel.
@@ -159,11 +203,19 @@ class Stage:
     endings of a checkout.
     `server_known` marks a stage the browser is not permitted to report,
     because something on our side knows it for certain.
+
+    `monetization` помечает одно из событий §7 ТЗ v3, и это один флаг с двумя
+    следствиями, потому что следствие у него по сути одно. Такому событию
+    разрешены дополнительные ярлыки `MONETIZATION_PROPERTIES` — и оно **обязано**
+    нести `surface` из `SURFACES`, иначе не пишется вовсе. Обе половины про одно:
+    эти события существуют, чтобы поверхности сравнивать друг с другом, так что
+    поверхность им — вторая половина имени, а не размерность.
     """
 
     name: str
     after: str | None
     server_known: bool = False
+    monetization: bool = False
 
 
 #: The whole funnel, in order. Adding a stage here is the only way to add one:
@@ -216,6 +268,65 @@ STAGES: tuple[Stage, ...] = (
     # is a thing only the client can see.
     Stage("daily_sent", None, server_known=True),
     Stage("daily_opened", "daily_sent"),
+
+    # ── лестница монетизации v3 (§7 ТЗ) ────────────────────────────────────
+    #
+    # В §7 двенадцать имён, здесь одиннадцать. Двенадцатое — `purchase`, оно
+    # уже стоит выше и остаётся `server_known`: ТЗ просит `purchase{sku,
+    # surface, price}`, но деньги по-прежнему знает подписанный вебхук, а не
+    # телефон, и открыть это имя клиенту значило бы сделать число, по которому
+    # решают рекламный бюджет, полем формы. Поверхность продажи читается из
+    # `checkout_started` того же человека — оно ниже, и без `surface` его не
+    # принимают.
+    #
+    # Все одиннадцать помечены `monetization=True`, и это гейт §А12. Цена
+    # ошибки, если поверхность станет необязательной: `paywall_shown` сложится
+    # в одно число по всем экранам, «какая поверхность продаёт» перестанет быть
+    # вопросом, на который есть ответ, и §7 останется списком имён без отчёта.
+    #
+    # `after` расставлен по целевым цифрам §7, а не по тому, что читается
+    # сверху вниз: у каждой строки отчёта должен быть знаменатель, про который
+    # владелец уже сказал, каким он должен быть.
+    Stage("paywall_shown", None, monetization=True),
+    # Два конца пейволла — братья, а не шаги, ровно как три конца чекаута выше.
+    # Сцепив их в цепочку, `paywall_dismissed` считал бы закрывших среди
+    # заплативших, то есть ноль, неотличимый от сломанного маяка.
+    Stage("paywall_dismissed", "paywall_shown", monetization=True),
+    # Не переименованный `checkout_opened`. Тот пишет этот сервер, когда сам
+    # открывает сессию Paddle для браузера; этот — телефон, у которого поднялся
+    # системный лист покупки. Слить их в одно имя значило бы сделать одну
+    # ступень из двух фактов, наблюдаемых с разных сторон: приложения первый не
+    # пишут никогда, веб второй не пишет никогда, и общее число читалось бы как
+    # провал платформы, которая на самом деле просто отвечает другим именем.
+    Stage("checkout_started", "paywall_shown", monetization=True),
+    # §7: «главу I дочитывают ≥55%». Знаменатель — дошедшие до конца квиза:
+    # глава I натала открывается сразу за ним (P1), а бесплатные главы прочих
+    # систем приходят сюда же с другой поверхностью и видны как разрыв между
+    # `reached` и `total`, который `Step` печатает отдельно.
+    Stage("free_chapter_completed", "quiz_complete", monetization=True),
+    # §7: «≥25% купивших натал добавляют партнёра». Знаменатель — покупка, то
+    # есть денежный след, а не маяк: иначе доля считалась бы среди тех, чей
+    # браузер о покупке рассказал.
+    Stage("partner_added", "purchase", monetization=True),
+    Stage("pair_teaser_completed", "partner_added", monetization=True),
+    # Дальше — три корня. Квоту вопросов, вход в отмену и открытие пуша не к
+    # чему прицепить честно: подписка, которую сейчас отменяют, могла быть
+    # куплена за месяц до окна отчёта, и цепочка к `purchase` считала бы долю
+    # отмен среди купивших *в этом окне* — число, которое тем меньше, чем
+    # длиннее окно.
+    Stage("question_quota_hit", None, monetization=True),
+    Stage("cancel_flow_entered", None, monetization=True),
+    # §7: «save-оффер спасает ≥10% отмен» — это ровно эти две ступени под
+    # входом в отмену.
+    Stage("save_offer_shown", "cancel_flow_entered", monetization=True),
+    Stage("save_offer_accepted", "save_offer_shown", monetization=True),
+    # Пересекается с `daily_opened` выше, и это не дубль по недосмотру. Тот
+    # меряется против `daily_sent` и отвечает на единственный вопрос, который
+    # владелец задал про уведомления, — «не назойливо ли»; этот отвечает на
+    # вопрос лестницы: с какого пуша человек пришёл на поверхность. Клиент,
+    # приславший на утреннюю заметку оба, ничего не ломает: ступени считаются
+    # по разным именам и каждая по различным личностям.
+    Stage("push_opened", None, monetization=True),
 )
 
 BY_NAME: dict[str, Stage] = {stage.name: stage for stage in STAGES}
@@ -230,6 +341,53 @@ STAGE_NAMES: tuple[str, ...] = tuple(stage.name for stage in STAGES)
 #: question at a coarser grain, and deliberately no free-text key of any kind.
 PROPERTIES: frozenset[str] = frozenset(
     {"system", "chapter", "product", "locale", "step", "variant", "currency", "how"}
+)
+
+#: Ярлыки, которые разрешены дополнительно и только событиям лестницы (§7 ТЗ).
+#: Имена — те самые, что в §7, буква в букву: клиент пишется по ТЗ, а
+#: переименовать `sku` в существующий `product` на сервере значило бы тихо
+#: ронять ярлык — маяк своё предупреждение из лога не увидит, и размерность
+#: пропала бы у всех событий сразу.
+#:
+#: **Почему отдельным набором, а не строкой в `PROPERTIES`.** `PROPERTIES` —
+#: это ровно `KEYS` из `src/lib/track.ts`, и равенство двух списков проверяет
+#: тест: веб заморожен на четырёх ступенях v2 и ни одной из этих поверхностей
+#: не имеет. Ключ, который веб не пришлёт никогда, не должен расширять мешок,
+#: об который чистится каждый маяк лендинга: чем шире общий список, тем меньше
+#: он значит.
+#:
+#: `price` здесь для A/B из Ф3 («$19.99 против $24.99») — это цена, которая
+#: **была на экране**, а не выручка. Выручку по-прежнему считают по `Purchase`;
+#: число, которое клиент может назвать сам, деньгами не является.
+#: `system` (§7 `free_chapter_completed{system}`) и `variant` уже есть в
+#: `PROPERTIES` и не дублируются.
+MONETIZATION_PROPERTIES: frozenset[str] = frozenset(
+    {"surface", "sku", "trigger", "nbo_reason", "method", "price", "type"}
+)
+
+#: Поверхности из §3 ТЗ — карта пути целиком, десять штук, и закрытый набор по
+#: той же причине, по которой закрыт список ступеней: `p1`, `P1` и `paywall_p1`
+#: в одной колонке — три когорты, две из которых конвертируются в ноль.
+#:
+#: Имена — коды ТЗ, а не описания. Так их пишут и в §3, и в задачах, и в
+#: разговоре, и совпадение здесь важнее читаемости отчёта: клиента пишет другой
+#: человек по тому же документу, а разошедшиеся словари на этом проводе не
+#: видно ни с одной стороны — маяк глотает 422 молча.
+#:
+#: `p0` в наборе есть, хотя §3 запрещает на нём цены вовсе. Отказ прятал бы
+#: нарушение инварианта вместо того, чтобы его посчитать: строка «пейволлы,
+#: показанные на p0» в отчёте — это то, как о сломанном P1 узнают.
+SURFACES: tuple[str, ...] = (
+    "p0",  # онбординг и квиз — цен нет вообще
+    "p1",  # результат квиза, оффер в конце бесплатной главы
+    "p2",  # тап по закрытой главе — дверь системы
+    "p3",  # конец купленного разбора — карточка «Что дальше»
+    "p4",  # флоу совместимости: ввод, тизер, пейволл, отчёт
+    "p5",  # живой слой день 2+ — пейволл подписки
+    "p6",  # квота вопросов
+    "p7",  # экран «Все планы»
+    "p8",  # отмена подписки — save-оффер
+    "p9",  # пуш
 )
 
 #: A property value is a label, not a sentence. Sixty-four characters is more
@@ -350,7 +508,55 @@ def clean_anon_id(anon_id: str | None) -> str | None:
 # ── writing ───────────────────────────────────────────────────────────────
 
 
-def clean_properties(properties: dict | None) -> dict:
+def check_surface(stage: str, properties: dict | None) -> str | None:
+    """Поверхность этого события в каноническом написании, или `None`.
+
+    `None` — если ступень поверхности не требует; для всех прочих либо строка
+    из `SURFACES`, либо отказ. Единственная точка, где живёт гейт §А12, и
+    вызывают её обе стороны: маршрут — чтобы ответить 422 до того, как событие
+    съест дневную квоту, и `record` — чтобы серверный вызов, написанный через
+    полгода, не мог обойти правило мимо HTTP.
+
+    **Отсутствующая и незнакомая поверхности разведены нарочно.** Это два
+    разных исправления в клиенте: в первом случае поле забыли, во втором
+    прислали своё слово вместо кода §3, и один общий отказ отправил бы автора
+    искать не там. Проверяется сырой мешок, до `clean_properties`: значение,
+    непохожее на ярлык, тот выбросит, и «прислали мусор» стало бы неотличимо
+    от «не прислали ничего».
+
+    **Регистр приводится, остальное — нет.** ТЗ пишет `P1`, код пишет `p1`, и
+    отчёт, разъехавшийся на две когорты из-за заглавной буквы, — ровно та
+    болезнь, от которой закрытый набор и заводят. Разбор члена перечисления —
+    не то же самое, что подчистка значения (её этот модуль не делает нигде:
+    половина чьего-то адреса — всё ещё его адрес), поэтому ничего, кроме
+    регистра и обрамляющих пробелов, здесь не прощается.
+
+    Отказ ещё и логируется. 422 достаётся маяку, который его глотает молча, —
+    без строки в логе рухнувшая ступень выглядела бы как «эту поверхность
+    просто никто не видел».
+    """
+    known = BY_NAME.get(stage)
+    if known is None or not known.monetization:
+        return None
+
+    raw = (properties or {}).get("surface")
+    if raw is None:
+        log.warning("%s refused: §7 events carry a surface and this one had none", stage)
+        raise SurfaceMissing(
+            f"{stage!r} is a monetization event and must say where it happened: "
+            f"send one of {', '.join(SURFACES)} as `surface`"
+        )
+
+    candidate = raw.strip().lower() if isinstance(raw, str) else raw
+    if candidate not in SURFACES:
+        log.warning("%s refused: %r is not a surface this product has", stage, str(raw)[:32])
+        raise UnknownSurface(
+            f"{str(raw)[:32]!r} is not a surface — {', '.join(SURFACES)}"
+        )
+    return candidate
+
+
+def clean_properties(properties: dict | None, *, stage: str | None = None) -> dict:
     """Whatever of this is safe to keep. Everything else is dropped and logged.
 
     Dropping rather than refusing, and the asymmetry with a bad stage name is
@@ -385,14 +591,29 @@ def clean_properties(properties: dict | None) -> dict:
     client costs nothing real: every value our three clients send is a
     catalogue slug, a system slug, a locale code, a currency or a fixed word,
     and a test posts each of them.
+
+    **Разрешённый список зависит от ступени, и только в одну сторону.** Событию
+    лестницы (§7) дополнительно разрешены `MONETIZATION_PROPERTIES`; всем
+    остальным — нет, и `{"sku": …}` на `landing_view` выбрасывается со строкой
+    в логе, как любой незнакомый ярлык. Причина в том, что `PROPERTIES` — общий
+    словарь с вебом, слово в слово, а `sku` и `nbo_reason` веб не пришлёт
+    никогда: список, в который дописывают всё подряд, перестаёт быть обещанием
+    того, что в этой таблице лежит.
     """
     if not properties or not isinstance(properties, dict):
         return {}
 
+    known = BY_NAME.get(stage or "")
+    allowed = (
+        PROPERTIES | MONETIZATION_PROPERTIES
+        if known is not None and known.monetization
+        else PROPERTIES
+    )
+
     kept: dict = {}
     dropped: list[str] = []
     for key, value in properties.items():
-        if key not in PROPERTIES:
+        if key not in allowed:
             dropped.append(str(key))
             continue
         if isinstance(value, bool) or isinstance(value, int):
@@ -563,6 +784,12 @@ async def record(
     Neither is a refusal. A row with two nulls in it counts towards a
     `count(*)` and towards no funnel, which is the one way this table can be
     made to disagree with itself.
+
+    **Гейт поверхности стоит и здесь, не только на маршруте.** Правило §А12
+    держится не договорённостью с клиентом, а функцией, которую нельзя обойти:
+    серверный вызов — вебхук, задача рассылки, код, написанный через полгода, —
+    приходит сюда, а не через HTTP, и событие лестницы без поверхности он
+    записал бы молча.
     """
     if stage not in BY_NAME:
         raise UnknownStage(f"{stage!r} is not a funnel stage — {', '.join(STAGE_NAMES)}")
@@ -571,11 +798,18 @@ async def record(
     if user_id is None and anonymous is None:
         raise Unattributed(f"{stage!r} arrived with no account and no anonymous id")
 
+    surface = check_surface(stage, properties)
+    kept = clean_properties(properties, stage=stage)
+    if surface is not None:
+        # Каноническое написание, в каком бы регистре оно ни пришло: `p1` и
+        # `P1` в одной колонке — две ступени в отчёте вместо одной.
+        kept["surface"] = surface
+
     row = Event(
         user_id=user_id,
         anon_id=anonymous,
         name=stage,
-        properties=clean_properties(properties),
+        properties=kept,
     )
     session.add(row)
     await session.flush()
@@ -914,11 +1148,16 @@ async def funnel(
 
 
 def render(steps: list[Step]) -> str:
-    """The funnel as a block of text, for a terminal or a log line."""
-    lines = [f"{'stage':<18}{'reached':>9}{'total':>8}  of"]
+    """The funnel as a block of text, for a terminal or a log line.
+
+    Колонка имени — 24, а не 18: `free_chapter_completed` длиннее восемнадцати,
+    и на узкой колонке числа съезжали бы ровно у ступеней лестницы, то есть у
+    тех строк, ради которых отчёт теперь и открывают.
+    """
+    lines = [f"{'stage':<24}{'reached':>9}{'total':>8}  of"]
     for step in steps:
         rate = "" if step.rate is None else f"  {step.rate * 100:5.1f}% of {step.of}"
-        lines.append(f"{step.stage:<18}{step.reached:>9}{step.total:>8}{rate}")
+        lines.append(f"{step.stage:<24}{step.reached:>9}{step.total:>8}{rate}")
     return "\n".join(lines)
 
 

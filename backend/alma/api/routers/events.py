@@ -33,6 +33,16 @@ the web one does. What reaches it is a client somebody wrote against the old
 shape of this route, and it gets a message naming the header rather than a 200
 that quietly discarded the event.
 
+**Событие лестницы монетизации без поверхности — тоже 422.** Двенадцать имён
+§7 ТЗ v3 (`paywall_shown`, `checkout_started`, `push_opened`, …) обязаны нести
+`surface` из §3 — `p1`, `p5`, `p6` и так далее. Это общий гейт фазы Ф3 (§А12), и
+он здесь по той же причине, по какой здесь отказ незнакомой ступени: событие,
+про которое неизвестно, где оно случилось, невозможно сосчитать так, как §7
+просит его считать. Незнакомая поверхность и отсутствующая разведены на два
+разных ответа, потому что чинят их в клиенте по-разному. Оба отказа
+происходят **до** списания дневной квоты: клиент, у которого разъехался
+словарь, не должен ещё и выжигать себе лимит на отказах.
+
 **`purchase` is refused however it is spelt.** The browser knows an overlay
 closed, and it may say so — that is `purchase_completed`, a stage of its own.
 Money is known by the processor's signed webhook, which already writes a
@@ -132,11 +142,46 @@ async def record_stage(
             },
         )
 
-    # Labels that are not on the allowlist are dropped rather than refused,
-    # and `clean_properties` says why: a beacon swallows its own errors, so
-    # refusing the event would delete a whole rung of the funnel over one
-    # unrecognised label and nothing anywhere would report it.
-    kept = funnel.clean_properties(meta if meta is not None else properties)
+    sent = meta if meta is not None else properties
+
+    # Поверхность — единственный ярлык, который отказывают, а не выбрасывают, и
+    # проверяется он до чистки: значение, непохожее на ярлык, `clean_properties`
+    # выкинет, и «прислали мусор» стало бы неотличимо от «не прислали ничего».
+    # Асимметрия с остальными ярлыками разобрана в `funnel.check_surface`:
+    # у этих двенадцати событий поверхность — часть имени, а не размерность.
+    # Здесь вызывается ради отказа; каноническое написание в строку кладёт
+    # `funnel.record` — один и тот же разбор в двух местах разъезжается.
+    try:
+        funnel.check_surface(stage, sent)
+    except funnel.SurfaceMissing as exc:
+        raise HTTPException(
+            422,
+            detail={
+                "error": "surface_required",
+                "message": str(exc),
+                "surfaces": list(funnel.SURFACES),
+            },
+        ) from exc
+    except funnel.UnknownSurface as exc:
+        raise HTTPException(
+            422,
+            detail={
+                "error": "unknown_surface",
+                "message": str(exc),
+                # Перечислены обратно, ровно как ступени выше: ошибся тот, кому
+                # и надо показать слова, которые следовало прислать.
+                "surfaces": list(funnel.SURFACES),
+            },
+        ) from exc
+
+    # Ярлыки чистит `record`, а не этот маршрут, и раньше он чистил их дважды.
+    # Пока чистка была одна на всех, лишний проход ничего не стоил; с
+    # поверхностью — стоит: маршрут проверяет присланное, а `record` получал уже
+    # почищенное, и значение, у которого правился регистр, до него не доезжало
+    # вовсе — 500 на событии, которое обязано было записаться. Правило прежнее и
+    # объяснено в `clean_properties`: незнакомый ярлык выбрасывается, а не
+    # отказывается, потому что маяк глотает свои ошибки и рунг воронки исчез бы
+    # на релиз из-за одного лишнего слова.
 
     try:
         # Two ceilings for the two kinds of caller, and the same number. An
@@ -162,6 +207,6 @@ async def record_stage(
         user_id=user.id if user is not None else None,
         anon_id=anon,
         stage=stage,
-        properties=kept,
+        properties=sent,
     )
     return {"recorded": True, "stage": stage}

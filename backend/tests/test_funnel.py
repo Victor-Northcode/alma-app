@@ -902,6 +902,282 @@ def test_the_column_name_works_on_the_wire_too(api, auth_headers):
     assert _events(api)[0].properties == {"product": "annual"}
 
 
+# ── лестница монетизации (§7 ТЗ v3) ───────────────────────────────────────
+#
+# Одиннадцать событий, которые шлёт клиент, с полями, которые §7 им называет,
+# и с поверхностью из §3 на каждом. Двенадцатое имя §7 — `purchase`: оно
+# записывается из платёжной записи и здесь проверяется тем, что по-прежнему
+# отбивается (см. `test_money_stays_the_webhooks_word_in_v3_too`).
+#
+# Словарь один на все проверки нарочно: событие, которое кто-то заведёт в
+# `STAGES` и забудет здесь, роняет `test_the_ladder_this_file_covers_is_the_whole_ladder`
+# — то есть новый пейволл не может приехать в прод без строки в отчёте.
+LADDER: dict[str, dict] = {
+    "paywall_shown": {
+        "surface": "p1",
+        "sku": "door.natal",
+        "trigger": "chapter_end",
+        "nbo_reason": "interest_love",
+    },
+    "paywall_dismissed": {"surface": "p1", "method": "swipe"},
+    "checkout_started": {"surface": "p2", "sku": "bundle.static", "price": "19.99"},
+    "free_chapter_completed": {"surface": "p1", "system": "natal"},
+    "partner_added": {"surface": "p4"},
+    "pair_teaser_completed": {"surface": "p4"},
+    "question_quota_hit": {"surface": "p6"},
+    "cancel_flow_entered": {"surface": "p8"},
+    "save_offer_shown": {"surface": "p8", "sku": "door.natal"},
+    "save_offer_accepted": {"surface": "p8", "sku": "door.natal"},
+    "push_opened": {"surface": "p9", "type": "daily"},
+}
+
+
+@pytest.mark.parametrize("stage", sorted(LADDER))
+def test_every_event_of_the_ladder_is_accepted_with_the_fields_the_brief_gives_it(
+    api, auth_headers, stage
+):
+    """Принимается — и сохраняется целиком, а не наполовину.
+
+    Второе важнее первого. Ярлык, который сервер молча выбросил, стоит той же
+    дыры в отчёте, что и отказ, только увидеть её нельзя ниоткуда: клиент
+    получил 200, строка в таблице есть, а измерения в ней нет. Поэтому здесь
+    сверяется весь мешок целиком, а не код ответа.
+    """
+    sent = api.post("/v1/events", json={"stage": stage, "meta": LADDER[stage]}, headers=auth_headers)
+    assert sent.status_code == 200, sent.json()
+
+    rows = _events(api)
+    assert len(rows) == 1
+    assert rows[0].name == stage
+    assert rows[0].properties == LADDER[stage]
+
+
+def test_the_ladder_this_file_covers_is_the_whole_ladder():
+    """Каждое событие лестницы имеет здесь строку — иначе тест краснеет.
+
+    Без этой проверки предыдущий тест покрывает ровно то, что кто-то не забыл
+    в него дописать, а забывают всегда новое: событие заводят в `STAGES` под
+    новый экран, тестов на него нет, и в отчёте оно потом читается как ноль.
+    """
+    assert set(LADDER) == {stage.name for stage in funnel.STAGES if stage.monetization}
+
+
+@pytest.mark.parametrize("stage", sorted(LADDER))
+def test_no_event_of_the_ladder_is_recorded_without_saying_where_it_happened(
+    api, auth_headers, stage
+):
+    """Гейт §А12, по одному событию за раз: без `surface` строки не будет.
+
+    Отказ, а не строка с пустым местом, и не подстановка «unknown». Эти
+    двенадцать имён заводились ради сравнения поверхностей: `paywall_shown`,
+    сложенный по всем экранам, — счётчик пейволлов вообще, и решение «какой
+    пейволл убрать» по нему принимать нельзя. Значение по умолчанию выполнило
+    бы гейт формально и создало бы в таблице ведро, означающее «клиент забыл»,
+    которое ни один отчёт не отличит от настоящей поверхности.
+    """
+    without = {key: value for key, value in LADDER[stage].items() if key != "surface"}
+    refused = api.post("/v1/events", json={"stage": stage, "meta": without}, headers=auth_headers)
+
+    assert refused.status_code == 422, refused.json()
+    detail = refused.json()["detail"]
+    assert detail["error"] == "surface_required"
+    # Список отдаётся обратно: ошибся клиент, ему и показывать слова.
+    assert "p1" in detail["surfaces"]
+    assert _events(api) == []
+
+
+def test_a_surface_this_product_does_not_have_is_refused_rather_than_stored(api, auth_headers):
+    """`paywall_p1` — не поверхность, и это отдельный ответ от «поля нет».
+
+    Две разные починки в клиенте: там забыли поле, здесь прислали своё слово
+    вместо кода §3. Один общий отказ отправил бы автора искать не туда.
+
+    Хранить такое нельзя по той же причине, по которой нельзя хранить опечатку
+    в имени ступени: `p1` и `paywall_p1` в одной колонке — две когорты, одна из
+    которых конвертируется в ноль, и в отчёте это выглядит здоровым.
+    """
+    refused = api.post(
+        "/v1/events",
+        json={"stage": "paywall_shown", "meta": {"surface": "paywall_p1", "sku": "door.natal"}},
+        headers=auth_headers,
+    )
+    assert refused.status_code == 422
+    detail = refused.json()["detail"]
+    assert detail["error"] == "unknown_surface"
+    assert detail["surfaces"] == list(funnel.SURFACES)
+
+    # И то, что поверхностью вообще не является: число вместо кода — это
+    # «прислали не то», а не «не прислали ничего».
+    number = api.post(
+        "/v1/events",
+        json={"stage": "paywall_shown", "meta": {"surface": 1}},
+        headers=auth_headers,
+    )
+    assert number.status_code == 422
+    assert number.json()["detail"]["error"] == "unknown_surface"
+
+    assert _events(api) == []
+
+
+def test_the_case_the_brief_writes_is_not_a_second_cohort(api, auth_headers):
+    """ТЗ пишет `P1`, таблица хранит `p1`, и это одна ступень, а не две.
+
+    Разбор члена перечисления — не подчистка значения: ярлыки этот модуль не
+    правит нигде (половина чьего-то адреса — всё ещё его адрес). Здесь
+    приводится только регистр, и ровно затем, чтобы отчёт не разъехался на
+    `p1` и `P1` из-за того, как поверхность названа в документе.
+    """
+    sent = api.post(
+        "/v1/events",
+        json={"stage": "question_quota_hit", "meta": {"surface": " P6 "}},
+        headers=auth_headers,
+    )
+    assert sent.status_code == 200, sent.json()
+    assert _events(api)[0].properties == {"surface": "p6"}
+
+
+def test_money_stays_the_webhooks_word_in_v3_too(api, auth_headers):
+    """§7 просит `purchase{sku, surface, price}` — и это по-прежнему 422.
+
+    Двенадцатое событие §7 уже есть в закрытом наборе и помечено
+    `server_known`: деньги знает подписанная нотификация стора, а не телефон.
+    Новая спецификация эту дверь не открывает — иначе число, по которому решают
+    рекламный бюджет, стало бы полем, которое любой может прислать курлом.
+    Поверхность продажи читается из `checkout_started` того же человека.
+    """
+    refused = api.post(
+        "/v1/events",
+        json={
+            "stage": "purchase",
+            "meta": {"sku": "sub.monthly", "surface": "p5", "price": "9.99"},
+        },
+        headers=auth_headers,
+    )
+    assert refused.status_code == 422
+    assert refused.json()["detail"]["error"] == "server_recorded"
+    assert _events(api) == []
+
+
+def test_the_ladders_labels_belong_to_the_ladder_and_not_to_the_rest(api, auth_headers):
+    """`sku` на `paywall_shown` — размерность; на `offer_view` — мусор.
+
+    `PROPERTIES` — общий словарь с вебом, слово в слово (`KEYS` в
+    `src/lib/track.ts`, и это проверяет соседний тест). Веб заморожен на
+    четырёх ступенях v2 и ни одной из этих поверхностей не имеет, так что ключ,
+    который он не пришлёт никогда, не должен расширять мешок, об который
+    чистится каждый маяк лендинга: чем шире общий список, тем меньше он значит.
+
+    Выброшено, а не отказано, — как любой незнакомый ярлык: ступень при этом
+    выживает, потому что маяк своё 422 глотает молча и рунг исчез бы целиком.
+    """
+    ladder = api.post(
+        "/v1/events",
+        json={"stage": "paywall_shown", "meta": {"surface": "p5", "sku": "sub.monthly"}},
+        headers=auth_headers,
+    )
+    assert ladder.status_code == 200
+    assert _events(api)[0].properties == {"surface": "p5", "sku": "sub.monthly"}
+
+    older = api.post(
+        "/v1/events",
+        json={"stage": "offer_view", "meta": {"sku": "sub.monthly", "product": "annual"}},
+        headers=auth_headers,
+    )
+    assert older.status_code == 200
+    stored = [row for row in _events(api) if row.name == "offer_view"]
+    assert stored[0].properties == {"product": "annual"}
+
+
+def test_the_two_allowlists_do_not_overlap():
+    """Общий словарь с вебом и словарь лестницы не пересекаются, и это правило.
+
+    Соседний тест сверяет `PROPERTIES` с `KEYS` из `src/lib/track.ts` на
+    равенство. Дописать `surface` в `PROPERTIES` значит уронить его — но уронить
+    его можно и молча, если однажды слить оба списка в один: тогда веб придётся
+    трогать (он заморожен), либо равенство придётся ослабить до вложения, и
+    вместе с ним пропадёт единственная проверка того, что два конца провода
+    говорят одними словами.
+    """
+    assert not (funnel.PROPERTIES & funnel.MONETIZATION_PROPERTIES)
+
+
+def test_a_ladder_label_that_is_something_a_person_typed_is_dropped_too(api, auth_headers):
+    """Новые ключи проходят то же сито `LABEL`, что и старые.
+
+    Приватность этой таблицы держится не на списке ключей, а на форме значений:
+    ключ из белого списка со свободным текстом внутри — ровно то, как сюда
+    попадает чьё-то имя. `nbo_reason` — самый вероятный кандидат: он про
+    причину, а причину легко захотеть записать словами.
+    """
+    sent = api.post(
+        "/v1/events",
+        json={
+            "stage": "paywall_shown",
+            "meta": {
+                "surface": "p3",
+                "nbo_reason": "она читала главу про любовь",
+                "trigger": "sofia@example.com",
+                "sku": "pair.check",
+            },
+        },
+        headers=auth_headers,
+    )
+    assert sent.status_code == 200, sent.json()
+    # Поверхность и SKU выжили: одна плохая размерность не стоит ступени.
+    assert _events(api)[0].properties == {"surface": "p3", "sku": "pair.check"}
+
+
+def test_every_surface_is_a_label_this_table_can_keep():
+    """Закрытый набор и правило значения не должны противоречить друг другу.
+
+    Поверхность проходит `check_surface` и потом `clean_properties`. Член
+    набора, не проходящий `LABEL`, дал бы 200 со строкой без поверхности — то
+    есть ровно то, что гейт §А12 запрещает, но уже молча.
+    """
+    for surface in funnel.SURFACES:
+        assert funnel.clean_properties(
+            {"surface": surface}, stage="paywall_shown"
+        ) == {"surface": surface}
+
+
+def test_every_event_the_brief_names_is_an_event_this_server_knows():
+    """§7 ТЗ читается из файла, а не пересказывается здесь.
+
+    Список, переписанный руками, — это то, чем уже один раз кончилось на этом
+    проводе: клиент слал `declined`, сервер знал `offer_declined`, маяк глотал
+    422, и тест удостоверял словарь, которого никто не отправлял. Поэтому имена
+    берутся из строки «События:» самого ТЗ — документа, по которому пишут и
+    клиент, и этот файл.
+    """
+    import re
+    from pathlib import Path
+
+    brief = (
+        Path(__file__).resolve().parents[2]
+        / "docs" / "monetization" / "alma-monetization-v3-tz.md"
+    )
+    if not brief.exists():
+        pytest.skip("ТЗ монетизации v3 не в этом чекауте")
+
+    line = re.search(r"^События: (.+)$", brief.read_text(encoding="utf-8"), re.M)
+    assert line, "§7 больше не начинает список со слова «События:»"
+
+    named: list[str] = []
+    for token in re.findall(r"`([a-z_]+(?:/[a-z_]+)?)(?:\{[^}]*\})?`", line.group(1)):
+        if "/" in token:
+            # `save_offer_shown/accepted` — сокращение ТЗ для пары событий с
+            # общим началом. Разворачивается здесь, а не заводится третьим
+            # именем на сервере.
+            first, second = token.split("/", 1)
+            named += [first, f"{first.rsplit('_', 1)[0]}_{second}"]
+        else:
+            named.append(token)
+
+    assert len(named) >= 12, f"§7 разобрался не целиком: {named}"
+    for name in named:
+        assert name in funnel.BY_NAME, f"§7 называет {name!r}, сервер такого не знает"
+
+
 # ── the query ─────────────────────────────────────────────────────────────
 
 
@@ -938,10 +1214,20 @@ def _person(session) -> User:
     return user
 
 
-async def _walk(session, user: User, *stages: str) -> None:
-    """Take one person as far down the funnel as the caller says."""
+async def _walk(session, user: User, *stages: str, surface: str = "p1") -> None:
+    """Take one person as far down the funnel as the caller says.
+
+    Событию лестницы поверхность подставляется, всем прочим — нет: `record`
+    первое без неё не запишет, а второму выбросил бы ярлык как незнакомый.
+    """
     for stage in stages:
-        await funnel.record(session, user_id=user.id, stage=stage)
+        ladder = funnel.BY_NAME[stage].monetization
+        await funnel.record(
+            session,
+            user_id=user.id,
+            stage=stage,
+            properties={"surface": surface} if ladder else None,
+        )
 
 
 def _steps(steps) -> dict[str, funnel.Step]:
@@ -1325,6 +1611,83 @@ def test_record_refuses_a_stage_the_endpoint_would_have_refused(db):
             await funnel.record(session, user_id=person.id, stage="signup_completed")
 
     _run(db, attempt)
+
+
+def test_record_refuses_a_ladder_event_with_no_surface_on_it(db):
+    """Гейт §А12 держится в модуле, а не на маршруте.
+
+    Серверный вызов — вебхук, задача рассылки, код, написанный через полгода —
+    приходит в `record` мимо HTTP. Правило, живущее только на краю, для них не
+    существует, и событие лестницы без поверхности они записали бы молча.
+    """
+    async def attempt(session):
+        person = _person(session)
+        await session.flush()
+
+        with pytest.raises(funnel.SurfaceMissing):
+            await funnel.record(session, user_id=person.id, stage="paywall_shown")
+
+        with pytest.raises(funnel.UnknownSurface):
+            await funnel.record(
+                session,
+                user_id=person.id,
+                stage="paywall_shown",
+                properties={"surface": "checkout"},
+            )
+
+        return (await session.execute(select(Event))).scalars().all()
+
+    assert _run(db, attempt) == []
+
+
+def test_the_ladder_answers_the_number_the_brief_asks_of_it(db):
+    """«Save-оффер спасает ≥10% отмен» — это строка отчёта, а не оценка.
+
+    Ради неё у ступеней лестницы и расставлен `after`: четверо вошли в отмену,
+    троим показали спасательный оффер, один его принял. Набор мал настолько,
+    что ответ читается рукой, — единственный способ знать, что запрос считает
+    то, что обещает.
+    """
+    async def seed(session):
+        everyone = [_person(session) for _ in range(4)]
+        await session.flush()
+        a, b, c, d = everyone
+        await _walk(session, a, "cancel_flow_entered", "save_offer_shown",
+                    "save_offer_accepted", surface="p8")
+        await _walk(session, b, "cancel_flow_entered", "save_offer_shown", surface="p8")
+        await _walk(session, c, "cancel_flow_entered", "save_offer_shown", surface="p8")
+        await _walk(session, d, "cancel_flow_entered", surface="p8")
+        return await funnel.funnel(session)
+
+    steps = _steps(_run(db, seed))
+    assert steps["cancel_flow_entered"].reached == 4
+    assert steps["save_offer_shown"].reached == 3
+    assert steps["save_offer_shown"].rate == 0.75
+    assert steps["save_offer_accepted"].reached == 1
+    assert steps["save_offer_accepted"].rate == pytest.approx(1 / 3)
+
+
+def test_a_paywall_that_was_shown_and_one_that_was_paid_for_are_not_chained(db):
+    """Закрытие пейволла и переход в оплату — братья, а не шаги.
+
+    Сцепив их в цепочку, `paywall_dismissed` считал бы закрывших **среди**
+    дошедших до оплаты: ноль, неотличимый от сломанного маяка. Здесь один
+    человек закрыл, другой пошёл платить, и обе доли считаются от показа.
+    """
+    async def seed(session):
+        shown_only, dismissed, checked_out = (_person(session) for _ in range(3))
+        await session.flush()
+        await _walk(session, shown_only, "paywall_shown", surface="p5")
+        await _walk(session, dismissed, "paywall_shown", "paywall_dismissed", surface="p5")
+        await _walk(session, checked_out, "paywall_shown", "checkout_started", surface="p5")
+        return await funnel.funnel(session)
+
+    steps = _steps(_run(db, seed))
+    assert steps["paywall_shown"].reached == 3
+    assert steps["paywall_dismissed"].reached == 1
+    assert steps["checkout_started"].reached == 1
+    assert steps["paywall_dismissed"].of == "paywall_shown"
+    assert steps["checkout_started"].of == "paywall_shown"
 
 
 def test_deleting_an_account_reaches_the_journey_that_happened_before_the_merge(db):
