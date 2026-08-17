@@ -85,6 +85,26 @@ class Chapter:
     #: so without the writer knowing which chapter it is.
     advice: bool = True
 
+    #: Whether this piece also writes the four life areas of the Today screen.
+    #:
+    #: **The block had no prompt at all, and that is what the owner saw.** Under
+    #: the horoscope the Today screen lists work, love, money and body, each
+    #: with its nearest contact. Nothing wrote those lines: the client rendered
+    #: the raw calculation through a template — `"{transiting} {aspect} your
+    #: {natal}"` — so a reader in English got *"Sun trine your Sun."* and, next
+    #: to the heading **Work**, *"Chiron conjunct your Midheaven."* Both are
+    #: true and neither is about work. The owner's words: «как будто ты забыл
+    #: туда промты добавить… он вообще не по теме».
+    #:
+    #: True for exactly one piece — the transits' `active` chapter — and that is
+    #: not arbitrary: it is the Today screen's day text, it is written from the
+    #: very same transit hits the areas are drawn from, and it is written once a
+    #: day anyway. Four short lines ride along in a call that was already
+    #: happening, which is why this costs a few dozen words rather than a second
+    #: request. Any other chapter asking for areas would be paying for a block
+    #: nothing renders.
+    areas: bool = False
+
 
 def _c(index, numeral, slug, title, question, reads, **kwargs) -> Chapter:
     # Бесплатная глава пишется средней моделью в кириллический потолок $0.10,
@@ -159,7 +179,7 @@ TRANSITS: tuple[Chapter, ...] = (
     # day text, and a day text is read standing up.
     _c(1, "I", "active", "What is active now", "What is actually happening to me?",
        ("transiting",), free=True, time_dependent=True,
-       words=(90, 150), paragraphs=(1, 2)),
+       words=(90, 150), paragraphs=(1, 2), areas=True),
     _c(2, "II", "ahead", "The months ahead", "What is coming and when?",
        ("transiting",), time_dependent=True),
     _c(3, "III", "long", "The long transits", "What is this whole chapter of my life about?",

@@ -62,6 +62,18 @@ class TodayModel extends ChangeNotifier {
   /// что в орбе прямо сейчас, `upcoming` — что на подходе; читая только первый,
   /// владелец открыл гороскоп, где все четыре области сказали «тихо». Они
   /// говорили правду про `active` — а в `upcoming` стояло сорок контактов.
+  /// Написанная строка области — или `null`, если её никто не писал.
+  ///
+  /// Живёт рядом с [nearest] намеренно: обе половины одной строки экрана —
+  /// **какой контакт** и **что он значит** — приходят из разных мест, из
+  /// расчёта и из письма, и держать их в одном месте единственный способ не
+  /// забыть, что они обязаны быть про одно и то же.
+  String? areaLine(String area) {
+    final answer = line;
+    if (answer is! LoadDone<ReadingResponse>) return null;
+    return answer.value.reading.areas[area];
+  }
+
   Map<String, dynamic>? nearest(String area) {
     final result = sky;
     if (result is! LoadDone<CalcResult>) return null;

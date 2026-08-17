@@ -553,6 +553,7 @@ class Reading {
     required this.citedFactors,
     required this.readFrom,
     required this.model,
+    this.areas = const {},
     this.advice,
   });
 
@@ -564,6 +565,15 @@ class Reading {
   final String teaser;
 
   final List<String> body;
+
+  /// Четыре области дня, написанные словами: `work`/`love`/`money`/`body` →
+  /// одна короткая фраза.
+  ///
+  /// **Пустая карта — нормальное состояние, а не сбой.** Поле просит одна
+  /// глава из сорока одной (`transits/active`), и главы, написанные до его
+  /// появления, лежат в кэше сервера без него. Экран в обоих случаях
+  /// возвращается к прежней строке-факту, а не показывает пустоту.
+  final Map<String, String> areas;
 
   /// Позиции, из которых прочитан текст. Каждое предложение ссылается на одну —
   /// именно это отличает Alma от ленты гороскопов, и экран обязан их
@@ -594,6 +604,13 @@ class Reading {
             (json['cited_factors'] as List? ?? const []).map((e) => e as String).toList(),
         readFrom: json['read_from'] as String? ?? '',
         model: json['model'] as String? ?? '',
+        areas: {
+          for (final item in (json['areas'] as List? ?? const []))
+            if (item is Map &&
+                (item['area'] as String? ?? '').isNotEmpty &&
+                (item['line'] as String? ?? '').trim().isNotEmpty)
+              item['area'] as String: (item['line'] as String).trim(),
+        },
         advice: ((json['advice'] as String?) ?? '').trim().isEmpty
             ? null
             : json['advice'] as String,

@@ -639,7 +639,7 @@ class _AreasPanel extends StatelessWidget {
         ));
         rows.add(const SizedBox(height: 12));
       }
-      rows.add(_AreaRow(area: area, hit: hit));
+      rows.add(_AreaRow(area: area, hit: hit, written: model.areaLine(area)));
     }
     return rows;
   }
@@ -647,9 +647,23 @@ class _AreasPanel extends StatelessWidget {
 
 /// Одна область: имя слева, дата справа, фраза под ними.
 class _AreaRow extends StatelessWidget {
-  const _AreaRow({required this.area, required this.hit});
+  const _AreaRow({required this.area, required this.hit, this.written});
 
   final String area;
+
+  /// Что об этой области написано словами. `null` — не писал никто.
+  ///
+  /// **Здесь никогда не было ни одного промта, и это было видно.** Строка
+  /// собиралась шаблоном прямо из расчёта — «{планета} {аспект} your {натал}»,
+  /// — и под заголовком «Работа» стояло «Chiron conjunct your Midheaven»:
+  /// правда про небо и ничего про работу. Владелец: «как будто ты забыл туда
+  /// промты добавить… он вообще не по теме».
+  ///
+  /// Теперь четыре строки пишет модель, в том же вызове, которым пишется
+  /// дневной текст (`Chapter.areas`). Шаблон остался запасным путём: главы,
+  /// написанные до этой правки, лежат в кэше сервера без нового поля, и
+  /// вернуться к факту честнее, чем показать пустоту.
+  final String? written;
 
   /// Ближайший контакт или `null` — «здесь сегодня тихо».
   final Map<String, dynamic>? hit;
@@ -720,7 +734,7 @@ class _AreaRow extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          quiet ? l.cabAreaQuiet : '${_phrase(l, hit!)}.',
+          quiet ? l.cabAreaQuiet : (written ?? '${_phrase(l, hit!)}.'),
           style: AlmaType.meta.copyWith(
             height: 1.5,
             color: AlmaPalette.body.withValues(alpha: quiet ? 0.55 : 0.78),

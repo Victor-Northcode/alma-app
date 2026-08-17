@@ -97,6 +97,33 @@ CHAPTER_SCHEMA: dict = {
             "type": "string",
             "description": "One concrete thing to do or stop doing. May be empty.",
         },
+        "areas": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "area": {
+                        "type": "string",
+                        "description": "One of: work, love, money, body.",
+                    },
+                    "line": {
+                        "type": "string",
+                        "description": (
+                            "One short sentence, at most 12 words, saying what "
+                            "the contact given for this area tends to feel like "
+                            "in that part of life. Name the area's subject, not "
+                            "the aspect: the reader already sees the date beside "
+                            "it and never sees the planets. Never write "
+                            "'conjunct', 'trine', 'square', 'sextile' or the "
+                            "planet names here — that line is the block above. "
+                            "No instructions and no predictions."
+                        ),
+                    },
+                },
+                "required": ["area", "line"],
+                "additionalProperties": False,
+            },
+        },
     },
     "required": ["title", "teaser", "paragraphs"],
     "additionalProperties": False,
@@ -106,22 +133,30 @@ CHAPTER_SCHEMA: dict = {
 def schema_for(chapter: chapter_defs.Chapter) -> dict:
     """`CHAPTER_SCHEMA`, minus whatever this piece does not want asked.
 
-    Today that is one field. A piece with `advice=False` is not sent the
-    property at all, rather than being sent it and having the answer thrown
-    away: the second still spends the tokens, and still invites the model to
-    put the instruction it was told not to write into the paragraphs beside it.
+    Two fields now. A piece with `advice=False` is not sent the property at
+    all, rather than being sent it and having the answer thrown away: the
+    second still spends the tokens, and still invites the model to put the
+    instruction it was told not to write into the paragraphs beside it. The
+    same argument covers `areas`, which exactly one piece renders: asking every
+    chapter for four lines nobody shows would buy the same problem twice.
 
-    `advice` is not in `required`, so removing the property leaves a schema of
-    the same shape. `Written.advice` is forced empty in `write` regardless, so
-    a provider that ignores the schema cannot put it back.
+    Neither is in `required`, so removing a property leaves a schema of the
+    same shape. `Written.advice` is forced empty in `write` regardless, so a
+    provider that ignores the schema cannot put it back; `areas` is dropped the
+    same way.
     """
-    if chapter.advice:
+    drop = {
+        key
+        for key, wanted in (("advice", chapter.advice), ("areas", chapter.areas))
+        if not wanted
+    }
+    if not drop:
         return CHAPTER_SCHEMA
     trimmed = dict(CHAPTER_SCHEMA)
     trimmed["properties"] = {
         key: value
         for key, value in CHAPTER_SCHEMA["properties"].items()
-        if key != "advice"
+        if key not in drop
     }
     return trimmed
 
@@ -151,6 +186,9 @@ class Written:
     teaser: str
     paragraphs: tuple[Paragraph, ...]
     advice: str
+    #: `(area, line)` for the Today screen's four life areas — empty for every
+    #: piece but the transits' `active` chapter. See `Chapter.areas`.
+    areas: tuple[tuple[str, str], ...]
     cited_factors: tuple[str, ...]
     model: str
     attempts: int
@@ -169,6 +207,7 @@ class Written:
             "body": [p.text for p in self.paragraphs],
             "paragraph_factors": [list(p.factors) for p in self.paragraphs],
             "advice": self.advice,
+            "areas": [{"area": area, "line": line} for area, line in self.areas],
             "cited_factors": list(self.cited_factors),
             "read_from": "Read from: " + " · ".join(self.cited_factors[:4])
             if self.cited_factors
@@ -305,6 +344,39 @@ def build_prompt(
 
     lines += ["", "FACTORS THIS CHAPTER IS READ FROM — cite these:"]
     lines += [f"- {factor}" for factor in offered] or ["- (none)"]
+
+    # **Четыре области Today — и ровно те контакты, что покажет экран.**
+    #
+    # Выбор здесь повторяет выбор клиента буква в букву (`today_model.nearest`):
+    # оба списка, `active` и `upcoming`, срочный первым. Иначе модель написала
+    # бы строку про один контакт, а строка над ней назвала бы другой — и это
+    # расхождение никто бы не заметил, потому что обе фразы по отдельности
+    # верны.
+    if chapter.areas:
+        nearest = _area_hits(result)
+        if nearest:
+            lines += [
+                "",
+                "THE FOUR AREAS OF THE TODAY SCREEN — write one line for each:",
+                *(f"- {area}: {hit}" for area, hit in nearest.items()),
+                "Each line: at most 12 words, about that part of life, in the "
+                "reader's language. The screen already prints the planets and "
+                "the date above your line — do not repeat them, and never use "
+                "aspect words. Say what it tends to feel like, not what to do "
+                "and not what will happen.",
+                # Первая же живая генерация: строка «work» повторила лид почти
+                # дословно — «An old question about your direction is
+                # resurfacing» вверху карточки и «An old question about your
+                # direction resurfaces» под заголовком «Работа», в одном
+                # экране, друг под другом. Не ошибка модели: сильнейший контакт
+                # дня и сильнейший контакт области — часто один и тот же, и,
+                # не сказав иного, она дважды пишет про него лучшее, что может.
+                "These four lines sit on the same screen as the teaser and the "
+                "paragraphs above. Do not restate them: if an area's contact is "
+                "the one the paragraphs already cover, write its line about "
+                "that part of life specifically, in words the paragraphs do not "
+                "use.",
+            ]
 
     # **The factor list is English, and the chapter is not.**
     #
@@ -868,6 +940,11 @@ async def write(
             advice=(
                 str(payload.get("advice") or "").strip() if chapter.advice else ""
             ),
+            # Тем же правилом, что и `advice`: не спрошено — значит пусто, а не
+            # «пришло, и ладно». Порядок областей задаём мы, а не ответ: экран
+            # печатает их в своём порядке, и пришедшая пятая или повторная
+            # область не должна появляться на нём вовсе.
+            areas=_areas_of(payload) if chapter.areas else (),
             cited_factors=cited,
             model=model,
             attempts=attempt,
@@ -882,6 +959,68 @@ async def write(
         "cites something the chart does not contain.",
         spend=_spent_since(tally, opening, model),
     )
+
+
+#: The four areas of the Today screen, in the order that screen prints them.
+AREAS: tuple[str, ...] = ("work", "love", "money", "body")
+
+
+def _area_hits(result: CalcResult) -> dict[str, str]:
+    """The contact each area will actually show, described for the prompt.
+
+    Mirrors `today_model.nearest` on the client, and the mirroring is the whole
+    point: the screen prints one contact per area and the model writes one line
+    per area, and if the two picked differently the line would quietly be about
+    something the reader cannot see. Both lists — what is in orb now and what is
+    on the way — most urgent first.
+
+    Areas with nothing in either list are simply absent: the screen says «здесь
+    сегодня тихо» on its own, and a line written about no contact would be the
+    invented interpretation this product exists not to print.
+    """
+    rows: list[dict] = []
+    for key in ("active", "upcoming"):
+        value = result.data.get(key)
+        if isinstance(value, list):
+            rows += [row for row in value if isinstance(row, dict)]
+    out: dict[str, str] = {}
+    for area in AREAS:
+        mine = [row for row in rows if row.get("area") == area]
+        if not mine:
+            continue
+        mine.sort(key=lambda row: row.get("urgency") or 0, reverse=True)
+        hit = mine[0]
+        described = (
+            f"{hit.get('transiting', '?')} {hit.get('aspect', '?')} "
+            f"natal {hit.get('natal', '?')}"
+        )
+        out[area] = described
+    return out
+
+
+def _areas_of(payload: dict) -> tuple[tuple[str, str], ...]:
+    """The four area lines, keyed by us rather than by the reply.
+
+    **The reply is read, not trusted.** A model asked for four objects can
+    return three, five, the same area twice, or an area spelled `Work`. None of
+    those should reach a screen that renders a fixed list of four rows: a
+    duplicate would print the same sentence under two headings, and an unknown
+    key would print nothing while the caller believed it had a line. So the
+    keys come from [AREAS] and the reply only fills them.
+
+    A line the model did not write stays absent rather than becoming an empty
+    string: the screen already knows how to say «здесь сегодня тихо», and an
+    empty line under a heading is that state rendered as a blank.
+    """
+    written: dict[str, str] = {}
+    for item in payload.get("areas") or ():
+        if not isinstance(item, dict):
+            continue
+        key = str(item.get("area") or "").strip().lower()
+        line = str(item.get("line") or "").strip()
+        if key in AREAS and line and key not in written:
+            written[key] = line
+    return tuple((area, written[area]) for area in AREAS if area in written)
 
 
 def _spent_since(tally: cost.Ledger, opening: int, model: str) -> cost.Spend:
