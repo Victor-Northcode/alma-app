@@ -745,7 +745,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
           Text(
             '${_entry?.numeral ?? ''} · ${_systemName(l)}'.toLowerCase(),
             textAlign: TextAlign.center,
-            style: AlmaType.overline.copyWith(color: AlmaPalette.goldOnGilt),
+            style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep),
           ),
           const SizedBox(height: 9),
           Text(reading.title,
@@ -939,7 +939,7 @@ class _CitedLineState extends State<_CitedLine> {
     // золочёная бумага, светлее и сама с золотом, и холст главы (`s51`)
     // печатает мета-строку именно #8A6F2E.
     final style = AlmaType.numeral.copyWith(
-      color: AlmaPalette.goldOnGilt,
+      color: AlmaPalette.goldDeep,
       fontFamilyFallback: AlmaType.glyphFallback,
     );
     return GestureDetector(
@@ -948,7 +948,7 @@ class _CitedLineState extends State<_CitedLine> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           Text(widget.label.toUpperCase(),
-              style: AlmaType.overline.copyWith(color: AlmaPalette.goldOnGilt)),
+              style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep)),
           const SizedBox(width: 12),
           Expanded(
             // Режется только хвост дома — см. `AlmaShrink.fitMetaLine`.
