@@ -2158,4 +2158,43 @@ class LDe extends L {
   String cabPlanCancelPeriodEnds(String date) {
     return 'Dein Plan bleibt bis $date aktiv.';
   }
+
+  @override
+  String get todayReadWholeSky => 'Den ganzen Himmel lesen';
+
+  @override
+  String todayReadMinutes(String n) {
+    return '$n Min.';
+  }
+
+  @override
+  String readerHeader(String date) {
+    return '$date · dein Himmel';
+  }
+
+  @override
+  String readerAskAboutIt(String aspect) {
+    return 'Frag Alma zu $aspect';
+  }
+
+  @override
+  String get readerTermYours => 'bei dir';
+
+  @override
+  String readerReadInChapter(String system, String chapter) {
+    return 'Lies es in $system — $chapter';
+  }
+
+  @override
+  String readerTomorrow(String event) {
+    return 'Morgen $event';
+  }
+
+  @override
+  String readerWrittenAt(String time) {
+    return 'Geschrieben um $time, deine Zeit';
+  }
+
+  @override
+  String get readerTextSize => 'Textgröße';
 }

@@ -44,6 +44,20 @@ class AlmaType {
   static const _display = 'Playfair Display';
   static const _ui = 'Golos Text';
 
+  /// Гарнитура чтения — всё, что длиннее абзаца.
+  ///
+  /// **Третья роль появилась потому, что двух не хватило.** Дисплейной антиквой
+  /// печатали и заголовок, и две тысячи знаков гороскопа; `today-reading-spec`
+  /// называет это прямо: у Playfair высокий контраст, на 17 точках тонкие
+  /// штрихи на тёмном пропадают, курсив добавляет наклон и связки, и такой
+  /// текст больно читать. Playfair остаётся — но только в дисплее: имя дня,
+  /// титулы, цифры, мета-строка.
+  static const _reading = 'Lora';
+
+  /// Засечные запасные — те же, что у дисплея: если Lora не доехала, текст
+  /// должен остаться засечным, а не съехать в системный гротеск.
+  static const _readingFallback = ['Charter', 'Georgia', 'Times New Roman', 'serif'];
+
   /// Тот же список, что в `AlmaFonts.displayFamilies` на iOS, и системный
   /// засечный последним — на Android и в браузере ни одного из первых нет.
   static const _displayFallback = ['New York', 'Charter', 'Georgia', 'serif'];
@@ -166,22 +180,75 @@ class AlmaType {
     color: AlmaPalette.gold,
   );
 
-  /// Голос дня — тот же засечный, чуть мельче голоса Alma.
-  /// Голос дня. Значение в значение с `almaDayVoice()`: 17.5 светлым
-  /// начертанием, интерлиньяж 1.55, чернила приглушены до 0.95.
+  /* ── чтение ─────────────────────────────────────────────────────────────
+     Три ступени `today-reading-spec §1`. Всё, что длиннее абзаца, печатается
+     ими и только ими: гороскоп, читалка, голос Alma.                        */
+
+  /// Лид — одна фраза, которой открывается чтение. Полужирный, 20/1.42.
+  static final readingLead = TextStyle(
+    fontFamily: _reading,
+    fontFamilyFallback: _readingFallback,
+    fontSize: 20,
+    fontWeight: FontWeight.w500,
+    fontVariations: const [FontVariation('wght', 500)],
+    height: 1.42,
+    color: AlmaPalette.inkLight,
+  );
+
+  /// Тело чтения. 17/1.65 — ступень «обычно» из трёх, которые даёт «Aa».
   ///
-  /// Здесь стояли 19 обычным весом и 1.5 — на кадре рядом с нативом текст дня
-  /// был заметно крупнее и жирнее, и на экран помещалось на треть меньше.
-  /// «Твой день слишком длинным текстом описывается, нужно короче и тоньше
-  /// шрифт» — правка, ради которой этот стиль и появился на нативе.
-  static final dayVoice = TextStyle(
-    fontFamily: _display,
-    fontFamilyFallback: _displayFallback,
-    fontSize: 17.5,
-    // Playfair начинается с 400: просьба о 300 законно рисуется как 400.
-    fontWeight: FontWeight.w300,
-    fontVariations: [FontVariation('wght', 400)],
-    height: 1.55,
-    color: AlmaPalette.inkLight.withValues(alpha: 0.95),
+  /// Размер приходит снаружи ([readingSteps]), потому что выбор человека
+  /// хранится за ним и переживает перезапуск. Интерлиньяж множителем, а не
+  /// числом: на 19 точках 1.65 даёт 31 — на 16 те же 1.65 дают 26, и обе
+  /// строки остаются одинаково просторными.
+  static TextStyle readingBody([double size = 17]) => TextStyle(
+        fontFamily: _reading,
+        fontFamilyFallback: _readingFallback,
+        fontSize: size,
+        fontWeight: FontWeight.w400,
+        fontVariations: const [FontVariation('wght', 400)],
+        height: 1.65,
+        color: AlmaPalette.inkLight.withValues(alpha: 0.95),
+      );
+
+  /// Три ступени кнопки «Aa»: мельче, обычно, крупнее.
+  static const readingSteps = [16.0, 17.0, 19.0];
+
+  /// Сноска — объяснение термина внутри карточки. 15/1.6.
+  static final readingNote = TextStyle(
+    fontFamily: _reading,
+    fontFamilyFallback: _readingFallback,
+    fontSize: 15,
+    fontWeight: FontWeight.w400,
+    fontVariations: const [FontVariation('wght', 400)],
+    height: 1.6,
+    color: AlmaPalette.body.withValues(alpha: 0.92),
+  );
+
+  /// Тихий подзаголовок смысловой части внутри чтения: Golos 600, 11, ls 2.2.
+  ///
+  /// Части размечает движок — клиент текст сам не режет. Строка стоит рядом с
+  /// гаснущей линией и по весу обязана быть тише всего вокруг: это не заголовок
+  /// раздела, а вздох между абзацами.
+  static const readingPart = TextStyle(
+    fontFamily: _ui,
+    fontFamilyFallback: _uiFallback,
+    fontSize: 11,
+    fontWeight: FontWeight.w600,
+    fontVariations: [FontVariation('wght', 600)],
+    letterSpacing: 2.2,
+    color: AlmaPalette.gold,
+  );
+
+  /// Шапка читалки: «16 АВГУСТА · ТВОЁ НЕБО». Golos 600, 10.5, ls 2.2.
+  // `final`, а не `const`: `muted2` — вычисленная прозрачность, а не литерал.
+  static final readerHead = TextStyle(
+    fontFamily: _ui,
+    fontFamilyFallback: _uiFallback,
+    fontSize: 10.5,
+    fontWeight: FontWeight.w600,
+    fontVariations: const [FontVariation('wght', 600)],
+    letterSpacing: 2.2,
+    color: AlmaPalette.muted2,
   );
 }

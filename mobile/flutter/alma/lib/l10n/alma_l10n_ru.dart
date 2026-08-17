@@ -2141,4 +2141,43 @@ class LRu extends L {
   String cabPlanCancelPeriodEnds(String date) {
     return 'План действует до $date.';
   }
+
+  @override
+  String get todayReadWholeSky => 'Прочитать всё небо';
+
+  @override
+  String todayReadMinutes(String n) {
+    return '$n мин';
+  }
+
+  @override
+  String readerHeader(String date) {
+    return '$date · твоё небо';
+  }
+
+  @override
+  String readerAskAboutIt(String aspect) {
+    return 'Спросить Alma про $aspect';
+  }
+
+  @override
+  String get readerTermYours => 'у тебя';
+
+  @override
+  String readerReadInChapter(String system, String chapter) {
+    return 'Прочитать в «$system» — $chapter';
+  }
+
+  @override
+  String readerTomorrow(String event) {
+    return 'Завтра $event';
+  }
+
+  @override
+  String readerWrittenAt(String time) {
+    return 'Написано в $time по твоему времени';
+  }
+
+  @override
+  String get readerTextSize => 'Размер текста';
 }

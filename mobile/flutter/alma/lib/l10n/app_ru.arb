@@ -633,5 +633,14 @@
   "cabLegalEffective": "Действует с {p1}",
   "cabPlanDeleteMismatchGuest": "Это не код этого аккаунта.",
   "paywallArtCaption": "Каждая глава открывается своей вклейкой — нарисованной для этой колоды.",
-  "cabPlanCancelPeriodEnds": "План действует до {date}."
+  "cabPlanCancelPeriodEnds": "План действует до {date}.",
+  "todayReadWholeSky": "Прочитать всё небо",
+  "todayReadMinutes": "{n} мин",
+  "readerHeader": "{date} · твоё небо",
+  "readerAskAboutIt": "Спросить Alma про {aspect}",
+  "readerTermYours": "у тебя",
+  "readerReadInChapter": "Прочитать в «{system}» — {chapter}",
+  "readerTomorrow": "Завтра {event}",
+  "readerWrittenAt": "Написано в {time} по твоему времени",
+  "readerTextSize": "Размер текста"
 }

@@ -2153,4 +2153,43 @@ class LPt extends L {
   String cabPlanCancelPeriodEnds(String date) {
     return 'Seu plano continua ativo até $date.';
   }
+
+  @override
+  String get todayReadWholeSky => 'Ler todo o céu';
+
+  @override
+  String todayReadMinutes(String n) {
+    return '$n min';
+  }
+
+  @override
+  String readerHeader(String date) {
+    return '$date · seu céu';
+  }
+
+  @override
+  String readerAskAboutIt(String aspect) {
+    return 'Pergunte à Alma sobre $aspect';
+  }
+
+  @override
+  String get readerTermYours => 'no seu mapa';
+
+  @override
+  String readerReadInChapter(String system, String chapter) {
+    return 'Leia em $system — $chapter';
+  }
+
+  @override
+  String readerTomorrow(String event) {
+    return 'Amanhã $event';
+  }
+
+  @override
+  String readerWrittenAt(String time) {
+    return 'Escrito às $time, seu horário';
+  }
+
+  @override
+  String get readerTextSize => 'Tamanho do texto';
 }

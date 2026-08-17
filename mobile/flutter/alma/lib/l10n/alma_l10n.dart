@@ -3916,6 +3916,60 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Your plan stays active until {date}.'**
   String cabPlanCancelPeriodEnds(String date);
+
+  /// today-reading-spec §6 · todayReadWholeSky
+  ///
+  /// In en, this message translates to:
+  /// **'Read the whole sky'**
+  String get todayReadWholeSky;
+
+  /// today-reading-spec §6 · todayReadMinutes
+  ///
+  /// In en, this message translates to:
+  /// **'{n} min'**
+  String todayReadMinutes(String n);
+
+  /// today-reading-spec §6 · readerHeader
+  ///
+  /// In en, this message translates to:
+  /// **'{date} · your sky'**
+  String readerHeader(String date);
+
+  /// today-reading-spec §6 · readerAskAboutIt
+  ///
+  /// In en, this message translates to:
+  /// **'Ask Alma about {aspect}'**
+  String readerAskAboutIt(String aspect);
+
+  /// today-reading-spec §6 · readerTermYours
+  ///
+  /// In en, this message translates to:
+  /// **'yours'**
+  String get readerTermYours;
+
+  /// today-reading-spec §6 · readerReadInChapter
+  ///
+  /// In en, this message translates to:
+  /// **'Read it in {system} — {chapter}'**
+  String readerReadInChapter(String system, String chapter);
+
+  /// today-reading-spec §6 · readerTomorrow
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow {event}'**
+  String readerTomorrow(String event);
+
+  /// today-reading-spec §6 · readerWrittenAt
+  ///
+  /// In en, this message translates to:
+  /// **'Written at {time}, your time'**
+  String readerWrittenAt(String time);
+
+  /// today-reading-spec §6 · readerTextSize
+  ///
+  /// In en, this message translates to:
+  /// **'Text size'**
+  String get readerTextSize;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

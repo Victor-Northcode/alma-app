@@ -633,5 +633,14 @@
   "cabLegalEffective": "Gültig ab {p1}",
   "cabPlanDeleteMismatchGuest": "Das ist nicht der Code dieses Kontos.",
   "paywallArtCaption": "Jedes Kapitel öffnet mit einer eigenen Tafel — gemalt für dieses Deck.",
-  "cabPlanCancelPeriodEnds": "Dein Plan bleibt bis {date} aktiv."
+  "cabPlanCancelPeriodEnds": "Dein Plan bleibt bis {date} aktiv.",
+  "todayReadWholeSky": "Den ganzen Himmel lesen",
+  "todayReadMinutes": "{n} Min.",
+  "readerHeader": "{date} · dein Himmel",
+  "readerAskAboutIt": "Frag Alma zu {aspect}",
+  "readerTermYours": "bei dir",
+  "readerReadInChapter": "Lies es in {system} — {chapter}",
+  "readerTomorrow": "Morgen {event}",
+  "readerWrittenAt": "Geschrieben um {time}, deine Zeit",
+  "readerTextSize": "Textgröße"
 }

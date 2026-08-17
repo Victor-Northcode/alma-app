@@ -11,6 +11,7 @@ import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
+import '../../state/ask_alma.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 import '../today/today_screen.dart' show openOffer;
@@ -131,6 +132,21 @@ class _AlmaScreenState extends State<AlmaScreen>
   @override
   void initState() {
     super.initState();
+    // Вопрос, с которым сюда пришли с другого экрана (читалка гороскопа, `R2`).
+    // Подставляем в поле и **гасим признак** — он одноразовый: оставленный
+    // гореть, он подставлял бы тот же вопрос при каждом возврате на вкладку.
+    // Не отправляем: вопросов в день три, и потратить один за человека,
+    // который ещё не дочитал предложение, — ловушка, а не услуга.
+    almaDraft.addListener(_takeDraft);
+    // **И один раз при появлении.** Одной подписки мало: страницы `PageView`
+    // строятся по мере приближения, и вкладка Alma — третья, то есть в момент
+    // нажатия на карточку в читалке её состояния ещё не существует. Признак
+    // ставится, слушать его некому, вопрос теряется — проверено на симуляторе,
+    // поле оставалось пустым. Значит забираем и то, что уже лежит.
+    //
+    // Кадром позже: `setState` из `initState` — построение дерева во время
+    // построения дерева.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _takeDraft());
     // **Экран смотрит на окно и обязан узнавать, что окно изменилось.**
     //
     // Низ этой вкладки считается от окна, а не от `MediaQuery` тела (почему —
@@ -361,8 +377,18 @@ class _AlmaScreenState extends State<AlmaScreen>
     });
   }
 
+  /// Вопрос пришёл с другого экрана — подставить в поле.
+  void _takeDraft() {
+    final question = almaDraft.value;
+    if (question == null || !mounted) return;
+    almaDraft.value = null;
+    setState(() => _draft.text = question);
+    _focus.requestFocus();
+  }
+
   @override
   void dispose() {
+    almaDraft.removeListener(_takeDraft);
     WidgetsBinding.instance.removeObserver(this);
     _tilt.dispose();
     _draft.dispose();

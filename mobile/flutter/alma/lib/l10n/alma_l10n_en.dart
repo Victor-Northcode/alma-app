@@ -2143,4 +2143,43 @@ class LEn extends L {
   String cabPlanCancelPeriodEnds(String date) {
     return 'Your plan stays active until $date.';
   }
+
+  @override
+  String get todayReadWholeSky => 'Read the whole sky';
+
+  @override
+  String todayReadMinutes(String n) {
+    return '$n min';
+  }
+
+  @override
+  String readerHeader(String date) {
+    return '$date · your sky';
+  }
+
+  @override
+  String readerAskAboutIt(String aspect) {
+    return 'Ask Alma about $aspect';
+  }
+
+  @override
+  String get readerTermYours => 'yours';
+
+  @override
+  String readerReadInChapter(String system, String chapter) {
+    return 'Read it in $system — $chapter';
+  }
+
+  @override
+  String readerTomorrow(String event) {
+    return 'Tomorrow $event';
+  }
+
+  @override
+  String readerWrittenAt(String time) {
+    return 'Written at $time, your time';
+  }
+
+  @override
+  String get readerTextSize => 'Text size';
 }

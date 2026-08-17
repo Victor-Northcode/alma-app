@@ -18,6 +18,7 @@ import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 import '../offer_screen.dart';
+import 'reading_screen.dart';
 import '../systems/writing_art.dart';
 import 'today_model.dart';
 
@@ -294,12 +295,18 @@ class _GlassPanel extends StatelessWidget {
 /// там, где в эталоне одна. Запас в 28 точек оставлен линии: он и есть то
 /// «сжимайся, но не исчезай», которое в вёрстке делает `flex`.
 class _PanelLabel extends StatelessWidget {
-  const _PanelLabel(this.text);
+  const _PanelLabel(this.text, {this.trailing});
 
   final String text;
 
+  /// Что стоит у правого канта вместо конца линии — время чтения на карточке
+  /// гороскопа (`today-reading-spec §2`). Линия отдаёт ему место, а не
+  /// упирается в него.
+  final String? trailing;
+
   @override
   Widget build(BuildContext context) {
+    final tail = trailing;
     return LayoutBuilder(
       builder: (context, box) => Row(
         children: [
@@ -322,6 +329,11 @@ class _PanelLabel extends StatelessWidget {
               ),
             ),
           ),
+          if (tail != null) ...[
+            const SizedBox(width: 10),
+            Text(tail,
+                style: AlmaType.meta.copyWith(color: AlmaPalette.muted3)),
+          ],
         ],
       ),
     );
@@ -350,7 +362,7 @@ class _HoroscopePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _PanelLabel(l.cabHoroscopeToday),
+          _PanelLabel(l.cabHoroscopeToday, trailing: _minutes(l)),
           if (subscriber) ..._voice(l) else ..._locked(context, l),
         ],
       ),
@@ -370,6 +382,29 @@ class _HoroscopePanel extends StatelessWidget {
           onTap: () => openOffer(context),
         ),
       ];
+
+  /// «3 мин» у правого канта подписи — сколько читать целиком.
+  ///
+  /// **Считается по словам, а не приходит с сервера.** Это измерение готового
+  /// текста, а не его разрезание: клиенту запрещено делить текст на части
+  /// (`§3` — «движок помечает части, клиент не разрезает текст сам»), но
+  /// сосчитать, сколько в нём слов, он вправе.
+  ///
+  /// 140 слов в минуту — темп внимательного чтения, не просмотра: этот текст
+  /// про самого читающего, и его перечитывают, а не проглядывают. Округление
+  /// вверх и пол в одну минуту: «0 мин» на карточке выглядело бы поломкой.
+  String? _minutes(L l) {
+    if (!subscriber) return null;
+    if (model.line case LoadDone<ReadingResponse>(value: final answer)) {
+      final words = answer.reading.body
+          .expand((p) => p.split(RegExp(r'\s+')))
+          .where((w) => w.isNotEmpty)
+          .length;
+      if (words == 0) return null;
+      return l.todayReadMinutes('${math.max(1, (words / 140).ceil())}');
+    }
+    return null;
+  }
 
   List<Widget> _voice(L l) {
     switch (model.line) {
@@ -409,14 +444,53 @@ class _HoroscopePanel extends StatelessWidget {
           ),
         ];
       case LoadDone<ReadingResponse>(value: final answer):
-        // Первый абзац в 14 точках под подписью, соседние — в 8 друг от друга:
-        // числа s45 и s1.
+        // **Здесь стоял весь текст целиком, и это была ошибка размером в
+        // экран.** Гороскоп подписчика — две тысячи знаков и больше; вылитый
+        // сюда дисплейной антиквой, он давал два экрана прокрутки, полоса
+        // вкладок наезжала на строки, а блок областей уходил за сгиб.
+        //
+        // `today-reading-spec §2` разводит это на два места: на «Сегодня»
+        // остаётся лид одной фразой, **один** абзац и дверь; весь текст живёт
+        // в читалке. Правило там сформулировано без исключений: «Полный текст
+        // на Today не выводится никогда».
+        //
+        // Лид — `teaser` сервера, а не первая фраза, отрезанная клиентом:
+        // схема просит у модели «одну фразу, называющую, что глава нашла»,
+        // и это ровно лид. Резать текст на клиенте спека запрещает отдельно.
+        final reading = answer.reading;
+        final first = reading.body.isEmpty ? null : reading.body.first;
         return [
-          for (final (i, paragraph) in answer.reading.body.indexed)
-            Padding(
-              padding: EdgeInsets.only(top: i == 0 ? 14 : 8),
-              child: Text(paragraph, style: AlmaType.dayVoice),
+          if (reading.teaser.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(reading.teaser, style: AlmaType.readingLead),
+          ],
+          if (first != null) ...[
+            const SizedBox(height: 12),
+            // **Четыре строки, дальше — растворение.**
+            //
+            // Спека требует двух вещей сразу: «один абзац» и «экран обязан
+            // заканчиваться до бара без скролла». У сервера абзац дня — шесть
+            // сотен знаков, и обе разом не выполняются: один такой абзац сам по
+            // себе длиннее экрана.
+            //
+            // Растворение — решение показа, а не содержания: текст не режется
+            // на части (это спека запрещает клиенту прямо) и не переписывается,
+            // просто карточка показывает его начало, а дверь под ней стоит в
+            // одном касании. Многоточие на этом месте читалось бы обрывом, а
+            // гаснущая строка — приглашением.
+            //
+            // **Правильное место починки — движок.** Спека писалась под
+            // короткий открывающий абзац; пока его нет, честнее гасить, чем
+            // ломать раскладку. Записано владельцу.
+            Text(
+              first,
+              style: AlmaType.readingBody(),
+              maxLines: 4,
+              overflow: TextOverflow.fade,
             ),
+          ],
+          const SizedBox(height: 16),
+          _WholeSkyDoor(reading: reading),
         ];
       case LoadFailed<ReadingResponse>(error: final error):
         return [
@@ -433,6 +507,53 @@ class _HoroscopePanel extends StatelessWidget {
       case _:
         return const [];
     }
+  }
+}
+
+/// Дверь в читалку: контур высотой 50 под абзацем (`today-reading-spec §2`).
+///
+/// Не `AlmaActionRow` со стрелкой в строке: у двери на карточке гороскопа есть
+/// заданная высота, и она — единственное на этом экране, что человек нажимает,
+/// чтобы продолжить чтение. Строка-ссылка на её месте читалась бы сноской.
+class _WholeSkyDoor extends StatelessWidget {
+  const _WholeSkyDoor({required this.reading});
+
+  final Reading reading;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return SizedBox(
+      height: 50,
+      width: double.infinity,
+      child: OutlinedButton(
+        onPressed: () => Navigator.of(context).push(
+          CupertinoPageRoute(
+            builder: (_) => TodayReadingScreen(
+              reading: reading,
+              // Гороскоп пишется на сегодня по определению: ручка зовётся
+              // `transits/active`, и другого дня у неё не бывает.
+              day: DateTime.now(),
+            ),
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: AlmaPalette.hairlineGold),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AlmaPalette.buttonRadius),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(l.todayReadWholeSky,
+                style: AlmaType.body.copyWith(color: AlmaPalette.gold)),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward, size: 15, color: AlmaPalette.gold),
+          ],
+        ),
+      ),
+    );
   }
 }
 

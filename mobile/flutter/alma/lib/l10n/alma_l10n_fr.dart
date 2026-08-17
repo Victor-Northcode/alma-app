@@ -2161,4 +2161,43 @@ class LFr extends L {
   String cabPlanCancelPeriodEnds(String date) {
     return 'Ton forfait reste actif jusqu\'au $date.';
   }
+
+  @override
+  String get todayReadWholeSky => 'Lire tout le ciel';
+
+  @override
+  String todayReadMinutes(String n) {
+    return '$n min';
+  }
+
+  @override
+  String readerHeader(String date) {
+    return '$date · ton ciel';
+  }
+
+  @override
+  String readerAskAboutIt(String aspect) {
+    return 'Demande à Alma à propos de $aspect';
+  }
+
+  @override
+  String get readerTermYours => 'chez toi';
+
+  @override
+  String readerReadInChapter(String system, String chapter) {
+    return 'Lis-le dans $system — $chapter';
+  }
+
+  @override
+  String readerTomorrow(String event) {
+    return 'Demain $event';
+  }
+
+  @override
+  String readerWrittenAt(String time) {
+    return 'Écrit à $time, ton heure';
+  }
+
+  @override
+  String get readerTextSize => 'Taille du texte';
 }

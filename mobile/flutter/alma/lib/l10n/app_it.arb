@@ -633,5 +633,14 @@
   "cabLegalEffective": "In vigore dal {p1}",
   "cabPlanDeleteMismatchGuest": "Questo non è il codice di questo account.",
   "paywallArtCaption": "Ogni capitolo si apre con la sua tavola — dipinta per questo mazzo.",
-  "cabPlanCancelPeriodEnds": "Il tuo piano resta attivo fino al {date}."
+  "cabPlanCancelPeriodEnds": "Il tuo piano resta attivo fino al {date}.",
+  "todayReadWholeSky": "Leggi tutto il cielo",
+  "todayReadMinutes": "{n} min",
+  "readerHeader": "{date} · il tuo cielo",
+  "readerAskAboutIt": "Chiedi ad Alma di {aspect}",
+  "readerTermYours": "nella tua carta",
+  "readerReadInChapter": "Leggilo in {system} — {chapter}",
+  "readerTomorrow": "Domani {event}",
+  "readerWrittenAt": "Scritto alle {time}, ora tua",
+  "readerTextSize": "Dimensione del testo"
 }

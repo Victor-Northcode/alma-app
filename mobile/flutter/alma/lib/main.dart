@@ -19,6 +19,7 @@ import 'screens/systems/chapter_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
 import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
+import 'state/ask_alma.dart';
 import 'state/session.dart';
 
 void main() => runApp(AlmaApp(
@@ -133,7 +134,21 @@ class _CabinetShellState extends State<CabinetShell> {
   final PillDirector _pill = PillDirector();
 
   @override
+  void initState() {
+    super.initState();
+    // Кто-то ушёл в Alma с готовым вопросом — из читалки гороскопа (`R2`).
+    // Оболочка отвечает за одно: довезти до вкладки. Текст в поле подставит
+    // сам экран Alma, он же и погасит признак — см. [almaDraft] о порядке.
+    almaDraft.addListener(_askedAlma);
+  }
+
+  void _askedAlma() {
+    if (almaDraft.value != null) _goTo(CabinetTab.alma);
+  }
+
+  @override
   void dispose() {
+    almaDraft.removeListener(_askedAlma);
     _pill.dispose();
     _peek.dispose();
     _pages.dispose();

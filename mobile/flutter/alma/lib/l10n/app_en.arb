@@ -2853,5 +2853,74 @@
         "type": "String"
       }
     }
+  },
+  "todayReadWholeSky": "Read the whole sky",
+  "@todayReadWholeSky": {
+    "description": "today-reading-spec §6 · todayReadWholeSky"
+  },
+  "todayReadMinutes": "{n} min",
+  "@todayReadMinutes": {
+    "description": "today-reading-spec §6 · todayReadMinutes",
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "readerHeader": "{date} · your sky",
+  "@readerHeader": {
+    "description": "today-reading-spec §6 · readerHeader",
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "readerAskAboutIt": "Ask Alma about {aspect}",
+  "@readerAskAboutIt": {
+    "description": "today-reading-spec §6 · readerAskAboutIt",
+    "placeholders": {
+      "aspect": {
+        "type": "String"
+      }
+    }
+  },
+  "readerTermYours": "yours",
+  "@readerTermYours": {
+    "description": "today-reading-spec §6 · readerTermYours"
+  },
+  "readerReadInChapter": "Read it in {system} — {chapter}",
+  "@readerReadInChapter": {
+    "description": "today-reading-spec §6 · readerReadInChapter",
+    "placeholders": {
+      "system": {
+        "type": "String"
+      },
+      "chapter": {
+        "type": "String"
+      }
+    }
+  },
+  "readerTomorrow": "Tomorrow {event}",
+  "@readerTomorrow": {
+    "description": "today-reading-spec §6 · readerTomorrow",
+    "placeholders": {
+      "event": {
+        "type": "String"
+      }
+    }
+  },
+  "readerWrittenAt": "Written at {time}, your time",
+  "@readerWrittenAt": {
+    "description": "today-reading-spec §6 · readerWrittenAt",
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "readerTextSize": "Text size",
+  "@readerTextSize": {
+    "description": "today-reading-spec §6 · readerTextSize"
   }
 }

@@ -2156,4 +2156,43 @@ class LIt extends L {
   String cabPlanCancelPeriodEnds(String date) {
     return 'Il tuo piano resta attivo fino al $date.';
   }
+
+  @override
+  String get todayReadWholeSky => 'Leggi tutto il cielo';
+
+  @override
+  String todayReadMinutes(String n) {
+    return '$n min';
+  }
+
+  @override
+  String readerHeader(String date) {
+    return '$date · il tuo cielo';
+  }
+
+  @override
+  String readerAskAboutIt(String aspect) {
+    return 'Chiedi ad Alma di $aspect';
+  }
+
+  @override
+  String get readerTermYours => 'nella tua carta';
+
+  @override
+  String readerReadInChapter(String system, String chapter) {
+    return 'Leggilo in $system — $chapter';
+  }
+
+  @override
+  String readerTomorrow(String event) {
+    return 'Domani $event';
+  }
+
+  @override
+  String readerWrittenAt(String time) {
+    return 'Scritto alle $time, ora tua';
+  }
+
+  @override
+  String get readerTextSize => 'Dimensione del testo';
 }

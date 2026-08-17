@@ -2148,4 +2148,43 @@ class LEs extends L {
   String cabPlanCancelPeriodEnds(String date) {
     return 'Tu plan sigue activo hasta $date.';
   }
+
+  @override
+  String get todayReadWholeSky => 'Leer todo el cielo';
+
+  @override
+  String todayReadMinutes(String n) {
+    return '$n min';
+  }
+
+  @override
+  String readerHeader(String date) {
+    return '$date · tu cielo';
+  }
+
+  @override
+  String readerAskAboutIt(String aspect) {
+    return 'Pregúntale a Alma sobre $aspect';
+  }
+
+  @override
+  String get readerTermYours => 'en tu carta';
+
+  @override
+  String readerReadInChapter(String system, String chapter) {
+    return 'Léelo en $system — $chapter';
+  }
+
+  @override
+  String readerTomorrow(String event) {
+    return 'Mañana $event';
+  }
+
+  @override
+  String readerWrittenAt(String time) {
+    return 'Escrito a las $time, tu hora';
+  }
+
+  @override
+  String get readerTextSize => 'Tamaño del texto';
 }
