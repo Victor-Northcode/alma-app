@@ -537,9 +537,29 @@ async def write(
     latin = i18n.resolve(locale) in ("en", "es", "de", "it", "fr", "pt-BR")
     per_word = 3 if latin else 9
     script_scale = 1.0 if latin else 2.0
-    max_tokens = min(8192, chapter.words[1] * per_word + (600 if latin else 1800))
+    # **Области стоят места, и первая же живая генерация это доказала.**
+    #
+    # Дневная глава просит четыре строки сверх прозы (`Chapter.areas`), а
+    # бюджет считался по одной прозе. Ответ обрезался на 2553 токенах, поднять
+    # потолок было не на что, три попытки сгорели, и подписчик получил 422 —
+    # то есть сломалась ровно та генерация, которую видит каждый и каждый день.
+    # Найдено в логе на симуляторе владельца через час после правки.
+    #
+    # Четыре строки по двенадцать слов — сорок восемь слов, плюс ключи JSON.
+    # Считаем тем же `per_word`, что и прозу: по-русски слово стоит втрое
+    # дороже, и allowance обязан ехать за скриптом, а не быть константой.
+    areas_room = (4 * 12 * per_word + 80) if chapter.areas else 0
+    # Потолок стоимости поднимается вместе с просьбой, иначе первое же
+    # переполнение упирается в отказ вместо добавки. Четверть — это ровно
+    # `areas_room` против прежней высоты в худшем случае (кириллица), и
+    # ложится на ту же ручку `scale`, которой уже пользуется скрипт.
+    if chapter.areas:
+        script_scale *= 1.25
+    max_tokens = min(
+        8192, chapter.words[1] * per_word + (600 if latin else 1800) + areas_room
+    )
     if not latin:
-        max_tokens = max(max_tokens, 4100)
+        max_tokens = max(max_tokens, 4100 + areas_room)
     #: The allowance this chapter needs whatever the budget thinks, kept apart
     #: from `max_tokens` because the loop below recomputes that one every
     #: attempt. Going under this is truncation; the truncation branch raises it
