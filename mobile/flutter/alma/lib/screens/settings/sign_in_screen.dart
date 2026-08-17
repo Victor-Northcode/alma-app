@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../design/brand_marks.dart';
 import '../../design/buttons.dart';
 import '../../design/emblem.dart';
 import '../../design/metrics.dart';
@@ -413,14 +414,33 @@ class _Provider extends StatelessWidget {
                   child: CircularProgressIndicator(
                       strokeWidth: 2, color: AlmaPalette.gold),
                 )
-              : Text(label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AlmaType.button.copyWith(
-                      fontSize: 15,
-                      color: onTap == null
-                          ? AlmaPalette.muted3
-                          : AlmaPalette.inkLight)),
+              // **Марка и подпись, а не одна подпись.** Так собраны кнопки
+              // входа во всяком приложении, которое их показывает, и не из
+              // моды: знак узнаётся раньше, чем прочитано слово, а на двух
+              // кнопках рядом именно это и решает, куда нажать.
+              //
+              // Марка не гаснет вместе с подписью, когда кнопка занята: серое
+              // яблоко и серая «G» — это чужие знаки, перекрашенные нами, чего
+              // обе компании не разрешают. Гаснет слово, знак остаётся собой.
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    label == 'Apple'
+                        ? BrandMark.apple()
+                        : BrandMark.google(),
+                    const SizedBox(width: 9),
+                    Flexible(
+                      child: Text(label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AlmaType.button.copyWith(
+                              fontSize: 15,
+                              color: onTap == null
+                                  ? AlmaPalette.muted3
+                                  : AlmaPalette.inkLight)),
+                    ),
+                  ],
+                ),
         ),
       );
 }
