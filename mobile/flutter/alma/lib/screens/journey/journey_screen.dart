@@ -13,9 +13,9 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
-import '../offer_screen.dart';
 import '../settings/sign_in_screen.dart';
 import '../systems/writing_art.dart';
+import '../systems/chapter_screen.dart';
 import 'push_ask_screen.dart';
 
 /// Путешествие: шесть шагов от имени до церемонии и трёхшаговый хвост за ней.
@@ -349,13 +349,17 @@ class _JourneyScreenState extends State<JourneyScreen> {
     // Навигатор берётся до первого `await`: после него `context` может уже не
     // принадлежать дереву, и `Navigator.of` на нём падает.
     final navigator = Navigator.of(context, rootNavigator: true);
-    // Витрина ведёт натальной картой: это единственная система, которую
-    // церемония действительно посчитала, и единственная, чьи числа у человека
-    // уже на руках.
+    // **Первым идёт бесплатный текст, а не витрина** — это инвариант P0 ТЗ
+    // монетизации v3: «до первого бесплатного контента пользователь не видит
+    // ни одной цены». Здесь стояла витрина (`OfferScreen`, s37), то есть
+    // человек проходил церемонию и первым делом видел ценник; VR приговорил
+    // этот шаг вместе со старой лестницей. Глава I натальной карты — то, ради
+    // чего числа только что посчитаны, и единственная бесплатная глава
+    // продукта. Оффер человек встретит в её конце (V1) — дочитав, а не до.
     await navigator.push(CupertinoPageRoute<void>(
-      builder: (context) => const OfferScreen(
+      builder: (context) => const ChapterScreen(
         system: SystemSlug.natal,
-        journeyStep: true,
+        chapter: 'core',
       ),
     ));
     if (!mounted) return;

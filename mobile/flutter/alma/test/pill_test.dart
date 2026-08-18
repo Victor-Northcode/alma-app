@@ -1,5 +1,6 @@
 import 'package:alma/design/invitation_pill.dart';
 import 'package:alma/l10n/alma_l10n.dart';
+import 'package:alma/state/paywall_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,6 +17,9 @@ void main() {
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
+    // Сторож §5 статический и переживает тесты; без сброса первый показ
+    // первого теста съедал бы проактивный бюджет всех остальных.
+    PaywallGuard.reset();
     events = [];
     realSink = PillEvents.sink;
     PillEvents.sink = (name, meta) => events.add((name: name, meta: meta));
@@ -94,8 +98,12 @@ void main() {
     expect(pill, findsOneWidget);
   });
 
-  testWidgets('три показа за сессию и полторы минуты тишины между',
-      (tester) async {
+  testWidgets('один показ за сессию — §5 ТЗ v3, правило 1', (tester) async {
+    // Здесь проверялись «три показа за сессию» — собственный ритм пилюли,
+    // написанный до v3. §5 ТЗ монетизации говорит короче: не больше одного
+    // проактивного оффера за сессию, и пилюля теперь спрашивает того же
+    // сторожа, что и все пейволлы. Второго прихода не бывает — сколько бы
+    // таймеров у неё ни оставалось.
     final director = PillDirector();
     addTearDown(director.dispose);
     await tester.pumpWidget(cabinet(director));
@@ -103,26 +111,19 @@ void main() {
     director.surface = PillSurface.today;
     await tester.pump();
 
-    for (var round = 1; round <= 3; round++) {
-      await tester.pump(const Duration(seconds: 7));
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(pill, findsOneWidget, reason: 'показ $round');
-      // Пока не прошло полторы минуты, второго приглашения не бывает.
-      await tester.pump(const Duration(seconds: 12));
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(pill, findsNothing);
-      await tester.pump(const Duration(seconds: 60));
-      expect(pill, findsNothing, reason: 'минуты тишины мало, нужно полторы');
-      await tester.pump(const Duration(seconds: 25));
-      await tester.pump(const Duration(milliseconds: 400));
-    }
-
-    // Четвёртого не бывает: напоминание, повторённое четыре раза за пять
-    // минут, — уже не напоминание.
-    await tester.pump(const Duration(minutes: 5));
+    await tester.pump(const Duration(seconds: 7));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(pill, findsOneWidget, reason: 'первый показ — законный');
+    // Показ доживает своё и уходит.
+    await tester.pump(const Duration(seconds: 12));
     await tester.pump(const Duration(milliseconds: 400));
     expect(pill, findsNothing);
-    expect(events.where((e) => e.name == 'pill_shown').length, 3);
+
+    // Хоть пять минут — второго проактивного зова в этой сессии нет.
+    await tester.pump(const Duration(minutes: 5));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(pill, findsNothing, reason: '§5: один проактивный оффер за сессию');
+    expect(events.where((e) => e.name == 'pill_shown').length, 1);
   });
 
   testWidgets('поверхность, сказавшая «не сейчас», молчит неделю',

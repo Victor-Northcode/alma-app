@@ -10,7 +10,7 @@ import '../design/metrics.dart';
 import '../design/palette.dart';
 import '../design/typography.dart';
 import '../l10n/alma_l10n.dart';
-import 'offer_screen.dart';
+import 'paywall/paywall_router.dart';
 
 /// Чем кончился шит «Вся Alma».
 enum AllAlmaExit {
@@ -31,9 +31,20 @@ enum AllAlmaExit {
   final String wire;
 }
 
-/// Открыть лестницу планов (S8).
-Future<void> openAlmaPlans(BuildContext context) => Navigator.of(context)
-    .push(CupertinoPageRoute(builder: (context) => const OfferScreen()));
+/// Открыть планы v3 (V8).
+///
+/// Вела на старую лестницу (`OfferScreen`, s8) прямым `Navigator.push` — мимо
+/// роутера пейволлов и мимо сторожа §5, то есть в приложении жили две системы
+/// монетизации разом. VR приговорил лестницу; пилюля осталась по слову
+/// владельца («оставляй»), но ведёт теперь на витрину v3 тем же путём, каким
+/// туда попадают все: `showPaywall` считает показ, шлёт воронку и подчиняется
+/// сторожу. `proactive: false` — человек сам нажал пилюлю и сам нажал
+/// золотую кнопку шита; проактивным был показ пилюли, и его считает она.
+Future<void> openAlmaPlans(BuildContext context) => showPaywall(
+      context,
+      const PaywallIntent.plans(),
+      trigger: 'all_alma_pill',
+    );
 
 /// Шит «Вся Alma» — то, во что превращается пилюля.
 ///

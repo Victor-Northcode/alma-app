@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../l10n/alma_l10n.dart';
+import '../state/paywall_guard.dart';
 import '../screens/all_alma_sheet.dart';
 import 'gold_texture.dart';
 import 'metrics.dart';
@@ -436,6 +437,13 @@ class _PillLayerState extends State<PillLayer> with TickerProviderStateMixin {
       _wait = Timer(_settling, _tryAppear);
       return;
     }
+    // **Пилюля — проактивный оффер, и сторож §5 считает её.** Она жила мимо
+    // него: свой таймер, свой счёт показов — и на «Сегодня» рядом с ней
+    // вставали другие зовы, каждый уверенный, что он единственный. Правило
+    // одно на продукт: не больше одного проактивного оффера за сессию, и чей
+    // бы показ ни был первым — второй молчит.
+    if (PaywallGuard.check(proactive: true) != PaywallRefusal.none) return;
+    PaywallGuard.noteProactive();
     _appear(surface);
   }
 
