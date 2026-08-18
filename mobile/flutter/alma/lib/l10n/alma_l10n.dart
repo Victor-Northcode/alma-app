@@ -959,11 +959,23 @@ abstract class L {
   /// **'Manage this subscription in the App Store'**
   String get cabManageInStore;
 
+  /// Play-вариант ключа cabManageInStore: Android обязан называть свой магазин своими словами
+  ///
+  /// In en, this message translates to:
+  /// **'Manage this subscription in Google Play'**
+  String get cabManageInStorePlay;
+
   /// from Cabinet/cab.managedByApple
   ///
   /// In en, this message translates to:
   /// **'This plan was bought in the App Store, so Apple holds the payment method and the cancellation happens there.'**
   String get cabManagedByApple;
+
+  /// Play-вариант ключа cabManagedByApple: Android обязан называть свой магазин своими словами
+  ///
+  /// In en, this message translates to:
+  /// **'This plan was bought in Google Play, so Google holds the payment method and the cancellation happens there.'**
+  String get cabManagedByGooglePlay;
 
   /// from Cabinet/cab.merchantLine
   ///
@@ -2945,12 +2957,6 @@ abstract class L {
   /// **'Today'**
   String get tabToday;
 
-  /// from Paywall/paywall.annualNote
-  ///
-  /// In en, this message translates to:
-  /// **'Renews every year until you cancel. Cancel any time in your Apple ID settings.'**
-  String get paywallAnnualNote;
-
   /// from Paywall/paywall.annualTitle
   ///
   /// In en, this message translates to:
@@ -2968,12 +2974,6 @@ abstract class L {
   /// In en, this message translates to:
   /// **'All eight systems'**
   String get paywallArchiveTitle;
-
-  /// from Paywall/paywall.autoRenewTerms
-  ///
-  /// In en, this message translates to:
-  /// **'Payment is charged to your Apple ID when you confirm. The plan renews automatically unless you cancel at least 24 hours before the period ends, and the renewal is charged within the 24 hours before it. Manage or cancel it in your Apple ID settings.'**
-  String get paywallAutoRenewTerms;
 
   /// from Paywall/paywall.doorNote
   ///
@@ -3005,12 +3005,6 @@ abstract class L {
   /// **'Every calculation stays free — all eight systems. You pay only for the written chapters.'**
   String get paywallFreeNote;
 
-  /// from Paywall/paywall.honestyCancel
-  ///
-  /// In en, this message translates to:
-  /// **'cancel in your Apple ID settings'**
-  String get paywallHonestyCancel;
-
   /// from Paywall/paywall.honestyOnce
   ///
   /// In en, this message translates to:
@@ -3040,6 +3034,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Plans bought in the app are cancelled in your Apple ID settings, not here.'**
   String get paywallManageNote;
+
+  /// Play-вариант ключа paywallManageNote: Android обязан называть свой магазин своими словами
+  ///
+  /// In en, this message translates to:
+  /// **'Plans bought in the app are cancelled in your Google Play subscriptions, not here.'**
+  String get paywallManageNotePlay;
 
   /// from Paywall/paywall.monthlyNote
   ///
@@ -3155,12 +3155,6 @@ abstract class L {
   /// **'Restore purchases'**
   String get paywallRestore;
 
-  /// from Paywall/paywall.renewShort (s8, one paragraph)
-  ///
-  /// In en, this message translates to:
-  /// **'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time'**
-  String get paywallRenewShort;
-
   /// from Paywall/paywall.restored
   ///
   /// In en, this message translates to:
@@ -3172,6 +3166,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'The App Store has nothing to restore for this Apple ID.'**
   String get paywallRestoredNone;
+
+  /// Play-вариант ключа paywallRestoredNone: Android обязан называть свой магазин своими словами
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play has nothing to restore for this account.'**
+  String get paywallRestoredNonePlay;
 
   /// from Paywall/paywall.restoredOther
   ///
@@ -3185,6 +3185,12 @@ abstract class L {
   /// **'Asking the App Store…'**
   String get paywallRestoring;
 
+  /// Play-вариант ключа paywallRestoring: Android обязан называть свой магазин своими словами
+  ///
+  /// In en, this message translates to:
+  /// **'Asking Google Play…'**
+  String get paywallRestoringPlay;
+
   /// from Paywall/paywall.skip
   ///
   /// In en, this message translates to:
@@ -3196,6 +3202,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'The App Store is not answering. Nothing here can be bought until it does — and nothing you already own has changed.'**
   String get paywallStoreUnavailable;
+
+  /// Play-вариант ключа paywallStoreUnavailable: Android обязан называть свой магазин своими словами
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play is not answering. Nothing here can be bought until it does — and nothing you already own has changed.'**
+  String get paywallStoreUnavailablePlay;
 
   /// from Paywall/paywall.subscriptionTerms
   ///
@@ -3304,6 +3316,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'One-time doors exist too · cancel any time in your Apple ID settings'**
   String get pillSheetFootnote;
+
+  /// Play-вариант ключа pillSheetFootnote: Android обязан называть свой магазин своими словами
+  ///
+  /// In en, this message translates to:
+  /// **'One-time doors exist too · cancel any time in your Google Play subscriptions'**
+  String get pillSheetFootnotePlay;
 
   /// from Pill/pill.sheetSub
   ///
@@ -4156,6 +4174,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Renews monthly · cancel any time in your Apple ID settings'**
   String get paywallV3SubRenewalDisclosure;
+
+  /// Play-вариант ключа paywallV3SubRenewalDisclosure: Android обязан называть свой магазин своими словами
+  ///
+  /// In en, this message translates to:
+  /// **'Renews monthly · cancel any time in Google Play'**
+  String get paywallV3SubRenewalDisclosurePlay;
 
   /// monetization v3 · А11 sub.includes_transits · V6/V8
   ///

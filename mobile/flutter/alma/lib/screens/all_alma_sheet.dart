@@ -9,6 +9,7 @@ import '../design/metrics.dart';
 import '../design/palette.dart';
 import '../design/typography.dart';
 import '../l10n/alma_l10n.dart';
+import '../billing/store_words.dart';
 import 'paywall/paywall_router.dart';
 
 /// Чем кончился шит «Вся Alma».
@@ -278,7 +279,7 @@ class _AllAlmaSheetState extends State<_AllAlmaSheet> {
                   const SizedBox(height: 6),
                   Center(
                     child: Text(
-                      l.pillSheetFootnote,
+                      l.storeSheetFootnote,
                       textAlign: TextAlign.center,
                       style: AlmaType.meta
                           .copyWith(color: AlmaPalette.muted3, fontSize: 12),

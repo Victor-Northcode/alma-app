@@ -14,6 +14,7 @@ import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
+import '../../billing/store_words.dart';
 import '../../net/alma_client.dart';
 import '../../notify/push_devices.dart';
 import '../../net/models.dart' show FunnelStage, SystemSlug;
@@ -808,7 +809,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       AlmaButton(
         kind: AlmaButtonKind.outline,
         fills: false,
-        label: l.cabManageInStore,
+        label: l.storeManageInStore,
         onTap: _manageSubscription,
       ),
       // Обещание про кошелёк — только там, где оно правда. У подписки,
@@ -816,7 +817,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // отправила бы человека искать отмену туда, где её нет.
       if (store) ...[
         const SizedBox(height: 10),
-        Text(l.cabManagedByApple, style: AlmaType.meta),
+        Text(l.storeManagedBy, style: AlmaType.meta),
       ] else
         // **Граница проходит здесь.** Предложить отмену магазинной подписки
         // внутри приложения — нарушение правил магазина и обещание, которого
@@ -979,7 +980,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // App Store стоит выше, второй такой же здесь не нужно.
         return [
           const SizedBox(height: 12),
-          Text(l.cabManagedByApple, style: AlmaType.meta),
+          Text(l.storeManagedBy, style: AlmaType.meta),
         ];
     }
   }
@@ -1458,7 +1459,7 @@ class _RestoreRowState extends State<_RestoreRow> {
         AlmaButton(
           kind: AlmaButtonKind.veil,
           fills: false,
-          label: store.restoring ? l.paywallRestoring : l.paywallRestore,
+          label: store.restoring ? l.storeRestoring : l.paywallRestore,
           onTap: store.restoring || store.busy != null
               ? null
               : () {
@@ -1471,16 +1472,16 @@ class _RestoreRowState extends State<_RestoreRow> {
             padding: const EdgeInsets.only(top: 10),
             child: Text(
               switch (notice.message) {
-                StoreMessage.storeSilent => l.paywallStoreUnavailable,
+                StoreMessage.storeSilent => l.storeUnavailable,
                 StoreMessage.pending => l.paywallPending,
                 StoreMessage.offline => l.paywallOffline,
                 StoreMessage.notVerified => l.paywallNotVerified,
                 StoreMessage.verifyLater => l.paywallVerifyLater,
                 StoreMessage.withdrawn => l.paywallWithdrawn,
                 StoreMessage.unlocked => l.paywallRestored,
-                StoreMessage.restoring => l.paywallRestoring,
+                StoreMessage.restoring => l.storeRestoring,
                 StoreMessage.restored => l.paywallRestored,
-                StoreMessage.restoredNone => l.paywallRestoredNone,
+                StoreMessage.restoredNone => l.storeRestoredNone,
               },
               style: AlmaType.meta.copyWith(
                 color: switch (notice.tone) {

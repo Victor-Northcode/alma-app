@@ -451,8 +451,15 @@ class LEn extends L {
   String get cabManageInStore => 'Manage this subscription in the App Store';
 
   @override
+  String get cabManageInStorePlay => 'Manage this subscription in Google Play';
+
+  @override
   String get cabManagedByApple =>
       'This plan was bought in the App Store, so Apple holds the payment method and the cancellation happens there.';
+
+  @override
+  String get cabManagedByGooglePlay =>
+      'This plan was bought in Google Play, so Google holds the payment method and the cancellation happens there.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -1566,10 +1573,6 @@ class LEn extends L {
   String get tabToday => 'Today';
 
   @override
-  String get paywallAnnualNote =>
-      'Renews every year until you cancel. Cancel any time in your Apple ID settings.';
-
-  @override
   String get paywallAnnualTitle => 'Everything, for a year';
 
   @override
@@ -1577,10 +1580,6 @@ class LEn extends L {
 
   @override
   String get paywallArchiveTitle => 'All eight systems';
-
-  @override
-  String get paywallAutoRenewTerms =>
-      'Payment is charged to your Apple ID when you confirm. The plan renews automatically unless you cancel at least 24 hours before the period ends, and the renewal is charged within the 24 hours before it. Manage or cancel it in your Apple ID settings.';
 
   @override
   String get paywallDoorNote => 'One payment.';
@@ -1601,9 +1600,6 @@ class LEn extends L {
       'Every calculation stays free — all eight systems. You pay only for the written chapters.';
 
   @override
-  String get paywallHonestyCancel => 'cancel in your Apple ID settings';
-
-  @override
   String get paywallHonestyOnce => 'one-time purchases do not renew';
 
   @override
@@ -1619,6 +1615,10 @@ class LEn extends L {
   @override
   String get paywallManageNote =>
       'Plans bought in the app are cancelled in your Apple ID settings, not here.';
+
+  @override
+  String get paywallManageNotePlay =>
+      'Plans bought in the app are cancelled in your Google Play subscriptions, not here.';
 
   @override
   String get paywallMonthlyNote =>
@@ -1692,16 +1692,16 @@ class LEn extends L {
   String get paywallRestore => 'Restore purchases';
 
   @override
-  String get paywallRenewShort =>
-      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
-
-  @override
   String get paywallRestored =>
       'Restored. Everything you bought is open again.';
 
   @override
   String get paywallRestoredNone =>
       'The App Store has nothing to restore for this Apple ID.';
+
+  @override
+  String get paywallRestoredNonePlay =>
+      'Google Play has nothing to restore for this account.';
 
   @override
   String get paywallRestoredOther =>
@@ -1711,11 +1711,18 @@ class LEn extends L {
   String get paywallRestoring => 'Asking the App Store…';
 
   @override
+  String get paywallRestoringPlay => 'Asking Google Play…';
+
+  @override
   String get paywallSkip => 'Skip for now';
 
   @override
   String get paywallStoreUnavailable =>
       'The App Store is not answering. Nothing here can be bought until it does — and nothing you already own has changed.';
+
+  @override
+  String get paywallStoreUnavailablePlay =>
+      'Google Play is not answering. Nothing here can be bought until it does — and nothing you already own has changed.';
 
   @override
   String get paywallSubscriptionTerms => 'Subscription terms';
@@ -1777,6 +1784,10 @@ class LEn extends L {
   @override
   String get pillSheetFootnote =>
       'One-time doors exist too · cancel any time in your Apple ID settings';
+
+  @override
+  String get pillSheetFootnotePlay =>
+      'One-time doors exist too · cancel any time in your Google Play subscriptions';
 
   @override
   String get pillSheetSub =>
@@ -2315,6 +2326,10 @@ class LEn extends L {
   @override
   String get paywallV3SubRenewalDisclosure =>
       'Renews monthly · cancel any time in your Apple ID settings';
+
+  @override
+  String get paywallV3SubRenewalDisclosurePlay =>
+      'Renews monthly · cancel any time in Google Play';
 
   @override
   String get paywallV3SubIncludesTransits =>

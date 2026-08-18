@@ -30,6 +30,7 @@ import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
+import '../../billing/store_words.dart';
 
 /// Шапка продающего экрана: надзаголовок слева, крестик справа.
 ///
@@ -494,7 +495,7 @@ class PaywallCta extends StatelessWidget {
     final busy = store.busy != null;
     if (label == null) {
       return Column(children: [
-        Text(l.paywallStoreUnavailable,
+        Text(l.storeUnavailable,
             textAlign: TextAlign.center, style: AlmaType.meta),
         const SizedBox(height: 14),
         AlmaButton(
@@ -740,16 +741,16 @@ class _ProcessingRingPainter extends CustomPainter {
 
 /// Девять состояний магазина словами человека.
 String paywallNoticeText(L l, StoreMessage message) => switch (message) {
-      StoreMessage.storeSilent => l.paywallStoreUnavailable,
+      StoreMessage.storeSilent => l.storeUnavailable,
       StoreMessage.pending => l.paywallPending,
       StoreMessage.offline => l.paywallOffline,
       StoreMessage.notVerified => l.paywallNotVerified,
       StoreMessage.verifyLater => l.paywallVerifyLater,
       StoreMessage.withdrawn => l.paywallWithdrawn,
       StoreMessage.unlocked => l.paywallRestored,
-      StoreMessage.restoring => l.paywallRestoring,
+      StoreMessage.restoring => l.storeRestoring,
       StoreMessage.restored => l.paywallV3StateRestoreDone,
-      StoreMessage.restoredNone => l.paywallRestoredNone,
+      StoreMessage.restoredNone => l.storeRestoredNone,
     };
 
 /// Подвал: `Restore`, а рядом то, что положено этому кадру.
@@ -773,7 +774,7 @@ class PaywallFooter extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         PaywallQuietLink(
-          label: store.restoring ? l.paywallRestoring : l.paywallRestore,
+          label: store.restoring ? l.storeRestoring : l.paywallRestore,
           bold: true,
           color: AlmaPalette.body.withValues(alpha: 0.7),
           onTap: store.restoring || store.busy != null ? null : store.restore,

@@ -451,8 +451,16 @@ class LEs extends L {
   String get cabManageInStore => 'Gestiona esta suscripción en la App Store';
 
   @override
+  String get cabManageInStorePlay =>
+      'Gestionar esta suscripción en Google Play';
+
+  @override
   String get cabManagedByApple =>
       'Este plan se compró en la App Store, así que Apple guarda el método de pago y la cancelación se hace allí.';
+
+  @override
+  String get cabManagedByGooglePlay =>
+      'Este plan se compró en Google Play: Google guarda el método de pago y la cancelación ocurre allí.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -1570,10 +1578,6 @@ class LEs extends L {
   String get tabToday => 'Hoy';
 
   @override
-  String get paywallAnnualNote =>
-      'Se renueva cada año hasta que lo canceles. Cancela cuando quieras en los ajustes de tu Apple ID.';
-
-  @override
   String get paywallAnnualTitle => 'Todo, durante un año';
 
   @override
@@ -1581,10 +1585,6 @@ class LEs extends L {
 
   @override
   String get paywallArchiveTitle => 'El archivo completo';
-
-  @override
-  String get paywallAutoRenewTerms =>
-      'El pago se carga a tu Apple ID al confirmar. El plan se renueva automáticamente salvo que lo canceles al menos 24 horas antes de que acabe el periodo, y el cobro de la renovación se hace en las 24 horas previas. Gestiónalo o cancélalo en los ajustes de tu Apple ID.';
 
   @override
   String get paywallDoorNote => 'Un solo pago.';
@@ -1605,9 +1605,6 @@ class LEs extends L {
       'Todos los cálculos siguen siendo gratis, siempre. Lo que tiene precio es lo escrito.';
 
   @override
-  String get paywallHonestyCancel => 'cancelas en los ajustes de tu Apple ID';
-
-  @override
   String get paywallHonestyOnce => 'un pago único es un pago único';
 
   @override
@@ -1622,6 +1619,10 @@ class LEs extends L {
   @override
   String get paywallManageNote =>
       'Los planes comprados en la app se cancelan en los ajustes de tu Apple ID, no aquí.';
+
+  @override
+  String get paywallManageNotePlay =>
+      'Los planes comprados en la app se cancelan en las suscripciones de Google Play, no aquí.';
 
   @override
   String get paywallMonthlyNote =>
@@ -1695,16 +1696,16 @@ class LEs extends L {
   String get paywallRestore => 'Restaurar compras';
 
   @override
-  String get paywallRenewShort =>
-      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
-
-  @override
   String get paywallRestored =>
       'Restaurado. Todo lo que compraste vuelve a estar abierto.';
 
   @override
   String get paywallRestoredNone =>
       'La App Store no tiene nada que restaurar para este Apple ID.';
+
+  @override
+  String get paywallRestoredNonePlay =>
+      'Google Play no tiene nada que restaurar para esta cuenta.';
 
   @override
   String get paywallRestoredOther =>
@@ -1714,11 +1715,18 @@ class LEs extends L {
   String get paywallRestoring => 'Estoy preguntando a la App Store…';
 
   @override
+  String get paywallRestoringPlay => 'Preguntando a Google Play…';
+
+  @override
   String get paywallSkip => 'Ahora no — continuar';
 
   @override
   String get paywallStoreUnavailable =>
       'La App Store no responde. Aquí no se puede comprar nada hasta que responda — y nada de lo que ya tienes ha cambiado.';
+
+  @override
+  String get paywallStoreUnavailablePlay =>
+      'Google Play no responde. Mientras calla, aquí no se puede comprar nada — y todo lo que ya es tuyo sigue igual.';
 
   @override
   String get paywallSubscriptionTerms => 'Condiciones de suscripción';
@@ -1780,6 +1788,10 @@ class LEs extends L {
   @override
   String get pillSheetFootnote =>
       'También hay puertas de pago único · cancela cuando quieras en los ajustes de tu Apple ID';
+
+  @override
+  String get pillSheetFootnotePlay =>
+      'También hay puertas de una sola vez · cancela cuando quieras en las suscripciones de Google Play';
 
   @override
   String get pillSheetSub =>
@@ -2320,6 +2332,10 @@ class LEs extends L {
   @override
   String get paywallV3SubRenewalDisclosure =>
       'Se renueva cada mes · puedes cancelar cuando quieras en los ajustes de tu Apple ID';
+
+  @override
+  String get paywallV3SubRenewalDisclosurePlay =>
+      'Se renueva cada mes · cancela cuando quieras en Google Play';
 
   @override
   String get paywallV3SubIncludesTransits =>

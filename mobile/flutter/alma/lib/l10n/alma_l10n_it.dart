@@ -452,8 +452,16 @@ class LIt extends L {
   String get cabManageInStore => 'Gestisci questo abbonamento nell\'App Store';
 
   @override
+  String get cabManageInStorePlay =>
+      'Gestisci questo abbonamento in Google Play';
+
+  @override
   String get cabManagedByApple =>
       'Questo piano è stato comprato nell\'App Store: Apple tiene il metodo di pagamento e la disdetta si fa lì.';
+
+  @override
+  String get cabManagedByGooglePlay =>
+      'Questo piano è stato comprato in Google Play: Google custodisce il metodo di pagamento e la disdetta avviene lì.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -1576,10 +1584,6 @@ class LIt extends L {
   String get tabToday => 'Oggi';
 
   @override
-  String get paywallAnnualNote =>
-      'Si rinnova ogni anno finché non disdici. Puoi disdire quando vuoi nelle impostazioni del tuo ID Apple.';
-
-  @override
   String get paywallAnnualTitle => 'Tutto, per un anno';
 
   @override
@@ -1588,10 +1592,6 @@ class LIt extends L {
 
   @override
   String get paywallArchiveTitle => 'Tutti e otto i sistemi';
-
-  @override
-  String get paywallAutoRenewTerms =>
-      'Il pagamento viene addebitato sul tuo ID Apple alla conferma. L\'abbonamento si rinnova automaticamente se non disdici almeno 24 ore prima della fine del periodo, e il rinnovo viene addebitato nelle 24 ore precedenti. Puoi gestirlo o disdirlo nelle impostazioni del tuo ID Apple.';
 
   @override
   String get paywallDoorNote => 'Un solo pagamento.';
@@ -1613,10 +1613,6 @@ class LIt extends L {
       'Ogni calcolo resta gratuito, sempre. Paghi solo la lettura scritta.';
 
   @override
-  String get paywallHonestyCancel =>
-      'disdici nelle impostazioni dell\'ID Apple';
-
-  @override
   String get paywallHonestyOnce => 'gli acquisti una tantum non si rinnovano';
 
   @override
@@ -1631,6 +1627,10 @@ class LIt extends L {
   @override
   String get paywallManageNote =>
       'Gli abbonamenti acquistati nell\'app si disdicono nelle impostazioni del tuo ID Apple, non qui.';
+
+  @override
+  String get paywallManageNotePlay =>
+      'I piani comprati nell\'app si disdicono negli abbonamenti Google Play, non qui.';
 
   @override
   String get paywallMonthlyNote =>
@@ -1703,16 +1703,16 @@ class LIt extends L {
   String get paywallRestore => 'Ripristina acquisti';
 
   @override
-  String get paywallRenewShort =>
-      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
-
-  @override
   String get paywallRestored =>
       'Ripristinato. Tutto quello che hai comprato è di nuovo aperto.';
 
   @override
   String get paywallRestoredNone =>
       'L\'App Store non ha nulla da ripristinare per questo ID Apple.';
+
+  @override
+  String get paywallRestoredNonePlay =>
+      'Google Play non ha nulla da ripristinare per questo account.';
 
   @override
   String get paywallRestoredOther =>
@@ -1722,11 +1722,18 @@ class LIt extends L {
   String get paywallRestoring => 'Sto chiedendo all\'App Store…';
 
   @override
+  String get paywallRestoringPlay => 'Chiedo a Google Play…';
+
+  @override
   String get paywallSkip => 'Salta per ora';
 
   @override
   String get paywallStoreUnavailable =>
       'L\'App Store non risponde. Qui non si può comprare nulla finché non risponde — e quello che possiedi già non cambia.';
+
+  @override
+  String get paywallStoreUnavailablePlay =>
+      'Google Play non risponde. Finché tace, qui non si può comprare nulla — e tutto ciò che è già tuo non è cambiato.';
 
   @override
   String get paywallSubscriptionTerms => 'Condizioni di abbonamento';
@@ -1788,6 +1795,10 @@ class LIt extends L {
   @override
   String get pillSheetFootnote =>
       'Esistono anche porte una tantum · annulla quando vuoi nelle impostazioni dell\'ID Apple';
+
+  @override
+  String get pillSheetFootnotePlay =>
+      'Esistono anche porte una tantum · disdici quando vuoi negli abbonamenti Google Play';
 
   @override
   String get pillSheetSub =>
@@ -2328,6 +2339,10 @@ class LIt extends L {
   @override
   String get paywallV3SubRenewalDisclosure =>
       'Si rinnova ogni mese · disdici quando vuoi nelle impostazioni del tuo Apple ID';
+
+  @override
+  String get paywallV3SubRenewalDisclosurePlay =>
+      'Si rinnova ogni mese · disdici quando vuoi in Google Play';
 
   @override
   String get paywallV3SubIncludesTransits =>

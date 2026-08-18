@@ -451,8 +451,15 @@ class LRu extends L {
   String get cabManageInStore => 'Управлять этой подпиской в App Store';
 
   @override
+  String get cabManageInStorePlay => 'Управлять этой подпиской в Google Play';
+
+  @override
   String get cabManagedByApple =>
       'Этот план куплен в App Store, поэтому способ оплаты у Apple, и отмена происходит там.';
+
+  @override
+  String get cabManagedByGooglePlay =>
+      'Этот план куплен в Google Play: способ оплаты хранит Google, и отмена происходит там же.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -1568,10 +1575,6 @@ class LRu extends L {
   String get tabToday => 'Сегодня';
 
   @override
-  String get paywallAnnualNote =>
-      'Продлевается каждый год, пока не отменишь. Отмена в любой момент в настройках Apple ID.';
-
-  @override
   String get paywallAnnualTitle => 'Вся Alma — на год';
 
   @override
@@ -1579,10 +1582,6 @@ class LRu extends L {
 
   @override
   String get paywallArchiveTitle => 'Все восемь систем';
-
-  @override
-  String get paywallAutoRenewTerms =>
-      'Оплата списывается с твоего Apple ID при подтверждении. План продлевается автоматически, если не отменить его хотя бы за 24 часа до конца периода; продление списывается в последние 24 часа перед ним. Управление и отмена — в настройках Apple ID.';
 
   @override
   String get paywallDoorNote => 'Один платёж.';
@@ -1604,9 +1603,6 @@ class LRu extends L {
       'Каждый расчёт всегда бесплатен целиком. Цену имеют только слова.';
 
   @override
-  String get paywallHonestyCancel => 'отмена в настройках Apple ID';
-
-  @override
   String get paywallHonestyOnce => 'разовое — значит разовое';
 
   @override
@@ -1621,6 +1617,10 @@ class LRu extends L {
   @override
   String get paywallManageNote =>
       'Планы, купленные в приложении, отменяются в настройках Apple ID, не здесь.';
+
+  @override
+  String get paywallManageNotePlay =>
+      'Планы, купленные в приложении, отменяются в подписках Google Play, не здесь.';
 
   @override
   String get paywallMonthlyNote =>
@@ -1692,15 +1692,15 @@ class LRu extends L {
   String get paywallRestore => 'Восстановить покупки';
 
   @override
-  String get paywallRenewShort =>
-      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
-
-  @override
   String get paywallRestored => 'Восстановлено. Всё купленное снова открыто.';
 
   @override
   String get paywallRestoredNone =>
       'App Store не нашёл покупок для этого Apple ID.';
+
+  @override
+  String get paywallRestoredNonePlay =>
+      'В Google Play нечего восстановить для этого аккаунта.';
 
   @override
   String get paywallRestoredOther =>
@@ -1710,11 +1710,18 @@ class LRu extends L {
   String get paywallRestoring => 'Спрашиваю App Store…';
 
   @override
+  String get paywallRestoringPlay => 'Спрашиваю Google Play…';
+
+  @override
   String get paywallSkip => 'Не сейчас — впусти меня';
 
   @override
   String get paywallStoreUnavailable =>
       'App Store не отвечает. Пока он молчит, здесь ничего нельзя купить — и ничего из уже купленного не изменилось.';
+
+  @override
+  String get paywallStoreUnavailablePlay =>
+      'Google Play не отвечает. Пока он молчит, здесь ничего не купить — и всё, чем ты уже владеешь, на месте.';
 
   @override
   String get paywallSubscriptionTerms => 'Условия подписки';
@@ -1775,6 +1782,10 @@ class LRu extends L {
   @override
   String get pillSheetFootnote =>
       'Есть и разовые двери · отменить можно в любой момент в настройках Apple ID';
+
+  @override
+  String get pillSheetFootnotePlay =>
+      'Есть и разовые двери · отмена в любой момент в подписках Google Play';
 
   @override
   String get pillSheetSub =>
@@ -2317,6 +2328,10 @@ class LRu extends L {
   @override
   String get paywallV3SubRenewalDisclosure =>
       'Продлевается ежемесячно · отменить можно в любой момент в настройках Apple ID';
+
+  @override
+  String get paywallV3SubRenewalDisclosurePlay =>
+      'Продлевается каждый месяц · отмена в любой момент в Google Play';
 
   @override
   String get paywallV3SubIncludesTransits =>

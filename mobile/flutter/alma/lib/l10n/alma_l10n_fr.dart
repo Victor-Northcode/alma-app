@@ -452,8 +452,15 @@ class LFr extends L {
   String get cabManageInStore => 'Gérer cet abonnement dans l\'App Store';
 
   @override
+  String get cabManageInStorePlay => 'Gérer cet abonnement dans Google Play';
+
+  @override
   String get cabManagedByApple =>
       'Cet abonnement a été acheté dans l\'App Store : Apple détient le moyen de paiement, et la résiliation se fait là-bas.';
+
+  @override
+  String get cabManagedByGooglePlay =>
+      'Cet abonnement a été acheté dans Google Play : Google détient le moyen de paiement, et l\'annulation se fait là-bas.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -1580,10 +1587,6 @@ class LFr extends L {
   String get tabToday => 'Aujourd\'hui';
 
   @override
-  String get paywallAnnualNote =>
-      'Se renouvelle chaque année jusqu\'à résiliation. Résiliable à tout moment dans les réglages de ton identifiant Apple.';
-
-  @override
   String get paywallAnnualTitle => 'Tout, pendant un an';
 
   @override
@@ -1591,10 +1594,6 @@ class LFr extends L {
 
   @override
   String get paywallArchiveTitle => 'L\'archive entière';
-
-  @override
-  String get paywallAutoRenewTerms =>
-      'Le paiement est débité de ton identifiant Apple à la confirmation. L\'abonnement se renouvelle automatiquement sauf résiliation au moins 24 heures avant la fin de la période, et le renouvellement est débité dans les 24 heures qui la précèdent. Gère-le ou résilie-le dans les réglages de ton identifiant Apple.';
 
   @override
   String get paywallDoorNote => 'Un seul paiement.';
@@ -1616,9 +1615,6 @@ class LFr extends L {
       'Tous les calculs restent gratuits, toujours. Ce qui se paie, ce sont les textes.';
 
   @override
-  String get paywallHonestyCancel => 'résiliation dans les réglages Apple';
-
-  @override
   String get paywallHonestyOnce => 'un paiement unique reste unique';
 
   @override
@@ -1633,6 +1629,10 @@ class LFr extends L {
   @override
   String get paywallManageNote =>
       'Les abonnements achetés dans l\'app se résilient dans les réglages de ton identifiant Apple, pas ici.';
+
+  @override
+  String get paywallManageNotePlay =>
+      'Les abonnements achetés dans l\'app s\'annulent dans les abonnements Google Play, pas ici.';
 
   @override
   String get paywallMonthlyNote =>
@@ -1705,16 +1705,16 @@ class LFr extends L {
   String get paywallRestore => 'Restaurer les achats';
 
   @override
-  String get paywallRenewShort =>
-      'Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time';
-
-  @override
   String get paywallRestored =>
       'Restauré. Tout ce que tu as acheté est de nouveau ouvert.';
 
   @override
   String get paywallRestoredNone =>
       'L\'App Store n\'a rien à restaurer pour cet identifiant Apple.';
+
+  @override
+  String get paywallRestoredNonePlay =>
+      'Google Play n\'a rien à restaurer pour ce compte.';
 
   @override
   String get paywallRestoredOther =>
@@ -1724,11 +1724,18 @@ class LFr extends L {
   String get paywallRestoring => 'Je demande à l\'App Store…';
 
   @override
+  String get paywallRestoringPlay => 'Je demande à Google Play…';
+
+  @override
   String get paywallSkip => 'Pas maintenant — continuer dans l\'app';
 
   @override
   String get paywallStoreUnavailable =>
       'L\'App Store ne répond pas. Rien ne peut être acheté ici tant qu\'il ne répond pas — et rien de ce que tu possèdes déjà ne change.';
+
+  @override
+  String get paywallStoreUnavailablePlay =>
+      'Google Play ne répond pas. Tant qu\'il se tait, rien ne peut être acheté ici — et tout ce qui t\'appartient déjà n\'a pas bougé.';
 
   @override
   String get paywallSubscriptionTerms => 'Conditions d\'abonnement';
@@ -1791,6 +1798,10 @@ class LFr extends L {
   @override
   String get pillSheetFootnote =>
       'Il existe aussi des portes à l\'unité · annulable à tout moment dans les réglages de ton identifiant Apple';
+
+  @override
+  String get pillSheetFootnotePlay =>
+      'Il existe aussi des portes à l\'unité · annulable à tout moment dans les abonnements Google Play';
 
   @override
   String get pillSheetSub =>
@@ -2334,6 +2345,10 @@ class LFr extends L {
   @override
   String get paywallV3SubRenewalDisclosure =>
       'Se renouvelle chaque mois · résiliable à tout moment dans les réglages de ton identifiant Apple';
+
+  @override
+  String get paywallV3SubRenewalDisclosurePlay =>
+      'Se renouvelle chaque mois · annulable à tout moment dans Google Play';
 
   @override
   String get paywallV3SubIncludesTransits =>

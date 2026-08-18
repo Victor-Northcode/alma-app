@@ -6,6 +6,7 @@ import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
+import '../../billing/store_words.dart';
 import 'paywall_parts.dart';
 import 'paywall_router.dart';
 import 'paywall_shell.dart';
@@ -98,7 +99,7 @@ class SubscriptionScreen extends StatelessWidget {
             //    продукт кроссплатформенный; варианта для Play на холсте нет
             //    (спека, дыра №7) — решение владельца.
             Text(
-              l.paywallV3SubRenewalDisclosure,
+              l.storeRenewalDisclosure,
               style: AlmaType.meta.copyWith(fontSize: 12, height: 1.45),
             ),
             const SizedBox(height: 10),

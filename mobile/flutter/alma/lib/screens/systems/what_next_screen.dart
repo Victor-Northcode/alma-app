@@ -7,6 +7,7 @@ import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
+import '../../billing/store_words.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/reading_tally.dart';
@@ -244,7 +245,7 @@ class _WhatNextScreenState extends State<WhatNextScreen> {
                       // Цену выдумать нельзя; молчащий магазин говорит о себе
                       // теми же словами, что на всех витринах.
                       Text(
-                        l.paywallStoreUnavailable,
+                        l.storeUnavailable,
                         style: AlmaType.meta
                             .copyWith(color: AlmaPalette.inkMuted),
                       ),

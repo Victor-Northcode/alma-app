@@ -576,9 +576,17 @@
   "@cabManageInStore": {
     "description": "from Cabinet/cab.manageInStore"
   },
+  "cabManageInStorePlay": "Manage this subscription in Google Play",
+  "@cabManageInStorePlay": {
+    "description": "Play-вариант ключа cabManageInStore: Android обязан называть свой магазин своими словами"
+  },
   "cabManagedByApple": "This plan was bought in the App Store, so Apple holds the payment method and the cancellation happens there.",
   "@cabManagedByApple": {
     "description": "from Cabinet/cab.managedByApple"
+  },
+  "cabManagedByGooglePlay": "This plan was bought in Google Play, so Google holds the payment method and the cancellation happens there.",
+  "@cabManagedByGooglePlay": {
+    "description": "Play-вариант ключа cabManagedByApple: Android обязан называть свой магазин своими словами"
   },
   "cabMerchantLine": "Payments processed by {p1} as merchant of record · VAT/GST included where applicable",
   "@cabMerchantLine": {
@@ -2115,10 +2123,6 @@
   "@tabToday": {
     "description": "from Localizable/tab.today"
   },
-  "paywallAnnualNote": "Renews every year until you cancel. Cancel any time in your Apple ID settings.",
-  "@paywallAnnualNote": {
-    "description": "from Paywall/paywall.annualNote"
-  },
   "paywallAnnualTitle": "Everything, for a year",
   "@paywallAnnualTitle": {
     "description": "from Paywall/paywall.annualTitle"
@@ -2130,10 +2134,6 @@
   "paywallArchiveTitle": "All eight systems",
   "@paywallArchiveTitle": {
     "description": "from Paywall/paywall.archiveTitle"
-  },
-  "paywallAutoRenewTerms": "Payment is charged to your Apple ID when you confirm. The plan renews automatically unless you cancel at least 24 hours before the period ends, and the renewal is charged within the 24 hours before it. Manage or cancel it in your Apple ID settings.",
-  "@paywallAutoRenewTerms": {
-    "description": "from Paywall/paywall.autoRenewTerms"
   },
   "paywallDoorNote": "One payment.",
   "@paywallDoorNote": {
@@ -2155,10 +2155,6 @@
   "@paywallFreeNote": {
     "description": "from Paywall/paywall.freeNote"
   },
-  "paywallHonestyCancel": "cancel in your Apple ID settings",
-  "@paywallHonestyCancel": {
-    "description": "from Paywall/paywall.honestyCancel"
-  },
   "paywallHonestyOnce": "one-time purchases do not renew",
   "@paywallHonestyOnce": {
     "description": "from Paywall/paywall.honestyOnce"
@@ -2178,6 +2174,10 @@
   "paywallManageNote": "Plans bought in the app are cancelled in your Apple ID settings, not here.",
   "@paywallManageNote": {
     "description": "from Paywall/paywall.manageNote"
+  },
+  "paywallManageNotePlay": "Plans bought in the app are cancelled in your Google Play subscriptions, not here.",
+  "@paywallManageNotePlay": {
+    "description": "Play-вариант ключа paywallManageNote: Android обязан называть свой магазин своими словами"
   },
   "paywallMonthlyNote": "Transits, Solar Return and compatibility while they move, plus 30 questions a month. Renews until you cancel.",
   "@paywallMonthlyNote": {
@@ -2260,10 +2260,6 @@
     "description": "from Paywall/paywall.refused"
   },
   "paywallRestore": "Restore purchases",
-  "paywallRenewShort": "Payment is charged to your Apple ID when you confirm · renews unless cancelled 24 h before the period ends · cancel any time",
-  "@paywallRenewShort": {
-    "description": "from Paywall/paywall.renewShort (s8, one paragraph)"
-  },
   "@paywallRestore": {
     "description": "from Paywall/paywall.restore"
   },
@@ -2275,6 +2271,10 @@
   "@paywallRestoredNone": {
     "description": "from Paywall/paywall.restoredNone"
   },
+  "paywallRestoredNonePlay": "Google Play has nothing to restore for this account.",
+  "@paywallRestoredNonePlay": {
+    "description": "Play-вариант ключа paywallRestoredNone: Android обязан называть свой магазин своими словами"
+  },
   "paywallRestoredOther": "These purchases already belong to another Alma account. Sign in with that one and they come with you.",
   "@paywallRestoredOther": {
     "description": "from Paywall/paywall.restoredOther"
@@ -2283,6 +2283,10 @@
   "@paywallRestoring": {
     "description": "from Paywall/paywall.restoring"
   },
+  "paywallRestoringPlay": "Asking Google Play…",
+  "@paywallRestoringPlay": {
+    "description": "Play-вариант ключа paywallRestoring: Android обязан называть свой магазин своими словами"
+  },
   "paywallSkip": "Skip for now",
   "@paywallSkip": {
     "description": "from Paywall/paywall.skip"
@@ -2290,6 +2294,10 @@
   "paywallStoreUnavailable": "The App Store is not answering. Nothing here can be bought until it does — and nothing you already own has changed.",
   "@paywallStoreUnavailable": {
     "description": "from Paywall/paywall.storeUnavailable"
+  },
+  "paywallStoreUnavailablePlay": "Google Play is not answering. Nothing here can be bought until it does — and nothing you already own has changed.",
+  "@paywallStoreUnavailablePlay": {
+    "description": "Play-вариант ключа paywallStoreUnavailable: Android обязан называть свой магазин своими словами"
   },
   "paywallSubscriptionTerms": "Subscription terms",
   "@paywallSubscriptionTerms": {
@@ -2367,6 +2375,10 @@
   "pillSheetFootnote": "One-time doors exist too · cancel any time in your Apple ID settings",
   "@pillSheetFootnote": {
     "description": "from Pill/pill.sheetFootnote"
+  },
+  "pillSheetFootnotePlay": "One-time doors exist too · cancel any time in your Google Play subscriptions",
+  "@pillSheetFootnotePlay": {
+    "description": "Play-вариант ключа pillSheetFootnote: Android обязан называть свой магазин своими словами"
   },
   "pillSheetSub": "Your chart is already calculated — and always free. The plan opens the writing.",
   "@pillSheetSub": {
@@ -3097,6 +3109,10 @@
   "paywallV3SubRenewalDisclosure": "Renews monthly · cancel any time in your Apple ID settings",
   "@paywallV3SubRenewalDisclosure": {
     "description": "monetization v3 · А11 sub.renewal_disclosure · V6/V7/V8"
+  },
+  "paywallV3SubRenewalDisclosurePlay": "Renews monthly · cancel any time in Google Play",
+  "@paywallV3SubRenewalDisclosurePlay": {
+    "description": "Play-вариант ключа paywallV3SubRenewalDisclosure: Android обязан называть свой магазин своими словами"
   },
   "paywallV3SubIncludesTransits": "Transits and the morning horoscope, written from your chart",
   "@paywallV3SubIncludesTransits": {

@@ -7,6 +7,7 @@ import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
+import '../../billing/store_words.dart';
 import '../legal/legal_screen.dart';
 import '../legal/legal_text.dart';
 import 'paywall_parts.dart';
@@ -121,7 +122,7 @@ class PlansScreen extends StatelessWidget {
                   // тем же тоном, а не пустотой под заголовком «все планы».
                   else if (deal.store.silent) ...[
                     const SizedBox(height: 20),
-                    Text(l.paywallStoreUnavailable, style: AlmaType.body),
+                    Text(l.storeUnavailable, style: AlmaType.body),
                     const SizedBox(height: 14),
                     AlmaButton(
                       kind: AlmaButtonKind.veil,
@@ -136,7 +137,7 @@ class PlansScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Text(l.paywallOwnedAll, style: AlmaType.voice),
                     const SizedBox(height: 14),
-                    Text(l.paywallManageNote, style: AlmaType.meta),
+                    Text(l.storeManageNote, style: AlmaType.meta),
                   ],
                   if (forever.isNotEmpty) ...[
                     const SizedBox(height: 20),
