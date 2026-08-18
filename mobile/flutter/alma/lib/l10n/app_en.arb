@@ -3002,7 +3002,7 @@
   "@paywallV3PairInputTitle": {
     "description": "monetization v3 · А11 pair.input_title · W2"
   },
-  "paywallV3PairInputName": "His name",
+  "paywallV3PairInputName": "Name",
   "@paywallV3PairInputName": {
     "description": "monetization v3 · А11 pair.input_name · W2"
   },
@@ -3360,5 +3360,104 @@
   "pairPerPersonNote": "Per person · yours forever · add as many as you like",
   "@pairPerPersonNote": {
     "description": "locked-chapter-spec §4 · C6 · природа покупки под кнопкой совместимости. Лимита на число людей нет и обещать его нельзя"
+  },
+  "pairInputNote": "A date of birth is enough. A time makes the houses exact, but it can wait.",
+  "@pairInputNote": {
+      "description": "monetization v3 · W2 · подпись под заголовком анкеты пары"
+  },
+  "pairInputTime": "Time of birth",
+  "@pairInputTime": {
+      "description": "monetization v3 · А11 pair.input_time · W2"
+  },
+  "pairInputOptional": "optional",
+  "@pairInputOptional": {
+      "description": "monetization v3 · А11 pair.input_optional · W2 — помета на поле времени"
+  },
+  "pairInputPlace": "Place of birth",
+  "@pairInputPlace": {
+      "description": "W2 · четвёртое поле, которого нет на холсте: сервер требует координаты и пояс (дома). Расхождение записано в SCREENS-V3 §W2 как вопрос владельцу"
+  },
+  "pairInputFreeNote": "Their chart is calculated for free, like yours. The first chapter — attraction — you read before deciding anything.",
+  "@pairInputFreeNote": {
+      "description": "monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают"
+  },
+  "pairInputCta": "Read what pulls you together",
+  "@pairInputCta": {
+      "description": "monetization v3 · А11 pair.input_cta · W2"
+  },
+  "pairMyPairsNote": "Every report stays yours, subscription or not.",
+  "@pairMyPairsNote": {
+      "description": "monetization v3 · А11 pair.my_pairs_note · V5"
+  },
+  "pairRowChapters": "four chapters",
+  "@pairRowChapters": {
+      "description": "monetization v3 · А11 pair.row_chapters · V5"
+  },
+  "pairRowBought": "bought {date}",
+  "@pairRowBought": {
+      "description": "monetization v3 · А11 pair.row_bought · V5",
+      "placeholders": {
+          "date": {
+              "type": "String"
+          }
+      }
+  },
+  "pairRowFreeChapter": "the attraction chapter is free to read first",
+  "@pairRowFreeChapter": {
+      "description": "V5 · строка человека без купленного отчёта; кадра нет (SCREENS-V3 §V5), фраза собрана из pair.hook_note"
+  },
+  "pairCreditOverline": "this month",
+  "@pairCreditOverline": {
+      "description": "monetization v3 · А11 pair.credit_overline · V5"
+  },
+  "pairCreditUsed": "{used} of {granted, plural, one{{granted} check used} other{{granted} checks used}}",
+  "@pairCreditUsed": {
+      "description": "monetization v3 · А11 pair.credit_used · V5 — plural по обоим числам",
+      "placeholders": {
+          "used": {
+              "type": "int"
+          },
+          "granted": {
+              "type": "int"
+          }
+      }
+  },
+  "pairCreditNext": "Your next included check arrives {date}. Checks do not carry over.",
+  "@pairCreditNext": {
+      "description": "monetization v3 · А11 pair.credit_next · V5",
+      "placeholders": {
+          "date": {
+              "type": "String"
+          }
+      }
+  },
+  "pairHookTitle": "Anyone else on your mind?",
+  "@pairHookTitle": {
+      "description": "monetization v3 · А11 pair.hook_title · V5"
+  },
+  "pairHookNote": "A date of birth is enough — the attraction chapter is free to read first.",
+  "@pairHookNote": {
+      "description": "monetization v3 · А11 pair.hook_note · V5"
+  },
+  "pairCheckAnotherPlain": "Check someone else",
+  "@pairCheckAnotherPlain": {
+      "description": "V5 · кнопка без цены: полка молчит или месячная проверка ещё не потрачена. Эталона на холсте нет (§V5, «кредит не потрачен»); это pair.check_another без цены"
+  },
+  "pairReportHeader": "you and {name}",
+  "@pairReportHeader": {
+      "description": "monetization v3 · А11 pair.report_header · W3 (и V4 до слияния тизера с главой I)",
+      "placeholders": {
+          "name": {
+              "type": "String"
+          }
+      }
+  },
+  "pairReportMeta": "four chapters · yours forever",
+  "@pairReportMeta": {
+      "description": "monetization v3 · А11 pair.report_meta · W3 — только у купленного отчёта: подтверждение, а не оффер"
+  },
+  "pairChapterRead": "read",
+  "@pairChapterRead": {
+      "description": "monetization v3 · А11 pair.chapter_read · W3 — метка прочитанной главы в оглавлении пары"
   }
 }

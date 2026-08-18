@@ -16,7 +16,7 @@ import 'screens/journey/journey_screen.dart';
 import 'screens/launch_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
-import 'screens/systems/people_screen.dart';
+import 'screens/systems/pair_add_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
 import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
@@ -304,8 +304,11 @@ class _CabinetShellState extends State<CabinetShell> {
       ));
       return;
     }
+    // Людей ещё нет — кадр W2: ввод человека прямо в совместимости, без
+    // списка. Список с выбором и удалением остаётся на экране людей; сюда
+    // человек приходит завести первого, и форма — единственное, что ему нужно.
     final added = await navigator.push<Profile>(CupertinoPageRoute(
-      builder: (context) => const PeopleScreen(picking: true),
+      builder: (context) => const PairAddScreen(),
     ));
     // Ушли, не сохранив, — и это нормальный исход: возвращаемся в колоду, а не
     // тащим человека в главу про пару, которой он не завёл.

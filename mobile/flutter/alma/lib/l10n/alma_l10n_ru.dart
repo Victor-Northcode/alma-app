@@ -2246,7 +2246,7 @@ class LRu extends L {
   String get paywallV3PairInputTitle => 'Кого мы читаем вместе?';
 
   @override
-  String get paywallV3PairInputName => 'Его имя';
+  String get paywallV3PairInputName => 'Имя';
 
   @override
   String get paywallV3PairInputDate => 'Дата рождения';
@@ -2527,4 +2527,81 @@ class LRu extends L {
   @override
   String get pairPerPersonNote =>
       'За человека · твоё навсегда · добавляй сколько хочешь';
+
+  @override
+  String get pairInputNote =>
+      'Даты рождения достаточно. Время делает дома точными, но оно может подождать.';
+
+  @override
+  String get pairInputTime => 'Время рождения';
+
+  @override
+  String get pairInputOptional => 'необязательно';
+
+  @override
+  String get pairInputPlace => 'Место рождения';
+
+  @override
+  String get pairInputFreeNote =>
+      'Эта карта считается бесплатно, как и твоя. Первую главу — притяжение — ты читаешь до любых решений.';
+
+  @override
+  String get pairInputCta => 'Прочитать, что вас тянет друг к другу';
+
+  @override
+  String get pairMyPairsNote =>
+      'Каждый разбор остаётся твоим — с подпиской или без.';
+
+  @override
+  String get pairRowChapters => 'четыре главы';
+
+  @override
+  String pairRowBought(String date) {
+    return 'куплено $date';
+  }
+
+  @override
+  String get pairRowFreeChapter => 'первая глава — притяжение — бесплатна';
+
+  @override
+  String get pairCreditOverline => 'в этом месяце';
+
+  @override
+  String pairCreditUsed(int used, int granted) {
+    String _temp0 = intl.Intl.pluralLogic(
+      granted,
+      locale: localeName,
+      other: '$granted проверки',
+      many: '$granted проверок',
+      few: '$granted проверок',
+      one: '$granted проверки',
+    );
+    return 'Использовано $used из $_temp0';
+  }
+
+  @override
+  String pairCreditNext(String date) {
+    return 'Следующая включённая проверка придёт $date. Проверки не переносятся.';
+  }
+
+  @override
+  String get pairHookTitle => 'Думаешь ещё о ком-то?';
+
+  @override
+  String get pairHookNote =>
+      'Достаточно даты рождения — первая глава, притяжение, читается бесплатно.';
+
+  @override
+  String get pairCheckAnotherPlain => 'Проверить кого-то ещё';
+
+  @override
+  String pairReportHeader(String name) {
+    return 'ты и $name';
+  }
+
+  @override
+  String get pairReportMeta => 'четыре главы · твоё навсегда';
+
+  @override
+  String get pairChapterRead => 'прочитано';
 }

@@ -914,6 +914,72 @@ class Entitlements {
       );
 }
 
+/// Одна строка «Моих пар»: оплаченный отчёт про одного человека.
+///
+/// `GET /pairs` строится **из грантов, а не из истории магазина** — и это
+/// причина, по которой модель не пытается быть `Profile`: профиль партнёра
+/// могли удалить, а оплаченный отчёт остаётся (А7 №12). Поэтому здесь только
+/// идентификатор, имя на момент ответа и то, откуда право взялось.
+class PairReportRef {
+  const PairReportRef({
+    required this.profileId,
+    required this.purchasedAt,
+    required this.source,
+    this.name,
+  });
+
+  final String profileId;
+
+  /// Имя партнёра — или `null`, когда профиль уже удалён. Экран тогда пишет
+  /// «без имени», а не прячет строку: за отчёт заплачено.
+  final String? name;
+
+  /// Момент выдачи гранта, ISO. На экране это «куплено 12 авг».
+  final String purchasedAt;
+
+  /// `credit` — списан месячный кредит подписки; иначе покупка. На доступ не
+  /// влияет ничем — оба навсегда, — различается только подпись строки.
+  final String source;
+
+  bool get included => source == 'credit';
+
+  factory PairReportRef.fromJson(Map<String, dynamic> json) => PairReportRef(
+        profileId: json['profile_id'] as String? ?? '',
+        name: json['name'] as String?,
+        purchasedAt: json['purchased_at'] as String? ?? '',
+        source: json['source'] as String? ?? 'purchase',
+      );
+}
+
+/// Кредит проверок пары в текущем расчётном периоде подписки.
+///
+/// Считает сервер (`GET /billing/credits`), и это не лень клиента: границы
+/// периода привязаны к billing-циклу подписки, а не к календарю (А2.2), и
+/// трату с другого устройства клиент не увидел бы вовсе. У не-подписчика все
+/// числа нули и `periodEnd` пуст — это состояние, а не ошибка.
+class PairCredit {
+  const PairCredit({
+    required this.granted,
+    required this.used,
+    required this.remaining,
+    this.periodEnd,
+  });
+
+  final int granted;
+  final int used;
+  final int remaining;
+
+  /// Конец периода, ISO — «следующая включённая проверка придёт {дата}».
+  final String? periodEnd;
+
+  factory PairCredit.fromJson(Map<String, dynamic> json) => PairCredit(
+        granted: (json['granted'] as num?)?.toInt() ?? 0,
+        used: (json['used'] as num?)?.toInt() ?? 0,
+        remaining: (json['remaining'] as num?)?.toInt() ?? 0,
+        periodEnd: json['period_end'] as String?,
+      );
+}
+
 /// Полка целиком: строки прайса и адрес, по которому подписку останавливают.
 ///
 /// **`manage_url` — единственное поле каталога, которого клиент не знает сам.**

@@ -12,6 +12,7 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
+import 'birth_form_parts.dart';
 
 /// Люди, с которыми сравнивают: список, добавление и удаление.
 ///
@@ -81,32 +82,19 @@ class _PeopleScreenState extends State<PeopleScreen> {
       _failure = null;
     });
     try {
-      final saved = await session.client.saveProfile(
-        BirthInput(
-          birthDate: '${_year.toString().padLeft(4, '0')}-'
-              '${_month.toString().padLeft(2, '0')}-'
-              '${_day.toString().padLeft(2, '0')}',
-          birthTime: _timeUnknown
-              ? null
-              : '${_hour.toString().padLeft(2, '0')}:${_minute.toString().padLeft(2, '0')}',
-          latitude: place.latitude,
-          longitude: place.longitude,
-          timezone: place.timezone,
-          placeLabel: place.label,
-          placeId: place.id,
-          name: _name.text.trim().isEmpty ? null : _name.text.trim(),
-        ),
-        // **Именно здесь отказ и приходит.** Второй сохранённый человек — это
-        // 402 `partner_limit`, единственная фраза этой ручки, адресованная
-        // читателю; её язык сервер берёт из `locale` запроса. Экран показывает
-        // `error.message` дословно, так что без этой строки первому гостю
-        // отказывали по-английски посреди русского экрана.
-        locale: session.locale,
-        // Ключевое слово всей этой страницы: это **не** владелец аккаунта.
-        // `true` здесь стирает собственную карту человека вместе с главами.
-        isSelf: false,
+      // Сохранение — общее с W2 (`birth_form_parts.dart`): язык отказа,
+      // `isSelf: false` и перечитанная сессия живут там ровно один раз.
+      final saved = await savePartner(
+        session,
+        birthDate: '${_year.toString().padLeft(4, '0')}-'
+            '${_month.toString().padLeft(2, '0')}-'
+            '${_day.toString().padLeft(2, '0')}',
+        birthTime: _timeUnknown
+            ? null
+            : '${_hour.toString().padLeft(2, '0')}:${_minute.toString().padLeft(2, '0')}',
+        place: place,
+        name: _name.text,
       );
-      await session.start(force: true);
       if (!mounted) return;
       // **За человеком пришли — человека и возвращаем.** Оставить того, кто
       // только что назвал пару, на пустой форме значило бы потребовать от него
@@ -392,7 +380,14 @@ class _PeopleScreenState extends State<PeopleScreen> {
             hint: l.journeyCaptureSearchPlace,
             onChanged: _search,
           ),
-          _suggestions(),
+          PlaceSuggestions(
+            found: _found,
+            onPick: (place) => setState(() {
+              _chosen = place;
+              _place.text = place.label;
+              _found = const [];
+            }),
+          ),
           if (_failure != null)
             Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -411,62 +406,6 @@ class _PeopleScreenState extends State<PeopleScreen> {
             label: _saving ? l.scrAddPersonSaving : l.cabPeopleAdd,
             onTap: _chosen == null || _saving ? null : _save,
           ),
-        ],
-      ),
-    );
-  }
-
-  /// Находки города — всплывающей панелью, как в макете (s11): ночная плашка с
-  /// золотым кантом и тенью, строки через волосяную линию. Голым списком под
-  /// полем они читались продолжением формы, а не ответом на набранное.
-  Widget _suggestions() {
-    if (_found.isEmpty) return const SizedBox.shrink();
-    return Container(
-      margin: const EdgeInsets.only(top: 6),
-      decoration: BoxDecoration(
-        color: AlmaPalette.night700,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.35)),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x8C000000), blurRadius: 34, offset: Offset(0, 14)),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          for (final (i, place) in _found.indexed)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => setState(() {
-                _chosen = place;
-                _place.text = place.label;
-                _found = const [];
-              }),
-              child: Container(
-                width: double.infinity,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                decoration: BoxDecoration(
-                  border: i == _found.length - 1
-                      ? null
-                      : Border(
-                          bottom: BorderSide(
-                              color: AlmaPalette.body.withValues(alpha: 0.08))),
-                ),
-                // Первая находка светлее остальных — это подсказка, а не
-                // предвыбор: нажать всё равно нужно.
-                child: Text(
-                  place.label,
-                  style: AlmaType.body.copyWith(
-                    fontSize: 15,
-                    color: i == 0
-                        ? AlmaPalette.goldBright
-                        : AlmaPalette.body.withValues(alpha: 0.85),
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );

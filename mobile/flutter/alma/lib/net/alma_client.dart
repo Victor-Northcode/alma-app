@@ -557,6 +557,28 @@ class AlmaClient {
   Future<Map<String, dynamic>> entitlements() async =>
       _get('/v1/billing/entitlements');
 
+  /// Оплаченные отчёты по парам, свежие сверху.
+  ///
+  /// Сервер отвечает голым списком, как `/v1/profiles`, — и по той же причине
+  /// здесь `_list`, а не `body['pairs']`: `_send` кладёт голый массив под
+  /// `value`, и выдуманная обёртка молча превращала бы список в пустоту.
+  Future<List<PairReportRef>> pairs() async {
+    final body = await _get('/v1/pairs');
+    return _list(body, 'pairs')
+        .map((e) => PairReportRef.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// Кредит проверок пары в текущем периоде подписки.
+  ///
+  /// Форма ответа — `{"pair": {...}}` (`billing.py:/credits`): сервер оставил
+  /// себе место под другие кредиты, и клиент разворачивает ровно свой ключ.
+  Future<PairCredit> pairCredits() async {
+    final body = await _get('/v1/billing/credits');
+    return PairCredit.fromJson(
+        (body['pair'] as Map?)?.cast<String, dynamic>() ?? const {});
+  }
+
   /// Остановить следующее списание — и не тронуть ничего оплаченного.
   ///
   /// **Отмена — это не возврат, и в этом весь маршрут.** Сервер снимает только

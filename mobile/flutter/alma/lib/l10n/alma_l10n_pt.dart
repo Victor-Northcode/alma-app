@@ -2254,7 +2254,7 @@ class LPt extends L {
   String get paywallV3PairInputTitle => 'Quem vamos ler junto?';
 
   @override
-  String get paywallV3PairInputName => 'O nome dele';
+  String get paywallV3PairInputName => 'Nome';
 
   @override
   String get paywallV3PairInputDate => 'Data de nascimento';
@@ -2528,4 +2528,79 @@ class LPt extends L {
   @override
   String get pairPerPersonNote =>
       'Por pessoa · seu para sempre · adicione quantas quiser';
+
+  @override
+  String get pairInputNote =>
+      'A data de nascimento basta. A hora torna as casas exatas, mas pode esperar.';
+
+  @override
+  String get pairInputTime => 'Hora de nascimento';
+
+  @override
+  String get pairInputOptional => 'opcional';
+
+  @override
+  String get pairInputPlace => 'Local de nascimento';
+
+  @override
+  String get pairInputFreeNote =>
+      'O mapa se calcula de graça, como o seu. O primeiro capítulo — a atração — você lê antes de decidir qualquer coisa.';
+
+  @override
+  String get pairInputCta => 'Ler o que os atrai';
+
+  @override
+  String get pairMyPairsNote =>
+      'Cada leitura continua sua, com ou sem assinatura.';
+
+  @override
+  String get pairRowChapters => 'quatro capítulos';
+
+  @override
+  String pairRowBought(String date) {
+    return 'comprada em $date';
+  }
+
+  @override
+  String get pairRowFreeChapter => 'o primeiro capítulo — a atração — é grátis';
+
+  @override
+  String get pairCreditOverline => 'este mês';
+
+  @override
+  String pairCreditUsed(int used, int granted) {
+    String _temp0 = intl.Intl.pluralLogic(
+      granted,
+      locale: localeName,
+      other: '$granted análises usadas',
+      one: '$granted análise usada',
+    );
+    return '$used de $_temp0';
+  }
+
+  @override
+  String pairCreditNext(String date) {
+    return 'Sua próxima análise incluída chega em $date. As análises não se acumulam.';
+  }
+
+  @override
+  String get pairHookTitle => 'Mais alguém em mente?';
+
+  @override
+  String get pairHookNote =>
+      'Basta a data de nascimento — o primeiro capítulo, a atração, é grátis.';
+
+  @override
+  String get pairCheckAnotherPlain => 'Analisar outra pessoa';
+
+  @override
+  String pairReportHeader(String name) {
+    return 'você e $name';
+  }
+
+  @override
+  String get pairReportMeta => 'quatro capítulos · seu para sempre';
+
+  @override
+  String get pairChapterRead => 'lido';
 }

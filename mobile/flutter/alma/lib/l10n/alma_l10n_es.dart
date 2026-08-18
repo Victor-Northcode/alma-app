@@ -2249,7 +2249,7 @@ class LEs extends L {
   String get paywallV3PairInputTitle => '¿A quién leemos juntos?';
 
   @override
-  String get paywallV3PairInputName => 'Su nombre';
+  String get paywallV3PairInputName => 'Nombre';
 
   @override
   String get paywallV3PairInputDate => 'Fecha de nacimiento';
@@ -2524,4 +2524,74 @@ class LEs extends L {
   @override
   String get pairPerPersonNote =>
       'Por persona · tuyo para siempre · añade a quien quieras';
+
+  @override
+  String get pairInputNote =>
+      'Con la fecha de nacimiento basta. La hora hace exactas las casas, pero puede esperar.';
+
+  @override
+  String get pairInputTime => 'Hora de nacimiento';
+
+  @override
+  String get pairInputOptional => 'opcional';
+
+  @override
+  String get pairInputPlace => 'Lugar de nacimiento';
+
+  @override
+  String get pairInputFreeNote =>
+      'Su carta se calcula gratis, como la tuya. El primer capítulo — la atracción — lo lees antes de decidir nada.';
+
+  @override
+  String get pairInputCta => 'Leer qué los atrae';
+
+  @override
+  String get pairMyPairsNote =>
+      'Cada lectura sigue siendo tuya, con o sin suscripción.';
+
+  @override
+  String get pairRowChapters => 'cuatro capítulos';
+
+  @override
+  String pairRowBought(String date) {
+    return 'comprada el $date';
+  }
+
+  @override
+  String get pairRowFreeChapter =>
+      'el primer capítulo — la atracción — es gratis';
+
+  @override
+  String get pairCreditOverline => 'este mes';
+
+  @override
+  String pairCreditUsed(int used, int granted) {
+    return 'Has usado $used de $granted análisis';
+  }
+
+  @override
+  String pairCreditNext(String date) {
+    return 'Tu próximo análisis incluido llega el $date. Los análisis no se acumulan.';
+  }
+
+  @override
+  String get pairHookTitle => '¿Alguien más en mente?';
+
+  @override
+  String get pairHookNote =>
+      'Basta la fecha de nacimiento — el primer capítulo, la atracción, es gratis.';
+
+  @override
+  String get pairCheckAnotherPlain => 'Analizar a otra persona';
+
+  @override
+  String pairReportHeader(String name) {
+    return 'tú y $name';
+  }
+
+  @override
+  String get pairReportMeta => 'cuatro capítulos · tuyo para siempre';
+
+  @override
+  String get pairChapterRead => 'leído';
 }

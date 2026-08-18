@@ -1,17 +1,21 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../design/layout.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
+import '../../state/reading_tally.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
+import 'my_pairs_screen.dart';
 import 'natal_wheel.dart';
-import 'people_screen.dart';
 import 'system_art.dart';
 import 'transit_ring.dart';
 import 'writing_art.dart';
@@ -71,6 +75,21 @@ class _SystemScreenState extends State<SystemScreen> {
   /// Совместимость без второго человека — состояние, а не ошибка.
   bool _needsPartner = false;
   bool _loading = true;
+
+  /* ── только у пары (кадр W3) ────────────────────────────────────────────
+     Шапке кадра нужны знаки Солнца обоих — «Pisces and Leo», — а расчёт
+     совместимости их не отдаёт: там контакты, наложения и композит, но не
+     сами карты двоих. Два натальных расчёта дешевле, чем кажется: сервер
+     кэширует их по рождению, и для читателя это тот же ответ, что рисует его
+     собственное колесо.                                                     */
+
+  /// Знак Солнца читателя и партнёра — имена движка («Pisces»), на экран
+  /// выходят словом каталога. `null` — расчёт не доехал, и шапка честно
+  /// показывает имена вместо знаков, а не выдумывает.
+  String? _mySign, _theirSign;
+
+  /// Слаги прочитанных глав этой пары — метки «read» в оглавлении.
+  Set<String> _read = const {};
 
   bool _started = false;
 
@@ -198,17 +217,43 @@ class _SystemScreenState extends State<SystemScreen> {
             )
         .then<Object?>((value) => value)
         .catchError((Object error) => error);
-    final both = await Future.wait([chapters, computed]);
+    // Довесок пары: два знака Солнца для шапки W3 и пометки «прочитано» для
+    // оглавления. Падают молча и порознь — шапка без знаков переживёт, а вот
+    // оглавление без глав нет, поэтому эти отказы не смешиваются с общими.
+    final isPair = widget.system == SystemSlug.compatibility && partner != null;
+    final mine = isPair
+        ? session.client
+            .compute(SystemSlug.natal)
+            .then<Object?>((value) => value)
+            .catchError((Object error) => error)
+        : Future<Object?>.value(null);
+    final theirs = isPair
+        ? session.client
+            .compute(SystemSlug.natal, body: {'profile_id': partner.id})
+            .then<Object?>((value) => value)
+            .catchError((Object error) => error)
+        : Future<Object?>.value(null);
+    final read = isPair
+        ? ReadingTally.readChapters(SystemSlug.compatibility, partner.id)
+        : Future.value(const <String>{});
+    final both = await Future.wait([chapters, computed, mine, theirs, read]);
     if (!mounted) return;
     setState(() {
       if (both[0] case final ChapterList list) _chapters = list;
       if (both[1] case final CalcResult result) _result = result;
       // Экран целиком отказывает, только если не пришло вообще ничего.
-      final failures = both.whereType<AlmaError>();
+      final failures = both.take(2).whereType<AlmaError>();
       _failure = _chapters == null && _result == null && failures.isNotEmpty
           ? failures.first
           : null;
       _computeFailure = both[1] is AlmaError ? both[1] as AlmaError : null;
+      _mySign = both[2] is CalcResult
+          ? (both[2] as CalcResult).data['sun_sign'] as String?
+          : null;
+      _theirSign = both[3] is CalcResult
+          ? (both[3] as CalcResult).data['sun_sign'] as String?
+          : null;
+      _read = both[4] as Set<String>? ?? const {};
       _needsPartner = needsPartner;
       _loading = false;
     });
@@ -230,14 +275,55 @@ class _SystemScreenState extends State<SystemScreen> {
             : _result == null && !_loading
                 ? 10.0
                 : 0.0;
+    // Кадр W3: у пары с названным партнёром экран собирается иначе —
+    // шапка-оверлайн вместо заголовка системы, вклейка со знаками, оглавление
+    // с метками «read» и мета-строкой «read from» внизу. Всё остальное —
+    // прежний экран системы.
+    final pair = widget.system == SystemSlug.compatibility &&
+        !_needsPartner &&
+        _partner != null;
     return ScreenScaffold(
       seed: 0x53595300 + widget.system.index,
-      title: CabinetWordsMore.system(l, widget.system),
+      // Титул кадра W3 живёт на вклейке («Pisces and Leo»), а не над списком:
+      // второй заголовок сверху делал бы экран пары непохожим на кадр.
+      title: pair ? null : CabinetWordsMore.system(l, widget.system),
       onRefresh: _load,
       children: [
-        // Рисунок системы, чертящий себя. Натальная и соляр — настоящее
-        // колесо; у остальных своё полотно, по одному на систему.
-        if (_wheelData case final chart?)
+        if (pair) ...[
+          _pairHeader(l),
+          const SizedBox(height: 18),
+          _pairPlate(context, l),
+          _partnerLine(context, l, _partner!),
+          if (_computeFailure case final error?)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 6),
+              child: Text(
+                error is ServerRefused && error.message.isNotEmpty
+                    ? error.message
+                    : l.stateUnavailable,
+                style: AlmaType.meta,
+              ),
+            ),
+          // Колесо остаётся — небо самих отношений; на кадре его нет, но
+          // решение владельца прямое: «колесо остаётся». Стоит под вклейкой,
+          // чтобы шапка кадра осталась шапкой.
+          if (_result?.data case final payload?)
+            Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 10),
+              child: switch (_relationshipChart(payload)) {
+                final chart? => NatalWheel(data: chart),
+                _ => const SizedBox.shrink(),
+              },
+            )
+          else if (_loading)
+            const Padding(
+              padding: EdgeInsets.only(top: 12, bottom: 10),
+              child: Center(child: ChartPlaceholder()),
+            ),
+        ]
+        else if (_wheelData case final chart?)
+          // Рисунок системы, чертящий себя. Натальная и соляр — настоящее
+          // колесо; у остальных своё полотно, по одному на систему.
           Padding(
             padding: const EdgeInsets.only(top: 6, bottom: 10),
             child: NatalWheel(data: chart),
@@ -256,11 +342,6 @@ class _SystemScreenState extends State<SystemScreen> {
               SystemSlug.birthCard =>
                 BirthCardArt(data: payload, name: _arcanaName(l, payload)),
               SystemSlug.synthesis => SynthesisStar(data: payload),
-              // Совместимость — это тоже карта: небо самих отношений.
-              SystemSlug.compatibility => switch (_relationshipChart(payload)) {
-                  final chart? => NatalWheel(data: chart),
-                  _ => const SizedBox.shrink(),
-                },
               _ => const SizedBox.shrink(),
             },
           )
@@ -332,14 +413,9 @@ class _SystemScreenState extends State<SystemScreen> {
           const SizedBox(height: 7),
           _compatBullet(l.cabCompatBulletComposite),
         ]
-        else ...[
-          // **Пара названа вслух, и её можно сменить.** Колесо отношений
-          // одинаково для любых двоих: без имени человек, у которого сохранено
-          // двое, не знает, чьё небо перед ним, — а глава, открытая отсюда,
-          // будет именно про этого второго. Строка стоит там же, где у
-          // остальных систем строки фактов: это и есть факт этого экрана.
-          if (widget.system == SystemSlug.compatibility && _partner != null)
-            _partnerLine(context, l, _partner!),
+        else if (!pair) ...[
+          // Отказ расчёта у пары уже напечатан в её собственной ветке выше —
+          // здесь он остаётся для всех прочих систем.
           if (_computeFailure case final error?)
             Padding(
               padding: const EdgeInsets.only(top: 4, bottom: 6),
@@ -385,8 +461,188 @@ class _SystemScreenState extends State<SystemScreen> {
               for (final entry in _chapters!.chapters) _row(l, entry),
           ],
         ),
+        // Мета-строка «read from» кадра W3: первая позиция, из которой пара
+        // прочитана, и счётчик остальных. На холсте она донная и абсолютная;
+        // в прокручиваемой колонке абсолютного низа нет — стоит последней
+        // строкой, той же конструкцией, что на V1 и V4 (`meta-line-spec.md`).
+        if (pair && (_result?.factors.isNotEmpty ?? false)) ...[
+          const SizedBox(height: 20),
+          _readFromLine(l, _result!.factors),
+        ],
       ],
     );
+  }
+
+  /// Шапка кадра W3: «←», оверлайн «you and marcus» по центру, распорка той
+  /// же ширины — центр обязан быть настоящим центром строки.
+  Widget _pairHeader(L l) {
+    // **Без имени шапка называет раздел, а не человека.**
+    //
+    // Имя партнёра необязательно, и подстановка сюда общей заглушки давала
+    // «YOU AND UNNAMED» — приложение обращалось к человеку словом «без имени».
+    // Заглушка законна строкой списка, где она стоит рядом с датой и читается
+    // пометой; в обращении она читается грубостью. Нет имени — нет и
+    // обращения: остаётся тот же оверлайн раздела, что и на вводе партнёра.
+    final theirs = _partner?.name;
+    if (theirs == null || theirs.isEmpty) {
+      return _plainHeader(l.scrPeopleEyebrow.toUpperCase());
+    }
+    return _plainHeader(l.pairReportHeader(theirs).toUpperCase());
+  }
+
+  /// Шапка кадра с готовой строкой: «←», надпись по центру, распорка той же
+  /// ширины — центр обязан быть настоящим центром строки.
+  Widget _plainHeader(String title) {
+    return Row(children: [
+      GestureDetector(
+        onTap: () => Navigator.of(context).maybePop(),
+        behavior: HitTestBehavior.opaque,
+        // Знак маленький, цель большая: 18 × 18 не нажимается.
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Center(
+            child: Text('←',
+                style: AlmaType.body.copyWith(
+                    fontSize: 18,
+                    color: AlmaPalette.body.withValues(alpha: 0.7))),
+          ),
+        ),
+      ),
+      Expanded(
+        child: Text(
+          title,
+          textAlign: TextAlign.center,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AlmaType.readerHead.copyWith(color: AlmaPalette.gold),
+        ),
+      ),
+      const SizedBox(width: 44),
+    ]);
+  }
+
+  /// Вклейка пары: `plate-tender` с сервера, знаки обоих титулом и — только у
+  /// купленного отчёта — строка «four chapters · yours forever».
+  ///
+  /// **«yours forever» — подтверждение, а не оффер** (правило 3: внутри
+  /// оплаченного ноль коммерции), поэтому строка стоит ровно тогда, когда
+  /// доступ уже выдан (`access.allowed`), и никогда — как обещание.
+  /// Знаки берутся из двух натальных расчётов; пока их нет, титулом стоят
+  /// имена пары — честный недострой вместо выдуманного знака.
+  Widget _pairPlate(BuildContext context, L l) {
+    final session = SessionScope.of(context);
+    final mySign = _mySign, theirSign = _theirSign;
+    final title = mySign != null && theirSign != null
+        ? l.cabPairJoin(
+            CabinetWordsMore.sign(l, mySign), CabinetWordsMore.sign(l, theirSign))
+        : (() {
+            final mine = session.profile?.name;
+            final theirs = _partner?.name?.isNotEmpty == true
+                ? _partner!.name!
+                : l.scrPeopleUnnamed;
+            return mine == null || mine.isEmpty
+                ? theirs
+                : l.cabPairJoin(mine, theirs);
+          })();
+    final bought = _result?.access.allowed == true;
+    return Container(
+      height: 170,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.45)),
+      ),
+      child: Stack(fit: StackFit.expand, children: [
+        FutureBuilder<File?>(
+          future: session.plates.file('plate-tender'),
+          builder: (context, plate) => plate.data == null
+              ? const ColoredBox(color: AlmaPalette.night700)
+              : Image.file(
+                  plate.data!,
+                  fit: BoxFit.cover,
+                  // `object-position: center 30%` кадра.
+                  alignment: const Alignment(0, -0.4),
+                ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              stops: const [0.35, 1],
+              colors: [
+                AlmaPalette.night900.withValues(alpha: 0.05),
+                AlmaPalette.night900.withValues(alpha: 0.88),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(5),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                  color: AlmaPalette.starFill.withValues(alpha: 0.26)),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 13,
+          child:
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AlmaType.displayL.copyWith(fontSize: 22, height: 1.14)),
+            if (bought) ...[
+              const SizedBox(height: 3),
+              Text(l.pairReportMeta,
+                  style: AlmaType.meta
+                      .copyWith(fontSize: 12, color: AlmaPalette.gold)),
+            ],
+          ]),
+        ),
+      ]),
+    );
+  }
+
+  /// Мета-строка «read from»: оверлайн, первая позиция, «+N». Режется только
+  /// хвост дома (`AlmaShrink.fitMetaLine`) — тело, градус и знак неделимы.
+  Widget _readFromLine(L l, List<String> factors) {
+    final rest = factors.length - 1;
+    final style = AlmaType.numeral
+        .copyWith(fontFamilyFallback: AlmaType.glyphFallback);
+    return Row(children: [
+      Text(l.cabReadFrom.toUpperCase(), style: AlmaType.readingPart),
+      const SizedBox(width: 11),
+      Expanded(
+        child: LayoutBuilder(
+          builder: (context, box) => Text(
+            AlmaShrink.fitMetaLine(
+              line: CabinetWordsMore.factor(l, factors.first),
+              style: style,
+              maxWidth: box.maxWidth,
+              scaler: MediaQuery.textScalerOf(context),
+            ),
+            // Голосу — полная строка с именем знака: у неё нет ширины.
+            semanticsLabel: CabinetWordsMore.factorSpoken(l, factors.first),
+            style: style,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ),
+      if (rest > 0) ...[
+        const SizedBox(width: 8),
+        Text('+$rest',
+            style: AlmaType.numeral
+                .copyWith(color: AlmaPalette.gold.withValues(alpha: 0.7))),
+      ],
+    ]);
   }
 
   /// Данные для колеса. Натальная карта — она сама; соляр — карта возвращения:
@@ -535,18 +791,19 @@ class _SystemScreenState extends State<SystemScreen> {
   /// Позвать человека — и вернуться с ним, а не просто «сходить на экран
   /// людей».
   ///
-  /// **Экран людей открывается в режиме выбора и отдаёт того, на ком
-  /// остановились.** Раньше отсюда уходили в список и возвращались ни с чем:
-  /// экран перечитывал себя и снова брал первого сохранённого. Для одного
-  /// человека это совпадало с ожиданием, для двоих — нет: добавивший второго
-  /// возвращался к небу первого. Названный человек уходит и в расчёт, и в главы,
-  /// открытые с этой страницы.
+  /// **Строка пары ведёт в «Мои пары» (V5), и экран выбора отдаёт того, на
+  /// ком остановились.** Раньше здесь открывался список людей; теперь у пар
+  /// есть собственный экран с состоянием каждого отчёта («куплено 12 авг»,
+  /// «входит в твой месяц») и дорогой к новому человеку. Контракт тот же:
+  /// `pop(Profile)` — и названный человек уходит и в расчёт, и в главы,
+  /// открытые с этой страницы. Управление списком (удаление) остаётся на
+  /// экране людей — V5 не удаляет никого.
   Future<void> _changePartner() async {
     final chosen = await Navigator.of(context).push<Profile>(
-        CupertinoPageRoute(builder: (context) => const PeopleScreen(picking: true)));
+        CupertinoPageRoute(builder: (context) => const MyPairsScreen()));
     if (!mounted) return;
-    // Ушли ни с кем — экран всё равно перечитывается: там могли удалить
-    // человека, против которого посчитано текущее колесо.
+    // Ушли ни с кем — экран всё равно перечитывается: там могли добавить
+    // человека, против которого ещё не считали.
     if (chosen != null) _partner = chosen;
     _load();
   }
@@ -854,14 +1111,31 @@ class _SystemScreenState extends State<SystemScreen> {
   /// замок. Закрытая глава честно скажет это внутри, показав заголовок, вопрос
   /// и дверь; прятать её из списка значило бы прятать сам продукт.
   Widget _row(L l, ChapterEntry entry) {
+    final partner = _partner;
+    // Метка «read» кадра W3 — только у пары: у остальных систем оглавление
+    // прочитанности не показывает, и рисовать её там значило бы дорисовать
+    // кадр, которого нет.
+    final read = widget.system == SystemSlug.compatibility &&
+        _read.contains(entry.slug);
     return InkWell(
       // **Глава уходит с именем пары.** Без него сервер угадывает второго и
       // угадывает верно ровно до второго сохранённого человека: при двоих он
       // отвечает 422 `partner_required`, и глава показывала «добавь человека»
       // тому, у кого их уже двое. У остальных систем `_partner` пуст, и поле не
       // уезжает вовсе.
-      onTap: () =>
-          widget.onOpenChapter(widget.system, entry.slug, partner: _partner),
+      onTap: () {
+        // Пометка ставится на тапе, потому что экран главы трогать нельзя
+        // (готовый паттерн C6), — и только по главе, которую сервер назвал
+        // открытой: встреча с дверью — не чтение. См. `ReadingTally`.
+        if (widget.system == SystemSlug.compatibility &&
+            partner != null &&
+            entry.open) {
+          ReadingTally.noteChapterRead(
+              SystemSlug.compatibility, partner.id, entry.slug);
+          setState(() => _read = {..._read, entry.slug});
+        }
+        widget.onOpenChapter(widget.system, entry.slug, partner: _partner);
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
@@ -889,6 +1163,16 @@ class _SystemScreenState extends State<SystemScreen> {
                 ],
               ),
             ),
+            if (read) ...[
+              const SizedBox(width: 12),
+              Padding(
+                padding: const EdgeInsets.only(top: 5),
+                child: Text(l.pairChapterRead,
+                    style: AlmaType.meta.copyWith(
+                        fontSize: 12,
+                        color: AlmaPalette.gold.withValues(alpha: 0.75))),
+              ),
+            ],
           ],
         ),
       ),

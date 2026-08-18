@@ -4040,7 +4040,7 @@ abstract class L {
   /// monetization v3 · А11 pair.input_name · W2
   ///
   /// In en, this message translates to:
-  /// **'His name'**
+  /// **'Name'**
   String get paywallV3PairInputName;
 
   /// monetization v3 · А11 pair.input_date · W2
@@ -4432,6 +4432,120 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Per person · yours forever · add as many as you like'**
   String get pairPerPersonNote;
+
+  /// monetization v3 · W2 · подпись под заголовком анкеты пары
+  ///
+  /// In en, this message translates to:
+  /// **'A date of birth is enough. A time makes the houses exact, but it can wait.'**
+  String get pairInputNote;
+
+  /// monetization v3 · А11 pair.input_time · W2
+  ///
+  /// In en, this message translates to:
+  /// **'Time of birth'**
+  String get pairInputTime;
+
+  /// monetization v3 · А11 pair.input_optional · W2 — помета на поле времени
+  ///
+  /// In en, this message translates to:
+  /// **'optional'**
+  String get pairInputOptional;
+
+  /// W2 · четвёртое поле, которого нет на холсте: сервер требует координаты и пояс (дома). Расхождение записано в SCREENS-V3 §W2 как вопрос владельцу
+  ///
+  /// In en, this message translates to:
+  /// **'Place of birth'**
+  String get pairInputPlace;
+
+  /// monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают
+  ///
+  /// In en, this message translates to:
+  /// **'Their chart is calculated for free, like yours. The first chapter — attraction — you read before deciding anything.'**
+  String get pairInputFreeNote;
+
+  /// monetization v3 · А11 pair.input_cta · W2
+  ///
+  /// In en, this message translates to:
+  /// **'Read what pulls you together'**
+  String get pairInputCta;
+
+  /// monetization v3 · А11 pair.my_pairs_note · V5
+  ///
+  /// In en, this message translates to:
+  /// **'Every report stays yours, subscription or not.'**
+  String get pairMyPairsNote;
+
+  /// monetization v3 · А11 pair.row_chapters · V5
+  ///
+  /// In en, this message translates to:
+  /// **'four chapters'**
+  String get pairRowChapters;
+
+  /// monetization v3 · А11 pair.row_bought · V5
+  ///
+  /// In en, this message translates to:
+  /// **'bought {date}'**
+  String pairRowBought(String date);
+
+  /// V5 · строка человека без купленного отчёта; кадра нет (SCREENS-V3 §V5), фраза собрана из pair.hook_note
+  ///
+  /// In en, this message translates to:
+  /// **'the attraction chapter is free to read first'**
+  String get pairRowFreeChapter;
+
+  /// monetization v3 · А11 pair.credit_overline · V5
+  ///
+  /// In en, this message translates to:
+  /// **'this month'**
+  String get pairCreditOverline;
+
+  /// monetization v3 · А11 pair.credit_used · V5 — plural по обоим числам
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {granted, plural, one{{granted} check used} other{{granted} checks used}}'**
+  String pairCreditUsed(int used, int granted);
+
+  /// monetization v3 · А11 pair.credit_next · V5
+  ///
+  /// In en, this message translates to:
+  /// **'Your next included check arrives {date}. Checks do not carry over.'**
+  String pairCreditNext(String date);
+
+  /// monetization v3 · А11 pair.hook_title · V5
+  ///
+  /// In en, this message translates to:
+  /// **'Anyone else on your mind?'**
+  String get pairHookTitle;
+
+  /// monetization v3 · А11 pair.hook_note · V5
+  ///
+  /// In en, this message translates to:
+  /// **'A date of birth is enough — the attraction chapter is free to read first.'**
+  String get pairHookNote;
+
+  /// V5 · кнопка без цены: полка молчит или месячная проверка ещё не потрачена. Эталона на холсте нет (§V5, «кредит не потрачен»); это pair.check_another без цены
+  ///
+  /// In en, this message translates to:
+  /// **'Check someone else'**
+  String get pairCheckAnotherPlain;
+
+  /// monetization v3 · А11 pair.report_header · W3 (и V4 до слияния тизера с главой I)
+  ///
+  /// In en, this message translates to:
+  /// **'you and {name}'**
+  String pairReportHeader(String name);
+
+  /// monetization v3 · А11 pair.report_meta · W3 — только у купленного отчёта: подтверждение, а не оффер
+  ///
+  /// In en, this message translates to:
+  /// **'four chapters · yours forever'**
+  String get pairReportMeta;
+
+  /// monetization v3 · А11 pair.chapter_read · W3 — метка прочитанной главы в оглавлении пары
+  ///
+  /// In en, this message translates to:
+  /// **'read'**
+  String get pairChapterRead;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

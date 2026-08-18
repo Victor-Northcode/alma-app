@@ -2259,7 +2259,7 @@ class LDe extends L {
   String get paywallV3PairInputTitle => 'Wen lesen wir zusammen?';
 
   @override
-  String get paywallV3PairInputName => 'Sein Name';
+  String get paywallV3PairInputName => 'Name';
 
   @override
   String get paywallV3PairInputDate => 'Geburtsdatum';
@@ -2535,4 +2535,80 @@ class LDe extends L {
   @override
   String get pairPerPersonNote =>
       'Pro Person · für immer dein · so viele Menschen, wie du willst';
+
+  @override
+  String get pairInputNote =>
+      'Das Geburtsdatum genügt. Die Uhrzeit macht die Häuser exakt, aber sie kann warten.';
+
+  @override
+  String get pairInputTime => 'Geburtszeit';
+
+  @override
+  String get pairInputOptional => 'optional';
+
+  @override
+  String get pairInputPlace => 'Geburtsort';
+
+  @override
+  String get pairInputFreeNote =>
+      'Diese Karte wird kostenlos berechnet, wie deine. Das erste Kapitel — die Anziehung — liest du, bevor du etwas entscheidest.';
+
+  @override
+  String get pairInputCta => 'Lies, was euch zueinander zieht';
+
+  @override
+  String get pairMyPairsNote =>
+      'Jede Deutung bleibt deine — mit oder ohne Abo.';
+
+  @override
+  String get pairRowChapters => 'vier Kapitel';
+
+  @override
+  String pairRowBought(String date) {
+    return 'gekauft am $date';
+  }
+
+  @override
+  String get pairRowFreeChapter =>
+      'das erste Kapitel — die Anziehung — ist kostenlos';
+
+  @override
+  String get pairCreditOverline => 'diesen Monat';
+
+  @override
+  String pairCreditUsed(int used, int granted) {
+    String _temp0 = intl.Intl.pluralLogic(
+      granted,
+      locale: localeName,
+      other: '$granted Checks genutzt',
+      one: '$granted Check genutzt',
+    );
+    return '$used von $_temp0';
+  }
+
+  @override
+  String pairCreditNext(String date) {
+    return 'Dein nächster inbegriffener Check kommt am $date. Checks werden nicht übertragen.';
+  }
+
+  @override
+  String get pairHookTitle => 'Noch jemand im Kopf?';
+
+  @override
+  String get pairHookNote =>
+      'Das Geburtsdatum genügt — das erste Kapitel, die Anziehung, ist kostenlos.';
+
+  @override
+  String get pairCheckAnotherPlain => 'Noch jemanden checken';
+
+  @override
+  String pairReportHeader(String name) {
+    return 'du und $name';
+  }
+
+  @override
+  String get pairReportMeta => 'vier Kapitel · für immer dein';
+
+  @override
+  String get pairChapterRead => 'gelesen';
 }

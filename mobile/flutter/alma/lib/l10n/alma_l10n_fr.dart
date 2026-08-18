@@ -2262,7 +2262,7 @@ class LFr extends L {
   String get paywallV3PairInputTitle => 'Qui lisons-nous ensemble ?';
 
   @override
-  String get paywallV3PairInputName => 'Son prénom';
+  String get paywallV3PairInputName => 'Prénom';
 
   @override
   String get paywallV3PairInputDate => 'Date de naissance';
@@ -2537,4 +2537,80 @@ class LFr extends L {
   @override
   String get pairPerPersonNote =>
       'Par personne · à toi pour toujours · ajoute autant de personnes que tu veux';
+
+  @override
+  String get pairInputNote =>
+      'La date de naissance suffit. L\'heure rend les maisons exactes, mais elle peut attendre.';
+
+  @override
+  String get pairInputTime => 'Heure de naissance';
+
+  @override
+  String get pairInputOptional => 'facultatif';
+
+  @override
+  String get pairInputPlace => 'Lieu de naissance';
+
+  @override
+  String get pairInputFreeNote =>
+      'Sa carte est calculée gratuitement, comme la tienne. Le premier chapitre — l\'attirance — tu le lis avant de décider quoi que ce soit.';
+
+  @override
+  String get pairInputCta => 'Lire ce qui vous attire';
+
+  @override
+  String get pairMyPairsNote =>
+      'Chaque lecture reste à toi, avec ou sans abonnement.';
+
+  @override
+  String get pairRowChapters => 'quatre chapitres';
+
+  @override
+  String pairRowBought(String date) {
+    return 'achetée le $date';
+  }
+
+  @override
+  String get pairRowFreeChapter =>
+      'le premier chapitre — l\'attirance — est offert';
+
+  @override
+  String get pairCreditOverline => 'ce mois-ci';
+
+  @override
+  String pairCreditUsed(int used, int granted) {
+    String _temp0 = intl.Intl.pluralLogic(
+      used,
+      locale: localeName,
+      other: '$used analyses utilisées',
+      one: '$used analyse utilisée',
+    );
+    return '$_temp0 sur $granted';
+  }
+
+  @override
+  String pairCreditNext(String date) {
+    return 'Ta prochaine analyse incluse arrive le $date. Les analyses ne se reportent pas.';
+  }
+
+  @override
+  String get pairHookTitle => 'Quelqu\'un d\'autre en tête ?';
+
+  @override
+  String get pairHookNote =>
+      'La date de naissance suffit — le premier chapitre, l\'attirance, est offert.';
+
+  @override
+  String get pairCheckAnotherPlain => 'Analyser quelqu\'un d\'autre';
+
+  @override
+  String pairReportHeader(String name) {
+    return 'toi et $name';
+  }
+
+  @override
+  String get pairReportMeta => 'quatre chapitres · à toi pour toujours';
+
+  @override
+  String get pairChapterRead => 'lu';
 }

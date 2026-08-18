@@ -2244,7 +2244,7 @@ class LEn extends L {
   String get paywallV3PairInputTitle => 'Who are we reading together?';
 
   @override
-  String get paywallV3PairInputName => 'His name';
+  String get paywallV3PairInputName => 'Name';
 
   @override
   String get paywallV3PairInputDate => 'Date of birth';
@@ -2517,4 +2517,80 @@ class LEn extends L {
   @override
   String get pairPerPersonNote =>
       'Per person · yours forever · add as many as you like';
+
+  @override
+  String get pairInputNote =>
+      'A date of birth is enough. A time makes the houses exact, but it can wait.';
+
+  @override
+  String get pairInputTime => 'Time of birth';
+
+  @override
+  String get pairInputOptional => 'optional';
+
+  @override
+  String get pairInputPlace => 'Place of birth';
+
+  @override
+  String get pairInputFreeNote =>
+      'Their chart is calculated for free, like yours. The first chapter — attraction — you read before deciding anything.';
+
+  @override
+  String get pairInputCta => 'Read what pulls you together';
+
+  @override
+  String get pairMyPairsNote =>
+      'Every report stays yours, subscription or not.';
+
+  @override
+  String get pairRowChapters => 'four chapters';
+
+  @override
+  String pairRowBought(String date) {
+    return 'bought $date';
+  }
+
+  @override
+  String get pairRowFreeChapter =>
+      'the attraction chapter is free to read first';
+
+  @override
+  String get pairCreditOverline => 'this month';
+
+  @override
+  String pairCreditUsed(int used, int granted) {
+    String _temp0 = intl.Intl.pluralLogic(
+      granted,
+      locale: localeName,
+      other: '$granted checks used',
+      one: '$granted check used',
+    );
+    return '$used of $_temp0';
+  }
+
+  @override
+  String pairCreditNext(String date) {
+    return 'Your next included check arrives $date. Checks do not carry over.';
+  }
+
+  @override
+  String get pairHookTitle => 'Anyone else on your mind?';
+
+  @override
+  String get pairHookNote =>
+      'A date of birth is enough — the attraction chapter is free to read first.';
+
+  @override
+  String get pairCheckAnotherPlain => 'Check someone else';
+
+  @override
+  String pairReportHeader(String name) {
+    return 'you and $name';
+  }
+
+  @override
+  String get pairReportMeta => 'four chapters · yours forever';
+
+  @override
+  String get pairChapterRead => 'read';
 }

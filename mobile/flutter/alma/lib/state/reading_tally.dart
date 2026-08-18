@@ -40,6 +40,42 @@ class ReadingTally {
     return prefs.getInt(_key(system)) ?? 0;
   }
 
+  /* ── пометки «прочитано» в оглавлении пары (W3) ─────────────────────────
+     Отдельно от счёта открытий: там целое число на систему, здесь — признак
+     на главу конкретной пары. Пара названа партнёром, потому что оглавление
+     у каждого второго человека своё: «прочитано» у Маркуса ничего не говорит
+     про Инес.                                                               */
+
+  static String _chapterKey(SystemSlug system, String partnerId, String chapter) =>
+      'reading.read.${system.slug}.$partnerId.$chapter';
+
+  /// Глава этой пары открыта читаемой — с текстом, а не стеной.
+  ///
+  /// **Зовёт оглавление при переходе, а не сама глава.** Экран главы трогать
+  /// нельзя (готовый паттерн C6), поэтому пометка ставится в момент тапа — и
+  /// только по главе, которую сервер назвал открытой (`entry.open`): тап в
+  /// закрытую главу — это встреча с дверью, а не чтение, и считать его
+  /// значило бы пометить «прочитано» то, что человек ни разу не видел.
+  /// TODO(server): как и счёт открытий, правильное место — сервер: пометка
+  /// умирает с установкой и не переезжает на второе устройство.
+  static Future<void> noteChapterRead(
+      SystemSlug system, String partnerId, String chapter) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_chapterKey(system, partnerId, chapter), true);
+  }
+
+  /// Слаги прочитанных глав этой пары — для меток «read» в оглавлении.
+  static Future<Set<String>> readChapters(
+      SystemSlug system, String partnerId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final prefix = 'reading.read.${system.slug}.$partnerId.';
+    return prefs
+        .getKeys()
+        .where((key) => key.startsWith(prefix))
+        .map((key) => key.substring(prefix.length))
+        .toSet();
+  }
+
   /// Самая читаемая из [among] — и `null`, если не читали ни одной.
   ///
   /// Пустой ответ здесь честнее первой попавшейся: экран спасения, назвавший
