@@ -145,6 +145,24 @@ class AlmaStore extends ChangeNotifier {
     // Ни одного товара — это молчащий магазин, а не пустая полка: на
     // симуляторе без конфигурации StoreKit ответ выглядит именно так, и
     // рисовать лестницу без единой цены как «всё продано» было бы враньём.
+    //
+    // **В отладке молчание подменяется витринными ценами.** Товаров в консолях
+    // ещё нет ни одного, и до тех пор каждый экран с ценой показывает «App
+    // Store не отвечает» — то есть проверить глазами нельзя ровно то, ради чего
+    // эти экраны построены. Владелец попросил прямо: «подставь фейк данные об
+    // оплате чтобы я мог посмотреть как это будет выглядеть в финальном
+    // варианте».
+    //
+    // `kDebugMode` — не стиль, а граница: в релизной сборке эта ветка
+    // вырезается компилятором целиком, поэтому выдуманная цена физически не
+    // может доехать до магазина. Числа те же, что в каталоге сервера, и живут
+    // одним списком ниже, чтобы никто не искал их по экранам.
+    if (_products.isEmpty && kDebugMode) {
+      _products.addAll(_pretendPrices());
+      _state = StoreState.ready;
+      notifyListeners();
+      return;
+    }
     _state = _products.isEmpty ? StoreState.silent : StoreState.ready;
     notifyListeners();
   }
@@ -436,4 +454,34 @@ class StoreNotice {
 
   final StoreTone tone;
   final StoreMessage message;
+}
+
+/// Витринные цены для отладочной сборки — см. довод в [AlmaStore.load].
+///
+/// Значения те же, что в `backend/alma/billing/catalogue.py`: пять дверей и
+/// проверка пары по $4.99, бандл $19.99, подписка $9.99 в месяц. Валюта
+/// доллар — настоящий магазин подставил бы местную, и это одно из отличий,
+/// которое здесь нельзя увидеть.
+Map<LadderKey, ProductDetails> _pretendPrices() {
+  const money = <LadderKey, String>{
+    LadderKey.natal: '4.99',
+    LadderKey.numerology: '4.99',
+    LadderKey.birthCard: '4.99',
+    LadderKey.astrocartography: '4.99',
+    LadderKey.synthesis: '4.99',
+    LadderKey.pairCheck: '4.99',
+    LadderKey.bundleStatic: '19.99',
+    LadderKey.subMonthly: '9.99',
+  };
+  return {
+    for (final entry in money.entries)
+      entry.key: ProductDetails(
+        id: entry.key.storeProductId,
+        title: entry.key.slug,
+        description: '',
+        price: '\$${entry.value}',
+        rawPrice: double.parse(entry.value),
+        currencyCode: 'USD',
+      ),
+  };
 }

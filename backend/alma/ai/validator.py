@@ -129,6 +129,7 @@ def check(
     allowed: list[str] | tuple[str, ...],
     offered: list[str] | tuple[str, ...] | None = None,
     minimum: int = 1,
+    most_words: int | None = None,
     allow_uncited: int = 0,
 ) -> Verdict:
     """Validate a generated reading against the factors that produced it.
@@ -194,6 +195,23 @@ def check(
     # and there are only three attempts before the chapter is refused.
     if too_short:
         reasons.append(f"only {len(paragraphs)} paragraph(s); this needs {minimum}")
+    # **Потолок длины, а не только пол.**
+    #
+    # Проверка всех сорока одной главы нашла открывающий абзац на 108 слов при
+    # заказанных 34–46. Длина просилась в промте и не сторожилась нигде, и в
+    # этом месте это не косметика: абзац закрытой главы существует, чтобы
+    # продать её, а на треть экрана он перестаёт быть началом и становится
+    # содержанием, за которое человек уже не заплатит.
+    #
+    # Порог щедрый намеренно — полтора заказанных потолка. Ловить надо грубый
+    # перебор, а не пять лишних слов: каждая жалоба стоит попытки, а их три.
+    if most_words is not None:
+        written = sum(len(p.text.split()) for p in paragraphs)
+        if written > most_words:
+            reasons.append(
+                f"{written} words where at most {most_words} were asked for; "
+                "cut it back to the length in the brief"
+            )
     if invented:
         reasons.append(f"{len(invented)} invented factor(s)")
     if uncited:

@@ -790,6 +790,8 @@ async def write(
             paragraphs,
             allowed=result.factors,
             offered=offered,
+            # Полтора заказанных потолка — см. довод в `validator.check`.
+            most_words=int(chapter.words[1] * 1.5),
             # A chapter is not a chapter at one paragraph. This used to be
             # `"minItems": 2` in CHAPTER_SCHEMA, which the API rejects with a
             # 400 — and no test caught it, because every test drives a
