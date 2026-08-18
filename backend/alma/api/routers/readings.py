@@ -743,12 +743,22 @@ async def _write_opening(
         # писать абзац, который некуда положить, значит заплатить за текст,
         # который тут же выбросят.
         profile_id = await _profile_id(session, user)
-        await _guard_month(
-            session, user, tier=tier, locale=language,
-            projected=_chapter_projection(
-                result, chapter, model=mid, locale=language, memory=memory
-            ),
-        )
+        # **Абзац не платит из потолка на чтение, и это не поблажка.**
+        #
+        # Здесь стоял `_guard_month` — тот же ограничитель, что бережёт деньги
+        # от человека, читающего много. Но открывающий абзац не чтение: это
+        # витрина, единственное, чем закрытая глава продаётся. Отказав в нём
+        # ради семи десятых цента, мы получаем экран, где над размытием пусто,
+        # — и владелец увидел ровно это: «все эти страницы должны выглядеть
+        # таким образом: кусочек текста главы и заблюренная часть».
+        #
+        # Пустое место вместо начала не экономит, а отменяет продажу.
+        #
+        # Расход всё равно ограничен, и дважды. Абзац пишется один раз на главу
+        # и живёт в кэше навсегда — сорок одна глава это около тридцати центов
+        # за всю жизнь аккаунта. А от петли (сменил дату рождения — ключ расчёта
+        # другой — пиши заново) стоит [_opening_allowance] ниже.
+        await _opening_allowance(session, user)
         written = await writer.write(
             result=result,
             chapter=chapter,
@@ -1397,6 +1407,52 @@ async def _asked(session, user, allowance: Allowance) -> int:
     key = _counter_id(user.id, _period_start(allowance.period), allowance.metric)
     row = await session.get(UsageCounter, key)
     return (row.count or 0) if row else 0
+
+
+#: Сколько открывающих абзацев аккаунт может получить за месяц.
+#:
+#: Не про деньги в первую очередь, а про петлю: абзац кэшируется по ключу
+#: расчёта, и человек, меняющий дату рождения туда-обратно, получал бы новый
+#: каждый раз. Сорок одна глава — весь продукт; шестьдесят оставляют запас на
+#: одну настоящую правку рождения и упираются в потолок только у того, кто
+#: крутит форму по кругу.
+OPENING_ALLOWANCE = 60
+
+#: Метрика в `usage_counter`. День ставится первым числом месяца — так
+#: существующая таблица «за день» даёт месячное ведро без новой схемы.
+OPENING_METRIC = "opening"
+
+
+async def _opening_allowance(session, user) -> None:
+    """Ограничитель витрины: считает абзацы, а не доллары.
+
+    Отдельный от месячного потолка намеренно — см. довод на месте вызова.
+    Отказ здесь выглядит для клиента так же, как любая другая причина не
+    написать абзац: цена показывается, начала нет. Это последняя линия и она
+    срабатывать не должна; если сработала — в логе видно, у кого.
+    """
+    from ...db.models import UsageCounter
+
+    month = date.today().replace(day=1)
+    key = f"{user.id}:{month.isoformat()}:{OPENING_METRIC}"
+    row = await session.get(UsageCounter, key)
+    if row is None:
+        row = UsageCounter(
+            id=key, user_id=user.id, day=month, metric=OPENING_METRIC,
+            count=0, amount=0.0,
+        )
+        session.add(row)
+    row.count = (row.count or 0) + 1
+    await session.flush()
+    if row.count > OPENING_ALLOWANCE:
+        log.warning(
+            "opening allowance spent by %s: %s in %s",
+            user.id, row.count, month.isoformat(),
+        )
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={"error": "opening_allowance"},
+        )
 
 
 async def _guard_month(
