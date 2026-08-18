@@ -130,6 +130,24 @@ class _CabinetShellState extends State<CabinetShell> {
   /// же и о том, почему считается расстояние, а не скорость на отпускании.
   double _pushed = 0;
 
+  /// Читалась ли глава на вкладке «Мои системы», когда с неё ушли.
+  ///
+  /// **Признак чтения принадлежит странице, а не приходу на вкладку.** Приход
+  /// гасил его безусловно — включая возврат туда, где глава осталась открытой.
+  /// Поднимает его сама глава, и только при перестройке; при возврате смахом
+  /// `PageView` её не перестраивает, и она молчала. Владелец увидел следствие:
+  /// «смахиваю на альму, возвращаюсь на главу — страница белая, а бар снизу
+  /// синий».
+  ///
+  /// Поэтому уход с «Моих систем» состояние **запоминает**, а возврат его
+  /// возвращает. Спрашивать саму главу отсюда нельзя: оболочка о её
+  /// существовании не знает и знать не должна.
+  bool _systemsWasReading = false;
+
+  /// Какая страница была последней — чтобы уход было от чего отсчитать. Смах
+  /// мимо `_goTo` не проходит, и только здесь видно, откуда ушли.
+  late int _lastPage = _tab.index;
+
   /// Связь между вкладкой и приглашением «Вся Alma». Что она решает и почему
   /// это отдельная вещь — в [PillDirector]; здесь только её кормят.
   final PillDirector _pill = PillDirector();
@@ -141,6 +159,24 @@ class _CabinetShellState extends State<CabinetShell> {
     // Оболочка отвечает за одно: довезти до вкладки. Текст в поле подставит
     // сам экран Alma, он же и погасит признак — см. [almaDraft] о порядке.
     almaDraft.addListener(_askedAlma);
+    // Пока мы на «Моих системах», запомненное состояние обязано быть зеркалом
+    // настоящего: иначе закрытая глава оставит `true`, и возврат на вкладку
+    // зажжёт пергаментную полосу над списком систем.
+    readingNow.addListener(_mirrorReading);
+  }
+
+  /// Пока идёт смена вкладки, зеркало молчит.
+  ///
+  /// **Без этого починка ломала сама себя.** Уход с «Моих систем» сохраняет
+  /// состояние и тут же гасит признак; гашение будит зеркало, а `_tab` в эту
+  /// секунду ещё указывает на «Мои системы» — и только что сохранённое `true`
+  /// затиралось обратно в `false`. Проверено на симуляторе: полоса оставалась
+  /// ночной ровно так же, как до починки.
+  bool _switching = false;
+
+  void _mirrorReading() {
+    if (_switching) return;
+    if (_tab == CabinetTab.systems) _systemsWasReading = readingNow.value;
   }
 
   void _askedAlma() {
@@ -150,6 +186,7 @@ class _CabinetShellState extends State<CabinetShell> {
   @override
   void dispose() {
     almaDraft.removeListener(_askedAlma);
+    readingNow.removeListener(_mirrorReading);
     _pill.dispose();
     _peek.dispose();
     _pages.dispose();
@@ -216,9 +253,15 @@ class _CabinetShellState extends State<CabinetShell> {
       return;
     }
     // Уходящую вкладку бар не прогоняет: на трёх остальных он постоянный, и
-    // нырок вниз с возвратом на месте назначения читался бы сбоем. Признак
-    // гасится в `onPageChanged`, когда страница доехала.
+    // нырок вниз с возвратом на месте назначения читался бы сбоем.
+    //
+    // Состояние запоминается **до** гашения: полосу на время перелёта надо
+    // увести в ночь, а вернувшись на «Мои системы» — вернуть, если там открыта
+    // глава. См. [_systemsWasReading].
+    _switching = true;
+    if (_tab == CabinetTab.systems) _systemsWasReading = readingNow.value;
     readingNow.value = false;
+    _switching = false;
     _pages.animateToPage(tab.index,
         duration: const Duration(milliseconds: 320), curve: Curves.easeOutCubic);
   }
@@ -448,7 +491,17 @@ class _CabinetShellState extends State<CabinetShell> {
         child: PageView(
           controller: _pages,
           onPageChanged: (index) {
-            readingNow.value = false;
+            final systems = CabinetTab.systems.index;
+            _switching = true;
+            if (_lastPage == systems) {
+              _systemsWasReading = readingNow.value || _systemsWasReading;
+            }
+            // Возврат на «Мои системы» возвращает то, что там было; приход на
+            // любую другую вкладку гасит. Безусловное гашение оставляло белую
+            // страницу главы под ночной полосой.
+            readingNow.value = index == systems && _systemsWasReading;
+            _lastPage = index;
+            _switching = false;
             // Приход на любую вкладку гасит зов бара. На трёх вкладках это
             // ничего не меняет — он там стоит всегда; на Alma это и есть «бара
             // нет»: приехал он в прошлый визит или нет, встречает беседа с
