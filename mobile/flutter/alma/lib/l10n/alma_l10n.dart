@@ -2459,6 +2459,42 @@ abstract class L {
   /// **'What should I call you?'**
   String get journeyNameTitle;
 
+  /// V0 · quiz.interest_title — заголовок шага «что сейчас важнее всего», жёсткий перенос холста
+  ///
+  /// In en, this message translates to:
+  /// **'What matters most right now?'**
+  String get quizInterestTitle;
+
+  /// V0 · quiz.interest_note — подпись; обещание «можно поменять» держит настройка интереса
+  ///
+  /// In en, this message translates to:
+  /// **'Alma starts where you are looking. You can change it later.'**
+  String get quizInterestNote;
+
+  /// V0 · quiz.interest_love
+  ///
+  /// In en, this message translates to:
+  /// **'Love and relationships'**
+  String get quizInterestLove;
+
+  /// V0 · quiz.interest_money
+  ///
+  /// In en, this message translates to:
+  /// **'Money and my path'**
+  String get quizInterestMoney;
+
+  /// V0 · quiz.interest_self
+  ///
+  /// In en, this message translates to:
+  /// **'Understanding myself'**
+  String get quizInterestSelf;
+
+  /// V0 · quiz.interest_future
+  ///
+  /// In en, this message translates to:
+  /// **'What lies ahead'**
+  String get quizInterestFuture;
+
   /// from Journey/journey.needsTime
   ///
   /// In en, this message translates to:
@@ -4606,6 +4642,72 @@ abstract class L {
   /// In en, this message translates to:
   /// **'read'**
   String get pairChapterRead;
+
+  /// monetization v3 · home.living_layer · W4 — оверлайн раздела закрытых блоков на «Сегодня»
+  ///
+  /// In en, this message translates to:
+  /// **'the living layer'**
+  String get homeLivingLayer;
+
+  /// monetization v3 · live.transits_title · W4
+  ///
+  /// In en, this message translates to:
+  /// **'Transits of the week'**
+  String get liveTransitsTitle;
+
+  /// monetization v3 · live.transits_note · W4 — живое число из расчёта транзитов, не из словаря
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{One exact aspect between now and Sunday} other{{count} exact aspects between now and Sunday}}'**
+  String liveTransitsNote(int count);
+
+  /// monetization v3 · W4 — тихая неделя или расчёт ещё не пришёл; на холсте не нарисовано, зеркалит cabAreaQuiet
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing exact before Sunday'**
+  String get liveTransitsNoteQuiet;
+
+  /// monetization v3 · live.solar_title · W4
+  ///
+  /// In en, this message translates to:
+  /// **'Your solar year'**
+  String get liveSolarTitle;
+
+  /// monetization v3 · live.solar_note · W4
+  ///
+  /// In en, this message translates to:
+  /// **'Rewritten every birthday, running now'**
+  String get liveSolarNote;
+
+  /// monetization v3 · live.day_title · W4
+  ///
+  /// In en, this message translates to:
+  /// **'The day in full'**
+  String get liveDayTitle;
+
+  /// monetization v3 · live.day_note · W4
+  ///
+  /// In en, this message translates to:
+  /// **'The long reading, areas, what is coming'**
+  String get liveDayNote;
+
+  /// monetization v3 · sub.badge · W5 — тихая метка в шапке панели гороскопа подписчика
+  ///
+  /// In en, this message translates to:
+  /// **'subscribed'**
+  String get paywallV3SubBadge;
+
+  /// monetization v3 · sub.cancel_honesty · W5 — зачин до двоеточия красится goldBright; сокращать и разбивать нельзя (§7 ТЗ)
+  ///
+  /// In en, this message translates to:
+  /// **'If you ever cancel: chapters bought as a door stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.'**
+  String get paywallV3SubCancelHonesty;
+
+  /// monetization v3 · state.processing_note · W6
+  ///
+  /// In en, this message translates to:
+  /// **'Apple has taken it; we are writing it down. This finishes by itself, even if you close the app.'**
+  String get paywallV3StateProcessingNote;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

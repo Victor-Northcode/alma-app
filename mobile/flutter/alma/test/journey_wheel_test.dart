@@ -52,11 +52,12 @@ void main() {
   bool forwardEnabled(WidgetTester tester) =>
       tester.widget<AlmaButton>(find.byType(AlmaButton).last).onTap != null;
 
-  /// Довести анкету до шага даты: имя и «о себе» кнопку не запирают.
+  /// Довести анкету до шага даты: имя, «что важнее» (V0) и «о себе» кнопку
+  /// не запирают — интерес пропускается законно (А7 №15).
   Future<void> toDateStep(WidgetTester tester) async {
     await tester.pumpWidget(host());
     await settle(tester);
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < 3; i++) {
       await tester.tap(find.byType(AlmaButton).last);
       await settle(tester);
     }

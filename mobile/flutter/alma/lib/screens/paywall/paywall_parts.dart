@@ -18,6 +18,8 @@
 /// похоже» нельзя: это и есть то самое незаметное расхождение.
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../billing/alma_store.dart';
@@ -531,6 +533,15 @@ class PaywallNotice extends StatelessWidget {
     final notice = store.notice;
     if (notice == null) return const SizedBox.shrink();
     final l = L.of(context);
+    // «Покупка проходит» — карточка W6, а не строка. Оба извещения — это
+    // «деньги на месте, право едет»: `verifyLater` — магазин списал, наш
+    // `/verify` в эту секунду не ответил; `pending` — магазин ещё ждёт
+    // одобрения. Человеку, с которого уже спросили денег, положено видимое
+    // усилие (кольцо) и действие (ретрай), а не строчка петитом.
+    if (notice.message == StoreMessage.pending ||
+        notice.message == StoreMessage.verifyLater) {
+      return PaywallProcessingCard(store: store, message: notice.message);
+    }
     return Padding(
       padding: const EdgeInsets.only(top: 10),
       child: Text(
@@ -546,6 +557,185 @@ class PaywallNotice extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Карточка «покупка проходит» — W6, карточка 1.
+///
+/// Каждый её элемент отвечает на «я заплатила, а где?», и ответ начинается с
+/// того, что деньги на месте, а не с извинения: ни «извините», ни слова, из
+/// которого следует, что деньги могли пропасть, ни поддержки первым
+/// действием — язык кадра.
+///
+/// **Подпись у двух состояний разная, и это не отступление от W6, а его же
+/// правило, прочитанное до конца.** Кадр писан про `verifyLater` — «оплата
+/// прошла, `/verify` не ответил», — и его текст «Apple has taken it» правда
+/// только там. На `pending` (спросить у родителя, шаг вне приложения) деньги
+/// ещё не списаны, и печатать «принял» значило бы сказать о деньгах неправду
+/// — худшую из возможных на этой карточке. Заголовок и кольцо общие.
+class PaywallProcessingCard extends StatelessWidget {
+  const PaywallProcessingCard({
+    super.key,
+    required this.store,
+    required this.message,
+  });
+
+  final AlmaStore store;
+  final StoreMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Padding(
+      // Отбивка кадра — 16.
+      padding: const EdgeInsets.only(top: 16),
+      child: Container(
+        // Числа W6: паддинг 17 · 17 · 15, кант золота на 0.3, радиус 16,
+        // заливка ночи-700 на 0.42.
+        padding: const EdgeInsets.fromLTRB(17, 17, 17, 15),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.3)),
+          color: AlmaPalette.night700.withValues(alpha: 0.42),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _ProcessingRing(),
+            const SizedBox(height: 12),
+            Text(
+              l.paywallV3StateProcessing,
+              style: AlmaType.headingM.copyWith(height: 1.2),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              message == StoreMessage.pending
+                  ? l.paywallPending
+                  : l.paywallV3StateProcessingNote,
+              style: AlmaType.meta.copyWith(fontSize: 12.5, height: 1.5),
+            ),
+            const SizedBox(height: 12),
+            AlmaButton(
+              kind: AlmaButtonKind.outline,
+              // Высота и радиус кадра (46/23) — переопределением параметров, а
+              // не правкой метрики: три контурных высоты на холсте — так на
+              // холсте, довод в §1 SCREENS-V3.
+              height: 46,
+              radius: 23,
+              label: l.paywallV3StateErrorRetry,
+              // Ретрай ускоряет то, что случится и без него: восстановление
+              // переспрашивает магазин, тот передоставляет транзакцию, и
+              // `/verify` получает второй шанс сейчас, а не через backoff.
+              // Кнопка нужна не механике, а человеку: две минуты глядеть на
+              // кольцо и не иметь действия — худшее, что можно предложить
+              // тому, с кого уже списали.
+              onTap: store.restoring ? null : store.restore,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Кольцо 34 × 34 — единственное быстрое вращение в продукте: 6 секунд на
+/// оборот против 60 у эмблемы пары и 80 у медальона Today. Обязано быть
+/// быстрым: медленное кольцо читается украшением, а это — работа.
+class _ProcessingRing extends StatefulWidget {
+  const _ProcessingRing();
+
+  @override
+  State<_ProcessingRing> createState() => _ProcessingRingState();
+}
+
+class _ProcessingRingState extends State<_ProcessingRing>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _spin = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 6),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // «Меньше движения» оставляет кольцо неподвижным — не замедленным:
+      // половина движения читается как подтормаживание.
+      final still = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+      if (!still) _spin.repeat();
+    });
+  }
+
+  @override
+  void dispose() {
+    _spin.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ClipRect — то же, что делает CSS, обрезая фон по коробке элемента:
+    // радиус градиента считается до дальнего угла и без обрезки штрихи
+    // вылезали бы за 34 точки.
+    return ClipRect(
+      child: AnimatedBuilder(
+        animation: _spin,
+        builder: (context, _) => CustomPaint(
+          size: const Size.square(34),
+          painter: _ProcessingRingPainter(turn: _spin.value),
+        ),
+      ),
+    );
+  }
+}
+
+/// Штрихи кольца: 30 через 12°, каждый шириной 3° — это
+/// `repeating-conic-gradient(0deg 3deg / 12deg)` кадра, гаснущие с обоих
+/// краёв кольцевой маской (радиальный градиент 46–48–78–82 % радиуса до
+/// дальнего угла — та же арифметика, что у венца медальона Today).
+class _ProcessingRingPainter extends CustomPainter {
+  const _ProcessingRingPainter({required this.turn});
+
+  /// Доля оборота, 0…1.
+  final double turn;
+
+  static const _ticks = 30;
+  static const _width = 3 * math.pi / 180;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centre = size.center(Offset.zero);
+    final reach = size.width * 0.7071;
+    final gold = AlmaPalette.gold.withValues(alpha: 0.55);
+    final paint = Paint()
+      ..shader = RadialGradient(
+        radius: 0.7071,
+        colors: [
+          gold.withValues(alpha: 0),
+          gold,
+          gold,
+          gold.withValues(alpha: 0),
+        ],
+        stops: const [0.46, 0.48, 0.78, 0.82],
+      ).createShader(Offset.zero & size);
+
+    final path = Path();
+    for (var i = 0; i < _ticks; i++) {
+      final a = turn * 2 * math.pi + i * 2 * math.pi / _ticks;
+      path.moveTo(centre.dx, centre.dy);
+      path.arcTo(
+        Rect.fromCircle(center: centre, radius: reach),
+        a - _width / 2,
+        _width,
+        false,
+      );
+      path.close();
+    }
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ProcessingRingPainter old) => old.turn != turn;
 }
 
 /// Девять состояний магазина словами человека.

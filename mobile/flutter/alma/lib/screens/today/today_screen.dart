@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/arrival.dart';
 import '../settings/sign_in_screen.dart';
+import '../../design/art.dart';
 import '../../design/buttons.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
@@ -15,6 +16,7 @@ import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
+import '../../state/nbo.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
 import '../../billing/ladder.dart';
@@ -90,38 +92,21 @@ class _TodayScreenState extends State<TodayScreen> {
         }
       },
       children: [
-        if (model != null) ...[
-          // 22 от низа шапки до панели — число s45. Раньше здесь стояло 28
-          // (`gapLarge`), потому что панели не было вовсе и отбивка была общей.
-          const SizedBox(height: 22),
-          _HoroscopePanel(model: model, subscriber: session.isSubscriber),
-          // Области — вторая панель, и только подписчику: под замком гороскоп
-          // целиком, а не его первый абзац.
-          if (session.isSubscriber) ...[
+        if (session.isSubscriber) ...[
+          if (model != null) ...[
+            // 22 от низа шапки до панели — число s45. Раньше здесь стояло 28
+            // (`gapLarge`), потому что панели не было вовсе и отбивка была
+            // общей.
+            const SizedBox(height: 22),
+            _HoroscopePanel(model: model, subscriber: true),
+            // Области — вторая панель, и только подписчику: под замком
+            // гороскоп целиком, а не его первый абзац.
             const SizedBox(height: 14),
             _AreasPanel(model: model),
           ],
-        ],
-        // **План, сказанный словами, тому, у кого его нет.**
-        //
-        // Он был доступен с лестницы, которая открывалась, только если сперва
-        // ткнуть в закрытую главу, — и владелец прошёл собственный продукт из
-        // конца в конец, ни разу не увидев, что подписка вообще предлагается.
-        // «Один тап в настройках» оказалось фразой, не стоящей ничего: никто
-        // не открывает настройки, чтобы ему что-нибудь продали.
-        //
-        // Здесь — потому что это экран, которым подписчик пользуется каждый
-        // день, и, значит, экран, где причина подписки читается: транзиты над
-        // ним движутся, а купленная однажды глава — нет. Исчезает в ту секунду,
-        // когда план появляется.
-        //
-        // **На ночи, а не в стекле** — так это нарисовано в s2: панель на этом
-        // экране принадлежит гороскопу, и приглашение, одетое в такую же,
-        // читалось бы вторым гороскопом.
-        if (!session.isSubscriber) ...[
-          const SizedBox(height: _sectionGap),
-          const _PlanInvitation(),
-        ],
+        ] else
+          // Бесплатному — те же секции, но их порядок решает NBO (§4).
+          ..._freeSections(session, model),
         // **Карточка «сохрани карту» — гостю, которому есть что терять.**
         //
         // Четыре условия, и каждое обязательно: не вошёл, карта уже есть, не
@@ -136,6 +121,55 @@ class _TodayScreenState extends State<TodayScreen> {
         ],
       ],
     );
+  }
+
+  /// Секции бесплатного «Сегодня» в порядке NBO (§4 ТЗ).
+  ///
+  /// **Порядок решает [nboOrder], а не вёрстка.** У каждой секции есть
+  /// карточка-представитель из матрицы §4: панель гороскопа — карточка
+  /// «гороскоп дня»; приглашение к плану продаёт живой слой, и его в матрице
+  /// представляет соляр — единственная карточка NBO, которая живёт только в
+  /// подписке. Карточки пары на этом экране пока нет — когда её построят
+  /// (W1), она встанет сюда одной строкой `NboCard.compatibility`, и порядок
+  /// ей уже посчитан.
+  ///
+  /// Секция, чьей карточки в сегодняшнем порядке нет, идёт после названных, в
+  /// порядке объявления: NBO упорядочивает, но не выключает — выключает
+  /// только `ownsEverything`, а с ним человек не бесплатный.
+  ///
+  /// **План, сказанный словами, тому, у кого его нет, — остаётся здесь же.**
+  /// Он был доступен с лестницы, открывавшейся только тапом в закрытую главу,
+  /// — и владелец прошёл собственный продукт из конца в конец, ни разу не
+  /// увидев, что подписка вообще предлагается. На ночи, а не в стекле — так
+  /// это нарисовано в s2: панель на этом экране принадлежит гороскопу, и
+  /// приглашение, одетое в такую же, читалось бы вторым гороскопом.
+  List<Widget> _freeSections(AlmaSession session, TodayModel? model) {
+    final sections = <(NboCard, Widget)>[
+      if (model != null)
+        (NboCard.horoscope, _HoroscopePanel(model: model, subscriber: false)),
+      (NboCard.solar, const _PlanInvitation()),
+    ];
+    final order = nboOrder(todaySignals(session));
+    // Слияние руками, а не `sort`: у `List.sort` нет гарантии стабильности, а
+    // две секции с ненайденной карточкой обязаны сохранить объявленный
+    // порядок.
+    final placed = <Widget>[
+      for (final card in order)
+        ...[
+          for (final (own, section) in sections)
+            if (own == card) section,
+        ],
+      for (final (own, section) in sections)
+        if (!order.contains(own)) section,
+    ];
+    return [
+      for (final (index, section) in placed.indexed) ...[
+        // 22 от низа шапки до первой секции — число s45; дальше — отбивка
+        // разделов бесплатного экрана (довод у [_sectionGap]).
+        SizedBox(height: index == 0 ? 22 : _sectionGap),
+        section,
+      ],
+    ];
   }
 
   /// **Календарный день устройства, не начало серверного окна.** Скан
@@ -202,6 +236,42 @@ class _TodayScreenState extends State<TodayScreen> {
       ),
     );
   }
+}
+
+/// Сигналы NBO (§4 ТЗ), собранные из сессии, — единственное место сборки.
+///
+/// Отдельной функцией намеренно: сигналы приезжают в модель клиента по одному
+/// и в разное время, и каждый подключается здесь одной строкой — не трогая ни
+/// одного вызова порядка.
+NboSignals todaySignals(AlmaSession session) {
+  final rights = session.entitlements;
+  return NboSignals(
+    // Ответ квиза V0 — из профиля владельца: сервер пишет его только туда,
+    // и матрица §4 начинает работать с первого экрана после анкеты. Пусто —
+    // человек прошёл анкету до появления вопроса или пропустил его, и порядок
+    // честно живёт на универсальной ветке: натал первым.
+    interest:
+        session.people.where((person) => person.isSelf).firstOrNull?.interest,
+    // Пол — тоже ответ квиза, и в клиентской модели его нет по той же
+    // причине. Тай-брейкер молчит, а не выдумывается.
+    femaleReader: false,
+    // TODO(nbo): `ReadingTally` хранит счётчики открытий без времени
+    // (`reading.opens.<slug>` — целое на систему), и окно «глава про любовь
+    // прочитана за 72 часа» посчитать не из чего. Честное значение — false:
+    // модификатор молчит, пока у чтений не появится время; его правильное
+    // место — сервер, см. TODO(server) в reading_tally.dart.
+    loveChapterReadRecently: false,
+    // «Бесплатные главы в ≥3 системах» продукт синхронно не знает: счётчики
+    // ReadingTally асинхронные и считают все открытия, а не бесплатные. Ноль
+    // — карточка бандла не выдумывается по кривому приближению.
+    freeChaptersReadSystems: 0,
+    ownsBundle: rights.ownsArchive,
+    subscriber: session.isSubscriber,
+    // «Всё куплено» здесь значит: подписка держит всё либо все системы
+    // открыты правами. Оба факта — слово сервера, а не догадка клиента.
+    ownsEverything:
+        session.isSubscriber || SystemSlug.values.every(rights.opened),
+  );
 }
 
 /* ── стекло ─────────────────────────────────────────────────────────────── */
@@ -296,9 +366,14 @@ class _GlassPanel extends StatelessWidget {
 /// там, где в эталоне одна. Запас в 28 точек оставлен линии: он и есть то
 /// «сжимайся, но не исчезай», которое в вёрстке делает `flex`.
 class _PanelLabel extends StatelessWidget {
-  const _PanelLabel(this.text, {this.trailing});
+  const _PanelLabel(this.text, {this.badge, this.trailing});
 
   final String text;
+
+  /// Тихая метка сразу за подписью — бейдж `subscribed` из W5. Не в хвосте
+  /// строки: у правого канта стоит время чтения, и две метки рядом читались
+  /// бы одной.
+  final Widget? badge;
 
   /// Что стоит у правого канта вместо конца линии — время чтения на карточке
   /// гороскопа (`today-reading-spec §2`). Линия отдаёт ему место, а не
@@ -311,10 +386,20 @@ class _PanelLabel extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, box) => Row(
         children: [
-          ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: math.max(0, box.maxWidth - 40)),
-            child: Text(text.toUpperCase(), style: AlmaType.overline),
+          // Гибкой — из-за бейджа: негибкая подпись рядом с меткой и временем
+          // чтения на узкой панели давала бы полосу переполнения, а не
+          // перенос.
+          Flexible(
+            child: ConstrainedBox(
+              constraints:
+                  BoxConstraints(maxWidth: math.max(0, box.maxWidth - 40)),
+              child: Text(text.toUpperCase(), style: AlmaType.overline),
+            ),
           ),
+          if (badge != null) ...[
+            const SizedBox(width: 10),
+            badge!,
+          ],
           const SizedBox(width: 12),
           Expanded(
             child: Container(
@@ -363,17 +448,76 @@ class _HoroscopePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _PanelLabel(l.cabHoroscopeToday, trailing: _minutes(l)),
-          if (subscriber) ..._voice(l) else ..._locked(context, l),
+          _PanelLabel(
+            l.cabHoroscopeToday,
+            // Тихая метка W5: подписчику всё открыто, и бейдж отвечает на
+            // «почему» — не продаёт. Не золотая кнопка, а подпись.
+            badge: subscriber ? const _SubscribedBadge() : null,
+            trailing: _minutes(l),
+          ),
+          if (subscriber) ..._voice(l) else ..._free(context, l),
         ],
       ),
     );
   }
 
+  /// Бесплатное состояние — кадр W4: написанный абзац дня, а под ним закрытый
+  /// живой слой.
+  ///
+  /// Абзац — `opening` закрытого ответа: сорок слов, написанных из настоящих
+  /// позиций до покупки; это доказательство «текст про тебя», которого у
+  /// стены не было. Пустой `opening` — законный ответ (потолок месяца выбран,
+  /// модель промолчала), и тогда панель остаётся прежним замком из s2:
+  /// честная строка и дверь, без ретрая и без филлера. Живой слой в этом
+  /// случае тоже не рисуется: три двери без единого написанного слова — та
+  /// самая стена, от которой W4 уходит.
+  List<Widget> _free(BuildContext context, L l) {
+    switch (model.line) {
+      case LoadRunning():
+        // Заготовки строк — как у подписчика, только короче: опенинг — один
+        // абзац, и блики на пол-экрана обещали бы письмо целиком.
+        return const [
+          SizedBox(height: 20),
+          WaitingBar(height: 15),
+          SizedBox(height: 13),
+          WaitingBar(
+            height: 15,
+            widthFactor: 0.62,
+            delay: Duration(milliseconds: 150),
+          ),
+        ];
+      case LoadDone<ReadingResponse>(value: final answer):
+        // Опенинг — только у закрытого ответа. Открытая глава у человека без
+        // плана — гонка прав между кадрами; показывать её здесь значило бы
+        // раздать письмо даром, поэтому падение в тот же честный замок.
+        final opening = answer.locked ? answer.opening : null;
+        final paragraphs = opening?.body
+                .where((paragraph) => paragraph.trim().isNotEmpty)
+                .toList() ??
+            const <String>[];
+        if (paragraphs.isEmpty) return _locked(context, l);
+        return [
+          const SizedBox(height: 14),
+          // Ступень чтения, как у всего написанного: 16.5 холста — округление
+          // 17/1.65, довод в §1 SCREENS-V3.
+          Text(paragraphs.join('\n\n'), style: AlmaType.readingBody()),
+          const SizedBox(height: 16),
+          _LivingLayer(model: model),
+        ];
+      case LoadFailed<ReadingResponse>():
+        // Отказ сети — не повод выдумывать заметку: прежний замок честен и
+        // работает без сервера.
+        return _locked(context, l);
+      case _:
+        return _locked(context, l);
+    }
+  }
+
   /// Залоченное состояние — блок из s2, целиком: строка о том, что это такое и
   /// когда приходит, и строка-дверь. Ни блюра поверх настоящего текста, ни
   /// пустой карточки: показывать размытым то, за что просят денег, — это
-  /// обещание, которого продукт не давал.
+  /// обещание, которого продукт не давал. Осталось запасным путём W4: сюда
+  /// панель падает, когда опенинг не написан.
   List<Widget> _locked(BuildContext context, L l) => [
         const SizedBox(height: 20),
         Text(l.cabHoroscopeLocked, style: AlmaType.body),
@@ -559,6 +703,240 @@ class _WholeSkyDoor extends StatelessWidget {
             const SizedBox(width: 8),
             const Icon(Icons.arrow_forward, size: 15, color: AlmaPalette.gold),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/* ── живой слой ─────────────────────────────────────────────────────────── */
+
+/// Тихая метка подписчика — бейдж `subscribed` из W5: Golos 600 9.5,
+/// разрядка 1.3, прописные, кант золота на 0.4, радиус 4, паддинг 3 × 7.
+///
+/// Не кнопка и не зов: внутри оплаченного коммерции ноль (правило 3 спеки), и
+/// метка лишь отвечает на вопрос «почему всё открыто».
+class _SubscribedBadge extends StatelessWidget {
+  const _SubscribedBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        // Прозрачность — число кадра W5. В палитре такой ступени нет, и
+        // тянуться к hairlineGold (0.16) нельзя: кант вдвое тише нарисованного
+        // — то самое незаметное расхождение (довод в §1 SCREENS-V3).
+        border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.4)),
+      ),
+      child: Text(
+        l.paywallV3SubBadge.toUpperCase(),
+        style: AlmaType.overline
+            .copyWith(fontSize: 9.5, letterSpacing: 1.3, height: 1),
+      ),
+    );
+  }
+}
+
+/// Три закрытых блока живого слоя — кадр W4: транзиты · соляр · глубина дня.
+///
+/// **Замка нет — стоит `✦`.** Решение холста, и оно продуктовое: замок
+/// говорит «тебе нельзя», звёздочка — «тут есть ещё». Продаётся написанное, а
+/// не доступ, и иконография обязана это повторять. Тап по любому блоку —
+/// пейволл подписки (P5): живое продаётся из живого, дверей у этих систем в
+/// v3 нет.
+///
+/// Цены на блоках нет ни одной — она живёт на V6, куда ведёт тап (правило
+/// кадра «чего на экране быть не должно»).
+class _LivingLayer extends StatelessWidget {
+  const _LivingLayer({required this.model});
+
+  final TodayModel model;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _LivingLayerLabel(),
+        // Отбивки кадра: 10 до первого блока, 11 между следующими.
+        const SizedBox(height: 10),
+        _LiveBlock(
+          image: AlmaArt.card(SystemSlug.transits),
+          title: l.liveTransitsTitle,
+          note: _transitsNote(l),
+        ),
+        const SizedBox(height: 11),
+        _LiveBlock(
+          image: AlmaArt.card(SystemSlug.solarReturn),
+          title: l.liveSolarTitle,
+          note: l.liveSolarNote,
+        ),
+        const SizedBox(height: 11),
+        // «День целиком» — не система, а глубина дня; у него нет своей карты
+        // в колоде, и картинкой стоит небо живого слоя — та же вклейка, что
+        // на V6, куда блок и ведёт.
+        _LiveBlock(
+          image: AlmaArt.skyPlate,
+          title: l.liveDayTitle,
+          note: l.liveDayNote,
+        ),
+      ],
+    );
+  }
+
+  /// Подпись транзитов несёт живое число из расчёта — не из словаря (W4).
+  ///
+  /// Небо ещё не пришло или неделя тихая — строка без числа: выдумывать «три
+  /// точных аспекта» нельзя ровно на том экране, который держится на правде о
+  /// сегодняшнем небе.
+  String _transitsNote(L l) {
+    final count = model.exactUntilSunday;
+    if (count == null || count == 0) return l.liveTransitsNoteQuiet;
+    return l.liveTransitsNote(count);
+  }
+}
+
+/// Строка раздела W4: оверлайн `the living layer` и линия, гаснущая вправо.
+///
+/// Не `_PanelLabel`: у того кегль 11.5 с разрядкой 2.5 и линия до правого
+/// канта с местом под хвост; здесь числа кадра — 11/2.2 золотом на 0.85 и
+/// линия в одну сторону.
+class _LivingLayerLabel extends StatelessWidget {
+  const _LivingLayerLabel();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Row(children: [
+      Text(
+        l.homeLivingLayer.toUpperCase(),
+        style: AlmaType.readingPart
+            .copyWith(color: AlmaPalette.gold.withValues(alpha: 0.85)),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        child: Container(
+          height: 1,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(colors: [
+              AlmaPalette.gold.withValues(alpha: 0.3),
+              const Color(0x00000000),
+            ]),
+          ),
+        ),
+      ),
+    ]);
+  }
+}
+
+/// Один закрытый блок живого слоя: фото под блюром, скрим, `✦`, заголовок и
+/// подпись. Числа — кадр W4: высота 112, радиус 16, кант золота на 0.22.
+class _LiveBlock extends StatelessWidget {
+  const _LiveBlock({
+    required this.image,
+    required this.title,
+    required this.note,
+  });
+
+  final String image;
+  final String title;
+  final String note;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: title,
+      child: GestureDetector(
+        onTap: () => openSubscription(context),
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          height: 112,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border:
+                Border.all(color: AlmaPalette.gold.withValues(alpha: 0.22)),
+          ),
+          child: ClipRRect(
+            // Радиус картины на толщину канта меньше рамы — иначе угол
+            // картинки вылезает из-под золота светлой ниткой (как у вклеек).
+            borderRadius: BorderRadius.circular(15),
+            child: Stack(fit: StackFit.expand, children: [
+              // Блюр 3 px холста — сигма 1.5, по той же арифметике
+              // CSS→Flutter, что у стекла панели (`blur(10px)` → 5). Ровно
+              // столько, чтобы картинка читалась содержимым, а не заглушкой.
+              ImageFiltered(
+                imageFilter: ImageFilter.blur(sigmaX: 1.5, sigmaY: 1.5),
+                child: Opacity(
+                  opacity: 0.5,
+                  child: Image.asset(
+                    image,
+                    fit: BoxFit.cover,
+                    // `object-position: center 34%` кадра.
+                    alignment: const Alignment(0, -0.32),
+                  ),
+                ),
+              ),
+              // Скрим кадра: ночь-900 от .55 к .8 — без него подпись не
+              // читается ни на одной фотографии.
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AlmaPalette.night900.withValues(alpha: 0.55),
+                      AlmaPalette.night900.withValues(alpha: 0.8),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 16,
+                right: 16,
+                top: 0,
+                bottom: 0,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(children: [
+                      // ✦ — настроение блока: не замок. Golos 13 золотом.
+                      Text('✦',
+                          style: AlmaType.meta.copyWith(
+                              fontSize: 13, color: AlmaPalette.gold)),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AlmaType.headingM.copyWith(
+                            fontSize: 18,
+                            height: 1.2,
+                            color:
+                                AlmaPalette.inkLight.withValues(alpha: 0.9),
+                          ),
+                        ),
+                      ),
+                    ]),
+                    const SizedBox(height: 4),
+                    Text(
+                      note,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AlmaType.meta
+                          .copyWith(fontSize: 12.5, color: AlmaPalette.muted3),
+                    ),
+                  ],
+                ),
+              ),
+            ]),
+          ),
         ),
       ),
     );

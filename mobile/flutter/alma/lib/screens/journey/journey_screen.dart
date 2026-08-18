@@ -63,7 +63,11 @@ class JourneyScreen extends StatefulWidget {
 /// Шесть шагов, как на нативе. Церемония — не украшение и не заставка: это
 /// единственный экран, где системы действительно считаются, и человек видит,
 /// что за него взялись, вместо белого поля с крутилкой.
-enum _Step { name, about, date, time, place, ceremony }
+// Интерес стоит вторым — «шаг II» холста V0. Шагов стало семь, и счётчик
+// печатает семь: холст обещал VI, но сам же держал это открытым вопросом
+// (сводка №10 — счётчик обещает шесть, нарисовано два). Считать по-настоящему
+// честнее, чем подгонять число под рисунок.
+enum _Step { name, interest, about, date, time, place, ceremony }
 
 class _JourneyScreenState extends State<JourneyScreen> {
   /// С какого шага открыться. **Вход для проверки, как на нативе**
@@ -77,6 +81,13 @@ class _JourneyScreenState extends State<JourneyScreen> {
 
   final _name = TextEditingController();
   String? _gender;
+
+  /// Ответ V0 «что сейчас важнее всего»: love / money / self / future.
+  /// Null — пропустил; NBO тогда работает по ветке «понять себя» (А7 №15),
+  /// и кнопка «дальше» пропуск разрешает: спрашивать дважды хуже, чем не
+  /// узнать.
+  String? _interest;
+
   // **Ничего не предзаполнено.** Колесо, открывшееся на «1 января 2000»,
   // читается как ответ, который уже дан: человек прокручивает мимо и уезжает
   // с чужой датой. `null` значит «не трогали», и первое же движение
@@ -191,7 +202,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
         // себя сразу, а на сервер он уезжает отдельной необязательной записью.
         // Отказ этой ручки обязан прийти на том языке, на котором человек
         // сейчас читает анкету.
-      ), locale: session.locale, gender: _gender);
+      ), locale: session.locale, gender: _gender, interest: _interest);
       if (_name.text.trim().isNotEmpty) {
         await session.client.setDisplayName(_name.text.trim());
       }
@@ -374,7 +385,8 @@ class _JourneyScreenState extends State<JourneyScreen> {
     widget.onDone();
   }
 
-  static String _roman(int n) => const ['I', 'II', 'III', 'IV', 'V', 'VI'][n - 1];
+  static String _roman(int n) =>
+      const ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'][n - 1];
 
   List<Widget> _stepBody(L l) => switch (_step) {
         _Step.name => [
@@ -396,6 +408,32 @@ class _JourneyScreenState extends State<JourneyScreen> {
               style: AlmaType.meta
                   .copyWith(color: AlmaPalette.body.withValues(alpha: 0.55)),
             ),
+          ],
+        _Step.interest => [
+            // Жёсткий перенос холста: «What matters most / right now?».
+            Text(l.quizInterestTitle, style: AlmaType.displayL),
+            const SizedBox(height: 10),
+            Text(l.quizInterestNote, style: AlmaType.meta),
+            const SizedBox(height: 24),
+            for (final (value, glyph, label) in [
+              ('love', '♥', l.quizInterestLove),
+              ('money', '◈', l.quizInterestMoney),
+              ('self', '☾', l.quizInterestSelf),
+              ('future', '✦', l.quizInterestFuture),
+            ])
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _interestCard(
+                  glyph: glyph,
+                  label: label,
+                  selected: _interest == value,
+                  // Повторный тап снимает выбор: пропуск — законный ответ
+                  // (А7 №15, NBO без интереса живёт по ветке «понять себя»),
+                  // и дорога к нему обязана существовать не только «мимо».
+                  onTap: () => setState(
+                      () => _interest = _interest == value ? null : value),
+                ),
+              ),
           ],
         _Step.about => [
             Text(l.journeyAboutTitle, style: AlmaType.displayL),
@@ -589,6 +627,65 @@ class _JourneyScreenState extends State<JourneyScreen> {
     );
   }
 
+
+  /// Карточка варианта V0 — по разметке холста: высота 62, радиус 16, глиф
+  /// засечной антиквой и подпись Playfair 17.5. Вариант здесь — не пункт
+  /// настроек, а имя того, за чем человек пришёл, и антиква ставит его в один
+  /// ряд с названиями глав, которые он увидит следом.
+  Widget _interestCard({
+    required String glyph,
+    required String label,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        height: 62,
+        padding: const EdgeInsets.symmetric(horizontal: 17),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: selected
+                ? const Color(0xFFE4C48A).withValues(alpha: 0.6)
+                : AlmaPalette.body.withValues(alpha: 0.12),
+          ),
+          gradient: selected
+              ? LinearGradient(colors: [
+                  AlmaPalette.gold.withValues(alpha: 0.16),
+                  AlmaPalette.gold.withValues(alpha: 0.03),
+                ])
+              : null,
+        ),
+        child: Row(children: [
+          Text(glyph,
+              style: AlmaType.displayL.copyWith(
+                  fontSize: 17,
+                  height: 1,
+                  color: selected
+                      ? AlmaPalette.goldBright
+                      : AlmaPalette.gold.withValues(alpha: 0.7))),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AlmaType.displayL.copyWith(
+                    fontSize: 17.5,
+                    height: 1.2,
+                    color: selected
+                        ? AlmaPalette.inkLight
+                        : const Color(0xFFF6F1E4).withValues(alpha: 0.85))),
+          ),
+          if (selected)
+            Text('✓',
+                style: AlmaType.meta
+                    .copyWith(fontSize: 13, color: AlmaPalette.gold)),
+        ]),
+      ),
+    );
+  }
 
   Widget _choice(String label,
       {required bool selected, required VoidCallback onTap}) {

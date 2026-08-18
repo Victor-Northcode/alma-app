@@ -8,20 +8,22 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Сколько раз спросили письмо дня. Проверяется отдельно: неподписчику его
-/// не показывают, и **просить его у сервера тоже незачем** — это деньги за
-/// генерацию, потраченные в пустоту, и месячный потолок, сгорающий на тексте,
-/// которого никто не прочтёт.
+/// Сколько раз спросили письмо дня. Проверяется отдельно: запрос обязан быть
+/// ровно один и у подписчика, и у бесплатного — второй означал бы ретрай, а
+/// у опенингов месячное окно на сервере, и цикл ретраев жёг бы ровно его.
 int readingCalls = 0;
 
 /// «Сегодня» с настоящими формами ответов: профиль есть, транзиты несут
 /// области и фазу луны, письмо дня написано. Формы сняты с живого сервера,
 /// а не выдуманы — сломается договор, сломается и тест.
 ///
-/// [subscriber] решает, что отвечает `/v1/billing/entitlements`: гороскоп —
-/// функция подписки по решению владельца, и оба состояния экрана обязаны быть
-/// закреплены, иначе однажды он снова начнёт раздаваться даром.
-AlmaClient richClient({bool subscriber = true}) {
+/// [subscriber] решает, что отвечает `/v1/billing/entitlements` **и** какой
+/// формой отвечает глава дня: подписчику — письмо целиком, бесплатному —
+/// 200 с `locked: true` и `opening` (W4, `readings.py` `_locked_chapter`).
+/// [openingWritten] выключает опенинг: `opening: null` — законный ответ
+/// (потолок месяца, молчание модели), и его экран обязан пережить замком, а
+/// не пустотой и не ретраем.
+AlmaClient richClient({bool subscriber = true, bool openingWritten = true}) {
   readingCalls = 0;
   final http.Client transport = MockClient((request) async {
     final path = request.url.path;
@@ -99,19 +101,40 @@ AlmaClient richClient({bool subscriber = true}) {
       };
     } else if (path == '/v1/readings') {
       readingCalls += 1;
-      body = {
-        'reading': {
-          'system': 'transits',
-          'chapter': 'active',
-          'title': 'День',
-          'teaser': 'Первая строка дня.',
-          'body': ['Сейчас проходящий Нептун встал точно на твой Марс.'],
-          'cited_factors': <String>[],
-          'read_from': '',
-          'model': 'test',
-        },
-        'cached': true,
-      };
+      body = subscriber
+          ? {
+              'reading': {
+                'system': 'transits',
+                'chapter': 'active',
+                'title': 'День',
+                'teaser': 'Первая строка дня.',
+                'body': ['Сейчас проходящий Нептун встал точно на твой Марс.'],
+                'cited_factors': <String>[],
+                'read_from': '',
+                'model': 'test',
+              },
+              'cached': true,
+            }
+          : {
+              // Форма закрытой главы — та же, что у сервера: `reading`
+              // присутствует и равен null, «главы здесь нет» сказано полем.
+              'reading': null,
+              'locked': true,
+              'product': 'sub.monthly',
+              'opening': openingWritten
+                  ? {
+                      'system': 'transits',
+                      'chapter': 'active',
+                      'title': 'День',
+                      'teaser': '',
+                      'body': ['Сегодня Луна убывает в твоём шестом доме.'],
+                      'cited_factors': <String>[],
+                      'read_from': '',
+                      'model': 'test',
+                    }
+                  : null,
+              'cached': true,
+            };
     } else {
       body = {};
     }
@@ -155,6 +178,10 @@ void main() {
     // Письмо дня.
     expect(find.textContaining('Нептун'), findsOneWidget);
 
+    // Тихая метка W5 в шапке панели: подписчику всё открыто, и бейдж отвечает
+    // на «почему» — не продаёт. Прописными, как на кадре.
+    expect(find.text('SUBSCRIBED'), findsOneWidget);
+
     // Область с контактом собрана фразой каталога: «Sun now and your natal
     // Midheaven» в en; тест гоняет en, потому и проверяет английские слова.
     expect(find.textContaining('Midheaven'), findsOneWidget);
@@ -164,7 +191,7 @@ void main() {
     expect(find.text('Nothing exact here today.'), findsNWidgets(3));
   });
 
-  testWidgets('без плана гороскоп закрыт, и письмо дня даже не запрашивается',
+  testWidgets('без плана — заметка дня из опенинга и закрытый живой слой',
       (tester) async {
     await tester.pumpWidget(AlmaApp(client: richClient(subscriber: false)));
     // Заставка держит экран 3,4 секунды и уходит, только когда сессия
@@ -180,23 +207,70 @@ void main() {
       await tester.pump(const Duration(milliseconds: 80));
     }
 
-    // Ни абзаца дня, ни блюра, ни пустой карточки: одна фраза о том, что это
-    // такое и где живёт, и дверь.
+    // Письма дня нет — есть заметка: открывающий абзац locked-ответа, W4.
     expect(find.textContaining('Нептун'), findsNothing);
+    expect(find.textContaining('шестом доме'), findsOneWidget);
+    // Прежний замок ушёл вместе со стеной: под заметкой не дверь-строка, а
+    // живой слой.
+    expect(
+      find.text(
+          'The horoscope is written from your own chart every morning, and it comes with the plan.'),
+      findsNothing,
+    );
+
+    // Три закрытых блока живого слоя одной колонкой — транзиты · соляр ·
+    // глубина дня, с оверлайном раздела. Цен на блоках нет ни одной.
+    expect(find.text('THE LIVING LAYER'), findsOneWidget);
+    expect(find.text('Transits of the week'), findsOneWidget);
+    expect(find.text('Your solar year'), findsOneWidget);
+    expect(find.text('The day in full'), findsOneWidget);
+    expect(find.textContaining('\$'), findsNothing);
+
+    // И приглашение к плану — на экране, которым подписчик пользовался бы
+    // каждый день, а не одним тапом в настройках, куда никто не заходит,
+    // чтобы ему что-нибудь продали. Оно ниже сгиба: живой слой сделал
+    // бесплатное «Сегодня» длиннее экрана, а ленивый скролл не строит того,
+    // что за кромкой, — доматываем страницу. Тянуть за видимый блок, а не за
+    // первый попавшийся Scrollable: первым находится горизонтальный PageView
+    // вкладок, и смах в него открыл бы соседнюю вкладку вместо прокрутки.
+    await tester.drag(find.text('Transits of the week'), const Offset(0, -400));
+    // Доехавшая в кадр секция ставит таймер каскада прихода (420 мс) — тест,
+    // кончившийся раньше, падает на «pending timers».
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+    expect(find.text('Everything open, every day'), findsOneWidget);
+    expect(find.text('See the plans'), findsOneWidget);
+
+    // Заметку спросили ровно один раз: опенинги ограничены месячным окном на
+    // сервере, и ретрай в цикле жёг бы ровно его.
+    expect(readingCalls, 1);
+  });
+
+  testWidgets('опенинг не написан — честный замок, без выдумки и без ретрая',
+      (tester) async {
+    await tester.pumpWidget(
+        AlmaApp(client: richClient(subscriber: false, openingWritten: false)));
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+    await tester.pump(const Duration(seconds: 4));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+
+    // `opening: null` — законный ответ (потолок месяца, молчание модели), и
+    // на нём панель остаётся прежним замком из s2: фраза и дверь. Ни блоков
+    // живого слоя без единого написанного слова, ни филлера вместо заметки.
     expect(
       find.text(
           'The horoscope is written from your own chart every morning, and it comes with the plan.'),
       findsOneWidget,
     );
     expect(find.text('Open the horoscope'), findsOneWidget);
+    expect(find.text('Transits of the week'), findsNothing);
 
-    // И приглашение к плану — на экране, которым подписчик пользовался бы
-    // каждый день, а не одним тапом в настройках, куда никто не заходит,
-    // чтобы ему что-нибудь продали.
-    expect(find.text('Everything open, every day'), findsOneWidget);
-    expect(find.text('See the plans'), findsOneWidget);
-
-    // Главное: за письмо дня никто не заплатил.
-    expect(readingCalls, 0);
+    // И один-единственный запрос: пустой опенинг не переспрашивается.
+    expect(readingCalls, 1);
   });
 }

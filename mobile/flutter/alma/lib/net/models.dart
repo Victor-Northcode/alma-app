@@ -231,6 +231,7 @@ class Profile {
     this.relation,
     this.birthTime,
     this.placeLabel,
+    this.interest,
   });
 
   final String id;
@@ -251,6 +252,11 @@ class Profile {
   final String? birthTime;
   final String? placeLabel;
 
+  /// Ответ квиза V0: "love" | "money" | "self" | "future" | null. Сигнал NBO,
+  /// живёт только у владельца аккаунта; null — квиз пройден до появления
+  /// вопроса или пропущен, и NBO работает без него.
+  final String? interest;
+
   bool get birthTimeKnown => birthTime != null;
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
@@ -264,6 +270,7 @@ class Profile {
         relation: json['relation'] as String?,
         birthTime: json['birth_time'] as String?,
         placeLabel: json['place_label'] as String?,
+        interest: json['interest'] as String?,
       );
 }
 

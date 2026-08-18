@@ -1299,6 +1299,26 @@ class LFr extends L {
   String get journeyNameTitle => 'Comment je t\'appelle ?';
 
   @override
+  String get quizInterestTitle =>
+      'Qu\'est-ce qui compte le plus en ce moment ?';
+
+  @override
+  String get quizInterestNote =>
+      'Alma commence là où tu regardes. Tu pourras changer plus tard.';
+
+  @override
+  String get quizInterestLove => 'L\'amour et les relations';
+
+  @override
+  String get quizInterestMoney => 'L\'argent et mon chemin';
+
+  @override
+  String get quizInterestSelf => 'Me comprendre';
+
+  @override
+  String get quizInterestFuture => 'Ce qui m\'attend';
+
+  @override
   String get journeyNeedsTime => 'heure de naissance manquante';
 
   @override
@@ -2650,4 +2670,48 @@ class LFr extends L {
 
   @override
   String get pairChapterRead => 'lu';
+
+  @override
+  String get homeLivingLayer => 'la couche vivante';
+
+  @override
+  String get liveTransitsTitle => 'Les transits de la semaine';
+
+  @override
+  String liveTransitsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count aspects exacts d\'ici dimanche',
+      one: 'Un aspect exact d\'ici dimanche',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveTransitsNoteQuiet => 'Rien d\'exact d\'ici dimanche';
+
+  @override
+  String get liveSolarTitle => 'Ton année solaire';
+
+  @override
+  String get liveSolarNote =>
+      'Réécrite à chaque anniversaire — en cours en ce moment';
+
+  @override
+  String get liveDayTitle => 'La journée en entier';
+
+  @override
+  String get liveDayNote => 'La longue lecture, les domaines, ce qui vient';
+
+  @override
+  String get paywallV3SubBadge => 'abonnement actif';
+
+  @override
+  String get paywallV3SubCancelHonesty =>
+      'Si un jour tu annules : les chapitres achetés pour toujours restent lisibles. Les chapitres ouverts seulement par l\'abonnement se referment avec lui — le calcul reste gratuit dans tous les cas.';
+
+  @override
+  String get paywallV3StateProcessingNote =>
+      'Apple a pris le paiement ; nous l\'enregistrons. Cela se termine tout seul, même si tu fermes l\'app.';
 }

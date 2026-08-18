@@ -90,7 +90,7 @@ class _AlmaAppState extends State<AlmaApp> {
     // отвечает «с какого пуша пришли», не смешиваясь с daily_opened.
     AlmaPush.instance.onOpened = (payload) {
       _session.client.track(FunnelStage.pushOpened, meta: {
-        if (payload['type'] case final type?) 'type': type,
+        'type': ?payload['type'],
       });
     };
     AlmaPush.instance.listen();

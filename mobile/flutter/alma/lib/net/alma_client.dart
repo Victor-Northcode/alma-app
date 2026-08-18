@@ -415,6 +415,7 @@ class AlmaClient {
     bool isSelf = true,
     String? relation,
     String? gender,
+    String? interest,
   }) async {
     final body = await _post('/v1/profiles', {
       ...birth.toJson(),
@@ -422,6 +423,9 @@ class AlmaClient {
       'locale': locale,
       'relation': ?relation,
       'gender': ?gender,
+      // Ответ квиза V0 «что сейчас важнее всего» — сигнал NBO. Сервер пишет
+      // его только владельцу аккаунта и отвергает слова вне закрытого списка.
+      'interest': ?interest,
     });
     return Profile.fromJson(body);
   }

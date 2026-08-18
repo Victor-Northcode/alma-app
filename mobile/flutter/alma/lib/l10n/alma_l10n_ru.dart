@@ -1289,6 +1289,25 @@ class LRu extends L {
   String get journeyNameTitle => 'Как мне тебя называть?';
 
   @override
+  String get quizInterestTitle => 'Что сейчас важнее всего?';
+
+  @override
+  String get quizInterestNote =>
+      'Alma начинает с того, куда ты смотришь. Потом можно поменять.';
+
+  @override
+  String get quizInterestLove => 'Любовь и отношения';
+
+  @override
+  String get quizInterestMoney => 'Деньги и мой путь';
+
+  @override
+  String get quizInterestSelf => 'Понять себя';
+
+  @override
+  String get quizInterestFuture => 'Что впереди';
+
+  @override
   String get journeyNeedsTime => 'нужно время рождения';
 
   @override
@@ -2642,4 +2661,50 @@ class LRu extends L {
 
   @override
   String get pairChapterRead => 'прочитано';
+
+  @override
+  String get homeLivingLayer => 'живой слой';
+
+  @override
+  String get liveTransitsTitle => 'Транзиты недели';
+
+  @override
+  String liveTransitsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count точного аспекта до воскресенья',
+      many: '$count точных аспектов до воскресенья',
+      few: '$count точных аспекта до воскресенья',
+      one: '$count точный аспект до воскресенья',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveTransitsNoteQuiet => 'До воскресенья точных аспектов нет';
+
+  @override
+  String get liveSolarTitle => 'Твой солярный год';
+
+  @override
+  String get liveSolarNote =>
+      'Переписывается каждый день рождения — идёт прямо сейчас';
+
+  @override
+  String get liveDayTitle => 'День целиком';
+
+  @override
+  String get liveDayNote => 'Длинное чтение, области, что впереди';
+
+  @override
+  String get paywallV3SubBadge => 'подписка активна';
+
+  @override
+  String get paywallV3SubCancelHonesty =>
+      'Если однажды отменишь: главы, купленные навсегда, остаются читаемыми. Главы, открытые только подпиской, закрываются вместе с ней — расчёт бесплатен в любом случае.';
+
+  @override
+  String get paywallV3StateProcessingNote =>
+      'Apple платёж принял; мы его записываем. Это завершится само, даже если ты закроешь приложение.';
 }

@@ -1291,6 +1291,25 @@ class LEs extends L {
   String get journeyNameTitle => '¿Cómo te llamo?';
 
   @override
+  String get quizInterestTitle => '¿Qué es lo más importante ahora?';
+
+  @override
+  String get quizInterestNote =>
+      'Alma empieza por donde estás mirando. Puedes cambiarlo después.';
+
+  @override
+  String get quizInterestLove => 'El amor y las relaciones';
+
+  @override
+  String get quizInterestMoney => 'El dinero y mi camino';
+
+  @override
+  String get quizInterestSelf => 'Entenderme';
+
+  @override
+  String get quizInterestFuture => 'Lo que viene';
+
+  @override
   String get journeyNeedsTime => 'falta la hora de nacimiento';
 
   @override
@@ -2630,4 +2649,47 @@ class LEs extends L {
 
   @override
   String get pairChapterRead => 'leído';
+
+  @override
+  String get homeLivingLayer => 'la capa viva';
+
+  @override
+  String get liveTransitsTitle => 'Los tránsitos de la semana';
+
+  @override
+  String liveTransitsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count aspectos exactos de aquí al domingo',
+      one: 'Un aspecto exacto de aquí al domingo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveTransitsNoteQuiet => 'Nada exacto de aquí al domingo';
+
+  @override
+  String get liveSolarTitle => 'Tu año solar';
+
+  @override
+  String get liveSolarNote => 'Se reescribe cada cumpleaños — en marcha ahora';
+
+  @override
+  String get liveDayTitle => 'El día completo';
+
+  @override
+  String get liveDayNote => 'La lectura larga, las áreas, lo que viene';
+
+  @override
+  String get paywallV3SubBadge => 'suscripción activa';
+
+  @override
+  String get paywallV3SubCancelHonesty =>
+      'Si algún día cancelas: los capítulos comprados para siempre siguen legibles. Los capítulos abiertos solo por la suscripción se cierran con ella — el cálculo sigue gratis en cualquier caso.';
+
+  @override
+  String get paywallV3StateProcessingNote =>
+      'Apple ya tomó el pago; lo estamos anotando. Esto se completa solo, aunque cierres la app.';
 }

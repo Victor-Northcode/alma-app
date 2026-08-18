@@ -822,7 +822,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // внутри приложения — нарушение правил магазина и обещание, которого
         // мы не можем сдержать: сервер ответит 409 и ничего не запишет.
         ..._cancelBlock(l, session, row),
+      // Плашка честности W5 — после управления, а не перед ним: сначала
+      // человек видит, что открыто и чем управлять, потом условие. Наоборот
+      // читалось бы предупреждением (порядок — довод самого кадра).
+      const SizedBox(height: 14),
+      _cancelHonesty(l),
     ];
+  }
+
+  /// Что случится при отмене — словами холста (W5, `sub.cancel_honesty`).
+  ///
+  /// §7 ТЗ называет это главной защитой от красной линии («думала, всё входит
+  /// в подписку»): подписка кончилась, часть глав закрылась — и человек обязан
+  /// был прочитать об этом заранее, у строки собственного плана, а не узнать
+  /// из закрывшейся главы. Сокращать и разбивать строку нельзя — правило
+  /// спеки W5.
+  Widget _cancelHonesty(L l) {
+    final text = l.paywallV3SubCancelHonesty;
+    // Зачин до первого двоеточия — цветом goldBright, как на холсте. Знак
+    // ищется в переведённой строке: у всех семи языков зачин им кончается (у
+    // французского перед знаком стоит узкий неразрывный — он входит в зачин).
+    final at = text.indexOf(':');
+    final style = AlmaType.meta.copyWith(
+      fontSize: 12.5,
+      height: 1.55,
+      color: AlmaPalette.body.withValues(alpha: 0.78),
+    );
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(14),
+        // Числа кадра W5: кант золота на 0.24 и ночь-700 на 0.35. В палитре
+        // таких ступеней нет, и ставятся они числом на месте — довод про
+        // золотой волосяной ряд в paywall_parts.dart.
+        border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.24)),
+        color: AlmaPalette.night700.withValues(alpha: 0.35),
+      ),
+      child: at < 0
+          ? Text(text, style: style)
+          : Text.rich(TextSpan(style: style, children: [
+              TextSpan(
+                text: text.substring(0, at + 1),
+                style: style.copyWith(color: AlmaPalette.goldBright),
+              ),
+              TextSpan(text: text.substring(at + 1)),
+            ])),
+    );
   }
 
   /// Отмена веб-подписки в два шага — и первый не отправляет ничего.

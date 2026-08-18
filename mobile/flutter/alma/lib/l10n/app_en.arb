@@ -1683,6 +1683,30 @@
   "@journeyNameTitle": {
     "description": "from Journey/journey.nameTitle"
   },
+  "quizInterestTitle": "What matters most right now?",
+  "@quizInterestTitle": {
+    "description": "V0 · quiz.interest_title — заголовок шага «что сейчас важнее всего», жёсткий перенос холста"
+  },
+  "quizInterestNote": "Alma starts where you are looking. You can change it later.",
+  "@quizInterestNote": {
+    "description": "V0 · quiz.interest_note — подпись; обещание «можно поменять» держит настройка интереса"
+  },
+  "quizInterestLove": "Love and relationships",
+  "@quizInterestLove": {
+    "description": "V0 · quiz.interest_love"
+  },
+  "quizInterestMoney": "Money and my path",
+  "@quizInterestMoney": {
+    "description": "V0 · quiz.interest_money"
+  },
+  "quizInterestSelf": "Understanding myself",
+  "@quizInterestSelf": {
+    "description": "V0 · quiz.interest_self"
+  },
+  "quizInterestFuture": "What lies ahead",
+  "@quizInterestFuture": {
+    "description": "V0 · quiz.interest_future"
+  },
   "journeyNeedsTime": "needs birth time",
   "@journeyNeedsTime": {
     "description": "from Journey/journey.needsTime"
@@ -3505,5 +3529,54 @@
   "pairChapterRead": "read",
   "@pairChapterRead": {
       "description": "monetization v3 · А11 pair.chapter_read · W3 — метка прочитанной главы в оглавлении пары"
+  },
+  "homeLivingLayer": "the living layer",
+  "@homeLivingLayer": {
+    "description": "monetization v3 · home.living_layer · W4 — оверлайн раздела закрытых блоков на «Сегодня»"
+  },
+  "liveTransitsTitle": "Transits of the week",
+  "@liveTransitsTitle": {
+    "description": "monetization v3 · live.transits_title · W4"
+  },
+  "liveTransitsNote": "{count, plural, one{One exact aspect between now and Sunday} other{{count} exact aspects between now and Sunday}}",
+  "@liveTransitsNote": {
+    "description": "monetization v3 · live.transits_note · W4 — живое число из расчёта транзитов, не из словаря",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveTransitsNoteQuiet": "Nothing exact before Sunday",
+  "@liveTransitsNoteQuiet": {
+    "description": "monetization v3 · W4 — тихая неделя или расчёт ещё не пришёл; на холсте не нарисовано, зеркалит cabAreaQuiet"
+  },
+  "liveSolarTitle": "Your solar year",
+  "@liveSolarTitle": {
+    "description": "monetization v3 · live.solar_title · W4"
+  },
+  "liveSolarNote": "Rewritten every birthday, running now",
+  "@liveSolarNote": {
+    "description": "monetization v3 · live.solar_note · W4"
+  },
+  "liveDayTitle": "The day in full",
+  "@liveDayTitle": {
+    "description": "monetization v3 · live.day_title · W4"
+  },
+  "liveDayNote": "The long reading, areas, what is coming",
+  "@liveDayNote": {
+    "description": "monetization v3 · live.day_note · W4"
+  },
+  "paywallV3SubBadge": "subscribed",
+  "@paywallV3SubBadge": {
+    "description": "monetization v3 · sub.badge · W5 — тихая метка в шапке панели гороскопа подписчика"
+  },
+  "paywallV3SubCancelHonesty": "If you ever cancel: chapters bought as a door stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.",
+  "@paywallV3SubCancelHonesty": {
+    "description": "monetization v3 · sub.cancel_honesty · W5 — зачин до двоеточия красится goldBright; сокращать и разбивать нельзя (§7 ТЗ)"
+  },
+  "paywallV3StateProcessingNote": "Apple has taken it; we are writing it down. This finishes by itself, even if you close the app.",
+  "@paywallV3StateProcessingNote": {
+    "description": "monetization v3 · state.processing_note · W6"
   }
 }

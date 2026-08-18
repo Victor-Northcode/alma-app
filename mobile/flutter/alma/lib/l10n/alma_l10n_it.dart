@@ -1296,6 +1296,25 @@ class LIt extends L {
   String get journeyNameTitle => 'Come ti chiamo?';
 
   @override
+  String get quizInterestTitle => 'Cosa conta di più adesso?';
+
+  @override
+  String get quizInterestNote =>
+      'Alma parte da dove stai guardando. Potrai cambiarlo dopo.';
+
+  @override
+  String get quizInterestLove => 'L\'amore e le relazioni';
+
+  @override
+  String get quizInterestMoney => 'I soldi e la mia strada';
+
+  @override
+  String get quizInterestSelf => 'Capire me stessa';
+
+  @override
+  String get quizInterestFuture => 'Cosa mi aspetta';
+
+  @override
   String get journeyNeedsTime => 'manca l\'ora di nascita';
 
   @override
@@ -2638,4 +2657,47 @@ class LIt extends L {
 
   @override
   String get pairChapterRead => 'letto';
+
+  @override
+  String get homeLivingLayer => 'lo strato vivo';
+
+  @override
+  String get liveTransitsTitle => 'I transiti della settimana';
+
+  @override
+  String liveTransitsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count aspetti esatti da qui a domenica',
+      one: 'Un aspetto esatto da qui a domenica',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveTransitsNoteQuiet => 'Niente di esatto da qui a domenica';
+
+  @override
+  String get liveSolarTitle => 'Il tuo anno solare';
+
+  @override
+  String get liveSolarNote => 'Si riscrive a ogni compleanno — in corso adesso';
+
+  @override
+  String get liveDayTitle => 'La giornata intera';
+
+  @override
+  String get liveDayNote => 'La lettura lunga, le aree, ciò che arriva';
+
+  @override
+  String get paywallV3SubBadge => 'abbonamento attivo';
+
+  @override
+  String get paywallV3SubCancelHonesty =>
+      'Se un giorno annulli: i capitoli comprati per sempre restano leggibili. I capitoli aperti solo dall\'abbonamento si chiudono con esso — il calcolo resta gratuito in ogni caso.';
+
+  @override
+  String get paywallV3StateProcessingNote =>
+      'Apple ha preso il pagamento; lo stiamo registrando. Si completa da solo, anche se chiudi l\'app.';
 }

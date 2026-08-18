@@ -1288,6 +1288,25 @@ class LEn extends L {
   String get journeyNameTitle => 'What should I call you?';
 
   @override
+  String get quizInterestTitle => 'What matters most right now?';
+
+  @override
+  String get quizInterestNote =>
+      'Alma starts where you are looking. You can change it later.';
+
+  @override
+  String get quizInterestLove => 'Love and relationships';
+
+  @override
+  String get quizInterestMoney => 'Money and my path';
+
+  @override
+  String get quizInterestSelf => 'Understanding myself';
+
+  @override
+  String get quizInterestFuture => 'What lies ahead';
+
+  @override
   String get journeyNeedsTime => 'needs birth time';
 
   @override
@@ -2629,4 +2648,47 @@ class LEn extends L {
 
   @override
   String get pairChapterRead => 'read';
+
+  @override
+  String get homeLivingLayer => 'the living layer';
+
+  @override
+  String get liveTransitsTitle => 'Transits of the week';
+
+  @override
+  String liveTransitsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count exact aspects between now and Sunday',
+      one: 'One exact aspect between now and Sunday',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveTransitsNoteQuiet => 'Nothing exact before Sunday';
+
+  @override
+  String get liveSolarTitle => 'Your solar year';
+
+  @override
+  String get liveSolarNote => 'Rewritten every birthday, running now';
+
+  @override
+  String get liveDayTitle => 'The day in full';
+
+  @override
+  String get liveDayNote => 'The long reading, areas, what is coming';
+
+  @override
+  String get paywallV3SubBadge => 'subscribed';
+
+  @override
+  String get paywallV3SubCancelHonesty =>
+      'If you ever cancel: chapters bought as a door stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.';
+
+  @override
+  String get paywallV3StateProcessingNote =>
+      'Apple has taken it; we are writing it down. This finishes by itself, even if you close the app.';
 }

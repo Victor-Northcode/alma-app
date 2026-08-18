@@ -1300,6 +1300,25 @@ class LDe extends L {
   String get journeyNameTitle => 'Wie soll ich dich nennen?';
 
   @override
+  String get quizInterestTitle => 'Was ist gerade am wichtigsten?';
+
+  @override
+  String get quizInterestNote =>
+      'Alma beginnt dort, wo du hinschaust. Du kannst es später ändern.';
+
+  @override
+  String get quizInterestLove => 'Liebe und Beziehungen';
+
+  @override
+  String get quizInterestMoney => 'Geld und mein Weg';
+
+  @override
+  String get quizInterestSelf => 'Mich selbst verstehen';
+
+  @override
+  String get quizInterestFuture => 'Was vor mir liegt';
+
+  @override
   String get journeyNeedsTime => 'Geburtszeit fehlt';
 
   @override
@@ -2648,4 +2667,48 @@ class LDe extends L {
 
   @override
   String get pairChapterRead => 'gelesen';
+
+  @override
+  String get homeLivingLayer => 'die lebendige Ebene';
+
+  @override
+  String get liveTransitsTitle => 'Die Transite der Woche';
+
+  @override
+  String liveTransitsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count exakte Aspekte bis Sonntag',
+      one: 'Ein exakter Aspekt bis Sonntag',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveTransitsNoteQuiet => 'Bis Sonntag nichts Exaktes';
+
+  @override
+  String get liveSolarTitle => 'Dein Solarjahr';
+
+  @override
+  String get liveSolarNote =>
+      'Wird an jedem Geburtstag neu geschrieben — läuft gerade';
+
+  @override
+  String get liveDayTitle => 'Der Tag im Ganzen';
+
+  @override
+  String get liveDayNote => 'Die lange Deutung, die Bereiche, was kommt';
+
+  @override
+  String get paywallV3SubBadge => 'abonniert';
+
+  @override
+  String get paywallV3SubCancelHonesty =>
+      'Falls du je kündigst: Kapitel, die du für immer gekauft hast, bleiben lesbar. Kapitel, die nur das Abo öffnet, schließen sich mit ihm — die Berechnung bleibt so oder so kostenlos.';
+
+  @override
+  String get paywallV3StateProcessingNote =>
+      'Apple hat die Zahlung angenommen; wir schreiben sie gerade gut. Das schließt sich von selbst ab, auch wenn du die App schließt.';
 }

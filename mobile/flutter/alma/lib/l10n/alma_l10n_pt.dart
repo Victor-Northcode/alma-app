@@ -1296,6 +1296,25 @@ class LPt extends L {
   String get journeyNameTitle => 'Como eu te chamo?';
 
   @override
+  String get quizInterestTitle => 'O que importa mais agora?';
+
+  @override
+  String get quizInterestNote =>
+      'A Alma começa por onde você está olhando. Dá para mudar depois.';
+
+  @override
+  String get quizInterestLove => 'O amor e as relações';
+
+  @override
+  String get quizInterestMoney => 'O dinheiro e o meu caminho';
+
+  @override
+  String get quizInterestSelf => 'Entender a mim mesma';
+
+  @override
+  String get quizInterestFuture => 'O que vem aí';
+
+  @override
   String get journeyNeedsTime => 'falta a hora de nascimento';
 
   @override
@@ -2640,4 +2659,48 @@ class LPt extends L {
 
   @override
   String get pairChapterRead => 'lido';
+
+  @override
+  String get homeLivingLayer => 'a camada viva';
+
+  @override
+  String get liveTransitsTitle => 'Os trânsitos da semana';
+
+  @override
+  String liveTransitsNote(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count aspectos exatos daqui até domingo',
+      one: 'Um aspecto exato daqui até domingo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get liveTransitsNoteQuiet => 'Nada exato daqui até domingo';
+
+  @override
+  String get liveSolarTitle => 'Seu ano solar';
+
+  @override
+  String get liveSolarNote =>
+      'Reescrito a cada aniversário — em andamento agora';
+
+  @override
+  String get liveDayTitle => 'O dia por inteiro';
+
+  @override
+  String get liveDayNote => 'A leitura longa, as áreas, o que vem aí';
+
+  @override
+  String get paywallV3SubBadge => 'assinatura ativa';
+
+  @override
+  String get paywallV3SubCancelHonesty =>
+      'Se um dia você cancelar: os capítulos comprados para sempre continuam legíveis. Os capítulos abertos só pela assinatura se fecham com ela — o cálculo continua gratuito de qualquer forma.';
+
+  @override
+  String get paywallV3StateProcessingNote =>
+      'A Apple já recebeu o pagamento; estamos anotando. Isso se conclui sozinho, mesmo se você fechar o app.';
 }
