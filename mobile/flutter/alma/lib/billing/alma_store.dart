@@ -40,6 +40,16 @@ class AlmaStore extends ChangeNotifier {
 
   StoreState _state = StoreState.idle;
   LadderKey? _busy;
+
+  /// Полка наполнена витринными ценами отладки, а не ответом магазина.
+  ///
+  /// Витрина — смотровая: лист покупки на ней не откроется никогда, и каждое
+  /// нажатие «купить» кончается отказом железно. Красная жалоба «App Store не
+  /// отвечает» на смотровой полке — не правда о магазине, а шум о том, что
+  /// спектакль не настоящий; владелец видел её на каждом экране с ценой.
+  /// Пока флаг поднят, отказы магазина глотаются молча. В релизе флаг не
+  /// поднимается никогда: обе ветки витрины живут под `kDebugMode`.
+  bool _pretending = false;
   bool _restoring = false;
   StoreNotice? _notice;
 
@@ -159,6 +169,7 @@ class AlmaStore extends ChangeNotifier {
         _products
           ..clear()
           ..addAll(_pretendPrices());
+        _pretending = true;
         _state = StoreState.ready;
         if (_notice?.message == StoreMessage.storeSilent) _notice = null;
         notifyListeners();
@@ -191,7 +202,11 @@ class AlmaStore extends ChangeNotifier {
     // вырезается компилятором целиком, поэтому выдуманная цена физически не
     // может доехать до магазина. Числа те же, что в каталоге сервера, и живут
     // одним списком ниже, чтобы никто не искал их по экранам.
-    if (_products.isEmpty && kDebugMode) _products.addAll(_pretendPrices());
+    _pretending = false;
+    if (_products.isEmpty && kDebugMode) {
+      _products.addAll(_pretendPrices());
+      _pretending = true;
+    }
     _state = _products.isEmpty ? StoreState.silent : StoreState.ready;
     // **Ответивший магазин гасит жалобу на молчащий.**
     //
@@ -307,7 +322,11 @@ class AlmaStore extends ChangeNotifier {
     } catch (error) {
       debugPrint('покупка ${key.slug} не открылась: $error');
       _busy = null;
-      _notice = StoreNotice(StoreTone.bad, StoreMessage.storeSilent);
+      // На витринной полке отказ листа — это устройство спектакля, а не
+      // новость о магазине; молчим, чтобы смотровой прогон не краснел.
+      if (!_pretending) {
+        _notice = StoreNotice(StoreTone.bad, StoreMessage.storeSilent);
+      }
       notifyListeners();
     }
     // Дальше слово за `purchaseStream`: лист закрывается, и покупка приходит
@@ -339,7 +358,11 @@ class AlmaStore extends ChangeNotifier {
       // Молчание оставляем молчанию — пустой полке.
       _notice = _products.isEmpty
           ? StoreNotice(StoreTone.bad, StoreMessage.storeSilent)
-          : StoreNotice(StoreTone.waiting, StoreMessage.restoredNone);
+          : _pretending
+              // Витрина: восстановление у мёртвого магазина падает всегда,
+              // и это свойство отладки, а не событие для человека.
+              ? null
+              : StoreNotice(StoreTone.waiting, StoreMessage.restoredNone);
     }
     // Восстановленные покупки приезжают тем же потоком; здесь остаётся снять
     // ожидание, чтобы кнопка не крутилась вечно, если магазин не прислал
@@ -387,7 +410,9 @@ class AlmaStore extends ChangeNotifier {
         case PurchaseStatus.error:
           debugPrint('магазин отказал: ${purchase.error}');
           _busy = null;
-          _notice = StoreNotice(StoreTone.bad, StoreMessage.storeSilent);
+          if (!_pretending) {
+            _notice = StoreNotice(StoreTone.bad, StoreMessage.storeSilent);
+          }
           notifyListeners();
 
         case PurchaseStatus.purchased:

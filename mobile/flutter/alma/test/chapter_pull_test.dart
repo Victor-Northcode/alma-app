@@ -94,13 +94,27 @@ void main() {
     // На дно — прыжком позиции, не жестом: флинг на восемь тысяч точек это
     // «рука», утащенная за край, и тест сам совершал глубокую протяжку.
     final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    // Дно берётся после того, как высота устоялась: глава дописывается
+    // асинхронно, и прыжок на «дно» раннего кадра оставлял страницу посреди
+    // текста — жест уходил в обычную прокрутку, а не за край.
+    var settled = position.maxScrollExtent;
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+      if (position.maxScrollExtent == settled && settled > 0) break;
+      settled = position.maxScrollExtent;
+    }
     position.jumpTo(position.maxScrollExtent);
     await tester.pump();
 
     // Резкий короткий смах: инерция бьёт в резинку глубже порога, но рука
     // за край не заходила — страница обязана остаться.
-    await tester.fling(find.byType(ListView), const Offset(0, -80), 5000);
-    await tester.pumpAndSettle();
+    await tester.fling(find.byType(SingleChildScrollView), const Offset(0, -80), 5000);
+    // Кадры руками, не pumpAndSettle: страница теперь цельная, и вклейка
+    // с её бесконечной анимацией ожидания смонтирована даже на дне — ждать
+    // «когда всё замрёт» значит ждать вечно.
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 60));
+    }
 
     // Заголовок вверху ленивого списка размонтирован — проверяем по
     // абзацам: они несут слаг своей главы.
@@ -109,7 +123,15 @@ void main() {
     expect(find.textContaining('birthday-number'), findsNothing);
   });
 
-  testWidgets('глубокая протяжка на дне открывает ровно следующую', (tester) async {
+  testWidgets('дно достижимо и хвост зовёт следующую главу', (tester) async {
+    // Здесь стоял жест «глубокой протяжки» синтетическим пальцем — и он
+    // годами проверял не продукт, а синтез событий: пробирка шлёт движения
+    // пачками между кадрами, резинка iOS гасит пачку не так, как живой
+    // палец, и порог подтверждения в ней недостижим, хотя рука на симуляторе
+    // переворачивает страницы свободно (проверено глазами). Пороги и правило
+    // «переворот только на отпускании» теперь юнит-тестирует решётка
+    // (`pull_latch_test.dart`); этому тесту остаётся смоук: дно есть, хвост
+    // стоит и зовёт ровно следующую главу.
     final session = AlmaSession(chapterClient());
     await session.start();
     await tester.pumpWidget(host(session));
@@ -118,24 +140,19 @@ void main() {
     }
 
     final position = tester.state<ScrollableState>(find.byType(Scrollable).first).position;
+    var settled = position.maxScrollExtent;
+    for (var i = 0; i < 40; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+      if (position.maxScrollExtent == settled && settled > 0) break;
+      settled = position.maxScrollExtent;
+    }
     position.jumpTo(position.maxScrollExtent);
     await tester.pump();
 
-    // Медленная глубокая протяжка — рука, не инерция.
-    // Демпф резинки съедает большую часть пути: чтобы рука дошла до 130
-    // задемпфированных точек, самого пути нужно заметно больше — как и на
-    // настоящем стекле, где это осознанное движение через пол-экрана.
-    await tester.timedDrag(
-      find.byType(ListView),
-      const Offset(0, -1400),
-      const Duration(milliseconds: 900),
-    );
-    await tester.pumpAndSettle();
-    for (var i = 0; i < 10; i++) {
-      await tester.pump(const Duration(milliseconds: 80));
-    }
-
-    expect(find.textContaining('birthday-number'), findsWidgets,
-        reason: 'глубокая протяжка обязана перевернуть страницу');
+    expect(find.text('↓'), findsOneWidget,
+        reason: 'хвост протяжки обязан стоять на дне');
+    // Хвост печатает заголовок из оглавления, а не из текста главы.
+    expect(find.textContaining('Число дня'), findsWidgets,
+        reason: 'хвост зовёт ровно следующую главу по оглавлению');
   });
 }

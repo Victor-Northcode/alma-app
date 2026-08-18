@@ -25,6 +25,7 @@ import '../paywall/paywall_router.dart' show openAllPlans;
 import 'people_screen.dart';
 import 'what_next_screen.dart';
 import 'writing_art.dart';
+import '../../state/pull_latch.dart';
 import '../../state/reading_tally.dart';
 import '../../state/session.dart';
 
@@ -195,8 +196,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// двухточечную полоску. Слушает её один узел.
   final ValueNotifier<double> _read = ValueNotifier(0);
 
-  /// Второй порог взят и ждёт, когда палец отпустят.
-  bool _committed = false;
+  /// Решётка порогов протяжки — чистая механика, юнит-тесты у неё свои
+  /// (`pull_latch.dart`); экран оставляет себе только вид и хаптику.
+  final PullLatch _latch = PullLatch(nearMark: _nearMark, commitMark: _commitMark);
   bool _advancing = false;
 
   bool _started = false;
@@ -623,35 +625,21 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // меняться, и лишнее уведомление слушателю — это лишний кадр.
     if (distance == 0 && _pull.value == 0) return;
     _pull.value = distance;
-    if (!byHand) {
-      // **Палец ушёл — вот тогда и переворачиваем.**
-      //
-      // Переворот срабатывал в момент пересечения порога, прямо под рукой:
-      // страница уходила посреди движения, и это читалось как «всё сразу
-      // пролистывается, если резко листнуть». Упор в том и состоит, что
-      // глава держится, пока держат её, а меняется на отпускании.
-      if (_committed) {
-        _committed = false;
+    // **Палец ушёл — вот тогда и переворачиваем** (правило записано в решётке
+    // вместе с порогами и гистерезисом); экрану остаются вид и хаптика.
+    switch (_latch.onScroll(distance, byHand: byHand)) {
+      case PullEvent.armed:
+        setState(() => _armed = true);
+        HapticFeedback.selectionClick();
+      case PullEvent.disarmed:
+        setState(() => _armed = false);
+      case PullEvent.committed:
+        // Тик тяжелее первого, чтобы рука почувствовала упор.
+        HapticFeedback.mediumImpact();
+      case PullEvent.advance:
         _advance();
-        return;
-      }
-      if (_armed && distance < _nearMark * 0.7) setState(() => _armed = false);
-      return;
-    }
-    if (distance >= _nearMark && !_armed) {
-      setState(() => _armed = true);
-      HapticFeedback.selectionClick();
-    } else if (distance < _nearMark * 0.7 && _armed) {
-      setState(() {
-        _armed = false;
-        _committed = false;
-      });
-    }
-    // Второй порог взят — тик тяжелее первого, чтобы рука почувствовала упор,
-    // и дальше ждём отпускания.
-    if (distance >= _commitMark && !_committed) {
-      _committed = true;
-      HapticFeedback.mediumImpact();
+      case PullEvent.none:
+        break;
     }
   }
 
@@ -659,12 +647,12 @@ class _ChapterScreenState extends State<ChapterScreen> {
     final next = _next;
     if (next == null) return;
     _pull.value = 0;
+    _latch.reset();
     setState(() {
       _advancing = true;
       _showing = next.slug;
       _reading = null;
       _armed = false;
-      _committed = false;
     });
     HapticFeedback.heavyImpact();
     _load();
@@ -1009,7 +997,17 @@ class _ChapterScreenState extends State<ChapterScreen> {
         _onOverscroll(past > 0 ? past : 0, byHand: byHand);
         return false;
       },
-      child: ListView(
+      // **Цельная прокрутка, а не ленивый список — ради нити и пальца.**
+      //
+      // `ListView` строит детей по мере прокрутки, и его полная высота — это
+      // оценка, которую движок пересчитывает на каждом достроенном абзаце.
+      // Нить справа делит пиксели на эту высоту, и пока знаменатель плавал,
+      // головка дёргалась мимо пальца — владелец: «полоска двигается не
+      // ровно, не за пальцем». Колонка раскладывается целиком на первом же
+      // кадре, высота точна с самого начала, и доля прокрутки растёт ровно с
+      // движением пальца. Цена — разложить сорок абзацев сразу; это дешевле
+      // одного дёрганого кадра.
+      child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics()),
         // **Поля страницы — не общие 22, а габарит рамы.**
@@ -1038,7 +1036,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
             AlmaMetrics.tabBarHeight +
                 MediaQueryData.fromView(View.of(context)).padding.bottom +
                 22),
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
           // **Вклейка — первое, что видно в главе.**
           //
           // Виджет арки был собран ещё в нулевом этапе и жил только в
@@ -1172,7 +1172,8 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // Хвост: следующая глава и полоса подтверждения. Полоса наливается
           // от 56 до 130 — сколько ещё тянуть, видно, а не угадывается.
           if (next != null) _tail(l, next),
-        ],
+          ],
+        ),
       ),
     );
   }
