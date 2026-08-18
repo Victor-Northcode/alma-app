@@ -440,6 +440,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // подставляющийся через десять секунд, читался бы подменой страницы.
       title: entry?.title ?? opening?.title ?? '',
       opening: opening,
+      onRetryOpening: () => _load(),
       systemName: _systemName(l),
       // Обещание над кнопкой считает **платные** главы: бесплатная за деньги не
       // открывается, и включать её в счёт значило бы продавать то, что уже
@@ -1326,6 +1327,7 @@ class _LockedChapter extends StatefulWidget {
     required this.overline,
     required this.title,
     required this.opening,
+    required this.onRetryOpening,
     required this.systemName,
     required this.paidChapters,
     required this.onOpened,
@@ -1347,6 +1349,11 @@ class _LockedChapter extends StatefulWidget {
   /// написанное, — это ровно то враньё, ради снятия которого отменяли
   /// `preview`.
   final Reading? opening;
+
+  /// Написать начало ещё раз. Зовётся только из состояния «начала нет»:
+  /// отказ движка бывает случайным, и повтор — единственное честное действие,
+  /// которое можно предложить, не выдумывая текста.
+  final VoidCallback onRetryOpening;
 
   final String systemName;
   final int? paidChapters;
@@ -1489,7 +1496,41 @@ class _LockedChapterState extends State<_LockedChapter> {
                     Padding(
                       padding: EdgeInsets.only(top: i == 0 ? 18 : 14),
                       child: Text(opening.body[i], style: _chapterProse()),
+                    )
+                else
+                  // **Начала нет — и это надо сказать, а не показать пустоту.**
+                  //
+                  // Проверка всех сорока одной главы дала один отказ:
+                  // `transits/long`, где модель трижды сослалась на то, чего в
+                  // карте нет, и валидатор отказался публиковать ложную ссылку.
+                  // Отказ правильный. Неправильным был экран: размытие, над
+                  // которым пусто, — ровно то, что владелец назвал ошибкой
+                  // словами «кусочек текста главы и заблюренная часть».
+                  //
+                  // Отказ оказался **случайным**: следующий же запрос написал
+                  // абзац. Поэтому здесь не оправдание, а предложение повторить
+                  // — тем же тоном, каким экран говорит о молчащем магазине.
+                  // Выдумывать текст вместо начала нельзя ни при каких
+                  // обстоятельствах: страница продаёт тем, что показывает
+                  // настоящее.
+                  Padding(
+                    padding: const EdgeInsets.only(top: 18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l.stateUnavailable,
+                            style: _chapterProse()
+                                .copyWith(color: AlmaPalette.inkMuted)),
+                        const SizedBox(height: 12),
+                        AlmaButton(
+                          kind: AlmaButtonKind.veil,
+                          fills: false,
+                          label: l.stateRetry,
+                          onTap: widget.onRetryOpening,
+                        ),
+                      ],
                     ),
+                  ),
                 Expanded(
                   child: _BlurredTail(
                       gap: widget.opening?.body.isEmpty ?? true ? 18 : 14),
