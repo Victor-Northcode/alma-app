@@ -861,7 +861,11 @@ class _LiveBlock extends StatelessWidget {
             border:
                 Border.all(color: AlmaPalette.gold.withValues(alpha: 0.22)),
           ),
-          child: ClipRRect(
+          // Граница перерисовки: гаусс по фотографии — работа растеризатора,
+          // а блок статичен; без границы прокрутка «Сегодня» пересчитывала бы
+          // все три размытия на каждом кадре, с ней — один раз на блок.
+          child: RepaintBoundary(
+              child: ClipRRect(
             // Радиус картины на толщину канта меньше рамы — иначе угол
             // картинки вылезает из-под золота светлой ниткой (как у вклеек).
             borderRadius: BorderRadius.circular(15),
@@ -936,7 +940,7 @@ class _LiveBlock extends StatelessWidget {
                 ),
               ),
             ]),
-          ),
+          )),
         ),
       ),
     );

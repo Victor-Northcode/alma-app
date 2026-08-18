@@ -97,8 +97,16 @@ class _NightSkyState extends State<NightSky> with SingleTickerProviderStateMixin
     _field = SkyField.generate(seed: widget.seed, density: widget.mood.density);
     // Одни часы на всё небо. Каждый слой берёт из них своё время, поэтому
     // звёзды, пылинки и аура не заводят три независимых таймера на экран.
+    //
+    // **Тридцать тиков в секунду, а не каждый кадр.** Тикер шёл с частотой
+    // дисплея — на ProMotion это сто двадцать перерисовок полноэкранного
+    // холста в секунду ради мерцания с периодом шесть-девять секунд и дрейфа
+    // в полминуты. Медленному свету хватает тридцати: между соседними тиками
+    // звезда меняет яркость меньше чем на процент, глазу разницы нет, а
+    // работы у растеризатора — вчетверо меньше на каждом экране продукта.
     _ticker = createTicker((elapsed) {
-      _clock.value = elapsed.inMicroseconds / 1e6;
+      final t = elapsed.inMicroseconds / 1e6;
+      if (t - _clock.value >= 1 / 30) _clock.value = t;
     })..start();
   }
 

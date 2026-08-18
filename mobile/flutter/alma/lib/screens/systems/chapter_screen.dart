@@ -1975,7 +1975,14 @@ class _BlurredTail extends StatelessWidget {
               container: true,
               label: l.cabLocked,
               child: ExcludeSemantics(
-                child: Opacity(
+                // Граница перерисовки — обязательная, и это про прокрутку.
+                // Гаусс на колонке текста в полэкрана — самая дорогая
+                // операция страницы; без границы растеризатор считал его
+                // заново на каждом кадре скролла, хотя сам текст под блюром
+                // не меняется никогда. С границей слой считается один раз и
+                // дальше просто едет как текстура.
+                child: RepaintBoundary(
+                  child: Opacity(
                   opacity: 0.5,
                   child: ImageFiltered(
                     // 4.5 — стандартное отклонение, ровно как у `blur(4.5px)`
@@ -1993,6 +2000,7 @@ class _BlurredTail extends StatelessWidget {
                       ],
                     ),
                   ),
+                ),
                 ),
               ),
             ),
