@@ -820,7 +820,7 @@
       }
     }
   },
-  "cabPlansBody": "The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The yearly plan opens all eight systems.",
+  "cabPlansBody": "The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The five still readings can be bought once and kept for ever.",
   "@cabPlansBody": {
     "description": "from Cabinet/cab.plans.body"
   },
@@ -2215,7 +2215,7 @@
   "@paywallPitchDoor3": {
     "description": "from Paywall/paywall.pitchDoor3"
   },
-  "paywallPitchPlan1": "The yearly plan and the archive open all eight systems; weekly and monthly keep the three that move.",
+  "paywallPitchPlan1": "The subscription keeps the three living systems written; the five still readings can be bought once and stay yours for ever.",
   "@paywallPitchPlan1": {
     "description": "from Paywall/paywall.pitchPlan1"
   },
@@ -3239,7 +3239,7 @@
   "@paywallV3PlansOneReading": {
     "description": "monetization v3 · plans.one_reading · V8"
   },
-  "paywallV3PlansAllFiveNote": "Twenty-six chapters, twenty per cent off",
+  "paywallV3PlansAllFiveNote": "Thirty-one chapters, twenty per cent off",
   "@paywallV3PlansAllFiveNote": {
     "description": "monetization v3 · plans.all_five_note · V8 — 26 платных глав пяти разборов"
   },
@@ -3385,7 +3385,7 @@
   "@pairInputPlace": {
       "description": "W2 · четвёртое поле, которого нет на холсте: сервер требует координаты и пояс (дома). Расхождение записано в SCREENS-V3 §W2 как вопрос владельцу"
   },
-  "pairInputFreeNote": "Their chart is calculated for free, like yours. The first chapter — attraction — you read before deciding anything.",
+  "pairInputFreeNote": "Their chart is calculated for free, like yours. How the first chapter — attraction — begins, you read before deciding anything.",
   "@pairInputFreeNote": {
       "description": "monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают"
   },
@@ -3410,7 +3410,7 @@
           }
       }
   },
-  "pairRowFreeChapter": "the attraction chapter is free to read first",
+  "pairRowFreeChapter": "how Attraction begins is free to read",
   "@pairRowFreeChapter": {
       "description": "V5 · строка человека без купленного отчёта; кадра нет (SCREENS-V3 §V5), фраза собрана из pair.hook_note"
   },
@@ -3443,7 +3443,7 @@
   "@pairHookTitle": {
       "description": "monetization v3 · А11 pair.hook_title · V5"
   },
-  "pairHookNote": "A date of birth is enough — the attraction chapter is free to read first.",
+  "pairHookNote": "A date of birth is enough — you read how Attraction begins before paying anything.",
   "@pairHookNote": {
       "description": "monetization v3 · А11 pair.hook_note · V5"
   },

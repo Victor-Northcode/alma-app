@@ -380,11 +380,13 @@ class Settings(BaseSettings):
     #: before anyone else does."* The second is the product. The first is what
     #: everybody who has not paid was being shown.
     #:
-    #: One question, ever, and it is the whole free conversation. Six cents
-    #: per install, spent exactly where the decision is made — and because it
-    #: is the only turn a free reader gets, it is also the turn that has to
-    #: prove what the conversation is. After it, the plan carries the chat.
-    free_welcome_bundle: int = Field(default=1, alias="ALMA_WELCOME_BUNDLE")
+    #: Three a month, and they are the whole free conversation. «Один и
+    #: навсегда» здесь уже стояло — и это было решение владельца до v3; ТЗ
+    #: монетизации v3 (§2, §3 P6) перерешило: бесплатный слой — **3 вопроса в
+    #: месяц**, и экран квоты встречает четвёртый, а не второй. Порядок цены
+    #: тот же — центы за активного бесплатного читателя в месяц, на модели,
+    #: которая продаёт; после третьего беседу несёт план.
+    free_welcome_bundle: int = Field(default=3, alias="ALMA_WELCOME_BUNDLE")
     #: `ALMA_PREVIEW_CHAPTERS` жил здесь и снят вместе с самим превью.
     #:
     #: Он задавал, сколько закрытых глав аккаунту напишут по-настоящему до

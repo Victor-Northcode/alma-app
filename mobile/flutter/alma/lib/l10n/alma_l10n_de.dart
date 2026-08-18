@@ -632,7 +632,7 @@ class LDe extends L {
 
   @override
   String get cabPlansBody =>
-      'Das Abo hält Transite, Solarhoroskop und Kompatibilität aktuell, schickt die Morgen­mitteilung und enthält 30 Fragen im Monat. Alle acht Systeme öffnet das Jahresabo.';
+      'Das Abo hält Transite, Solarhoroskop und Kompatibilität aktuell, schickt die Morgen­mitteilung und enthält 30 Fragen im Monat. Die fünf stillen Deutungen kauft man einmal und behält sie für immer.';
 
   @override
   String get cabPlansCta => 'Pläne ansehen';
@@ -1665,7 +1665,7 @@ class LDe extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'Das Jahresabo und das Archiv öffnen alle acht Systeme; Wochen- und Monatsabo halten die drei aktuell, die sich bewegen.';
+      'Das Abo hält die drei lebendigen Systeme geschrieben; die fünf stillen Deutungen kauft man einmal, und sie bleiben für immer.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -2441,7 +2441,7 @@ class LDe extends L {
 
   @override
   String get paywallV3PlansAllFiveNote =>
-      'Sechs­undzwanzig Kapitel, zwanzig Prozent günstiger';
+      'Einunddreißig Kapitel, zwanzig Prozent günstiger';
 
   @override
   String get paywallV3PlansPair => 'Eine Deutung für zwei';
@@ -2558,7 +2558,7 @@ class LDe extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Diese Karte wird kostenlos berechnet, wie deine. Das erste Kapitel — die Anziehung — liest du, bevor du etwas entscheidest.';
+      'Diese Karte wird kostenlos berechnet, wie deine. Wie das erste Kapitel — die Anziehung — beginnt, liest du, bevor du etwas entscheidest.';
 
   @override
   String get pairInputCta => 'Lies, was euch zueinander zieht';
@@ -2577,7 +2577,7 @@ class LDe extends L {
 
   @override
   String get pairRowFreeChapter =>
-      'das erste Kapitel — die Anziehung — ist kostenlos';
+      'wie die Anziehung beginnt, liest du kostenlos';
 
   @override
   String get pairCreditOverline => 'diesen Monat';
@@ -2603,7 +2603,7 @@ class LDe extends L {
 
   @override
   String get pairHookNote =>
-      'Das Geburtsdatum genügt — das erste Kapitel, die Anziehung, ist kostenlos.';
+      'Das Geburtsdatum genügt — wie die Anziehung beginnt, liest du, bevor du irgendetwas bezahlst.';
 
   @override
   String get pairCheckAnotherPlain => 'Noch jemanden checken';

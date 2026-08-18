@@ -257,14 +257,18 @@ def _bundle(*, strong: str) -> Allowance:
 
 
 def _welcome(*, mid: str) -> Allowance:
-    """The first few questions of a new account, on the model that sells.
+    """The free tier's questions — three a month, on the model that sells.
 
-    See `config.free_welcome_bundle` for the money. The shape is the owner's
-    bundle exactly — a finite pile, counted for the life of the account rather
-    than per day — because it is the same idea aimed at the other end: that
-    bundle is the thanks for a purchase, and this one is the reason to make it.
+    See `config.free_welcome_bundle` for the money. Окно — месяц, а не жизнь
+    аккаунта: ТЗ v3 §2 называет бесплатный слой «3 вопроса Альме в месяц», и
+    сценарий приёмки P6 начинается с «израсходованы 3 бесплатных вопроса,
+    отправляет четвёртый». Прежняя форма «once» превращала строку каталога
+    «Three questions a month is where free ends» в неправду со второго месяца.
     """
-    return Allowance("welcome", mid, settings().free_welcome_bundle, "once", WELCOME_QUESTIONS_METRIC)
+    return Allowance(
+        "welcome", mid, settings().free_welcome_bundle, "month",
+        WELCOME_QUESTIONS_METRIC,
+    )
 
 
 async def _calc(system: str, birth, **options) -> CalcResult:

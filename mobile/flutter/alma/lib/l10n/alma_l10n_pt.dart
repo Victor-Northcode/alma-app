@@ -631,7 +631,7 @@ class LPt extends L {
 
   @override
   String get cabPlansBody =>
-      'A assinatura mantém atualizados trânsitos, revolução solar e compatibilidade, envia o aviso da manhã e inclui 30 perguntas por mês. O plano anual abre os oito sistemas.';
+      'A assinatura mantém atualizados trânsitos, revolução solar e compatibilidade, envia o aviso da manhã e inclui 30 perguntas por mês. As cinco leituras imóveis compram-se uma vez e ficam suas para sempre.';
 
   @override
   String get cabPlansCta => 'Ver os planos';
@@ -1661,7 +1661,7 @@ class LPt extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'O plano anual e o arquivo abrem os oito sistemas; o semanal e o mensal mantêm vivos os três que se movem.';
+      'A assinatura mantém escritos os três sistemas vivos; as cinco leituras imóveis compram-se uma vez e ficam suas para sempre.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -2435,7 +2435,7 @@ class LPt extends L {
 
   @override
   String get paywallV3PlansAllFiveNote =>
-      'Vinte e seis capítulos, vinte por cento menos';
+      'Trinta e um capítulos, vinte por cento menos';
 
   @override
   String get paywallV3PlansPair => 'Uma análise de compatibilidade';
@@ -2551,7 +2551,7 @@ class LPt extends L {
 
   @override
   String get pairInputFreeNote =>
-      'O mapa se calcula de graça, como o seu. O primeiro capítulo — a atração — você lê antes de decidir qualquer coisa.';
+      'O mapa se calcula de graça, como o seu. Como começa o primeiro capítulo — a atração — você lê antes de decidir qualquer coisa.';
 
   @override
   String get pairInputCta => 'Ler o que os atrai';
@@ -2569,7 +2569,7 @@ class LPt extends L {
   }
 
   @override
-  String get pairRowFreeChapter => 'o primeiro capítulo — a atração — é grátis';
+  String get pairRowFreeChapter => 'como a atração começa lê-se de graça';
 
   @override
   String get pairCreditOverline => 'este mês';
@@ -2595,7 +2595,7 @@ class LPt extends L {
 
   @override
   String get pairHookNote =>
-      'Basta a data de nascimento — o primeiro capítulo, a atração, é grátis.';
+      'Basta a data de nascimento — você lê como a atração começa antes de pagar qualquer coisa.';
 
   @override
   String get pairCheckAnotherPlain => 'Analisar outra pessoa';

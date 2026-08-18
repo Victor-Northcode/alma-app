@@ -1256,7 +1256,7 @@ abstract class L {
   /// from Cabinet/cab.plans.body
   ///
   /// In en, this message translates to:
-  /// **'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The yearly plan opens all eight systems.'**
+  /// **'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The five still readings can be bought once and kept for ever.'**
   String get cabPlansBody;
 
   /// from Cabinet/cab.plans.cta
@@ -3086,7 +3086,7 @@ abstract class L {
   /// from Paywall/paywall.pitchPlan1
   ///
   /// In en, this message translates to:
-  /// **'The yearly plan and the archive open all eight systems; weekly and monthly keep the three that move.'**
+  /// **'The subscription keeps the three living systems written; the five still readings can be bought once and stay yours for ever.'**
   String get paywallPitchPlan1;
 
   /// from Paywall/paywall.pitchPlan2
@@ -4316,7 +4316,7 @@ abstract class L {
   /// monetization v3 · plans.all_five_note · V8 — 26 платных глав пяти разборов
   ///
   /// In en, this message translates to:
-  /// **'Twenty-six chapters, twenty per cent off'**
+  /// **'Thirty-one chapters, twenty per cent off'**
   String get paywallV3PlansAllFiveNote;
 
   /// monetization v3 · plans.pair · V8
@@ -4472,7 +4472,7 @@ abstract class L {
   /// monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают
   ///
   /// In en, this message translates to:
-  /// **'Their chart is calculated for free, like yours. The first chapter — attraction — you read before deciding anything.'**
+  /// **'Their chart is calculated for free, like yours. How the first chapter — attraction — begins, you read before deciding anything.'**
   String get pairInputFreeNote;
 
   /// monetization v3 · А11 pair.input_cta · W2
@@ -4502,7 +4502,7 @@ abstract class L {
   /// V5 · строка человека без купленного отчёта; кадра нет (SCREENS-V3 §V5), фраза собрана из pair.hook_note
   ///
   /// In en, this message translates to:
-  /// **'the attraction chapter is free to read first'**
+  /// **'how Attraction begins is free to read'**
   String get pairRowFreeChapter;
 
   /// monetization v3 · А11 pair.credit_overline · V5
@@ -4532,7 +4532,7 @@ abstract class L {
   /// monetization v3 · А11 pair.hook_note · V5
   ///
   /// In en, this message translates to:
-  /// **'A date of birth is enough — the attraction chapter is free to read first.'**
+  /// **'A date of birth is enough — you read how Attraction begins before paying anything.'**
   String get pairHookNote;
 
   /// V5 · кнопка без цены: полка молчит или месячная проверка ещё не потрачена. Эталона на холсте нет (§V5, «кредит не потрачен»); это pair.check_another без цены

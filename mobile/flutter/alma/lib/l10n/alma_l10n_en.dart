@@ -630,7 +630,7 @@ class LEn extends L {
 
   @override
   String get cabPlansBody =>
-      'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The yearly plan opens all eight systems.';
+      'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The five still readings can be bought once and kept for ever.';
 
   @override
   String get cabPlansCta => 'See the plans';
@@ -1653,7 +1653,7 @@ class LEn extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'The yearly plan and the archive open all eight systems; weekly and monthly keep the three that move.';
+      'The subscription keeps the three living systems written; the five still readings can be bought once and stay yours for ever.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -2424,7 +2424,7 @@ class LEn extends L {
 
   @override
   String get paywallV3PlansAllFiveNote =>
-      'Twenty-six chapters, twenty per cent off';
+      'Thirty-one chapters, twenty per cent off';
 
   @override
   String get paywallV3PlansPair => 'A compatibility report';
@@ -2540,7 +2540,7 @@ class LEn extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Their chart is calculated for free, like yours. The first chapter — attraction — you read before deciding anything.';
+      'Their chart is calculated for free, like yours. How the first chapter — attraction — begins, you read before deciding anything.';
 
   @override
   String get pairInputCta => 'Read what pulls you together';
@@ -2558,8 +2558,7 @@ class LEn extends L {
   }
 
   @override
-  String get pairRowFreeChapter =>
-      'the attraction chapter is free to read first';
+  String get pairRowFreeChapter => 'how Attraction begins is free to read';
 
   @override
   String get pairCreditOverline => 'this month';
@@ -2585,7 +2584,7 @@ class LEn extends L {
 
   @override
   String get pairHookNote =>
-      'A date of birth is enough — the attraction chapter is free to read first.';
+      'A date of birth is enough — you read how Attraction begins before paying anything.';
 
   @override
   String get pairCheckAnotherPlain => 'Check someone else';

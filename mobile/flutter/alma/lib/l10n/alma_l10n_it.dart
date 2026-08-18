@@ -630,7 +630,7 @@ class LIt extends L {
 
   @override
   String get cabPlansBody =>
-      'Il piano tiene aggiornati transiti, Rivoluzione solare e compatibilità, invia l\'aggiornamento del mattino e include 30 domande al mese. Il piano annuale apre tutti e otto i sistemi.';
+      'Il piano tiene aggiornati transiti, Rivoluzione solare e compatibilità, invia l\'aggiornamento del mattino e include 30 domande al mese. Le cinque letture immobili si comprano una volta e restano tue per sempre.';
 
   @override
   String get cabPlansCta => 'Vedi i piani';
@@ -1664,7 +1664,7 @@ class LIt extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'Il piano annuale e l\'archivio aprono tutti e otto i sistemi; settimanale e mensile tengono vivi i tre che si muovono.';
+      'Il piano tiene scritti i tre sistemi vivi; le cinque letture immobili si comprano una volta e restano tue per sempre.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -2438,7 +2438,7 @@ class LIt extends L {
 
   @override
   String get paywallV3PlansAllFiveNote =>
-      'Ventisei capitoli, venti per cento in meno';
+      'Trentun capitoli, venti per cento in meno';
 
   @override
   String get paywallV3PlansPair => 'Un\'analisi di coppia';
@@ -2554,7 +2554,7 @@ class LIt extends L {
 
   @override
   String get pairInputFreeNote =>
-      'La sua carta si calcola gratis, come la tua. Il primo capitolo — l\'attrazione — lo leggi prima di decidere.';
+      'La sua carta si calcola gratis, come la tua. Come comincia il primo capitolo — l\'attrazione — lo leggi prima di decidere.';
 
   @override
   String get pairInputCta => 'Leggi cosa vi attira';
@@ -2573,7 +2573,7 @@ class LIt extends L {
 
   @override
   String get pairRowFreeChapter =>
-      'il primo capitolo — l\'attrazione — è gratis';
+      'come comincia l\'attrazione si legge gratis';
 
   @override
   String get pairCreditOverline => 'questo mese';
@@ -2593,7 +2593,7 @@ class LIt extends L {
 
   @override
   String get pairHookNote =>
-      'Basta la data di nascita — il primo capitolo, l\'attrazione, è gratis.';
+      'Basta la data di nascita — leggi come comincia l\'attrazione prima di pagare qualsiasi cosa.';
 
   @override
   String get pairCheckAnotherPlain => 'Analizza un\'altra persona';

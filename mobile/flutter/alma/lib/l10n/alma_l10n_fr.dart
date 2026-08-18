@@ -630,7 +630,7 @@ class LFr extends L {
 
   @override
   String get cabPlansBody =>
-      'L\'abonnement garde à jour les transits, la révolution solaire et la compatibilité, envoie la notification du matin et inclut 30 questions par mois. L\'abonnement annuel ouvre les huit systèmes.';
+      'L\'abonnement garde à jour les transits, la révolution solaire et la compatibilité, envoie la notification du matin et inclut 30 questions par mois. Les cinq lectures immobiles s\'achètent une fois et restent à toi pour toujours.';
 
   @override
   String get cabPlansCta => 'Voir les formules';
@@ -1665,7 +1665,7 @@ class LFr extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'L\'abonnement annuel et l\'archive ouvrent les huit systèmes ; l\'hebdomadaire et le mensuel gardent vivants les trois qui bougent.';
+      'L\'abonnement garde écrits les trois systèmes vivants ; les cinq lectures immobiles s\'achètent une fois et restent à toi pour toujours.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -2444,7 +2444,7 @@ class LFr extends L {
 
   @override
   String get paywallV3PlansAllFiveNote =>
-      'Vingt-six chapitres, vingt pour cent de moins';
+      'Trente et un chapitres, vingt pour cent de moins';
 
   @override
   String get paywallV3PlansPair => 'Une analyse de compatibilité';
@@ -2560,7 +2560,7 @@ class LFr extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Sa carte est calculée gratuitement, comme la tienne. Le premier chapitre — l\'attirance — tu le lis avant de décider quoi que ce soit.';
+      'Sa carte est calculée gratuitement, comme la tienne. Comment commence le premier chapitre — l\'attirance —, tu le lis avant de décider quoi que ce soit.';
 
   @override
   String get pairInputCta => 'Lire ce qui vous attire';
@@ -2579,7 +2579,7 @@ class LFr extends L {
 
   @override
   String get pairRowFreeChapter =>
-      'le premier chapitre — l\'attirance — est offert';
+      'le début de l\'attirance se lit gratuitement';
 
   @override
   String get pairCreditOverline => 'ce mois-ci';
@@ -2605,7 +2605,7 @@ class LFr extends L {
 
   @override
   String get pairHookNote =>
-      'La date de naissance suffit — le premier chapitre, l\'attirance, est offert.';
+      'La date de naissance suffit — tu lis le début de l\'attirance avant de payer quoi que ce soit.';
 
   @override
   String get pairCheckAnotherPlain => 'Analyser quelqu\'un d\'autre';
