@@ -20,6 +20,7 @@ import '../../net/models.dart' show FunnelStage, SystemSlug;
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
 import '../cabinet_words.dart';
+import '../today/today_screen.dart' show openSubscription;
 import '../paywall/cancel_save_screen.dart';
 import '../paywall/paywall_router.dart';
 import '../legal/legal_screen.dart';
@@ -970,9 +971,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         kind: AlmaButtonKind.outline,
         fills: false,
         label: l.cabPlansCta,
-        // Единственный экран каталога, где видно всё, — и открывается он
-        // только по такой вот тихой просьбе, никогда сам.
-        onTap: () => openAllPlans(context),
+        // **Тот же экран, что у «Сегодня», — решение владельца.** Кнопка вела
+        // на витрину «все планы», и одна и та же надпись открывала два разных
+        // экрана: с «Сегодня» — подписку с картиной и составом, отсюда — сухой
+        // список цен. «Должно быть так, как в today». Витрина осталась
+        // достижимой тихой ссылкой «All plans» с самого экрана подписки —
+        // ровно так, как ей и положено открываться по ТЗ (P7: только по тихим
+        // ссылкам, никогда сама).
+        onTap: () => openSubscription(context, trigger: 'settings_plan'),
       ),
     ];
   }
