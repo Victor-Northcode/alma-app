@@ -130,6 +130,18 @@ class AlmaStore extends ChangeNotifier {
     notifyListeners();
 
     if (!await _iap.isAvailable()) {
+      // Магазина нет вовсе — и в отладке это тот же случай, что «есть, но
+      // молчит»: показать надо витрину, а не жалобу. Ветка ниже одна на оба
+      // пути, поэтому здесь только выход к ней, а не второй список цен.
+      if (kDebugMode) {
+        _products
+          ..clear()
+          ..addAll(_pretendPrices());
+        _state = StoreState.ready;
+        if (_notice?.message == StoreMessage.storeSilent) _notice = null;
+        notifyListeners();
+        return;
+      }
       _state = StoreState.silent;
       notifyListeners();
       return;
@@ -157,13 +169,22 @@ class AlmaStore extends ChangeNotifier {
     // вырезается компилятором целиком, поэтому выдуманная цена физически не
     // может доехать до магазина. Числа те же, что в каталоге сервера, и живут
     // одним списком ниже, чтобы никто не искал их по экранам.
-    if (_products.isEmpty && kDebugMode) {
-      _products.addAll(_pretendPrices());
-      _state = StoreState.ready;
-      notifyListeners();
-      return;
-    }
+    if (_products.isEmpty && kDebugMode) _products.addAll(_pretendPrices());
     _state = _products.isEmpty ? StoreState.silent : StoreState.ready;
+    // **Ответивший магазин гасит жалобу на молчащий.**
+    //
+    // `storeSilent` ставит неудавшееся восстановление покупок — и оставляло
+    // навсегда: в настройках висела красная строка «App Store не отвечает» в то
+    // самое время, когда на главе рядом стояла цена $4.99. Найдено глазами.
+    //
+    // Правда здесь на стороне полки: если магазин назвал товары, он отвечает, и
+    // прошлая жалоба — это память о минуте, которой больше нет. Гасится только
+    // она: ожидание покупки и отказ сервера принадлежат другим путям и живут
+    // своей жизнью.
+    if (_state == StoreState.ready &&
+        _notice?.message == StoreMessage.storeSilent) {
+      _notice = null;
+    }
     notifyListeners();
   }
 
