@@ -23,7 +23,23 @@ import '../../state/session.dart';
 /// Пол здесь не спрашивают — он влияет на род в письме о *читателе*, а не о
 /// том, с кем его сравнивают.
 class PeopleScreen extends StatefulWidget {
-  const PeopleScreen({super.key});
+  const PeopleScreen({super.key, this.picking = false});
+
+  /// Экран открыт **за ответом**: кого читать в главе про пару.
+  ///
+  /// **Разница не в оформлении, а в том, чем экран кончается.** В обычном
+  /// режиме это управление списком: сохранил — остался, форма опустела, можно
+  /// добавить второго. В режиме выбора экран обязан вернуть человека тому, кто
+  /// его звал, — `Navigator.pop(context, profile)`, — потому что глава
+  /// совместимости не имеет права угадывать пару: сервер подставляет второго
+  /// сам только пока он ровно один, а при двоих отвечает 422
+  /// `partner_required`. Названный человек — единственный способ не сломать
+  /// главу ровно у того, кто добавил двоих.
+  ///
+  /// Заодно сохранённые люди становятся строками-кнопками: список, из которого
+  /// нельзя выбрать, — тот же тупик, ради снятия которого затевалась карточка
+  /// совместимости в «Моих системах».
+  final bool picking;
 
   @override
   State<PeopleScreen> createState() => _PeopleScreenState();
@@ -65,7 +81,7 @@ class _PeopleScreenState extends State<PeopleScreen> {
       _failure = null;
     });
     try {
-      await session.client.saveProfile(
+      final saved = await session.client.saveProfile(
         BirthInput(
           birthDate: '${_year.toString().padLeft(4, '0')}-'
               '${_month.toString().padLeft(2, '0')}-'
@@ -91,15 +107,22 @@ class _PeopleScreenState extends State<PeopleScreen> {
         isSelf: false,
       );
       await session.start(force: true);
-      if (mounted) {
-        setState(() {
-          _saving = false;
-          _name.clear();
-          _place.clear();
-          _chosen = null;
-          _found = const [];
-        });
+      if (!mounted) return;
+      // **За человеком пришли — человека и возвращаем.** Оставить того, кто
+      // только что назвал пару, на пустой форме значило бы потребовать от него
+      // ещё одного действия ради того, что он уже сделал: самый дорогой импульс
+      // продукта гасится именно такими лишними шагами.
+      if (widget.picking) {
+        Navigator.of(context).pop(saved);
+        return;
       }
+      setState(() {
+        _saving = false;
+        _name.clear();
+        _place.clear();
+        _chosen = null;
+        _found = const [];
+      });
     } on AlmaError catch (error) {
       if (mounted) {
         setState(() {
@@ -261,45 +284,55 @@ class _PeopleScreenState extends State<PeopleScreen> {
             // города, ни времени, ни кем приходится. Три факта через точку —
             // как на нативе и как в макете.
             for (final person in session.people)
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                decoration: BoxDecoration(
-                  border:
-                      Border(bottom: BorderSide(color: AlmaPalette.hairline)),
-                ),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          person.name?.isNotEmpty == true
-                              ? person.name!
-                              : l.scrPeopleUnnamed,
-                          style: AlmaType.headingM,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(_facts(l, person), style: AlmaType.meta),
-                        if (person.relation?.isNotEmpty == true) ...[
+              GestureDetector(
+                // Строка отвечает на тап только тогда, когда за ответом
+                // пришли: в обычном режиме это список, которым управляют, и
+                // молчаливый `pop` с человеком отсюда выбросил бы с экрана
+                // того, кто зашёл добавить второго.
+                behavior: HitTestBehavior.opaque,
+                onTap: widget.picking
+                    ? () => Navigator.of(context).pop(person)
+                    : null,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  decoration: BoxDecoration(
+                    border:
+                        Border(bottom: BorderSide(color: AlmaPalette.hairline)),
+                  ),
+                  child: Row(children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            person.name?.isNotEmpty == true
+                                ? person.name!
+                                : l.scrPeopleUnnamed,
+                            style: AlmaType.headingM,
+                          ),
                           const SizedBox(height: 4),
-                          // Приглушённым, а не золотом: золото на каждой строке
-                          // перестаёт значить «вот это главное».
-                          Text(person.relation!.toUpperCase(),
-                              style: AlmaType.tag
-                                  .copyWith(color: AlmaPalette.muted3)),
+                          Text(_facts(l, person), style: AlmaType.meta),
+                          if (person.relation?.isNotEmpty == true) ...[
+                            const SizedBox(height: 4),
+                            // Приглушённым, а не золотом: золото на каждой
+                            // строке перестаёт значить «вот это главное».
+                            Text(person.relation!.toUpperCase(),
+                                style: AlmaType.tag
+                                    .copyWith(color: AlmaPalette.muted3)),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-                  TextButton(
-                    onPressed: () => _confirmRemove(person),
-                    child: Text(l.scrPeopleRemove,
-                        style: AlmaType.meta.copyWith(
-                            color:
-                                AlmaPalette.disagree.withValues(alpha: 0.85))),
-                  ),
-                ]),
+                    const SizedBox(width: 14),
+                    TextButton(
+                      onPressed: () => _confirmRemove(person),
+                      child: Text(l.scrPeopleRemove,
+                          style: AlmaType.meta.copyWith(
+                              color: AlmaPalette.disagree
+                                  .withValues(alpha: 0.85))),
+                    ),
+                  ]),
+                ),
               ),
             const SizedBox(height: AlmaMetrics.gapLarge),
           ],

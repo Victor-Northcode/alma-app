@@ -350,6 +350,15 @@ def test_locked_means_the_writing_is_withheld_and_nothing_else(api, auth_headers
     A locked system answers with everything it computed. The 41 written
     chapters live behind `POST /v1/readings`, which checks the same
     entitlement — so this asserts the two ends of the same rule.
+
+    **Оба конца теперь отвечают одинаково — 200 с флагом `locked`.** Раньше
+    здесь стояло `refused.status_code in (402, 403)`, и расхождение было
+    видно прямо в этом тесте: расчёт закрытой системы приходил как удача с
+    флагом, а закрытая глава — как ошибка. Роутер глав перестал быть
+    исключением из правила, которое `systems.py` держит с самого начала:
+    «paywall's job is to sell the rest, and a blank page sells nothing».
+    Ключа модели в тестах нет, поэтому открывающий абзац здесь пустой — стена
+    от этого не перестаёт быть стеной.
     """
     for system in ("natal", "synthesis"):
         body = api.post(
@@ -358,14 +367,14 @@ def test_locked_means_the_writing_is_withheld_and_nothing_else(api, auth_headers
         assert body["locked"] is True
         assert body["factors"], f"{system} withheld arithmetic it does not sell"
 
-    # Стена стоит **перед** поиском рождения и расчётом: без права чтение не
-    # доходит даже до карты. Профиль всё же заводится — иначе тест доказывал бы
-    # отказ, который мог бы прийти и от отсутствия анкеты.
+    # Профиль заводится намеренно — иначе тест доказывал бы отказ, который мог
+    # бы прийти и от отсутствия анкеты.
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     refused = api.post(
         "/v1/readings", json={"system": "natal", "chapter": "love"}, headers=auth_headers
-    )
-    assert refused.status_code in (402, 403), "the writing is what the lock is for"
+    ).json()
+    assert refused["locked"] is True
+    assert refused["reading"] is None, "the writing is what the lock is for"
 
 
 def test_a_chart_without_a_birth_time_degrades_and_explains(api, auth_headers):

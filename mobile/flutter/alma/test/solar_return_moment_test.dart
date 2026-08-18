@@ -113,7 +113,9 @@ Widget host(AlmaSession session) => SessionScope(
         home: Scaffold(
           body: SystemScreen(
             system: SystemSlug.solarReturn,
-            onOpenChapter: (_, _) {},
+            // Третьим параметром экран называет пару — у соляра её нет, но
+            // подпись обязана совпадать с той, что ждёт экран.
+            onOpenChapter: (_, _, {partner}) {},
           ),
         ),
       ),

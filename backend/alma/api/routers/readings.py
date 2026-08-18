@@ -12,8 +12,17 @@ the same, which is not the same question as whether the system around it has
 been recomputed.
 
 *Entitlement is checked before generation, not after.* Otherwise a locked
-chapter still costs us a model call, and a paywall that bills us for the
+chapter still costs us a whole chapter, and a paywall that bills us for the
 traffic it turns away is a paywall pointed the wrong way.
+
+*A locked chapter is answered, not refused — with its opening paragraph and
+nothing else.* Спека `locked-chapter-spec.md` §2.5: ≈40 слов от движка, и это
+единственный текст, на который тратятся токены до оплаты. Он пишется при
+первом открытии главы и кэшируется навсегда (`_opening_key` намеренно не
+включает движущиеся факты), поэтому обход всех сорока закрытых глав стоит
+около $0.69 в худшем случае — **один раз за жизнь аккаунта**, а не за визит.
+Права проверяются прежде и здесь: без них не пишется *глава*, и это правило не
+смягчилось ни на строку.
 
 *Nothing is generated until both ceilings have been asked, and everything
 generated is charged.* The per-call ceiling catches a single generation too
@@ -110,6 +119,25 @@ CHAT_SYSTEMS = (
 #: and the birth-time checks run before anything can complain about a missing
 #: API key.
 ProviderDep = Annotated[Callable[[], Provider], Depends(get_provider)]
+
+
+#: Приставка, под которой открывающий абзац лежит в колонке `Reading.chapter`.
+#:
+#: Та же уловка, что у дневной заметки (`daily/storage.CHAPTER_PREFIX`) и у
+#: превью сфер (`chapter="spheres"`): своя таблица дала бы вторую копию
+#: удаления аккаунта, экспорта и слияния гостя с почтой, а строка в `Reading`
+#: получает всё это в тот же день, что и появляется. Двоеточие — то, чего в
+#: настоящих слагах не бывает, поэтому спутать нельзя.
+#:
+#: Ограничение `reading_once` — (user, system, chapter, calc_key, locale), так
+#: что абзац и сама глава живут в разных строках и не мешают друг другу:
+#: купивший получает полную главу, а его открывающий абзац остаётся там же,
+#: где лежал, и второй раз не пишется.
+OPENING_PREFIX = "opening:"
+
+
+def opening_chapter_id(slug: str) -> str:
+    return f"{OPENING_PREFIX}{slug}"
 
 
 #: One lock per reading key, in this process.
@@ -374,33 +402,28 @@ async def read(
     # simply stop accumulating siblings.
     language = i18n.resolve(payload.locale)
 
-    # **Без права глава не пишется вовсе.**
+    # **Без права глава целиком не пишется, но экран не остаётся пустым.**
     #
-    # Прежнее правило нужно назвать вслух, иначе следующий читающий увидит
-    # «закрытая глава = пустая стена», решит, что здесь потеряна щедрость, и
-    # вернёт генерацию. Оно было такое: первые несколько закрытых глав аккаунт
-    # получал *написанными по-настоящему* — сервер сочинял главу целиком,
+    # Историю надо назвать вслух, иначе следующий читающий решит, что здесь
+    # потеряна щедрость, и вернёт генерацию целой главы. Сначала первые
+    # несколько закрытых глав писались *по-настоящему* — сервер сочинял главу,
     # помечал ответ `preview`, клиент показывал первый абзац и размывал
-    # остальное; допуск задавался `ALMA_PREVIEW_CHAPTERS`. Замысел был
-    # продающий: страница настоящей прозы о тебе продаёт лучше, чем
-    # шестнадцать закрытых заголовков.
+    # остальное (`ALMA_PREVIEW_CHAPTERS`). Владелец это отменил по деньгам:
+    # каждое превью — запись сильной моделью за $0.02–0.10 для человека,
+    # который ещё ничего не решил. Осталась голая стена: 402 `locked`, а на
+    # экране — заголовок, объяснение и кнопка.
     #
-    # Владелец это отменил, и причина названа им — деньги за генерацию.
-    # Каждое такое превью это запись сильной моделью (десятки тысяч входных
-    # токенов и пара тысяч выходных, $0.02–0.10) за того, кто не заплатил
-    # ничего, и тратится она *до* решения о покупке, а не после. «Пока у
-    # человека нет подписки или купленного — не пишем; после покупки пишется
-    # полная глава».
+    # Владелец увидел и её: «чёрная стена — просят заплатить за заголовок»
+    # (`locked-chapter-spec.md` §5). Обе крайности стоят продажи, и середина
+    # названа спекой §2.5 — **открывающий абзац**: ≈40 слов, написанные из
+    # позиций этого человека, единственный текст, за который мы платим до
+    # оплаты. Не половина главы, а её первый абзац; остальное на экране —
+    # размытый филлер, который рисует клиент и который не стоит ни токена.
     #
-    # Стена стоит **до** `resolve_birth` и `_calc` намеренно: так «не писать»
-    # становится свойством устройства кода, а не следствием удачного порядка
-    # проверок ниже по течению. Бесплатная глава системы сюда не попадает —
-    # `entitlements.check` разрешает её сама, — и это единственный путь письма
-    # для неоплатившего.
+    # Стена по-прежнему стоит **до** генерации полной главы, и это не
+    # изменилось ни на строку: ниже по течению `_read_or_write` вызывается
+    # только для того, кому глава открыта.
     #
-    # Ответ тот же 402 `locked`, что стоял здесь до превью: клиент рисует
-    # стену S26 (заголовок, объяснение, одна кнопка) и, зная право заранее из
-    # оглавления, обычно даже не доходит до этого запроса.
     # Про кого пишем, когда пишем про пару. Мягкий разбор: строгий («партнёров
     # несколько, назови») стоит ниже, в `_partner`, и обязан остаться там —
     # иначе неоплативший человек с двумя партнёрами получит 422 вместо
@@ -417,15 +440,16 @@ async def read(
             session, user, payload.system, chapter=chapter.slug, partner_id=pair
         )
     )
-    if not access.allowed and not chapter.free:
-        raise HTTPException(
-            status.HTTP_402_PAYMENT_REQUIRED,
-            detail={
-                "error": "locked",
-                "message": access.reason,
-                "system": payload.system,
-                "chapter": chapter.slug,
-            },
+    if not access.allowed:
+        # `and not chapter.free` здесь больше нет, и это не упрощение ради
+        # краткости: бесплатная глава физически не может прийти сюда с отказом —
+        # `check` отвечает про неё True первой же веткой, а безымянная пара
+        # выбирает `PAIR_WITHOUT_PROFILE` только для платной. Второе условие
+        # означало бы, что мы допускаем «бесплатная и закрытая», а такого
+        # состояния нет.
+        return await _locked_chapter(
+            payload, user, session, provider,
+            chapter=chapter, language=language, access=access, pair=pair,
         )
 
     # **Месячный кредит подписчика тратится здесь — на первой платной главе про
@@ -438,13 +462,17 @@ async def read(
     # получает новый отчёт», — момент перед генерацией, и он здесь.
     #
     # Порядок с `access` тоже не случаен: подписка **покрывает** совместимость
-    # (`scope="all"`), поэтому 402 выше до этой строки не доходит, и решение
-    # «включённая проверка или $4.99 сверх» принимается ровно один раз — тут.
+    # (`scope="all"`), поэтому закрытая глава выше до этой строки не доходит, и
+    # решение «включённая проверка или $4.99 сверх» принимается ровно один
+    # раз — тут.
+    #
+    # Развилки `if chapter.free` здесь больше нет. Она вела в
+    # `_teaser_or_paywall` — отдельный бесплатный тизер «Притяжение» со своим
+    # капом на число новых людей в месяц. Владелец снял его 17.08.2026 словами
+    # «тизер и глава I пары — одно и то же»: теперь это обычная закрытая глава,
+    # и её открывающий абзац пишется тем же путём, что у остальных сорока.
     if payload.system == "compatibility" and pair is not None:
-        if chapter.free:
-            await _teaser_or_paywall(session, user, pair)
-        else:
-            await _pair_credit_or_paywall(session, user, pair)
+        await _pair_credit_or_paywall(session, user, pair)
 
     birth = await resolve_birth(
         session, user, profile_id=payload.profile_id, birth=payload.birth
@@ -480,51 +508,352 @@ async def read(
         _prune_lock(lock_key)
 
 
-async def _teaser_or_paywall(session, user, partner_id: str) -> None:
-    """Бесплатный тизер «Притяжение» — до капа, дальше сразу пейволл.
+# ── закрытая глава: тот же роут, половина текста ───────────────────────────
+#
+# **Почему 200, а не 402, — решение, которое стоит объяснить один раз здесь.**
+#
+# Здесь стоял `raise HTTPException(402, {"error": "locked", …})`, и он был
+# правдой ровно до тех пор, пока сервер на такой запрос действительно ничего не
+# делал. Теперь делает: считает карту, зовёт модель, пишет строку в `Reading`,
+# двигает месячный счёт аккаунта. Отвечать кодом ошибки на запрос, который
+# сохранил состояние и потратил деньги, — это соврать про то, что он не удался;
+# следующий, кто увидит в логе 402, решит, что генерации не было.
+#
+# Довод продукта — тот же и сильнее. Спека §5 снимает «отдельный маршрут
+# пейволла главы» словами «залоченная глава — это сама глава, дописанная
+# наполовину, а не другой экран». Дом уже так и устроен: `systems.py` на
+# закрытую систему отвечает 200 с полным расчётом и флагом `locked`, и её
+# докстринг объясняет почему — «paywall's job is to sell the rest, and a blank
+# page sells nothing». Закрытая глава просто перестала быть исключением из
+# правила, которое соседний роутер держит с самого начала.
+#
+# Клиентам это ломающее изменение, и оно осознанное: старый клиент на закрытую
+# главу `POST /v1/readings` вообще не шлёт — он знает право заранее из
+# оглавления и рисует стену сам, — а новому нужен абзац, за которым он и
+# приходит.
 
-    Тизер стоит нам около 3¢ на человека, и это мало ровно до тех пор, пока
-    людей считают по одному. Аккаунт, добавляющий партнёра за партнёром,
-    тратит бюджет бесплатного тира и не приближается к покупке: тот, кто
-    проверяет десятого человека даром, уже сказал всё, что нужно знать о его
-    готовности платить.
 
-    **Кап — на новых людей в месяц**, и его значение живёт на сервере
-    (`credits.teaser_cap`), чтобы менять его без релиза. Перечитывание уже
-    написанного тизера не стоит ничего и не считается никогда.
+def _locked_payload(
+    system: str,
+    chapter_slug: str,
+    access: entitlements.Access,
+    *,
+    opening: dict | None = None,
+    cached: bool = False,
+    created_at: str | None = None,
+    needs_partner: bool = False,
+) -> dict:
+    """Ровно то, из чего клиент рисует C2–C6.
 
-    **Освобождён любой, кому этот отчёт и так открыт**, и спрашивается это
-    одним вопросом — «покрыта ли совместимость про этого человека», — а не
-    списком тиров. Список пришлось бы держать в согласии с каталогом, и
-    достаточно одного пропущенного случая (легаси-`live`, старая годовая),
-    чтобы человек, читающий платные главы, упёрся в стену на **бесплатной**.
-    Такая инверсия читается как поломка, потому что она и есть поломка.
+    `reading` присутствует и равен `None` намеренно: форма ответа одна и та же
+    для открытой и закрытой главы, и «главы здесь нет» сказано полем, а не его
+    отсутствием. Клиент, забывший посмотреть на `locked`, наткнётся на пустоту
+    сразу, а не покажет сорок слов как всю главу.
 
-    Отказ — 402 с ценой полного разбора, а не ошибка: по А9 превышение
-    заменяет тизер пейволлом, то есть предложением, а не поломкой.
+    `product` — ключ полки, которым эта система открывается, из каталога, а не
+    из `if` здесь: таблица «система → цена» уже есть в `catalogue.unlocks`, и
+    вторая её копия однажды предложит «$4.99 навсегда» за транзиты.
+
+    `needs_partner` — единственное «закрыто», которое **не** чинится деньгами:
+    пару нечем назвать, поэтому и абзаца нет. Отдельным полем, а не по
+    `opening is None`, потому что причин для пустого абзаца несколько (модель
+    молчит, месяц выбран) и все прочие лечатся повтором, а эта — вводом
+    человека. Спека §1 рисует по нему «tap to add someone →» вместо цены.
     """
-    from ...billing import credits as pair_credits
+    from ...billing.catalogue import unlocks
 
-    covered = await entitlements.check(
-        session, user, "compatibility", partner_id=partner_id
-    )
-    if covered.allowed:
-        return
-    if await pair_credits.teaser_allowed(session, user, partner_id):
-        return
+    return {
+        "system": system,
+        "chapter": chapter_slug,
+        "locked": True,
+        "reading": None,
+        "opening": opening,
+        "access": access.as_dict(),
+        "product": unlocks(system),
+        "needs_partner": needs_partner,
+        "cached": cached,
+        "created_at": created_at,
+    }
 
-    raise HTTPException(
-        status.HTTP_402_PAYMENT_REQUIRED,
-        detail={
-            "error": "teaser_cap",
-            "message": (
-                "the free preview covers one new person a month — the full "
-                "report about the two of you is $4.99 and stays yours"
+
+async def _locked_chapter(
+    payload: ReadingRequest,
+    user,
+    session,
+    provider,
+    *,
+    chapter,
+    language: str,
+    access: entitlements.Access,
+    pair: str | None,
+) -> dict:
+    """Закрытая глава со своим открывающим абзацем.
+
+    **Абзац — лучшее усилие, стена — обязательство.** Всё, что может пойти не
+    так в генерации (модель молчит, ключа нет, месячный потолок аккаунта
+    выбран, валидатор отверг три попытки, у человека не сохранена дата
+    рождения), кончается здесь `opening=None` и записью в лог, а не ошибкой
+    наружу. Довод простой: экран, на котором человеку показывают цену, обязан
+    отрисоваться всегда. 503 вместо пейволла — это не «мы честно сказали о
+    сбое», это ненайденная кнопка «купить» у человека, который уже потянулся за
+    кошельком.
+
+    Деньги при этом не теряются: путь отказа писателя платит через
+    `_charge_anyway`, как и у обычной главы, — три попытки действительно
+    случились.
+    """
+    def wall(**extra) -> dict:
+        return _locked_payload(payload.system, chapter.slug, access, **extra)
+
+    if payload.system == "compatibility" and pair is None:
+        # Пару не о ком считать: партнёров ноль или несколько и ни один не
+        # назван. Синастрию построить не из чего, значит и позиций, из которых
+        # пишется абзац, не существует — это не сбой, а честное «сначала
+        # скажи, про кого». Стена всё равно отдаётся: на ней клиент рисует
+        # «tap to add someone →» (спека §1, карточка совместимости).
+        return wall(needs_partner=True)
+
+    # **Ключ берётся до расчёта, и это не микрооптимизация.**
+    #
+    # У обычной главы иначе нельзя: её ключ включает список факторов, которых
+    # без расчёта не существует. У абзаца — можно, ровно потому, что факторов
+    # в его ключе нет (см. `_opening_key`), а рождение и неподвижные опции
+    # известны сразу. Разница видна на транзитах: их расчёт — скан года,
+    # 1.35 секунды, и он же стоит за экраном «Сегодня», в который неподписчик
+    # заходит каждый день. Считать его ради строки, которая уже лежит в базе,
+    # значит платить секундой за каждое открытие уже написанного.
+    try:
+        birth = await resolve_birth(
+            session, user, profile_id=payload.profile_id, birth=payload.birth
+        )
+        options = _options_for(payload.system, payload.house_system)
+        if payload.system == "compatibility":
+            options["other"] = await _partner(session, user, payload)
+    except HTTPException as exc:
+        # Нет анкеты, нет времени рождения, партнёр не назван — всё это
+        # законные 4xx для *открытой* главы, где человек действительно должен
+        # что-то доделать. На закрытой они превращают пейволл в форму ввода, и
+        # человек не узнаёт, что глава продаётся.
+        log.info(
+            "no opening for %s/%s — nothing to write from: %s",
+            payload.system, chapter.slug, exc.detail,
+        )
+        return wall()
+
+    calc_key = _opening_key(payload.system, birth, options, chapter)
+    stored_chapter = opening_chapter_id(chapter.slug)
+
+    async def _lookup() -> Reading | None:
+        return (
+            await session.execute(
+                select(Reading).where(
+                    Reading.user_id == user.id,
+                    Reading.system == payload.system,
+                    Reading.chapter == stored_chapter,
+                    Reading.calc_key == calc_key,
+                    Reading.locale == language,
+                )
+            )
+        ).scalar_one_or_none()
+
+    found = await _lookup()
+    if found is not None:
+        # **Второй заход бесплатен, и это половина решения владельца.** Абзац
+        # пишется один раз на главу и живёт вечно; человек, обошедший все сорок
+        # закрытых глав по третьему разу, не стоит нам ничего сверх первого
+        # обхода — ни модели, ни расчёта.
+        return wall(
+            opening=found.body,
+            cached=True,
+            created_at=found.created_at.isoformat(),
+        )
+
+    lock_key = f"{user.id}:{payload.system}:{stored_chapter}:{calc_key}:{language}"
+    try:
+        async with _write_lock(lock_key):
+            again = await _lookup()
+            if again is not None:
+                return wall(
+                    opening=again.body,
+                    cached=True,
+                    created_at=again.created_at.isoformat(),
+                )
+            try:
+                result = await _calc(payload.system, birth, **options)
+            except HTTPException as exc:
+                # Неоднозначный час рождения, время не задано у главы, которой
+                # оно нужно. Та же логика, что выше: на закрытой главе это
+                # причина не написать абзац, а не причина не показать цену.
+                log.info(
+                    "no opening for %s/%s — the chart could not be computed: %s",
+                    payload.system, chapter.slug, exc.detail,
+                )
+                return wall()
+            written = await _write_opening(
+                payload, user, session, provider,
+                chapter=chapter_defs.opening_of(chapter), language=language,
+                result=result, calc_key=calc_key, stored_chapter=stored_chapter,
+                lookup=_lookup,
+            )
+    finally:
+        _prune_lock(lock_key)
+
+    if written is None:
+        return wall()
+    body, cached, created_at = written
+    return wall(opening=body, cached=cached, created_at=created_at)
+
+
+async def _write_opening(
+    payload: ReadingRequest,
+    user,
+    session,
+    provider,
+    *,
+    chapter,
+    language: str,
+    result: CalcResult,
+    calc_key: str,
+    stored_chapter: str,
+    lookup,
+) -> tuple[dict, bool, str] | None:
+    """Сорок слов, один раз на главу. `None`, если написать не вышло.
+
+    **Средняя модель и бесплатный потолок**, и оба выбраны не по привычке.
+    Абзац тратится до всякого решения о покупке, то есть на каждого, включая
+    тех, кто не купит никогда, — это ровно тот расход, который обязан
+    упираться в `free_user_budget`. А `test_the_strong_model_is_what_the_free_ceiling_refuses`
+    уже доказывает, что промт астрокартографии на сильной модели в этот потолок
+    не влезает: сильная модель здесь означала бы 503 на самой длинной системе.
+
+    **Регистр — свой (`opening`), а не «бесплатный».** `paid` в этом вызове
+    выбирает потолок, `register` — голос, и здесь они обязаны разойтись: платить
+    надо по-бесплатному, а писать — первый абзац главы, а не законченную
+    бесплатную заметку. Это ровно тот случай, ради которого `register` и
+    отделён от `paid` (см. `voice.system_prompt`).
+    """
+    _cheap, mid, _strong = models()
+    tier = await entitlements.tier_of(session, user)
+    memory = await _recall(session, user)
+
+    try:
+        # **Спрашивается до генерации, а не после.** У обычной главы этот
+        # вопрос стоит после письма, и там это безобидно: без анкеты туда не
+        # дойти. Сюда — дойти можно, рождением прямо в теле запроса, и тогда
+        # писать абзац, который некуда положить, значит заплатить за текст,
+        # который тут же выбросят.
+        profile_id = await _profile_id(session, user)
+        await _guard_month(
+            session, user, tier=tier, locale=language,
+            projected=_chapter_projection(
+                result, chapter, model=mid, locale=language, memory=memory
             ),
-            "system": "compatibility",
-            "product": "pair.check",
-            "profile_id": partner_id,
-        },
+        )
+        written = await writer.write(
+            result=result,
+            chapter=chapter,
+            provider=provider(),
+            model=mid,
+            locale=language,
+            paid=False,
+            register="opening",
+            memory=memory,
+            reader_gender=await _reader_gender(session, user, payload),
+        )
+    except ReadingRefused as exc:
+        # Три попытки состоялись и стоили денег — счёт двигается, как и у
+        # обычной главы. `_charge_anyway` откатывает сессию и коммитит сумму
+        # отдельно, поэтому после него возвращать можно только константу.
+        await _charge_anyway(session, user, cents=exc.spend.cents)
+        log.warning(
+            "no opening for %s/%s: %s", result.system, chapter.slug, exc
+        )
+        return None
+    except (cost.BudgetExceeded, ModelUnavailable, HTTPException) as exc:
+        # `HTTPException` здесь — это 429 месячного потолка из `_guard_month`
+        # или 400 «сначала сохрани дату рождения» из `_profile_id`. Ловятся
+        # вместе с остальными намеренно: и то и другое — причина не написать
+        # абзац, а не причина не показать цену.
+        log.warning(
+            "no opening for %s/%s: %s", result.system, chapter.slug,
+            getattr(exc, "detail", exc),
+        )
+        return None
+
+    record = Reading(
+        user_id=user.id,
+        profile_id=profile_id,
+        system=result.system,
+        chapter=stored_chapter,
+        locale=language,
+        calc_key=calc_key,
+        engine_version=result.engine_version,
+        model=written.model,
+        body=written.as_dict(),
+        cited_factors=list(written.cited_factors),
+        input_tokens=written.spend.input_tokens,
+        output_tokens=written.spend.output_tokens,
+        cost_cents=written.spend.cents,
+    )
+    session.add(record)
+    await _count(session, user, "openings_written")
+    await _spend(session, user, written.spend.cents)
+    try:
+        await session.flush()
+    except IntegrityError:
+        # Другой воркер написал тот же абзац между нашим поиском и вставкой.
+        # Его слова побеждают, как и у обычной главы; наша генерация всё равно
+        # состоялась, поэтому сумма записывается заново после отката.
+        await session.rollback()
+        log.warning(
+            "lost the opening race for %s/%s — returning the stored copy",
+            result.system, chapter.slug,
+        )
+        await _spend(session, user, written.spend.cents)
+        await session.flush()
+        theirs = await lookup()
+        if theirs is None:
+            return None
+        return theirs.body, True, theirs.created_at.isoformat()
+
+    return written.as_dict(), False, utcnow().isoformat()
+
+
+def _opening_key(
+    system: str,
+    birth,
+    options: dict,
+    chapter: chapter_defs.Chapter,
+) -> str:
+    """Личность открывающего абзаца: **кто ты, а не что сегодня в небе.**
+
+    Отличается от `_reading_key` ровно одним — здесь нет `factors`, — и это
+    отличие и есть слово «навсегда» из решения владельца.
+
+    Считать абзац главой было бы естественно и дорого. Ключ главы включает
+    список факторов, из которых она написана, потому что глава, у которой
+    появился новый повод что-то сказать, честно переписывается. Для транзитов
+    этот список меняется каждый раз, когда контакт входит в орб, — то есть
+    открывающий абзац закрытой главы транзитов переписывался бы раз в
+    несколько дней, у каждого свободного аккаунта, вечно. Тридцать центов на
+    аккаунт превратились бы в тридцать центов в месяц на аккаунт, который
+    ничего не купил.
+
+    Что осталось в ключе и почему: рождение (двое разных людей — два разных
+    абзаца), дом системы и прочие неподвижные опции (плацидус и цельные знаки
+    дают разные позиции), локаль — отдельной колонкой `Reading.locale`, и
+    версия движка внутри `cache_key`. Последняя означает, что смена арифметики
+    всё-таки перепишет абзацы; это редкое и намеренное событие, и платить за
+    правильные позиции в такой день дешевле, чем цитировать факторы, которых
+    движок больше не производит.
+    """
+    stable = {
+        name: value for name, value in options.items() if name not in MOMENT_OPTIONS
+    }
+    if "other" in stable and hasattr(stable["other"], "fingerprint"):
+        stable["other"] = stable["other"].fingerprint()
+    return cache_key(
+        system, birth, chapter=opening_chapter_id(chapter.slug), **stable
     )
 
 
@@ -805,9 +1134,17 @@ async def _partner(session, user, payload: ReadingRequest):
 
     Without this the route was a 500 and always had been: `_options_for` fell
     through to `{"house_system": …}` and `compatibility_result` requires
-    `other`, so the free sample chapter that exists to sell an $8.99 door
-    raised TypeError for everybody who asked for it. The budget test priced
-    that chapter, which read as coverage of a path that never executed.
+    `other`, so the sample chapter that exists to sell the report raised
+    TypeError for everybody who asked for it. The budget test priced that
+    chapter, which read as coverage of a path that never executed.
+
+    **Ветка 422 ниже с этого роута больше не достижима, и остаётся защитой.**
+    Оба вызывающих спрашивают `deps.partner_profile_id` раньше, и «партнёров
+    ноль или несколько, ни один не назван» кончается там же — стеной с
+    `needs_partner: true`, а не ошибкой. Убрать 422 значило бы, что следующий
+    вызывающий этой функции — а она не про HTTP — получит на том же состоянии
+    TypeError из движка. Формулировка на человеческом языке нужна ровно на тот
+    случай, и стоит она одного `if`.
     """
     from ...db.models import Profile
     from ..deps import birth_from_profile
@@ -1536,11 +1873,23 @@ async def chat(
     from ...db.models import Reading as _Reading
     written_rows = (
         await session.execute(
-            select(_Reading.system, _Reading.chapter).where(
-                _Reading.user_id == user.id, _Reading.chapter != "spheres"
-            )
+            select(_Reading.system, _Reading.chapter).where(_Reading.user_id == user.id)
         )
     ).all()
+    # **Только настоящие главы, и проверяется это по каталогу, а не списком
+    # исключений.** Здесь стояло `chapter != "spheres"`, и это было верно ровно
+    # для одной из трёх псевдоглав, живущих в той же таблице: дневная заметка
+    # пишется как `transits/daily:2026-08-07`, а открывающий абзац — как
+    # `natal/opening:love`. Обе прошли бы фильтр, дошли до
+    # `i18n.chapter_words`, который на неизвестной паре поднимает `KeyError`, —
+    # и весь `POST /v1/chat` ответил бы 500 всякому, кто хоть раз открыл
+    # закрытую главу или получил утреннюю заметку. Спрашивать «есть ли такая
+    # глава в оглавлении» надёжнее любого списка: четвёртая псевдоглава не
+    # обязана про этот фильтр знать.
+    written_rows = [
+        row for row in written_rows
+        if row[1] in {c.slug for c in chapter_defs.BY_SYSTEM.get(row[0], ())}
+    ]
     if written_rows:
         titles = []
         for sys_slug, ch_slug in written_rows[:24]:

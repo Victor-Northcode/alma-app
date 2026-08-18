@@ -187,14 +187,53 @@ announcement. A quiet week honestly described is the reason this feature can \
 be trusted the week something real happens.
 """
 
-#: register name → the block appended after `VOICE`. Three named states rather
-#: than a `paid` boolean with a second boolean beside it: two booleans encoding
-#: three registers is how the pair ends up disagreeing, and the fourth register
-#: somebody adds next has somewhere to go.
+#: Appended for the opening paragraph of a locked chapter — the forty words
+#: `locked-chapter-spec.md` §2.5 puts above the blur.
+#:
+#: **Четвёртый регистр, а не `FREE_TIER` покороче**, и разница ровно в одном
+#: слове: `FREE_TIER` велит быть *полным* («make it complete… do not end on a
+#: cliffhanger»), потому что бесплатная глава — законченное чтение. Это —
+#: начало главы, за которой стоит стена, и оно обязано быть началом: не
+#: аннотацией, не оглавлением и не обещанием.
+#:
+#: Обе ошибки уже описаны спекой, и обе стоят продажи. §7: «на каждой
+#: залоченной главе виден **написанный** абзац: не заголовок, не „описание
+#: системы“, а живой текст с позициями». Абзац, который рассказывает, *о чём*
+#: будет глава, — это заголовок в трёх предложениях; человек прочитал сорок
+#: слов и не узнал о себе ничего, то есть доказательство, ради которого мы за
+#: эти слова платим, не предъявлено. А §4 запрещает второй половине абзаца
+#: продавать: цену, «дальше ты узнаешь» и «разблокируй» пишет экран, одной
+#: кнопкой, и абзац, который делает это словами, — второй оффер на экране, где
+#: их должно быть ноль.
+OPENING_TIER = """\
+This is the opening paragraph of a chapter the reader has not paid for. It is \
+the only writing they will see before they decide, so it has one job: say \
+something true and specific about *this* person, from the positions you were \
+given, in about forty words.
+
+- Start in the middle of the observation. No preamble, no "your chart shows", \
+no naming of the chapter — the title is already on the screen above you.
+- Name at least one real placement and say what it does in this life. A \
+sentence that would be true of anybody is worse than no sentence.
+- Do not describe what the chapter will cover, do not summarise it, and do not \
+list what is coming. You are writing the chapter's first paragraph, not a \
+description of it.
+- Do not sell. No prices, no "unlock", no "read on", no "there is more". The \
+screen says all of that with one button; you say the true thing.
+- Stop when the observation is finished. It is allowed to end on a full \
+thought that happens to be short — a cliffhanger written on purpose reads as a \
+trick, and the reader is about to be asked for money.
+"""
+
+#: register name → the block appended after `VOICE`. Four named states rather
+#: than a `paid` boolean with booleans beside it: booleans encoding four
+#: registers is how the set ends up disagreeing, and the next register somebody
+#: adds has somewhere to go.
 REGISTERS: dict[str, str] = {
     "free": FREE_TIER,
     "paid": PAID_TIER,
     "daily": DAILY_TIER,
+    "opening": OPENING_TIER,
 }
 
 LOCALE_NAMES = {

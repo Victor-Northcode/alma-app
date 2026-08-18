@@ -24,6 +24,14 @@ import '../cabinet_words.dart';
 /// экрана — ровно ту треть, в которой теперь стоят четыре карты. Это решение
 /// владельца, а не оптимизация по месту; см. отчёт о том, где этим числам
 /// теперь жить.
+///
+/// **Ни одна карта не молчит на тап** (`locked-chapter-spec.md`, §1 и §7, кадр
+/// C5). Здесь стояло `onTap: ready ? … : null`, и три состояния из пяти —
+/// «добавь человека», «нужно время рождения», «пока нет» — делали карту
+/// картинкой. Дороже всех обходилась совместимость: подпись «add a person»
+/// называла действие, которого нельзя было совершить, и самый сильный импульс
+/// продукта кончался ничем ровно в ту секунду, когда до него дотронулись.
+/// Теперь тап есть у всех восьми, а куда он ведёт, решает оболочка.
 class SystemsScreen extends StatelessWidget {
   const SystemsScreen({super.key, required this.onOpenSystem});
 
@@ -61,7 +69,7 @@ class SystemsScreen extends StatelessWidget {
       seed: 0x53595354,
       title: l.tabSystems,
       trailing: _tally(l, hub),
-      children: hub == null ? const [] : _deck(context, l, hub),
+      children: hub == null ? const [] : _deck(context, l, session, hub),
     );
   }
 
@@ -85,7 +93,7 @@ class SystemsScreen extends StatelessWidget {
   /// Карт **всегда восемь**, даже если хаб прислал меньше: колода с дырой
   /// читается как поломка вёрстки, а система, о которой сервер промолчал,
   /// честнее выглядит приглушённой картой с состоянием «пока нет».
-  List<Widget> _deck(BuildContext context, L l, Hub hub) {
+  List<Widget> _deck(BuildContext context, L l, AlmaSession session, Hub hub) {
     final height = _cardHeight(context);
     final entries = [
       for (final slug in _order)
@@ -98,9 +106,9 @@ class SystemsScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(top: _gap),
           child: Row(children: [
-            Expanded(child: _card(l, entries[i], i, height)),
+            Expanded(child: _card(l, session, entries[i], i, height)),
             const SizedBox(width: _gap),
-            Expanded(child: _card(l, entries[i + 1], i + 1, height)),
+            Expanded(child: _card(l, session, entries[i + 1], i + 1, height)),
           ]),
         ),
     ];
@@ -149,30 +157,39 @@ class SystemsScreen extends StatelessWidget {
     return math.min(ideal, free / 4);
   }
 
-  /// Карта системы: арт, золотой кант, номер сверху, имя и состояние понизу.
+  /// Карта системы: арт, золотой кант, номер сверху, имя и обещание понизу.
   ///
   /// Закрытая система отличается не замком, а тишиной: картина приглушена, а
-  /// вместо «рассчитано» стоит своё состояние — «нужно время рождения»,
-  /// «добавь человека». Замок на витрине читается запретом, а здесь всё
-  /// рассчитано и бесплатно — закрыт только текст.
-  Widget _card(L l, HubEntry entry, int ordinal, double height) {
-    final ready = CabinetWordsMore.isReady(entry.status);
-    return GestureDetector(
-      onTap: ready ? () => onOpenSystem(entry.slug) : null,
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
+  /// вместо «рассчитано» стоит своё состояние — «нужно время рождения», «пока
+  /// нет». Замок на витрине читается запретом, а здесь всё рассчитано и
+  /// бесплатно — закрыт только текст.
+  ///
+  /// **Совместимость без человека не приглушается, а светится.** По кадру C5 у
+  /// неё кант ярче остальных и мягкое сияние: это не «система, которой нет», а
+  /// приглашение — единственная карта колоды, зовущая привести кого-то ещё.
+  /// Приглушить её значило бы спрятать самый дорогой импульс продукта под тем
+  /// же серым, каким помечено отсутствие данных.
+  Widget _card(L l, AlmaSession session, HubEntry entry, int ordinal, double height) {
+    final invite = _invites(session, entry);
+    // Приглушение говорит «данных нет», а не «закрыто»: у приглашения данные и
+    // не должны быть — за ними и зовут.
+    final dim = !CabinetWordsMore.isReady(entry.status) && !invite;
+    final card = SizedBox(
         height: height,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(13),
           child: Stack(fit: StackFit.expand, children: [
             Opacity(
-              opacity: ready ? 1 : 0.45,
+              opacity: dim ? 0.45 : 1,
               child: Image.asset(AlmaArt.card(entry.slug), fit: BoxFit.cover),
             ),
             DecoratedBox(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(13),
-                border: Border.all(color: AlmaPalette.gold.withValues(alpha: 0.5)),
+                border: Border.all(
+                    color: invite
+                        ? AlmaPalette.goldBright.withValues(alpha: 0.6)
+                        : AlmaPalette.gold.withValues(alpha: 0.5)),
                 // Имя стоит на своей земле: без затемнения книзу светлая
                 // картина съедает подпись целиком.
                 //
@@ -221,27 +238,127 @@ class SystemsScreen extends StatelessWidget {
                         .copyWith(fontSize: 16, color: AlmaPalette.starFill),
                   ),
                   const SizedBox(height: 2),
-                  // Состояние стоит **всегда**, а не только у закрытой карты:
-                  // «рассчитано» — это и есть то, что человек пришёл увидеть,
-                  // и молчание на семи картах из восьми делало счётчик наверху
-                  // единственным доказательством расчёта.
+                  // Подпись стоит **всегда**, а не только у закрытой карты: она
+                  // и есть то, что человек пришёл увидеть, и молчание на семи
+                  // картах из восьми делало счётчик наверху единственным
+                  // доказательством расчёта.
                   // Две строки, а не одна: по-английски «needs birth time»
                   // укладывается в ширину карты, а по-французски «heure de
                   // naissance manquante» — нет, и обрезанная причина не
                   // объясняет ничего. Место под вторую строку на карте есть.
                   Text(
-                    CabinetWordsMore.status(l, entry.status),
+                    _caption(l, session, entry),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: AlmaType.meta
-                        .copyWith(fontSize: 11.5, color: AlmaPalette.gold),
+                    style: AlmaType.meta.copyWith(
+                        fontSize: 11.5, color: _captionColor(session, entry)),
                   ),
                 ],
               ),
             ),
           ]),
         ),
-      ),
+      );
+
+    return GestureDetector(
+      // **Тап есть у каждой карты, без единого исключения** (§7: «в My systems
+      // нет ни одной карточки, которая не отвечает на тап»). Куда он ведёт —
+      // дело оболочки: у совместимости без человека это ввод человека, у
+      // остальных экран системы, который сам объяснит, чего ему не хватает.
+      // Экран, объясняющий нехватку, — это ответ; карта, молчащая под пальцем,
+      // — поломка.
+      onTap: () => onOpenSystem(entry.slug),
+      behavior: HitTestBehavior.opaque,
+      child: invite
+          // Сияние — снаружи `ClipRRect`: обрезка по скруглению срезала бы его
+          // вместе с углами, и от приглашения остался бы один кант.
+          ? DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(13),
+                boxShadow: [
+                  BoxShadow(
+                      color: AlmaPalette.gold.withValues(alpha: 0.15),
+                      blurRadius: 22),
+                ],
+              ),
+              child: card,
+            )
+          : card,
     );
+  }
+
+  /// Карта зовёт привести человека: совместимость, у которой пары ещё нет.
+  ///
+  /// Считается по сохранённым людям, а не по слову хаба: `status` приезжает с
+  /// сервера и запаздывает на один круг после добавления человека, а карта
+  /// обязана перестать звать в ту же секунду, в которую человек появился.
+  bool _invites(AlmaSession session, HubEntry entry) =>
+      entry.slug == SystemSlug.compatibility && session.people.isEmpty;
+
+  /// Подпись под именем системы — обещание, которое карта даёт на тап.
+  ///
+  /// Три формы, все из спеки (§1, §6):
+  /// * «tap to add someone →» — совместимость без человека;
+  /// * «N of M open» — там, где главы уже открыты (бесплатная или купленные);
+  /// * «read the opening →» — там, где ещё не открыто ничего.
+  ///
+  /// **Нехватка данных остаётся названной.** «Нужно время рождения» и «пока
+  /// нет» — не подписи бездействия, а причина, по которой у карты нет рисунка;
+  /// заменить их на «прочитай начало» значило бы пообещать чтение, которое
+  /// упрётся в тот же недостающий факт уже внутри. Карта при этом жива: тап
+  /// ведёт на экран системы, где причина объяснена и есть, что с ней сделать.
+  String _caption(L l, AlmaSession session, HubEntry entry) {
+    if (_invites(session, entry)) return '${l.systemsTapToAdd} →';
+    if (!CabinetWordsMore.isReady(entry.status)) {
+      return CabinetWordsMore.status(l, entry.status);
+    }
+    final counted = _openChapters(session, entry);
+    if (counted != null && counted.$1 > 0) {
+      return l.systemsChaptersOpen(counted.$1, counted.$2);
+    }
+    return '${l.systemsReadOpening} →';
+  }
+
+  /// Цвета кадра C5: приглашение самое светлое, счёт открытых глав золотой,
+  /// обещание чтения — обычная приглушённая подпись. Разница не декоративная:
+  /// на полотне из восьми карт светлым выделено ровно одно место, куда стоит
+  /// нажать первым.
+  Color _captionColor(AlmaSession session, HubEntry entry) {
+    if (_invites(session, entry)) return AlmaPalette.starFill;
+    if (!CabinetWordsMore.isReady(entry.status)) return AlmaPalette.gold;
+    final counted = _openChapters(session, entry);
+    return counted != null && counted.$1 > 0
+        ? AlmaPalette.gold
+        : AlmaPalette.muted;
+  }
+
+  /// Сколько глав системы открыто и сколько их всего — или `null`, если этого
+  /// пока никто не знает.
+  ///
+  /// **Считается по тому, что действительно привозили, а не по правилу в
+  /// голове клиента.** Какая глава бесплатна, решает сервер (`free_chapters` в
+  /// `chapters.py`), и вписать сюда «у натальной карты открыта первая» значило
+  /// бы завести второй источник правды, который однажды разойдётся с первым и
+  /// напечатает «1 из 16 открыта» там, где не открыто ничего. Поэтому счёт
+  /// берётся из привезённого оглавления (память клиента), а пока оглавления не
+  /// привозили — карта обещает начало, а не число.
+  ///
+  /// Купленная система — исключение, у которого свой источник: право открывает
+  /// все главы разом, и спрашивать про это оглавление незачем.
+  // TODO(hub): число открытых глав знает сервер, а спрашивают его здесь у
+  // памяти клиента — значит, до первого входа в систему карта обещает начало
+  // даже там, где бесплатная глава уже открыта. Это честно (лучше не назвать
+  // числа, чем назвать неверное), но беднее кадра C5, где натал подписан «1 of
+  // 16 open» с первого взгляда. Чинится одним полем в `/v1/systems/hub` рядом
+  // со `status`; до тех пор упрощение сознательное.
+  (int, int)? _openChapters(AlmaSession session, HubEntry entry) {
+    final known =
+        session.client.knownChapters(entry.slug, locale: session.locale);
+    final total = known?.total ?? entry.slug.chapterCount;
+    if (entry.unlocked || session.entitlements.opened(entry.slug)) {
+      return (total, total);
+    }
+    if (known == null) return null;
+    return (known.chapters.where((chapter) => chapter.open).length, total);
   }
 }

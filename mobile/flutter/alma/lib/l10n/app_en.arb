@@ -1110,10 +1110,6 @@
   "@cabUnknownTime": {
     "description": "from Cabinet/cab.unknownTime"
   },
-  "cabUnlock": "Unlock",
-  "@cabUnlock": {
-    "description": "from Cabinet/cab.unlock"
-  },
   "cabUpcoming": "coming up",
   "@cabUpcoming": {
     "description": "from Cabinet/cab.upcoming"
@@ -3014,19 +3010,6 @@
   "@paywallV3PairInputDate": {
     "description": "monetization v3 · А11 pair.input_date · W2"
   },
-  "paywallV3PairTeaserTitle": "What pulls you towards each other",
-  "@paywallV3PairTeaserTitle": {
-    "description": "monetization v3 · А11 pair.teaser_title · V4"
-  },
-  "paywallV3PairTeaserCta": "The full reading · {price}",
-  "@paywallV3PairTeaserCta": {
-    "description": "monetization v3 · А11 pair.teaser_cta · V4",
-    "placeholders": {
-      "price": {
-        "type": "String"
-      }
-    }
-  },
   "paywallV3PairPrice": "{price} · forever",
   "@paywallV3PairPrice": {
     "description": "monetization v3 · А11 pair.price · V4/V5",
@@ -3316,5 +3299,66 @@
   "paywallV3CancelNoteNoDate": "Cancelling opens your Apple ID settings",
   "@paywallV3CancelNoteNoDate": {
     "description": "monetization v3 · V9 без даты конца периода — на холсте не нарисовано"
+  },
+  "systemsTapToAdd": "tap to add someone",
+  "@systemsTapToAdd": {
+    "description": "locked-chapter-spec §6 · C5 · подпись карточки совместимости в «Моих системах»"
+  },
+  "systemsReadOpening": "read the opening",
+  "@systemsReadOpening": {
+    "description": "locked-chapter-spec §6 · C5 · подпись карточки, у которой ещё не открыта ни одна глава"
+  },
+  "systemsChaptersOpen": "{open} of {total} open",
+  "@systemsChaptersOpen": {
+    "description": "locked-chapter-spec §1 · C5 · сколько глав системы уже открыто",
+    "placeholders": {
+      "open": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "chapterFreeBadge": "free",
+  "@chapterFreeBadge": {
+    "description": "locked-chapter-spec §6 · C1 · бейдж единственной бесплатной главы продукта (натал I)"
+  },
+  "chapterUnlockCta": "Unlock and read · {price}",
+  "@chapterUnlockCta": {
+    "description": "locked-chapter-spec §4 · кнопка статичного разбора на самой главе. Цена внутри строки, а не приклеена кодом: точка-разделитель принадлежит переводчику, и в языке, где её место другое, она сдвинется вместе с текстом",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "chapterForeverNote": "Yours forever · no subscription",
+  "@chapterForeverNote": {
+    "description": "locked-chapter-spec §4 · природа покупки под кнопкой статичного разбора. Слово «продление» здесь запрещено"
+  },
+  "chapterDailyBadge": "updates daily",
+  "@chapterDailyBadge": {
+    "description": "locked-chapter-spec §2 · C4 · бейдж живой системы в шапке главы (транзиты, соляр)"
+  },
+  "chapterLivingNote": "This one is rewritten every day — it lives in the subscription, not in a purchase",
+  "@chapterLivingNote": {
+    "description": "locked-chapter-spec §6 · C4 · строка «что дальше» у живой системы. Слово «навсегда» здесь запрещено"
+  },
+  "chapterWhatFollows": "{n, plural, one{{n} chapter of your {system}, written from these positions} other{{n} chapters of your {system}, written from these positions}}",
+  "@chapterWhatFollows": {
+    "description": "locked-chapter-spec §6 · строка «что дальше» над кнопкой: сколько глав этой системы ещё не написано",
+    "placeholders": {
+      "n": {
+        "type": "int"
+      },
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "pairPerPersonNote": "Per person · yours forever · add as many as you like",
+  "@pairPerPersonNote": {
+    "description": "locked-chapter-spec §4 · C6 · природа покупки под кнопкой совместимости. Лимита на число людей нет и обещать его нельзя"
   }
 }

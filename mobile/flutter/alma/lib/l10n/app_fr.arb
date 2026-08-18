@@ -261,7 +261,6 @@
   "cabSystemTransits": "Transits",
   "cabSystemFinished": "Tout est lu ici",
   "cabUnknownTime": "heure de naissance inconnue",
-  "cabUnlock": "Déverrouiller",
   "cabUpcoming": "à venir",
   "cabWritingNote": "Il est écrit une fois, et il dira la même chose demain.",
   "cabYourDay": "Ta journée",
@@ -660,8 +659,6 @@
   "paywallV3PairInputTitle": "Qui lisons-nous ensemble ?",
   "paywallV3PairInputName": "Son prénom",
   "paywallV3PairInputDate": "Date de naissance",
-  "paywallV3PairTeaserTitle": "Ce qui vous attire l'un vers l'autre",
-  "paywallV3PairTeaserCta": "La lecture complète · {price}",
   "paywallV3PairPrice": "{price} · pour toujours",
   "paywallV3PairForever": "Reste à toi pour toujours",
   "paywallV3PairIncludedBadge": "incluse dans ton mois",
@@ -715,5 +712,15 @@
   "paywallV3CancelSaveFact": "Tu as ouvert {chapters, plural, one{ce chapitre} other{ces {chapters} chapitres}} {times, plural, one{une fois} other{{times} fois}}. Pour {price} elles restent lisibles après la fin de l'abonnement — sans aucun renouvellement.",
   "paywallV3CancelSaveFactPlain": "Pour {price} elles restent lisibles après la fin de l'abonnement — sans aucun renouvellement.",
   "paywallV3CancelNote": "Résilier ouvre les réglages de ton identifiant Apple · ton abonnement court jusqu'au {date}",
-  "paywallV3CancelNoteNoDate": "Résilier ouvre les réglages de ton identifiant Apple"
+  "paywallV3CancelNoteNoDate": "Résilier ouvre les réglages de ton identifiant Apple",
+  "systemsTapToAdd": "ajoute quelqu'un",
+  "systemsReadOpening": "lis le début",
+  "systemsChaptersOpen": "{open} sur {total} ouverts",
+  "chapterFreeBadge": "offert",
+  "chapterUnlockCta": "Débloquer et lire · {price}",
+  "chapterForeverNote": "À toi pour toujours · sans abonnement",
+  "chapterDailyBadge": "mis à jour chaque jour",
+  "chapterLivingNote": "Ce chapitre se réécrit chaque jour — il vit dans l'abonnement, pas dans un achat",
+  "chapterWhatFollows": "{n, plural, one{{n} chapitre de ton {system}, écrit à partir de ces positions} other{{n} chapitres de ton {system}, écrits à partir de ces positions}}",
+  "pairPerPersonNote": "Par personne · à toi pour toujours · ajoute autant de personnes que tu veux"
 }

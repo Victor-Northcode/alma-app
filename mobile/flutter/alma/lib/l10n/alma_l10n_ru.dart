@@ -852,9 +852,6 @@ class LRu extends L {
   String get cabUnknownTime => 'время рождения неизвестно';
 
   @override
-  String get cabUnlock => 'Разблокировать';
-
-  @override
   String get cabUpcoming => 'впереди';
 
   @override
@@ -2255,14 +2252,6 @@ class LRu extends L {
   String get paywallV3PairInputDate => 'Дата рождения';
 
   @override
-  String get paywallV3PairTeaserTitle => 'Что тянет вас друг к другу';
-
-  @override
-  String paywallV3PairTeaserCta(String price) {
-    return 'Полный разбор · $price';
-  }
-
-  @override
   String paywallV3PairPrice(String price) {
     return '$price · навсегда';
   }
@@ -2492,4 +2481,50 @@ class LRu extends L {
 
   @override
   String get paywallV3CancelNoteNoDate => 'Отмена откроет настройки Apple ID';
+
+  @override
+  String get systemsTapToAdd => 'добавь человека';
+
+  @override
+  String get systemsReadOpening => 'прочитай начало';
+
+  @override
+  String systemsChaptersOpen(int open, int total) {
+    return 'открыто $open из $total';
+  }
+
+  @override
+  String get chapterFreeBadge => 'бесплатно';
+
+  @override
+  String chapterUnlockCta(String price) {
+    return 'Открыть и читать · $price';
+  }
+
+  @override
+  String get chapterForeverNote => 'Твоё навсегда · без подписки';
+
+  @override
+  String get chapterDailyBadge => 'обновляется каждый день';
+
+  @override
+  String get chapterLivingNote =>
+      'Эта глава переписывается каждый день — она живёт в подписке, а не в покупке';
+
+  @override
+  String chapterWhatFollows(int n, String system) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n главы твоего разбора «$system», написанные из этих позиций',
+      many: '$n глав твоего разбора «$system», написанных из этих позиций',
+      few: '$n главы твоего разбора «$system», написанные из этих позиций',
+      one: '$n глава твоего разбора «$system», написанная из этих позиций',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pairPerPersonNote =>
+      'За человека · твоё навсегда · добавляй сколько хочешь';
 }

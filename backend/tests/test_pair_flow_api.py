@@ -273,88 +273,102 @@ def test_a_grandfathered_plan_is_not_counted_against_the_monthly_credit(store_ap
 
 
 # ══════════════════════════════════════════════════════════════════════════
-#  Кап бесплатных тизеров
+#  Глава I пары — обычная закрытая глава
 # ══════════════════════════════════════════════════════════════════════════
+#
+# Здесь стояли четыре теста про кап бесплатных тизеров: «один новый человек в
+# месяц», «уже написанный тизер не отбирают», «кап меняется через `Setting`
+# без релиза», «подписчика не капают». Механики больше нет — владелец,
+# 17.08.2026: «тизер „Притяжение“ и глава I пары — одно и то же», — и вместе с
+# ней ушли `pair.teaser_cap`, `TEASER_CAP_DEFAULT` и счётчик `pair_teaser`.
+#
+# Молча удалять их было бы неправильно: они защищали настоящие деньги, и то,
+# что защищало, обязано быть проверено по-новому. Тесты ниже держат ровно те же
+# три обещания в новой форме — свободный аккаунт не получает генерацию отчёта
+# даром, повторный заход не стоит ничего, подписчик проходит без стены.
 
-def test_the_free_teaser_covers_one_new_person_a_month(store_api, scripted):
-    """Решение владельца: **один** человек, не три.
 
-    Второй новый человек в том же месяце получает не тизер, а предложение
-    купить полный разбор — по А9 это замена, а не ошибка.
+def _opening_reply() -> str:
+    """Заготовка открывающего абзаца главы I пары: один абзац."""
+    from alma.ai import chapters as chapter_defs
+    from alma.calc import compute
+
+    result = compute(
+        "compatibility", _birth(SOFIA), other=_birth(LUCAS), house_system="placidus"
+    )
+    offered = chapter_defs.relevant_factors(
+        chapter_defs.find("compatibility", "attraction"), result.factors
+    )
+    return json.dumps(
+        {
+            "title": "What pulls",
+            "teaser": "A line.",
+            "paragraphs": [
+                {"text": "Forty words about the two of you.", "factors": offered[:1]},
+            ],
+        }
+    )
+
+
+def test_a_free_account_gets_the_opening_of_the_pair_chapter_and_a_price(
+    store_api, scripted
+):
+    """То, что раньше давал тизер, — доказательство «это про нас», — осталось.
+
+    Чего не осталось: полного отчёта даром. Тизер был двумя абзацами платной
+    генерации; теперь это сорок слов из тех же позиций и цена рядом. Кап на
+    число людей в месяц не нужен именно поэтому: свободный аккаунт, добавляющий
+    партнёра за партнёром, до дорогой генерации больше не доходит вовсе.
     """
     headers = _headers(store_api)
-    first, _ = _profiles(store_api, headers)
-    scripted.responses.append(_reply())
-    assert _read(store_api, headers, partner=first, chapter="attraction").status_code == 200
+    partner, _ = _profiles(store_api, headers)
+    scripted.responses.append(_opening_reply())
 
-    # Второго партнёра бесплатный слой сохранить не даёт, пока не куплена хотя
-    # бы одна пара, — поэтому он появляется у аккаунта, который уже платил.
-    from alma.billing import credits as pair_credits  # noqa: F401  (документирует связь)
+    response = _read(store_api, headers, partner=partner, chapter="attraction")
 
-    second = store_api.post(
-        "/v1/profiles",
-        json={**SOFIA, "relation": "partner", "name": "Masha"},
-        headers=headers,
-    )
-    assert second.status_code == 402, "лестница партнёров не изменилась"
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["locked"] is True
+    assert body["reading"] is None, "полный отчёт даром не отдаётся"
+    assert body["product"] == "pair.check"
+    assert body["opening"]["cited_factors"], "абзац обязан быть с позициями"
 
 
-def test_a_teaser_already_written_is_never_taken_away(store_api, scripted):
-    """Перечитывание не считается: текст на экране, за него ничего не просили."""
+def test_an_opening_already_written_is_never_paid_for_twice(store_api, scripted):
+    """Перечитывание не стоит ничего — как и у тизера, и по той же причине.
+
+    Текст уже на экране, за него ничего не просили, и второй раз он не
+    генерируется вовсе. Прежде это держал ключ счётчика без месяца в нём;
+    теперь — строка в `Reading` с ключом, в котором нет ни даты, ни движущихся
+    факторов.
+    """
     headers = _headers(store_api)
     partner, _ = _profiles(store_api, headers)
-    scripted.responses.append(_reply())
+    scripted.responses.append(_opening_reply())
 
-    assert _read(store_api, headers, partner=partner, chapter="attraction").status_code == 200
-    again = _read(store_api, headers, partner=partner, chapter="attraction")
-    assert again.status_code == 200
-    # Второй раз модель не звали: глава уже написана.
+    first = _read(store_api, headers, partner=partner, chapter="attraction").json()
+    again = _read(store_api, headers, partner=partner, chapter="attraction").json()
+
+    assert first["cached"] is False and again["cached"] is True
+    assert again["opening"]["body"] == first["opening"]["body"]
     assert len(scripted.calls) == 1
 
 
-def test_the_cap_moves_without_a_release(store_api, scripted):
-    """Кап живёт в `Setting`, а не в коде: правка цифры не должна быть деплоем.
+def test_a_subscriber_never_meets_the_wall_on_the_pair_chapter(store_api, apple, scripted):
+    """Подписка покрывает совместимость целиком — стены на главе I нет.
 
-    Ноль — самая честная проверка механизма: он не «читается», а решает.
+    Тест назывался «подписчика не капают на тизерах» и проверял, что кап на
+    бесплатные тизеры его не касается. Кап снят; обещание то же и проверяется
+    прямее: подписчик получает не абзац с ценой, а главу.
     """
-    from conftest import read_async
-
-    async def close_the_free_layer() -> None:
-        from alma.db.models import Setting
-        from alma.db.session import session_factory
-
-        async with session_factory()() as session:
-            session.add(Setting(key="pair.teaser_cap", value={"per_month": 0}))
-            await session.commit()
-
-    headers = _headers(store_api)
-    partner, _ = _profiles(store_api, headers)
-    read_async(close_the_free_layer)
-
-    refused = _read(store_api, headers, partner=partner, chapter="attraction")
-
-    assert refused.status_code == 402
-    assert refused.json()["detail"]["error"] == "teaser_cap"
-    assert refused.json()["detail"]["product"] == "pair.check"
-    assert len(scripted.calls) == 0, "пейволл обязан стоять до генерации"
-
-
-def test_a_subscriber_is_never_capped_on_teasers(store_api, apple, scripted):
-    """Три цента против $9.99 в месяц — не тот риск, ради которого ставят стену."""
-    from conftest import read_async
-
-    async def close_the_free_layer() -> None:
-        from alma.db.models import Setting
-        from alma.db.session import session_factory
-
-        async with session_factory()() as session:
-            session.add(Setting(key="pair.teaser_cap", value={"per_month": 0}))
-            await session.commit()
-
     headers = _headers(store_api)
     partner, _ = _profiles(store_api, headers)
     _subscribe(store_api, headers, apple)
-    read_async(close_the_free_layer)
     scripted.responses.append(_reply())
 
-    assert _read(store_api, headers, partner=partner, chapter="attraction").status_code == 200
+    response = _read(store_api, headers, partner=partner, chapter="attraction")
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body.get("locked") is not True
+    assert body["reading"]["body"]

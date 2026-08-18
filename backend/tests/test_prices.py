@@ -112,6 +112,32 @@ def test_the_three_systems_that_move_have_no_door():
     assert set(STATIC) | set(NOT_A_DOOR) == set(SYSTEMS)
 
 
+def test_every_system_names_the_one_thing_that_opens_it():
+    """Экран закрытой главы обязан назвать цену — любой главы любой системы.
+
+    `catalogue.unlocks` — то самое место, откуда роут глав берёт SKU для стены
+    (`locked-chapter-spec.md` §1). Система, для которой оно падает, — это 500
+    вместо пейволла; система, для которой оно врёт, — это кнопка «$4.99
+    навсегда» над транзитами, которые разово не продаются вовсе.
+
+    Проверяется по видам товара, а не по именам ключей: имена — дело полки, а
+    вид («навсегда», «подписка», «на человека») — обещание, которое стоит под
+    кнопкой и которое нельзя перепутать.
+    """
+    for system in SYSTEMS:
+        key = prices.unlocks(system)
+        item = prices.PRODUCTS[key]
+        if system in NOT_A_DOOR and system != "compatibility":
+            assert item.interval, f"{system} moves and must be sold as a subscription"
+        elif system == "compatibility":
+            assert item.kind == "consumable", "пара покупается на человека"
+        else:
+            assert item.band == "door" and item.slug == system
+
+    with pytest.raises(ValueError):
+        prices.unlocks("palmistry")
+
+
 def test_a_catalogue_key_is_never_mistaken_for_a_system_slug():
     """В v3 они разошлись, и это единственная причина, по которой
     `store_product_id` даёт `ai.pazl.alma.door.natal`, а не `…alma.natal`.

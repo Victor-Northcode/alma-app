@@ -261,7 +261,6 @@
   "cabSystemTransits": "Trânsitos",
   "cabSystemFinished": "Você já leu tudo aqui",
   "cabUnknownTime": "hora de nascimento desconhecida",
-  "cabUnlock": "Desbloquear",
   "cabUpcoming": "o que vem",
   "cabWritingNote": "É escrito uma vez, e amanhã vai dizer a mesma coisa.",
   "cabYourDay": "Seu dia",
@@ -657,8 +656,6 @@
   "paywallV3PairInputTitle": "Quem vamos ler junto?",
   "paywallV3PairInputName": "O nome dele",
   "paywallV3PairInputDate": "Data de nascimento",
-  "paywallV3PairTeaserTitle": "O que puxa vocês um para o outro",
-  "paywallV3PairTeaserCta": "A leitura completa · {price}",
   "paywallV3PairPrice": "{price} · para sempre",
   "paywallV3PairForever": "Fica sua para sempre",
   "paywallV3PairIncludedBadge": "incluída no seu mês",
@@ -712,5 +709,15 @@
   "paywallV3CancelSaveFact": "Você abriu {chapters, plural, one{este capítulo} other{estes {chapters} capítulos}} {times, plural, one{uma vez} other{{times} vezes}}. Por {price} eles continuam legíveis depois que a assinatura acabar — sem renovação nenhuma.",
   "paywallV3CancelSaveFactPlain": "Por {price} eles continuam legíveis depois que a assinatura acabar — sem renovação nenhuma.",
   "paywallV3CancelNote": "Cancelar abre os ajustes do seu Apple ID · sua assinatura vai até {date}",
-  "paywallV3CancelNoteNoDate": "Cancelar abre os ajustes do seu Apple ID"
+  "paywallV3CancelNoteNoDate": "Cancelar abre os ajustes do seu Apple ID",
+  "systemsTapToAdd": "adicione alguém",
+  "systemsReadOpening": "leia o começo",
+  "systemsChaptersOpen": "{open} de {total} abertos",
+  "chapterFreeBadge": "grátis",
+  "chapterUnlockCta": "Desbloquear e ler · {price}",
+  "chapterForeverNote": "Seu para sempre · sem assinatura",
+  "chapterDailyBadge": "atualiza todo dia",
+  "chapterLivingNote": "Este capítulo é reescrito todo dia — ele vive na assinatura, não em uma compra",
+  "chapterWhatFollows": "{n, plural, one{{n} capítulo do seu {system}, escrito a partir destas posições} other{{n} capítulos do seu {system}, escritos a partir destas posições}}",
+  "pairPerPersonNote": "Por pessoa · seu para sempre · adicione quantas quiser"
 }

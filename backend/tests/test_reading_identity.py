@@ -170,6 +170,10 @@ def test_a_different_house_system_is_a_different_reading():
 # ── and the same thing over HTTP, which is where it cost money ─────────────
 
 def _reply(factors: list[str]) -> str:
+    # Три абзаца: у платной главы минимум три (`Chapter.paragraphs` = (3, 5)),
+    # и с тех пор как бесплатна ровно одна глава во всём продукте, всё здесь
+    # пишется как платное. Двухабзацная заготовка ушла бы на перегенерацию, и
+    # тест падал бы на кончившемся сценарии, а не на своём предмете.
     return json.dumps(
         {
             "title": "A title",
@@ -178,6 +182,7 @@ def _reply(factors: list[str]) -> str:
             "paragraphs": [
                 {"text": "The first paragraph, read from the chart.", "factors": factors[:1]},
                 {"text": "The second, from the same place.", "factors": factors[:1]},
+                {"text": "The third, still from the chart.", "factors": factors[:1]},
             ],
         }
     )
@@ -194,13 +199,29 @@ def scripted(api):
     api.app.dependency_overrides.clear()
 
 
-def test_the_free_numerology_sample_is_not_rewritten_the_next_day(
-    api, auth_headers, scripted, monkeypatch
+@pytest.fixture
+def owns(monkeypatch):
+    """Открыть всё: правило доступа — предмет `test_entitlements.py`."""
+    from alma.auth import entitlements
+
+    async def yes(session, user, system, *, chapter=None, partner_id=None, at=None):
+        return entitlements.Access(True, "bought in the test", kind="one_time")
+
+    monkeypatch.setattr(entitlements, "check", yes)
+
+
+def test_a_bought_numerology_chapter_is_not_rewritten_the_next_day(
+    api, auth_headers, scripted, monkeypatch, owns
 ):
     """The reproduction, end to end: one provider call, then none.
 
     The clock is moved by moving `_options_for`, which is the only thing in
     the route that reads it — the same lever a real midnight pulls.
+
+    `owns` появился здесь вместе с правилом «бесплатна ровно одна глава во
+    всём продукте»: глава I нумерологии перестала быть образцом. Без него
+    тест продолжал бы проходить — и проверял бы кэш открывающего абзаца
+    вместо кэша главы, то есть тихо сменил бы предмет.
     """
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     factors = list(compute("numerology", _birth(SOFIA), reference=date(2026, 8, 6)).factors)
@@ -233,3 +254,81 @@ def test_the_free_numerology_sample_is_not_rewritten_the_next_day(
     assert ask()["cached"] is True, "nor is half a year"
 
     assert len(scripted.calls) == 1
+
+
+# ── и абзац закрытой главы, который не движется вообще ─────────────────────
+
+def test_an_opening_does_not_move_when_the_sky_does():
+    """Ключ открывающего абзаца не содержит факторов — намеренно.
+
+    Правило этого файла — «глава та же ровно пока те же факты» — к абзацу
+    **не** применяется, и это единственное осознанное исключение. Довод —
+    деньги: у транзитов список факторов меняется каждый раз, когда контакт
+    входит в орб, так что абзац закрытой главы транзитов переписывался бы раз
+    в несколько дней, у каждого свободного аккаунта, вечно. Владелец решил
+    иначе: один раз на главу, навсегда.
+
+    Проверяется с двух сторон сразу, иначе тест доказывал бы «ключ равен сам
+    себе»: факты за год действительно разъехались, ключ главы вслед за ними —
+    тоже, а ключ абзаца не сдвинулся.
+    """
+    birth = _birth(SOFIA)
+    chapter = chapter_defs.find("transits", "active")
+    start = datetime(2026, 8, 6, tzinfo=timezone.utc)
+    later = start + timedelta(days=365)
+
+    def options(when: datetime) -> dict:
+        return {"start": when, "days": 365, "house_system": "placidus"}
+
+    facts = {
+        when: tuple(
+            chapter_defs.relevant_factors(
+                chapter, compute("transits", birth, **options(when)).factors
+            )
+        )
+        for when in (start, later)
+    }
+    assert facts[start] != facts[later], "за год транзиты обязаны разъехаться"
+
+    assert _key("transits", birth, "active", **options(start)) != _key(
+        "transits", birth, "active", **options(later)
+    ), "сама глава переписывается — это правило файла"
+
+    assert route._opening_key(
+        "transits", birth, options(start), chapter
+    ) == route._opening_key("transits", birth, options(later), chapter)
+
+
+def test_an_opening_is_still_a_different_one_for_a_different_person():
+    """Из ключа выброшены факты, но не человек и не дом системы."""
+    chapter = chapter_defs.find("natal", "love")
+    options = {"house_system": "placidus"}
+
+    mine = route._opening_key("natal", _birth(SOFIA), options, chapter)
+    theirs = route._opening_key("natal", _birth(LUCAS), options, chapter)
+    whole_sign = route._opening_key(
+        "natal", _birth(SOFIA), {"house_system": "whole-sign"}, chapter
+    )
+    other_chapter = route._opening_key(
+        "natal", _birth(SOFIA), options, chapter_defs.find("natal", "money")
+    )
+
+    assert len({mine, theirs, whole_sign, other_chapter}) == 4
+
+
+def test_an_opening_never_collides_with_the_chapter_it_opens():
+    """Абзац и глава живут в разных строках `Reading`, а не спорят за одну.
+
+    Ограничение `reading_once` — (user, system, chapter, calc_key, locale).
+    Если бы абзац писался под тем же именем главы, купивший получал бы
+    IntegrityError на первой же оплаченной главе — или, что хуже, читал бы
+    сорок слов вместо разбора, за который заплатил.
+    """
+    assert route.opening_chapter_id("love") != "love"
+    assert route.opening_chapter_id("love").startswith(route.OPENING_PREFIX)
+    # Двоеточия в настоящих слагах не бывает — перепутать нельзя.
+    assert not any(
+        ":" in chapter.slug
+        for defined in chapter_defs.BY_SYSTEM.values()
+        for chapter in defined
+    )

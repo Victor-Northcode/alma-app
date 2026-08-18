@@ -29,8 +29,8 @@ The rules, and **the order they are asked in is itself a rule**:
   поэтому единственный, которого нет в `unlocked_systems` — см. `unlocked_pairs`.
 * A live subscription covers the systems that keep moving. Легаси: ни один
   товар v3 такого гранта не выписывает, но старые строки обязаны работать.
-* One chapter of every system is free, named by the chapter definitions
-  rather than by a second list here.
+* **Ровно одна глава во всём продукте бесплатна** — натал I «Core», — и
+  названа она определениями глав, а не вторым списком здесь.
 
 What this module is *not* about is worth saying, because the boundary is the
 product: every **calculation** is free and always will be. The chart, the
@@ -67,10 +67,17 @@ from ..db.models import Entitlement, EntitlementKind, User, as_utc, utcnow
 #:
 #: The boundary, so nobody re-opens this by halves: **calculations stay free
 #: forever** — they are computed from static local files and cost nothing —
-#: and **one written chapter per system stays free**, via `free_chapters()`.
-#: What ended is whole free *systems*, which is the only thing this constant
-#: ever meant. The mechanism is kept rather than deleted because re-opening a
-#: system for a campaign should be a one-line, one-place decision.
+#: and **exactly one written chapter stays free**, `natal/core`, via
+#: `free_chapters()`. What ended is whole free *systems*, which is the only
+#: thing this constant ever meant. The mechanism is kept rather than deleted
+#: because re-opening a system for a campaign should be a one-line, one-place
+#: decision.
+#:
+#: «По главе на систему» кончилось следом, 17.08.2026: восемь бесплатных первых
+#: глав читались на экране не как правило, а как случайность — одни системы
+#: открывались, другие показывали стену. Закрытая глава теперь отдаёт
+#: открывающий абзац (`locked-chapter-spec.md` §2.5), и он же взял на себя ту
+#: работу, ради которой раздавались семь глав: доказать, что текст про тебя.
 FREE_SYSTEMS: frozenset[str] = frozenset()
 
 #: How wide a grant is, spelled the way the `scope` column spells it. Named
@@ -115,10 +122,10 @@ def pair_system(partner_id: str) -> str:
     return f"{PAIR_PREFIX}{partner_id}"
 
 
-#: Within a paid system, one chapter stays open as the sample. Which one is
-#: declared alongside the chapter itself rather than duplicated here — a
-#: second copy of this list is a list that drifts, and a drifted exemption
-#: locks the very chapter that is supposed to sell the rest.
+#: Which chapters of this system stay open — for seven systems of eight, none.
+#: Which ones is declared alongside the chapter itself rather than duplicated
+#: here: a second copy of this list is a list that drifts, and a drifted
+#: exemption locks the very chapter that is supposed to sell the rest.
 def free_chapters(system: str) -> frozenset[str]:
     from ..ai.chapters import BY_SYSTEM, free_chapters as declared
 
@@ -256,10 +263,14 @@ async def check(
     if chapter and chapter in free_chapters(system):
         return Access(True, "this chapter is free", kind="free")
 
-    # Требование партнёра стоит **после** бесплатных веток намеренно. Первая
-    # глава совместимости бесплатна для всех, и «про кого она» её открытость не
-    # меняет — то есть на этот вопрос ответ есть и без имени. Не отвечает без
-    # имени только платная глава, и вот там молчание — уже ошибка вызова.
+    # Требование партнёра стоит **после** бесплатных веток намеренно, и стоит
+    # там до сих пор, хотя сегодня у совместимости бесплатных глав нет.
+    #
+    # Довод не про сегодняшний состав `free_chapters`, а про порядок вопросов:
+    # «эта глава роздана даром» — свойство самой главы, и «про кого она» его не
+    # меняет. Спросив имя первым, мы уронили бы `PartnerRequired` на оглавлении
+    # у всякого, кто ещё никого не добавил, — то есть у всех, — если завтра
+    # кампания снова откроет главу I пары на неделю.
     if system == "compatibility" and partner_id is None:
         raise PartnerRequired(
             "compatibility is bought one partner at a time: check() needs the "

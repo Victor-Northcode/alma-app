@@ -105,46 +105,69 @@ def _numerology_factors() -> list[str]:
 
 # ── what a free chapter costs ──────────────────────────────────────────────
 
-def _free_chapter_projections(model: str) -> dict[str, float]:
-    """Every free chapter of every system, priced the way the router prices it."""
+def _system_results() -> dict[str, object]:
+    """One `CalcResult` per system, computed the way the router computes it."""
     birth, other = _birth(SOFIA), _birth(LUCAS)
     today = datetime.now().date()
-    projected: dict[str, float] = {}
-
+    results = {}
     for system in chapter_defs.BY_SYSTEM:
         options = route._options_for(system, "placidus")
         if system == "compatibility":
-            # Not reachable through POST /v1/readings yet — see the note in
-            # `_options_for` — but its sample chapter has to fit the ceiling
-            # on the day it is, and it is the second largest prompt we build.
+            # Its prompt is the second largest we build, because it carries two
+            # charts, so it has to be in every ceiling measurement here.
             options = {"other": other, "house_system": "placidus"}
         if system in ("numerology", "birth-card", "synthesis"):
             options = {"reference": today}
-        result = compute(system, birth, **options)
-
-        for chapter in chapter_defs.for_system(system):
-            if not chapter.free:
-                continue
-            projected[f"{system}/{chapter.slug}"] = route._chapter_projection(
-                result, chapter, model=model, locale="en", memory=None
-            )
-    return projected
+        results[system] = compute(system, birth, **options)
+    return results
 
 
-def test_every_free_chapter_fits_the_free_ceiling_on_the_mid_model():
-    """The free tier has to be affordable for every system, not most of them.
+def _free_chapter_projections(model: str) -> dict[str, float]:
+    """Every free chapter of every system, priced the way the router prices it."""
+    results = _system_results()
+    return {
+        f"{system}/{chapter.slug}": route._chapter_projection(
+            results[system], chapter, model=model, locale="en", memory=None
+        )
+        for system in chapter_defs.BY_SYSTEM
+        for chapter in chapter_defs.for_system(system)
+        if chapter.free
+    }
 
-    A free chapter is guarded against `free_user_budget` by `writer.write`,
-    so a free chapter the ceiling refuses is a chapter nobody can read — a
-    503, not a paywall. Measuring all of them rather than the one that broke
-    is the point: astrocartography was over by six-tenths of a cent, and
-    nothing about it was special except that its factor list is long.
+
+def _opening_projections(model: str, *, locale: str = "en") -> dict[str, float]:
+    """Открывающий абзац каждой закрытой главы, в ценах роутера.
+
+    Сорок штук, а не сорок одна: у бесплатной главы открывающего абзаца не
+    бывает — она открыта, и роутер до этой ветки не доходит.
+    """
+    results = _system_results()
+    return {
+        f"{system}/{chapter.slug}": route._chapter_projection(
+            results[system], chapter_defs.opening_of(chapter),
+            model=model, locale=locale, memory=None,
+        )
+        for system in chapter_defs.BY_SYSTEM
+        for chapter in chapter_defs.for_system(system)
+        if not chapter.free
+    }
+
+
+def test_the_one_free_chapter_fits_the_free_ceiling_on_the_mid_model():
+    """Бесплатная глава обязана быть по карману, иначе её нельзя прочитать.
+
+    Тест мерил по одной главе-образцу на каждую из восьми систем; с 17.08.2026
+    бесплатна ровно одна во всём продукте, и правило про неё то же самое:
+    `writer.write` сверяет её с `free_user_budget`, и глава, которую потолок
+    отвергает, — это 503, а не пейволл. Астрокартография когда-то выходила за
+    потолок на шесть десятых цента, и особенного в ней было только одно —
+    длинный список факторов.
     """
     ceiling = settings().free_user_budget
     _cheap, mid, _strong = models()
 
     projected = _free_chapter_projections(mid)
-    assert len(projected) == len(chapter_defs.BY_SYSTEM), "every system has a sample chapter"
+    assert list(projected) == ["natal/core"]
 
     over = {name: cost for name, cost in projected.items() if cost > ceiling}
     assert not over, (
@@ -153,23 +176,113 @@ def test_every_free_chapter_fits_the_free_ceiling_on_the_mid_model():
     )
 
 
+def test_every_opening_fits_the_free_ceiling_on_the_mid_model():
+    """Сорок открывающих абзацев — то, что раздаётся даром теперь.
+
+    Тот же вопрос, что и про бесплатную главу, и он стал важнее: абзац
+    пишется для **каждой** закрытой главы, то есть у всех сорока промт обязан
+    влезать в бесплатный потолок. Не влезет один — на одной конкретной главе
+    вместо цены появится пустая стена, и найдётся это на самой длинной
+    системе, как в прошлый раз.
+
+    Кириллица меряется отдельно, потому что она и стоит отдельно: `writer`
+    удваивает и потолок, и число токенов на слово, а промт остаётся тем же.
+    """
+    ceiling = settings().free_user_budget
+    _cheap, mid, _strong = models()
+
+    total = 41 - 1  # сорок одна глава минус одна бесплатная
+    for locale, scale in (("en", 1.0), ("ru", 2.0)):
+        projected = _opening_projections(mid, locale=locale)
+        assert len(projected) == total, "у каждой закрытой главы есть открывающий абзац"
+        over = {n: c for n, c in projected.items() if c > ceiling * scale}
+        assert not over, (
+            f"[{locale}] openings over the ${ceiling * scale:.2f} ceiling on {mid}: "
+            + ", ".join(f"{name} ${cost:.4f}" for name, cost in over.items())
+        )
+
+
+def test_walking_every_locked_chapter_costs_about_what_the_owner_was_told():
+    """Цена обхода всех глав тем, кто ничего не купил, — **один раз за жизнь**.
+
+    Число здесь не круглое, и это намеренно: оно должно ловить не «стало
+    чуть-чуть дороже», а «кто-то удлинил открывающий абзац или подключил его к
+    сильной модели», то есть удвоение. Верхняя граница — проекция потолка, где
+    вся разрешённая длина считается израсходованной; настоящий счёт примерно
+    вдвое ниже, потому что сорок слов столько токенов не занимают.
+
+    И это плата за жизнь аккаунта, а не за месяц: `_opening_key` намеренно не
+    включает движущиеся факторы, поэтому повторные заходы бесплатны, а
+    транзиты не переписывают свой абзац каждый раз, когда контакт входит в орб.
+    """
+    _cheap, mid, _strong = models()
+    sweep = sum(_opening_projections(mid).values())
+    assert 0.40 < sweep < 1.00, f"обход всех закрытых глав стоит ${sweep:.4f}"
+
+
 def test_the_strong_model_is_what_the_free_ceiling_refuses():
-    """Why the router must not send a free chapter to the strong model.
+    """Why the router must not send free writing to the strong model.
 
     This is the reproduction of the bug kept as an assertion. Every chapter
     used to go to the strong model while the free ones were guarded against
     the free ceiling, and the astrocartography sample — eleven thousand
     characters of line descriptions — projected past it. Every request for
     that chapter answered 503. If the prices or the prompt ever change enough
-    that this stops being true, the routing below is still correct and this
-    test should be read again rather than deleted.
+    that this stops being true, the routing is still correct and this test
+    should be read again rather than deleted.
+
+    Мерится по `astrocartography/lines`, хотя она перестала быть бесплатной:
+    воспроизводится **баг**, а не сегодняшняя полка, и промт у неё тот же
+    самый — самый длинный в продукте.
     """
     ceiling = settings().free_user_budget
-    _cheap, _mid, strong = models()
+    _cheap, mid, strong = models()
+    results = _system_results()
+    lines = chapter_defs.find("astrocartography", "lines")
 
-    projected = _free_chapter_projections(strong)
-    assert projected["astrocartography/lines"] > ceiling
-    assert projected["natal/core"] < ceiling, "the bug was never visible on natal"
+    on_strong = route._chapter_projection(
+        results["astrocartography"], lines, model=strong, locale="en", memory=None
+    )
+    on_mid = route._chapter_projection(
+        results["astrocartography"], lines, model=mid, locale="en", memory=None
+    )
+    assert on_strong > ceiling
+    assert _free_chapter_projections(strong)["natal/core"] < ceiling, (
+        "the bug was never visible on natal"
+    )
+    # Средняя модель на том же промте — то, чем баг чинился, и чинится до сих
+    # пор для всего, что раздаётся даром.
+    assert on_mid < ceiling
+
+
+def test_the_opening_of_a_locked_chapter_is_written_by_the_mid_model(
+    api, auth_headers, scripted
+):
+    """И довод здесь **не** тот, что у бесплатной главы.
+
+    Бесплатную главу сильная модель писать не может физически: её промт в
+    бесплатный потолок на сильной модели не влезает (тест выше). Открывающий
+    абзац влезает — он просит вчетверо меньше выхода, и на сильной модели
+    самая длинная система проектируется в $0.036 против потолка $0.05.
+
+    Причина, по которой он всё равно пишется средней, — не потолок одного
+    вызова, а масштаб: абзац тратится **до** всякого решения о покупке, то
+    есть на каждого, включая тех, кто не купит никогда, и таких большинство.
+    Сорок абзацев на аккаунт — это то место, где разница между моделями
+    умножается на всю базу свободных аккаунтов.
+
+    Записано тестом, а не комментарием, потому что комментарий не падает.
+    """
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    scripted.responses.append(_opening(_natal_factors()))
+
+    response = api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    _cheap, mid, strong = models()
+    assert scripted.calls[0]["model"] == mid
+    assert strong not in {call["model"] for call in scripted.calls}
 
 
 def test_a_free_chapter_is_written_by_the_mid_model(api, auth_headers, scripted):
@@ -202,31 +315,63 @@ def test_a_paid_chapter_is_written_by_the_strong_model(api, auth_headers, script
     assert scripted.calls[0]["model"] == strong
 
 
-def test_a_locked_chapter_writes_nothing_and_spends_nothing(
+def _opening(factors: list[str]) -> str:
+    """Заготовка открывающего абзаца: один абзац, как просит `opening_of`."""
+    return json.dumps(
+        {
+            "title": "A title",
+            "teaser": "A line.",
+            "paragraphs": [
+                {"text": "Forty words about you, read from the chart.",
+                 "factors": factors[:1]},
+            ],
+        }
+    )
+
+
+def test_a_locked_chapter_pays_for_forty_words_and_never_for_the_chapter(
     api, auth_headers, scripted
 ):
-    """Закрытая глава не доходит ни до писателя, ни до счётчика денег.
+    """Сколько стоит стена — и сколько она стоит на второй заход.
 
-    Здесь стоял обратный тест: первые несколько закрытых глав писались
-    по-настоящему (`preview`), клиент размывал их, и допуск задавался
-    `ALMA_PREVIEW_CHAPTERS`. Владелец отменил правило ради экономии на
-    генерации — и отмена проверяется с обоих концов: модель не вызвана, и
-    месячный счёт аккаунта не сдвинулся ни на цент. Второе важнее первого:
-    вызов без записи в счёт был бы дырой в потолке, а не экономией.
+    Здесь стояло «закрытая глава не доходит ни до писателя, ни до счётчика
+    денег», и до 17.08.2026 это было правдой. До того был обратный режим:
+    первые несколько закрытых глав писались **целиком** (`ALMA_PREVIEW_CHAPTERS`)
+    и размывались на клиенте. Владелец отменил его по деньгам, а потом отменил
+    и получившуюся чёрную стену — «просят заплатить за заголовок».
+
+    Середина проверяется здесь с трёх сторон, и все три про деньги:
+    писателя зовут по разу на главу, а не по разу на просмотр; каждый вызов
+    записан в месячный счёт, потому что вызов без записи — дыра в потолке, а
+    не экономия; и второй обход тех же глав не стоит уже ничего.
     """
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
-    scripted.responses.append(_reply(_natal_factors()))
+    factors = _natal_factors()
+    scripted.responses.extend(_opening(factors) for _ in range(3))
     user_id = api.get("/v1/auth/session", headers=auth_headers).json()["user_id"]
 
-    for chapter in ("career", "love", "shadow"):
+    locked = ("career", "love", "shadow")
+    for chapter in locked:
         wall = api.post(
             "/v1/readings", json={"system": "natal", "chapter": chapter}, headers=auth_headers
         )
-        assert wall.status_code == 402, wall.text
-        assert wall.json()["detail"]["error"] == "locked"
+        assert wall.status_code == 200, wall.text
+        body = wall.json()
+        assert body["locked"] is True and body["reading"] is None
+        assert body["opening"]["body"]
 
-    assert scripted.calls == [], "закрытая глава не должна доходить до писателя"
-    assert _spent(user_id) == 0.0, "стена не стоит денег"
+    assert len(scripted.calls) == 3, "по одному абзацу на главу, и ни одной главы"
+    walked = _spent(user_id)
+    assert walked > 0.0, "написанный абзац обязан быть записан в счёт"
+
+    for chapter in locked:
+        again = api.post(
+            "/v1/readings", json={"system": "natal", "chapter": chapter}, headers=auth_headers
+        )
+        assert again.status_code == 200 and again.json()["cached"] is True
+
+    assert len(scripted.calls) == 3, "второй заход снова заплатил за те же слова"
+    assert _spent(user_id) == pytest.approx(walked), "перечитывание стены бесплатно"
 
 
 # ── which model and how many turns each tier gets ──────────────────────────
@@ -654,16 +799,23 @@ def test_no_tier_is_promised_more_than_its_ceiling_can_fund():
     turn = _chat_turn_projection(birth)
 
     samples = sum(_free_chapter_projections(mid).values())
+    # **Обход всех закрытых глав входит в худший месяц каждого тира, кто может
+    # его совершить.** Свободный аккаунт — очевидно; но и покупатель тоже, и
+    # это ровно тот случай, который заставил поднять `owner_month_budget` с
+    # 3.25 до 3.60: человек может обойти сорок стен, раздумывая, купить бандл и
+    # дочитать весь архив в том же месяце. Подписчику абзацы не пишутся вовсе —
+    # ему всё открыто, — поэтому в его строке их нет.
+    openings = sum(_opening_projections(mid).values())
     everything = _whole_archive_projection(birth, other, mid=mid)
 
     heaviest = {
         # The free chat is one welcome question ever, on the mid model; the
         # daily allowance is zero and the cheap tier is gone.
-        "free": config.free_welcome_bundle * turn(mid) + samples,
+        "free": config.free_welcome_bundle * turn(mid) + samples + openings,
         # An owner may have bought the archive, so the whole of it is written
         # in the month they bought it — plus the five-question bundle on the
         # strong model, all conceivably in the same month.
-        "owner": config.owner_question_bundle * turn(strong) + everything,
+        "owner": config.owner_question_bundle * turn(strong) + everything + openings,
         "subscriber": config.subscriber_questions_per_month * turn(mid) + everything,
     }
     for tier, needed in heaviest.items():

@@ -620,23 +620,35 @@ def test_a_free_chapter_opens_inside_a_paid_system(db):
     assert db(work) == (True, False)
 
 
-def test_every_paid_system_has_a_sample_chapter_that_actually_opens(db):
-    """One source of truth, verified through the paywall rather than beside it."""
-    from alma.ai.chapters import BY_SYSTEM, free_chapters
+def test_the_one_free_chapter_opens_and_every_other_chapter_does_not(db):
+    """One source of truth, verified through the paywall rather than beside it.
+
+    Раньше здесь требовалась открывающаяся глава-образец у **каждой** системы.
+    Правило сменилось 17.08.2026: свободна ровно одна глава во всём продукте,
+    натал I. Проверяется по-прежнему через `entitlements.check`, а не рядом с
+    ним, — вопрос ведь тот же: совпадает ли объявленное в `chapters.py` с тем,
+    что решает пейволл. Разъехавшись, эти двое запирают именно ту главу,
+    которая продаёт остальные, — так уже было со слагом «sun»/«core».
+    """
+    from alma.ai.chapters import BY_SYSTEM
 
     async def work(session):
         user = await accounts.create_guest(session)
-        results = {}
-        for system in BY_SYSTEM:
-            if system in entitlements.FREE_SYSTEMS:
-                continue
-            sample = next(iter(free_chapters(system)))
-            access = await entitlements.check(session, user, system, chapter=sample)
-            results[system] = (sample, access.allowed)
-        return results
+        opened = []
+        for system, defined in BY_SYSTEM.items():
+            for chapter in defined:
+                access = await entitlements.check(
+                    session, user, system, chapter=chapter.slug,
+                    # Совместимость покупается поштучно, поэтому «открыта ли
+                    # глава» без имени партнёра — вопрос без ответа; имя даётся
+                    # заведомо несуществующее, чтобы отказ был про права.
+                    partner_id="nobody" if system == "compatibility" else None,
+                )
+                if access.allowed:
+                    opened.append(f"{system}/{chapter.slug}")
+        return opened
 
-    for system, (sample, allowed) in db(work).items():
-        assert allowed, f"{system}'s sample chapter {sample!r} is locked"
+    assert db(work) == ["natal/core"]
 
 
 # ── tokens ─────────────────────────────────────────────────────────────────

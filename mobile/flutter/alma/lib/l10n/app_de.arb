@@ -261,7 +261,6 @@
   "cabSystemTransits": "Transite",
   "cabSystemFinished": "Hier ist alles gelesen",
   "cabUnknownTime": "Geburtszeit unbekannt",
-  "cabUnlock": "Freischalten",
   "cabUpcoming": "was kommt",
   "cabWritingNote": "Es wird einmal geschrieben und sagt morgen dasselbe.",
   "cabYourDay": "Dein Tag",
@@ -657,8 +656,6 @@
   "paywallV3PairInputTitle": "Wen lesen wir zusammen?",
   "paywallV3PairInputName": "Sein Name",
   "paywallV3PairInputDate": "Geburtsdatum",
-  "paywallV3PairTeaserTitle": "Was euch zueinander zieht",
-  "paywallV3PairTeaserCta": "Die ganze Deutung · {price}",
   "paywallV3PairPrice": "{price} · für immer",
   "paywallV3PairForever": "Bleibt für immer deins",
   "paywallV3PairIncludedBadge": "in deinem Monat enthalten",
@@ -712,5 +709,15 @@
   "paywallV3CancelSaveFact": "Du hast {chapters, plural, one{dieses Kapitel} other{diese {chapters} Kapitel}} {times, plural, one{einmal} other{{times} Mal}} geöffnet. Für {price} bleiben sie nach dem Abo-Ende lesbar — ohne jede Verlängerung.",
   "paywallV3CancelSaveFactPlain": "Für {price} bleiben sie nach dem Abo-Ende lesbar — ohne jede Verlängerung.",
   "paywallV3CancelNote": "Kündigen öffnet deine Apple-ID-Einstellungen · dein Abo läuft bis {date}",
-  "paywallV3CancelNoteNoDate": "Kündigen öffnet deine Apple-ID-Einstellungen"
+  "paywallV3CancelNoteNoDate": "Kündigen öffnet deine Apple-ID-Einstellungen",
+  "systemsTapToAdd": "jemanden hinzufügen",
+  "systemsReadOpening": "lies den Anfang",
+  "systemsChaptersOpen": "{open} von {total} offen",
+  "chapterFreeBadge": "kostenlos",
+  "chapterUnlockCta": "Freischalten und lesen · {price}",
+  "chapterForeverNote": "Für immer dein · kein Abo",
+  "chapterDailyBadge": "täglich neu",
+  "chapterLivingNote": "Dieses Kapitel wird jeden Tag neu geschrieben — es lebt im Abo, nicht in einem Kauf",
+  "chapterWhatFollows": "{n, plural, one{{n} weiteres Kapitel deiner {system}, aus diesen Positionen geschrieben} other{{n} Kapitel deiner {system}, aus diesen Positionen geschrieben}}",
+  "pairPerPersonNote": "Pro Person · für immer dein · so viele Menschen, wie du willst"
 }

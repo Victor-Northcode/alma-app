@@ -851,9 +851,6 @@ class LEn extends L {
   String get cabUnknownTime => 'birth time unknown';
 
   @override
-  String get cabUnlock => 'Unlock';
-
-  @override
   String get cabUpcoming => 'coming up';
 
   @override
@@ -2253,14 +2250,6 @@ class LEn extends L {
   String get paywallV3PairInputDate => 'Date of birth';
 
   @override
-  String get paywallV3PairTeaserTitle => 'What pulls you towards each other';
-
-  @override
-  String paywallV3PairTeaserCta(String price) {
-    return 'The full reading · $price';
-  }
-
-  @override
   String paywallV3PairPrice(String price) {
     return '$price · forever';
   }
@@ -2484,4 +2473,48 @@ class LEn extends L {
   @override
   String get paywallV3CancelNoteNoDate =>
       'Cancelling opens your Apple ID settings';
+
+  @override
+  String get systemsTapToAdd => 'tap to add someone';
+
+  @override
+  String get systemsReadOpening => 'read the opening';
+
+  @override
+  String systemsChaptersOpen(int open, int total) {
+    return '$open of $total open';
+  }
+
+  @override
+  String get chapterFreeBadge => 'free';
+
+  @override
+  String chapterUnlockCta(String price) {
+    return 'Unlock and read · $price';
+  }
+
+  @override
+  String get chapterForeverNote => 'Yours forever · no subscription';
+
+  @override
+  String get chapterDailyBadge => 'updates daily';
+
+  @override
+  String get chapterLivingNote =>
+      'This one is rewritten every day — it lives in the subscription, not in a purchase';
+
+  @override
+  String chapterWhatFollows(int n, String system) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n chapters of your $system, written from these positions',
+      one: '$n chapter of your $system, written from these positions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pairPerPersonNote =>
+      'Per person · yours forever · add as many as you like';
 }

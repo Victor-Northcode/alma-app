@@ -16,6 +16,7 @@ import 'screens/journey/journey_screen.dart';
 import 'screens/launch_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
+import 'screens/systems/people_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
 import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
@@ -223,14 +224,100 @@ class _CabinetShellState extends State<CabinetShell> {
   }
 
   void _openSystem(SystemSlug slug) {
+    // Совместимость — единственная система, которой мало одного рождения, и
+    // потому единственная, у которой вход не в систему, а в человека.
+    if (slug == SystemSlug.compatibility) {
+      _openPair();
+      return;
+    }
     _systemsNav.currentState?.push(CupertinoPageRoute(
       builder: (context) => SystemScreen(system: slug, onOpenChapter: _openChapter),
     ));
   }
 
-  void _openChapter(SystemSlug system, String chapter) {
+  /// Вход в совместимость: сначала человек, потом небо на двоих.
+  ///
+  /// **Цен на этом пути нет ни одной** (`locked-chapter-spec.md` §1): расчёт
+  /// бесплатен, платен только текст, и покупка стоит внутри главы — там, где
+  /// уже написан абзац про эту пару. Экран, просящий деньги до того, как
+  /// человек назвал, с кем сравнивать, продаёт кота в мешке.
+  ///
+  /// Развилка одна: пары ещё нет — просим человека и сразу ведём в главу I; пара
+  /// есть — открываем систему, где нарисовано небо отношений и лежит оглавление.
+  Future<void> _openPair() async {
+    final navigator = _systemsNav.currentState;
+    if (navigator == null) return;
+    final session = SessionScope.of(context);
+    if (session.people.isNotEmpty) {
+      navigator.push(CupertinoPageRoute(
+        builder: (context) => SystemScreen(
+          system: SystemSlug.compatibility,
+          // Кого сравниваем — сказано вслух, а не угадано экраном. Сервер
+          // подставляет второго сам только пока он ровно один; при двоих
+          // отвечает 422 `partner_required`.
+          partner: session.people.first,
+          onOpenChapter: _openChapter,
+        ),
+      ));
+      return;
+    }
+    final added = await navigator.push<Profile>(CupertinoPageRoute(
+      builder: (context) => const PeopleScreen(picking: true),
+    ));
+    // Ушли, не сохранив, — и это нормальный исход: возвращаемся в колоду, а не
+    // тащим человека в главу про пару, которой он не завёл.
+    if (added == null) return;
+    await _openPairChapter(added);
+  }
+
+  /// Первая глава пары — про того, кого только что назвали.
+  ///
+  /// **Оглавление спрашивается до перехода, и это не лишний запрос.** Слаг
+  /// первой главы знает сервер (`chapters.py`), и вписать сюда «attraction»
+  /// значило бы завести вторую копию этого знания, которая молча разойдётся с
+  /// первой при переименовании. Заодно ответ ложится в память клиента, и экран
+  /// главы решает «открыта ли она» синхронно, на первом кадре: иначе паттерн
+  /// залоченной главы появляется после ответа сервера, а не сразу.
+  ///
+  /// Оглавление не доехало — ведём на экран системы: там та же дорога к главам
+  /// и объяснение, если что-то не так. Тупика не остаётся ни на одной ветке.
+  Future<void> _openPairChapter(Profile partner) async {
+    final navigator = _systemsNav.currentState;
+    if (navigator == null || !mounted) return;
+    final session = SessionScope.of(context);
+    String? asked;
+    try {
+      final list = await session.client
+          .chapters(SystemSlug.compatibility, locale: session.locale);
+      asked = list.chapters.firstOrNull?.slug;
+    } on AlmaError {
+      asked = null;
+    }
+    if (!mounted) return;
+    // Копия ради замыкания: `final` даёт продвижение типа внутри строителя,
+    // который выполнится когда угодно позже.
+    final first = asked;
+    navigator.push(CupertinoPageRoute(
+      builder: (context) => first == null
+          ? SystemScreen(
+              system: SystemSlug.compatibility,
+              partner: partner,
+              onOpenChapter: _openChapter,
+            )
+          : ChapterScreen(
+              system: SystemSlug.compatibility,
+              chapter: first,
+              partner: partner,
+            ),
+    ));
+  }
+
+  /// [partner] — про кого глава, когда она про пару. Дальше него это знание не
+  /// идёт: у остальных систем второго человека нет вовсе.
+  void _openChapter(SystemSlug system, String chapter, {Profile? partner}) {
     _systemsNav.currentState?.push(CupertinoPageRoute(
-      builder: (context) => ChapterScreen(system: system, chapter: chapter),
+      builder: (context) =>
+          ChapterScreen(system: system, chapter: chapter, partner: partner),
     ));
   }
 

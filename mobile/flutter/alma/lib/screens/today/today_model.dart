@@ -71,7 +71,9 @@ class TodayModel extends ChangeNotifier {
   String? areaLine(String area) {
     final answer = line;
     if (answer is! LoadDone<ReadingResponse>) return null;
-    return answer.value.reading.areas[area];
+    // Пусто и когда главы в ответе нет вовсе: у закрытой главы `reading` пуст,
+    // а области дня — часть купленного текста, а не открывающего абзаца.
+    return answer.value.reading?.areas[area];
   }
 
   Map<String, dynamic>? nearest(String area) {

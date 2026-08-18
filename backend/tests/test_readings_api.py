@@ -32,7 +32,38 @@ def scripted(api):
     api.app.dependency_overrides.clear()
 
 
+@pytest.fixture
+def owns(monkeypatch):
+    """Открыть всё, не проходя через магазин.
+
+    Появилась вместе с правилом «бесплатна ровно одна глава во всём продукте».
+    До него половина тестов этого файла брала `numerology/life-path` как
+    «какую-нибудь бесплатную главу» и проверяла на ней механику чтения:
+    написано один раз, выдуманный фактор не доходит до читателя, партнёр
+    обязан быть назван. Механика у оплаченной главы та же самая, а вот
+    отсутствие права теперь возвращает стену — и такой тест молча
+    превращается в тест про пейволл.
+
+    Кто и почему получает доступ — предмет `test_entitlements.py`; здесь это
+    условие, а не проверяемое. Поэтому monkeypatch, а не грант через биллинг:
+    тест не должен зависеть от того, каким SKU сегодня открывается система.
+    """
+    from alma.auth import entitlements
+
+    async def yes(session, user, system, *, chapter=None, partner_id=None, at=None):
+        return entitlements.Access(True, "bought in the test", kind="one_time")
+
+    monkeypatch.setattr(entitlements, "check", yes)
+
+
 def _chapter_reply(factors, *, title="Life path", teaser="A line.") -> str:
+    # Три абзаца, а не два. Платная глава требует трёх (`Chapter.paragraphs`
+    # по умолчанию — (3, 5)), и с тех пор как бесплатная глава в продукте
+    # ровно одна, почти всё здесь пишется как платное. Двухабзацная заготовка
+    # отвергалась бы валидатором, писатель уходил бы на вторую попытку, и тест
+    # падал бы 503-й на кончившемся сценарии — то есть по причине, не имеющей
+    # отношения к тому, что он проверяет. Бесплатной главе три абзаца тоже
+    # годятся: у неё (2, 4).
     return json.dumps(
         {
             "title": title,
@@ -41,6 +72,21 @@ def _chapter_reply(factors, *, title="Life path", teaser="A line.") -> str:
             "paragraphs": [
                 {"text": "The first paragraph, read from the chart.", "factors": factors[:1]},
                 {"text": "The second, from the same place.", "factors": factors[:1]},
+                {"text": "The third, still from the chart.", "factors": factors[:1]},
+            ],
+        }
+    )
+
+
+def _opening_reply(factors, *, title="Life path", teaser="A line.") -> str:
+    """Заготовка открывающего абзаца: один абзац, как просит `opening_of`."""
+    return json.dumps(
+        {
+            "title": title,
+            "teaser": teaser,
+            "paragraphs": [
+                {"text": "Forty words about you, read from the chart.",
+                 "factors": factors[:1]},
             ],
         }
     )
@@ -76,26 +122,29 @@ def _factors_for(api, headers, system="numerology") -> list[str]:
 
 # ── the table of contents ──────────────────────────────────────────────────
 
-def test_the_chapter_list_says_what_is_open(api, auth_headers):
-    """Every system now opens exactly its sample chapter and no more.
+def test_the_chapter_list_of_a_paid_system_opens_nothing(api, auth_headers):
+    """Семь систем из восьми не открывают ни одной главы, и это правило.
 
-    Numerology used to come back entirely unlocked because it was one of the
-    two free systems. There are none left: fourteen written chapters given
-    away cost $0.287 per quiz-completer against a cohort that converts at one
-    or two percent, so the free tier is one chapter of each system and the
-    calculations, which cost nothing to serve.
+    Здесь стояло обратное: у нумерологии открывалась глава I. Владелец,
+    17.08.2026: бесплатна ровно одна глава во всём продукте — натал I. Восемь
+    первых глав даром — это восемь разных обещаний на восьми экранах, и на
+    экране они читались не как щедрость, а как случайность: одна система
+    открылась, другая показала стену.
+
+    Закрытая глава при этом не пустая — она отдаёт открывающий абзац; но
+    оглавление обязано говорить правду про доступ, иначе клиент нарисует
+    бейдж «free» над платным текстом.
     """
     body = api.get("/v1/readings/numerology/chapters", headers=auth_headers).json()
     assert body["total"] == 5
-    open_ones = [c for c in body["chapters"] if c["open"]]
-    assert [c["slug"] for c in open_ones] == ["life-path"]
-    assert all(c["free"] for c in open_ones)
+    assert [c["slug"] for c in body["chapters"] if c["open"]] == []
+    assert not any(c["free"] for c in body["chapters"])
 
 
-def test_a_paid_system_opens_exactly_one_chapter(api, auth_headers):
+def test_the_one_free_chapter_in_the_product_is_natal_i(api, auth_headers):
     body = api.get("/v1/readings/natal/chapters", headers=auth_headers).json()
     open_ones = [c for c in body["chapters"] if c["open"]]
-    assert len(open_ones) == 1
+    assert [c["slug"] for c in open_ones] == ["core"]
     assert open_ones[0]["free"] is True
 
 
@@ -105,7 +154,7 @@ def test_an_unknown_system_has_no_chapters(api, auth_headers):
 
 # ── generating ─────────────────────────────────────────────────────────────
 
-def test_a_reading_is_generated_and_cited(api, auth_headers, scripted):
+def test_a_reading_is_generated_and_cited(api, auth_headers, scripted, owns):
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     factors = _factors_for(api, auth_headers)
     scripted.responses.append(_chapter_reply(factors))
@@ -123,7 +172,7 @@ def test_a_reading_is_generated_and_cited(api, auth_headers, scripted):
     assert body["reading"]["read_from"].startswith("Read from:")
 
 
-def test_a_reading_is_written_once_and_never_changes(api, auth_headers, scripted):
+def test_a_reading_is_written_once_and_never_changes(api, auth_headers, scripted, owns):
     """A paragraph that landed must still be there tomorrow."""
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     factors = _factors_for(api, auth_headers)
@@ -143,21 +192,110 @@ def test_a_reading_is_written_once_and_never_changes(api, auth_headers, scripted
     assert len(scripted.calls) == 1, "the model was called again for a stored reading"
 
 
-def test_a_locked_chapter_never_reaches_the_model(api, auth_headers, scripted):
-    """A paywall that still pays for inference is pointed the wrong way.
+def test_a_locked_chapter_answers_with_its_opening_paragraph(api, auth_headers, scripted):
+    """Закрытая глава — это та же глава, дописанная на один абзац.
 
-    Held without qualification again. Between the two there was an allowance
-    (`ALMA_PREVIEW_CHAPTERS`) under which the first few locked chapters *were*
-    written for real and blurred client-side; the owner cancelled it because
-    the generation was paid for before anybody decided to buy.
+    Прежде тест держал 402 `locked` и «модель не вызвана вовсе». Первая
+    половина ушла, вторая осталась в другом виде — и это ровно то, что
+    поменял владелец, увидев чёрную стену: «просят заплатить за заголовок»
+    (`locked-chapter-spec.md` §5).
+
+    Что теперь обязано быть правдой: ответ 200 — потому что запрос удался,
+    сохранил строку и потратил деньги, а код ошибки на таком запросе врёт;
+    `locked` сказано полем; сама глава не отдана (`reading is None`); и над
+    размытием стоит **написанный** абзац с позициями (§7). Плюс SKU, которым
+    эта система открывается, — чтобы клиент не собирал таблицу цен во второй
+    раз.
     """
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    scripted.responses.append(_opening_reply(_factors_for(api, auth_headers, "natal")))
+
     response = api.post(
         "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
     )
-    assert response.status_code == 402
-    assert response.json()["detail"]["error"] == "locked"
-    assert scripted.calls == []
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["locked"] is True
+    assert body["reading"] is None, "закрытая глава не отдаёт саму главу"
+    assert body["product"] == "door.natal"
+    assert body["access"]["allowed"] is False
+    assert body["opening"]["body"], "стена без написанного абзаца — та же стена"
+    assert body["opening"]["cited_factors"], "абзац обязан быть с позициями"
+    assert len(scripted.calls) == 1, "сорок слов, а не глава"
+
+
+def test_the_opening_of_a_locked_chapter_is_written_once_and_for_ever(
+    api, auth_headers, scripted
+):
+    """Второй заход в ту же закрытую главу не стоит ни цента.
+
+    Решение владельца: абзац пишется при первом открытии и кэшируется
+    навсегда. Обход всех глав стоит около тридцати центов **один раз за жизнь
+    аккаунта**, а не каждый раз, когда человек листает разбор, раздумывая.
+    """
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    scripted.responses.append(_opening_reply(_factors_for(api, auth_headers, "natal")))
+    request = {"system": "natal", "chapter": "career"}
+
+    first = api.post("/v1/readings", json=request, headers=auth_headers).json()
+    second = api.post("/v1/readings", json=request, headers=auth_headers).json()
+
+    assert first["cached"] is False and second["cached"] is True
+    assert second["opening"]["body"] == first["opening"]["body"]
+    assert len(scripted.calls) == 1, "второй заход снова заплатил за те же слова"
+
+
+def test_the_opening_is_asked_for_as_prose_and_not_as_a_description(api, auth_headers, scripted):
+    """Приёмка спеки §7, переведённая в проверяемое.
+
+    «На каждой залоченной главе виден **написанный** абзац: не заголовок, не
+    „описание системы“, а живой текст с позициями.» Судить прозу тестом
+    нельзя — модели здесь всё равно нет, — но можно судить **бриф**, а
+    описание системы вместо наблюдения берётся именно из брифа.
+
+    Два отличия от бесплатной главы, и оба обязаны быть в системном промте:
+    свой регистр вместо «это бесплатное чтение» (`FREE_TIER` велит быть
+    *законченным*, а это — начало главы) и прямой запрет пересказывать, о чём
+    глава будет, и продавать словами. Второе не мелочь копирайта: цену на
+    экране говорит одна кнопка, и абзац, который делает это ещё раз, — второй
+    оффер там, где их должно быть ноль (ТЗ §1, принцип 2).
+    """
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    scripted.responses.append(_opening_reply(_factors_for(api, auth_headers, "natal")))
+    api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
+    )
+
+    system_prompt = scripted.calls[0]["system"]
+    assert "This is the free reading." not in system_prompt
+    assert "opening paragraph of a chapter the reader has not paid for" in system_prompt
+    assert "Do not describe what the chapter will cover" in system_prompt
+    assert "Do not sell." in system_prompt
+
+
+def test_a_locked_chapter_never_writes_the_chapter_itself(api, auth_headers, scripted):
+    """Стена по-прежнему стоит до полной генерации, и это не смягчилось.
+
+    Между 402 и сегодняшним ответом был режим (`ALMA_PREVIEW_CHAPTERS`), в
+    котором первые несколько закрытых глав писались **целиком** и размывались
+    на клиенте; владелец отменил его по деньгам — глава сильной моделью за
+    $0.02–0.10 для человека, который ещё ничего не решил. Открывающий абзац
+    его не возвращает: длина у него своя (`opening_of`), и проверяется это
+    здесь тем, что модель просят про один абзац, а не про три.
+    """
+    from alma.ai import chapters as chapter_defs
+
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    scripted.responses.append(_opening_reply(_factors_for(api, auth_headers, "natal")))
+    api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
+    )
+
+    prompt = scripted.calls[0]["prompt"]
+    career = chapter_defs.find("natal", "career")
+    assert f"{chapter_defs.OPENING_WORDS[0]}–{chapter_defs.OPENING_WORDS[1]} words" in prompt
+    assert "in one paragraph" in prompt
+    assert f"{career.words[0]}–{career.words[1]} words" not in prompt
 
 
 def test_a_known_gender_reaches_the_writer_and_stands_down_the_gate(api, auth_headers, scripted):
@@ -205,7 +343,7 @@ def test_the_free_sample_chapter_of_a_paid_system_generates(api, auth_headers, s
     assert response.status_code == 200, response.text
 
 
-def test_an_invented_factor_never_reaches_the_reader(api, auth_headers, scripted):
+def test_an_invented_factor_never_reaches_the_reader(api, auth_headers, scripted, owns):
     """The model tries twice to invent, then gets it right."""
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     factors = _factors_for(api, auth_headers)
@@ -225,7 +363,7 @@ def test_an_invented_factor_never_reaches_the_reader(api, auth_headers, scripted
         assert cited in factors
 
 
-def test_a_model_that_only_invents_produces_no_reading(api, auth_headers, scripted):
+def test_a_model_that_only_invents_produces_no_reading(api, auth_headers, scripted, owns):
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     scripted.responses.extend([_chapter_reply(["not real"]) for _ in range(3)])
 
@@ -237,24 +375,40 @@ def test_a_model_that_only_invents_produces_no_reading(api, auth_headers, script
     assert response.json()["detail"]["error"] == "reading_refused"
 
 
-def test_locked_outranks_an_unconfigured_api_key(api, auth_headers):
-    """A paywall must answer before the AI does, even with no key set.
+def test_the_wall_still_stands_when_the_model_cannot_be_reached(api, auth_headers):
+    """Без ключа абзаца нет, а цена есть.
 
-    No provider override here — the real dependency, with nothing configured.
-    Building the provider eagerly made "the AI is unavailable" beat "this is
-    locked", which tells the person the product is broken when in fact they
-    simply have not bought it.
+    Тест назывался «locked outranks an unconfigured api key» и держал 402
+    против 503: провайдер строится лениво, чтобы пейволл отвечал раньше, чем
+    отсутствие ключа. Правило то же, а форма другая — теперь закрытая глава
+    честно ходит к модели за сорока словами, и вопрос становится острее:
+    **что увидит человек, когда модель недоступна?**
+
+    Ответ — стену с ценой и без абзаца. 503 на экране, где показывают цену, —
+    это не «мы честно сказали о сбое», это ненайденная кнопка «купить» у
+    человека, который уже потянулся за кошельком. Абзац — лучшее усилие,
+    стена — обязательство.
+
+    Никакого `scripted` здесь нет намеренно: настоящая зависимость, ключа нет.
     """
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     response = api.post(
         "/v1/readings", json={"system": "natal", "chapter": "career"}, headers=auth_headers
     )
-    assert response.status_code == 402
-    assert response.json()["detail"]["error"] == "locked"
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["locked"] is True
+    assert body["opening"] is None
+    assert body["product"] == "door.natal"
 
 
-def test_a_missing_api_key_says_so_rather_than_failing_obscurely(api, auth_headers):
-    """No provider override here — the real one, with no key configured."""
+def test_a_missing_api_key_says_so_rather_than_failing_obscurely(api, auth_headers, owns):
+    """No provider override here — the real one, with no key configured.
+
+    Про **открытую** главу, и `owns` появился здесь именно поэтому: у закрытой
+    недоступная модель гасится в стену (тест выше), а у купленной молчать
+    нельзя — человек заплатил и обязан узнать, что сломались мы.
+    """
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     response = api.post(
         "/v1/readings", json={"system": "numerology", "chapter": "life-path"},
@@ -265,12 +419,29 @@ def test_a_missing_api_key_says_so_rather_than_failing_obscurely(api, auth_heade
     assert "ANTHROPIC_API_KEY" in response.json()["detail"]["message"]
 
 
-def test_a_reading_needs_saved_birth_data(api, auth_headers, scripted):
+def test_a_reading_needs_saved_birth_data(api, auth_headers, scripted, owns):
     response = api.post(
         "/v1/readings", json={"system": "numerology", "chapter": "life-path"},
         headers=auth_headers,
     )
     assert response.status_code == 400
+
+
+def test_a_locked_chapter_without_birth_data_still_shows_its_price(api, auth_headers, scripted):
+    """Анкеты нет — абзаца нет, стена есть.
+
+    Обратная сторона теста выше. «Сначала сохрани дату рождения» — законный
+    400 для главы, которую человек открыл и обязан доделать ввод; на закрытой
+    он превращает пейволл в форму, и человек не узнаёт, что глава продаётся.
+    """
+    response = api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "career"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["locked"] is True
+    assert response.json()["opening"] is None
+    assert scripted.calls == [], "нечего писать — не звали"
 
 
 def test_an_unknown_chapter_is_a_404(api, auth_headers, scripted):
@@ -280,6 +451,78 @@ def test_an_unknown_chapter_is_a_404(api, auth_headers, scripted):
         headers=auth_headers,
     )
     assert response.status_code == 404
+
+
+# ── «в транзитах нет бесплатного» ──────────────────────────────────────────
+
+def _transit_factors() -> list[str]:
+    """Факторы того же скана, что просит роут.
+
+    Не `_factors_for(..., "transits")`: тот считает без опций, а роут просит
+    год с полуночи (`_options_for`). Разные сканы — разные строки факторов, и
+    заготовка, ссылающаяся на чужие, отвергается валидатором как выдумка.
+    """
+    from alma.ai import chapters as chapter_defs
+    from alma.api.routers import readings as route
+    from alma.calc import compute
+
+    from tests.test_readings_budget import _birth
+
+    result = compute(
+        "transits", _birth(SOFIA), **route._options_for("transits", "placidus")
+    )
+    return chapter_defs.relevant_factors(
+        chapter_defs.find("transits", "active"), result.factors
+    )
+
+
+def test_the_day_text_of_the_today_screen_is_closed_without_a_subscription(
+    api, auth_headers, scripted
+):
+    """Экран «Сегодня» у неподписчика показывает цену, а не текст дня.
+
+    Владелец, 17.08.2026, буквально: «в транзитах нет бесплатного». Дневной
+    текст на этом экране — глава `transits/active`, и она же была бесплатной
+    утренней заметкой. Отдельной сущности «бесплатная заметка» больше нет:
+    транзиты — движок ежедневного гороскопа, то есть ровно то, что продаётся
+    подпиской, и глава, переписываемая каждый день и раздаваемая даром, —
+    это подписка, за которую забыли взять деньги.
+
+    Цена здесь обязана быть подписочной. `door.transits` не существует и не
+    должен: продать «навсегда» то, что переписывается само, значит продать
+    подписку и не взять за неё денег.
+    """
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    scripted.responses.append(_opening_reply(_transit_factors()))
+
+    response = api.post(
+        "/v1/readings", json={"system": "transits", "chapter": "active"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["locked"] is True
+    assert body["reading"] is None, "текст дня — не бесплатный"
+    assert body["product"] == "sub.monthly"
+    assert body["opening"]["body"], "и всё-таки не молчание"
+
+
+def test_the_day_text_opens_for_a_subscriber(api, auth_headers, scripted, owns):
+    """Обратная сторона: подписчику та же глава приходит целиком.
+
+    Проверяется вместе с закрытой, потому что порознь эти два теста
+    доказывают половину: «закрыто у всех» — тоже поломка, и куда более тихая.
+    """
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    scripted.responses.append(_chapter_reply(_transit_factors()))
+
+    response = api.post(
+        "/v1/readings", json={"system": "transits", "chapter": "active"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json().get("locked") is not True
+    assert response.json()["reading"]["body"]
 
 
 # ── the conversation ───────────────────────────────────────────────────────
@@ -574,14 +817,26 @@ def test_memory_can_be_deleted(api, auth_headers, scripted):
 
 # ── the second person ──────────────────────────────────────────────────────
 
-def test_a_compatibility_reading_needs_the_person_it_is_about(api, auth_headers):
+def test_a_compatibility_reading_says_who_is_missing_rather_than_failing(
+    api, auth_headers, scripted, owns
+):
     """It used to be a 500, and always had been.
 
     `_options_for` fell through to `{"house_system": …}` while
     `compatibility_result` requires `other`, so every request raised
-    TypeError — including the free sample chapter that exists to sell an $8.99
-    door. The budget test priced that chapter, which read as coverage of a
-    path that never executed.
+    TypeError — including the sample chapter that exists to sell the report.
+    The budget test priced that chapter, which read as coverage of a path that
+    never executed.
+
+    Ответ с тех пор поменялся дважды, и второй раз — сегодня. Был 422
+    `partner_required`; он приходил, потому что глава I пары была бесплатной и
+    доходила до `_partner`. Теперь она закрыта, а безымянная пара упирается в
+    `PAIR_WITHOUT_PROFILE` раньше — и это правильнее: 422 на месте пейволла
+    означало бы, что человек так и не узнал, что глава продаётся.
+
+    Чего не потерялось: **чего именно не хватает, сказано полем**, а не тоном
+    сообщения. `needs_partner` — единственное «закрыто», которое не чинится
+    деньгами, и клиент рисует по нему «tap to add someone →» вместо цены.
     """
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     response = api.post(
@@ -589,11 +844,72 @@ def test_a_compatibility_reading_needs_the_person_it_is_about(api, auth_headers)
         json={"system": "compatibility", "chapter": "attraction"},
         headers=auth_headers,
     )
-    assert response.status_code == 422
-    assert response.json()["detail"]["error"] == "partner_required"
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["locked"] is True
+    assert body["needs_partner"] is True
+    assert body["opening"] is None, "синастрию не из чего построить"
+    assert scripted.calls == []
 
 
-def test_a_compatibility_reading_is_written_about_two_people(api, auth_headers, scripted):
+def test_a_pair_chapter_is_locked_like_any_other_and_priced_like_a_pair(
+    api, auth_headers, scripted
+):
+    """Глава I пары («Притяжение») больше не бесплатный тизер.
+
+    Владелец, 17.08.2026: «тизер и глава I пары — одно и то же». Вместе с
+    `free=True` снят и весь второй механизм — кап `pair.teaser_cap`, счётчик
+    `pair_teaser`, — потому что от чего он защищал, от того теперь защищает
+    сама стена. Остаётся обычная закрытая глава: открывающий абзац и цена
+    `pair.check`, а не `door.compatibility`, которого не существует.
+    """
+    from tests.conftest import LUCAS
+
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    api.post("/v1/profiles", json={**LUCAS, "relation": "partner"}, headers=auth_headers)
+    scripted.responses.append(_opening_reply(_pair_factors("attraction")))
+
+    response = api.post(
+        "/v1/readings",
+        json={"system": "compatibility", "chapter": "attraction"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["locked"] is True
+    assert body["needs_partner"] is False
+    assert body["product"] == "pair.check"
+    assert body["opening"]["cited_factors"]
+
+
+def _pair_factors(chapter: str) -> list[str]:
+    """Настоящие факторы синастрии Софии и Лукаса для этой главы."""
+    from datetime import date
+
+    from alma.ai import chapters as chapter_defs
+    from alma.calc import BirthData, compute
+    from tests.conftest import LUCAS
+
+    def birth(payload: dict) -> BirthData:
+        return BirthData(
+            date=date.fromisoformat(payload["birth_date"]),
+            time=payload["birth_time"],
+            latitude=payload["latitude"],
+            longitude=payload["longitude"],
+            timezone=payload["timezone"],
+            place_label=payload["place_label"],
+            name=payload["name"],
+        )
+
+    result = compute(
+        "compatibility", birth(SOFIA), other=birth(LUCAS), house_system="placidus"
+    )
+    return chapter_defs.relevant_factors(
+        chapter_defs.find("compatibility", chapter), result.factors
+    )
+
+
+def test_a_compatibility_reading_is_written_about_two_people(api, auth_headers, scripted, owns):
     from datetime import date
 
     from alma.calc import BirthData, compute
@@ -638,7 +954,7 @@ def test_a_compatibility_reading_is_written_about_two_people(api, auth_headers, 
     assert response.json()["reading"]["body"]
 
 
-def test_a_compatibility_reading_cannot_name_somebody_elses_partner(api, auth_headers):
+def test_a_compatibility_reading_cannot_name_somebody_elses_partner(api, auth_headers, owns):
     from tests.conftest import LUCAS
 
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)

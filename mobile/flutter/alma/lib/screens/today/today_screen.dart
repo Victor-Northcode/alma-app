@@ -397,7 +397,7 @@ class _HoroscopePanel extends StatelessWidget {
   String? _minutes(L l) {
     if (!subscriber) return null;
     if (model.line case LoadDone<ReadingResponse>(value: final answer)) {
-      final words = answer.reading.body
+      final words = (answer.reading?.body ?? const <String>[])
           .expand((p) => p.split(RegExp(r'\s+')))
           .where((w) => w.isNotEmpty)
           .length;
@@ -459,6 +459,13 @@ class _HoroscopePanel extends StatelessWidget {
         // схема просит у модели «одну фразу, называющую, что глава нашла»,
         // и это ровно лид. Резать текст на клиенте спека запрещает отдельно.
         final reading = answer.reading;
+        // **Закрытую главу карточка дня не показывает вовсе.** Ответ на главу
+        // теперь один на оба случая: у закрытой `reading` пуст, а вместо неё
+        // приезжает `opening` — сорок слов, написанных до покупки. Подписчику
+        // этого не приходит, но право может истечь между кадрами, и напечатать
+        // открывающий абзац как письмо дня значило бы выдать пробу за
+        // купленное. Карточка остаётся в своём непрочитанном виде.
+        if (reading == null) return const <Widget>[];
         final first = reading.body.isEmpty ? null : reading.body.first;
         return [
           if (reading.teaser.isNotEmpty) ...[

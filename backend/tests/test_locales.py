@@ -519,6 +519,11 @@ def test_a_regional_tag_does_not_buy_a_second_copy_of_the_same_reading(api, auth
     we paid for the same German — once for the phone that reports "de" and
     again for the one that reports "de-AT". A reader who switches form is
     charged twice for prose they already own.
+
+    Написано на `natal/core`, а не на `numerology/life-path`: с 17.08.2026
+    бесплатна ровно одна глава во всём продукте, и это она. Проверяемое от
+    выбора главы не зависит — вопрос про ключ строки `reading`, а не про
+    систему, — а платить за право доступа ради теста про локали незачем.
     """
     from alma.ai.provider import ScriptedProvider
     from alma.api.deps import get_provider
@@ -533,19 +538,19 @@ def test_a_regional_tag_does_not_buy_a_second_copy_of_the_same_reading(api, auth
         # second one. If it does, the provider runs dry and the route answers
         # 503 — which is this test failing loudly rather than quietly.
         scripted.responses.append(
-            _chapter_reply(_factors_for(api, auth_headers), title="Lebensweg")
+            _chapter_reply(_factors_for(api, auth_headers, "natal"), title="Kern")
         )
 
         response = api.post(
             "/v1/readings",
-            json={"system": "numerology", "chapter": "life-path", "locale": "de"},
+            json={"system": "natal", "chapter": "core", "locale": "de"},
             headers=auth_headers,
         )
         assert response.status_code == 200, response.text
         first = response.json()
         second = api.post(
             "/v1/readings",
-            json={"system": "numerology", "chapter": "life-path", "locale": "de-AT"},
+            json={"system": "natal", "chapter": "core", "locale": "de-AT"},
             headers=auth_headers,
         ).json()
 

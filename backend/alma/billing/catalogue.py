@@ -421,6 +421,40 @@ def product(key: str) -> Product:
         raise ValueError(f"nothing on sale called {key!r}") from None
 
 
+def unlocks(system: str) -> str:
+    """Какой ключ полки открывает написанные главы этой системы.
+
+    Одно место, потому что таблица «система → цена» уже существует дважды: в
+    `locked-chapter-spec.md` §1 и на экране закрытой главы. Третьей копией
+    стал бы `if` на клиенте — и разошлась бы она молча, показав кнопку «Unlock
+    and read · $4.99» над транзитами, которые разово не продаются вовсе.
+
+    Три случая, и они не про астрологию, а про то, чем товар является:
+
+    * **живая система** — транзиты и соляр переписываются сами, так что
+      продать их «навсегда» значит продать подписку и не взять за неё денег.
+      Их открывает `sub.monthly`, и только он;
+    * **пара** — покупается не система, а отчёт про одного человека, поэтому
+      `pair.check`, расходуемый;
+    * **всё остальное** — дверь своей системы, `door.{slug}`, навсегда.
+
+    Бандл (`bundle.static`) сюда намеренно не попадает: он открывает те же
+    пять систем, но экран закрытой главы обязан назвать **одну** цену (ТЗ §1,
+    принцип 2), а бандл живёт тихой ссылкой на «все планы».
+
+    Падает, а не возвращает `None`, на системе, которой нечем открыться:
+    беззвучный `None` дошёл бы до экрана кнопкой без цены.
+    """
+    if system in LIVING_SYSTEMS - {"compatibility"}:
+        return "sub.monthly"
+    if system == "compatibility":
+        return "pair.check"
+    key = f"door.{system}"
+    if key not in PRODUCTS:
+        raise ValueError(f"nothing on the shelf opens {system!r}")
+    return key
+
+
 def by_price_id(price_id: str, processor: str | None = None) -> str | None:
     """Which catalogue **key** carries this processor identifier.
 

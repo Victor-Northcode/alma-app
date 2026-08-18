@@ -427,21 +427,56 @@ def test_compatibility_without_a_partner_is_a_caller_error_not_a_refusal(db):
     assert message is not None and "partner_id" in message
 
 
-def test_the_free_pair_chapter_needs_no_partner(db):
-    """Бесплатная глава бесплатна для всех, и «про кого она» её открытости не
-    меняет. Требование партнёра стоит после бесплатных веток именно поэтому:
-    иначе оглавление совместимости падало бы у всякого, у кого нет партнёра."""
-    from alma.ai.chapters import free_chapters
+def test_a_pair_chapter_without_a_partner_is_closed_rather_than_a_call_error(db):
+    """У совместимости бесплатных глав больше нет — и порядок веток тот же.
 
-    sample = next(iter(free_chapters("compatibility")))
+    Тест назывался «бесплатная глава пары не требует партнёра» и держал
+    `allowed is True` на главе I: она была бесплатным тизером «Притяжение».
+    Владелец снял тизер как отдельную сущность 17.08.2026 («тизер и глава I
+    пары — одно и то же»), так что теперь верно обратное: без имени партнёра
+    платная глава закрыта.
+
+    Чем это **не** является — ошибкой вызова. `PartnerRequired` (400) значит
+    «спросили бессмысленное»; здесь вопрос осмысленный, и ответ на него —
+    «закрыто»: гранту `pair:{id}` не к чему привязаться. Разница видна на
+    HTTP и стоит она пейволла, показанного тому, кто уже заплатил.
+    """
 
     async def work(session):
         user = await accounts.create_guest(session)
         return await entitlements.check(
-            session, user, "compatibility", chapter=sample
+            session, user, "compatibility", chapter="attraction", partner_id="nobody"
         )
 
-    assert db(work).allowed is True
+    assert db(work).allowed is False
+
+
+def test_a_free_chapter_still_answers_without_a_partner_being_named(db):
+    """Порядок веток в `check` — правило, а не сегодняшний состав каталога.
+
+    Бесплатных глав у совместимости сейчас нет, поэтому проверяется сам
+    порядок: на главе, помеченной `free`, ответ есть **до** вопроса «про
+    кого». Спросив имя первым, мы уронили бы `PartnerRequired` на оглавлении
+    у всякого, кто ещё никого не добавил, — то есть у всех, — в тот день,
+    когда кампания снова откроет главу I пары на неделю.
+    """
+    from dataclasses import replace
+
+    from alma.ai import chapters as chapter_defs
+
+    async def work(session, monkeypatched: tuple):
+        user = await accounts.create_guest(session)
+        return await entitlements.check(
+            session, user, "compatibility", chapter="attraction"
+        )
+
+    original = chapter_defs.BY_SYSTEM["compatibility"]
+    freed = (replace(original[0], free=True), *original[1:])
+    chapter_defs.BY_SYSTEM["compatibility"] = freed
+    try:
+        assert db(lambda session: work(session, freed)).allowed is True
+    finally:
+        chapter_defs.BY_SYSTEM["compatibility"] = original
 
 
 def test_a_subscription_opens_every_pair_while_it_lasts(db):
@@ -572,30 +607,42 @@ def test_a_plan_change_moves_the_scope_instead_of_keeping_both(db):
 
 # ── what is free ───────────────────────────────────────────────────────────
 
-def test_no_whole_system_is_free_but_one_chapter_of_each_still_is(db):
-    """The free tier is a sample of everything, not the whole of anything."""
-    from alma.ai.chapters import BY_SYSTEM, free_chapters
+def test_no_system_is_free_and_the_free_layer_is_one_chapter(db):
+    """Бесплатный слой — одна глава, а не образец каждой системы.
+
+    Тест держал обратное: у каждой из восьми систем обязана была открываться
+    глава-образец. Владелец, 17.08.2026: свободна ровно одна глава во всём
+    продукте, натал I «Core». Восемь образцов читались на экране не как
+    щедрость, а как случайность — и они же были той причиной, по которой у
+    владельца одни главы открывались, а другие показывали чёрную стену.
+
+    Заодно проверяется, что бесплатная глава не открывает свою систему
+    целиком: `whole` спрашивается без имени главы, и ответ обязан быть «нет»
+    даже у натала.
+    """
+    from alma.ai.chapters import BY_SYSTEM
 
     async def work(session):
         user = await accounts.create_guest(session)
-        results = {}
-        for system in BY_SYSTEM:
-            sample = next(iter(free_chapters(system)))
-            # Совместимости нужен партнёр — и бесплатной главе он не нужен:
-            # `check` отвечает про бесплатную главу до того, как спросит имя.
-            # Здесь передаётся тот же несуществующий профиль в обе стороны,
-            # чтобы «система целиком закрыта» осталось вопросом про права, а не
-            # про то, назвали ли партнёра.
+        whole = {}
+        opened = []
+        for system, defined in BY_SYSTEM.items():
+            # Совместимости нужен партнёр. Здесь передаётся заведомо
+            # несуществующий профиль, чтобы «закрыто» осталось ответом про
+            # права, а не про то, назвали ли партнёра.
             partner = "nobody" if system == "compatibility" else None
-            whole = await entitlements.check(
-                session, user, system, partner_id=partner
-            )
-            opened = await entitlements.check(
-                session, user, system, chapter=sample, partner_id=partner
-            )
-            results[system] = (whole.allowed, opened.allowed)
-        return results
+            whole[system] = (
+                await entitlements.check(session, user, system, partner_id=partner)
+            ).allowed
+            for chapter in defined:
+                access = await entitlements.check(
+                    session, user, system, chapter=chapter.slug, partner_id=partner
+                )
+                if access.allowed:
+                    opened.append(f"{system}/{chapter.slug}")
+        return whole, opened
 
-    for system, (whole, opened) in db(work).items():
-        assert whole is False, f"{system} is being given away entirely"
-        assert opened is True, f"{system} has no free sample chapter"
+    whole, opened = db(work)
+    for system, allowed in whole.items():
+        assert allowed is False, f"{system} is being given away entirely"
+    assert opened == ["natal/core"]

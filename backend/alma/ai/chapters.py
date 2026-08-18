@@ -23,7 +23,7 @@ English, which is right for a log line and wrong for a screen.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +37,23 @@ class Chapter:
     #: A chapter with no matching factors is not written at all — silence
     #: beats a paragraph assembled out of whatever was nearby.
     reads: tuple[str, ...]
+    #: **Ровно одна глава во всём продукте, и это натал I «Core».**
+    #:
+    #: Здесь стояло `free=True` у первой главы каждой из восьми систем, и
+    #: владелец увидел последствие раньше, чем кто-либо посчитал деньги: одни
+    #: главы открывались, другие показывали чёрную стену, и никакого правила за
+    #: этим не читалось. Восемь бесплатных первых глав — это восемь разных
+    #: обещаний на восьми экранах вместо одного.
+    #:
+    #: Решение владельца от 17.08.2026 и спека `locked-chapter-spec.md` §7:
+    #: свободна одна глава, с бейджем «free», и она же — то, чем кончается квиз.
+    #: Всё остальное закрыто и показывает открывающий абзац (§2.5).
+    #:
+    #: Флаг делает три вещи разом, и это надо знать, снимая его: выбирает модель
+    #: (`mid` против `strong` в роутере), выбирает потолок одной генерации
+    #: (`free_user_budget` $0.05 против `full_report_budget` $0.50) и — через
+    #: `_c` ниже — задаёт длину. Снять его значит не только «закрыть», но и
+    #: «сделать длиннее и дороже».
     free: bool = False
     #: True when the chapter depends on the houses, and therefore on a real
     #: birth time. The sensitivity test asserts exactly this set moves.
@@ -110,6 +127,11 @@ def _c(index, numeral, slug, title, question, reads, **kwargs) -> Chapter:
     # Бесплатная глава пишется средней моделью в кириллический потолок $0.10,
     # и 480 слов туда не помещаются ($0.107). Она остаётся прежней длины,
     # если её собственный бюджет не задан явно.
+    #
+    # Ветка сохранена, хотя `free=True` теперь стоит ровно у одной главы: она —
+    # то место, где «бесплатная короче» записано один раз, а не переписано в
+    # `natal/core` руками. Кампания, открывающая вторую главу на неделю, не
+    # должна вспоминать про длину.
     if kwargs.get("free") and "words" not in kwargs:
         kwargs["words"] = (180, 320)
         kwargs.setdefault("paragraphs", (2, 4))
@@ -153,7 +175,7 @@ NATAL: tuple[Chapter, ...] = (
 
 NUMEROLOGY: tuple[Chapter, ...] = (
     _c(1, "I", "life-path", "Life path", "What was I built to spend my life on?",
-       ("life path", "destiny"), free=True),
+       ("life path", "destiny")),
     _c(2, "II", "birthday-number", "Birthday number", "What comes easily that I overlook?",
        ("birthday number", "karmic debt")),
     _c(3, "III", "personal-year", "Personal year", "What season am I actually in?",
@@ -166,7 +188,7 @@ NUMEROLOGY: tuple[Chapter, ...] = (
 
 BIRTH_CARD: tuple[Chapter, ...] = (
     _c(1, "I", "personality", "Personality card", "How do people read me?",
-       ("Personality Card",), free=True),
+       ("Personality Card",)),
     _c(2, "II", "soul", "Soul card", "What runs underneath that?",
        ("Soul Card", "same card")),
     _c(3, "III", "year-card", "Year card", "What is this particular year for?",
@@ -177,8 +199,19 @@ TRANSITS: tuple[Chapter, ...] = (
     # A morning note, not an essay — the owner's verdict on the default
     # length was «слишком длинно». This chapter is also the Today screen's
     # day text, and a day text is read standing up.
+    #
+    # **И оно больше не бесплатно: «в транзитах нет бесплатного» (владелец,
+    # 17.08.2026).** Транзиты — движок ежедневного гороскопа, то есть ровно то,
+    # что продаётся подпиской; глава, переписываемая каждый день и раздаваемая
+    # даром, — это подписка, за которую забыли взять деньги. Экран «Сегодня»
+    # берёт свой дневной текст отсюда, так что у неподписчика он теперь
+    # закрыт — и закрыт честно, с открывающим абзацем, а не молчанием.
+    #
+    # Длина осталась своей (90–150), хотя глава стала платной и получила бы
+    # 300–480 по умолчанию: причина той длины — не тир, а то, что это дневная
+    # заметка. Подписчик, читающий её стоя в метро, не просил разворот.
     _c(1, "I", "active", "What is active now", "What is actually happening to me?",
-       ("transiting",), free=True, time_dependent=True,
+       ("transiting",), time_dependent=True,
        words=(90, 150), paragraphs=(1, 2), areas=True),
     _c(2, "II", "ahead", "The months ahead", "What is coming and when?",
        ("transiting",), time_dependent=True),
@@ -189,7 +222,7 @@ TRANSITS: tuple[Chapter, ...] = (
 SOLAR_RETURN: tuple[Chapter, ...] = (
     _c(1, "I", "year-shape", "The shape of the year", "What is this year for?",
        ("return ascendant", "return midheaven", "ruler of the year"),
-       free=True, time_dependent=True),
+       time_dependent=True),
     _c(2, "II", "emphasis", "Where the year lands", "Which part of my life does it touch?",
        ("angular", "return"), time_dependent=True),
     _c(3, "III", "contacts", "Where it meets your chart", "How does it connect to who I already am?",
@@ -197,8 +230,14 @@ SOLAR_RETURN: tuple[Chapter, ...] = (
 )
 
 COMPATIBILITY: tuple[Chapter, ...] = (
+    # **Тизер «Притяжение» и эта глава — одно и то же**, решение владельца от
+    # 17.08.2026. Отдельной бесплатной механики тизера больше нет: вместе с
+    # `free=True` сняты `TEASER_CAP_DEFAULT`, счётчик `pair_teaser` и настройка
+    # `pair.teaser_cap` в `billing/credits.py`. Глава закрыта как все прочие и
+    # показывает открывающий абзац; бесплатным остаётся **расчёт**
+    # совместимости, который и так ничего не стоит.
     _c(1, "I", "attraction", "What pulls", "Why this person and not another?",
-       ("venus", "mars", "sun", "moon"), free=True),
+       ("venus", "mars", "sun", "moon")),
     _c(2, "II", "friction", "Where it catches", "What will we keep arguing about?",
        ("square", "opposition", "saturn", "friction", "tension")),
     _c(3, "III", "overlays", "Where we land in each other", "What part of my life does this person occupy?",
@@ -209,7 +248,7 @@ COMPATIBILITY: tuple[Chapter, ...] = (
 
 ASTROCARTOGRAPHY: tuple[Chapter, ...] = (
     _c(1, "I", "lines", "Your lines", "Which places amplify which part of me?",
-       ("line",), free=True, time_dependent=True),
+       ("line",), time_dependent=True),
     _c(2, "II", "here", "Where you are now", "How does where I live affect me?",
        ("at the birthplace", "line"), time_dependent=True),
     _c(3, "III", "crossings", "Crossings", "Where do two things happen at once?",
@@ -218,7 +257,7 @@ ASTROCARTOGRAPHY: tuple[Chapter, ...] = (
 
 SYNTHESIS: tuple[Chapter, ...] = (
     _c(1, "I", "agreement", "Where the systems agree", "What is true from more than one direction?",
-       ("agree",), free=True),
+       ("agree",)),
     _c(2, "II", "disagreement", "Where they disagree", "What contradiction do I actually live in?",
        ("disagree",), words=(220, 400)),
     _c(3, "III", "single", "What only one system sees", "What would I miss reading just one of these?",
@@ -266,12 +305,58 @@ def relevant_factors(chapter: Chapter, factors: list[str] | tuple[str, ...]) -> 
 
 
 def free_chapters(system: str) -> frozenset[str]:
-    """Which chapters of a paid system stay open.
+    """Which chapters of this system stay open. Usually none.
 
     The single source of truth for this. It used to live in the entitlements
     module as a hand-written set of slugs, which drifted out of step with the
     chapters themselves — the paywall was exempting a chapter named "sun" that
     had been called "core" for some time, so the exemption never fired and the
     sample chapter was silently locked.
+
+    **Пустое множество — теперь нормальный ответ.** Семь систем из восьми
+    возвращают отсюда пустоту, и вызывающий не должен считать это поломкой:
+    свободна ровно одна глава во всём продукте, `natal/core`. Всякий, кто
+    пишет `next(iter(free_chapters(system)))`, ошибается на семи системах из
+    восьми — спрашивать надо `chapter.free` у конкретной главы.
     """
     return frozenset(chapter.slug for chapter in for_system(system) if chapter.free)
+
+
+# ── открывающий абзац закрытой главы ───────────────────────────────────────
+
+#: Длина открывающего абзаца, `locked-chapter-spec.md` §2.5: «≈40 слов,
+#: приходит от движка». Полоса вокруг сорока, а не точное число: писателю
+#: задаётся диапазон, и «ровно 40» он всё равно не выдержит, зато будет резать
+#: последнюю фразу.
+OPENING_WORDS: tuple[int, int] = (34, 46)
+
+#: Один абзац. Не два «покороче»: под ним начинается размытый филлер, и второй
+#: настоящий абзац читался бы как обрыв на середине мысли.
+OPENING_PARAGRAPHS: tuple[int, int] = (1, 1)
+
+
+def opening_of(chapter: Chapter) -> Chapter:
+    """Та же глава, ужатая до открывающего абзаца.
+
+    **Производная от главы, а не отдельная сущность.** Слаг, вопрос и `reads`
+    остаются теми же — то есть абзац пишется из тех же позиций, что и сама
+    глава, проходит тот же валидатор цитат и попадает на тот же экран под тот
+    же заголовок. Спека §7 проверяет это глазами: на закрытой главе обязан
+    быть виден **написанный** текст с позициями, а не описание системы; сделать
+    его из чего-то, кроме самой главы, значит написать описание системы.
+
+    `advice=False` и `areas=False` — потому что «одно конкретное действие» под
+    сорока словами это уже не абзац, а совет, купленный даром, а четыре строки
+    областей Today рисует только оплаченная дневная глава.
+
+    `free` намеренно **не** ставится в True. Это не бесплатная глава; это
+    единственный текст, на который тратятся токены до оплаты, и роутер решает
+    про его модель и потолок отдельно — см. `_write_opening` там.
+    """
+    return replace(
+        chapter,
+        words=OPENING_WORDS,
+        paragraphs=OPENING_PARAGRAPHS,
+        advice=False,
+        areas=False,
+    )

@@ -852,9 +852,6 @@ class LFr extends L {
   String get cabUnknownTime => 'heure de naissance inconnue';
 
   @override
-  String get cabUnlock => 'Déverrouiller';
-
-  @override
   String get cabUpcoming => 'à venir';
 
   @override
@@ -2271,15 +2268,6 @@ class LFr extends L {
   String get paywallV3PairInputDate => 'Date de naissance';
 
   @override
-  String get paywallV3PairTeaserTitle =>
-      'Ce qui vous attire l\'un vers l\'autre';
-
-  @override
-  String paywallV3PairTeaserCta(String price) {
-    return 'La lecture complète · $price';
-  }
-
-  @override
   String paywallV3PairPrice(String price) {
     return '$price · pour toujours';
   }
@@ -2505,4 +2493,48 @@ class LFr extends L {
   @override
   String get paywallV3CancelNoteNoDate =>
       'Résilier ouvre les réglages de ton identifiant Apple';
+
+  @override
+  String get systemsTapToAdd => 'ajoute quelqu\'un';
+
+  @override
+  String get systemsReadOpening => 'lis le début';
+
+  @override
+  String systemsChaptersOpen(int open, int total) {
+    return '$open sur $total ouverts';
+  }
+
+  @override
+  String get chapterFreeBadge => 'offert';
+
+  @override
+  String chapterUnlockCta(String price) {
+    return 'Débloquer et lire · $price';
+  }
+
+  @override
+  String get chapterForeverNote => 'À toi pour toujours · sans abonnement';
+
+  @override
+  String get chapterDailyBadge => 'mis à jour chaque jour';
+
+  @override
+  String get chapterLivingNote =>
+      'Ce chapitre se réécrit chaque jour — il vit dans l\'abonnement, pas dans un achat';
+
+  @override
+  String chapterWhatFollows(int n, String system) {
+    String _temp0 = intl.Intl.pluralLogic(
+      n,
+      locale: localeName,
+      other: '$n chapitres de ton $system, écrits à partir de ces positions',
+      one: '$n chapitre de ton $system, écrit à partir de ces positions',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get pairPerPersonNote =>
+      'Par personne · à toi pour toujours · ajoute autant de personnes que tu veux';
 }

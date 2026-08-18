@@ -30,16 +30,35 @@ import 'writing_art.dart';
 /// синтез не показывают строк вовсе: их числа уже внутри рисунка, и второй раз
 /// печатать их значило бы повторяться.
 class SystemScreen extends StatefulWidget {
-  const SystemScreen({super.key, required this.system, required this.onOpenChapter});
+  const SystemScreen({
+    super.key,
+    required this.system,
+    required this.onOpenChapter,
+    this.partner,
+  });
 
   final SystemSlug system;
-  final void Function(SystemSlug system, String chapter) onOpenChapter;
+
+  /// [partner] — кого сравнивать, когда система про пару. Дальше он уходит и в
+  /// расчёт колеса, и в главу: рисунок над оглавлением и текст под ним обязаны
+  /// быть про одну и ту же пару, иначе экран показывает одно небо, а читает
+  /// другое.
+  final void Function(SystemSlug system, String chapter, {Profile? partner})
+      onOpenChapter;
+
+  /// С кем сравнивать. `null` — «не сказано», и тогда берётся первый
+  /// сохранённый: ровно то же правило, по которому выбирает сервер, пока
+  /// человек один.
+  final Profile? partner;
 
   @override
   State<SystemScreen> createState() => _SystemScreenState();
 }
 
 class _SystemScreenState extends State<SystemScreen> {
+  /// Пара этого экрана. Меняется по «Change» — и тогда пересчитывается всё:
+  /// колесо, факты и главы, в которые отсюда уходят.
+  Profile? _partner;
   ChapterList? _chapters;
   CalcResult? _result;
   AlmaError? _failure;
@@ -68,6 +87,24 @@ class _SystemScreenState extends State<SystemScreen> {
     }
   }
 
+
+  /// Кого сравнивать на этом экране — и только у совместимости.
+  ///
+  /// Порядок: выбранный руками, потом названный снаружи, потом первый
+  /// сохранённый. Человек, которого больше нет — его могли удалить на экране
+  /// людей, пока эта страница висела в стеке, — пропускается: расчёт против
+  /// исчезнувшего профиля отвечает 404, и экран показывал бы отказ там, где
+  /// достаточно взять того, кто остался.
+  Profile? _pickPartner(AlmaSession session) {
+    if (widget.system != SystemSlug.compatibility) return null;
+    for (final candidate in [_partner, widget.partner]) {
+      if (candidate == null) continue;
+      for (final person in session.people) {
+        if (person.id == candidate.id) return person;
+      }
+    }
+    return session.people.firstOrNull;
+  }
 
   /// Карта отношений для колеса.
   ///
@@ -143,9 +180,13 @@ class _SystemScreenState extends State<SystemScreen> {
     // `other_profile_id`», и порт эту строку показывал как есть: экран просил
     // какой-то id. Партнёр берётся из профилей аккаунта; когда его нет,
     // запрос не отправляется вовсе — просить нечего.
-    final partner = widget.system == SystemSlug.compatibility
-        ? session.people.firstOrNull
-        : null;
+    //
+    // **Названный побеждает первого сохранённого.** Первый — это догадка, и
+    // она верна ровно до второго человека: с двумя людьми в аккаунте догадка
+    // экрана и догадка сервера — разные вещи, и тот, кто пришёл сюда за
+    // конкретной парой, читал бы чужую.
+    final partner = _pickPartner(session);
+    _partner = partner;
     final needsPartner =
         widget.system == SystemSlug.compatibility && partner == null;
     final computed = needsPartner
@@ -268,11 +309,7 @@ class _SystemScreenState extends State<SystemScreen> {
           ),
           const SizedBox(height: 14),
           InkWell(
-            onTap: () async {
-              await Navigator.of(context).push(CupertinoPageRoute(
-                  builder: (context) => const PeopleScreen()));
-              if (mounted) _load();
-            },
+            onTap: _changePartner,
             child: Container(
               height: 54,
               alignment: Alignment.center,
@@ -295,16 +332,25 @@ class _SystemScreenState extends State<SystemScreen> {
           const SizedBox(height: 7),
           _compatBullet(l.cabCompatBulletComposite),
         ]
-        else if (_computeFailure case final error?)
-          Padding(
-            padding: const EdgeInsets.only(top: 4, bottom: 6),
-            child: Text(
-              error is ServerRefused && error.message.isNotEmpty
-                  ? error.message
-                  : l.stateUnavailable,
-              style: AlmaType.meta,
+        else ...[
+          // **Пара названа вслух, и её можно сменить.** Колесо отношений
+          // одинаково для любых двоих: без имени человек, у которого сохранено
+          // двое, не знает, чьё небо перед ним, — а глава, открытая отсюда,
+          // будет именно про этого второго. Строка стоит там же, где у
+          // остальных систем строки фактов: это и есть факт этого экрана.
+          if (widget.system == SystemSlug.compatibility && _partner != null)
+            _partnerLine(context, l, _partner!),
+          if (_computeFailure case final error?)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 6),
+              child: Text(
+                error is ServerRefused && error.message.isNotEmpty
+                    ? error.message
+                    : l.stateUnavailable,
+                style: AlmaType.meta,
+              ),
             ),
-          ),
+        ],
         ...facts,
         SizedBox(height: gap),
         _section(
@@ -484,6 +530,60 @@ class _SystemScreenState extends State<SystemScreen> {
     // 4:12 AM там, где по 12. Руками этот выбор не делается.
     return '${DateFormat.yMMMMd(l.localeName).format(local)}'
         ' · ${DateFormat.jm(l.localeName).format(local)}';
+  }
+
+  /// Позвать человека — и вернуться с ним, а не просто «сходить на экран
+  /// людей».
+  ///
+  /// **Экран людей открывается в режиме выбора и отдаёт того, на ком
+  /// остановились.** Раньше отсюда уходили в список и возвращались ни с чем:
+  /// экран перечитывал себя и снова брал первого сохранённого. Для одного
+  /// человека это совпадало с ожиданием, для двоих — нет: добавивший второго
+  /// возвращался к небу первого. Названный человек уходит и в расчёт, и в главы,
+  /// открытые с этой страницы.
+  Future<void> _changePartner() async {
+    final chosen = await Navigator.of(context).push<Profile>(
+        CupertinoPageRoute(builder: (context) => const PeopleScreen(picking: true)));
+    if (!mounted) return;
+    // Ушли ни с кем — экран всё равно перечитывается: там могли удалить
+    // человека, против которого посчитано текущее колесо.
+    if (chosen != null) _partner = chosen;
+    _load();
+  }
+
+  /// Строка «с кем считаем» и слово «Изменить» справа.
+  ///
+  /// Собственное имя читателя ставится первым, когда оно известно, — «Аня и
+  /// Маркус» — той же строкой каталога, которой пара названа везде
+  /// (`cabPairJoin`). Без имени остаётся один партнёр: выдумывать читателю
+  /// обращение ради красивой пары незачем.
+  Widget _partnerLine(BuildContext context, L l, Profile partner) {
+    final mine = SessionScope.of(context).profile?.name;
+    final theirs =
+        partner.name?.isNotEmpty == true ? partner.name! : l.scrPeopleUnnamed;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _changePartner,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
+        ),
+        child: Row(children: [
+          Expanded(
+            child: Text(
+              mine == null || mine.isEmpty ? theirs : l.cabPairJoin(mine, theirs),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AlmaType.numeral.copyWith(fontSize: 17),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(l.scrPeopleChange,
+              style: AlmaType.meta.copyWith(color: AlmaPalette.goldBright)),
+        ]),
+      ),
+    );
   }
 
   /// Пункт списка «что будет посчитано» на S23.
@@ -741,7 +841,13 @@ class _SystemScreenState extends State<SystemScreen> {
   /// и дверь; прятать её из списка значило бы прятать сам продукт.
   Widget _row(L l, ChapterEntry entry) {
     return InkWell(
-      onTap: () => widget.onOpenChapter(widget.system, entry.slug),
+      // **Глава уходит с именем пары.** Без него сервер угадывает второго и
+      // угадывает верно ровно до второго сохранённого человека: при двоих он
+      // отвечает 422 `partner_required`, и глава показывала «добавь человека»
+      // тому, у кого их уже двое. У остальных систем `_partner` пуст, и поле не
+      // уезжает вовсе.
+      onTap: () =>
+          widget.onOpenChapter(widget.system, entry.slug, partner: _partner),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(

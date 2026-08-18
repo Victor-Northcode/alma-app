@@ -274,9 +274,14 @@ async def test_the_working_is_cited_but_never_shown_as_a_pill(natal):
     chapter = chapters.find("numerology", "life-path")
     offered = chapters.relevant_factors(chapter, result.factors)
     working = next(f for f in result.factors if "working:" in f)
+    # Три абзаца, а не два: «путь жизни» перестал быть бесплатной главой и
+    # получил обычный платный минимум `paragraphs=(3, 5)`. Валидатор отвергает
+    # двухабзацную платную главу, писатель уходит на вторую попытку, и тест
+    # падал бы на кончившихся заготовках вместо того, что проверяет.
     provider = ScriptedProvider(responses=[
         _reply([("Первый абзац, спокойный.", [offered[0], working]),
-                ("Второй абзац, тоже.", [offered[0]])])
+                ("Второй абзац, тоже.", [offered[0]]),
+                ("Третий, которого просит длина.", [offered[0]])])
     ])
 
     written = await writer.write(
@@ -1294,11 +1299,39 @@ def test_chapter_slugs_are_unique_within_a_system():
         assert len(slugs) == len(set(slugs)), f"{system} has a duplicate chapter slug"
 
 
-def test_every_system_has_exactly_one_free_chapter():
-    """The sample. Two would give away the product; none would sell nothing."""
+def test_exactly_one_chapter_in_the_whole_product_is_free():
+    """Натал I «Core», и больше ничего — решение владельца от 17.08.2026.
+
+    Тест раньше требовал по бесплатной главе на каждую из восьми систем, и
+    ровно это владелец увидел на экране: одни главы открывались, другие
+    показывали чёрную стену, и никакого правила за этим не читалось. Одна
+    бесплатная глава — правило, которое можно назвать вслух и нарисовать
+    бейджем; восемь — восемь разных обещаний.
+
+    Держится списком, а не счётчиком: «одна бесплатная» и «бесплатная —
+    именно эта» ломаются по-разному, и второе ломается тише.
+    """
+    free = [
+        f"{system}/{c.slug}"
+        for system, defined in chapters.BY_SYSTEM.items()
+        for c in defined
+        if c.free
+    ]
+    assert free == ["natal/core"]
+
+
+def test_the_free_chapter_is_the_first_one_of_its_system():
+    """Бесплатной может быть только глава I, и это не украшение.
+
+    Квиз кончается тем, что открывается она; человек, которому даром досталась
+    глава VII, читает середину книги и не понимает начала.
+    """
     for system, defined in chapters.BY_SYSTEM.items():
-        free = [c for c in defined if c.free]
-        assert len(free) == 1, f"{system} has {len(free)} free chapters"
+        for chapter in defined:
+            if chapter.free:
+                assert chapter.index == 1, (
+                    f"{system}/{chapter.slug} is free and is not the opening chapter"
+                )
 
 
 def test_most_natal_chapters_find_something_to_read(natal):

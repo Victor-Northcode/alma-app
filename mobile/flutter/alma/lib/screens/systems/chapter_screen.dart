@@ -1,9 +1,11 @@
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../billing/alma_store.dart';
 import '../../billing/ladder.dart';
 import '../../design/buttons.dart';
 import '../../design/gilt_page.dart';
@@ -17,12 +19,28 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../cabinet_words.dart';
-import '../paywall/door_screen.dart';
-import '../paywall/paywall_router.dart';
+import '../paywall/paywall_parts.dart' show paywallNoticeText;
 import 'people_screen.dart';
 import 'writing_art.dart';
 import '../../state/reading_tally.dart';
 import '../../state/session.dart';
+
+/// Проза главы — одна на закрытую и на открытую половину экрана.
+///
+/// **Один стиль, потому что это один текст.** Первый абзац приходит с сервера
+/// до покупки и остаётся первым абзацем после неё; набранный до и после разными
+/// гарнитурами, он доказывал бы обратное тому, ради чего паттерн построен —
+/// что закрытая глава это **та же глава, дописанная наполовину**, а не другой
+/// экран. По той же причине им набран и филлер под размытием: ритм строк должен
+/// совпадать с настоящим, иначе размытая колонка читается чужой вставкой.
+///
+/// Lora 400 16/1.62 — числа эталона (`Alma - Locked Chapter Pattern.dc.html`,
+/// C1–C6) и они же правило `today-reading-spec §1`: всё, что длиннее абзаца,
+/// набирается гарнитурой чтения, а не интерфейсной. Здесь стоял
+/// `AlmaType.body` — Golos 15.5, — и это был единственный кусок длинной прозы
+/// продукта, набранный гротеском.
+TextStyle _chapterProse() => AlmaType.readingBody(16)
+    .copyWith(height: 1.62, color: AlmaPalette.ink);
 
 /// Одна глава, на единственной светлой поверхности продукта.
 ///
@@ -87,15 +105,24 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   Reading? _reading;
 
-  /// Права на эту главу нет — на экране стена S26, и запроса не будет.
+  /// Права на эту главу нет — на экране паттерн закрытой главы, и запроса не
+  /// будет.
   ///
-  /// **Здесь стоял `_preview`, и это отменённое правило.** Платная глава
-  /// приезжала *написанной*: сервер сочинял её целиком, помечал ответ
-  /// `preview`, экран показывал первый абзац и размывал остальные. Владелец
-  /// снял правило — «мы не должны сразу писать всю главу, пока у человека нет
-  /// подписки или купленного», — потому что за каждый такой показ платили мы,
-  /// до всякого решения о покупке. Поэтому размытой пробы больше нет вовсе:
-  /// текста не написано, и экран не должен делать вид, что он есть.
+  /// **Здесь стоял `_preview`, и это дважды переигранное правило.** Сначала
+  /// платная глава приезжала *написанной*: сервер сочинял её целиком, помечал
+  /// ответ `preview`, экран показывал первый абзац и размывал остальные.
+  /// Владелец снял это — «мы не должны сразу писать всю главу, пока у человека
+  /// нет подписки или купленного», — потому что за каждый такой показ платили
+  /// мы, до всякого решения о покупке; на месте пробы встала чёрная стена
+  /// «Unlock to read».
+  ///
+  /// Стена не прожила и той причины, ради которой ставилась: она ничего не
+  /// показывала и ничего не доказывала, и просила заплатить за заголовок.
+  /// Теперь работают обе половины сразу — **один написанный абзац** приезжает
+  /// с оглавлением (`ChapterEntry.opening`, ≈40 слов, единственные токены до
+  /// покупки), а хвост под ним размыт **клиентским филлером**, который не стоит
+  /// ничего (`docs/monetization/locked-chapter-spec.md` §3). Экран не врёт, что
+  /// глава написана, и не просит платить за пустоту.
   ///
   /// Считается **до** запроса, из оглавления (`ChapterEntry.open`) — того
   /// самого, которое только что показал экран системы, — поэтому кнопка стоит
@@ -114,7 +141,40 @@ class _ChapterScreenState extends State<ChapterScreen> {
   AlmaError? _failure;
   bool _loading = true;
 
-  double _pull = 0;
+  /// Открывающий абзац закрытой главы — тот единственный текст, за который мы
+  /// платим до покупки. Приезжает полем `opening`; `null` — его нет, и паттерн
+  /// рисуется без него.
+  Reading? _opening;
+
+  /// Пару нечем назвать: сервер сказал `needs_partner`. Цены на этом экране
+  /// быть не должно — сначала человек, потом деньги.
+  bool _needsPartner = false;
+
+  /// Чем эта система открывается — **словом каталога сервера**, а не выводом
+  /// клиента из слага.
+  ///
+  /// Таблица «система → товар» живёт в `catalogue.unlocks`, и вторая её копия
+  /// однажды предложит «$4.99 навсегда» за транзиты. `null` — ответ ещё не
+  /// приехал, и до тех пор кнопка торгует тем, что вывела сама
+  /// ([chapterSku]): цена обязана стоять на первом кадре, а не после сети.
+  LadderKey? _product;
+
+  /// Сколько уже протянули за конец главы — для полоски под хвостом.
+  ///
+  /// **Признаком, а не полем состояния, и это была настоящая поломка.** Здесь
+  /// стояло `double`, и `_onOverscroll` двигал его через `setState` — на
+  /// **каждом** кадре прокрутки, а не только на дотяжке за дно. То есть вся
+  /// глава — список абзацев, вклейка, мета-строка, знак конца — перестраивалась
+  /// шестьдесят раз в секунду ради полоски 64×2 внизу.
+  ///
+  /// Владелец увидел это не там, где причина: «в главах этот ползунок двигается
+  /// не плавно за движениями пальца». Нить справа ([_read]) считалась и
+  /// рисовалась правильно с первого дня — у неё просто не оставалось кадров,
+  /// потому что их съедала перестройка страницы рядом.
+  ///
+  /// Довод против `setState` каждый кадр записан прямо ниже, у `_read`, и был
+  /// применён к нити, но не к протяжке. Теперь применён к обеим.
+  final ValueNotifier<double> _pull = ValueNotifier(0);
   bool _armed = false;
 
   /// Сколько главы прочитано — для нити у правого поля ([GiltThread]).
@@ -138,6 +198,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // если ушли жестом назад, а не кнопкой.
     readingNow.value = false;
     _read.dispose();
+    _pull.dispose();
     super.dispose();
   }
 
@@ -203,11 +264,16 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // Нить возвращается в начало вместе со страницей: следующая глава
     // прочитана на ноль, чем бы ни кончилась предыдущая.
     _read.value = 0;
+    _pull.value = 0;
     setState(() {
       _loading = true;
       _failure = null;
-      _pull = 0;
       _armed = false;
+      // Всё, что приезжало про предыдущую главу, уходит вместе с ней: абзац
+      // одной главы над титулом другой — худшая из возможных ошибок здесь.
+      _opening = null;
+      _needsPartner = false;
+      _product = null;
     });
     try {
       // **Оглавление показывается, как только пришло, а не вместе с текстом.**
@@ -225,42 +291,57 @@ class _ChapterScreenState extends State<ChapterScreen> {
         _list = list;
         _locked = _right(session, from: list) == false;
       });
-      // **Закрытая глава не спрашивает сервер вовсе.** Не потому, что сервер
-      // ответит отказом — он ответит, 402 `locked`, — а потому, что просить
-      // текст, который решено не писать, значит ждать впустую на глазах у
-      // человека, которому нужна кнопка.
+      // **Закрытая глава спрашивает сервер снова — но не главу, а её первый
+      // абзац.**
       //
-      // Признак перелистывания снимается здесь же: страница доехала, пусть и
-      // до стены. Иначе протяжка в закрытую главу оставляла бы жест
-      // заблокированным до следующего удачного чтения.
-      if (_locked) {
-        setState(() => _advancing = false);
-        return;
-      }
-      setState(() => _writing = true);
+      // Долгое время не спрашивала вовсе: право читалось из оглавления, а
+      // просить текст, который решено не писать, значило ждать впустую на
+      // глазах у того, кому нужна кнопка. Стена, которую эта экономия
+      // оставляла, не доказывала ничего — и теперь сервер отвечает на закрытую
+      // главу 200 с `locked: true` и `opening`: сорок слов средней моделью, с
+      // настоящими позициями (`readings.py`, `_locked_chapter`).
+      //
+      // Ждать их не страшно: паттерн уже на экране — титул, размытый хвост и
+      // кнопка с ценой стоят с первого кадра, потому что право известно из
+      // оглавления. Абзац просто дописывается сверху, когда приедет. Поэтому
+      // «Пишу эту главу…» тут не поднимается: обещать целую главу тому, кому
+      // она не положена, — то же обещание, ради снятия которого всё делалось.
+      if (!_locked) setState(() => _writing = true);
       final response = await session.client.reading(
         system: widget.system,
         chapter: _showing,
         locale: session.locale,
         partnerProfileId: _partnerId(session),
       );
-      if (mounted) {
-        // Пергамент появляется вместе с текстом — и бар вместе с ним. Но
-        // только если эта глава ещё наверху: пока она писалась, человек мог
-        // уйти назад или открыть другую, и поднимать пергамент из-под чужой
-        // страницы нельзя.
-        final route = ModalRoute.of(context);
-        if (route == null || route.isCurrent) readingNow.value = true;
+      if (!mounted) return;
+      if (response.locked) {
+        // Слово сервера сильнее памяти клиента: право могло истечь между
+        // оглавлением и запросом, и тогда паттерн встаёт здесь, а не по
+        // догадке.
         setState(() {
-          _reading = response.reading;
+          _locked = true;
+          _opening = response.opening;
+          _needsPartner = response.needsPartner;
+          _product = LadderKey.from(response.product);
           _advancing = false;
         });
-        // Глава прочитана — счётчик системы на единицу больше. Считается
-        // здесь, а не при открытии экрана: стена и ожидание письма — это не
-        // чтение, а спасение от отмены (V9) обязано предлагать ту систему,
-        // которую действительно читают.
-        ReadingTally.noteOpen(widget.system);
+        return;
       }
+      // Пергамент появляется вместе с текстом — и бар вместе с ним. Но
+      // только если эта глава ещё наверху: пока она писалась, человек мог
+      // уйти назад или открыть другую, и поднимать пергамент из-под чужой
+      // страницы нельзя.
+      final route = ModalRoute.of(context);
+      if (route == null || route.isCurrent) readingNow.value = true;
+      setState(() {
+        _reading = response.reading;
+        _advancing = false;
+      });
+      // Глава прочитана — счётчик системы на единицу больше. Считается
+      // здесь, а не при открытии экрана: закрытая страница и ожидание письма —
+      // это не чтение, а спасение от отмены (V9) обязано предлагать ту систему,
+      // которую действительно читают.
+      if (response.reading != null) ReadingTally.noteOpen(widget.system);
     } on AlmaError catch (error) {
       if (mounted) setState(() => _failure = error);
     } finally {
@@ -288,38 +369,84 @@ class _ChapterScreenState extends State<ChapterScreen> {
     return (widget.partner ?? session.people.firstOrNull)?.id;
   }
 
-  /// Вернулись с витрины. Право могло измениться — перечитываем оглавление у
-  /// сервера и, если глава открылась, тем же путём идём за текстом: покупка
-  /// это и есть то, после чего глава пишется целиком.
+  /// Право могло измениться — перечитываем оглавление у сервера и, если глава
+  /// открылась, тем же путём идём за текстом: покупка это и есть то, после чего
+  /// глава пишется целиком.
+  ///
+  /// Зовётся из паттерна закрытой главы, когда магазин сказал «право выдано».
+  /// Отдельного «вернулись с витрины» больше нет: витрины на этом пути нет.
   Future<void> _afterOffer() async {
     if (mounted) await _load(relist: true);
   }
 
-  /// Дверь этой главы — V2, поверхность P2.
+  /// Отказы, которые лечатся подпиской, а не дверью.
   ///
-  /// **Что показать, решает маршрутизатор, а не глава.** У транзитов и соляра
-  /// двери нет вовсе, и тап по их закрытой главе ведёт на пейволл подписки;
-  /// знать об этом главе незачем — она сообщает намерение и то, что видит
-  /// перед собой: номер главы, её имя, вклейку и число платных глав системы.
-  Future<void> _openDoor() async {
-    final list = _list;
+  /// Потолок бесплатного письма: право на главу есть, а денег на её написание
+  /// в этом месяце уже нет. Раньше на это отвечал отдельный экран — «Alma
+  /// сегодня много для тебя написала · Посмотреть планы», — и §5 спеки его
+  /// удаляет: у статичной главы нет никакого «завтра», а экран смешивал разовое
+  /// чтение с подпиской. Отвечает тот же паттерн закрытой главы, только продаёт
+  /// он подписку (C4), потому что снимает потолок именно она.
+  static const _capReasons = ['month_budget', 'budget_exceeded'];
+
+  /// Рисуется ли сейчас паттерн закрытой главы, а не текст.
+  ///
+  /// **Три входа в одно состояние, и это не небрежность.** Право отсутствует по
+  /// оглавлению ([_locked]) — обычный случай, известный до первого кадра; право
+  /// истекло между списком и запросом (402 `locked`); письмо упёрлось в потолок
+  /// месяца. Показать во всех трёх надо одно и то же: половину главы и одну
+  /// кнопку. Разные экраны на них — это ровно те два экрана, которые §5 велит
+  /// удалить.
+  ///
+  /// Подписчику потолок не продаётся: ему уже нечего купить, и вместо кнопки он
+  /// получает фразу сервера — «следующее откроется завтра».
+  bool _lockedPattern(AlmaSession session) {
+    if (_reading != null) return false;
+    // Пару нечем назвать: закрыто, но не деньгами. Цена здесь была бы вопросом
+    // «с кем сравнить» по цене $4.99 — спека §1 требует сначала человека.
+    if (_needsPartner) return false;
+    if (_locked) return true;
+    final failure = _failure;
+    if (failure is! ServerRefused) return false;
+    if (failure.code == 'locked') return true;
+    return _capReasons.contains(failure.code) && !session.isSubscriber;
+  }
+
+  /// Метка в правом углу шапки, если ей есть что сказать.
+  ///
+  /// Две, и они не встречаются: «обновляется каждый день» — у живых систем
+  /// (C4), «бесплатно» — у единственной свободной главы продукта (C1).
+  Widget? _headBadge(L l, {required bool locked}) {
+    if ((_product ?? chapterSku(widget.system)) == LadderKey.subMonthly) {
+      return _ChapterBadge(l.chapterDailyBadge);
+    }
+    if (!locked && _entry?.free == true) {
+      return _ChapterBadge(l.chapterFreeBadge);
+    }
+    return null;
+  }
+
+  /// Закрытая глава: шесть частей эталона на той же бумаге, что и написанная.
+  Widget _lockedPage(L l) {
     final entry = _entry;
-    await showPaywall(
-      context,
-      PaywallIntent.door(widget.system),
-      trigger: 'locked_chapter',
-      // Заголовок двери обещает то, что за ней: платные главы, без
-      // бесплатной. `null` — оглавление не доехало, и число не выдумывается.
-      chapters: list?.chapters.where((chapter) => !chapter.free).length,
-      chapter: entry == null
-          ? null
-          : DoorChapter(
-              numeral: entry.numeral,
-              title: entry.title,
-              plate: AlmaPlates.name(widget.system, entry.slug),
-            ),
+    final opening = _opening;
+    return _LockedChapter(
+      system: widget.system,
+      // Товар — слово сервера, пока оно не приехало — свой вывод. Так цена
+      // стоит на первом кадре и при этом не спорит с каталогом.
+      sku: _product ?? chapterSku(widget.system),
+      overline: '${entry?.numeral ?? ''} · ${_systemName(l)}'.toLowerCase(),
+      // Титул из оглавления, а не из абзаца: он известен до сети, и заголовок,
+      // подставляющийся через десять секунд, читался бы подменой страницы.
+      title: entry?.title ?? opening?.title ?? '',
+      opening: opening,
+      systemName: _systemName(l),
+      // Обещание над кнопкой считает **платные** главы: бесплатная за деньги не
+      // открывается, и включать её в счёт значило бы продавать то, что уже
+      // отдано. `null` — оглавление не доехало, и число не выдумывается.
+      paidChapters: _list?.chapters.where((chapter) => !chapter.free).length,
+      onOpened: _afterOffer,
     );
-    await _afterOffer();
   }
 
   ChapterEntry? get _entry {
@@ -354,7 +481,10 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// Инерция рисует полосу, но не переворачивает.
   void _onOverscroll(double distance, {required bool byHand}) {
     if (_advancing || _next == null || _loading) return;
-    setState(() => _pull = distance);
+    // Обычное чтение не трогает вообще ничего: пока за дно не тянут, тут нечему
+    // меняться, и лишнее уведомление слушателю — это лишний кадр.
+    if (distance == 0 && _pull.value == 0) return;
+    _pull.value = distance;
     if (!byHand) {
       // **Палец ушёл — вот тогда и переворачиваем.**
       //
@@ -390,11 +520,11 @@ class _ChapterScreenState extends State<ChapterScreen> {
   void _advance() {
     final next = _next;
     if (next == null) return;
+    _pull.value = 0;
     setState(() {
       _advancing = true;
       _showing = next.slug;
       _reading = null;
-      _pull = 0;
       _armed = false;
       _committed = false;
     });
@@ -415,7 +545,13 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // устройстве, экран «глава пишется, 1 / 3».
     final route = ModalRoute.of(context);
     final onTop = route == null || route.isCurrent;
-    final onParchment = _reading != null;
+    // **Закрытая глава лежит на той же бумаге, что открытая, — в этом весь
+    // паттерн.** Раньше пергамент означал «текст куплен»: без права экран
+    // оставался ночью со стеной посередине, и покупка выглядела переходом на
+    // другой экран. Теперь это одна страница в двух состояниях — половина
+    // написана, половина размыта, — и поверхность у неё обязана быть одна.
+    final locked = _lockedPattern(SessionScope.of(context));
+    final onParchment = _reading != null || locked;
     if (onTop && readingNow.value != onParchment) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) readingNow.value = onParchment;
@@ -490,10 +626,26 @@ class _ChapterScreenState extends State<ChapterScreen> {
                     0,
                   ),
                   child: onParchment
-                      // Счётчика глав рядом со стрелкой на бумаге нет: холст
-                      // печатает его вертикально под нитью прогресса у правого
-                      // поля, и держать два счётчика на одной странице незачем.
-                      ? GiltBack(onTap: () => Navigator.of(context).pop())
+                      ? Row(children: [
+                          GiltBack(onTap: () => Navigator.of(context).pop()),
+                          // **Счётчик глав стоит рядом со стрелкой только на
+                          // закрытой странице.** У открытой он напечатан
+                          // вертикально под нитью прогресса ([GiltThread]) — там
+                          // же, где холст его и рисует, — и держать два
+                          // счётчика на одной странице незачем. Нити на
+                          // закрытой главе нет: прогресса чтения там, где текста
+                          // ещё нет, не бывает, — поэтому число переезжает в
+                          // шапку, как на кадрах C2–C6.
+                          if (_reading == null) ...[
+                            const SizedBox(width: 12),
+                            Text('$index / $total',
+                                style: AlmaType.numeral.copyWith(
+                                    fontSize: 13,
+                                    color: AlmaPalette.goldDeep)),
+                          ],
+                          const Spacer(),
+                          ?_headBadge(l, locked: locked),
+                        ])
                       : Row(children: [
                           IconButton(
                             onPressed: () => Navigator.of(context).pop(),
@@ -528,7 +680,11 @@ class _ChapterScreenState extends State<ChapterScreen> {
                     ),
                     child: KeyedSubtree(
                       key: ValueKey(_showing),
-                      child: onParchment ? _underMargin(_page(l)) : _page(l),
+                      // Поле верха гасит **прокрутку**, уходящую под шапку, — и
+                      // положено только ей. Закрытая страница не прокручивается
+                      // вовсе, и та же маска съедала бы у неё верхушку
+                      // надзаголовка ни за чем.
+                      child: _reading != null ? _underMargin(_page(l)) : _page(l),
                     ),
                   ),
                 ),
@@ -537,9 +693,11 @@ class _ChapterScreenState extends State<ChapterScreen> {
           ),
           // Нить прогресса — поверх содержимого и мимо безопасной зоны: она
           // стоит по середине высоты **экрана**, как на холсте, и вырез её не
-          // сдвигает. Только на бумаге: прогресса чтения там, где текста ещё
-          // нет, не бывает.
-          if (onParchment) GiltThread(read: _read, counter: '$index / $total'),
+          // сдвигает. Только у написанной главы: прогресса чтения там, где
+          // текста ещё нет, не бывает — на закрытой странице нить показывала бы
+          // долю прочитанного от размытого филлера.
+          if (_reading != null)
+            GiltThread(read: _read, counter: '$index / $total'),
         ],
       ),
     );
@@ -576,10 +734,23 @@ class _ChapterScreenState extends State<ChapterScreen> {
   }
 
   Widget _page(L l) {
-    // Стена — раньше всего остального, включая ожидание: на закрытой главе
-    // ждать нечего, а кнопка нужна сразу.
-    if (_locked && _reading == null) {
-      return _LockedWall(onOpen: _openDoor);
+    // Паттерн — раньше всего остального, включая ожидание: на закрытой главе
+    // ждать нечего, а абзац и кнопка нужны сразу. Сюда же сведены все три
+    // повода показать его ([_lockedPattern]) — в том числе оба отказа сервера,
+    // у каждого из которых был свой экран.
+    if (_lockedPattern(SessionScope.of(context))) return _lockedPage(l);
+    // **Совместимости нужен второй человек, и говорит об этом теперь сам
+    // ответ.** Раньше это был отказ 422 `partner_required` (он остаётся: так
+    // сервер отвечает, когда партнёров несколько и надо назвать одного); теперь
+    // безымянная пара приходит закрытой главой с признаком `needs_partner`, и
+    // отвечать на неё ценой нельзя — покупать нечего, пока не сказано, про кого
+    // глава.
+    if (_needsPartner && _reading == null) {
+      return _NeedsPartner(
+        system: widget.system,
+        message: l.cabCompatNeedsSecond,
+        onAdded: _load,
+      );
     }
     if (_writing && _reading == null) {
       // **Самое долгое ожидание в продукте — сорок-девяносто секунд.**
@@ -631,15 +802,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
       );
     }
     final failure = _failure;
-    // **Стена говорит по-человечески.** Сервер отвечает «natal has not been
-    // unlocked yet» — это для разработчика; читателю нужна причина и путь.
-    //
-    // Второй рубеж, а не первый: право теперь читается из оглавления до
-    // запроса, и сюда попадает только случай, когда клиент считал главу
-    // открытой, а сервер отказал, — право истекло между списком и запросом.
-    if (failure is ServerRefused && failure.code == 'locked' && _reading == null) {
-      return _LockedWall(onOpen: _openDoor);
-    }
     // **Совместимости нужен второй человек — и дверь к нему, а не фраза в
     // пустоте.**
     //
@@ -659,48 +821,25 @@ class _ChapterScreenState extends State<ChapterScreen> {
       );
     }
     if (failure != null && _reading == null) {
-      // **Отказ по потолку сам называет выход — значит, выход обязан быть на
-      // экране.** Фраза кончается словами «или прямо сейчас, с подпиской», а
-      // под ней не было ничего: ни двери, ни кнопки. Предложение, названное
-      // текстом и не показанное, хуже отсутствующего — оно выглядит как
-      // издёвка. Остальные отказы двери не получают: сеть и отказ письма
-      // подпиской не лечатся.
-      final capped = failure is ServerRefused &&
-          const ['month_budget', 'budget_exceeded'].contains(failure.code) &&
-          !SessionScope.of(context).isSubscriber;
+      // **Кнопки здесь больше нет, и это удаление, а не потеря.**
+      //
+      // Стояла обводка «Посмотреть планы» под фразой сервера про потолок
+      // месяца — тот самый экран «Alma сегодня много для тебя написала · См.
+      // планы», который §5 спеки удаляет: у статичной главы нет «завтра», а
+      // экран смешивал разовое чтение с подпиской и стоял не на своём фоне.
+      // Потолок теперь отвечает паттерном закрытой главы ([_lockedPattern]) —
+      // половиной главы и одной кнопкой подписки, — и сюда попадает только то,
+      // что покупкой не лечится: мёртвая сеть, отказ письма и тот же потолок у
+      // подписчика, которому продавать уже нечего.
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(AlmaMetrics.pad),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                failure is ServerRefused && failure.message.isNotEmpty
-                    ? failure.message
-                    : l.stateUnavailable,
-                style: AlmaType.meta,
-                textAlign: TextAlign.center,
-              ),
-              if (capped) ...[
-                const SizedBox(height: 20),
-                AlmaButton(
-                  kind: AlmaButtonKind.outline,
-                  fills: false,
-                  label: l.cabPlansCta,
-                  // Потолок бесплатного письма снимает подписка, а не дверь:
-                  // фраза сервера кончается словами «или прямо сейчас, с
-                  // подпиской», и кнопка обязана вести туда же, куда обещание.
-                  onTap: () async {
-                    await showPaywall(
-                      context,
-                      const PaywallIntent.subscription(),
-                      trigger: 'month_budget',
-                    );
-                    await _afterOffer();
-                  },
-                ),
-              ],
-            ],
+          child: Text(
+            failure is ServerRefused && failure.message.isNotEmpty
+                ? failure.message
+                : l.stateUnavailable,
+            style: AlmaType.meta,
+            textAlign: TextAlign.center,
           ),
         ),
       );
@@ -828,34 +967,24 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // Четыре, а не восемь: у каждого абзаца своя отбивка сверху в 14, и
           // от линейки до первой строки холст просит восемнадцать.
           const SizedBox(height: 4),
-          // **Размытой пробы здесь больше нет — и это осознанная отмена.**
+          // **Сюда попадает только оплаченный текст — целиком.**
           //
-          // Стояло так: платная глава приезжала написанной целиком, с флагом
-          // `preview`; первый абзац читался, остальные шли под `ImageFilter.
-          // blur(5.5)`, а под ними — «Разблокировать». Продающий замысел был
-          // в том, что страница настоящей прозы о тебе убеждает сильнее
-          // шестнадцати закрытых заголовков.
+          // Размытие живёт этажом выше, на закрытой половине жизни этой
+          // страницы ([_LockedChapter]), и размывается там **клиентский
+          // филлер**, а не написанное. Так уже пробовали иначе: глава
+          // приезжала написанной с флагом `preview`, первый абзац читался,
+          // остальные шли под дымкой — и за каждую такую дымку платили мы,
+          // сильной моделью, до всякого решения о покупке. Правило снято
+          // владельцем, и текста без права не существует.
           //
-          // Владелец отменил его ради денег за генерацию: сервер писал главу
-          // сильной моделью до всякой покупки, то есть платили мы, а решал
-          // потом человек. Теперь текста без права не существует, и размывать
-          // нечего — а рисовать дымку поверх пустоты значило бы врать, что
-          // написанное есть. Закрытая глава показывает стену (`_LockedWall`),
-          // и она честна: заголовок, объяснение, одна кнопка.
-          //
-          // Сюда, на бумагу, попадает только оплаченный текст — целиком.
-          //
-          // **Кегль вернулся к общему 15.5.** Стояло 17 — число старого холста
-          // (`s5`), где колонка была шириной 358 точек. Колонка сузилась до
-          // 294, и 17 на ней даёт строку в семь-восемь слов: глаз теряет её
-          // конец чаще, чем читает. Холст чтения (`s52`) печатает главу тем же
-          // кеглем, что и весь остальной продукт, с чуть большим интерлиньяжем.
+          // Набор — [_chapterProse], та же гарнитура и тот же кегль, что у
+          // первого абзаца на закрытой половине: строка, которая до покупки
+          // выглядела бы иначе, чем после, доказывала бы, что это два разных
+          // экрана.
           for (final paragraph in reading.body)
             Padding(
               padding: const EdgeInsets.only(top: 14),
-              child: Text(paragraph,
-                  style: AlmaType.body
-                      .copyWith(color: AlmaPalette.ink, height: 1.62)),
+              child: Text(paragraph, style: _chapterProse()),
             ),
           if (reading.advice != null) ...[
             const SizedBox(height: 22),
@@ -899,9 +1028,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
   // Снято только в порте, по его же решению — на нативе `chapterEndOffer`
   // остаётся, и это сознательное расхождение, а не отставание порта.
   //
-  // Дверь на *закрытой* главе цела: стена `_LockedWall` рисует
-  // «Разблокировать», и это единственный способ её купить. Убрано предложение
-  // поверх уже прочитанного, а не путь к покупке.
+  // Покупка на *закрытой* главе цела и стоит теперь прямо на ней
+  // ([_LockedChapter]) — цена на кнопке, кнопка на размытом продолжении. Убрано
+  // предложение поверх уже прочитанного, а не путь к покупке.
 
   String _systemName(L l) => switch (widget.system) {
         SystemSlug.natal => l.cabSystemNatal,
@@ -915,7 +1044,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
       };
 
   Widget _tail(L l, ChapterEntry next) {
-    final progress = (_pull / _commitMark).clamp(0.0, 1.0);
     // **Свечение под хвостом — не украшение, а условие читаемости.**
     //
     // Хвост стоит у нижнего края, а нижний край золочёного листа — это уже
@@ -934,9 +1062,15 @@ class _ChapterScreenState extends State<ChapterScreen> {
         width: 64,
         child: Stack(children: [
           Container(height: 2, color: AlmaPalette.ink.withValues(alpha: 0.15)),
-          FractionallySizedBox(
-            widthFactor: progress,
-            child: Container(height: 2, color: AlmaPalette.goldDeep),
+          // Слушает **только** полоска. Всё остальное в хвосте — стрелка, имя
+          // следующей главы, подсказка — от протяжки не зависит и перестройки
+          // не заслуживает.
+          ValueListenableBuilder<double>(
+            valueListenable: _pull,
+            builder: (context, pull, _) => FractionallySizedBox(
+              widthFactor: (pull / _commitMark).clamp(0.0, 1.0),
+              child: Container(height: 2, color: AlmaPalette.goldDeep),
+            ),
           ),
         ]),
       ),
@@ -1072,46 +1206,487 @@ class _EndMark extends StatelessWidget {
   }
 }
 
-/// Стена: система не открыта. Причина словами и путь дальше.
-///
-/// Прежде здесь стояла служебная строка сервера — «natal has not been unlocked
-/// yet», по-английски и про внутренние понятия. Читателю нужно другое: что
-/// именно закрыто, почему это стоит открыть и одна кнопка.
-///
-/// Разметка — s26 эталона, буква в букву: рисунок 200, отбивка 28, заголовок
-/// 24 засечным, отбивка 12, объяснение, отбивка 24, кнопка. И ровно столько:
-/// обещать на стене то, чего пока не написано, нельзя, поэтому ни строки
-/// текста главы, ни дымки на её месте здесь нет.
-class _LockedWall extends StatelessWidget {
-  const _LockedWall({required this.onOpen});
+/* ── закрытая глава ─────────────────────────────────────────────────────────
+   Здесь стояла стена `_LockedWall`: рисунок 200, «Unlock to read», объяснение,
+   кнопка «Разблокировать», — и вела она на отдельный экран двери. Эталон
+   `Alma - Locked Chapter Pattern.dc.html` (кадр X1) удаляет её словами «ничего
+   не показано, ничего не доказано, цены нет — просят заплатить за заголовок»,
+   а `locked-chapter-spec.md` §5 добавляет: отдельного маршрута «пейволл главы»
+   быть не должно вовсе. Ниже — то, что встало на её место.               */
 
-  /// Открыть дверь и, вернувшись, перечитать право: оно могло измениться, и
-  /// без перепроверки купивший возвращался на ту же стену, с которой ушёл
-  /// платить. Что именно показать — дверь или пейволл подписки — решает
-  /// маршрутизатор, а не стена.
-  final Future<void> Function() onOpen;
+/// Что продаёт закрытая глава этой системы. Цена зависит **только** от типа
+/// системы (спека §4), и вычисляется она здесь, в одном месте на весь экран.
+///
+/// * статичные пять (натал, нумерология, birth card, астрокартография,
+///   синтез) — своя дверь, `$4.99`, навсегда;
+/// * живые (транзиты, соляр) — двери нет и быть не может: они пересчитываются,
+///   и «навсегда» им обещать нечем. Продаётся подписка;
+/// * совместимость — `pair.check`, поштучно на человека: система тут не
+///   покупается вовсе, покупается отчёт про конкретную пару.
+///
+/// То же правило записано в `ladderFor` — оно решает, что показать на витринах,
+/// — и разойтись они не могут: обе ветки читают `LadderKey.doorFor`.
+LadderKey chapterSku(SystemSlug system) => switch (system) {
+      SystemSlug.compatibility => LadderKey.pairCheck,
+      _ => LadderKey.doorFor(system) ?? LadderKey.subMonthly,
+    };
+
+/// Метка в шапке главы: прописные золотом в тонкой рамке.
+///
+/// Числа эталона (C1, C4): Golos 600 9.5, разрядка 1.3, кант `#A8873C` на 0.45,
+/// радиус 4, поля 3 × 7.
+class _ChapterBadge extends StatelessWidget {
+  const _ChapterBadge(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 7),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+              color: AlmaPalette.goldDeep.withValues(alpha: 0.45)),
+        ),
+        child: Text(
+          text.toUpperCase(),
+          style: AlmaType.overline.copyWith(
+            fontSize: 9.5,
+            // Разрядка прописных зависит от алфавита, а не от кегля: кириллица
+            // шире, и общая 2.2 растаскивает «ОБНОВЛЯЕТСЯ КАЖДЫЙ ДЕНЬ» в
+            // решётку на всю ширину шапки.
+            letterSpacing: AlmaLocaleRules.capsTracking(text) * 0.72,
+            color: AlmaPalette.goldDeep,
+          ),
+        ),
+      );
+}
+
+/// Три абзаца филлера под размытием — **на клиенте, и это главное про них**.
+///
+/// Движок не пишет ничего, кроме первого абзаца: за размытые строки токенов не
+/// платят вовсе (спека §3). Поэтому текст здесь один на все сорок одну главу и
+/// ничего ни о ком не утверждает — он держит **ритм**, а не смысл: те же длины
+/// строк и те же межстрочия, что у настоящей прозы над ним, потому что колонка
+/// с другим ритмом читается вставкой, а не продолжением.
+///
+/// **Не переводится.** Под `blur(4.5)` слова не читаются ни на одном языке, а
+/// переведённый филлер — это семь строк в каталоге, которые кто-нибудь однажды
+/// начнёт вычитывать. Длина колонки от локали не зависит: лишнее срезается
+/// низом экрана.
+const _filler = <String>[
+  'The second layer of this belongs to a placement that softens the first '
+      'impression, and it works in a way that reads as ease rather than as '
+      'effort, which is why certain rooms open to you faster than they open to '
+      'most of the people who walk into them beside you.',
+  'The angle another body makes to that same degree explains what it costs, '
+      'and the reason the whole performance tires you long before anybody '
+      'standing near you notices that it was a performance at all, or that it '
+      'was being held up by anything.',
+  'What follows is the part almost nobody guesses from the outside, the small '
+      'practice that makes it lighter to carry, and the way the shape of it '
+      'changes once it has been written down from your own degrees instead of '
+      "from somebody else's idea of them.",
+];
+
+/// Закрытая глава — шесть частей эталона, всегда в этом порядке.
+///
+/// Надзаголовок · титул · «read from» с настоящими позициями · **один
+/// написанный абзац** · размытый хвост · ✦, строка «что дальше» и одна кнопка.
+///
+/// ## Кнопка стоит НА размытом тексте
+///
+/// Разметка §2, и это не украшение, а смысл экрана. Размытая колонка занимает
+/// **весь остаток страницы** и проходит под ✦, под строкой и под кнопкой;
+/// градиент затухания гасит её к низу, но не обрывает. Чистой полосы между
+/// текстом и ценой быть не должно: покупка обязана читаться как «открыть
+/// продолжение», а не как «купить товар».
+///
+/// Эталон добивается этого числами — колонка 296…330 точек ровно до нижнего
+/// края кнопки, — но числа те посчитаны под один кадр 402 × 874 и один язык. У
+/// нас длина написанного абзаца приходит с сервера и меняется вместе с локалью,
+/// поэтому колонка не задаётся высотой, а **растягивается** ([Expanded]) до
+/// низа экрана: под кнопкой текст есть при любой длине абзаца, а лишнее
+/// срезается низом. Правило спеки выполняется буквально, а не в одном кадре.
+///
+/// ## Магазин здесь свой, а не оболочка пейволла
+///
+/// [PaywallShell] поднимает магазин, полку, воронку и уход с экрана — но она же
+/// и **является** экраном: `Scaffold` с ночным небом и своим маршрутом. Взять
+/// её сюда значило бы вернуть отдельный экран пейволла, ради удаления которого
+/// всё это и сделано. Поэтому магазин привязывается здесь напрямую, а из
+/// оболочки повторены ровно две вещи, без которых покупка ломается: закрытие по
+/// извещению `unlocked`/`restored` (а не по ответу магазина — право пишет
+/// сервер) и две ступени воронки, `paywall_shown` и `checkout_started`, с той
+/// же поверхностью, что считает [PaywallIntent].
+class _LockedChapter extends StatefulWidget {
+  const _LockedChapter({
+    required this.system,
+    required this.sku,
+    required this.overline,
+    required this.title,
+    required this.opening,
+    required this.systemName,
+    required this.paidChapters,
+    required this.onOpened,
+  });
+
+  final SystemSlug system;
+
+  /// Что продаёт эта страница. Уже решённый вопрос: слово каталога сервера,
+  /// пока оно не приехало — вывод [chapterSku].
+  final LadderKey sku;
+
+  final String overline;
+  final String title;
+
+  /// Настоящее начало главы, ≈40 слов, написанное движком из позиций этого
+  /// человека. `null` — абзаца нет: сервер его ещё не прислал, модель
+  /// промолчала или выбран потолок месяца. Паттерн рисуется без него, а не
+  /// падает и не подставляет вместо него филлер: размытая проба, выданная за
+  /// написанное, — это ровно то враньё, ради снятия которого отменяли
+  /// `preview`.
+  final Reading? opening;
+
+  final String systemName;
+  final int? paidChapters;
+
+  /// Право выдано — перечитать оглавление и пойти за текстом.
+  final Future<void> Function() onOpened;
+
+  @override
+  State<_LockedChapter> createState() => _LockedChapterState();
+}
+
+class _LockedChapterState extends State<_LockedChapter> {
+  final AlmaStore _store = AlmaStore.shared;
+
+  /// Извещение магазина, с которым страница открылась.
+  ///
+  /// Сравнивается по личности объекта, а не по значению: `AlmaStore` живёт один
+  /// на процесс, и извещение о позавчерашней покупке всё ещё в нём — страница,
+  /// смотрящая на `message == unlocked`, открыла бы главу в первый же кадр,
+  /// ничего не продав.
+  StoreNotice? _seen;
+  bool _started = false;
+  bool _announced = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    _seen = _store.notice;
+    _store.addListener(_storeChanged);
+    _store.attach(SessionScope.of(context));
+    // Что угодно, кроме загруженной полки, стоит попробовать ещё раз: глава,
+    // открытая после мёртвой сети, обязана назвать цену.
+    if (_store.state != StoreState.ready) _store.load();
+  }
+
+  @override
+  void dispose() {
+    _store.removeListener(_storeChanged);
+    super.dispose();
+  }
+
+  void _storeChanged() {
+    if (!mounted) return;
+    final notice = _store.notice;
+    if (!identical(notice, _seen)) {
+      _seen = notice;
+      final opened = notice != null &&
+          (notice.message == StoreMessage.unlocked ||
+              notice.message == StoreMessage.restored);
+      // **Право пишет сервер, а не магазин.** Извещение здесь — сигнал
+      // перечитать оглавление, а не разрешение показать текст.
+      if (opened) widget.onOpened();
+    }
+    setState(() {});
+  }
+
+  LadderKey get _sku => widget.sku;
+
+  /// Поверхность воронки — считается намерением, как на всех пейволлах v3.
+  PaywallIntent get _intent => switch (_sku) {
+        LadderKey.subMonthly => const PaywallIntent.subscription(),
+        LadderKey.pairCheck => const PaywallIntent.pair(),
+        _ => PaywallIntent.door(widget.system),
+      };
+
+  /// «Пейволл показан» — один раз за показ и только когда известно, чем торгуем.
+  void _announce() {
+    if (_announced) return;
+    _announced = true;
+    SessionScope.of(context).client.track(FunnelStage.paywallShown, meta: {
+      'surface': _intent.surfaceCode,
+      'sku': _sku.slug,
+      'trigger': 'locked_chapter',
+    });
+  }
+
+  void _buy() {
+    SessionScope.of(context).client.track(FunnelStage.checkoutStarted,
+        meta: {'surface': _intent.surfaceCode, 'sku': _sku.slug});
+    _store.buy(_sku);
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const WritingArt(size: 200),
-            const SizedBox(height: 28),
-            Text(l.cabLocked,
+    _announce();
+    return Padding(
+      // Поля страницы — те же, что у написанной половины (`GiltPage`): 52 слева,
+      // 56 справа. Эталон рисует закрытую главу по общему полю 22, но у нашей
+      // страницы колонка заужена намеренно и с собственным доводом — 294 точки
+      // это 45–50 знаков в строке. Разные поля до и после покупки означали бы,
+      // что первый абзац переливается на глазах в момент оплаты.
+      padding: const EdgeInsets.only(
+          left: GiltPage.side, right: GiltPage.sideRight),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: GiltPage.headGap),
+                Text(widget.overline,
+                    textAlign: TextAlign.center,
+                    style: AlmaType.overline
+                        .copyWith(color: AlmaPalette.goldDeep)),
+                const SizedBox(height: 9),
+                Text(widget.title,
+                    textAlign: TextAlign.center,
+                    style: AlmaType.displayL
+                        .copyWith(color: AlmaPalette.ink, height: 1.14)),
+                // Мета-строка — та же, что у написанной главы, и по тем же
+                // правилам (`meta-line-spec.md`). Позиции приходят вместе с
+                // абзацем, из которого они процитированы. Пусто — строки нет
+                // вовсе: «прочитано из» без единой позиции это подпись без
+                // подписанта, то есть ровно то обещание без доказательства,
+                // ради снятия которого удалена стена.
+                if (widget.opening?.citedFactors.isNotEmpty ?? false) ...[
+                  const SizedBox(height: 14),
+                  Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 280),
+                      child: _CitedLine(
+                          factors: widget.opening!.citedFactors,
+                          label: l.cabReadFrom),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                Container(
+                    height: 1,
+                    color: AlmaPalette.ink.withValues(alpha: 0.13)),
+                if (widget.opening case final opening?)
+                  // 18 от линейки до первой строки — то же число, что на
+                  // написанной половине (4 + 14): абзац обязан стоять на той же
+                  // высоте до и после покупки. Между абзацами — 14, как там же:
+                  // сорок слов обычно один абзац, но движок вправе разбить их.
+                  for (var i = 0; i < opening.body.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(top: i == 0 ? 18 : 14),
+                      child: Text(opening.body[i], style: _chapterProse()),
+                    ),
+                Expanded(
+                  child: _BlurredTail(
+                      gap: widget.opening?.body.isEmpty ?? true ? 18 : 14),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            // Отсчёт от бара вкладок, а не от кромки стекла: эталон бара не
+            // рисует, а устройство его имеет, и кнопка на 104 от стекла легла
+            // бы под полосу. Формула — та же, что у нижнего поля написанной
+            // страницы, вместе с её уроком: отступ берётся от **окна**, потому
+            // что `Scaffold` с `extendBody` уже положил высоту бара в
+            // `MediaQuery` тела, и сложение с ней считает бар дважды.
+            bottom: AlmaMetrics.tabBarHeight +
+                MediaQueryData.fromView(View.of(context)).padding.bottom +
+                22,
+            child: _offer(l),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _offer(L l) {
+    final price = _store.price(_sku);
+    final living = _sku == LadderKey.subMonthly;
+    final chapters = widget.paidChapters;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Тот же знак, что закрывает написанную главу: там он говорит «текст
+        // кончился», здесь — «дальше то, что ещё не открыто». Одна вещь и один
+        // рисунок; второй такой же завёлся бы отдельным виджетом на неделю.
+        const _EndMark(),
+        const SizedBox(height: 12),
+        // Строка «что дальше» стоит **над** ценой: сначала что человек получит,
+        // потом сколько это стоит. У живых систем на её месте единственное, что
+        // им можно обещать, — что глава переписывается каждый день.
+        if (living || (chapters != null && chapters > 0)) ...[
+          Text(
+            living
+                ? l.chapterLivingNote
+                : l.chapterWhatFollows(chapters!, widget.systemName),
+            textAlign: TextAlign.center,
+            style: AlmaType.headingM.copyWith(
+                fontSize: 15.5, height: 1.4, color: AlmaPalette.ink),
+          ),
+          const SizedBox(height: 13),
+        ],
+        if (price == null)
+          // **Цену выдумать нельзя ни при каких обстоятельствах.** Молчащий
+          // магазин — это не «бесплатно» и не «$4.99»: число на кнопке обязано
+          // совпасть со списанным. Вместо цены — правда и попытка спросить ещё
+          // раз, той же единственной кнопкой экрана.
+          Column(children: [
+            Text(l.paywallStoreUnavailable,
                 textAlign: TextAlign.center,
-                style: AlmaType.displayL.copyWith(fontSize: 24)),
-            const SizedBox(height: 12),
-            Text(l.cabLockedNote,
-                textAlign: TextAlign.center, style: AlmaType.meta),
-            const SizedBox(height: 24),
-            AlmaButton(fills: false, label: l.cabUnlock, onTap: onOpen),
-          ],
+                style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
+            const SizedBox(height: 14),
+            AlmaButton(
+              radius: AlmaPalette.buttonRadius,
+              label: l.stateRetry,
+              onTap: _store.load,
+            ),
+          ])
+        else
+          AlmaButton(
+            // Прямоугольник со скруглением 15, а не пилюля: так кнопка
+            // нарисована на всех четырёх кадрах паттерна (C2, C3, C4, C6). На
+            // продающих экранах v3 она пилюля — там она стоит на ночи и одна на
+            // весь кадр; здесь она лежит на странице и обязана читаться её
+            // частью, а не наклейкой поверх.
+            radius: AlmaPalette.buttonRadius,
+            label: _store.busy != null
+                ? l.stateLoadingShort
+                : (living
+                    ? l.paywallV3SubCta(price)
+                    : l.chapterUnlockCta(price)),
+            onTap: _store.busy != null || _store.restoring ? null : _buy,
+          ),
+        const SizedBox(height: 9),
+        // Природа покупки под ценой — всегда. Правило §5 ТЗ монетизации: цены
+        // без длительности не бывает. Три случая и три разные правды: разовое
+        // «навсегда», продление подписки, отчёт «за человека».
+        Text(
+          switch (_sku) {
+            LadderKey.subMonthly => l.paywallV3SubRenewalDisclosure,
+            LadderKey.pairCheck => l.pairPerPersonNote,
+            _ => l.chapterForeverNote,
+          },
+          textAlign: TextAlign.center,
+          style: AlmaType.meta.copyWith(
+            fontSize: living ? 11.5 : 12.5,
+            height: 1.45,
+            color: AlmaPalette.inkMuted2,
+          ),
         ),
+        if (_store.notice case final notice?) ...[
+          const SizedBox(height: 10),
+          Text(
+            paywallNoticeText(l, notice.message),
+            textAlign: TextAlign.center,
+            // Тон несут слова, а не цвет: продуктовые `agree`/`disagree`
+            // подбирались под ночь и на пергаменте почти не отличаются от
+            // фона. Плохую новость набираем чернилами — её надо прочитать.
+            style: AlmaType.meta.copyWith(
+              color: notice.tone == StoreTone.bad
+                  ? AlmaPalette.ink
+                  : AlmaPalette.goldDeep,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Размытый хвост главы: филлер под `blur(4.5)` и градиент, гасящий его к низу.
+///
+/// **Скринридеру и буферу обмена сюда хода нет.** [ExcludeSemantics] снимает с
+/// филлера всю семантику, а контейнер над ним говорит одно слово о себе целиком
+/// — «открой, чтобы прочитать». Иначе голос читал бы вслух три абзаца
+/// бессмысленного английского текста тому, кто не видит, что они размыты, и
+/// «выделить всё» уносило бы их в буфер. В поиск, шаринг и экспорт филлер не
+/// попадает по построению: он не поле модели, а константа экрана.
+class _BlurredTail extends StatelessWidget {
+  const _BlurredTail({required this.gap});
+
+  /// Отбивка от написанного абзаца (или от линейки, когда абзаца нет).
+  final double gap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    final style = _chapterProse();
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Без `bottom`: колонка кладётся своей естественной высотой и режется
+          // низом экрана. Высота у неё заведомо больше остатка страницы — иначе
+          // под кнопкой открылась бы чистая бумага, то есть ровно тот разрыв,
+          // которого паттерн не допускает.
+          Positioned(
+            left: 0,
+            right: 0,
+            top: gap,
+            child: Semantics(
+              container: true,
+              label: l.cabLocked,
+              child: ExcludeSemantics(
+                child: Opacity(
+                  opacity: 0.5,
+                  child: ImageFiltered(
+                    // 4.5 — стандартное отклонение, ровно как у `blur(4.5px)`
+                    // в CSS эталона: там параметр фильтра и есть сигма.
+                    imageFilter:
+                        ImageFilter.blur(sigmaX: 4.5, sigmaY: 4.5),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = 0; i < _filler.length; i++)
+                          Padding(
+                            padding: EdgeInsets.only(top: i == 0 ? 0 : 12),
+                            child: Text(_filler[i], style: style),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Затухание: сверху текст чист, к низу гаснет до половины — но не до
+          // нуля. Числа эталона: 0 → .22 на 40 % → .5 к низу.
+          Positioned.fill(
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      AlmaPalette.parchmentA.withValues(alpha: 0),
+                      AlmaPalette.parchmentA.withValues(alpha: 0.22),
+                      AlmaPalette.parchmentA.withValues(alpha: 0.5),
+                    ],
+                    stops: const [0, 0.4, 1],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

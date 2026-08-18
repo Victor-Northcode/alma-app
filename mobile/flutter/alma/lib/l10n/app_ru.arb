@@ -261,7 +261,6 @@
   "cabSystemTransits": "Транзиты",
   "cabSystemFinished": "Здесь всё прочитано",
   "cabUnknownTime": "время рождения неизвестно",
-  "cabUnlock": "Разблокировать",
   "cabUpcoming": "впереди",
   "cabWritingNote": "Пишется один раз — и завтра скажет то же самое.",
   "cabYourDay": "Твой день",
@@ -657,8 +656,6 @@
   "paywallV3PairInputTitle": "Кого мы читаем вместе?",
   "paywallV3PairInputName": "Его имя",
   "paywallV3PairInputDate": "Дата рождения",
-  "paywallV3PairTeaserTitle": "Что тянет вас друг к другу",
-  "paywallV3PairTeaserCta": "Полный разбор · {price}",
   "paywallV3PairPrice": "{price} · навсегда",
   "paywallV3PairForever": "Останется твоим навсегда",
   "paywallV3PairIncludedBadge": "входит в твой месяц",
@@ -712,5 +709,15 @@
   "paywallV3CancelSaveFact": "{chapters, plural, one{Эта глава открыта} few{Эти {chapters} главы открыты} many{Эти {chapters} глав открыты} other{Эти {chapters} главы открыты}} {times, plural, one{{times} раз} few{{times} раза} many{{times} раз} other{{times} раза}}. За {price} они останутся читаемыми и после конца подписки — без всякого продления.",
   "paywallV3CancelSaveFactPlain": "За {price} они останутся читаемыми и после конца подписки — без всякого продления.",
   "paywallV3CancelNote": "Отмена откроет настройки Apple ID · подписка работает до {date}",
-  "paywallV3CancelNoteNoDate": "Отмена откроет настройки Apple ID"
+  "paywallV3CancelNoteNoDate": "Отмена откроет настройки Apple ID",
+  "systemsTapToAdd": "добавь человека",
+  "systemsReadOpening": "прочитай начало",
+  "systemsChaptersOpen": "открыто {open} из {total}",
+  "chapterFreeBadge": "бесплатно",
+  "chapterUnlockCta": "Открыть и читать · {price}",
+  "chapterForeverNote": "Твоё навсегда · без подписки",
+  "chapterDailyBadge": "обновляется каждый день",
+  "chapterLivingNote": "Эта глава переписывается каждый день — она живёт в подписке, а не в покупке",
+  "chapterWhatFollows": "{n, plural, one{{n} глава твоего разбора «{system}», написанная из этих позиций} few{{n} главы твоего разбора «{system}», написанные из этих позиций} many{{n} глав твоего разбора «{system}», написанных из этих позиций} other{{n} главы твоего разбора «{system}», написанные из этих позиций}}",
+  "pairPerPersonNote": "За человека · твоё навсегда · добавляй сколько хочешь"
 }

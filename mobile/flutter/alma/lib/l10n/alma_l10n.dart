@@ -1673,12 +1673,6 @@ abstract class L {
   /// **'birth time unknown'**
   String get cabUnknownTime;
 
-  /// from Cabinet/cab.unlock
-  ///
-  /// In en, this message translates to:
-  /// **'Unlock'**
-  String get cabUnlock;
-
   /// from Cabinet/cab.upcoming
   ///
   /// In en, this message translates to:
@@ -4055,18 +4049,6 @@ abstract class L {
   /// **'Date of birth'**
   String get paywallV3PairInputDate;
 
-  /// monetization v3 · А11 pair.teaser_title · V4
-  ///
-  /// In en, this message translates to:
-  /// **'What pulls you towards each other'**
-  String get paywallV3PairTeaserTitle;
-
-  /// monetization v3 · А11 pair.teaser_cta · V4
-  ///
-  /// In en, this message translates to:
-  /// **'The full reading · {price}'**
-  String paywallV3PairTeaserCta(String price);
-
   /// monetization v3 · А11 pair.price · V4/V5
   ///
   /// In en, this message translates to:
@@ -4390,6 +4372,66 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Cancelling opens your Apple ID settings'**
   String get paywallV3CancelNoteNoDate;
+
+  /// locked-chapter-spec §6 · C5 · подпись карточки совместимости в «Моих системах»
+  ///
+  /// In en, this message translates to:
+  /// **'tap to add someone'**
+  String get systemsTapToAdd;
+
+  /// locked-chapter-spec §6 · C5 · подпись карточки, у которой ещё не открыта ни одна глава
+  ///
+  /// In en, this message translates to:
+  /// **'read the opening'**
+  String get systemsReadOpening;
+
+  /// locked-chapter-spec §1 · C5 · сколько глав системы уже открыто
+  ///
+  /// In en, this message translates to:
+  /// **'{open} of {total} open'**
+  String systemsChaptersOpen(int open, int total);
+
+  /// locked-chapter-spec §6 · C1 · бейдж единственной бесплатной главы продукта (натал I)
+  ///
+  /// In en, this message translates to:
+  /// **'free'**
+  String get chapterFreeBadge;
+
+  /// locked-chapter-spec §4 · кнопка статичного разбора на самой главе. Цена внутри строки, а не приклеена кодом: точка-разделитель принадлежит переводчику, и в языке, где её место другое, она сдвинется вместе с текстом
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock and read · {price}'**
+  String chapterUnlockCta(String price);
+
+  /// locked-chapter-spec §4 · природа покупки под кнопкой статичного разбора. Слово «продление» здесь запрещено
+  ///
+  /// In en, this message translates to:
+  /// **'Yours forever · no subscription'**
+  String get chapterForeverNote;
+
+  /// locked-chapter-spec §2 · C4 · бейдж живой системы в шапке главы (транзиты, соляр)
+  ///
+  /// In en, this message translates to:
+  /// **'updates daily'**
+  String get chapterDailyBadge;
+
+  /// locked-chapter-spec §6 · C4 · строка «что дальше» у живой системы. Слово «навсегда» здесь запрещено
+  ///
+  /// In en, this message translates to:
+  /// **'This one is rewritten every day — it lives in the subscription, not in a purchase'**
+  String get chapterLivingNote;
+
+  /// locked-chapter-spec §6 · строка «что дальше» над кнопкой: сколько глав этой системы ещё не написано
+  ///
+  /// In en, this message translates to:
+  /// **'{n, plural, one{{n} chapter of your {system}, written from these positions} other{{n} chapters of your {system}, written from these positions}}'**
+  String chapterWhatFollows(int n, String system);
+
+  /// locked-chapter-spec §4 · C6 · природа покупки под кнопкой совместимости. Лимита на число людей нет и обещать его нельзя
+  ///
+  /// In en, this message translates to:
+  /// **'Per person · yours forever · add as many as you like'**
+  String get pairPerPersonNote;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {
