@@ -510,7 +510,7 @@
   "paywallRestore": "Käufe wiederherstellen",
   "paywallRestored": "Wieder­hergestellt. Alles, was du gekauft hast, ist wieder offen.",
   "paywallRestoredNone": "Der App Store hat für diese Apple-ID nichts wieder­herzustellen.",
-  "paywallRestoredNonePlay": "Google Play hat für dieses Konto nichts wiederherzustellen.",
+  "paywallRestoredNonePlay": "Google Play hat für dieses Konto nichts wieder­herzustellen.",
   "paywallRestoredOther": "Diese Käufe gehören bereits einem anderen Alma-Konto. Melde dich mit diesem an, dann kommen sie mit.",
   "paywallRestoring": "Ich frage den App Store…",
   "paywallRestoringPlay": "Frage Google Play…",

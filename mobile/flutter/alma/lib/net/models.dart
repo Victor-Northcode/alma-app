@@ -776,6 +776,64 @@ enum ChatTurnKind {
   bool get showsChartSilentNote => this == chartSilent;
 }
 
+/// Глава, на которую опирался ответ, — когда сервер смог назвать её честно.
+///
+/// Сервер называет главу только если в контексте ответа была ровно одна
+/// написанная глава (`readings.py`, `source_chapter`); при нескольких или ни
+/// одной поле не приходит вовсе. Заголовок уже переведён на язык запроса —
+/// клиент печатает его дословно, а `system`/`slug` нужны, чтобы открыть ту же
+/// главу тем же маршрутом, что и с экрана системы.
+class SourceChapter {
+  const SourceChapter({
+    required this.system,
+    required this.slug,
+    required this.title,
+  });
+
+  final String system;
+  final String slug;
+  final String title;
+
+  /// `null` на всём, что не полная тройка: полкарточки — хуже её отсутствия.
+  static SourceChapter? from(dynamic json) {
+    if (json is! Map) return null;
+    final system = json['system'];
+    final slug = json['slug'];
+    final title = json['title'];
+    if (system is! String || slug is! String || title is! String) return null;
+    if (system.isEmpty || slug.isEmpty || title.isEmpty) return null;
+    return SourceChapter(system: system, slug: slug, title: title);
+  }
+}
+
+/// Одно событие стрима `/v1/chat/stream`: стадия работы или готовый ответ.
+///
+/// Запечатано, чтобы `switch` на месте разбора был исчерпывающим: третий вид
+/// события обязан не скомпилироваться, а не молча потеряться.
+sealed class ChatEvent {
+  const ChatEvent();
+}
+
+/// Стадия думания: сервер назвал настоящий шаг подготовки ответа.
+///
+/// [name] — сырое имя движка («4», «saturn»): переводит его экран словами
+/// своего каталога, в последний момент перед показом, как и цитаты.
+class ChatStage extends ChatEvent {
+  const ChatStage({required this.stage, required this.name});
+
+  /// `house` или `body` — что за имя пришло. Незнакомая стадия с сервера
+  /// свежее сборки просто не рисуется, это не ошибка разбора.
+  final String stage;
+  final String name;
+}
+
+/// Ответ доехал: ровно тот же [ChatReply], что отдаёт старый `/v1/chat`.
+class ChatDone extends ChatEvent {
+  const ChatDone(this.reply);
+
+  final ChatReply reply;
+}
+
 /// Ответ Alma на один вопрос. Форма снята с живого `/v1/chat`:
 /// `{thread_id, message: {id, role, body, cited_factors, turn_kind}, …}`.
 class ChatReply {
@@ -785,6 +843,7 @@ class ChatReply {
     required this.citedFactors,
     this.kind = ChatTurnKind.conversation,
     this.questionsLeft,
+    this.sourceChapter,
   });
 
   final String? threadId;
@@ -799,6 +858,10 @@ class ChatReply {
   final List<String> citedFactors;
 
   final int? questionsLeft;
+
+  /// Глава, на которую ответ опирался, — или `null`, когда сервер не смог
+  /// назвать её честно. Отсутствие — нормальное состояние, а не сбой.
+  final SourceChapter? sourceChapter;
 
   /// Абзацы — тело, разрезанное по пустой строке.
   List<String> get paragraphs =>
@@ -815,6 +878,7 @@ class ChatReply {
       citedFactors: cited,
       kind: ChatTurnKind.of(message['turn_kind'] as String?, citedFactors: cited),
       questionsLeft: (json['questions_left'] as num?)?.toInt(),
+      sourceChapter: SourceChapter.from(json['source_chapter']),
     );
   }
 }

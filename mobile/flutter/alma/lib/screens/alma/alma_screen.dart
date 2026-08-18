@@ -16,6 +16,7 @@ import '../../state/session.dart';
 import '../cabinet_words.dart';
 import '../../billing/ladder.dart';
 import '../paywall/paywall_router.dart';
+import '../systems/chapter_screen.dart';
 import 'chat_turn.dart';
 import 'thread_screen.dart';
 
@@ -44,10 +45,16 @@ class _Turn {
     this.citedFactors = const [],
     this.arriving = false,
     this.kind,
+    this.sourceChapter,
   });
   final bool mine;
   final String body;
   final List<String> citedFactors;
+
+  /// Глава, на которую ответ опирался, — если сервер назвал её честно.
+  /// Только у живого ответа: в поднятой с сервера беседе этого поля нет,
+  /// потому что оно не хранится в сообщении.
+  final SourceChapter? sourceChapter;
 
   /// Какого рода этот ответ: чтение, тихий отказ карты, разговор или забота.
   ///
@@ -284,6 +291,10 @@ class _AlmaScreenState extends State<AlmaScreen>
     final message = text.trim();
     if (message.isEmpty || _sending) return;
     final session = SessionScope.of(context);
+    // Слова каталога берутся до первого await: стадии приходят посреди
+    // стрима, и тянуться к контексту через асинхронный разрыв — это как раз
+    // то, о чём предупреждает `use_build_context_synchronously`.
+    final l = L.of(context);
     // Реплика человека встаёт в ленту до похода на сервер: это его собственные
     // слова, тут нечего выдумывать, а вопрос, пропавший на восемь секунд,
     // читается как несостоявшаяся отправка.
@@ -300,23 +311,54 @@ class _AlmaScreenState extends State<AlmaScreen>
     _tilt.forward();
     _scrollDown();
     try {
-      final reply = await session.client.ask(
+      // Стрим вместо одиночного запроса: сервер называет стадии настоящей
+      // работы (§8: `{stage, name}`), и строка думания меняется по факту, а
+      // не изображает занятость. `done` несёт ровно тот же ответ, что раньше
+      // отдавал `ask`, — дальше всё как было.
+      final events = session.client.askStream(
         message,
         threadId: _threadId,
         locale: session.locale,
       );
-      if (!mounted) return;
-      setState(() {
-        _threadId = reply.threadId ?? _threadId;
-        _left = reply.questionsLeft ?? _left;
-        _turns.add(_Turn(
-          mine: false,
-          body: reply.body,
-          citedFactors: reply.citedFactors,
-          kind: reply.kind,
-          arriving: true,
-        ));
-      });
+      await for (final event in events) {
+        if (!mounted) return;
+        switch (event) {
+          case ChatStage(:final stage, :final name):
+            // Имя приходит сырым («4», «saturn») и переводится словами
+            // каталога в последний момент — тем же правилом, что цитаты.
+            // Позиции под строкой остаются: это карта самого человека, и
+            // она не зависит от того, какой шаг движок делает сейчас.
+            final house = stage == 'house' ? int.tryParse(name) : null;
+            setState(() {
+              if (house != null) {
+                _stage = ThinkingStage(
+                  house: CabinetWordsMore.houseOrdinal(l, house),
+                  factors: _stage.factors,
+                );
+              } else if (stage == 'body') {
+                _stage = ThinkingStage(
+                  body: CabinetWords.body(l, name),
+                  factors: _stage.factors,
+                );
+              }
+              // Незнакомая стадия с сервера свежее сборки не рисуется — и не
+              // роняет ничего: строка остаётся на последнем понятном шаге.
+            });
+          case ChatDone(:final reply):
+            setState(() {
+              _threadId = reply.threadId ?? _threadId;
+              _left = reply.questionsLeft ?? _left;
+              _turns.add(_Turn(
+                mine: false,
+                body: reply.body,
+                citedFactors: reply.citedFactors,
+                kind: reply.kind,
+                sourceChapter: reply.sourceChapter,
+                arriving: true,
+              ));
+            });
+        }
+      }
     } on AlmaError catch (error) {
       if (!mounted) return;
       final limit = _isLimit(error);
@@ -355,7 +397,13 @@ class _AlmaScreenState extends State<AlmaScreen>
       if (limit && !session.isSubscriber) await _openQuota(message);
     } finally {
       if (mounted) {
-        setState(() => _sending = false);
+        setState(() {
+          _sending = false;
+          // Стадии этого вопроса отработали. Следующий начинается с
+          // нейтрального «думаю», а не с чужого дома: позиции карты остаются,
+          // они от вопроса не зависят.
+          _stage = ThinkingStage(factors: _stage.factors);
+        });
         // Она ответила — свет отпускает наклон и возвращается к своему
         // дыханию.
         _tilt.reverse();
@@ -691,11 +739,31 @@ class _AlmaScreenState extends State<AlmaScreen>
           body: turn.body,
           citedFactors: turn.citedFactors,
           kind: turn.kind,
+          sourceChapter: turn.sourceChapter,
+          onOpenSource: _openSourceChapter,
           // Оседает только ответ, пришедший в эту сессию и последним.
           arriving: turn.arriving && i == _turns.length - 1,
         );
       },
     );
+  }
+
+  /// Открыть главу, которую ответ назвал источником.
+  ///
+  /// Тот же механизм, каким главы открываются из оболочки (`main.dart`,
+  /// `_openChapter`): `CupertinoPageRoute` с `ChapterScreen`. Навигатор —
+  /// корневой, как у экрана прошлой беседы выше: стек вкладки систем отсюда
+  /// недостижим, публичного входа в него оболочка не даёт, а заводить его
+  /// ради одной карточки значило бы связать две вкладки навсегда.
+  void _openSourceChapter(SourceChapter source) {
+    final system = SystemSlug.from(source.system);
+    // Система с сервера свежее сборки: вести некуда, и молчание честнее
+    // экрана с ошибкой под карточкой, которая выглядит как приглашение.
+    if (system == null) return;
+    Navigator.of(context, rootNavigator: true).push(CupertinoPageRoute(
+      builder: (context) =>
+          ChapterScreen(system: system, chapter: source.slug),
+    ));
   }
 
   /// Отказ в ленте: фраза телом, без подписи «ALMA» и без цитаты позиций.

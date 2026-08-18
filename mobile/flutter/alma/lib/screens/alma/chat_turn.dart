@@ -7,7 +7,7 @@ import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
-import '../../net/models.dart' show ChatTurnKind;
+import '../../net/models.dart' show ChatTurnKind, SourceChapter;
 import '../cabinet_words.dart';
 
 /// Одна реплика беседы — **одна на два экрана**.
@@ -24,11 +24,23 @@ class ChatTurnView extends StatefulWidget {
     this.citedFactors = const [],
     this.kind,
     this.arriving = false,
+    this.sourceChapter,
+    this.onOpenSource,
   });
 
   final bool mine;
   final String body;
   final List<String> citedFactors;
+
+  /// Глава, на которую ответ опирался, — когда сервер назвал её честно.
+  /// `null` — обычное состояние: глав в контексте не было или их несколько,
+  /// и тогда под ответом ничего не рисуется.
+  final SourceChapter? sourceChapter;
+
+  /// Что делать по нажатию на карточку главы. Колбэком от экрана, а не
+  /// маршрутом отсюда: у реплики нет своего навигатора, а механизм открытия
+  /// главы принадлежит тому, кто ленту держит (см. `AlmaScreen`).
+  final void Function(SourceChapter chapter)? onOpenSource;
 
   /// Что это была за реплика — четыре вида таксономии, а не «ответ или нет».
   ///
@@ -299,6 +311,45 @@ class _ChatTurnViewState extends State<ChatTurnView>
         if (kind.showsChartSilentNote) ...[
           const SizedBox(height: 12),
           Text(l.scrChatSilent, style: AlmaType.meta),
+        ],
+        // **Глава-источник — тихая строка-карточка, не кнопка.** Приглашение
+        // дочитать то, из чего ответ вырос, а не действие, которого ответ
+        // требует; поэтому мета-кегль, волосяная обводка и никакого золота
+        // заливкой — золотая заливка в этом продукте принадлежит дверям
+        // покупки. Заголовок приходит с сервера уже на языке запроса и
+        // печатается дословно. Рисуется только когда сервер главу назвал:
+        // отсутствие поля — обычное состояние, и тогда здесь пусто.
+        if (widget.sourceChapter != null) ...[
+          const SizedBox(height: 12),
+          InkWell(
+            onTap: widget.onOpenSource == null
+                ? null
+                : () => widget.onOpenSource!(widget.sourceChapter!),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                border: Border.all(color: AlmaPalette.hairline),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(mainAxisSize: MainAxisSize.min, children: [
+                Flexible(
+                  child: Text(
+                    l.chatFromChapter(widget.sourceChapter!.title),
+                    style: AlmaType.meta
+                        .copyWith(color: AlmaPalette.goldBright),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Та же стрелка, каким жестом зовут всё остальное на этой
+                // вкладке: вступительные вопросы, отправку.
+                Text('→',
+                    style: AlmaType.body
+                        .copyWith(fontSize: 15, color: AlmaPalette.gold)),
+              ]),
+            ),
+          ),
         ],
       ]),
     );

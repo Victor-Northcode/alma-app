@@ -93,6 +93,49 @@ extension CabinetWordsMore on CabinetWords {
         _ => name,
       };
 
+  /// Порядковое имя дома для строки думания: «fourth», «4-й», «4.».
+  ///
+  /// Не [house]: тот отдаёт слово целиком — «4th house», «4-й дом», — а шаблон
+  /// `chatReadingHouse` уже несёт слово «дом» на своём месте («reading your
+  /// {house} house…»), и полная форма печатала бы «дом» дважды. Каталог хранит
+  /// готовые фразы, а не грамматику; правило порядкового числительного — это
+  /// грамматика, и живёт оно здесь, рядом с остальными правилами последнего
+  /// момента (регистр в [_bodyCased] — тот же случай). Языки — ровно семь,
+  /// которыми продукт пишет; незнакомый получает голое число: честнее, чем
+  /// английский суффикс посреди чужого языка.
+  static String houseOrdinal(L l, int number) {
+    final language = l.localeName.split(RegExp('[_-]')).first;
+    switch (language) {
+      case 'en':
+        // Спека A2 пишет словом: «reading your fourth house…». Домов ровно
+        // двенадцать, так что список конечен и не растёт.
+        const words = [
+          'first', 'second', 'third', 'fourth', 'fifth', 'sixth',
+          'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth',
+        ];
+        return (number >= 1 && number <= words.length)
+            ? words[number - 1]
+            : '$number';
+      case 'ru':
+        return '$number-й'; // дом — мужской род: «4-й дом»
+      case 'de':
+        return '$number.'; // «lese dein 4. Haus…»
+      case 'fr':
+        return number == 1 ? '1re' : '${number}e'; // maison — женский род
+      case 'it':
+        // Без скобок: «ª» — не буква идентификатора, интерполяция кончается
+        // на числе, и линтер просит ровно эту форму.
+        return '$numberª'; // «la tua 4ª casa»
+      case 'es':
+      case 'pt':
+        // В обоих шаблонах число стоит после слова — «leyendo tu casa 4…»,
+        // «lendo sua casa 4…» — и так дома по-испански и зовут.
+        return '$number';
+      default:
+        return '$number';
+    }
+  }
+
   static String house(L l, int number) => switch (number) {
         1 => l.cabHouse1,
         2 => l.cabHouse2,

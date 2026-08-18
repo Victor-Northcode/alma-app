@@ -687,6 +687,224 @@ class AlmaClient {
         timeout: writingTimeout,
       ));
 
+  /// Тот же вопрос, но сервер рассказывает по дороге, что он делает.
+  ///
+  /// `POST /v1/chat/stream` — SSE: события `stage` со стадией настоящей
+  /// работы, затем ровно один `done` с тем же JSON, что отдаёт `/v1/chat`,
+  /// либо `error` с телом обычного отказа. Разбор строчный и свой: формат —
+  /// «event: имя», «data: json», пустая строка, — и тянуть под три строки
+  /// парсера зависимость не за что.
+  ///
+  /// Ошибки — те же типы, что у [ask], и по тем же правилам: HTTP-статус до
+  /// начала потока (квота отвечает обычным 429), `error` внутри потока и
+  /// оборванная сеть — всё выходит наружу [AlmaError], так что экран
+  /// обрабатывает стрим и одиночный ответ одним `catch`.
+  Stream<ChatEvent> askStream(
+    String message, {
+    String? threadId,
+    required String locale,
+  }) async* {
+    final request = http.Request('POST', baseUrl.resolve('/v1/chat/stream'));
+    request.headers.addAll({
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream',
+      anonHeader: await _tokens.anonId(),
+      timezoneHeader: _deviceTimezone(),
+    });
+    final token = await _tokens.read();
+    if (token != null) {
+      request.headers['Authorization'] = 'Bearer $token';
+      request.headers[tokenHeader] = token;
+    }
+    request.body = jsonEncode({
+      'message': message,
+      'thread_id': ?threadId,
+      'locale': locale,
+    });
+
+    http.StreamedResponse streamed;
+    try {
+      // Тот же таймаут, что у [ask], и меряет он то же самое: ожидание
+      // заголовков. Тело у обоих читается без часов — у `_send` их нет на
+      // `bytesToString`, и стрим не заводит себе строже: `Stream.timeout`
+      // на теле к тому же не отдаёт закрытие потока под фальшивыми часами
+      // виджет-тестов, то есть его цена — подвисший `finally` у экрана.
+      streamed = await _http.send(request).timeout(writingTimeout);
+    } on TimeoutException {
+      throw const NetworkDown('истекло время ожидания: POST /v1/chat/stream');
+    } catch (error) {
+      throw NetworkDown(error.toString());
+    }
+
+    // Те же обязанности, что у `_send`: свежий токен из заголовка — в связку,
+    // 410 — чистка. Стрим не освобождает от договора о токенах.
+    final minted = streamed.headers[tokenHeader.toLowerCase()];
+    if (minted != null && minted.isNotEmpty) {
+      await _tokens.write(minted);
+    }
+    if (streamed.statusCode == 410) {
+      await _tokens.clear();
+    }
+    if (streamed.statusCode >= 400) {
+      // Отказ до первого байта — обычный JSON, не поток: квота, стена,
+      // развилка часов. Разбирается тем же кодом, что и у одиночного ответа.
+      throw _refusal(streamed.statusCode, await streamed.stream.bytesToString());
+    }
+
+    // **Поток дочитывается до естественного конца, а не бросается на
+    // `done`.** Сервер закрывает его сразу за последним событием, так что
+    // дочитать — бесплатно; а ранний выход из `await for` — это отмена
+    // подписки, и под фальшивыми часами виджет-тестов отмена цепочки
+    // `ByteStream → utf8 → LineSplitter` не завершается никогда: `finally`
+    // у экрана не наступал, и думание оставалось висеть поверх ответа.
+    // Поэтому стадии выходят наружу по дороге, а `done` и ошибка — после
+    // конца потока.
+    var event = '';
+    final data = StringBuffer();
+    ChatReply? finished;
+    AlmaError? refused;
+    try {
+      final lines = streamed.stream
+          .transform(utf8.decoder)
+          .transform(const LineSplitter());
+      await for (final line in lines) {
+        // Ответ уже есть — остаток дочитывается молча.
+        if (finished != null || refused != null) continue;
+        if (line.isNotEmpty) {
+          if (line.startsWith('event:')) {
+            event = line.substring('event:'.length).trim();
+          } else if (line.startsWith('data:')) {
+            // Многострочный data склеивается как есть; «:keepalive» и прочие
+            // служебные строки SSE молча пропускаются.
+            data.write(line.substring('data:'.length).trimLeft());
+          }
+          continue;
+        }
+        // Пустая строка — конец события.
+        final name = event;
+        final payload = data.toString();
+        event = '';
+        data.clear();
+        if (name.isEmpty || payload.isEmpty) continue;
+        switch (name) {
+          case 'stage':
+            // Стадия — украшение дороги, а не груз: непонятная не роняет
+            // вопрос, она просто не рисуется.
+            try {
+              final parsed = jsonDecode(payload);
+              if (parsed is Map) {
+                final stage = (parsed['stage'] ?? '').toString();
+                final label = (parsed['name'] ?? '').toString();
+                if (stage.isNotEmpty && label.isNotEmpty) {
+                  yield ChatStage(stage: stage, name: label);
+                }
+              }
+            } catch (_) {}
+          case 'done':
+            final parsed = jsonDecode(payload);
+            if (parsed is Map) {
+              finished = ChatReply.fromJson(parsed.cast<String, dynamic>());
+            } else {
+              refused = BadPayload('done не объект: $payload');
+            }
+          case 'error':
+            // Сервер упал уже после старта потока и сказал об этом словами
+            // обычного отказа: `{status, detail}` разбирается тем же кодом,
+            // что и тело HTTP-ошибки.
+            int status = 500;
+            Object detail = const <String, dynamic>{};
+            try {
+              final parsed = jsonDecode(payload);
+              if (parsed is Map) {
+                status = (parsed['status'] as num?)?.toInt() ?? 500;
+                detail = parsed['detail'] ?? detail;
+              }
+            } catch (_) {}
+            refused = _refusal(status, jsonEncode({'detail': detail}));
+          default:
+            // Событие с сервера свежее сборки — не ошибка, просто не наше.
+            break;
+        }
+      }
+    } on AlmaError {
+      rethrow;
+    } catch (error) {
+      // Оборванный сокет, битая кодировка — всё это сеть, и экран отвечает
+      // на неё как на сеть: вопрос возвращается в поле, а не пропадает.
+      throw NetworkDown(error.toString());
+    }
+    if (refused != null) throw refused;
+    if (finished != null) {
+      yield ChatDone(finished);
+      return;
+    }
+    // Сервер закрыл поток, не сказав ни `done`, ни `error`, — это обрыв, а
+    // не тихий успех: без ответа вопрос не считается отправленным.
+    throw const NetworkDown('стрим оборвался до ответа: POST /v1/chat/stream');
+  }
+
+  /// Отказ сервера, собранный из статуса и тела, — общий для `_send` и
+  /// [askStream], потому что язык отказов один на все ручки.
+  ///
+  /// **Предложение сервера показывается как есть — когда оно для читателя.**
+  /// FastAPI кладёт тело отказа в `detail`, и наш сервер шлёт там объект
+  /// `{error, message}`. Первый разбор брал `detail` целиком и печатал
+  /// словарь фигурными скобками прямо на экране — «{error: budget_exceeded,
+  /// message: spent $0.1023…}» — найдено на живом отказе в браузере.
+  ///
+  /// Сообщения 4xx приходят из `alma/i18n/replies.py` на языке аккаунта и
+  /// показываются дословно. Сообщения 5xx — внутренние английские строки
+  /// для оператора («spent $0.1023 against a $0.10 ceiling»), читателю
+  /// экран говорит свою переведённую фразу; так же поступает iOS, где
+  /// AlmaFailure рисует displayText, а не серверное нутро.
+  static AlmaError _refusal(int statusCode, String text) {
+    String message = '';
+    String? code;
+    AmbiguousBirthTime? fork;
+    try {
+      final parsed = jsonDecode(text);
+      if (parsed is Map) {
+        final detail = parsed['detail'];
+        if (detail is Map) {
+          message = (detail['message'] ?? '').toString();
+          code = detail['error'] as String?;
+          // Развилка перевода часов уходит своим типом: это единственный
+          // отказ, на который у экрана есть ответ, а не только сожаление.
+          //
+          // Собирается здесь, а возвращается **ниже**: этот разбор обёрнут в
+          // `catch (_) {}`, который проглотил бы бросок вместе с опечаткой в
+          // JSON, и развилка молча превратилась бы в общий отказ.
+          if (code == 'ambiguous_birth_time') {
+            fork = AmbiguousBirthTime.from(detail.cast<String, dynamic>());
+          }
+        } else if (detail is String) {
+          message = detail;
+        } else {
+          message = (parsed['message'] ?? '').toString();
+          code = parsed['error'] as String? ?? parsed['code'] as String?;
+        }
+      }
+    } catch (_) {}
+    if (fork != null) return fork;
+    // **Кроме тех кодов, у которых фраза заведомо переведена.**
+    //
+    // `alma/i18n/replies.py` — единственный источник этих сообщений, и они
+    // приходят на языке аккаунта независимо от статуса. Отказ по потолку
+    // отвечает 503, и правило выше стирало готовую человеческую фразу,
+    // подменяя её общим «что-то не работает» — то есть теряло единственное
+    // объяснение, которое у читателя было.
+    const translated = {
+      'budget_exceeded',
+      'month_budget',
+      'question_limit.day',
+      'question_limit.month',
+      'partner_limit',
+      'answer_refused',
+    };
+    if (statusCode >= 500 && !translated.contains(code)) message = '';
+    return ServerRefused(status: statusCode, message: message, code: code);
+  }
+
   /// Беседы этого человека, свежая первой. Форма снята с сервера, а не
   /// придумана: `{"threads": [{id, title, updated_at}]}` —
   /// `readings.py:/chat/threads`.
@@ -783,63 +1001,7 @@ class AlmaClient {
     }
 
     if (streamed.statusCode >= 400) {
-      // **Предложение сервера показывается как есть — когда оно для
-      // читателя.** FastAPI кладёт тело отказа в `detail`, и наш сервер шлёт
-      // там объект `{error, message}`. Первый разбор брал `detail` целиком и
-      // печатал словарь фигурными скобками прямо на экране —
-      // «{error: budget_exceeded, message: spent $0.1023…}» — найдено на
-      // живом отказе в браузере.
-      //
-      // Сообщения 4xx приходят из `alma/i18n/replies.py` на языке аккаунта и
-      // показываются дословно. Сообщения 5xx — внутренние английские строки
-      // для оператора («spent $0.1023 against a $0.10 ceiling»), читателю
-      // экран говорит свою переведённую фразу; так же поступает iOS, где
-      // AlmaFailure рисует displayText, а не серверное нутро.
-      String message = '';
-      String? code;
-      AmbiguousBirthTime? fork;
-      try {
-        final parsed = jsonDecode(text);
-        if (parsed is Map) {
-          final detail = parsed['detail'];
-          if (detail is Map) {
-            message = (detail['message'] ?? '').toString();
-            code = detail['error'] as String?;
-            // Развилка перевода часов уходит своим типом: это единственный
-            // отказ, на который у экрана есть ответ, а не только сожаление.
-            //
-            // Собирается здесь, а бросается **ниже**: этот разбор обёрнут в
-            // `catch (_) {}`, который проглотил бы бросок вместе с опечаткой в
-            // JSON, и развилка молча превратилась бы в общий отказ.
-            if (code == 'ambiguous_birth_time') {
-              fork = AmbiguousBirthTime.from(detail.cast<String, dynamic>());
-            }
-          } else if (detail is String) {
-            message = detail;
-          } else {
-            message = (parsed['message'] ?? '').toString();
-            code = parsed['error'] as String? ?? parsed['code'] as String?;
-          }
-        }
-      } catch (_) {}
-      if (fork != null) throw fork;
-      // **Кроме тех кодов, у которых фраза заведомо переведена.**
-      //
-      // `alma/i18n/replies.py` — единственный источник этих сообщений, и они
-      // приходят на языке аккаунта независимо от статуса. Отказ по потолку
-      // отвечает 503, и правило выше стирало готовую человеческую фразу,
-      // подменяя её общим «что-то не работает» — то есть теряло единственное
-      // объяснение, которое у читателя было.
-      const translated = {
-        'budget_exceeded',
-        'month_budget',
-        'question_limit.day',
-        'question_limit.month',
-        'partner_limit',
-        'answer_refused',
-      };
-      if (streamed.statusCode >= 500 && !translated.contains(code)) message = '';
-      throw ServerRefused(status: streamed.statusCode, message: message, code: code);
+      throw _refusal(streamed.statusCode, text);
     }
 
     if (text.isEmpty) return const {};

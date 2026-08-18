@@ -38,13 +38,17 @@ nothing the ledger could only see the requests that worked.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
+import re
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
-from collections.abc import Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -60,7 +64,7 @@ from ...calc.cache import MOMENT_OPTIONS, compute_cached
 from ...calc.contract import cache_key
 from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...config import settings
-from ...db.models import ChatMessage, ChatThread, Memory, Reading, UsageCounter, utcnow
+from ...db.models import ChatMessage, ChatThread, Memory, Reading, UsageCounter, User, utcnow
 from ..cache import result_cache
 from ..deps import (
     CurrentUser,
@@ -1764,6 +1768,24 @@ async def chat(
     provider: ProviderDep,
 ) -> dict:
     """One turn of conversation, answered only from the chart."""
+    # Тело живёт в `_chat_turn`, потому что у хода беседы теперь два входа:
+    # этот — старый контракт, один JSON после долгого молчания — и
+    # `/chat/stream`, где те же шаги рассказываются по мере работы. Логика
+    # одна на двоих намеренно: отдельная копия для стрима — это дыра мимо
+    # квоты ровно в тот день, когда правят одну из копий.
+    return await _chat_turn(payload, user, session, provider)
+
+
+async def _chat_gate(session, user, *, locale: str) -> tuple[Allowance, str]:
+    """Какая порция отвечает этому человеку сейчас — или честный 429.
+
+    Вынесено из тела хода, потому что спрашивающих двое: сам `_chat_turn` и
+    `/chat/stream`, которому отказ нужен **до первого байта** — SSE-ответ уже
+    несёт 200, и квота, проверенная только внутри потока, превращала бы отказ
+    в «ошибку внутри успешного ответа». Ничего не тратит: списание было и
+    остаётся после состоявшегося ответа, поэтому второй заход этой проверки
+    в одном запросе безвреден.
+    """
     _cheap, mid, strong = models()
     tier = await entitlements.tier_of(session, user)
     # **Сегодня это всегда False, и оставлено оно намеренно.** Недельная
@@ -1774,7 +1796,7 @@ async def chat(
     # удержанию, а восстанавливать снесённую квоту под давлением эксперимента —
     # это как раз тот случай, когда её делают «примерно как было».
     weekly = await entitlements.has_kind(session, user, "weekly")
-    allowance = _allowance(tier, mid=mid, locale=payload.locale, weekly=weekly)
+    allowance = _allowance(tier, mid=mid, locale=locale, weekly=weekly)
 
     # An owner spends the bundle their purchase included; when it is gone the
     # base allowance is the wall, and the wall's own sentence points at the
@@ -1831,7 +1853,7 @@ async def chat(
         # models a cached read yet.
         message = i18n_replies.reply(
             f"question_limit.{allowance.period}",
-            payload.locale,
+            locale,
             limit=allowance.limit,
         )
         raise HTTPException(
@@ -1844,6 +1866,57 @@ async def chat(
                 "period": allowance.period,
             },
         )
+    return allowance, tier
+
+
+#: Дом в строке фактора — ровно то, что печатает движок:
+#: «sun 17°46′ ♓ · house 4» (`engine/natal.py::describe`).
+_FACTOR_HOUSE = re.compile(r"\bhouse (\d{1,2})\b")
+#: Движущееся тело транзита: «transiting saturn □ natal sun · orb …»
+#: (`engine/transits.py::describe`).
+_FACTOR_TRANSITING = re.compile(r"^transiting ([a-z_]+)")
+
+
+def _stage_for(system: str, result: CalcResult) -> tuple[str, str] | None:
+    """Что назвать вслух про этот шаг сборки карты — из настоящих данных.
+
+    Спека беседы (§6, A2): «reading your …» показывается только с настоящими
+    данными запроса; правдоподобный «четвёртый дом» здесь был бы враньём ровно
+    там, где продукт обещает не выдумывать. Поэтому имя берётся из факторов
+    только что посчитанной системы — дом из натальной карты этого человека,
+    движущееся тело из его же первого транзита, — а если в факторах нет ни
+    дома, ни тела (рождение без времени), шаг честно молчит. Сырые имена
+    движка («4», «saturn») переводит клиент словами своего каталога — так же,
+    как переводит цитаты.
+    """
+    if system == "natal":
+        for factor in result.factors:
+            found = _FACTOR_HOUSE.search(factor)
+            if found:
+                return "house", found.group(1)
+    if system == "transits":
+        for factor in result.factors:
+            found = _FACTOR_TRANSITING.match(factor)
+            if found:
+                return "body", found.group(1)
+    return None
+
+
+async def _chat_turn(
+    payload: ChatRequest,
+    user,
+    session,
+    provider,
+    *,
+    stage: Callable[[str, str], Awaitable[None]] | None = None,
+) -> dict:
+    """Один ход беседы: квота, карта, модель, счёт — и готовый ответ.
+
+    `stage` — рассказчик стрима: его зовут на настоящих шагах подготовки
+    (см. `_stage_for`), и когда его нет, ход ведёт себя ровно как всегда.
+    """
+    allowance, tier = await _chat_gate(session, user, locale=payload.locale)
+    _cheap, _mid, _strong = models()
 
     birth = await resolve_birth(session, user, profile_id=payload.profile_id, birth=None)
     results: list[CalcResult] = []
@@ -1861,6 +1934,10 @@ async def chat(
                     continue
                 options["other"] = other
             results.append(await _calc(system, birth, **options))
+            if stage is not None:
+                named = _stage_for(system, results[-1])
+                if named is not None:
+                    await stage(*named)
         except HTTPException:
             # Three of the eight need a birth time, and a person who never gave
             # one is the common case rather than the edge. Dropping them
@@ -1950,6 +2027,26 @@ async def chat(
         row for row in written_rows
         if row[1] in {c.slug for c in chapter_defs.BY_SYSTEM.get(row[0], ())}
     ]
+    # **Глава-источник называется здесь, где собирается контекст, а не задним
+    # числом.** Единственное, что связывает ответ с главой, — заголовки уже
+    # написанных глав, уходящие в промт ниже; ничего другого про главы модель
+    # не видит. Одна глава в контексте — её можно назвать честно; несколько
+    # или ни одной — назвать нечего, и поле остаётся null: выбирать «самую
+    # похожую» значило бы выдумывать источник ровно там, где продукт обещает
+    # не выдумывать. Пары (система, глава) убираются от повторов — та же глава
+    # на двух языках лежит двумя строками, а глава при этом одна.
+    unique_chapters = list(dict.fromkeys((row[0], row[1]) for row in written_rows))
+    source_chapter = None
+    if len(unique_chapters) == 1:
+        src_system, src_slug = unique_chapters[0]
+        src_words = i18n.chapter_words(
+            src_system, src_slug, locale=i18n.resolve(payload.locale)
+        )
+        source_chapter = {
+            "system": src_system,
+            "slug": src_slug,
+            "title": src_words.title,
+        }
     if written_rows:
         titles = []
         for sys_slug, ch_slug in written_rows[:24]:
@@ -2113,7 +2210,105 @@ async def chat(
         # something different to a subscriber than to a free user, and the
         # client cannot tell which sentence to write without being told.
         "questions_period": allowance.period,
+        # Глава, на которую ответ опирается, — или null, когда назвать её
+        # честно нельзя. См. довод у места, где она выбирается.
+        "source_chapter": source_chapter,
     }
+
+
+@router.post("/chat/stream")
+async def chat_stream(
+    payload: ChatRequest,
+    user: CurrentUser,
+    session: SessionDep,
+    provider: ProviderDep,
+) -> StreamingResponse:
+    """Тот же ход беседы, рассказанный по мере работы — SSE.
+
+    События:
+
+    * ``event: stage`` — ``{"stage": "house" | "body", "name": "<имя движка>"}``,
+      по настоящим шагам сборки карты (`_stage_for`);
+    * ``event: done`` — ровно тот JSON, что отдаёт ``POST /v1/chat``;
+    * ``event: error`` — ``{"status": <код>, "detail": <тело ошибки /v1/chat>}``,
+      когда ход упал уже после старта потока.
+
+    Ход — тот же `_chat_turn`, что у ``/v1/chat``: квота, потолки и счёт
+    общие по построению, дыры мимо квоты нет, потому что нет второго пути.
+    """
+    # Отказ квоты — до первого байта и тем же телом, что у `/v1/chat`: SSE
+    # начинается со статуса 200, и отказ, случившийся после старта потока,
+    # пришлось бы выдумывать заново внутри «успешного» ответа. Проверка ничего
+    # не тратит, поэтому её второй заход внутри `_chat_turn` не удваивает счёт.
+    await _chat_gate(session, user, locale=payload.locale)
+
+    # Одно голое значение вместо строки пользователя: сессия запроса умрёт
+    # раньше, чем генератор начнёт работать, и трогать через неё ORM-объект
+    # оттуда уже нельзя.
+    user_id = user.id
+
+    async def turns() -> AsyncIterator[str]:
+        # Стадии рождаются внутри `_chat_turn`, а наружу уходят отсюда —
+        # очередь и есть та труба, по которой рабочая корутина рассказывает
+        # генератору, что она сейчас делает.
+        queue: asyncio.Queue[tuple[str, dict]] = asyncio.Queue()
+
+        async def tell(kind: str, name: str) -> None:
+            await queue.put(("stage", {"stage": kind, "name": name}))
+
+        async def work() -> None:
+            from ...db.session import session_scope
+
+            try:
+                # Своя сессия с тем же правилом «commit по успеху», что у
+                # `get_session`: FastAPI отпускает yield-зависимости до того,
+                # как тело потока начинает писаться, и сессия запроса к этому
+                # моменту закрыта.
+                async with session_scope() as fresh:
+                    who = await fresh.get(User, user_id)
+                    if who is None:
+                        raise HTTPException(
+                            status.HTTP_401_UNAUTHORIZED, detail="no such account"
+                        )
+                    body = await _chat_turn(payload, who, fresh, provider, stage=tell)
+                await queue.put(("done", body))
+            except HTTPException as exc:
+                # Тот же словарь, что ушёл бы телом ошибки на `/v1/chat`:
+                # клиент собирает из него тот же отказ и показывает ту же
+                # фразу — стрим не изобретает второй язык поломок.
+                detail = (
+                    exc.detail
+                    if isinstance(exc.detail, dict)
+                    else {"error": "error", "message": str(exc.detail)}
+                )
+                await queue.put(("error", {"status": exc.status_code, "detail": detail}))
+            except Exception:  # noqa: BLE001 — поток обязан кончиться словом, а не тишиной
+                log.exception("chat stream failed for %s", user_id)
+                await queue.put(("error", {"status": 500, "detail": {"error": "internal"}}))
+
+        task = asyncio.create_task(work())
+        try:
+            while True:
+                kind, data = await queue.get()
+                yield f"event: {kind}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+                if kind in ("done", "error"):
+                    return
+        finally:
+            # Клиент ушёл посреди генерации — не жечь модель дальше. После
+            # нормального конца задача уже завершена и cancel — пустой жест.
+            if not task.done():
+                task.cancel()
+                with suppress(asyncio.CancelledError):
+                    await task
+
+    return StreamingResponse(
+        turns(),
+        media_type="text/event-stream",
+        # Прокси между телефоном и нами не должен ни кэшировать поток, ни
+        # копить его в буфере до конца генерации — иначе стадии приедут
+        # одной пачкой вместе с ответом, то есть не приедут вовсе.
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.get("/memory")

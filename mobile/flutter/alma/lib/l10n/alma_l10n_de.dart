@@ -1713,7 +1713,7 @@ class LDe extends L {
 
   @override
   String get paywallRestoredNonePlay =>
-      'Google Play hat für dieses Konto nichts wiederherzustellen.';
+      'Google Play hat für dieses Konto nichts wieder­herzustellen.';
 
   @override
   String get paywallRestoredOther =>

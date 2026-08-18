@@ -31,22 +31,33 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Сервер в пробирке: ответ на вопрос приходит **не сразу**. Пауза здесь и
 /// есть предмет проверки — всё время, пока вопрос в пути, свет держит наклон.
+///
+/// Экран спрашивает стримом (`/v1/chat/stream`), поэтому пробирка отвечает
+/// SSE: стадия и `done` с тем же JSON, что раньше отдавал `/v1/chat`. Кодировка
+/// названа в заголовке: в цитате стоит глиф знака, а `http.Response` без
+/// charset кодирует латиницей-1 и падал бы на нём.
 AlmaClient chatClient({Duration answersAfter = const Duration(seconds: 2)}) {
   final http.Client transport = MockClient((request) async {
-    if (request.url.path == '/v1/chat') {
+    if (request.url.path == '/v1/chat/stream') {
       await Future<void>.delayed(answersAfter);
+      final done = jsonEncode({
+        'thread_id': 'th1',
+        'message': {
+          'body': 'Your sun lives in the fourth house.',
+          'turn_kind': 'reading',
+          'cited_factors': ['sun 17°46′ ♓︎ · house 4'],
+        },
+        'questions_left': 2,
+      });
       return http.Response(
-          jsonEncode({
-            'thread_id': 'th1',
-            'message': {
-              'body': 'Your sun lives in the fourth house.',
-              'turn_kind': 'reading',
-              'cited_factors': ['sun 17°46′ ♓︎ · house 4'],
-            },
-            'questions_left': 2,
-          }),
+          'event: stage\n'
+          'data: {"stage":"house","name":"4"}\n'
+          '\n'
+          'event: done\n'
+          'data: $done\n'
+          '\n',
           200,
-          headers: {'content-type': 'application/json'});
+          headers: {'content-type': 'text/event-stream; charset=utf-8'});
     }
     Map<String, dynamic> body;
     if (request.url.path == '/v1/auth/refresh') {

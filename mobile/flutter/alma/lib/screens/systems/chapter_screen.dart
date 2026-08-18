@@ -186,7 +186,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// Довод против `setState` каждый кадр записан прямо ниже, у `_read`, и был
   /// применён к нити, но не к протяжке. Теперь применён к обеим.
   final ValueNotifier<double> _pull = ValueNotifier(0);
-  bool _armed = false;
 
   /// Сколько главы прочитано — для нити у правого поля ([GiltThread]).
   ///
@@ -295,7 +294,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
     setState(() {
       _loading = true;
       _failure = null;
-      _armed = false;
       // Всё, что приезжало про предыдущую главу, уходит вместе с ней: абзац
       // одной главы над титулом другой — худшая из возможных ошибок здесь.
       _opening = null;
@@ -629,10 +627,11 @@ class _ChapterScreenState extends State<ChapterScreen> {
     // вместе с порогами и гистерезисом); экрану остаются вид и хаптика.
     switch (_latch.onScroll(distance, byHand: byHand)) {
       case PullEvent.armed:
-        setState(() => _armed = true);
         HapticFeedback.selectionClick();
       case PullEvent.disarmed:
-        setState(() => _armed = false);
+        // Вид взвода живёт у полосы хвоста, и она слушает `_pull` сама;
+        // экрану здесь перестраивать нечего.
+        break;
       case PullEvent.committed:
         // Тик тяжелее первого, чтобы рука почувствовала упор.
         HapticFeedback.mediumImpact();
@@ -652,7 +651,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
       _advancing = true;
       _showing = next.slug;
       _reading = null;
-      _armed = false;
     });
     HapticFeedback.heavyImpact();
     _load();
