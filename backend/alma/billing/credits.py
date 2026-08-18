@@ -251,6 +251,14 @@ async def spend(
         "account %s spent a monthly pair credit on %s (%s of %s in the period "
         "ending %s)", user.id, profile_id, row.used, row.granted, row.period_end,
     )
+    # Пуш «отчёт пары готов» (кадр W7) — кредитный грант ничем не тише
+    # купленного: период, в котором он выдан, оплачен. Хук здесь, а не у
+    # вызывающего: единственный вызывающий — `readings.py`, чужой файл, а
+    # выдача гранта — вот она. `report_ready` идемпотентен и не поднимает
+    # исключений, так что трата кредита не может сорваться из-за уведомления.
+    from ..notify import pair as pair_push
+
+    await pair_push.report_ready(session, user, partner_id=profile_id, source="credit")
     return grant
 
 

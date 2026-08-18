@@ -160,9 +160,15 @@ class FCM:
         # payload that means two things depending on who reads it.
         alert: dict = {
             "channel_id": CHANNEL,
-            "title_loc_key": push.title_key,
             "notification_priority": "PRIORITY_DEFAULT",
         }
+        # Как и в APNs: собранный сервером заголовок («отчёт пары готов» несёт
+        # имя партнёра, которого нет ни в одном ключе бандла) вытесняет ключ —
+        # одно из двух, никогда оба.
+        if push.title:
+            alert["title"] = push.title
+        else:
+            alert["title_loc_key"] = push.title_key
         if push.body:
             alert["body"] = push.body
         else:

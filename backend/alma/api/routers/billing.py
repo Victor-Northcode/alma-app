@@ -707,6 +707,16 @@ async def bind_pair_purchase(
         "account %s bound transaction %s to partner %s by hand",
         user.id, transaction, profile_id,
     )
+    # Привязка вручную — тоже «отчёт готов»: путь аварийный, но покупка
+    # настоящая, и source на ней — процессор, записанный на платеже. Повтор
+    # привязки (ретрай клиента после таймаута) до этой строки не доходит —
+    # он выходит выше через `already_bound`, а «одна пара — один пуш» держит
+    # и остальные повторы.
+    from ...notify import pair as pair_push
+
+    await pair_push.report_ready(
+        session, user, partner_id=profile_id, source=purchase.provider or "unknown"
+    )
     return {"granted": True, "profile_id": profile_id, "status": "bound"}
 
 
@@ -1170,6 +1180,25 @@ async def _apply(
         # доставка того же продления не дарит вторую проверку.
         if granted.subscription_id:
             await pair_credits.ensure_period(session, user)
+        # Пуш «отчёт пары готов» (кадр W7) — сразу после того, как грант пары
+        # выписан. Хук стоит здесь, а не внутри `entitlements.grant`: grant() —
+        # низкоуровневый писатель строк, его зовут и руками, и тесты, а пуш —
+        # ответ на настоящую продажу, и `event.provider` здесь под рукой.
+        # Идемпотентность — внутри `report_ready` (одна пара — один пуш), так
+        # что второй путь той же покупки (/verify и нотификация магазина)
+        # ничего не дошлёт; сама функция не поднимает исключений — платёж не
+        # может стоить дороже из-за уведомления.
+        if granted.scope == entitlements.SCOPE_PAIR and granted.system.startswith(
+            entitlements.PAIR_PREFIX
+        ):
+            from ...notify import pair as pair_push
+
+            await pair_push.report_ready(
+                session,
+                user,
+                partner_id=granted.system.removeprefix(entitlements.PAIR_PREFIX),
+                source=event.provider,
+            )
         return f"granted {granted.system}"
 
     if event.revokes:

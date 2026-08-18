@@ -235,7 +235,12 @@ class APNs:
         # resolves `loc-key` against the bundle and takes `body` literally, and
         # sending both would make the payload ambiguous about which wins — so
         # it is one or the other, never a fallback pair.
-        alert: dict = {"title-loc-key": push.title_key}
+        # Готовый заголовок вытесняет ключ по тому же правилу «одно из двух»,
+        # что и body ниже: ключа пары в замороженном бандле клиента нет, и
+        # `title-loc-key` рядом с ним показал бы сырую строку ключа на локскрине.
+        alert: dict = (
+            {"title": push.title} if push.title else {"title-loc-key": push.title_key}
+        )
         if push.body:
             alert["body"] = push.body
         else:
