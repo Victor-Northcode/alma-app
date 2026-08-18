@@ -84,6 +84,16 @@ class _AlmaAppState extends State<AlmaApp> {
     // После `whenReady`, а не рядом с ним: до готовности сессии токена
     // аккаунта ещё нет, а запрос без токена сервер встретил бы новым гостем.
     _session.whenReady().then((_) => AlmaPush.instance.sync(widget.client));
+    // Тап по пушу — последнее из четырёх событий §7. Ставится в корне: здесь
+    // есть сессия, а разбор «живой тап или тап, открывший мёртвый процесс»
+    // уже сделан в AlmaPush.listen. Тип пуша едет полем — по нему лестница
+    // отвечает «с какого пуша пришли», не смешиваясь с daily_opened.
+    AlmaPush.instance.onOpened = (payload) {
+      _session.client.track(FunnelStage.pushOpened, meta: {
+        if (payload['type'] case final type?) 'type': type,
+      });
+    };
+    AlmaPush.instance.listen();
     // Счёт запусков для карточки «сохрани карту»: считается здесь, потому что
     // здесь и есть запуск. Внутри карточки это был бы счёт визитов на экран.
     noteLaunch();

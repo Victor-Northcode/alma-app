@@ -45,6 +45,10 @@ Future<Profile> savePartner(
     isSelf: false,
   );
   await session.start(force: true);
+  // §7 ТЗ: «≥25% купивших натал добавляют партнёра» — числитель этой цифры.
+  // Шлётся после удавшегося сохранения, а не по нажатию кнопки: партнёр,
+  // которого сервер отверг, не добавлен.
+  session.client.track(FunnelStage.partnerAdded);
   return saved;
 }
 

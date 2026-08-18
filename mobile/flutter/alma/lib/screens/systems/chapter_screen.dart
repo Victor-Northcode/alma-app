@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
@@ -147,6 +148,13 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// платим до покупки. Приезжает полем `opening`; `null` — его нет, и паттерн
   /// рисуется без него.
   Reading? _opening;
+
+  /// Солнечные знаки двоих — только для медальонов запертой главы пары (C6).
+  ///
+  /// В расчёте совместимости знаков двоих нет; берутся из двух натальных
+  /// расчётов, как на экране системы, — сервер оба кэширует. Не доехали —
+  /// медальоны не рисуются вовсе: честный недострой вместо выдуманного знака.
+  String? _mySign, _theirSign;
 
   /// Пару нечем назвать: сервер сказал `needs_partner`. Цены на этом экране
   /// быть не должно — сначала человек, потом деньги.
@@ -315,6 +323,13 @@ class _ChapterScreenState extends State<ChapterScreen> {
         _list = list;
         _locked = _right(session, from: list) == false;
       });
+      // Знаки двоих для медальонов C6 — параллельно и не блокируя ничего:
+      // страница целиком живёт и без них.
+      if (widget.system == SystemSlug.compatibility &&
+          _locked &&
+          _mySign == null) {
+        unawaited(_loadSigns(session));
+      }
       // **Закрытая глава спрашивает сервер снова — но не главу, а её первый
       // абзац.**
       //
@@ -450,6 +465,27 @@ class _ChapterScreenState extends State<ChapterScreen> {
     return null;
   }
 
+  /// Два натальных расчёта ради двух солнечных знаков — как на экране
+  /// системы: сервер кэширует оба, и пара запросов стоит меньше, чем пустое
+  /// место там, где холст рисует медальоны.
+  Future<void> _loadSigns(AlmaSession session) async {
+    final partnerId = _partnerId(session);
+    if (partnerId == null) return;
+    try {
+      final both = await Future.wait([
+        session.client.compute(SystemSlug.natal),
+        session.client.compute(SystemSlug.natal, body: {'profile_id': partnerId}),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _mySign = both[0].data['sun_sign'] as String?;
+        _theirSign = both[1].data['sun_sign'] as String?;
+      });
+    } on AlmaError {
+      // Молча: медальоны — украшение правды, а не её условие.
+    }
+  }
+
   /// Закрытая глава: шесть частей эталона на той же бумаге, что и написанная.
   Widget _lockedPage(L l) {
     final entry = _entry;
@@ -472,6 +508,8 @@ class _ChapterScreenState extends State<ChapterScreen> {
       paidChapters: _list?.chapters.where((chapter) => !chapter.free).length,
       onOpened: _afterOffer,
       partnerId: _partnerId(SessionScope.of(context)),
+      mySign: _mySign,
+      theirSign: _theirSign,
     );
   }
 
@@ -1461,6 +1499,8 @@ class _LockedChapter extends StatefulWidget {
     required this.paidChapters,
     required this.onOpened,
     this.partnerId,
+    this.mySign,
+    this.theirSign,
   });
 
   final SystemSlug system;
@@ -1494,6 +1534,10 @@ class _LockedChapter extends StatefulWidget {
   /// открывается intent, чей токен магазин вернёт внутри подписанного
   /// пейлоада. У остальных систем поле пусто и в покупку не уходит.
   final String? partnerId;
+
+  /// Солнечные знаки двоих — медальоны C6. Пусто — блок не рисуется.
+  final String? mySign;
+  final String? theirSign;
 
   /// Право выдано — перечитать оглавление и пойти за текстом.
   final Future<void> Function() onOpened;
@@ -1562,11 +1606,20 @@ class _LockedChapterState extends State<_LockedChapter> {
   void _announce() {
     if (_announced) return;
     _announced = true;
-    SessionScope.of(context).client.track(FunnelStage.paywallShown, meta: {
+    final client = SessionScope.of(context).client;
+    client.track(FunnelStage.paywallShown, meta: {
       'surface': _intent.surfaceCode,
       'sku': _sku.slug,
       'trigger': 'locked_chapter',
     });
+    // §7: «30–40% дотизера покупают пару» — знаменатель. Тизер v3 — это и
+    // есть написанное начало запертой главы пары; отдельного экрана-тизера
+    // после спеки запертой главы не существует. Считается по факту показа
+    // начала — то есть когда есть что читать, а не когда пусто и ретрай.
+    if (_sku == LadderKey.pairCheck &&
+        (widget.opening?.body.isNotEmpty ?? false)) {
+      client.track(FunnelStage.pairTeaserCompleted);
+    }
   }
 
   void _buy() {
@@ -1603,6 +1656,15 @@ class _LockedChapterState extends State<_LockedChapter> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: GiltPage.headGap),
+                // Медальоны пары — единственный блок холста C6, которого не
+                // было: два знака в кругах и орбита между ними. Только у
+                // совместимости и только когда оба знака доехали — пустой круг
+                // или один знак из двух читались бы поломкой, а не парой.
+                if (widget.mySign != null && widget.theirSign != null) ...[
+                  _PairMedallions(
+                      mine: widget.mySign!, theirs: widget.theirSign!),
+                  const SizedBox(height: 14),
+                ],
                 Text(widget.overline,
                     textAlign: TextAlign.center,
                     style: AlmaType.overline
@@ -2309,4 +2371,150 @@ class _WhatNextInvite extends StatelessWidget {
       ]),
     );
   }
+}
+
+/// Медальоны пары по холсту C6: два знака в кругах 56 и орбита 34 между ними.
+///
+/// Числа холста дословно: круг 56, кант `rgba(168,135,60,.5)`, заливка
+/// `rgba(255,252,244,.5)`, глиф Playfair 21 цветом золота; орбита — спицы
+/// кольцом 40–72% радиуса, оборот 60 секунд, в центре дышащая точка 12 с
+/// периодом 5. Шестьдесят секунд — намеренно против шести у кольца покупки:
+/// быстрое вращение читается работой, медленное — жизнью.
+class _PairMedallions extends StatefulWidget {
+  const _PairMedallions({required this.mine, required this.theirs});
+
+  final String mine;
+  final String theirs;
+
+  @override
+  State<_PairMedallions> createState() => _PairMedallionsState();
+}
+
+class _PairMedallionsState extends State<_PairMedallions>
+    with TickerProviderStateMixin {
+  late final AnimationController _spin =
+      AnimationController(vsync: this, duration: const Duration(seconds: 60))
+        ..repeat();
+  late final AnimationController _breath =
+      AnimationController(vsync: this, duration: const Duration(seconds: 5))
+        ..repeat(reverse: true);
+
+  static const _glyphs = {
+    'Aries': '♈︎', 'Taurus': '♉︎', 'Gemini': '♊︎', 'Cancer': '♋︎',
+    'Leo': '♌︎', 'Virgo': '♍︎', 'Libra': '♎︎', 'Scorpio': '♏︎',
+    'Sagittarius': '♐︎', 'Capricorn': '♑︎', 'Aquarius': '♒︎', 'Pisces': '♓︎',
+  };
+
+  @override
+  void dispose() {
+    _spin.dispose();
+    _breath.dispose();
+    super.dispose();
+  }
+
+  Widget _sign(String name) => Container(
+        width: 56,
+        height: 56,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: const Color(0xFFFFFCF4).withValues(alpha: 0.5),
+          border: Border.all(
+              color: const Color(0xFFA8873C).withValues(alpha: 0.5)),
+        ),
+        // Глифа нет в словаре — печатается имя как есть: незнакомое слово
+        // сервера честнее пустого круга.
+        //
+        // Шрифт называется явно, как у колеса натала: без 'Apple Symbols'
+        // система отдаёт астрологические знаки Apple Color Emoji, и в круге
+        // вместо золотого глифа вставал фиолетовый значок-наклейка. Найдено
+        // глазами на симуляторе.
+        child: Text(
+          _glyphs[name] ?? name,
+          style: TextStyle(
+              fontFamily: 'Apple Symbols',
+              fontFamilyFallback: const [
+                'Segoe UI Symbol',
+                'Noto Sans Symbols 2',
+                'serif',
+              ],
+              fontSize: _glyphs.containsKey(name) ? 21 : 11,
+              height: 1,
+              color: const Color(0xFFA8873C)),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _sign(widget.mine),
+        const SizedBox(width: 13),
+        SizedBox(
+          width: 34,
+          height: 34,
+          child: Stack(alignment: Alignment.center, children: [
+            RepaintBoundary(
+              child: RotationTransition(
+                turns: _spin,
+                child: const CustomPaint(
+                  size: Size(34, 34),
+                  painter: _OrbitPainter(),
+                ),
+              ),
+            ),
+            FadeTransition(
+              // Дыхание точки: холст даёт breathe 5s ease-in-out; здесь это
+              // ход прозрачности туда-обратно тем же периодом.
+              opacity: _breath.drive(
+                  Tween(begin: 0.35, end: 1.0)
+                      .chain(CurveTween(curve: Curves.easeInOut))),
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(colors: [
+                    const Color(0xFFA8873C).withValues(alpha: 0.9),
+                    const Color(0xFFA8873C).withValues(alpha: 0),
+                  ], stops: const [0.0, 0.7]),
+                ),
+              ),
+            ),
+          ]),
+        ),
+        const SizedBox(width: 13),
+        _sign(widget.theirs),
+      ],
+    );
+  }
+}
+
+/// Спицы орбиты: тонкая чёрточка каждые 11°, кольцом от 40 до 72 % радиуса —
+/// перевод repeating-conic-gradient холста с его же радиальной маской.
+class _OrbitPainter extends CustomPainter {
+  const _OrbitPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final centre = size.center(Offset.zero);
+    final radius = size.shortestSide / 2;
+    final paint = Paint()
+      ..color = const Color(0xFFA8873C).withValues(alpha: 0.5)
+      ..strokeWidth = 1.1
+      ..strokeCap = StrokeCap.round;
+    for (var degree = 0; degree < 360; degree += 11) {
+      final angle = degree * math.pi / 180;
+      final direction = Offset(math.cos(angle), math.sin(angle));
+      canvas.drawLine(
+        centre + direction * radius * 0.40,
+        centre + direction * radius * 0.72,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OrbitPainter oldDelegate) => false;
 }
