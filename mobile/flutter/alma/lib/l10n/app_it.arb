@@ -460,6 +460,8 @@
   "stateRetry": "Riprova",
   "stateSomethingWrong": "Qualcosa è andato storto. Non si è perso nulla.",
   "stateUnavailable": "Qualcosa dalla nostra parte non funziona. Non sei tu, e non è il tuo tema.",
+  "stateUnboundTitle": "Per chi è questa lettura?",
+  "stateUnboundNote": "Il pagamento è andato a buon fine, ma è arrivato senza nome. Scegli la persona e la lettura si apre.",
   "stateWriting": "Sto scrivendo questo capitolo…",
   "tabAlma": "Alma",
   "tabSettings": "Impostazioni",

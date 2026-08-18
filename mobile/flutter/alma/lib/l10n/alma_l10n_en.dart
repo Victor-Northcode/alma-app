@@ -1525,6 +1525,13 @@ class LEn extends L {
       'Something on our side is not working. It is not you, and it is not your chart.';
 
   @override
+  String get stateUnboundTitle => 'Who is this reading for?';
+
+  @override
+  String get stateUnboundNote =>
+      'The payment went through but arrived without a name attached. Choose the person and it opens.';
+
+  @override
   String get stateWriting => 'Writing this chapter…';
 
   @override

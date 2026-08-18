@@ -980,6 +980,32 @@ class PairCredit {
       );
 }
 
+/// Ответ `POST /billing/pair/intent`: про кого будет покупка проверки пары.
+///
+/// `appAccountToken` — UUID, который клиент кладёт в магазинный лист
+/// (`applicationUserName` у `in_app_purchase`: `appAccountToken` на iOS,
+/// `obfuscatedProfileId` на Android). Магазин вернёт его серверу **внутри
+/// подписанной покупки** — так платёж и человек сходятся без слова клиента.
+/// `intentId` уходит в `/verify` только для сверки.
+class PairIntentTicket {
+  const PairIntentTicket({
+    required this.intentId,
+    required this.appAccountToken,
+    required this.profileId,
+  });
+
+  final String intentId;
+  final String appAccountToken;
+  final String profileId;
+
+  factory PairIntentTicket.fromJson(Map<String, dynamic> json) =>
+      PairIntentTicket(
+        intentId: (json['intent_id'] ?? '').toString(),
+        appAccountToken: (json['app_account_token'] ?? '').toString(),
+        profileId: (json['profile_id'] ?? '').toString(),
+      );
+}
+
 /// Полка целиком: строки прайса и адрес, по которому подписку останавливают.
 ///
 /// **`manage_url` — единственное поле каталога, которого клиент не знает сам.**

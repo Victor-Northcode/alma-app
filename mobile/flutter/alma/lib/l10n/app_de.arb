@@ -460,6 +460,8 @@
   "stateRetry": "Erneut versuchen",
   "stateSomethingWrong": "Etwas ist schiefgelaufen. Verloren gegangen ist nichts.",
   "stateUnavailable": "Auf unserer Seite funktioniert etwas nicht. Es liegt nicht an dir und nicht an deinem Horoskop.",
+  "stateUnboundTitle": "Für wen ist diese Deutung?",
+  "stateUnboundNote": "Die Zahlung ist durch, kam aber ohne Namen an. Wähle die Person, und die Deutung öffnet sich.",
   "stateWriting": "Ich schreibe dieses Kapitel…",
   "tabAlma": "Alma",
   "tabSettings": "Einstellungen",

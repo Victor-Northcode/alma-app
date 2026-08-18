@@ -1529,6 +1529,13 @@ class LEs extends L {
       'Algo de nuestro lado no funciona. No eres tú, y no es tu carta.';
 
   @override
+  String get stateUnboundTitle => '¿Para quién es esta lectura?';
+
+  @override
+  String get stateUnboundNote =>
+      'El pago se realizó, pero llegó sin nombre. Elige a la persona y la lectura se abre.';
+
+  @override
   String get stateWriting => 'Estoy escribiendo este capítulo…';
 
   @override

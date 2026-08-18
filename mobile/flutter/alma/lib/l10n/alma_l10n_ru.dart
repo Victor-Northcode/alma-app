@@ -1527,6 +1527,13 @@ class LRu extends L {
       'Что-то не работает на нашей стороне. Дело не в тебе и не в твоей карте.';
 
   @override
+  String get stateUnboundTitle => 'Про кого этот разбор?';
+
+  @override
+  String get stateUnboundNote =>
+      'Оплата прошла, но пришла без имени. Выбери человека — и разбор откроется.';
+
+  @override
   String get stateWriting => 'Пишу эту главу…';
 
   @override

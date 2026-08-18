@@ -1535,6 +1535,13 @@ class LPt extends L {
       'Algo do nosso lado não está funcionando. Não é você, e não é o seu mapa.';
 
   @override
+  String get stateUnboundTitle => 'Para quem é esta leitura?';
+
+  @override
+  String get stateUnboundNote =>
+      'O pagamento foi concluído, mas chegou sem nome. Escolhe a pessoa e a leitura abre.';
+
+  @override
   String get stateWriting => 'Estou escrevendo este capítulo…';
 
   @override

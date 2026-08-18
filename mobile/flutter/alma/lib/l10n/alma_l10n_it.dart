@@ -1535,6 +1535,13 @@ class LIt extends L {
       'Qualcosa dalla nostra parte non funziona. Non sei tu, e non è il tuo tema.';
 
   @override
+  String get stateUnboundTitle => 'Per chi è questa lettura?';
+
+  @override
+  String get stateUnboundNote =>
+      'Il pagamento è andato a buon fine, ma è arrivato senza nome. Scegli la persona e la lettura si apre.';
+
+  @override
   String get stateWriting => 'Sto scrivendo questo capitolo…';
 
   @override

@@ -16,6 +16,7 @@ import 'screens/journey/journey_screen.dart';
 import 'screens/launch_screen.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
+import 'screens/paywall/pair_bind_screen.dart';
 import 'screens/systems/pair_add_screen.dart';
 import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
@@ -163,6 +164,27 @@ class _CabinetShellState extends State<CabinetShell> {
     // настоящего: иначе закрытая глава оставит `true`, и возврат на вкладку
     // зажжёт пергаментную полосу над списком систем.
     readingNow.addListener(_mirrorReading);
+    // Оплаченная и не привязанная проверка пары доезжает в любой момент —
+    // чаще всего при запуске, когда магазин передоставляет незавершённую
+    // транзакцию с прошлого раза. Долг гасится выбором человека, и продукт
+    // обязан привести к нему сам: деньги уже взяты.
+    AlmaStore.shared.addListener(_pairDebt);
+  }
+
+  /// Экран привязки уже стоит — второго не открывать: доставка покупки
+  /// повторяется, а два одинаковых вопроса подряд читаются сбоем.
+  bool _askingPairDebt = false;
+
+  Future<void> _pairDebt() async {
+    if (_askingPairDebt || AlmaStore.shared.unbound == null || !mounted) {
+      return;
+    }
+    _askingPairDebt = true;
+    await Navigator.of(context, rootNavigator: true).push(
+      CupertinoPageRoute<void>(
+          builder: (context) => const PairBindScreen()),
+    );
+    _askingPairDebt = false;
   }
 
   /// Пока идёт смена вкладки, зеркало молчит.
@@ -187,6 +209,7 @@ class _CabinetShellState extends State<CabinetShell> {
   void dispose() {
     almaDraft.removeListener(_askedAlma);
     readingNow.removeListener(_mirrorReading);
+    AlmaStore.shared.removeListener(_pairDebt);
     _pill.dispose();
     _peek.dispose();
     _pages.dispose();

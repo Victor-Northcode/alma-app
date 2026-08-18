@@ -43,6 +43,22 @@ class AlmaStore extends ChangeNotifier {
   bool _restoring = false;
   StoreNotice? _notice;
 
+  /// Намерение открытой сейчас покупки пары: про кого платёж.
+  ///
+  /// Живёт от нажатия «купить» до ответа `/verify` и держится одним полем,
+  /// а не картой по транзакциям, потому что покупка в этом классе одна за раз
+  /// (`_busy`). Нужен для двух вещей: сверки `intent_id` на сервере и
+  /// **самопочинки** — если магазин потерял токен и сервер ответил `unbound`,
+  /// партнёр известен отсюда, и привязка делается без вопросов человеку.
+  PairIntentTicket? _pairIntent;
+
+  /// Оплаченная проверка пары, которую сервер записал и ни к кому не привязал.
+  ///
+  /// Появляется, когда `/verify` ответил `unbound`, а локального намерения
+  /// нет — покупка доехала с прошлого запуска. Экран привязки (W6, карточка 2)
+  /// открывается по этому полю; после `/pair/bind` оно чистится.
+  PairUnbound? _unbound;
+
   StoreState get state => _state;
 
   /// Какая ступень сейчас покупается. Пока она есть, лестница не отвечает на
@@ -50,6 +66,12 @@ class AlmaStore extends ChangeNotifier {
   LadderKey? get busy => _busy;
   bool get restoring => _restoring;
   StoreNotice? get notice => _notice;
+
+  /// Оплаченная и не привязанная проверка пары — или `null`.
+  ///
+  /// Пока поле непусто, продукт должен вести человека к выбору партнёра, а не
+  /// продавать дальше: деньги уже взяты, и первый долг — открыть оплаченное.
+  PairUnbound? get unbound => _unbound;
 
   /// Цена ступени строкой — **как её напечатал магазин**.
   ///
@@ -192,12 +214,19 @@ class AlmaStore extends ChangeNotifier {
   ///
   /// Ничего не открывает сам: успех здесь означает только, что магазин принял
   /// платёж. Право приходит из [_claim], то есть с сервера.
-  Future<void> buy(LadderKey key) async {
+  Future<void> buy(LadderKey key, {String? partnerProfileId}) async {
     final product = _products[key];
     // Ступень без товара — строка, которой не следовало быть нарисованной:
     // лестница строится только по тому, на что магазин ответил. Отказ вместо
     // падения — падать в секунду нажатия «купить» худшее из времён.
     if (_busy != null || product == null) return;
+    // Проверка пары без партнёра — не покупка, а описка вызывающего экрана:
+    // расходуемый товар обязан называть человека **до** денег, иначе платёж
+    // приедет `unbound` по нашей же вине. Сервер такой intent и не откроет.
+    if (key == LadderKey.pairCheck && (partnerProfileId ?? '').isEmpty) {
+      debugPrint('покупка пары без партнёра не открывается');
+      return;
+    }
     _busy = key;
     _notice = null;
     notifyListeners();
@@ -228,11 +257,53 @@ class AlmaStore extends ChangeNotifier {
     // путешествия `s37`, когда построят `V1` (порядок задан в разделе VR
     // `docs/monetization/SCREENS-V3.md`).
 
-    final purchase = PurchaseParam(productDetails: product);
+    // **Проверка пары — расходуемый товар, и до листа есть один шаг.**
+    //
+    // Две покупки с одним `productId` — это два разных человека, а магазин про
+    // наших людей не знает ничего. Поэтому сначала `POST /billing/pair/intent`:
+    // сервер запоминает «этот аккаунт платит про этого партнёра» и выдаёт
+    // UUID-токен. Токен кладётся в покупку (`appAccountToken` у Apple,
+    // `obfuscatedProfileId` у Play) и вернётся серверу внутри **подписанного
+    // магазином** пейлоада — единственная связь платежа с человеком, которой
+    // можно верить. Интент не открылся — лист не открывается тоже: покупка без
+    // токена приехала бы `unbound`, и мы устроили бы это сами.
+    _pairIntent = null;
+    if (key == LadderKey.pairCheck) {
+      final session = _session;
+      if (session == null) {
+        _busy = null;
+        notifyListeners();
+        return;
+      }
+      try {
+        await session.whenReady();
+        _pairIntent = await session.client.openPairIntent(partnerProfileId!);
+      } on AlmaError catch (error) {
+        debugPrint('intent пары не открылся: $error');
+        _busy = null;
+        _notice = StoreNotice(StoreTone.bad, StoreMessage.notVerified);
+        notifyListeners();
+        return;
+      }
+    }
+
+    final purchase = PurchaseParam(
+      productDetails: product,
+      // Токен намерения — только у проверки пары; остальным ступеням класть
+      // нечего, и пустая строка здесь хуже null: Play примет её как настоящий
+      // obfuscatedProfileId и сервер будет разбирать пустоту.
+      applicationUserName: _pairIntent?.appAccountToken,
+    );
     try {
-      // `buyNonConsumable` и для подписок: расходуемых товаров у продукта нет
-      // ни одного — ни главы, ни план не «тратятся».
-      await _iap.buyNonConsumable(purchaseParam: purchase);
+      if (key.consumable) {
+        // Расходуемое покупается расходуемым: `buyNonConsumable` для
+        // consumable-товара Play продаёт **один раз за жизнь аккаунта** — то
+        // есть вторая проверка пары не купилась бы никогда и ни за что.
+        await _iap.buyConsumable(purchaseParam: purchase);
+      } else {
+        // `buyNonConsumable` и для подписок: ни главы, ни план не «тратятся».
+        await _iap.buyNonConsumable(purchaseParam: purchase);
+      }
     } catch (error) {
       debugPrint('покупка ${key.slug} не открылась: $error');
       _busy = null;
@@ -377,7 +448,60 @@ class AlmaStore extends ChangeNotifier {
         // нажатой кнопки.
         product: key.slug,
         transaction: purchase.verificationData.serverVerificationData,
+        intentId: key == LadderKey.pairCheck ? _pairIntent?.intentId : null,
       );
+
+      // **Оплачено и не привязано — незаконченный шаг, а не успех и не отказ.**
+      //
+      // `unbound` значит: деньги записаны, магазинный пейлоад пришёл без
+      // токена, и сервер не знает, про кого этот отчёт. Два выхода, по тому,
+      // помним ли мы сами:
+      //
+      // Намерение ещё в руках — привязываем молча тем же партнёром, про
+      // которого открывали покупку. Это не «слово клиента» в обход правил:
+      // `/pair/bind` существует ровно для этого и сам проверяет, что профиль
+      // наш и покупка наша.
+      //
+      // Намерения нет (покупка доехала с прошлого запуска) — состояние уходит
+      // в `unbound`, и продукт показывает выбор человека (W6, карточка 2).
+      //
+      // Транзакция в обоих случаях **не финишируется** (return false):
+      // расходуемая покупка, завершённая до привязки, не вернётся ни повтором,
+      // ни восстановлением — consumable не восстанавливаются вовсе, — и при
+      // потерянном локальном состоянии деньги остались бы записанными на
+      // сервере без всякой дороги к отчёту. Незавершённая возвращается сама
+      // при каждом запуске, и цикл закрывается: после привязки следующая
+      // доставка находит грант, отвечает 200, и транзакция финишируется.
+      if ((answer['status'] as String?) == 'unbound') {
+        final transaction = (answer['transaction_id'] ?? '').toString();
+        final remembered = _pairIntent;
+        if (remembered != null && transaction.isNotEmpty) {
+          try {
+            await session.client.bindPairPurchase(
+              transaction: transaction,
+              profileId: remembered.profileId,
+            );
+            await session.refreshRights();
+            _pairIntent = null;
+            _unbound = null;
+            session.client.track(FunnelStage.purchaseCompleted,
+                meta: {'product': key.slug});
+            PaywallGuard.notePurchase();
+            _notice = StoreNotice(StoreTone.good, StoreMessage.unlocked);
+            _busy = null;
+            notifyListeners();
+            return true;
+          } on AlmaError catch (error) {
+            debugPrint('самопочинка привязки не прошла: $error');
+          }
+        }
+        _unbound = PairUnbound(transaction: transaction);
+        _notice = StoreNotice(StoreTone.waiting, StoreMessage.pending);
+        _busy = null;
+        notifyListeners();
+        return false;
+      }
+
       await session.refreshRights();
       // **«Открыто» говорится по списку прав, а не по факту ответа 200.**
       //
@@ -409,6 +533,7 @@ class AlmaStore extends ChangeNotifier {
                   : StoreMessage.unlocked,
             )
           : StoreNotice(StoreTone.waiting, StoreMessage.verifyLater);
+      _pairIntent = null;
       _busy = null;
       notifyListeners();
       // Сервер ответил и записал, что смог: транзакция своё дело сделала.
@@ -441,11 +566,51 @@ class AlmaStore extends ChangeNotifier {
     }
   }
 
+  /// Привязать непривязанную покупку к выбранному партнёру (W6, карточка 2).
+  ///
+  /// Зовёт экран выбора человека. Успех чистит [unbound] и перечитывает
+  /// права; сама транзакция дофинишируется при следующей доставке — сервер на
+  /// неё ответит найденным грантом.
+  Future<bool> bindUnbound(String profileId) async {
+    final debt = _unbound;
+    final session = _session;
+    if (debt == null || session == null || debt.transaction.isEmpty) {
+      return false;
+    }
+    try {
+      await session.client.bindPairPurchase(
+        transaction: debt.transaction,
+        profileId: profileId,
+      );
+      await session.refreshRights();
+      _unbound = null;
+      _notice = StoreNotice(StoreTone.good, StoreMessage.unlocked);
+      notifyListeners();
+      return true;
+    } on AlmaError catch (error) {
+      debugPrint('привязка покупки пары не прошла: $error');
+      _notice = StoreNotice(StoreTone.bad, StoreMessage.notVerified);
+      notifyListeners();
+      return false;
+    }
+  }
+
   @override
   void dispose() {
     _feed?.cancel();
     super.dispose();
   }
+}
+
+/// Оплаченная проверка пары, у которой ещё нет человека.
+///
+/// Единственное поле — магазинная транзакция: ей и привязывают
+/// (`POST /billing/pair/bind`). Партнёра здесь нет намеренно — он как раз
+/// неизвестен, за тем состояние и существует.
+class PairUnbound {
+  const PairUnbound({required this.transaction});
+
+  final String transaction;
 }
 
 /// Что сейчас с полкой.

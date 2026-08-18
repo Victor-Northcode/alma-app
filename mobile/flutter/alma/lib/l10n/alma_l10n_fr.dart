@@ -1538,6 +1538,13 @@ class LFr extends L {
       'Quelque chose ne fonctionne pas de notre côté. Ce n\'est pas toi, et ce n\'est pas ton thème.';
 
   @override
+  String get stateUnboundTitle => 'Pour qui est cette lecture ?';
+
+  @override
+  String get stateUnboundNote =>
+      'Le paiement est passé, mais il est arrivé sans nom. Choisissez la personne et la lecture s\'ouvre.';
+
+  @override
   String get stateWriting => 'J\'écris ce chapitre…';
 
   @override

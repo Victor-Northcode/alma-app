@@ -40,6 +40,14 @@ enum LadderKey {
   /// Всё, пока подписка жива.
   subMonthly('sub.monthly', null);
 
+  /// Расходуемая ли ступень — то есть покупается ли она многократно.
+  ///
+  /// Ровно одна: проверка пары. От ответа зависит **магазинный вызов**
+  /// (`buyConsumable` против `buyNonConsumable`), и ошибка здесь не косметика:
+  /// consumable, купленный как non-consumable, Play продаёт один раз за жизнь
+  /// аккаунта — вторая пара не купилась бы никогда.
+  bool get consumable => this == LadderKey.pairCheck;
+
   const LadderKey(this.slug, this.system);
 
   final String slug;

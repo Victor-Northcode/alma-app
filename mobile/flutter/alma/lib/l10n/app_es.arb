@@ -460,6 +460,8 @@
   "stateRetry": "Reintentar",
   "stateSomethingWrong": "Algo ha salido mal. No se ha perdido nada.",
   "stateUnavailable": "Algo de nuestro lado no funciona. No eres tú, y no es tu carta.",
+  "stateUnboundTitle": "¿Para quién es esta lectura?",
+  "stateUnboundNote": "El pago se realizó, pero llegó sin nombre. Elige a la persona y la lectura se abre.",
   "stateWriting": "Estoy escribiendo este capítulo…",
   "tabAlma": "Alma",
   "tabSettings": "Ajustes",

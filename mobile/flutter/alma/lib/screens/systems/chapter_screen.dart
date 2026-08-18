@@ -447,6 +447,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // отдано. `null` — оглавление не доехало, и число не выдумывается.
       paidChapters: _list?.chapters.where((chapter) => !chapter.free).length,
       onOpened: _afterOffer,
+      partnerId: _partnerId(SessionScope.of(context)),
     );
   }
 
@@ -1339,6 +1340,7 @@ class _LockedChapter extends StatefulWidget {
     required this.systemName,
     required this.paidChapters,
     required this.onOpened,
+    this.partnerId,
   });
 
   final SystemSlug system;
@@ -1365,6 +1367,13 @@ class _LockedChapter extends StatefulWidget {
 
   final String systemName;
   final int? paidChapters;
+
+  /// Про кого покупается проверка пары — только у совместимости.
+  ///
+  /// Расходуемый товар обязан назвать человека **до** денег: по этому id
+  /// открывается intent, чей токен магазин вернёт внутри подписанного
+  /// пейлоада. У остальных систем поле пусто и в покупку не уходит.
+  final String? partnerId;
 
   /// Право выдано — перечитать оглавление и пойти за текстом.
   final Future<void> Function() onOpened;
@@ -1441,9 +1450,18 @@ class _LockedChapterState extends State<_LockedChapter> {
   }
 
   void _buy() {
-    SessionScope.of(context).client.track(FunnelStage.checkoutStarted,
+    final session = SessionScope.of(context);
+    session.client.track(FunnelStage.checkoutStarted,
         meta: {'surface': _intent.surfaceCode, 'sku': _sku.slug});
-    _store.buy(_sku);
+    // Проверка пары — расходуемый товар и обязана назвать человека **до**
+    // денег: магазин вернёт токен намерения внутри подписанного пейлоада, и
+    // только по нему сервер узнаёт, про кого открывать отчёт. Партнёр здесь
+    // известен — это его глава сейчас на экране.
+    _store.buy(
+      _sku,
+      partnerProfileId:
+          _sku == LadderKey.pairCheck ? widget.partnerId : null,
+    );
   }
 
   @override

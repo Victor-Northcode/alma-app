@@ -2867,6 +2867,18 @@ abstract class L {
   /// **'Something on our side is not working. It is not you, and it is not your chart.'**
   String get stateUnavailable;
 
+  /// W6 карточка 2 · state.unbound_title — заголовок экрана привязки оплаченной проверки пары
+  ///
+  /// In en, this message translates to:
+  /// **'Who is this reading for?'**
+  String get stateUnboundTitle;
+
+  /// W6 карточка 2 · state.unbound_note — подпись: деньги на месте, выбери человека
+  ///
+  /// In en, this message translates to:
+  /// **'The payment went through but arrived without a name attached. Choose the person and it opens.'**
+  String get stateUnboundNote;
+
   /// from Localizable/state.writing
   ///
   /// In en, this message translates to:

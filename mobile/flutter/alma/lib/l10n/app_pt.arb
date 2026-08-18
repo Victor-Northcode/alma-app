@@ -460,6 +460,8 @@
   "stateRetry": "Tentar de novo",
   "stateSomethingWrong": "Algo deu errado. Nada foi perdido.",
   "stateUnavailable": "Algo do nosso lado não está funcionando. Não é você, e não é o seu mapa.",
+  "stateUnboundTitle": "Para quem é esta leitura?",
+  "stateUnboundNote": "O pagamento foi concluído, mas chegou sem nome. Escolhe a pessoa e a leitura abre.",
   "stateWriting": "Estou escrevendo este capítulo…",
   "tabAlma": "Alma",
   "tabSettings": "Ajustes",

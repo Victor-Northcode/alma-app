@@ -2063,6 +2063,14 @@
   "@stateUnavailable": {
     "description": "from Localizable/state.unavailable"
   },
+  "stateUnboundTitle": "Who is this reading for?",
+  "@stateUnboundTitle": {
+    "description": "W6 карточка 2 · state.unbound_title — заголовок экрана привязки оплаченной проверки пары"
+  },
+  "stateUnboundNote": "The payment went through but arrived without a name attached. Choose the person and it opens.",
+  "@stateUnboundNote": {
+    "description": "W6 карточка 2 · state.unbound_note — подпись: деньги на месте, выбери человека"
+  },
   "stateWriting": "Writing this chapter…",
   "@stateWriting": {
     "description": "from Localizable/state.writing"

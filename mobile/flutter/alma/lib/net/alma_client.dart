@@ -627,11 +627,45 @@ class AlmaClient {
     required String platform,
     required String product,
     required String transaction,
+    String? intentId,
   }) =>
       _post('/v1/billing/iap/verify', {
         'platform': platform,
         'product': product,
         'transaction': transaction,
+        // Какой intent клиент считает своим — **только для сверки** на той
+        // стороне. Партнёра сервер берёт из токена, который подписал магазин;
+        // это поле лишь позволяет ему записать в лог расхождение.
+        'intent_id': ?intentId,
+      });
+
+  /* ── покупка пары: про кого будет платёж ─────────────────────────────── */
+
+  /// Сказать серверу, **про кого** открывается покупка проверки пары, и
+  /// получить токен для магазинного листа.
+  ///
+  /// Токен кладётся в `appAccountToken` (iOS) / `obfuscatedProfileId`
+  /// (Android) и возвращается серверу **внутри подписанного магазином
+  /// пейлоада** — единственная связь «этот платёж — про этого человека»,
+  /// которой можно верить. `profile_id` в теле `/verify` не годится ни при
+  /// каких обстоятельствах: его пишет приложение, а приложение пересобирается.
+  Future<PairIntentTicket> openPairIntent(String profileId) async =>
+      PairIntentTicket.fromJson(
+          await _post('/v1/billing/pair/intent', {'profile_id': profileId}));
+
+  /// Аварийная привязка оплаченной проверки пары к партнёру.
+  ///
+  /// Для покупки, пришедшей без токена: сервер записал деньги, ответил
+  /// `unbound`, и этот вызов закрывает долг. Повтор с тем же партнёром
+  /// идемпотентен (`already_bound`); с другим — 409, одна покупка открывает
+  /// один отчёт.
+  Future<Map<String, dynamic>> bindPairPurchase({
+    required String transaction,
+    required String profileId,
+  }) =>
+      _post('/v1/billing/pair/bind', {
+        'transaction': transaction,
+        'profile_id': profileId,
       });
 
   /* ── беседа ──────────────────────────────────────────────────────────── */

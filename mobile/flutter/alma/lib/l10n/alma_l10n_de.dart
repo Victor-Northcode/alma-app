@@ -1538,6 +1538,13 @@ class LDe extends L {
       'Auf unserer Seite funktioniert etwas nicht. Es liegt nicht an dir und nicht an deinem Horoskop.';
 
   @override
+  String get stateUnboundTitle => 'Für wen ist diese Deutung?';
+
+  @override
+  String get stateUnboundNote =>
+      'Die Zahlung ist durch, kam aber ohne Namen an. Wähle die Person, und die Deutung öffnet sich.';
+
+  @override
   String get stateWriting => 'Ich schreibe dieses Kapitel…';
 
   @override
