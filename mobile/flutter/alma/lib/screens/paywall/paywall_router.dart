@@ -27,7 +27,6 @@ import '../../net/models.dart';
 import '../../state/paywall_guard.dart';
 import '../../state/session.dart';
 import 'cancel_save_screen.dart';
-import 'door_screen.dart';
 import 'plans_screen.dart';
 import 'quota_screen.dart';
 import 'subscription_screen.dart';
@@ -78,7 +77,6 @@ Future<PaywallOutcome> showPaywall(
   String? question,
   int? chapters,
   int? opens,
-  DoorChapter? chapter,
 }) async {
   final refusal = PaywallGuard.check(proactive: proactive);
   if (refusal != PaywallRefusal.none) {
@@ -88,7 +86,7 @@ Future<PaywallOutcome> showPaywall(
     return PaywallOutcome.blocked;
   }
   final screen = _screenFor(intent,
-      question: question, chapters: chapters, opens: opens, chapter: chapter);
+      question: question, chapters: chapters, opens: opens);
   if (screen == null) return PaywallOutcome.blocked;
   final session = SessionScope.of(context);
   if (proactive) PaywallGuard.noteProactive();
@@ -173,14 +171,18 @@ Widget? _screenFor(
   String? question,
   int? chapters,
   int? opens,
-  DoorChapter? chapter,
 }) {
   switch (intent.surface) {
     case PaywallSurface.door:
+      // **Отдельного экрана двери больше нет** — спека запертой главы (§5)
+      // удалила маршрут «пейволл главы»: закрытая глава продаёт сама, внутри
+      // себя, написанным началом и кнопкой на размытии. Интент двери остался
+      // жить кодом поверхности воронки; показывать по нему больше нечего.
+      // Живые системы (без двери в каталоге) по-прежнему уводят к подписке.
       final system = intent.system;
       if (system == null) return null;
       if (LadderKey.doorFor(system) == null) return const SubscriptionScreen();
-      return DoorScreen(system: system, chapters: chapters, chapter: chapter);
+      return null;
 
     case PaywallSurface.subscription:
       return intent.questions

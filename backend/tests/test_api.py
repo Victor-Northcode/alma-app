@@ -774,3 +774,33 @@ def test_a_signed_in_user_can_export_and_delete(api, auth_headers):
 
     after = api.get("/v1/auth/session", headers=signed_in)
     assert after.status_code == 410, "a deleted account must say so, not become a new guest"
+
+
+def test_interest_saves_to_self_and_never_to_partner(api, auth_headers):
+    """Ответ квиза V0 пишется владельцу и молча не пишется чужому профилю.
+
+    Сигнал NBO принадлежит тому, кто отвечал на квиз. Партнёр на вопрос не
+    отвечал; интерес, принятый на его профиль, был бы данными, которых никто
+    не давал, — поэтому он не сохраняется, и это не ошибка запроса.
+    """
+    me = api.post("/v1/profiles", headers=auth_headers, json={
+        "name": "Q", "birth_date": "1990-01-01",
+        "latitude": 55.75, "longitude": 37.62, "timezone": "Europe/Moscow",
+        "is_self": True, "interest": "money",
+    }).json()
+    assert me["interest"] == "money"
+
+    other = api.post("/v1/profiles", headers=auth_headers, json={
+        "name": "P", "birth_date": "1991-02-02",
+        "latitude": 55.75, "longitude": 37.62, "timezone": "Europe/Moscow",
+        "is_self": False, "interest": "love",
+    }).json()
+    assert other["interest"] is None
+
+    # Закрытый список: чужое слово — 422, а не молчаливое сохранение.
+    refused = api.post("/v1/profiles", headers=auth_headers, json={
+        "name": "X", "birth_date": "1992-03-03",
+        "latitude": 55.75, "longitude": 37.62, "timezone": "Europe/Moscow",
+        "is_self": True, "interest": "fame",
+    })
+    assert refused.status_code == 422

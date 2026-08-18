@@ -25,6 +25,7 @@ def _out(profile: Profile) -> ProfileOut:
         relation=profile.relation,
         is_self=profile.is_self,
         gender=profile.gender,
+        interest=profile.interest,
         birth_date=profile.birth_date,
         birth_time=profile.birth_time,
         latitude=profile.latitude,
@@ -122,6 +123,7 @@ async def create_profile(
         relation=payload.relation,
         is_self=is_self,
         gender=payload.gender,
+        interest=payload.interest if payload.is_self is not False else None,
         birth_date=payload.birth_date,
         birth_time=payload.birth_time,
         latitude=payload.latitude,
@@ -151,6 +153,10 @@ async def update_profile(
     profile.relation = payload.relation
     if payload.gender is not None:
         profile.gender = payload.gender
+    # Интерес пишется только себе: NBO читает сигнал владельца аккаунта, и
+    # чужой профиль с интересом был бы данными, которые никто не собирал.
+    if payload.interest is not None and profile.is_self:
+        profile.interest = payload.interest
     profile.birth_date = payload.birth_date
     profile.birth_time = payload.birth_time
     profile.latitude = payload.latitude

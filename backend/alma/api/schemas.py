@@ -84,6 +84,10 @@ class ProfileInput(BirthInput):
     #: you" step. Only two values are meaningful to the writer; absence is a
     #: first-class state, not a default.
     gender: str | None = Field(default=None, pattern="^(female|male)$")
+    #: Ответ квиза V0 «что сейчас важнее всего» — сигнал NBO, не астрология.
+    #: Закрытый список тот же, что в ТЗ §4; absence — первоклассное состояние:
+    #: человек мог пройти анкету до появления вопроса или молча его пропустить.
+    interest: str | None = Field(default=None, pattern="^(love|money|self|future)$")
     #: Whose birth this is. `None` means "not said", which resolves to the
     #: first birth an account saves and to nobody after that — see
     #: `profiles.create_profile`. It used to default to `True`, and saving a
@@ -100,6 +104,7 @@ class ProfileOut(BaseModel):
     relation: str | None
     is_self: bool
     gender: str | None = None
+    interest: str | None = None
     birth_date: date
     birth_time: str | None
     latitude: float

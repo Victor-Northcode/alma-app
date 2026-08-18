@@ -19,11 +19,44 @@ import UIKit
   /// ответом лежит сеть, поэтому ожидание живёт здесь, а не в стеке.
   private var waiting: FlutterResult?
 
+  /// Пуш, по которому приложение открыли, — пока Dart не был готов слушать.
+  ///
+  /// Тап по уведомлению будит процесс раньше, чем поднимется движок Flutter:
+  /// ответ делегата приходит в первые миллисекунды, а канал начинают слушать
+  /// секундой позже. Потерять этот единственный тап — значит не досчитать
+  /// ровно тех, кого пуш привёл, то есть саму метрику `push_opened` (§7 ТЗ).
+  /// Поэтому payload ждёт здесь, и Dart забирает его методом `launchPush`.
+  private var pendingOpen: [String: Any]?
+
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    UNUserNotificationCenter.current().delegate = self
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  /// Тап по уведомлению — и в работающем приложении, и в мёртвом.
+  override func userNotificationCenter(
+    _ center: UNUserNotificationCenter,
+    didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping () -> Void
+  ) {
+    let payload = response.notification.request.content.userInfo
+    var opened: [String: Any] = [:]
+    // Наверх едут только строковые поля верхнего уровня: серверный payload
+    // кладёт тип пуша строкой (`type`), и большего каналу знать не нужно.
+    for (key, value) in payload {
+      if let name = key as? String, let text = value as? String {
+        opened[name] = text
+      }
+    }
+    if let channel = push {
+      channel.invokeMethod("pushOpened", arguments: opened)
+    } else {
+      pendingOpen = opened
+    }
+    completionHandler()
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
@@ -34,11 +67,17 @@ import UIKit
       binaryMessenger: engineBridge.applicationRegistrar.messenger()
     )
     channel.setMethodCallHandler { [weak self] call, result in
-      guard call.method == "apnsToken" else {
+      switch call.method {
+      case "apnsToken":
+        self?.requestToken(result)
+      case "launchPush":
+        // Пуш, открывший мёртвое приложение. Отдаётся один раз: второй вопрос
+        // получает nil, и Dart не насчитает два открытия из одного тапа.
+        result(self?.pendingOpen)
+        self?.pendingOpen = nil
+      default:
         result(FlutterMethodNotImplemented)
-        return
       }
-      self?.requestToken(result)
     }
     push = channel
   }

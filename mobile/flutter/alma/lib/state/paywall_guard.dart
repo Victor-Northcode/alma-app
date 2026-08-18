@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../design/palette.dart' show readingNow;
 
@@ -40,6 +41,9 @@ enum PaywallRefusal {
 
   /// Проактивный оффер в этой сессии уже был. §5 правило 1.
   proactiveSpent,
+
+  /// Этот товар недавно отклонили проактивно. §5 правило 2: 48 часов тишины.
+  declinedRecently,
 }
 
 /// Четыре правила §5, которые нельзя проверить на экране.
@@ -58,6 +62,21 @@ class PaywallGuard {
   static DateTime? _boughtAt;
   static bool _proactiveSpent = false;
 
+  /// Когда какой товар отклонили проактивно — свайпом или крестиком карточки.
+  ///
+  /// §5 правило 2: отклонённый проактивный SKU молчит 48 часов; контекстные
+  /// пейволлы по тапу — без кулдауна («она сама пришла»). Память переживает
+  /// перезапуск — 48 часов длиннее любой сессии, — поэтому дублируется в
+  /// [SharedPreferences] и поднимается [restore] при старте. В памяти процесса
+  /// карта нужна, чтобы `check` оставался синхронным: решение «показывать ли»
+  /// принимается в кадре, ждать диск в нём нельзя.
+  static final Map<String, DateTime> _declined = {};
+
+  static const _declinedKey = 'paywall.declined';
+
+  /// Сколько молчит отклонённый проактивный товар.
+  static const declineCooldown = Duration(hours: 48);
+
   /// Покупка состоялась. Зовёт `AlmaStore`, когда сервер выдал право, —
   /// **не экран**: покупка приходит и без экрана (восстановление, отложенное
   /// одобрение, покупка на другом устройстве), и тишина после неё положена
@@ -67,7 +86,46 @@ class PaywallGuard {
   /// Проактивный показ в этой сессии уже был.
   static void noteProactive() => _proactiveSpent = true;
 
-  static PaywallRefusal check({required bool proactive, DateTime? now}) {
+  /// Товар отклонён проактивно: карточку смахнули или закрыли крестиком.
+  ///
+  /// Пишется сразу и в процесс, и на диск; диск — без ожидания, потерять
+  /// одну запись при падении в ту же миллисекунду дешевле, чем сделать
+  /// каждый свайп асинхронным.
+  static void noteDeclined(String sku, [DateTime? at]) {
+    _declined[sku] = at ?? DateTime.now();
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setStringList(_declinedKey, [
+        for (final entry in _declined.entries)
+          '${entry.key}|${entry.value.millisecondsSinceEpoch}',
+      ]);
+    });
+  }
+
+  /// Молчит ли сейчас этот товар после недавнего отказа.
+  static bool coolingDown(String sku, {DateTime? now}) {
+    final at = _declined[sku];
+    if (at == null) return false;
+    return (now ?? DateTime.now()).difference(at) < declineCooldown;
+  }
+
+  /// Поднять память отказов с диска — один раз при старте приложения.
+  static Future<void> restore() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final row in prefs.getStringList(_declinedKey) ?? const <String>[]) {
+      final cut = row.lastIndexOf('|');
+      if (cut <= 0) continue;
+      final stamp = int.tryParse(row.substring(cut + 1));
+      if (stamp == null) continue;
+      _declined[row.substring(0, cut)] =
+          DateTime.fromMillisecondsSinceEpoch(stamp);
+    }
+  }
+
+  static PaywallRefusal check({
+    required bool proactive,
+    DateTime? now,
+    String? sku,
+  }) {
     if (onScreen) return PaywallRefusal.overPaywall;
     if (readingNow.value) return PaywallRefusal.whileReading;
     final bought = _boughtAt;
@@ -76,6 +134,11 @@ class PaywallGuard {
       return PaywallRefusal.afterPurchase;
     }
     if (proactive && _proactiveSpent) return PaywallRefusal.proactiveSpent;
+    // Кулдаун — только проактивным и только если показ называет товар:
+    // контекстный пейволл по тапу приходит без кулдауна по букве правила 2.
+    if (proactive && sku != null && coolingDown(sku, now: now)) {
+      return PaywallRefusal.declinedRecently;
+    }
     return PaywallRefusal.none;
   }
 
@@ -87,5 +150,6 @@ class PaywallGuard {
     onScreen = false;
     _boughtAt = null;
     _proactiveSpent = false;
+    _declined.clear();
   }
 }

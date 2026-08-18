@@ -210,6 +210,13 @@ class Profile(Base):
     #: «ты родилась» instead of tiptoeing around the past tense, and the
     #: genderless gate stands down. NULL keeps the old behaviour exactly.
     gender: Mapped[str | None] = mapped_column(String(10))
+    #: «Что сейчас важнее всего?» — ответ квиза V0: "love" | "money" | "self" |
+    #: "future" | NULL. Не астрология, а сигнал NBO (ТЗ v3 §4): от него зависит
+    #: порядок карточек главного экрана и какая глава стоит тизером. NULL —
+    #: человек прошёл анкету до появления вопроса или пропустил его; NBO тогда
+    #: живёт на одних поведенческих сигналах. Только у is_self-профиля: чужой
+    #: интерес не спрашивается.
+    interest: Mapped[str | None] = mapped_column(String(10))
 
     birth_date: Mapped[datetime] = mapped_column(Date)
     #: "HH:MM" or NULL. NULL is a real state, not a missing value: every

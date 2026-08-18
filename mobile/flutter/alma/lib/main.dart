@@ -22,9 +22,16 @@ import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
 import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
 import 'state/ask_alma.dart';
+import 'state/paywall_guard.dart';
 import 'state/session.dart';
 
-void main() => runApp(AlmaApp(
+void main() {
+  // Память сторожа §5 (отклонённые проактивные товары, 48 часов) живёт на
+  // диске и поднимается до первого кадра: решение «показывать ли» синхронно,
+  // и сторож, спрошенный раньше диска, разрешил бы то, что вчера отклонили.
+  WidgetsFlutterBinding.ensureInitialized();
+  PaywallGuard.restore();
+  runApp(AlmaApp(
       client: AlmaClient(
         // База берётся из окружения сборки, как ALMA_API_BASE на нативных
         // сборках; по умолчанию — локальный сервер разработки. Захардкоженного
@@ -36,6 +43,7 @@ void main() => runApp(AlmaApp(
         )),
       ),
     ));
+}
 
 /// Корень. Порт `AlmaApp.swift` + `RootView.swift`.
 class AlmaApp extends StatefulWidget {

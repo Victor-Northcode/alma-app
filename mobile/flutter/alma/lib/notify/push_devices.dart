@@ -81,6 +81,37 @@ class AlmaPush {
   /// 410 и строка уйдёт сама (`notify/tokens.py`).
   static const String _memory = 'alma.push.device';
 
+  /// Кто слушает открытия по пушу. Ставит оболочка при старте; пока пусто —
+  /// открытия копятся некуда, и это честно: считать их некому.
+  void Function(Map<String, String> payload)? onOpened;
+
+  /// Начать слушать тапы по уведомлениям — живые и тот, что открыл процесс.
+  ///
+  /// Живой тап приходит вызовом `pushOpened` с той стороны канала; тап по
+  /// мёртвому приложению делегат придерживает у себя, и его забирает разовый
+  /// вопрос `launchPush` — см. AppDelegate о том, почему иначе он терялся бы.
+  Future<void> listen() async {
+    _channel.setMethodCallHandler((call) async {
+      if (call.method == 'pushOpened') _deliver(call.arguments);
+      return null;
+    });
+    try {
+      _deliver(await _channel.invokeMethod<dynamic>('launchPush'));
+    } catch (_) {
+      // Тут нечего чинить: нет нативной стороны — нет и открытий.
+    }
+  }
+
+  void _deliver(dynamic raw) {
+    if (raw is! Map) return;
+    final payload = <String, String>{
+      for (final entry in raw.entries)
+        if (entry.key is String && entry.value is String)
+          entry.key as String: entry.value as String,
+    };
+    onOpened?.call(payload);
+  }
+
   /// Разговоры с системой идут по одному, в очередь.
   ///
   /// **Не отбрасывание второго зова, а именно очередь.** Кнопка «Разрешить»

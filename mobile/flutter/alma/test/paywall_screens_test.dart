@@ -5,7 +5,6 @@ import 'package:alma/billing/ladder.dart';
 import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/net/alma_client.dart';
 import 'package:alma/net/models.dart' show SystemSlug;
-import 'package:alma/screens/paywall/door_screen.dart';
 import 'package:alma/screens/paywall/plans_screen.dart';
 import 'package:alma/screens/paywall/quota_screen.dart';
 import 'package:alma/screens/paywall/subscription_screen.dart';
@@ -55,23 +54,6 @@ void main() {
       for (final key in LadderKey.values)
         key: _product(key.storeProductId, _price[key]!, _raw[key]!),
     });
-  });
-
-  testWidgets('V2 · дверь: одна цена, «навсегда», ни слова о продлении',
-      (tester) async {
-    await _open(tester, const DoorScreen(system: SystemSlug.natal, chapters: 15));
-
-    expect(find.text(r'Unlock and read · $4.99'), findsOneWidget);
-    expect(find.text('Yours forever · no subscription'), findsOneWidget);
-    // Единственная тихая ссылка — и та ведёт на лестницу, а не на второй товар.
-    expect(find.text('All plans'), findsOneWidget);
-
-    // Правило 2: на разовом экране продления не бывает.
-    expect(find.textContaining('Renews'), findsNothing);
-    expect(find.textContaining('month'), findsNothing);
-    // Правило 1: вторая цена на двери — это возврат к лестнице.
-    expect(find.textContaining(r'$19.99'), findsNothing);
-    expect(find.textContaining(r'$9.99'), findsNothing);
   });
 
   testWidgets('V6 · подписка: «навсегда» и продление стоят над кнопкой',

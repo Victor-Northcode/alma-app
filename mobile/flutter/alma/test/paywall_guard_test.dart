@@ -3,6 +3,7 @@ import 'package:alma/design/palette.dart' show readingNow;
 import 'package:alma/net/models.dart' show SystemSlug;
 import 'package:alma/state/paywall_guard.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// **Инварианты §5 ТЗ — те, что нельзя проверить глазами.**
 ///
@@ -80,5 +81,41 @@ void main() {
         const PaywallIntent.subscription().surface);
     expect(const PaywallIntent.questionQuota().ladder, isFalse,
         reason: 'лестница живёт ровно на одном экране — V8');
+  });
+
+  test('правило 2: отклонённый проактивный SKU молчит 48 часов', () {
+    // noteDeclined пишет и на диск; в пробирке диск — мок.
+    TestWidgetsFlutterBinding.ensureInitialized();
+    SharedPreferences.setMockInitialValues({});
+    PaywallGuard.reset();
+    final noon = DateTime(2026, 8, 18, 12);
+    PaywallGuard.noteDeclined('pair.check', noon);
+    // Проактивный показ того же товара — тишина, и почти до конца окна.
+    expect(
+      PaywallGuard.check(
+          proactive: true, sku: 'pair.check', now: noon.add(const Duration(hours: 47))),
+      PaywallRefusal.declinedRecently,
+    );
+    // Контекстный пейволл по тапу — без кулдауна: «она сама пришла».
+    expect(
+      PaywallGuard.check(
+          proactive: false, sku: 'pair.check', now: noon.add(const Duration(hours: 1))),
+      PaywallRefusal.none,
+    );
+    // Другой товар не задет: отказ адресный.
+    expect(
+      PaywallGuard.check(
+          proactive: true, sku: 'bundle.static', now: noon.add(const Duration(hours: 1))),
+      PaywallRefusal.none,
+    );
+    // Через 48 часов — снова можно.
+    expect(
+      PaywallGuard.check(
+          proactive: true,
+          sku: 'pair.check',
+          now: noon.add(const Duration(hours: 48, minutes: 1))),
+      PaywallRefusal.none,
+    );
+    PaywallGuard.reset();
   });
 }
