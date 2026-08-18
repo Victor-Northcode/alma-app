@@ -2223,6 +2223,11 @@ class LEn extends L {
   }
 
   @override
+  String paywallV3DoorCtaShort(Object price) {
+    return 'Open it · $price';
+  }
+
+  @override
   String paywallV3DoorBundleLink(String price) {
     return 'All five readings — $price';
   }
@@ -2480,6 +2485,31 @@ class LEn extends L {
   @override
   String get paywallV3CancelNoteNoDate =>
       'Cancelling opens your Apple ID settings';
+
+  @override
+  String get paywallV3DoorWhatRestHolds => 'what the rest holds';
+
+  @override
+  String get paywallV3WhatNextOverline => 'what next';
+
+  @override
+  String get paywallV3WhatNextInviteLine =>
+      'The last chapter is read — see where it leads';
+
+  @override
+  String get paywallV3WhatNextReadOpening => 'Read the opening';
+
+  @override
+  String get paywallV3WhatNextPairTitle => 'Check the two of you';
+
+  @override
+  String get paywallV3WhatNextPairNote =>
+      'Your Venus chapter says how you attach. His date says how it lands.';
+
+  @override
+  String paywallV3WhatNextPairCta(String price) {
+    return 'Check someone · $price';
+  }
 
   @override
   String get systemsTapToAdd => 'tap to add someone';

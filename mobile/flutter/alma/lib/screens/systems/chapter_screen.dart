@@ -20,7 +20,9 @@ import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../cabinet_words.dart';
 import '../paywall/paywall_parts.dart' show paywallNoticeText;
+import '../paywall/paywall_router.dart' show openAllPlans;
 import 'people_screen.dart';
+import 'what_next_screen.dart';
 import 'writing_art.dart';
 import '../../state/reading_tally.dart';
 import '../../state/session.dart';
@@ -191,6 +193,21 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   bool _started = false;
 
+  /// Конец главы уже засчитан — порог [_readDone] пересекается один раз за
+  /// показ. Не поле «дочитано ли», а защёлка: у дна резинка ходит через порог
+  /// туда-обратно каждым подрагиванием пальца, и без защёлки событие воронки
+  /// умножалось бы на каждое из них.
+  bool _endNoted = false;
+
+  /// Оффер V1 в хвосте бесплатной главы. Появляется по факту дочитывания —
+  /// продолжением текста, а не поверх него (ТЗ §3 P1).
+  bool _endOffer = false;
+
+  /// Приглашение «Что дальше» (V3) в хвосте последней главы купленной
+  /// системы. Тоже продолжением страницы: автоперехода на экран апсейла после
+  /// только что дочитанного разбора быть не должно.
+  bool _whatNextInvite = false;
+
   // См. SystemScreen: SessionScope в initState недоступен.
   @override
   void dispose() {
@@ -274,6 +291,13 @@ class _ChapterScreenState extends State<ChapterScreen> {
       _opening = null;
       _needsPartner = false;
       _product = null;
+      // Конец главы — свойство показанной страницы, и следующая страница
+      // начинается недочитанной. Сюда же попадает возврат с покупки: оффер,
+      // оставшийся в хвосте у того, кто только что заплатил, читался бы как
+      // «не прошло».
+      _endNoted = false;
+      _endOffer = false;
+      _whatNextInvite = false;
     });
     try {
       // **Оглавление показывается, как только пришло, а не вместе с текстом.**
@@ -469,6 +493,80 @@ class _ChapterScreenState extends State<ChapterScreen> {
       if (entry.index == current.index + 1) return entry;
     }
     return null;
+  }
+
+  /// Порог дочитанности — доля прокрутки, после которой глава считается
+  /// прочитанной. Число из ТЗ §3 P1: «скролл ≥85%». Расстояние, а не таймер —
+  /// по той же причине, по которой жест перелистывания меряется метками:
+  /// таймеру нельзя верить, а прокрутка и есть чтение.
+  static const _readDone = 0.85;
+
+  /// Названия следующих платных глав — для чипов оффера V1. Имена уже в
+  /// оглавлении, отдельных строк им не нужно (SCREENS-V3 §V1): чипы делают
+  /// работу, которую не сделает цена, — показывают, что за дверью, именами.
+  List<String> get _upcomingTitles {
+    final list = _list;
+    final current = _entry;
+    if (list == null || current == null) return const [];
+    return [
+      for (final entry in list.chapters)
+        if (entry.index > current.index && !entry.free) entry.title,
+    ].take(4).toList();
+  }
+
+  /// Первое пересечение порога дочитанности. Здесь решаются обе концовки v3 —
+  /// оффер в конце бесплатной главы (V1) и приглашение «Что дальше» (V3), —
+  /// обе продолжением страницы, а не отдельным экраном поверх чтения.
+  void _noteEndOfChapter() {
+    if (_endNoted || _reading == null) return;
+    final entry = _entry;
+    if (entry == null) return;
+    _endNoted = true;
+    final session = SessionScope.of(context);
+    if (entry.free) {
+      // §7 ТЗ: дочитанная бесплатная глава — ступень воронки, знаменатель
+      // конверсии P1. Поверхность обязательна — сервер помечает ступень
+      // monetization и без неё отвечает 422 (`alma/funnel.py`,
+      // `check_surface`); дочитанное бесплатное чтение — это P1.
+      session.client.track(FunnelStage.freeChapterCompleted, meta: {
+        'surface': 'p1',
+        'system': widget.system.slug,
+      });
+    }
+    final door = LadderKey.doorFor(widget.system);
+    final hasClosedPaid =
+        _list?.chapters.any((chapter) => !chapter.free && !chapter.open) ??
+            false;
+    if (entry.free && door != null && hasClosedPaid) {
+      // V1: только у бесплатной главы и только пока платные главы закрыты.
+      // Тому, у кого всё открыто — покупкой, бандлом или подпиской, —
+      // продавать нечего, и блок не появляется вовсе.
+      setState(() => _endOffer = true);
+      // «Пейволл показан» — один раз, в момент появления блока. Поверхность —
+      // та же, что у всей двери натала ([PaywallIntent.door]): считать её по
+      // месту значило бы развести один товар на две когорты; повод различает
+      // `trigger`.
+      session.client.track(FunnelStage.paywallShown, meta: {
+        'surface': PaywallIntent.door(widget.system).surfaceCode,
+        'sku': door.slug,
+        'trigger': 'chapter_end',
+      });
+    } else if (_next == null && !entry.free && !session.isSubscriber) {
+      // V3: дочитана последняя глава купленной системы — глава не заперта
+      // (мы её читаем) и не единственная бесплатная. Подписчику приглашение
+      // не показывается: коммерческие карточки у него исчезают целиком
+      // (§4 ТЗ), и от экрана «Что дальше» не осталось бы ничего.
+      setState(() => _whatNextInvite = true);
+    }
+  }
+
+  /// Открыть экран «Что дальше» — по тапу на приглашение, не автопереходом.
+  void _openWhatNext() {
+    Navigator.of(context, rootNavigator: true).push(
+      CupertinoPageRoute(
+        builder: (context) => WhatNextScreen(finished: widget.system),
+      ),
+    );
   }
 
   /// [byHand] — палец на стекле, а не инерция.
@@ -864,6 +962,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
         // всё.
         _read.value =
             (metrics.pixels / metrics.maxScrollExtent).clamp(0.0, 1.0);
+        // Конец главы считается тем же дном, что нить и перелистывание, — по
+        // факту прокрутки, без таймеров.
+        if (_read.value >= _readDone) _noteEndOfChapter();
         final past = metrics.pixels - metrics.maxScrollExtent;
         final byHand = notification is ScrollUpdateNotification &&
             notification.dragDetails != null;
@@ -1010,6 +1111,25 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // ли он.
           const SizedBox(height: 20),
           const _EndMark(),
+          // Обе концовки v3 встают **после** знака конца и до подсказки
+          // протяжки: они продолжение текста, а не наклейка поверх него, и
+          // появляются только по факту дочитывания ([_noteEndOfChapter]).
+          if (_endOffer)
+            _ChapterEndOffer(
+              system: widget.system,
+              chips: _upcomingTitles,
+              paidChapters:
+                  _list?.chapters.where((chapter) => !chapter.free).length,
+              // Тихая ссылка на набор гаснет у владельца набора: предлагать
+              // купить купленное — самый быстрый способ выглядеть мошенником.
+              bundleLink:
+                  !SessionScope.of(context).entitlements.ownsArchive,
+              onOpened: _afterOffer,
+            )
+          else if (_whatNextInvite) ...[
+            const SizedBox(height: 16),
+            _WhatNextInvite(onTap: _openWhatNext),
+          ],
           const SizedBox(height: 34),
           // Хвост: следующая глава и полоса подтверждения. Полоса наливается
           // от 56 до 130 — сколько ещё тянуть, видно, а не угадывается.
@@ -1891,6 +2011,302 @@ class _NeedsPartner extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/* ── оффер в конце бесплатной главы (V1) ────────────────────────────────────
+   Разметка `SCREENS-V3.md` §V1: оверлайн → чипы следующих глав → карточка
+   оффера → тихая ссылка на набор. Внутри страницы, продолжением текста после
+   последнего абзаца — это главный экран конверсии продукта, и перебивка
+   отдельным экраном ровно в ту секунду, когда письмо доказало себя, сломала бы
+   его смысл.                                                                */
+
+/// Хвост дочитанной бесплатной главы.
+///
+/// **Магазин привязан напрямую, как у [_LockedChapter], и по той же причине:**
+/// [PaywallShell] сама является экраном, а здесь оффер обязан лежать на той же
+/// бумаге, что и глава. Повторены те же две вещи, без которых покупка
+/// ломается: закрытие по извещению `unlocked`/`restored` (право пишет сервер)
+/// и ступень воронки `checkout_started` с поверхностью двери.
+///
+/// О подписке на этом блоке нет ни слова — правило кадра V1: первая сессия
+/// несёт минимум сущностей, и единственная тихая ссылка ведёт на набор.
+class _ChapterEndOffer extends StatefulWidget {
+  const _ChapterEndOffer({
+    required this.system,
+    required this.chips,
+    required this.paidChapters,
+    required this.bundleLink,
+    required this.onOpened,
+  });
+
+  final SystemSlug system;
+
+  /// Названия следующих глав — из оглавления, не из строк каталога.
+  final List<String> chips;
+
+  /// Сколько платных глав обещает карточка. `null` — оглавление не доехало,
+  /// и число не выдумывается (правило [_LockedChapter.paidChapters]).
+  final int? paidChapters;
+
+  /// Показывать ли тихую ссылку на набор — гаснет у владельца набора.
+  final bool bundleLink;
+
+  /// Право выдано — перечитать оглавление и пойти за текстом.
+  final Future<void> Function() onOpened;
+
+  @override
+  State<_ChapterEndOffer> createState() => _ChapterEndOfferState();
+}
+
+class _ChapterEndOfferState extends State<_ChapterEndOffer> {
+  final AlmaStore _store = AlmaStore.shared;
+
+  /// Извещение магазина, с которым блок появился, — по личности объекта, как
+  /// у [_LockedChapterState._seen] и по той же причине.
+  StoreNotice? _seen;
+  bool _started = false;
+
+  /// Что продаёт блок. Дверь есть всегда: [_noteEndOfChapter] поднимает оффер
+  /// только у систем с дверью, и живой системе или паре этот блок не
+  /// достаётся — на них правило V1 «ни слова о подписке» не собрать.
+  LadderKey get _sku => LadderKey.doorFor(widget.system)!;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    _seen = _store.notice;
+    _store.addListener(_storeChanged);
+    _store.attach(SessionScope.of(context));
+    // Что угодно, кроме загруженной полки, стоит попробовать ещё раз: оффер,
+    // доживший до конца главы, обязан назвать цену.
+    if (_store.state != StoreState.ready) _store.load();
+  }
+
+  @override
+  void dispose() {
+    _store.removeListener(_storeChanged);
+    super.dispose();
+  }
+
+  void _storeChanged() {
+    if (!mounted) return;
+    final notice = _store.notice;
+    if (!identical(notice, _seen)) {
+      _seen = notice;
+      final opened = notice != null &&
+          (notice.message == StoreMessage.unlocked ||
+              notice.message == StoreMessage.restored);
+      // Право пишет сервер: извещение — сигнал перечитать оглавление, после
+      // которого хвост с оффером исчезает сам ([_load] сбрасывает признак).
+      if (opened) widget.onOpened();
+    }
+    setState(() {});
+  }
+
+  void _buy() {
+    // Та же воронка, что у [_LockedChapterState._buy]: поверхность считает
+    // намерение двери, а не экран.
+    SessionScope.of(context).client.track(FunnelStage.checkoutStarted, meta: {
+      'surface': PaywallIntent.door(widget.system).surfaceCode,
+      'sku': _sku.slug,
+    });
+    _store.buy(_sku);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 16),
+        // Оверлайн — как у меты главы: прописные золотом на пергаменте.
+        Text(
+          l.paywallV3DoorWhatRestHolds.toUpperCase(),
+          style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep),
+        ),
+        if (widget.chips.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              for (final title in widget.chips) _Chip(title),
+            ],
+          ),
+        ],
+        const SizedBox(height: 18),
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: AlmaPalette.goldDeep.withValues(alpha: 0.5)),
+            // Числа холста V1: тёплая светлая карточка, чуть плотнее бумаги.
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xBFFFFCF4), Color(0x8CE9DDC1)],
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (widget.paidChapters case final chapters?) ...[
+                Text(
+                  l.paywallV3DoorTitle(chapters),
+                  style: AlmaType.displayL.copyWith(
+                      fontSize: 20, height: 1.2, color: AlmaPalette.ink),
+                ),
+                const SizedBox(height: 16),
+              ],
+              if (_store.price(_sku) case final price?)
+                AlmaButton(
+                  // Прямоугольник 15, как у кнопки запертой главы: на бумаге
+                  // кнопка обязана читаться частью страницы, а не наклейкой.
+                  radius: AlmaPalette.buttonRadius,
+                  label: _store.busy != null
+                      ? l.stateLoadingShort
+                      : l.paywallV3DoorCta(price),
+                  // Внутри карточки кнопке остаётся ~260 точек, и полная
+                  // подпись не влезает даже нижней ступенью кегля — цену
+                  // съедало многоточие, а цена здесь главное слово. Короткий
+                  // вариант по правилу дома: тот же смысл, цена на месте.
+                  shortLabel: _store.busy != null
+                      ? null
+                      : l.paywallV3DoorCtaShort(price),
+                  onTap:
+                      _store.busy != null || _store.restoring ? null : _buy,
+                )
+              else
+                // Цену выдумать нельзя: молчащий магазин — не «$4.99». Тот же
+                // ответ, что у запертой главы, — правда и попытка ещё раз.
+                Column(children: [
+                  Text(l.paywallStoreUnavailable,
+                      textAlign: TextAlign.center,
+                      style: AlmaType.meta
+                          .copyWith(color: AlmaPalette.inkMuted)),
+                  const SizedBox(height: 14),
+                  AlmaButton(
+                    radius: AlmaPalette.buttonRadius,
+                    label: l.stateRetry,
+                    onTap: _store.load,
+                  ),
+                ]),
+              const SizedBox(height: 10),
+              Text(
+                l.paywallV3DoorForever,
+                textAlign: TextAlign.center,
+                style: AlmaType.meta.copyWith(
+                  fontSize: 12.5,
+                  height: 1.45,
+                  color: AlmaPalette.inkMuted2,
+                ),
+              ),
+              if (_store.notice case final notice?) ...[
+                const SizedBox(height: 10),
+                Text(
+                  paywallNoticeText(l, notice.message),
+                  textAlign: TextAlign.center,
+                  style: AlmaType.meta.copyWith(
+                    color: notice.tone == StoreTone.bad
+                        ? AlmaPalette.ink
+                        : AlmaPalette.goldDeep,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        // Тихая ссылка ровно одна. Без цены не рисуется: «все пять разборов»
+        // без числа — это вопрос, на который экран обязан был ответить сам.
+        if (widget.bundleLink)
+          if (_store.price(LadderKey.bundleStatic) case final bundle?) ...[
+            const SizedBox(height: 18),
+            Center(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => openAllPlans(context),
+                child: Container(
+                  padding: const EdgeInsets.only(bottom: 2),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                          color:
+                              AlmaPalette.goldDeep.withValues(alpha: 0.45)),
+                    ),
+                  ),
+                  child: Text(
+                    l.paywallV3DoorBundleLink(bundle),
+                    style: AlmaType.meta
+                        .copyWith(fontSize: 13, color: AlmaPalette.goldDeep),
+                  ),
+                ),
+              ),
+            ),
+          ],
+      ],
+    );
+  }
+}
+
+/// Чип с названием главы за дверью. Числа холста V1: Playfair 14.5, кант
+/// золота на 0.4, радиус 15, поля 6 × 13.
+class _Chip extends StatelessWidget {
+  const _Chip(this.title);
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 13),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+              color: AlmaPalette.goldDeep.withValues(alpha: 0.4)),
+        ),
+        child: Text(
+          title,
+          style: AlmaType.numeral
+              .copyWith(fontSize: 14.5, color: AlmaPalette.ink),
+        ),
+      );
+}
+
+/// Приглашение «Что дальше» в конце последней главы купленной системы (V3).
+///
+/// Одна строка и ни одной цены: цены живут на самом экране «Что дальше», а
+/// здесь только дверь к нему — тем же приёмом, что оффер V1, потому что
+/// автопереход после только что дочитанного разбора читался бы перебивкой.
+class _WhatNextInvite extends StatelessWidget {
+  const _WhatNextInvite({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = L.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(children: [
+        Text(
+          l.paywallV3WhatNextOverline.toUpperCase(),
+          textAlign: TextAlign.center,
+          style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '${l.paywallV3WhatNextInviteLine} →',
+          textAlign: TextAlign.center,
+          style: AlmaType.headingM
+              .copyWith(fontSize: 15.5, height: 1.4, color: AlmaPalette.ink),
+        ),
+      ]),
     );
   }
 }

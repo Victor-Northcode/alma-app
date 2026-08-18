@@ -4007,6 +4007,12 @@ abstract class L {
   /// **'Open the whole reading · {price}'**
   String paywallV3DoorCta(String price);
 
+  /// V1 · короткий вариант кнопки двери для узкой карточки: тот же смысл, цена обязана быть видна
+  ///
+  /// In en, this message translates to:
+  /// **'Open it · {price}'**
+  String paywallV3DoorCtaShort(Object price);
+
   /// monetization v3 · А11 door.bundle_link · V1
   ///
   /// In en, this message translates to:
@@ -4384,6 +4390,48 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Cancelling opens your Apple ID settings'**
   String get paywallV3CancelNoteNoDate;
+
+  /// monetization v3 · А11 chapter.what_rest_holds · V1 — оверлайн над чипами глав в конце бесплатной главы
+  ///
+  /// In en, this message translates to:
+  /// **'what the rest holds'**
+  String get paywallV3DoorWhatRestHolds;
+
+  /// monetization v3 · А11 next.overline · V3 — и он же заголовок блока-приглашения в конце последней главы
+  ///
+  /// In en, this message translates to:
+  /// **'what next'**
+  String get paywallV3WhatNextOverline;
+
+  /// monetization v3 · V3 — единственная строка блока-приглашения; тап открывает экран «Что дальше»
+  ///
+  /// In en, this message translates to:
+  /// **'The last chapter is read — see where it leads'**
+  String get paywallV3WhatNextInviteLine;
+
+  /// monetization v3 · V3 карточка 1 — открыть бесплатную главу следующей непрочитанной системы
+  ///
+  /// In en, this message translates to:
+  /// **'Read the opening'**
+  String get paywallV3WhatNextReadOpening;
+
+  /// monetization v3 · А11 next.pair_title · V3
+  ///
+  /// In en, this message translates to:
+  /// **'Check the two of you'**
+  String get paywallV3WhatNextPairTitle;
+
+  /// monetization v3 · А11 next.pair_note · V3
+  ///
+  /// In en, this message translates to:
+  /// **'Your Venus chapter says how you attach. His date says how it lands.'**
+  String get paywallV3WhatNextPairNote;
+
+  /// monetization v3 · V3 карточка 2 — цена pair.check из магазина
+  ///
+  /// In en, this message translates to:
+  /// **'Check someone · {price}'**
+  String paywallV3WhatNextPairCta(String price);
 
   /// locked-chapter-spec §6 · C5 · подпись карточки совместимости в «Моих системах»
   ///

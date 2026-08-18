@@ -1132,7 +1132,23 @@ enum FunnelStage {
   /// Показан и принят оффер спасения. Их отношение и есть «save-оффер спасает
   /// ≥10% отмен» из §7.
   saveOfferShown('save_offer_shown'),
-  saveOfferAccepted('save_offer_accepted');
+  saveOfferAccepted('save_offer_accepted'),
+
+  /// Бесплатная глава дочитана: прокрутка ≥ 0.85, по факту, без таймеров.
+  /// Один раз за показ страницы — повторные пересечения порога у дна это
+  /// подрагивание резинки, а не второе чтение. Несёт `system`; поверхность
+  /// обязательна, как у всех ступеней §7.
+  freeChapterCompleted('free_chapter_completed'),
+
+  /// Партнёр добавлен. Объявлено для сверки со словарём сервера; отправку
+  /// строит флоу пары (Ф1), не эта задача.
+  partnerAdded('partner_added'),
+
+  /// Тизер «Притяжение» дочитан. Объявлено заранее — шлёт его флоу пары.
+  pairTeaserCompleted('pair_teaser_completed'),
+
+  /// Пуш открыт. Объявлено заранее — шлёт его обработчик уведомлений.
+  pushOpened('push_opened');
 
   const FunnelStage(this.wire);
 

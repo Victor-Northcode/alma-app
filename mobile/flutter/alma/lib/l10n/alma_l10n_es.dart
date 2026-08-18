@@ -2228,6 +2228,11 @@ class LEs extends L {
   }
 
   @override
+  String paywallV3DoorCtaShort(Object price) {
+    return 'Abrir · $price';
+  }
+
+  @override
   String paywallV3DoorBundleLink(String price) {
     return 'Las cinco lecturas — $price';
   }
@@ -2486,6 +2491,31 @@ class LEs extends L {
   @override
   String get paywallV3CancelNoteNoDate =>
       'Cancelar abre los ajustes de tu Apple ID';
+
+  @override
+  String get paywallV3DoorWhatRestHolds => 'lo que guarda el resto';
+
+  @override
+  String get paywallV3WhatNextOverline => 'lo que sigue';
+
+  @override
+  String get paywallV3WhatNextInviteLine =>
+      'El último capítulo está leído — mira adónde lleva';
+
+  @override
+  String get paywallV3WhatNextReadOpening => 'Leer el primer capítulo';
+
+  @override
+  String get paywallV3WhatNextPairTitle => 'Comprueba lo vuestro';
+
+  @override
+  String get paywallV3WhatNextPairNote =>
+      'Tu capítulo de Venus dice cómo te vinculas. Su fecha dice cómo aterriza.';
+
+  @override
+  String paywallV3WhatNextPairCta(String price) {
+    return 'Analizar a alguien · $price';
+  }
 
   @override
   String get systemsTapToAdd => 'añade a alguien';

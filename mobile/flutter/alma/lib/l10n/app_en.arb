@@ -2959,6 +2959,11 @@
     }
   },
   "paywallV3DoorCta": "Open the whole reading · {price}",
+  "paywallV3DoorCtaShort": "Open it · {price}",
+  "@paywallV3DoorCtaShort": {
+    "description": "V1 · короткий вариант кнопки двери для узкой карточки: тот же смысл, цена обязана быть видна",
+    "placeholders": {"price": {}}
+  },
   "@paywallV3DoorCta": {
     "description": "monetization v3 · А11 door.cta · V1/V2",
     "placeholders": {
@@ -3307,6 +3312,39 @@
   "paywallV3CancelNoteNoDate": "Cancelling opens your Apple ID settings",
   "@paywallV3CancelNoteNoDate": {
     "description": "monetization v3 · V9 без даты конца периода — на холсте не нарисовано"
+  },
+  "paywallV3DoorWhatRestHolds": "what the rest holds",
+  "@paywallV3DoorWhatRestHolds": {
+    "description": "monetization v3 · А11 chapter.what_rest_holds · V1 — оверлайн над чипами глав в конце бесплатной главы"
+  },
+  "paywallV3WhatNextOverline": "what next",
+  "@paywallV3WhatNextOverline": {
+    "description": "monetization v3 · А11 next.overline · V3 — и он же заголовок блока-приглашения в конце последней главы"
+  },
+  "paywallV3WhatNextInviteLine": "The last chapter is read — see where it leads",
+  "@paywallV3WhatNextInviteLine": {
+    "description": "monetization v3 · V3 — единственная строка блока-приглашения; тап открывает экран «Что дальше»"
+  },
+  "paywallV3WhatNextReadOpening": "Read the opening",
+  "@paywallV3WhatNextReadOpening": {
+    "description": "monetization v3 · V3 карточка 1 — открыть бесплатную главу следующей непрочитанной системы"
+  },
+  "paywallV3WhatNextPairTitle": "Check the two of you",
+  "@paywallV3WhatNextPairTitle": {
+    "description": "monetization v3 · А11 next.pair_title · V3"
+  },
+  "paywallV3WhatNextPairNote": "Your Venus chapter says how you attach. His date says how it lands.",
+  "@paywallV3WhatNextPairNote": {
+    "description": "monetization v3 · А11 next.pair_note · V3"
+  },
+  "paywallV3WhatNextPairCta": "Check someone · {price}",
+  "@paywallV3WhatNextPairCta": {
+    "description": "monetization v3 · V3 карточка 2 — цена pair.check из магазина",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
   },
   "systemsTapToAdd": "tap to add someone",
   "@systemsTapToAdd": {

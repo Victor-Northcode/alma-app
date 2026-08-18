@@ -2225,6 +2225,11 @@ class LRu extends L {
   }
 
   @override
+  String paywallV3DoorCtaShort(Object price) {
+    return 'Открыть · $price';
+  }
+
+  @override
   String paywallV3DoorBundleLink(String price) {
     return 'Все пять разборов — $price';
   }
@@ -2488,6 +2493,31 @@ class LRu extends L {
 
   @override
   String get paywallV3CancelNoteNoDate => 'Отмена откроет настройки Apple ID';
+
+  @override
+  String get paywallV3DoorWhatRestHolds => 'о чём остальные главы';
+
+  @override
+  String get paywallV3WhatNextOverline => 'что дальше';
+
+  @override
+  String get paywallV3WhatNextInviteLine =>
+      'Последняя глава прочитана — посмотри, куда это ведёт';
+
+  @override
+  String get paywallV3WhatNextReadOpening => 'Прочитать первую главу';
+
+  @override
+  String get paywallV3WhatNextPairTitle => 'Проверь вас двоих';
+
+  @override
+  String get paywallV3WhatNextPairNote =>
+      'Твоя глава про Венеру говорит, как ты привязываешься. Его дата рождения — как это отзовётся.';
+
+  @override
+  String paywallV3WhatNextPairCta(String price) {
+    return 'Проверить кого-то · $price';
+  }
 
   @override
   String get systemsTapToAdd => 'добавь человека';

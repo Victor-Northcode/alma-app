@@ -4,7 +4,6 @@ import 'package:alma/billing/alma_store.dart';
 import 'package:alma/billing/ladder.dart';
 import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/net/alma_client.dart';
-import 'package:alma/net/models.dart' show SystemSlug;
 import 'package:alma/screens/paywall/plans_screen.dart';
 import 'package:alma/screens/paywall/quota_screen.dart';
 import 'package:alma/screens/paywall/subscription_screen.dart';
