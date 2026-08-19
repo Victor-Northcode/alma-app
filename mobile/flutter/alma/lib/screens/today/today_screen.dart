@@ -54,6 +54,37 @@ class _TodayScreenState extends State<TodayScreen> {
   TodayModel? _model;
   String? _loadedForProfile;
 
+  /// С какими правами экран себя прочитал. `null` — ещё ни с какими.
+  ///
+  /// **Права — часть запроса, а не только вёрстки.** Глава дня приходит с
+  /// сервера в двух разных размерах: подписчику — письмо целиком, бесплатному
+  /// — 200 с `locked: true` и открывающим абзацем (`readings.py`,
+  /// `_locked_chapter`). Перезагрузка стояла только на смене профиля, так что
+  /// заплативший оставался с тем ответом, который сервер дал ему **до**
+  /// покупки: каркас страницы менялся сразу (сессия — `InheritedNotifier`), а
+  /// внутри панели по-прежнему лежала бесплатная заметка, и письма дня не было
+  /// до перезапуска приложения. Худший вид молчания — то, за которое заплатили
+  /// минуту назад.
+  ///
+  /// Признак нужен ровно потому, что `build` зовётся десятки раз: без него
+  /// «права изменились» было бы неотличимо от «нас просто перестроили», и
+  /// каждый кадр уходил бы в сеть.
+  bool? _loadedForSubscriber;
+
+  /// Модель со своей подпиской — **и подписка ставится только здесь**.
+  ///
+  /// Она висела внутри ветки перезагрузки, то есть слушатель добавлялся заново
+  /// на каждую причину перечитать экран. Пока причина была одна — смена
+  /// профиля, — это почти не замечалось; теперь их две, и вторая срабатывает
+  /// на каждой покупке, возврате и продлении. Один слушатель на модель.
+  TodayModel _watchedModel(AlmaClient client) {
+    final model = TodayModel(client);
+    model.addListener(() {
+      if (mounted) setState(() {});
+    });
+    return model;
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = SessionScope.of(context);
@@ -63,14 +94,20 @@ class _TodayScreenState extends State<TodayScreen> {
     // как «task(id: profile.id)»: все четыре вкладки живут всю жизнь
     // приложения, и загрузка «один раз при создании» означала экран, навсегда
     // застрявший на «Читаю твою карту», если рождение ввели после запуска.
+    //
+    // И по смене прав — по той же причине и с тем же весом: см.
+    // [_loadedForSubscriber]. Покупка, возврат и продление приходят в сессию в
+    // любую секунду, а страница обязана перечитать себя, а не ждать, пока
+    // человек убьёт приложение.
     final profileId = session.profile?.id;
-    if (profileId != null && profileId != _loadedForProfile) {
+    final subscriber = session.isSubscriber;
+    if (profileId != null &&
+        (profileId != _loadedForProfile ||
+            subscriber != _loadedForSubscriber)) {
       _loadedForProfile = profileId;
-      final model = _model ??= TodayModel(session.client);
-      model.addListener(() {
-        if (mounted) setState(() {});
-      });
-      model.load(locale: session.locale, subscriber: session.isSubscriber);
+      _loadedForSubscriber = subscriber;
+      (_model ??= _watchedModel(session.client))
+          .load(locale: session.locale, subscriber: subscriber);
     }
 
     final model = _model;

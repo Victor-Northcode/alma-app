@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Link, Platform;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -708,8 +708,7 @@ class AlmaClient {
     request.headers.addAll({
       'Content-Type': 'application/json',
       'Accept': 'text/event-stream',
-      anonHeader: await _tokens.anonId(),
-      timezoneHeader: _deviceTimezone(),
+      ..._commonHeaders(await _tokens.anonId()),
     });
     final token = await _tokens.read();
     if (token != null) {
@@ -951,11 +950,7 @@ class AlmaClient {
     request.headers.addAll({
       'Content-Type': 'application/json',
       'Accept': 'application/json',
-      anonHeader: await _tokens.anonId(),
-      // Часовой пояс устройства. Сервер читает его в одном месте: в запросе,
-      // который заводит гостя, — чтобы утреннее уведомление приходило утром, а
-      // не в чужой полдень. Незнакомую зону он молча игнорирует.
-      timezoneHeader: _deviceTimezone(),
+      ..._commonHeaders(await _tokens.anonId()),
     });
     final token = await _tokens.read();
     if (token != null) {
@@ -1014,7 +1009,7 @@ class AlmaClient {
     }
   }
 
-  /// Зона устройства **именем IANA**, потому что сервер знает только их.
+  /// Зона устройства **именем IANA**, или `null` — «не знаем».
   ///
   /// `DateTime.now().timeZoneName` отдаёт короткое имя — «MSK», «CET», «+03» —
   /// и сервер такую зону молча игнорирует, ровно как обещает комментарий у
@@ -1022,22 +1017,67 @@ class AlmaClient {
   /// уведомления, и промах виден не в приложении, а тем, что письмо приходит
   /// не утром. `DateTime.now().timeZoneName` заменён на имя из окружения,
   /// которое Dart отдаёт в форме IANA.
-  static String _deviceTimezone() {
-    if (kIsWeb) return 'UTC';
+  ///
+  /// **`null`, а не «UTC», и это не мелочь.** Здесь стояло `return 'UTC'` на
+  /// всех трёх ветках неудачи — на вебе, без `TZ` и без `/etc/localtime`, то
+  /// есть **на всяком Android**, где такого файла нет вовсе. Сервер
+  /// (`notify/rules.zone_for`) выбросил у себя ступень UTC ровно затем, чтобы
+  /// не будить человека посреди ночи, и написал это прямо: «UTC — законная
+  /// зона для того, кто в ней живёт, и незаконная догадка». Клиент эту защиту
+  /// обходил: `is_known_timezone('UTC')` — правда, зона садилась на строку
+  /// устройства и побеждала зону рождения, и подписчик в Окленде получал
+  /// утренний пуш в 20:00. Незнание называется незнанием: поля нет —
+  /// `tokens.register` оставляет прежнее известное значение, а ступень зоны
+  /// падает на рождение, что хотя бы не выдумано.
+  ///
+  /// Публичная, потому что зовущих двое: заголовок [timezoneHeader] здесь и
+  /// тело `PushDevice` в `notify/push_devices.dart`. Там лежала своя копия,
+  /// и она — как всякая копия — разошлась с этой; правило «зону, которой не
+  /// знаем, не называем» обязано жить в одном месте, иначе следующая правка
+  /// починит одну половину.
+  static String? deviceTimezone() {
+    if (kIsWeb) return null;
     try {
-      final zone = Platform.environment['TZ'];
-      if (zone != null && zone.contains('/')) return zone;
       // iOS и Android отдают IANA через локальную зону как символическую
       // ссылку /etc/localtime → /var/db/timezone/zoneinfo/Europe/Moscow.
       final link = Link('/etc/localtime');
-      if (link.existsSync()) {
-        final target = link.targetSync();
-        final parts = target.split('zoneinfo/');
-        if (parts.length == 2 && parts[1].contains('/')) return parts[1];
-      }
-      return 'UTC';
+      return ianaTimezone(
+        envTz: Platform.environment['TZ'],
+        localtimeTarget: link.existsSync() ? link.targetSync() : null,
+      );
     } catch (_) {
-      return 'UTC';
+      return null;
     }
   }
+
+  /// Разбор того, что отдала платформа, — без самой платформы.
+  ///
+  /// Отдельной функцией, потому что это единственная часть [deviceTimezone],
+  /// которую можно проверить: `/etc/localtime` на машине, где идут тесты, есть
+  /// или нет по причинам, к продукту отношения не имеющим.
+  @visibleForTesting
+  static String? ianaTimezone({String? envTz, String? localtimeTarget}) {
+    // Косая черта — весь критерий «это имя IANA»: «MSK» и «+03» её не имеют, и
+    // сервер их всё равно не знает. Она же не даёт вернуть голое «UTC».
+    if (envTz != null && envTz.contains('/')) return envTz;
+    if (localtimeTarget != null) {
+      final parts = localtimeTarget.split('zoneinfo/');
+      if (parts.length == 2 && parts[1].contains('/')) return parts[1];
+    }
+    return null;
+  }
+
+  /// Заголовки, одинаковые у всех запросов, включая **необязательный** пояс.
+  ///
+  /// Одним местом, а не двумя списками в `_send` и `askStream`: правило «зону,
+  /// которой не знаем, не называем» обязано быть одно, иначе второй вызов
+  /// однажды снова напишет 'UTC' руками.
+  static Map<String, String> _commonHeaders(String anonId) => {
+        anonHeader: anonId,
+        // Часовой пояс устройства. Сервер читает его в одном месте: в запросе,
+        // который заводит гостя, — чтобы утреннее уведомление приходило утром,
+        // а не в чужой полдень. Незнакомую зону он молча игнорирует, а
+        // **неизвестную нам мы не шлём вовсе**: см. [deviceTimezone].
+        timezoneHeader: ?deviceTimezone(),
+      };
 }

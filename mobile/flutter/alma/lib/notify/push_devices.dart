@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' show Link, Platform;
+import 'dart:io' show Platform;
 import 'dart:ui' show PlatformDispatcher;
 
-import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
+import 'package:flutter/foundation.dart'
+    show ValueNotifier, kIsWeb, kReleaseMode;
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart'
     show AppLifecycleState, WidgetsBinding, WidgetsBindingObserver;
@@ -35,6 +36,25 @@ enum PushOutcome {
   /// который чинится сам: [AlmaPush.sync] повторит при следующем запуске.
   offline,
 }
+
+/// Тап по уведомлению, которому ещё некому было ответить.
+///
+/// **Зачем признак, а не вызов.** Слушателя у тапа двое, и они живут в разных
+/// местах дерева: корень (`AlmaApp`) пишет ступень воронки — там есть сессия, —
+/// а открывает место оболочка (`CabinetShell`), потому что вкладки и стек
+/// «Моих систем» знает только она. [AlmaPush.onOpened] — одно поле, и второй
+/// присвоивший затёр бы первого. Ровно то же решение и по той же причине, что
+/// у `almaDraft` в `state/ask_alma.dart`.
+///
+/// **И зачем он не гаснет сам.** Тап по мёртвому приложению доезжает раньше,
+/// чем построится кабинет: `AlmaPush.listen` забирает его у делегата в первые
+/// миллисекунды, а на экране в это время заставка, а то и анкета. Вызов в эту
+/// секунду ушёл бы в пустоту — навигатора вкладок ещё нет. Признак ждёт, пока
+/// кабинет действительно откроется, и гасит его тот, кто открыл место.
+///
+/// Полезная нагрузка — как её отдал сервер (`docs/PUSH.md §2.3`): `type` из
+/// закрытого списка и, у пары, `profile_id`.
+final ValueNotifier<Map<String, String>?> pushedOpen = ValueNotifier(null);
 
 /// Уведомления на стороне телефона: разрешение, токен устройства, регистрация.
 ///
@@ -316,7 +336,8 @@ class AlmaPush {
       // `production`, и `kReleaseMode` различает ровно это. Ошибиться здесь
       // значит получить `200` на каждую отправку и тишину на телефоне.
       environment: kReleaseMode ? 'production' : 'sandbox',
-      timezone: _timezone(),
+      // `null` — законный ответ и он значит «не знаем»; см. [PushDevice.timezone].
+      timezone: AlmaClient.deviceTimezone(),
       // Язык **телефона**, а не аккаунта: iOS подставляет `loc-args` в строку
       // из бандла на языке устройства, и сервер должен переводить аргументы в
       // тот же язык (`PUSH.md §1.6`).
@@ -348,29 +369,10 @@ class AlmaPush {
     }
   }
 
-  /// Зона устройства **именем IANA**, потому что сервер знает только их:
-  /// `geo.is_known_timezone` молча выбрасывает «MSK» и «+03», а вместе с ней —
-  /// единственное, от чего зависит час доставки.
-  ///
-  /// Копия `AlmaClient._deviceTimezone`, и это временно: обе ручки ниже
-  /// переезжают в `alma_client.dart`, и зона поедет с ними. Своя нужна потому,
-  /// что заголовок `X-Alma-Timezone` ставит `_send`, а эти два вызова идут
-  /// мимо него.
-  static String _timezone() {
-    if (kIsWeb) return 'UTC';
-    try {
-      final zone = Platform.environment['TZ'];
-      if (zone != null && zone.contains('/')) return zone;
-      final link = Link('/etc/localtime');
-      if (link.existsSync()) {
-        final parts = link.targetSync().split('zoneinfo/');
-        if (parts.length == 2 && parts[1].contains('/')) return parts[1];
-      }
-      return 'UTC';
-    } catch (_) {
-      return 'UTC';
-    }
-  }
+  // Зоны устройства здесь больше нет: она одна на приложение и живёт в
+  // `AlmaClient.deviceTimezone`. Копия стояла тут «временно», разошлась с
+  // оригиналом ровно тем способом, каким расходятся копии, — и обе отвечали
+  // 'UTC' там, где не знали ответа. Одна функция — одно правило.
 }
 
 /// Возвращение в приложение — единственное событие жизненного цикла, которое
@@ -405,7 +407,18 @@ class PushDevice {
   final String platform;
   final String token;
   final String environment;
-  final String timezone;
+
+  /// Часовой пояс телефона — или `null`, когда узнать его не удалось.
+  ///
+  /// **Обязательным он быть не может, потому что мы его иногда не знаем.**
+  /// Поле было `String`, и заполнялось оно догадкой 'UTC' — то есть незнание
+  /// приезжало на сервер под видом знания и садилось в строку устройства,
+  /// откуда бьёт по часу доставки: `notify/rules.zone_for` ставит зону
+  /// устройства **выше** зоны рождения, так что выдуманная UTC побеждала
+  /// настоящую и будила подписчика в Окленде среди ночи. Тот же сервер у себя
+  /// ступень UTC снёс намеренно («законная зона для того, кто в ней живёт, и
+  /// незаконная догадка») — клиент обходил защиту снаружи.
+  final String? timezone;
   final String locale;
   final String? appVersion;
   final String? osVersion;
@@ -413,12 +426,13 @@ class PushDevice {
   /// Пустые поля **не отправляются**: `DeviceIn` объявлен `extra="forbid"`, и
   /// хотя `null` там законен, посланное `null` перетирало бы известное сервером
   /// ничем. `tokens.register` обновляет поле только когда оно пришло непустым —
-  /// то же правило с той же стороны.
+  /// то же правило с той же стороны. Зона идёт этим же путём: неизвестная не
+  /// отправляется вовсе, и прежняя известная серверу остаётся на месте.
   Map<String, dynamic> toJson() => {
         'platform': platform,
         'token': token,
         'environment': environment,
-        'timezone': timezone,
+        'timezone': ?timezone,
         'locale': locale,
         if (appVersion != null) 'app_version': appVersion,
         if (osVersion != null) 'os_version': osVersion,
@@ -431,9 +445,9 @@ class PushDevice {
 /// `dailySettings` и `setDaily`, которые ходят на тот же `/v1/notifications`;
 /// тот файл сейчас занят другой работой, а расширение переносится оттуда сюда и
 /// обратно одним движением, ничего не меняя в вызовах. Вместе с переносом
-/// исчезнет и [_call] со своей сборкой заголовков, и копия часового пояса выше:
-/// `AlmaClient._send` делает всё это в одном месте и делает больше — читает
-/// новый токен из заголовка ответа и чистит хранилище на 410.
+/// исчезнет и [_call] со своей сборкой заголовков: `AlmaClient._send` делает
+/// всё это в одном месте и делает больше — читает новый токен из заголовка
+/// ответа и чистит хранилище на 410.
 extension PushDevices on AlmaClient {
   /// `POST /v1/notifications/devices` — записать этот телефон.
   ///
@@ -476,7 +490,10 @@ Future<void> _call(
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     AlmaClient.anonHeader: await tokens.anonId(),
-    AlmaClient.timezoneHeader: AlmaPush._timezone(),
+    // Неизвестной зоне здесь тоже нет заголовка: `deps.device_timezone` читает
+    // его как ещё одного кандидата в зону устройства, и 'UTC' наугад испортил
+    // бы час доставки ровно так же, как испортил бы его в теле запроса.
+    AlmaClient.timezoneHeader: ?AlmaClient.deviceTimezone(),
   });
   // **Без токена никуда не идём, и это защита, а не проверка.** Сервер
   // встречает запрос без токена тем, что чеканит нового гостя и кладёт его в

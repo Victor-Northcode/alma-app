@@ -109,6 +109,14 @@ class _AlmaAppState extends State<AlmaApp> {
       _session.client.track(FunnelStage.pushOpened, meta: {
         'type': ?payload['type'],
       });
+      // **И тап открывает то, на что указывает.** Раньше здесь всё и
+      // кончалось: событие воронки записано, человек стоит там, где стоял, —
+      // то есть уведомление, обещавшее показать сегодняшнюю заметку или
+      // готовый отчёт пары, приводило на произвольную вкладку, а чаще на ту,
+      // с которой ушли неделю назад. Открывает не корень, а оболочка: вкладки
+      // и стек «Моих систем» знает она — см. [pushedOpen] о том, почему это
+      // признак, а не вызов.
+      pushedOpen.value = payload;
     };
     AlmaPush.instance.listen();
     // Счёт запусков для карточки «сохрани карту»: считается здесь, потому что
@@ -204,6 +212,9 @@ class _CabinetShellState extends State<CabinetShell> {
     // транзакцию с прошлого раза. Долг гасится выбором человека, и продукт
     // обязан привести к нему сам: деньги уже взяты.
     AlmaStore.shared.addListener(_pairDebt);
+    // Тап по уведомлению живого приложения — сразу; тап, открывший мёртвое,
+    // подождёт кабинета (см. [_maybeOpenPushed] и [pushedOpen]).
+    pushedOpen.addListener(_maybeOpenPushed);
   }
 
   /// Экран привязки уже стоит — второго не открывать: доставка покупки
@@ -220,6 +231,70 @@ class _CabinetShellState extends State<CabinetShell> {
           builder: (context) => const PairBindScreen()),
     );
     _askingPairDebt = false;
+  }
+
+  /// Открыт ли кабинет прямо сейчас. Пока нет — тапу некуда вести.
+  ///
+  /// Заставка, экран отказа сети и анкета возвращаются из [build] раньше
+  /// вкладок: `PageView` не построен, `_pages` не привязан к нему, стек «Моих
+  /// систем» не существует. Признак поднимает сам [build] в той единственной
+  /// точке, за которой кабинет уже возвращается.
+  bool _cabinetOpen = false;
+
+  /// Тап по уведомлению — открыть то, на что он указывает.
+  ///
+  /// Зовут отсюда двое: слушатель [pushedOpen] (живой тап по открытому
+  /// приложению) и [build] кабинета (тап, разбудивший процесс, — он приехал
+  /// раньше, чем стало куда вести). Признак гасится **до** навигации: `build`
+  /// зовётся на каждый кадр, и один тап обязан открыть одно место один раз.
+  ///
+  /// Кадром позже, а не сейчас: половина вызовов приходит из `build`, а
+  /// навигация посреди построения дерева — это построение дерева во время
+  /// построения дерева.
+  void _maybeOpenPushed() {
+    final payload = pushedOpen.value;
+    if (payload == null || !_cabinetOpen) return;
+    pushedOpen.value = null;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _openPushed(payload));
+  }
+
+  /// Куда ведёт какой пуш — закрытый список `docs/PUSH.md §2.3`.
+  ///
+  /// Список закрыт намеренно, и незнакомый тип **никуда не ведёт**: сборка
+  /// старше сервера — обычное дело, а угаданное «наверное, это про день»
+  /// увело бы человека не туда, чем ничего не сделать хуже.
+  Future<void> _openPushed(Map<String, String> payload) async {
+    if (!mounted) return;
+    switch (payload['type']) {
+      case 'daily':
+        // Дневная заметка живёт на «Сегодня». `date` из пейлоада сюда не идёт:
+        // экран показывает **сегодня** и другой даты не знает вовсе, а пуш
+        // приходит в то самое утро. Выдумывать ему архив по одному полю пуша
+        // значит обещать экран, которого нет.
+        await _goTo(CabinetTab.today);
+      case 'pair_ready':
+        final partner = _pushPartner(payload['profile_id']);
+        // Человека не нашли — стоим на месте. Совместимость «с кем-нибудь»
+        // открыла бы отчёт про **другого**, а это хуже, чем не двинуться:
+        // отчёт пары называет двоих поимённо. Осиротевший грант (профиль
+        // удалён, отчёт оплачен) — известная дыра, у неё и на «Моих парах»
+        // дороги нет; см. TODO(owner) там же.
+        if (partner == null) return;
+        // Перелёт дожидается конца, а не отдаётся и забывается: глава ляжет в
+        // навигатор «Моих систем», а он рождается вместе со своей страницей —
+        // см. [_goTo] и [_openPairChapter].
+        await _goTo(CabinetTab.systems);
+        if (!mounted) return;
+        await _openPairChapter(partner);
+      // Ни `default`, ни `_`: закрытый список — на то и закрытый.
+    }
+  }
+
+  /// Партнёр пуша среди сохранённых людей — или `null`, если такого нет.
+  Profile? _pushPartner(String? profileId) {
+    if (profileId == null || profileId.isEmpty) return null;
+    final people = SessionScope.of(context).people;
+    return people.where((person) => person.id == profileId).firstOrNull;
   }
 
   /// Пока идёт смена вкладки, зеркало молчит.
@@ -245,6 +320,7 @@ class _CabinetShellState extends State<CabinetShell> {
     almaDraft.removeListener(_askedAlma);
     readingNow.removeListener(_mirrorReading);
     AlmaStore.shared.removeListener(_pairDebt);
+    pushedOpen.removeListener(_maybeOpenPushed);
     _pill.dispose();
     _peek.dispose();
     _pages.dispose();
@@ -302,7 +378,14 @@ class _CabinetShellState extends State<CabinetShell> {
   }
 
   /// Нажатие на бар — то же движение, что смах: страница доезжает сама.
-  void _goTo(CabinetTab tab) {
+  ///
+  /// **Возвращает то, чем перелёт кончается**, и это не украшение подписи.
+  ///
+  /// Открывающему место по тапу с уведомления нужна не «команда отдана», а
+  /// «страница есть»: `PageView` строит соседнюю по мере приближения, и её
+  /// навигатора в секунду вызова ещё нет. Тем, кто просто переключает вкладку,
+  /// ждать нечего, и `void` в их вызовах ничего не меняет.
+  Future<void> _goTo(CabinetTab tab) async {
     if (tab == _tab) {
       // Тап по вкладке, на которой уже стоишь. Идти некуда — но на Alma это
       // единственный способ сказать бару «спасибо, показал»: он приходил
@@ -320,7 +403,7 @@ class _CabinetShellState extends State<CabinetShell> {
     if (_tab == CabinetTab.systems) _systemsWasReading = readingNow.value;
     readingNow.value = false;
     _switching = false;
-    _pages.animateToPage(tab.index,
+    await _pages.animateToPage(tab.index,
         duration: const Duration(milliseconds: 320), curve: Curves.easeOutCubic);
   }
 
@@ -386,8 +469,7 @@ class _CabinetShellState extends State<CabinetShell> {
   /// Оглавление не доехало — ведём на экран системы: там та же дорога к главам
   /// и объяснение, если что-то не так. Тупика не остаётся ни на одной ветке.
   Future<void> _openPairChapter(Profile partner) async {
-    final navigator = _systemsNav.currentState;
-    if (navigator == null || !mounted) return;
+    if (!mounted) return;
     final session = SessionScope.of(context);
     String? asked;
     try {
@@ -398,6 +480,14 @@ class _CabinetShellState extends State<CabinetShell> {
       asked = null;
     }
     if (!mounted) return;
+    // **Навигатор спрашивается после запроса, а не до.** Спрошенный первой
+    // строкой, он отвечал `null` всякому, кто пришёл сюда не с «Моих систем»:
+    // `PageView` строит страницу по мере приближения, и в секунду вызова её
+    // ещё нет. Пока звали только изнутри вкладки, это не было видно; тап по
+    // уведомлению о готовом отчёте приходит откуда угодно, и там путь тихо
+    // обрывался ничем.
+    final navigator = _systemsNav.currentState;
+    if (navigator == null) return;
     // Копия ради замыкания: `final` даёт продвижение типа внутри строителя,
     // который выполнится когда угодно позже.
     final first = asked;
@@ -550,6 +640,10 @@ class _CabinetShellState extends State<CabinetShell> {
     // Строкой ниже всех `return` выше: ни поверх церемонии, ни поверх заставки,
     // ни поверх экрана отказа сети её быть не должно.
     _maybeCoach();
+    // И по той же причине — ровно здесь — забирается тап по уведомлению,
+    // разбудивший процесс: до этой строки вкладок нет, и вести ему некуда.
+    _cabinetOpen = true;
+    _maybeOpenPushed();
     return Scaffold(
       backgroundColor: AlmaPalette.night,
       extendBody: true,
