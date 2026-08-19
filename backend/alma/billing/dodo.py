@@ -55,6 +55,7 @@ from datetime import datetime
 import httpx
 
 from ..config import settings
+from . import http
 from .provider import (
     MAX_SIGNATURE_AGE,
     PERIOD,
@@ -765,13 +766,15 @@ class DodoClient:
                 "DODO_PAYMENTS_API_KEY is not set — cannot talk to Dodo"
             )
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.request(
-                    method,
-                    f"{self.base}{path}",
-                    headers={"Authorization": f"Bearer {self.api_key}"},
-                    json=body,
-                )
+            # Общий клиент процесса, а не свой на вызов: см. `billing/http.py`.
+            # Здесь это заметнее всего — отмена подписки и открытие кассы идут
+            # к одному хосту, и второй запрос больше не платит за рукопожатие.
+            response = await http.client().request(
+                method,
+                f"{self.base}{path}",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json=body,
+            )
         except httpx.HTTPError as exc:
             raise BillingUnavailable(f"dodo unreachable: {exc}") from exc
         if response.status_code >= 400:

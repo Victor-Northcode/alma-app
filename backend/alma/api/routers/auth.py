@@ -142,6 +142,13 @@ MAGIC_LINKS_PER_SOURCE_PER_HOUR = 10
 
 MAGIC_LINK_WINDOW_SECONDS = 3600.0
 
+#: **Оба счёта общие для всех воркеров и переживают выкладку.** До 19.08.2026
+#: они жили в памяти процесса, то есть «три письма в час на адрес» на
+#: восьмиядерной машине означали двадцать четыре, а `docker compose up` обнулял
+#: и это. Теперь счёт лежит в `rate_window` (`deps.SharedWindow`), и адрес туда
+#: уходит отпечатком, а не текстом: таблица потолков с живыми почтовыми
+#: ящиками была бы вторым, необъявленным местом, где мы их храним.
+
 
 def _too_many_links() -> HTTPException:
     """Один и тот же отказ для обоих потолков.
@@ -178,20 +185,20 @@ async def request_magic_link(
     # Адрес приводится к нижнему регистру только для ключа счётчика: в базу и в
     # письмо идёт то, что прислали. `Sofia@` и `sofia@` — один почтовый ящик и
     # обязаны делить потолок, иначе он снимается сменой регистра.
-    if not window(
+    if not await window(
         request,
         "magic_link_email",
         limit=MAGIC_LINKS_PER_EMAIL_PER_HOUR,
         seconds=MAGIC_LINK_WINDOW_SECONDS,
-    ).hit(payload.email.strip().lower()):
+    ).hit(session, payload.email.strip().lower()):
         raise _too_many_links()
 
-    if not window(
+    if not await window(
         request,
         "magic_link_source",
         limit=MAGIC_LINKS_PER_SOURCE_PER_HOUR,
         seconds=MAGIC_LINK_WINDOW_SECONDS,
-    ).hit(request_source(request)):
+    ).hit(session, request_source(request)):
         raise _too_many_links()
 
     token, token_hash = tokens.new_magic_token()

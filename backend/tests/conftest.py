@@ -181,7 +181,40 @@ def _sealed_environment(monkeypatch) -> Iterator[None]:
     ):
         monkeypatch.delenv(leaked, raising=False)
     config_module.settings.cache_clear()
+    # Провайдер модели теперь один на процесс (`ai/provider.default_provider`),
+    # и процесс здесь один на весь прогон: без этого первый тест, поставивший
+    # ключ, оставил бы построенного провайдера всем следующим — включая тот,
+    # который проверяет, что **без** ключа приходит честный 503.
+    from alma.ai import provider as provider_module
+
+    provider_module.reset_provider()
     yield
+    provider_module.reset_provider()
+    config_module.settings.cache_clear()
+
+
+@pytest.fixture
+def schema(tmp_path, monkeypatch) -> Iterator[None]:
+    """Пустая база с готовой схемой и без приложения.
+
+    Ровно та же последовательность, что руками повторена в десятке фикстур
+    ниже — снять engine, указать URL, забыть настройки, создать схему, — но без
+    `TestClient`. Нужна тестам, которые проверяют то, что живёт под API:
+    счётчики, окна ограничителей, чистку.
+    """
+    from alma import config as config_module
+    from alma.db import session as session_module
+
+    asyncio.run(session_module.dispose())
+    monkeypatch.setenv("ALMA_DATABASE_URL", database_url(tmp_path, "schema.db"))
+    monkeypatch.setenv("ALMA_ENV", "test")
+    monkeypatch.setenv("ALMA_JWT_SECRET", "test-secret-not-the-default")
+    config_module.settings.cache_clear()
+    asyncio.run(session_module.create_all())
+
+    yield
+
+    asyncio.run(session_module.dispose())
     config_module.settings.cache_clear()
 
 
@@ -208,6 +241,15 @@ def api(tmp_path, monkeypatch) -> Iterator:
     from alma.api.cache import result_cache
 
     result_cache().clear()
+
+    # **Схему создаёт отдельный шаг, а не старт приложения** — ровно как в
+    # проде, где её приводит в порядок `python -m tools.migrate`, а восемь
+    # воркеров только проверяют результат (`db.session.verify_schema`). Если
+    # убрать эту строку, `TestClient` не поднимется, и это не хрупкость
+    # фикстуры, а тот самый отказ, который на выкладке обязан случиться: пустая
+    # база и запущенный сервис — состояние, в котором первый же платный запрос
+    # отвечает пятисоткой.
+    asyncio.run(session_module.create_all())
 
     with TestClient(create_app()) as client:
         yield client

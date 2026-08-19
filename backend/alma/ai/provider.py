@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import logging
+from contextlib import suppress
 from dataclasses import dataclass, field
 from typing import Any, Protocol
 
@@ -143,9 +144,36 @@ class AnthropicProvider:
                 "ANTHROPIC_API_KEY is not set — put it in the environment; "
                 "it is never written to a file in this repository"
             )
+        import httpx
         from anthropic import AsyncAnthropic
 
-        self._client = AsyncAnthropic(api_key=key)
+        # **Свой пул соединений, названный числами, а не умолчанием SDK.**
+        #
+        # `AsyncAnthropic` без `http_client` собирает свой `httpx.AsyncClient`
+        # с пятью keep-alive соединениями. Пять — это меньше, чем воркер может
+        # вести генераций одновременно (пул базы у нас 20, поток глав и чат
+        # идут параллельно), и шестая генерация начинала бы с TLS-рукопожатия
+        # до `api.anthropic.com` — два круга по сети перед первым токеном
+        # ответа, который человек ждёт на экране.
+        #
+        # `connect=5` при `read=None`: подключение либо происходит быстро, либо
+        # не происходит, а вот **читать** ответ мы обязаны сколько угодно —
+        # длинная глава наблюдалась три минуты, и таймаут чтения здесь означал
+        # бы оплаченный вызов, выброшенный на середине.
+        self._client = AsyncAnthropic(
+            api_key=key,
+            http_client=httpx.AsyncClient(
+                timeout=httpx.Timeout(None, connect=5.0),
+                limits=httpx.Limits(
+                    max_keepalive_connections=20, max_connections=40
+                ),
+            ),
+        )
+
+    async def aclose(self) -> None:
+        """Закрыть соединения. Зовётся из `lifespan`, больше ниоткуда."""
+        with suppress(Exception):
+            await self._client.close()
 
     async def complete(
         self,
@@ -312,8 +340,50 @@ class ScriptedProvider:
         )
 
 
+#: Провайдер этого процесса. Один на всех.
+_provider: Provider | None = None
+
+
 def default_provider() -> Provider:
-    return AnthropicProvider()
+    """Провайдер модели — один на процесс, а не один на вызов.
+
+    **Раньше здесь стояло `return AnthropicProvider()`, и это стоило
+    рукопожатия на каждой генерации.** `api/deps.get_provider` зовётся
+    зависимостью на каждом запросе к генерирующему маршруту, а конструктор
+    поднимает `AsyncAnthropic`, то есть новый `httpx.AsyncClient` со своим
+    пулом. Пул, созданный на один запрос, к моменту второго уже собран
+    сборщиком мусора — поэтому keep-alive не работал ни разу за всё время
+    жизни продукта: каждая глава, каждый ход беседы и каждая утренняя запись
+    начинались с TCP-соединения и TLS-рукопожатия до `api.anthropic.com`. Из
+    Европы это два круга по сети, 60–120 мс на круг, перед первым токеном
+    ответа — на пути, где человек смотрит на «Alma пишет эту главу…».
+
+    Ленивая сборка сохранена, и её довод не изменился (см. `deps.get_provider`):
+    провайдер строится в момент первого обращения, а не при импорте, потому что
+    ненастроенный ключ не должен обгонять пейволл.
+
+    Тесты подменяют провайдера через зависимость и сюда не приходят; те, что
+    приходят, зовут `reset_provider()`.
+    """
+    global _provider
+    if _provider is None:
+        _provider = AnthropicProvider()
+    return _provider
+
+
+async def close_provider() -> None:
+    """Отпустить соединения провайдера. Зовётся из `lifespan` при остановке."""
+    global _provider
+    provider, _provider = _provider, None
+    closing = getattr(provider, "aclose", None)
+    if closing is not None:
+        await closing()
+
+
+def reset_provider() -> None:
+    """Забыть провайдера, не закрывая его. Для тестов, меняющих ключ."""
+    global _provider
+    _provider = None
 
 
 def models() -> tuple[str, str, str]:

@@ -104,20 +104,34 @@ def test_forwarded_for_is_not_taken_as_the_source(api, monkeypatch):
     assert refused.status_code == 429
 
 
-def test_a_window_counts_per_key_and_then_refuses():
-    window = deps.FixedWindow(limit=2, seconds=60)
-    assert window.hit("a") is True
-    assert window.hit("a") is True
-    assert window.hit("a") is False
-    assert window.hit("b") is True, "у другого ключа свой счёт"
+def test_a_window_counts_per_key_and_then_refuses(schema):
+    async def go():
+        window = deps.SharedWindow(name="probe", limit=2, seconds=60)
+        async with session_module.session_scope() as session:
+            assert await window.hit(session, "a") is True
+            assert await window.hit(session, "a") is True
+            assert await window.hit(session, "a") is False
+            assert await window.hit(session, "b") is True, "у другого ключа свой счёт"
+
+    run_async(go)
 
 
-def test_a_window_does_not_grow_into_a_way_to_exhaust_memory():
-    """Ключей столько, сколько адресов, и платит за них память процесса."""
-    window = deps.FixedWindow(limit=1, seconds=3600, max_keys=10)
-    for number in range(500):
-        window.hit(f"198.51.100.{number}")
-    assert len(window._counts) <= 10
+def test_a_window_does_not_grow_into_a_way_to_exhaust_memory(schema):
+    """Ключей столько, сколько адресов, и платит за них память процесса.
+
+    В базе строк по-прежнему столько, сколько было источников, — их убирает
+    чистка (`tools/prune.py`). Здесь речь про словарь в памяти воркера: он
+    хранит только то, чем можно быстро **отказать**, и потому обязан быть
+    ограничен сверху.
+    """
+    async def go():
+        window = deps.SharedWindow(name="probe", limit=1, seconds=3600, max_keys=10)
+        async with session_module.session_scope() as session:
+            for number in range(500):
+                await window.hit(session, f"198.51.100.{number}")
+        assert len(window._seen) <= 10
+
+    run_async(go)
 
 
 # ── 2. письма входа под счётом ─────────────────────────────────────────────

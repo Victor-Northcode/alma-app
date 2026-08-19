@@ -252,8 +252,12 @@ async def create_all() -> None:
     leaves any database that predates a new column unqueryable — and says
     nothing about it. `migrate.reconcile` closes exactly that gap and refuses
     loudly at anything wider than adding a column or an index. Both halves are
-    no-ops on a database that is already current, so this is safe on every
-    boot; see `migrate.py` for why it is a placeholder rather than a tool.
+    no-ops on a database that is already current; see `migrate.py` for why it is
+    a placeholder rather than a tool.
+
+    **Это больше не вызывается на старте приложения.** Оно вызывается ровно
+    одним процессом — шагом выкладки `python -m tools.migrate`, — а воркеры
+    только проверяют результат через `verify_schema`. Довод — там же.
     """
     from .migrate import reconcile
 
@@ -274,6 +278,68 @@ async def create_all() -> None:
             await connection.execute(text("SET LOCAL lock_timeout = 0"))
         await connection.run_sync(Base.metadata.create_all)
     await reconcile()
+
+
+class SchemaNotReady(RuntimeError):
+    """База не приведена к тому, что ожидает код. Стартовать на ней нельзя."""
+
+
+#: Команда, которой схема приводится в порядок. Одна строка на весь проект: она
+#: печатается в отказе, стоит в `docs/DEPLOY.md §4` и запускается выкладкой.
+MIGRATE_COMMAND = "python -m tools.migrate"
+
+
+async def verify_schema() -> None:
+    """Проверить, что схема на месте, и отказаться работать, если нет.
+
+    **Это то, что осталось от `create_all` на старте, и осталось нарочно.**
+    Раньше каждый рабочий процесс при подъёме сам создавал недостающие таблицы
+    и колонки. На одном процессе это работало; на восьми это восемь
+    одновременных `CREATE TABLE`/`CREATE INDEX` по одной базе в одну секунду —
+    то есть гонка за блокировками каталога ровно в тот момент, когда сервис
+    поднимается после выкладки, и `lock_timeout` в три секунды превращает её в
+    воркер, который не встал. Postgres умеет `IF NOT EXISTS`, но не умеет
+    сделать восемь одновременных `ALTER TABLE ADD COLUMN` бесплатными.
+
+    Миграция стала отдельным шагом выкладки (`MIGRATE_COMMAND`), а здесь
+    осталась проверка: она **только читает** каталог и потому безопасна на
+    любом числе процессов одновременно.
+
+    Проверяются таблицы и колонки, а не индексы. Отсутствующая таблица или
+    колонка — это `SELECT`, который упадёт на первом же запросе продукта
+    (пейволл, хаб, вебхук кассы), то есть отказ, который обязан случиться на
+    старте. Отсутствующий индекс — это медленно, а не сломано, и ронять из-за
+    него выкладку значило бы менять работающий сервис на аккуратный.
+    """
+    from sqlalchemy import inspect
+
+    def _missing(connection) -> list[str]:
+        inspector = inspect(connection)
+        live = set(inspector.get_table_names())
+        gaps: list[str] = []
+        for table in Base.metadata.sorted_tables:
+            if table.name not in live:
+                gaps.append(table.name)
+                continue
+            present = {column["name"] for column in inspector.get_columns(table.name)}
+            gaps.extend(
+                f"{table.name}.{column.name}"
+                for column in table.columns
+                if column.name not in present
+            )
+        return gaps
+
+    async with engine().connect() as connection:
+        missing = await connection.run_sync(_missing)
+
+    if missing:
+        raise SchemaNotReady(
+            "the database is missing "
+            + ", ".join(missing[:12])
+            + (f" and {len(missing) - 12} more" if len(missing) > 12 else "")
+            + f" — run `{MIGRATE_COMMAND}` before starting the workers "
+            "(docs/DEPLOY.md §4)"
+        )
 
 
 async def drop_all() -> None:

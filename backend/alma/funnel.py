@@ -647,38 +647,36 @@ async def spend_allowance(
     both back and a client that keeps going after its 429 keeps being refused
     on the count it has already stored — which is the property that matters,
     because the thing being defended is the size of the table rather than the
-    cost of answering. A limiter on requests would need state shared between
-    processes, and this service has none.
+    cost of answering.
 
-    Both numeric fields are set explicitly because SQLAlchemy applies column
-    defaults at INSERT, and a freshly constructed row reads back as `None`
-    until then.
+    **Списание атомарное, и прежняя оговорка на этом месте снята.** Здесь
+    стояло «a limiter on requests would need state shared between processes,
+    and this service has none» — общее состояние у сервиса теперь есть
+    (`db/counters.py`, `deps.SharedWindow`), и сам счётчик больше не читается
+    перед записью: `spend_and_check` прибавляет и узнаёт результат одним
+    запросом. Два маяка, пришедшие вместе, раньше читали один и тот же ноль.
 
     The ceiling is read here rather than defaulted in the signature, where it
     would be bound once at import and no longer be the number this module
     documents.
     """
-    from .db.models import UsageCounter
+    from .db import counters
 
     ceiling = DAILY_LIMIT if limit is None else limit
 
-    today = utcnow().date()
-    key = f"{user_id}:{today.isoformat()}:{LIMIT_METRIC}"
-    row = await session.get(UsageCounter, key)
-    if row is None:
-        row = UsageCounter(
-            id=key, user_id=user_id, day=today, metric=LIMIT_METRIC, count=0, amount=0.0
+    try:
+        return await counters.spend_and_check(
+            session,
+            user_id=user_id,
+            day=utcnow().date(),
+            metric=LIMIT_METRIC,
+            limit=ceiling,
         )
-        session.add(row)
-    row.count = (row.count or 0) + 1
-    await session.flush()
-
-    if row.count > ceiling:
+    except counters.QuotaExceeded as exc:
         raise TooManyEvents(
             f"{ceiling} events is a day's worth for one account; "
-            f"this one has sent {row.count}"
-        )
-    return row.count
+            f"this one has sent {int(exc.spent)}"
+        ) from exc
 
 
 async def spend_anonymous_allowance(

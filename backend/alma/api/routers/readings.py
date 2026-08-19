@@ -77,10 +77,12 @@ from ...calc.cache import MOMENT_OPTIONS, compute_cached_async
 from ...calc.contract import cache_key
 from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...config import settings
+from ...db import counters
 from ...db.models import ChatMessage, ChatThread, Memory, Reading, UsageCounter, User, utcnow
 from ...db.session import SessionReleased, session_scope
 from ..cache import result_cache
 from ..deps import (
+    STREAM_TURNS,
     CurrentUser,
     SessionDep,
     get_provider,
@@ -187,14 +189,27 @@ def _prune_lock(key: str) -> None:
         _WRITE_LOCKS.pop(key, None)
 
 
-#: Ходы беседы, у которых больше нет читателя.
+#: Ходы беседы, у которых больше нет читателя, — теперь общий реестр в `deps`.
 #:
 #: `/chat/stream` перестал отменять свою задачу, когда клиент уходит (см. довод
 #: в `finally` там же), и задача, которую никто не ждёт, обязана быть где-то
 #: записана: `asyncio` держит на задачи только слабые ссылки, и брошенная
 #: пропадает в сборщике мусора посреди генерации — то есть ровно тем способом,
 #: от которого мы уходим. Строка убирается сама, когда ход дописан.
-_STREAM_TURNS: set[asyncio.Task] = set()
+#:
+#: **Здесь стоял голый `set`, и он был на одну обязанность беднее.** Первая — та
+#: же: держать ссылку. Вторая появилась вместе с остановкой процесса: множество,
+#: которое некому дождаться, при выкладке исчезает вместе с процессом, а с ним и
+#: ответ, за который уже заплачено. Ждать его обязан `lifespan` в `api/app.py`, а
+#: тому пришлось бы импортировать приватное имя чужого роутера и подписаться под
+#: тем, что имя не переименуют. Поэтому реестр живёт в `deps`, а этот псевдоним
+#: оставлен ради читателя, который придёт сюда за старым именем.
+#:
+#: Третья обязанность — потолок: `set.add` принимает что угодно и сколько
+#: угодно, `admit` отказывает после `MAX_BACKGROUND_TURNS`, потому что
+#: «дописать оплаченный ответ» — обещание, которое можно дать конечное число раз
+#: за окно остановки.
+_STREAM_TURNS = STREAM_TURNS
 
 
 #: Один замок на аккаунт, на всё время хода беседы.
@@ -1540,8 +1555,10 @@ async def _remember(session, user, items: tuple[str, ...], source: str) -> None:
     await session.flush()
 
 
-def _counter_id(user_id: str, day, metric: str) -> str:
-    return f"{user_id}:{day.isoformat()}:{metric}"
+#: Ключ строки счётчика. Формула одна на весь сервис и живёт в `db/counters`;
+#: здесь оставлено имя, которым её звали в этом файле, чтобы вторая формула не
+#: завелась по недосмотру.
+_counter_id = counters.counter_id
 
 
 #: The date a lifetime counter is filed under. Any fixed value works; this one
@@ -1558,46 +1575,27 @@ def _period_start(period: str, at: datetime | None = None) -> date:
     return today.replace(day=1) if period == "month" else today
 
 
-async def _counter_row(session, user_id: str, metric: str, *, day: date | None = None) -> UsageCounter:
-    """The counter for one account, one metric and one period.
+async def _count(session, user, metric: str, amount: int = 1, *, day: date | None = None) -> int:
+    """Прибавить к счётчику и вернуть, сколько стало. Один запрос.
 
-    Keyed on the id rather than on the `User` instance, because one caller —
-    `_charge_anyway` — has just rolled its session back and every attribute of
-    that instance is expired: reading `user.id` there would attempt lazy IO in
-    the wrong place and raise.
+    **Здесь стояло «прочитать строку, прибавить в питоне, сбросить», и это
+    недосчитывало.** Два одновременных хода читали один и тот же ноль, оба
+    писали единицу, и порция «три вопроса в день» переставала быть порцией:
+    двойное нажатие «отправить» стоило двух генераций, а в счётчике оставляло
+    одну. Повторяемое сколько угодно раз — то есть потолка не было вовсе.
+
+    Замок `_chat_slot` сужал щель до одного процесса; воркеров у нас
+    `min(8, cpu*2)`, и в комментарии к тому замку это записано прямо: «настоящее
+    лекарство — уникальность в базе, и его стоит завести в тот день, когда
+    воркеров станет больше одного». Этот день настал, лекарство — `counters.add`:
+    `INSERT … ON CONFLICT DO UPDATE SET count = count + :n RETURNING count`, то
+    есть без окна между чтением и записью и одинаково на всех воркерах.
     """
     when = day or datetime.now(timezone.utc).date()
-    key = _counter_id(user_id, when, metric)
-    row = await session.get(UsageCounter, key)
-    if row is None:
-        row = UsageCounter(
-            id=key, user_id=user_id, day=when, metric=metric, count=0, amount=0.0
-        )
-        session.add(row)
-    return row
-
-
-async def _counter(session, user, metric: str, *, day: date | None = None) -> UsageCounter:
-    """One period's counter for one metric, created if this is the first tick.
-
-    Both numeric fields are set explicitly rather than left to the column
-    default: SQLAlchemy applies those at INSERT, so a freshly constructed row
-    reads back as None and the first `+=` raises.
-
-    `day` is the *start* of whatever period the counter covers, which for a
-    monthly one is the first of the month. That is also why a monthly counter
-    carries its own metric name rather than reusing the daily one with a
-    month-start day — on the first of every month the two would land on the
-    same primary key, and one turn would be charged to both allowances.
-    """
-    return await _counter_row(session, user.id, metric, day=day)
-
-
-async def _count(session, user, metric: str, amount: int = 1, *, day: date | None = None) -> int:
-    row = await _counter(session, user, metric, day=day)
-    row.count = (row.count or 0) + amount
-    await session.flush()
-    return row.count
+    count, _cents = await counters.add(
+        session, user_id=user.id, day=when, metric=metric, count=amount
+    )
+    return count
 
 
 async def _spend(session, user, cents: float) -> None:
@@ -1607,10 +1605,20 @@ async def _spend(session, user, cents: float) -> None:
     has spent its month, which is why the metric name is imported from there
     rather than written out again: a typo here would not fail anything, it
     would just make every account look free.
+
+    **Одним запросом по той же причине, что и `_count`, но потеря здесь
+    обиднее.** Недосчитанные вопросы — это порция, отданная сверх обещанного;
+    недосчитанные центы — это месячный потолок, который считает нас дешевле,
+    чем мы есть, то есть предохранитель, не срабатывающий ровно под нагрузкой,
+    ради которой он поставлен.
     """
-    row = await _counter(session, user, cost.SPEND_METRIC)
-    row.amount = (row.amount or 0.0) + cents
-    await session.flush()
+    await counters.add(
+        session,
+        user_id=user.id,
+        day=datetime.now(timezone.utc).date(),
+        metric=cost.SPEND_METRIC,
+        cents=cents,
+    )
 
 
 def _truncated_cents(exc: AnswerTruncated) -> float:
@@ -1661,8 +1669,17 @@ async def _charge_anyway(user, *, cents: float) -> None:
     if not cents:
         return
     async with session_scope() as session:
-        row = await _counter_row(session, user_id, cost.SPEND_METRIC)
-        row.amount = (row.amount or 0.0) + cents
+        # `user_id` строкой, а не `user`: у этого вызывающего сессия своя, и
+        # чужой объект в ней — expired, то есть чтение `user.id` полезло бы за
+        # данными не в ту транзакцию. Это же и причина, по которой примитив
+        # принимает идентификатор, а не пользователя.
+        await counters.add(
+            session,
+            user_id=user_id,
+            day=datetime.now(timezone.utc).date(),
+            metric=cost.SPEND_METRIC,
+            cents=cents,
+        )
 
 
 async def _asked(session, user, allowance: Allowance) -> int:
@@ -1693,29 +1710,31 @@ async def _opening_allowance(session, user) -> None:
     Отказ здесь выглядит для клиента так же, как любая другая причина не
     написать абзац: цена показывается, начала нет. Это последняя линия и она
     срабатывать не должна; если сработала — в логе видно, у кого.
-    """
-    from ...db.models import UsageCounter
 
+    Порядок «прибавить, потом сравнить» тут был с самого начала и был верным;
+    менялось только то, чем прибавляли. Раньше — `get` → `+= 1` → `flush`, то
+    есть три шага с окном между первым и третьим: восемь воркеров, каждый со
+    своим нулём в руках, проходили шестидесятый абзац восемь раз. Теперь один
+    запрос, и второй видит своё же увеличение.
+    """
     month = date.today().replace(day=1)
-    key = f"{user.id}:{month.isoformat()}:{OPENING_METRIC}"
-    row = await session.get(UsageCounter, key)
-    if row is None:
-        row = UsageCounter(
-            id=key, user_id=user.id, day=month, metric=OPENING_METRIC,
-            count=0, amount=0.0,
+    try:
+        await counters.spend_and_check(
+            session,
+            user_id=user.id,
+            day=month,
+            metric=OPENING_METRIC,
+            limit=OPENING_ALLOWANCE,
         )
-        session.add(row)
-    row.count = (row.count or 0) + 1
-    await session.flush()
-    if row.count > OPENING_ALLOWANCE:
+    except counters.QuotaExceeded as exc:
         log.warning(
             "opening allowance spent by %s: %s in %s",
-            user.id, row.count, month.isoformat(),
+            user.id, exc.spent, month.isoformat(),
         )
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
             detail={"error": "opening_allowance"},
-        )
+        ) from exc
 
 
 async def _guard_month(
@@ -2737,8 +2756,12 @@ async def chat_stream(
         # может быть собрана сборщиком мусора посреди работы — это
         # документированное поведение `asyncio.create_task`, а ниже мы как раз
         # перестаём её ждать.
-        _STREAM_TURNS.add(task)
-        task.add_done_callback(_STREAM_TURNS.discard)
+        #
+        # Ссылку берёт реестр, и берёт всегда: его `False` — это жалоба в лог о
+        # том, что брошенных генераций стало больше, чем покрывает окно
+        # остановки, а не отказ присмотреть. Отказаться здесь нельзя ничем —
+        # модель уже позвана и оплачена (см. `TurnRegistry.admit`).
+        STREAM_TURNS.admit(task)
         try:
             while True:
                 kind, data = await queue.get()

@@ -57,9 +57,10 @@ services:
     restart: unless-stopped
     depends_on:
       db:
-        # Не «запущена», а «отвечает»: `create_all` в lifespan идёт к базе на
+        # Не «запущена», а «отвечает»: `verify_schema` в lifespan идёт к базе на
         # первой же секунде, и контейнер, стартовавший на полсекунды раньше
-        # Postgres, падает с отказом соединения.
+        # Postgres, падает с отказом соединения. То же и для шага миграции,
+        # который выкладка запускает отдельной командой (`docs/DEPLOY.md §4`).
         condition: service_healthy
     env_file:
       - .env

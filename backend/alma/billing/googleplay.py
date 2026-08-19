@@ -62,6 +62,7 @@ import httpx
 import jwt
 
 from ..config import settings
+from . import http
 from .provider import (
     PERIOD,
     BillingUnavailable,
@@ -208,14 +209,17 @@ class GooglePlayClient:
                 "not set — cannot talk to Google Play"
             )
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    TOKEN_ENDPOINT,
-                    data={
-                        "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
-                        "assertion": self._assertion(),
-                    },
-                )
+            # Общий клиент процесса (`billing/http.py`). Именно здесь это
+            # заметнее всего: проверка одной покупки — два вызова подряд, за
+            # токеном и за самой покупкой, и раньше каждый начинался с
+            # TLS-рукопожатия к своему хосту Google.
+            response = await http.client().post(
+                TOKEN_ENDPOINT,
+                data={
+                    "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
+                    "assertion": self._assertion(),
+                },
+            )
         except httpx.HTTPError as exc:
             raise BillingUnavailable(f"google unreachable: {exc}") from exc
         if response.status_code >= 400:
@@ -248,11 +252,10 @@ class GooglePlayClient:
         """
         token = await self._access_token()
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
-                    f"{ANDROID_PUBLISHER}{path}",
-                    headers={"Authorization": f"Bearer {token}"},
-                )
+            response = await http.client().get(
+                f"{ANDROID_PUBLISHER}{path}",
+                headers={"Authorization": f"Bearer {token}"},
+            )
         except httpx.HTTPError as exc:
             raise BillingUnavailable(f"google unreachable: {exc}") from exc
         if response.status_code >= 400:

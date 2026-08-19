@@ -14,6 +14,7 @@ from .models import (
     Memory,
     Profile,
     Purchase,
+    RateWindow,
     Reading,
     Setting,
     UsageCounter,
@@ -31,6 +32,7 @@ from .session import (
     healthy,
     session_factory,
     session_scope,
+    verify_schema,
 )
 
 __all__ = [
@@ -47,6 +49,7 @@ __all__ = [
     "Memory",
     "Profile",
     "Purchase",
+    "RateWindow",
     "Reading",
     "Setting",
     "UsageCounter",
@@ -61,5 +64,6 @@ __all__ = [
     "new_id",
     "session_factory",
     "session_scope",
+    "verify_schema",
     "utcnow",
 ]

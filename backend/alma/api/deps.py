@@ -40,14 +40,20 @@ The rule now:
   выдавался по одному HTTP-вызову, так что ротация гостей брала столько
   бюджетов, сколько раз позвонила. Потолок стоит по источнику запроса — см.
   `GUEST_MINTS_PER_HOUR` и `request_source`.
+* **И этот потолок общий для всех рабочих процессов.** Он был не общим: счёт
+  жил в памяти воркера, восемь воркеров давали восьмикратную норму, а выкладка
+  обнуляла её целиком. Счёт переехал в базу — `SharedWindow` и таблица
+  `rate_window`; в памяти осталось только то, что умеет отказывать быстро.
 """
 
 from __future__ import annotations
 
+import hashlib
 import ipaddress
 import logging
 import time
 from datetime import date as date_type
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, Request, Response, status
@@ -58,6 +64,7 @@ from ..auth import accounts, tokens
 from ..auth.accounts import AccountDeleted
 from ..calc import BirthData
 from ..db import User, get_session
+from ..db import counters
 from ..db.models import Profile
 from ..geo import is_known_timezone
 from .schemas import BirthInput
@@ -140,71 +147,151 @@ def request_source(request: Request) -> str:
     return peer
 
 
-class FixedWindow:
-    """Сколько раз этот ключ приходил за последнее окно. В памяти процесса.
+class SharedWindow:
+    """Сколько раз этот ключ приходил за окно. Счёт — в базе, один на всех.
 
-    **Приблизительный, и это выбрано, а не упущено.** Состояние живёт в одном
-    процессе: два воркера дают вдвое больший потолок, рестарт обнуляет счёт. Тот
-    же компромисс уже записан в `funnel.spend_allowance` — «общего состояния у
-    сервиса нет», — и цена честная: потолок здесь стоит против скрипта, который
-    крутит запросы тысячами, а не против точного бюджета. Точный вариант — Redis
-    или строка в базе на каждый запрос без аккаунта, то есть новая зависимость
-    либо запись в базу от неаутентифицированного вызова: и то и другое дороже
-    того, что защищаем.
+    **Раньше он жил в памяти процесса, и потолка фактически не было.** Прод —
+    это `gunicorn` по числу ядер: на восьмиядерной машине восемь процессов, у
+    каждого свой словарь, и «тридцать гостей в час с адреса» превращалось в
+    двести сорок. Выкладка обнуляла и это: `docker compose up -d --build`
+    поднимает новые процессы с чистыми счётчиками, то есть потолок снимался
+    каждым деплоем. Оба свойства были записаны в прежнем докстринге как
+    осознанный компромисс — компромисс перестал быть честным ровно тогда, когда
+    воркеров стало больше одного.
 
-    Окно фиксированное, а не скользящее: на стыке двух окон пропускается до
-    двойного лимита, зато на ключ хранится пара чисел вместо списка отметок —
-    важно, потому что ключей столько, сколько адресов, и платит за них память
-    процесса. `max_keys` — та же забота: словарь, растущий по адресам, сам стал
-    бы способом уронить сервис.
+    **Общее хранилище — наша же база, и никакого Redis.** Строка на
+    (ограничитель, окно, отпечаток ключа), увеличение — один
+    `INSERT … ON CONFLICT DO UPDATE … RETURNING` (`db/counters.hit_window`), то
+    есть без окна между чтением и записью. Отдельная таблица `rate_window`, а
+    не `usage_counter`: у того `user_id` — внешний ключ в `user`, а всё, что
+    здесь ограничивают, случается до аккаунта или вместо него (довод целиком —
+    в докстринге модели).
+
+    **Дёшево оно за счёт памяти, но памяти, которая умеет только отказывать.**
+    Процесс помнит последнее, что база сказала про ключ в текущем окне; если
+    там уже потолок — отказ выдаётся без единого запроса, и скрипт, который
+    крутит тысячу запросов в секунду, стоит нам одной записи в словарь. Память
+    **никогда не пропускает** — пропустить может только база, — иначе мы бы
+    вернули ровно те же попроцессные потолки, от которых уходим.
+
+    Окно фиксированное, а не скользящее, и его номер — это `время // длина`, то
+    есть одно и то же число во всех процессах и после перезапуска. На стыке
+    окон пропускается до двойного лимита; цена та же, что была, и она куплена
+    за одну строку на ключ вместо списка отметок.
+
+    `max_keys` — про память процесса: словарь, растущий по числу адресов, сам
+    стал бы способом уронить сервис.
     """
 
-    __slots__ = ("limit", "seconds", "max_keys", "_counts")
+    __slots__ = ("name", "limit", "seconds", "max_keys", "_seen")
 
-    def __init__(self, *, limit: int, seconds: float, max_keys: int = 20_000) -> None:
+    def __init__(
+        self, *, name: str, limit: int, seconds: float, max_keys: int = 20_000
+    ) -> None:
+        self.name = name
         self.limit = limit
         self.seconds = seconds
         self.max_keys = max_keys
-        self._counts: dict[str, list[float]] = {}
+        #: ключ → (номер окна, что база ответила в последний раз). Только для
+        #: отказа; см. докстринг.
+        self._seen: dict[str, tuple[int, int]] = {}
 
-    def hit(self, key: str) -> bool:
-        """Засчитать обращение. `False` — потолок уже выбран."""
-        now = time.monotonic()
-        entry = self._counts.get(key)
-        if entry is None or now - entry[0] >= self.seconds:
-            if len(self._counts) >= self.max_keys:
-                self._forget_stale(now)
-            self._counts[key] = [now, 1.0]
-            return self.limit >= 1
-        entry[1] += 1
-        return entry[1] <= self.limit
+    def _window_index(self, now: float) -> int:
+        return int(now // self.seconds)
 
-    def _forget_stale(self, now: float) -> None:
-        for key, entry in list(self._counts.items()):
-            if now - entry[0] >= self.seconds:
-                del self._counts[key]
-        if len(self._counts) >= self.max_keys:
+    def row_id(self, key: str, index: int) -> str:
+        """Первичный ключ строки окна.
+
+        Ключ уходит в базу **отпечатком**: сюда приходит сетевой адрес или
+        почтовый ящик, а таблица потолков с живыми адресами посетителей — это
+        то самое хранение IP, которого privacy-страница обещает не делать.
+        blake2b с `person=` разводит одинаковые ключи разных ограничителей: один
+        и тот же адрес в `guest_mint` и в `anon_events` обязан считаться
+        отдельно, а сравнивать отпечатки разных ограничителей мы не должны уметь
+        вовсе.
+        """
+        digest = hashlib.blake2b(
+            key.encode("utf-8", "replace"),
+            digest_size=16,
+            person=self.name.encode("utf-8")[:16],
+        ).hexdigest()
+        return f"{self.name}:{index}:{digest}"
+
+    def expiry(self, index: int) -> datetime:
+        """Конец окна — то, что уходит клиенту в `Retry-After`."""
+        return datetime.fromtimestamp((index + 1) * self.seconds, tz=timezone.utc)
+
+    async def hit(self, session: AsyncSession, key: str) -> bool:
+        """Засчитать обращение. `False` — потолок уже выбран.
+
+        **Отказ не откатывает чужую работу и не нуждается в откате своей.** У
+        HTTP-маршрута отказ — это `HTTPException`, а `session_scope` на любом
+        исключении откатывает транзакцию целиком, унося и это увеличение. Счёт
+        от этого не разъезжается: в базе остаётся ровно столько, сколько
+        обращений было **пропущено**, а отказанные пересчитываются заново и
+        снова упираются. Это и есть нужное свойство — потолок держится, а
+        отказанные попытки не накручивают его дальше вверх.
+        """
+        now = time.time()
+        index = self._window_index(now)
+
+        seen = self._seen.get(key)
+        if seen is not None and seen[0] == index and seen[1] >= self.limit:
+            # Потолок этого окна уже известен выбранным. В базу не идём: это
+            # тот самый путь, по которому ходит скрипт, и он обязан быть
+            # бесплатным.
+            return False
+
+        count = await counters.hit_window(
+            session,
+            row_id=self.row_id(key, index),
+            expires_at=self.expiry(index),
+        )
+        self._remember(key, index, count)
+        return count <= self.limit
+
+    def _remember(self, key: str, index: int, count: int) -> None:
+        if len(self._seen) >= self.max_keys and key not in self._seen:
+            self._forget_stale(index)
+        self._seen[key] = (index, count)
+
+    def _forget_stale(self, index: int) -> None:
+        for key, (window_index, _count) in list(self._seen.items()):
+            if window_index != index:
+                del self._seen[key]
+        if len(self._seen) >= self.max_keys:
             # Ни одно окно не истекло — значит, идёт наплыв с многих адресов.
-            # Забываем всё: потолок на следующем окне мягче, чем процесс,
-            # съевший память под словарь чужих адресов.
-            self._counts.clear()
+            # Забываем всё: следующее обращение каждого из них сходит в базу,
+            # где счёт цел, — то есть теряется скорость, а не потолок.
+            self._seen.clear()
 
 
-def window(request: Request, name: str, *, limit: int, seconds: float) -> FixedWindow:
-    """Именованный счётчик, живущий столько же, сколько приложение.
+def window(request: Request, name: str, *, limit: int, seconds: float) -> SharedWindow:
+    """Именованный ограничитель, живущий столько же, сколько приложение.
 
     На `app.state`, а не в модуле, и это не вкусовщина: модульный словарь
     переживает `create_app()`, а значит и тест, и один прогон набора выбрал бы
-    потолок за всех остальных. Здесь у каждого приложения свои счётчики —
-    и в проде их ровно одни на процесс, как и задумано.
+    потолок за всех остальных. Здесь у каждого приложения свои — и в проде их
+    ровно одни на процесс, как и задумано.
+
+    Потолок читается **на каждом вызове**, а не запоминается при создании:
+    тесты подменяют числа через `monkeypatch.setattr`, а объект переживает
+    запрос, и запомненное значение сделало бы подмену невидимой начиная со
+    второго теста в файле.
     """
-    counters: dict[str, FixedWindow] = getattr(request.app.state, "rate_windows", None)
-    if counters is None:
-        counters = {}
-        request.app.state.rate_windows = counters
-    found = counters.get(name)
+    counters_by_name: dict[str, SharedWindow] = getattr(
+        request.app.state, "rate_windows", None
+    )
+    if counters_by_name is None:
+        counters_by_name = {}
+        request.app.state.rate_windows = counters_by_name
+    found = counters_by_name.get(name)
     if found is None:
-        found = counters[name] = FixedWindow(limit=limit, seconds=seconds)
+        found = counters_by_name[name] = SharedWindow(
+            name=name, limit=limit, seconds=seconds
+        )
+    found.limit = limit
+    found.seconds = seconds
     return found
 
 
@@ -226,6 +313,103 @@ def window(request: Request, name: str, *, limit: int, seconds: float) -> FixedW
 #: ниже — риск отказать настоящему новичку, выше — дороже утечка.
 GUEST_MINTS_PER_HOUR = 30
 GUEST_MINT_WINDOW_SECONDS = 3600.0
+
+
+# ── фоновые ходы беседы ────────────────────────────────────────────────────
+
+
+#: Сколько недописанных ходов беседы воркер держит одновременно.
+#:
+#: Ход попадает сюда, когда клиент ушёл со `/chat/stream`, а генерация ещё идёт
+#: (довод, почему её не отменяют, — в `readings.py`, в `finally` того маршрута).
+#: Потолка не было вовсе, и это второй способ уронить воркер после потолка на
+#: гостей: каждый брошенный ход держит корутину, соединение к модели и до
+#: 40 секунд памяти под prompt, а бросить их можно ровно столько, сколько раз
+#: удастся начать беседу и закрыть вкладку.
+#:
+#: Число считано от воркера, а не от вкуса. Пул базы у воркера — 20 постоянных
+#: соединений (`db/session.POOL_SIZE`), ход берёт короткую транзакцию в трёх
+#: местах, и на остановке мы обязаны дождаться их всех за
+#: `app.STREAM_TURN_GRACE_SECONDS` = 100 с. Тридцать две брошенные генерации по
+#: 10–40 с укладываются в это окно; сто — уже нет, и выкладка снова начала бы
+#: терять оплаченные ответы, только теперь по своей вине.
+MAX_BACKGROUND_TURNS = 32
+
+
+class TurnRegistry:
+    """Фоновые ходы беседы: сколько их, и как их дождаться при остановке.
+
+    **Замена голому `set` в `readings.py`, и разница ровно в двух вещах.**
+    Первая — счёт: сверх `MAX_BACKGROUND_TURNS` реестр кричит в лог, потому что
+    столько брошенных генераций сразу означает, что окно остановки их больше не
+    покрывает. Задачу он при этом всё равно берёт — почему именно так, написано
+    у `admit`. Вторая — `drain`: множество, которое некому дождаться, при выкладке просто
+    исчезает вместе с процессом, а вместе с ним исчезает и ответ, за который
+    уже заплачено (`session_scope` внутри задачи получает `CancelledError` и
+    откатывает расход, списанный вопрос и сам текст).
+
+    Живёт здесь, а не в `readings.py`: `api/app.py` обязан уметь дождаться этих
+    задач в `lifespan`, а импортировать роутер ради приватного имени — значит
+    подписаться под тем, что имя не переименуют. Сегодня `readings.py` держит
+    свой собственный `set` и владелец того файла может переехать сюда двумя
+    строками — см. отчёт; `app._pending_turns` до тех пор ждёт оба.
+
+    Слабых ссылок здесь нет намеренно: `asyncio` держит на задачи только их,
+    и брошенная задача пропадает в сборщике мусора посреди генерации — то есть
+    ровно тем способом, от которого всё это и уходит.
+    """
+
+    __slots__ = ("limit", "_tasks")
+
+    def __init__(self, *, limit: int = MAX_BACKGROUND_TURNS) -> None:
+        self.limit = limit
+        self._tasks: set = set()
+
+    def admit(self, task) -> bool:
+        """Взять задачу под присмотр. `False` — мест больше нет, но она взята.
+
+        **Ссылка берётся всегда, и потолок её не отменяет.** Сначала здесь было
+        наоборот: сверх потолка задача не добавлялась вовсе. Это отменяло не
+        нагрузку, а единственную гарантию, ради которой реестр и существует:
+        `asyncio` держит на задачи только слабые ссылки, и задача, на которую
+        никто не смотрит, пропадает в сборщике мусора посреди генерации. То есть
+        отказ «беречь» ровно тридцать третий оплаченный ответ был бы способом
+        потерять его гарантированно и непредсказуемо — вместо «потерять при
+        остановке процесса, если она случится».
+
+        Отказаться от задачи в этой точке нельзя ничем: модель уже позвана и
+        оплачена, отмена — это деньги без ответа. Значит и потолок здесь может
+        быть только громким, а не запретительным: `False` говорит «нас залило,
+        посмотри в лог», и вызывающий волен на это посмотреть.
+
+        Настоящее место для отказа — до генерации, на входе в беседу: там ещё
+        ничего не стоило. Такого подпора сейчас нет, и это записано честно, а не
+        сымитировано потолком, который срабатывает слишком поздно, чтобы
+        что-нибудь сберечь.
+        """
+        self._tasks.add(task)
+        task.add_done_callback(self._tasks.discard)
+        if len(self._tasks) > self.limit:
+            log.error(
+                "%d background conversation turns are running at once; the "
+                "shutdown window is %s and may no longer cover them",
+                len(self._tasks),
+                MAX_BACKGROUND_TURNS,
+            )
+            return False
+        return True
+
+    def pending(self) -> set:
+        """Копия множества — по ней безопасно ждать, пока оно меняется."""
+        return set(self._tasks)
+
+    def __len__(self) -> int:
+        return len(self._tasks)
+
+
+#: Реестр этого процесса. Модульный, а не на `app.state`, потому что ждать его
+#: обязан `lifespan`, а тот получает `app` уже после того, как задачи начались.
+STREAM_TURNS = TurnRegistry()
 
 
 def local_sandbox() -> bool:
@@ -500,12 +684,12 @@ async def current_user(
     # выше, — так что потолок не касается ни одного существующего аккаунта, ни
     # гостевого, ни настоящего. `Retry-After` в часах, потому что окно часовое:
     # клиенту честнее увидеть срок, чем гадать.
-    if not window(
+    if not await window(
         request,
         "guest_mint",
         limit=GUEST_MINTS_PER_HOUR,
         seconds=GUEST_MINT_WINDOW_SECONDS,
-    ).hit(request_source(request)):
+    ).hit(session, request_source(request)):
         log.warning("guest minting refused: one source asked for more than %d in an hour",
                     GUEST_MINTS_PER_HOUR)
         raise HTTPException(

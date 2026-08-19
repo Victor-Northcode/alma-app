@@ -19,7 +19,8 @@ from fastapi.responses import JSONResponse
 
 from ..calc.service import AmbiguousBirthTime, TimeRequired, ambiguity_detail
 from ..config import settings
-from ..db import create_all, dispose
+from ..db import dispose
+from ..db.session import verify_schema
 from ..geo import PlaceIndexMissing
 from . import plates
 from .routers import (
@@ -136,13 +137,96 @@ async def _warm_in_background() -> None:
         await to_thread.run_sync(_warm, abandon_on_cancel=True)
 
 
+#: Сколько ждать фоновые ходы беседы при остановке процесса, в секундах.
+#:
+#: **Число выбрано от `graceful_timeout`, а не от длины генерации.**
+#: `gunicorn.conf.py` даёт воркеру 120 секунд на то, чтобы уйти по-хорошему, и
+#: после них присылает SIGKILL. Всё, что здесь ждётся дольше, ждётся зря: нас
+#: убьют посреди ожидания, и оплаченный ход всё равно не допишется. Сто секунд
+#: оставляют двадцать на всё остальное закрытие — пул базы, HTTP-клиенты,
+#: последние ответы, — и на то, чтобы отказ успел попасть в лог.
+#:
+#: Кого ждём: `readings._STREAM_TURNS` — задачи, которые дописывают ход беседы
+#: после того, как клиент ушёл (там же довод, почему их не отменяют). При
+#: выкладке процесс уходил, не дождавшись их: генерация состоялась, за неё
+#: выставлен счёт, а `session_scope` внутри задачи получил `CancelledError` и
+#: откатил и расход, и списанный вопрос, и сам ответ. То есть заплатили мы, а
+#: человек не получил ничего — и месячный потолок этого не увидел.
+STREAM_TURN_GRACE_SECONDS = 100.0
+
+
+def _pending_turns() -> set:
+    """Фоновые ходы беседы, которых стоит дождаться. Пустое — тоже ответ.
+
+    Источник один — `deps.STREAM_TURNS`. Здесь недолго стояло два: реестр и
+    приватное множество `readings._STREAM_TURNS`, прочитанное через `getattr`,
+    пока роутер на реестр не переехал. Второй источник снят вместе с причиной, и
+    снят намеренно, а не оставлен «на всякий случай»: `getattr` с запасным
+    пустым значением молча превращает ошибку в «ждать нечего», а «ждать нечего»
+    здесь означает «оплаченные ответы потеряны». Ошибку импорта лучше увидеть
+    один раз при запуске, чем не увидеть ни разу при остановке.
+    """
+    from . import deps
+
+    return deps.STREAM_TURNS.pending()
+
+
+async def _drain_stream_turns(seconds: float = STREAM_TURN_GRACE_SECONDS) -> None:
+    """Дать недописанным ходам беседы кончиться. Не дольше, чем нам самим дано."""
+    pending = _pending_turns()
+    if not pending:
+        return
+
+    log.warning("waiting for %d paid conversation turn(s) to finish", len(pending))
+    done, still_running = await asyncio.wait(pending, timeout=seconds)
+    if still_running:
+        # Не отменяем: отмена — это ровно тот откат, от которого мы уходим.
+        # Пусть их снимет SIGKILL, а в логе останется, за что именно человеку
+        # придётся извиняться.
+        log.error(
+            "%d conversation turn(s) were still writing after %.0fs and the "
+            "process is going anyway — those answers are paid for and lost",
+            len(still_running), seconds,
+        )
+    else:
+        log.warning("all %d conversation turn(s) finished", len(done))
+
+
+async def close_http_clients() -> None:
+    """Отпустить соединения, которые процесс держал открытыми между запросами.
+
+    Их два, и оба появились в один день по одной причине: клиент, создаваемый
+    на каждый вызов, — это TLS-рукопожатие на каждый вызов. Общий клиент живёт
+    сколько процесс, а значит его надо закрыть, когда процесс уходит: `httpx`
+    без `aclose` оставляет открытые сокеты, и воркер, снятый по SIGTERM,
+    оставил бы их вендору как полуоткрытые соединения.
+
+    Ошибки проглатываются каждым из двух по отдельности: остановка, упавшая на
+    закрытии клиента, — это `dispose()` пула базы, который не случился.
+    """
+    from ..ai.provider import close_provider
+    from ..billing import http as billing_http
+
+    for name, close in (("billing", billing_http.aclose), ("model", close_provider)):
+        try:
+            await close()
+        except Exception as exc:  # noqa: BLE001 — см. докстринг
+            log.info("closing the %s http client: %s", name, exc)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = settings()
     # Refuses to boot a production process whose session tokens would be
     # forgeable. Better a failed deploy than a quiet one.
     config.check_production_ready()
-    await create_all()
+    # **Схему здесь только проверяют.** Создавал её раньше каждый воркер, и на
+    # восьми процессах это восемь одновременных `CREATE INDEX` по одной базе в
+    # секунду выкладки. Теперь её приводит в порядок один шаг деплоя
+    # (`python -m tools.migrate`, `docs/DEPLOY.md §4`), а процесс, поднявшийся
+    # раньше него, обязан не подняться вовсе: тихо стартовать на базе без
+    # колонки значит отдать первый же платный запрос пятисоткой.
+    await verify_schema()
 
     missing = config.missing_for_production()
     if missing and config.is_production:
@@ -159,6 +243,12 @@ async def lifespan(app: FastAPI):
     warming.cancel()
     with suppress(asyncio.CancelledError):
         await warming
+    # Порядок здесь важен и стоил разбора: сперва дописать оплаченные ходы,
+    # потом закрывать то, чем они пишут. Закрытый пул базы или закрытый
+    # HTTP-клиент посреди хода — это тот же потерянный ответ, только с более
+    # запутанной трассировкой.
+    await _drain_stream_turns()
+    await close_http_clients()
     await dispose()
 
 

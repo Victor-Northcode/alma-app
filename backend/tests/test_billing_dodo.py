@@ -822,7 +822,14 @@ def test_a_partial_refund_does_not_close_the_grant_and_a_full_one_does():
 # ── the client ─────────────────────────────────────────────────────────────
 
 class _Recorder:
-    """A stand-in for `httpx.AsyncClient` that records one call."""
+    """Подставной общий клиент процесса, записывающий один вызов.
+
+    Подменяется не `httpx.AsyncClient`, а `billing.http.client()` — с 19 августа
+    2026 адаптеры кассы не создают клиента на вызов, а берут один на процесс
+    (довод — в `billing/http.py`). Контекстный менеджер здесь остался нарочно и
+    больше не используется: если кто-нибудь вернёт `async with`, тест продолжит
+    проходить и промолчит о том, что рукопожатие вернулось.
+    """
 
     calls: list[tuple[str, str, dict | None]] = []
     status = 200
@@ -856,7 +863,9 @@ def recorder(monkeypatch):
     _Recorder.calls = []
     _Recorder.status = 200
     _Recorder.body = {}
-    monkeypatch.setattr(dodo.httpx, "AsyncClient", _Recorder)
+    from alma.billing import http as billing_http
+
+    monkeypatch.setattr(billing_http, "client", lambda: _Recorder())
     return _Recorder
 
 

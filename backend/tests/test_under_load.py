@@ -406,6 +406,11 @@ def test_startup_does_not_wait_for_the_warm_up(tmp_path, monkeypatch):
     geo._finder.cache_clear()
     geo._zone_names.cache_clear()
 
+    # Схему заводит шаг выкладки, а не старт приложения (`tools/migrate.py`).
+    # Здесь она заводится до замера нарочно: мерить надо старт воркера, а
+    # `create_all` — не его работа.
+    asyncio.run(session_module.create_all())
+
     started = time.perf_counter()
     with TestClient(create_app()) as client:
         boot = time.perf_counter() - started
@@ -466,6 +471,8 @@ def test_the_thread_pool_is_sized_by_the_machine(tmp_path, monkeypatch):
     monkeypatch.setenv("ALMA_ENV", "test")
     monkeypatch.setenv("ALMA_JWT_SECRET", "test-secret-not-the-default")
     config_module.settings.cache_clear()
+    # Схема — отдельный шаг выкладки; без неё `lifespan` откажется стартовать.
+    asyncio.run(session_module.create_all())
 
     seen: dict = {}
 

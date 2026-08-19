@@ -39,6 +39,7 @@ from datetime import datetime
 import httpx
 
 from ..config import settings
+from . import http
 from .provider import (
     MAX_SIGNATURE_AGE,
     PERIOD,
@@ -464,11 +465,11 @@ class PaddleClient:
         if not self.configured:
             return None
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
-                    f"{self.base}/transactions/{transaction_id}",
-                    headers={"Authorization": f"Bearer {self.api_key}"},
-                )
+            # Общий клиент процесса — см. `billing/http.py`.
+            response = await http.client().get(
+                f"{self.base}/transactions/{transaction_id}",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+            )
             if response.status_code >= 400:
                 log.error("paddle refused: %s %s", response.status_code, response.text[:300])
                 return None
@@ -489,11 +490,10 @@ class PaddleClient:
         if not self.configured or not customer_id:
             return None
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.get(
-                    f"{self.base}/customers/{customer_id}",
-                    headers={"Authorization": f"Bearer {self.api_key}"},
-                )
+            response = await http.client().get(
+                f"{self.base}/customers/{customer_id}",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+            )
         except httpx.HTTPError as exc:
             log.error("paddle unreachable while looking up a buyer's address: %s", exc)
             return None
@@ -527,12 +527,11 @@ class PaddleClient:
                 "PADDLE_API_KEY is not set — cannot cancel a subscription"
             )
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(
-                    f"{self.base}/subscriptions/{subscription_id}/cancel",
-                    headers={"Authorization": f"Bearer {self.api_key}"},
-                    json={"effective_from": "next_billing_period"},
-                )
+            response = await http.client().post(
+                f"{self.base}/subscriptions/{subscription_id}/cancel",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json={"effective_from": "next_billing_period"},
+            )
         except httpx.HTTPError as exc:
             raise BillingUnavailable(f"paddle unreachable: {exc}") from exc
         if response.status_code >= 400:
