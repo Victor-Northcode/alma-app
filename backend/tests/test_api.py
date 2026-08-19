@@ -826,3 +826,52 @@ def test_sun_sign_comes_with_the_profile_and_stays_silent_on_the_border(api, aut
         "is_self": False,
     }).json()
     assert border["sun_sign"] is None, "20 марта 1988 Солнце меняет знак — молчим"
+
+
+def test_magic_link_cannot_hijack_someone_elses_account(api):
+    """Ссылка, запрошенная на чужой адрес, не отдаёт чужой аккаунт просящему.
+
+    Атака, которую это сторожит: атакующий-гость просит ссылку на адрес
+    жертвы; жертва получает настоящее письмо и жмёт свою кнопку. Пока consume
+    предпочитал «гостя, который сделал работу», аккаунт жертвы оказывался
+    привязан к гостевой строке атакующего — и его старый токен на девяносто
+    дней становился ключом от чужой карты, бесед и покупок.
+    """
+    # Гость атакующего: любой запрос без Authorization чеканит его и кладёт
+    # токен в заголовок ответа.
+    first = api.get("/v1/auth/session")
+    attacker = first.headers.get("X-Alma-Token")
+    assert attacker, "гость обязан чеканиться — иначе тест проверяет не то"
+    attacker_id = api.get(
+        "/v1/auth/session", headers={"Authorization": f"Bearer {attacker}"}
+    ).json()["user_id"]
+
+    # Атакующий просит ссылку на чужой адрес.
+    asked = api.post(
+        "/v1/auth/magic-link",
+        headers={"Authorization": f"Bearer {attacker}"},
+        json={"email": "victim@example.com"},
+    )
+    assert asked.status_code == 202
+    token = asked.json().get("debug_token")
+    assert token, "тестовое окружение обязано отдавать токен, иначе нечего кликать"
+
+    # Жертва открывает письмо у себя: свой гость, свой запрос.
+    victim_guest = api.get("/v1/auth/session").headers.get("X-Alma-Token")
+    signed = api.post(
+        "/v1/auth/magic-link/consume",
+        headers={"Authorization": f"Bearer {victim_guest}"},
+        json={"token": token},
+    )
+    assert signed.status_code == 200
+    victim_id = signed.json()["user_id"]
+
+    # Главное: аккаунт жертвы — это НЕ строка атакующего.
+    assert victim_id != attacker_id
+
+    # И старый токен атакующего по-прежнему принадлежит ему самому.
+    still = api.get(
+        "/v1/auth/session", headers={"Authorization": f"Bearer {attacker}"}
+    ).json()
+    assert still["user_id"] == attacker_id
+    assert still.get("email") in (None, ""), "почта жертвы не должна повиснуть на атакующем"

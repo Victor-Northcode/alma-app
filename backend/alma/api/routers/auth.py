@@ -148,11 +148,33 @@ async def request_magic_link(
         "sent": True,
         "expires_in_minutes": settings().magic_link_minutes,
     }
-    if not delivered and not settings().is_production:
-        # Development has no mail provider configured. Returning the link
-        # keeps the flow usable locally; production never reaches this.
+    if not delivered and _may_show_debug_token():
+        # Локальной разработке нужен работающий вход без почтового провайдера.
+        # Условие — **разрешение, а не отрицание одного слова**: раньше здесь
+        # стояло `not is_production`, то есть всё, что не названо ровно
+        # "production"/"prod", отдавало рабочий токен входа прямо в JSON. Стенд
+        # с ALMA_ENV=staging и без ключа почты раздавал бы вход в любой аккаунт
+        # тому, кто знает адрес.
         response["debug_token"] = token
     return response
+
+
+def _may_show_debug_token() -> bool:
+    """Можно ли вернуть токен входа в теле ответа.
+
+    Два условия разом: окружение из **белого списка** локальных и локальный же
+    адрес сервиса. Белый список, а не чёрный: неизвестное имя окружения — повод
+    молчать, а не повод считать его песочницей. Адрес — вторая половина замка:
+    стенд, которому забыли сменить ALMA_ENV, обычно уже смотрит наружу, и по
+    адресу это видно.
+    """
+    config = settings()
+    return config.environment.lower() in {
+        "development",
+        "dev",
+        "local",
+        "test",
+    } and ("localhost" in config.base_url or "127.0.0.1" in config.base_url)
 
 
 @router.post("/magic-link/consume", response_model=SessionOut)
@@ -177,13 +199,31 @@ async def consume_magic_link(
     link.used_at = utcnow()
     await session.flush()
 
+    # **Гость берётся только тот, кто предъявил токен вот этим запросом.**
+    #
+    # Здесь стояла подмена: если ссылку запросили «в другой вкладке», код
+    # доставал сохранённого в строке гостя и предпочитал его кликнувшему.
+    # Намерение было доброе — не потерять карту, посчитанную до входа, — а
+    # следствие открывало захват чужого аккаунта целиком.
+    #
+    # Разбор атаки. Никто не мешает попросить ссылку на **чужой** адрес: в
+    # строку `MagicLink` при этом пишется гость просящего. Жертве уходит
+    # настоящее письмо с нашего домена, она открывает свою почту и жмёт свою
+    # кнопку — а подмена подставляет в `sign_in` гостя атакующего. Дальше
+    # `accounts.sign_in` либо вешает почту жертвы прямо на строку атакующего,
+    # либо сливает её аккаунт с этой строкой; в обоих случаях старый гостевой
+    # токен атакующего (90 дней) с этой секунды аутентифицирует его как
+    # жертву — со всей картой рождения, беседами, покупками и правом удалить
+    # аккаунт. Ни одного «взлома» не требуется: только знание чужого адреса.
+    #
+    # Поэтому сохранённый идентификатор используется ровно как **сверка**, а
+    # не как источник личности: совпал с кликнувшим — хорошо, разошёлся —
+    # игнорируется молча. Цена честная и мелкая: тот, кто попросил ссылку на
+    # телефоне и открыл письмо на компьютере, войдёт на компьютере в пустой
+    # аккаунт, а карта останется в госте телефона и присоединится к аккаунту
+    # при первом же входе с самого телефона. Данные не теряются — сдвигается
+    # момент склейки.
     guest = user if user.is_guest else None
-    if link.guest_user_id and (guest is None or guest.id != link.guest_user_id):
-        # The link was requested in another tab or on another device; prefer
-        # the guest that actually did the work over whoever is clicking.
-        stored = await accounts.resolve(session, link.guest_user_id)
-        if stored is not None and stored.is_guest:
-            guest = stored
 
     signed_in = await accounts.sign_in(
         session,
