@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -363,7 +364,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
           _opening = response.opening;
           _needsPartner = response.needsPartner;
           _product = LadderKey.from(response.product);
-          _advancing = false;
         });
         return;
       }
@@ -375,7 +375,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
       if (route == null || route.isCurrent) readingNow.value = true;
       setState(() {
         _reading = response.reading;
-        _advancing = false;
       });
       // Глава прочитана — счётчик системы на единицу больше. Считается
       // здесь, а не при открытии экрана: закрытая страница и ожидание письма —
@@ -389,6 +388,14 @@ class _ChapterScreenState extends State<ChapterScreen> {
         setState(() {
           _loading = false;
           _writing = false;
+          // **Признак перехода снимается здесь, а не по ответу сервера, — и
+          // это была заклиненная протяжка.** Он гасился в двух удачных
+          // ветках; отказ письма (мёртвая сеть, потолок месяца) выходил мимо
+          // них, и `_advancing` оставался поднятым навсегда. Дальше экран
+          // отказывал **каждой** протяжке молча: полоса не наливалась, тик не
+          // звучал, страница не листалась — «иногда не переходит». Конец
+          // загрузки — конец перехода, чем бы загрузка ни кончилась.
+          _advancing = false;
         });
       }
     }
@@ -523,7 +530,15 @@ class _ChapterScreenState extends State<ChapterScreen> {
     return null;
   }
 
-  /// Следующая глава, когда она есть и открыта.
+  /// Следующая глава оглавления — по номеру, а не по месту в массиве.
+  ///
+  /// **Права здесь не спрашиваются, и это не упущение.** Здесь стояло «когда
+  /// она есть и открыта» — обещание, которого код не давал никогда. Закрытая
+  /// следующая глава именуется хвостом и открывается протяжкой ровно так же:
+  /// на ней встаёт паттерн закрытой главы — половина текста и одна кнопка с
+  /// ценой ([_lockedPattern]). Это и есть дверь продукта, а хвост, молча
+  /// исчезающий на предпоследней странице, оставил бы человека в тупике без
+  /// объяснения. Отредактировано слово, а не поведение.
   ChapterEntry? get _next {
     final list = _list;
     final current = _entry;
@@ -624,8 +639,26 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// прямой ответ, рука это или инерция, — поэтому подтверждение здесь
   /// буквально то, чем оно всегда было по замыслу: рука, дотянувшая до метки.
   /// Инерция рисует полосу, но не переворачивает.
-  void _onOverscroll(double distance, {required bool byHand}) {
-    if (_advancing || _next == null || _loading) return;
+  ///
+  /// [next] — глава, чьё имя напечатано в хвосте **этого** кадра, а не та,
+  /// которую оглавление назовёт следующей на отпускании пальца. Один снимок на
+  /// обещание и на исполнение: человек тянет к тому имени, которое прочитал.
+  void _onOverscroll(double distance,
+      {required bool byHand, required ChapterEntry? next}) {
+    if (_advancing || next == null || _loading) {
+      // **Протяжку сейчас не принимаем — и не копим её.**
+      //
+      // Решётка держит подтверждённый упор до отпускания, а отпускание — это
+      // такое же уведомление прокрутки, и его здесь могло не стать: страница
+      // ушла в загрузку (возврат с витрины перечитывает оглавление) ровно
+      // между «упор взят» и «палец ушёл». Упор оставался взведённым, и первый
+      // же следующий отскок резинки — уже на другой главе или с другим
+      // оглавлением — переворачивал страницу сам, без руки и не туда. Решётка
+      // разряжается вместе с отказом принимать жест.
+      if (_latch.armed || _latch.committed) _latch.reset();
+      if (_pull.value != 0) _pull.value = 0;
+      return;
+    }
     // Обычное чтение не трогает вообще ничего: пока за дно не тянут, тут нечему
     // меняться, и лишнее уведомление слушателю — это лишний кадр.
     if (distance == 0 && _pull.value == 0) return;
@@ -643,15 +676,18 @@ class _ChapterScreenState extends State<ChapterScreen> {
         // Тик тяжелее первого, чтобы рука почувствовала упор.
         HapticFeedback.mediumImpact();
       case PullEvent.advance:
-        _advance();
+        _advance(next);
       case PullEvent.none:
         break;
     }
   }
 
-  void _advance() {
-    final next = _next;
-    if (next == null) return;
+  /// Перевернуть страницу на [next] — ту главу, которую назвал хвост.
+  void _advance(ChapterEntry next) {
+    // Двух переворотов на одну протяжку не бывает: решётка отдаёт `advance`
+    // один раз, но уведомления прокрутки приходят пачкой, и признак взводится
+    // до всякого `await`.
+    if (_advancing) return;
     _pull.value = 0;
     _latch.reset();
     setState(() {
@@ -712,8 +748,19 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // Слоем, а не обёрткой вокруг содержимого: оборачивание меняло бы
       // глубину поддерева ровно в тот кадр, когда пергамент сменяется ночью, —
       // то есть на перелистывании, — и `AnimatedSwitcher` терял бы свой элемент
-      // вместе с начатой анимацией. В стопке второй ребёнок всегда `SafeArea`,
-      // и меняется только первый.
+      // вместе с начатой анимацией.
+      //
+      // **Слои помечены ключами, и без них слой не спасал.** Расчёт был на то,
+      // что второй ребёнок стопки всегда `SafeArea` и переживёт смену первого.
+      // Так не работает: разбор списка детей идёт с головы, и на первом же
+      // несовпадении (`GiltPage` → `NightSky`) он бросает попарное сличение и
+      // уходит в разбор по ключам — а **безключевые** дети остатка при этом
+      // гасятся все до одного. То есть каждое перелистывание сносило
+      // и заново собирало всё содержимое экрана: `AnimatedSwitcher` получал
+      // новый элемент и терял вместе с ним анимацию оседающей страницы —
+      // единственную, ради которой он тут стоит, — а уходящая глава исчезала
+      // мгновенно, вместо того чтобы уехать вниз за 420 мс. Ключи возвращают
+      // сличение: фон меняется, содержимое переживает смену.
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -726,30 +773,45 @@ class _ChapterScreenState extends State<ChapterScreen> {
             // (`s51`, `s52`), и это не смена оттенка: у рамы есть габарит, ради
             // которого у страницы появились поля 52/56 и посадка вклейки в
             // чистый центр. Правило расхождений холста однозначно — прав холст.
-            const GiltPage()
+            const GiltPage(key: ValueKey('surface'))
           else
             // Настроение заведено ровно для этого экрана: поле приглушено и
             // кометы нет, потому что продукт здесь — слова, а свет, идущий
             // поперёк страницы, мешает их читать.
             const NightSky(
+              key: ValueKey('surface'),
               mood: SkyMood.reading,
               seed: _skySeed,
               child: SizedBox.expand(),
             ),
           SafeArea(
+            key: const ValueKey('content'),
             bottom: false,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Padding(
-                  // **На бумаге шапка стоит по холсту, на ночи — по общему
-                  // полю.** Отсчёт у холста от верхнего края экрана (88), а
-                  // `SafeArea` уже опустила содержимое на вырез, поэтому здесь
-                  // остаток. `max` — для телефонов с высокой чёлкой: если
-                  // безопасная зона глубже 83 точек, кнопка съезжает вниз
-                  // вместе с ней, а не прячется под неё.
+                  // **По высоте шапка стоит по холсту, по левому краю — по
+                  // общему полю продукта.** Отсчёт у холста от верхнего края
+                  // экрана (88), а `SafeArea` уже опустила содержимое на
+                  // вырез, поэтому здесь остаток. `max` — для телефонов с
+                  // высокой чёлкой: если безопасная зона глубже 83 точек,
+                  // кнопка съезжает вниз вместе с ней, а не прячется под неё.
+                  //
+                  // **Слева здесь стояло поле колонки текста (52), и владелец
+                  // это снял:** «кнопка назад в главах — сдвинуть левее, сейчас
+                  // выглядит немного странно». Поле 52 заведено под ширину
+                  // строки чтения — 45–50 знаков, — и стрелке оно чужое:
+                  // кружок вставал на двадцать пять точек правее, чем «←» на
+                  // любом другом кадре продукта, и читался утопленным вглубь
+                  // страницы, а не кнопкой у края.
+                  //
+                  // Общее поле 22 — ровно то, от которого 44-точечная цель
+                  // начинается на анкете пары, на экране системы, в правовом
+                  // документе и в шапках витрин. Совпадает и центр знака:
+                  // 22 + 22 = 44 от края экрана всюду, включая эту страницу.
                   padding: EdgeInsets.fromLTRB(
-                    onParchment ? GiltPage.side - GiltPage.headPad : AlmaMetrics.pad,
+                    AlmaMetrics.pad,
                     onParchment
                         ? math.max(10, GiltPage.headTop - GiltPage.headPad - safeTop)
                         : 10,
@@ -828,7 +890,10 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // текста ещё нет, не бывает — на закрытой странице нить показывала бы
           // долю прочитанного от размытого филлера.
           if (_reading != null)
-            GiltThread(read: _read, counter: '$index / $total'),
+            GiltThread(
+                key: const ValueKey('thread'),
+                read: _read,
+                counter: '$index / $total'),
         ],
       ),
     );
@@ -978,11 +1043,33 @@ class _ChapterScreenState extends State<ChapterScreen> {
     final reading = _reading;
     if (reading == null) return const SizedBox.shrink();
 
+    // **Чья это страница и куда с неё ведёт хвост — снимается здесь, одним
+    // снимком на кадр.**
+    //
+    // `slug` — чтобы уведомления прокрутки принадлежали той главе, которая их
+    // родила. Смена главы не размонтирует старую страницу мгновенно: пока
+    // [AnimatedSwitcher] уводит её вниз, её прокрутка ещё жива и досматривает
+    // отскок резинки после протяжки — а её уведомления приходили в то же
+    // состояние, где уже стоит **следующая** глава. Свежесозданная страница
+    // получала от предшественницы «прочитано до конца»: нить у правого поля
+    // вставала полной, воронка засчитывала дочитанную бесплатную главу,
+    // которую никто не читал, а хвост оффера V1 (или приглашение V3) вырастал
+    // в середине первого экрана.
+    //
+    // `next` — чтобы хвост и переворот читали **одно и то же в один и тот же
+    // момент**. Имя следующей главы человек читает в хвосте («↓ Портрет ·
+    // тяни дальше»), и переворачивается страница ровно на неё; раньше переход
+    // спрашивал оглавление заново, уже на отпускании пальца, — то есть мог
+    // уйти не туда, куда звал напечатанный хвост, если оглавление перечитали
+    // между кадром и отпусканием (`_load(relist: true)` после витрины).
+    final slug = _showing;
     final next = _next;
     // ↑ дальше страница; поле верха ей ставит [_underMargin].
 
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) {
+        // Уведомление уходящей страницы — не про ту, что на экране.
+        if (slug != _showing) return false;
         final metrics = notification.metrics;
         if (!metrics.hasContentDimensions || metrics.maxScrollExtent <= 0) {
           return false;
@@ -999,7 +1086,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
         final past = metrics.pixels - metrics.maxScrollExtent;
         final byHand = notification is ScrollUpdateNotification &&
             notification.dragDetails != null;
-        _onOverscroll(past > 0 ? past : 0, byHand: byHand);
+        _onOverscroll(past > 0 ? past : 0, byHand: byHand, next: next);
         return false;
       },
       // **Цельная прокрутка, а не ленивый список — ради нити и пальца.**
@@ -1231,21 +1318,34 @@ class _ChapterScreenState extends State<ChapterScreen> {
           color: AlmaPalette.inkLight.withValues(alpha: 0.9), blurRadius: 4),
     ];
     return Column(children: [
+      // **Полоска рисуется, а не верстается — и это была причина жалобы на
+      // перелистывание.**
+      //
+      // Здесь стояли `ValueListenableBuilder` и `FractionallySizedBox`:
+      // ширина налива менялась размером виджета, то есть **вёрсткой внутри
+      // самой прокрутки**, и менялась на каждом кадре протяжки. Кадр выходил
+      // такой: палец тянет за дно → уведомление прокрутки → налив получает
+      // новую ширину → колонка главы перевёрстывается → область прокрутки
+      // пересчитывает свои размеры прямо посреди живого жеста — и
+      // `RangeMaintainingScrollPhysics` возвращает дотяжку на ту величину,
+      // какой она была на прошлой вёрстке. Дотяжка переставала расти за
+      // пальцем: она замирала на первых точках, порог 130 не брался, и глава
+      // не переворачивалась — «иногда с главы на главу неправильно переходит
+      // именно вот этим свайпом». Иногда — потому что это гонка вёрстки с
+      // жестом, и выигрывает она не всегда.
+      //
+      // Проверено в пробирке на обеих физиках (iOS и Android): та же протяжка
+      // даёт 196 точек дотяжки, когда налив рисуется, и ровно 0, когда он
+      // верстается. Перестройка **без** смены размера (только цвет) и
+      // перевёрстка **вне** прокрутки жесту не мешают — мешает именно вёрстка
+      // внутри неё.
+      //
+      // Поэтому полоса — холст с `repaint: _pull`: ни сборки, ни вёрстки,
+      // только перерисовка 64×2 точек.
       SizedBox(
         width: 64,
-        child: Stack(children: [
-          Container(height: 2, color: AlmaPalette.ink.withValues(alpha: 0.15)),
-          // Слушает **только** полоска. Всё остальное в хвосте — стрелка, имя
-          // следующей главы, подсказка — от протяжки не зависит и перестройки
-          // не заслуживает.
-          ValueListenableBuilder<double>(
-            valueListenable: _pull,
-            builder: (context, pull, _) => FractionallySizedBox(
-              widthFactor: (pull / _commitMark).clamp(0.0, 1.0),
-              child: Container(height: 2, color: AlmaPalette.goldDeep),
-            ),
-          ),
-        ]),
+        height: 2,
+        child: CustomPaint(painter: _PullBar(_pull, mark: _commitMark)),
       ),
       const SizedBox(height: 12),
       Text('↓',
@@ -1264,6 +1364,36 @@ class _ChapterScreenState extends State<ChapterScreen> {
       const SizedBox(height: 40),
     ]);
   }
+}
+
+/// Налив полосы протяжки — 64×2 точки, рисунком.
+///
+/// Живёт отдельным художником, а не виджетом, по причине, записанной у места
+/// вызова: любая **вёрстка** внутри прокрутки на кадре живого жеста гасит саму
+/// дотяжку, за которой эта полоса и следит. `repaint` — сам сигнал протяжки:
+/// холст перерисовывается по нему напрямую, минуя и сборку, и раскладку.
+class _PullBar extends CustomPainter {
+  _PullBar(this.pull, {required this.mark}) : super(repaint: pull);
+
+  final ValueListenable<double> pull;
+
+  /// Порог подтверждения: полная полоса — это взятый упор.
+  final double mark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rail = Paint()..color = AlmaPalette.ink.withValues(alpha: 0.15);
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), rail);
+    final filled = size.width * (pull.value / mark).clamp(0.0, 1.0);
+    if (filled <= 0) return;
+    canvas.drawRect(Rect.fromLTWH(0, 0, filled, size.height),
+        Paint()..color = AlmaPalette.goldDeep);
+  }
+
+  /// Перерисовку заказывает `repaint`, а не сравнение художников: сам объект
+  /// пересоздаётся только вместе со страницей.
+  @override
+  bool shouldRepaint(_PullBar old) => old.pull != pull || old.mark != mark;
 }
 
 
