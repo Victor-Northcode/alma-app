@@ -9,6 +9,7 @@ import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
+import '../../design/wheel.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
@@ -463,12 +464,17 @@ class _JourneyScreenState extends State<JourneyScreen> {
             // не даёт ввести невозможное число вовсе.
             Row(children: [
               Expanded(
-                child: _Wheel(
+                child: AlmaWheel(
                   key: const ValueKey('wheel.day'),
                   label: l.journeyCaptureDay,
-                  options: [for (var d = 1; d <= 31; d++) d],
-                  selected: _day,
-                  caption: (d) => '$d',
+                  // Подписи над колёсами анкеты нет: над ними стоит вопрос
+                  // шага, и «ДЕНЬ · МЕСЯЦ · ГОД» под «Когда вы родились?» —
+                  // это форма заявления, а не разговор. Голосу подпись
+                  // остаётся.
+                  showLabel: false,
+                  min: 1,
+                  max: 31,
+                  value: _day,
                   onChanged: (d) => setState(() => _day = d),
                 ),
               ),
@@ -476,19 +482,22 @@ class _JourneyScreenState extends State<JourneyScreen> {
               // в колонку по числу цифр не помещается.
               Expanded(
                 flex: 2,
-                child: _Wheel(
+                child: AlmaWheel(
                   key: const ValueKey('wheel.month'),
                   label: l.journeyCaptureMonth,
-                  options: [for (var m = 1; m <= 12; m++) m],
-                  selected: _month,
+                  showLabel: false,
+                  min: 1,
+                  max: 12,
+                  value: _month,
                   caption: (m) => _monthName(l.localeName, m),
                   onChanged: (m) => setState(() => _month = m),
                 ),
               ),
               Expanded(
-                child: _Wheel(
+                child: AlmaWheel(
                   key: const ValueKey('wheel.year'),
                   label: l.journeyCaptureYear,
+                  showLabel: false,
                   // **Годы идут вверх, как в эталоне, а не вниз.**
                   //
                   // Список шёл от «десять лет назад» вниз, и колесо открывалось
@@ -500,12 +509,10 @@ class _JourneyScreenState extends State<JourneyScreen> {
                   // Верхняя граница прежняя — десять лет назад: продукт для
                   // взрослых, и год рождения младенца это строка, которую
                   // прокручивают мимо, а не выбирают.
-                  options: [
-                    for (var y = _thisYear - 101; y <= _thisYear - 10; y++) y,
-                  ],
-                  selected: _year,
+                  min: _thisYear - 101,
+                  max: _thisYear - 10,
+                  value: _year,
                   fallback: _thisYear - 30,
-                  caption: (y) => '$y',
                   onChanged: (y) => setState(() => _year = y),
                 ),
               ),
@@ -531,21 +538,25 @@ class _JourneyScreenState extends State<JourneyScreen> {
                 ignoring: _timeUnknown,
                 child: Row(children: [
                   Expanded(
-                    child: _Wheel(
+                    child: AlmaWheel(
                       key: const ValueKey('wheel.hour'),
                       label: l.journeyHourLabel,
-                      options: [for (var h = 0; h <= 23; h++) h],
-                      selected: _hour,
+                      showLabel: false,
+                      min: 0,
+                      max: 23,
+                      value: _hour,
                       caption: (h) => h.toString().padLeft(2, '0'),
                       onChanged: (h) => setState(() => _hour = h),
                     ),
                   ),
                   Expanded(
-                    child: _Wheel(
+                    child: AlmaWheel(
                       key: const ValueKey('wheel.minute'),
                       label: l.journeyMinuteLabel,
-                      options: [for (var m = 0; m <= 59; m++) m],
-                      selected: _minute,
+                      showLabel: false,
+                      min: 0,
+                      max: 59,
+                      value: _minute,
                       caption: (m) => m.toString().padLeft(2, '0'),
                       onChanged: (m) => setState(() => _minute = m),
                     ),
@@ -900,191 +911,6 @@ class _Choice extends StatelessWidget {
           ]),
         ),
       );
-}
-
-/// Одно колесо анкеты.
-///
-/// Главное здесь — **пустое состояние**. Натив ради него отказался от колеса
-/// вовсе: «`DatePicker` всегда имеет значение, поэтому открывается на сегодня,
-/// и человек, пролиставший мимо, молча сообщил, что родился сегодня утром»
-/// (`JourneyControls.swift:145`). Дизайн-проект колесо вернул, но правило
-/// осталось: значение в полосе не считается выбранным, пока барабан не
-/// повернули. Иначе датой рождения половины людей стало бы то, на чём колесо
-/// открылось.
-///
-/// Отсюда вся приглушённость: невыбранное колесо тусклое целиком, и полоса
-/// выбора у него почти погашена. Раньше оно выглядело точно как выбранное —
-/// в окне стояло «1 января 1996» слоновой костью, а кнопка «дальше» была
-/// серой, и экран сам себе противоречил.
-///
-/// Свою же строку выбирают поворотом туда и обратно: барабан отдаёт значение,
-/// когда центральная строка сменилась, поэтому вернувшийся на место отдаёт то
-/// же число — но уже как выбранное.
-class _Wheel extends StatefulWidget {
-  const _Wheel({
-    super.key,
-    required this.label,
-    required this.options,
-    required this.selected,
-    required this.caption,
-    required this.onChanged,
-    this.fallback,
-  });
-
-  final String label;
-  final List<int> options;
-  final int? selected;
-
-  /// На чём открыться, пока ничего не выбрано, если середина списка не годится.
-  /// Году она не годится: середина диапазона в сто лет — это 1971, а середина
-  /// взрослой жизни — тридцать лет назад.
-  final int? fallback;
-  final String Function(int) caption;
-  final ValueChanged<int> onChanged;
-
-  @override
-  State<_Wheel> createState() => _WheelState();
-}
-
-class _WheelState extends State<_Wheel> {
-  late final FixedExtentScrollController _controller = FixedExtentScrollController(
-    initialItem: _initial,
-  );
-
-  /// Какая строка сейчас в полосе выбора. Нужна для лестницы прозрачности:
-  /// она считается от расстояния до центра, а не от того, выбрано ли значение.
-  late int _centre = _initial;
-
-  /// **Колесо открывается в середине списка, а не на первой строке.**
-  ///
-  /// Первая строка — это половина барабана, стоящая пустой: над «1 января»
-  /// ничего нет, и колонка из пяти строк показывает три. Эталон нарисован
-  /// полным, и полным он должен быть с первого кадра, до всякой прокрутки.
-  int get _initial {
-    final at = widget.selected ?? widget.fallback;
-    if (at == null) return widget.options.length ~/ 2;
-    final index = widget.options.indexOf(at);
-    return index < 0 ? widget.options.length ~/ 2 : index;
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  /// Высота строки. Пять строк в окне 148 — как в эталоне: там пять детей по
-  /// 25.5 с зазором 6, что даёт ту же плотность.
-  static const _extent = 148 / 5;
-
-  bool get _chosen => widget.selected != null;
-
-  /// Барабан хоть раз тронули пальцем. До этого он ничего не отдаёт.
-  bool _touched = false;
-
-  /// Полоса выбора зажигается вместе со значением. Пока значения нет, она
-  /// почти невидима — ровно как золотой кант нативного поля, который
-  /// появляется только у заполненного (`JourneyControls.swift:186`).
-  Color get _band => _chosen ? const Color(0x29C9AE6B) : const Color(0x0FC9AE6B);
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: widget.label,
-      value: widget.selected == null ? '' : widget.caption(widget.selected!),
-      child: SizedBox(
-        height: 148,
-        child: Stack(alignment: Alignment.center, children: [
-          // **Полоса выбора вчетверо бледнее, чем была.** Стояла в полный
-          // `hairlineGold`, и две золотые черты спорили с самим значением —
-          // глаз читал сначала рамку, потом цифру. В эталоне это едва заметная
-          // подсказка: `rgba(201,174,107,.16)`.
-          Container(
-            height: 34,
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: _band),
-                bottom: BorderSide(color: _band),
-              ),
-            ),
-          ),
-          NotificationListener<ScrollNotification>(
-            // **Значение отдаёт палец, а не барабан.**
-            //
-            // `onSelectedItemChanged` срабатывает на любое изменение
-            // центральной строки, включая то, которое человек не делал:
-            // барабан доезжает сам при появлении на экране, при возврате на
-            // шаг, при подстройке размеров. Именно так на шаге даты однажды
-            // оказалось выбрано «6 января 1925» с горящей кнопкой «дальше» —
-            // дата, которую никто не называл, готовая уехать на сервер и лечь
-            // в основание всех восьми систем.
-            //
-            // `dragDetails != null` отличает жест от всего остального: у
-            // прокрутки, начатой пальцем, они есть, у программной — нет.
-            onNotification: (notification) {
-              if (notification is ScrollStartNotification &&
-                  notification.dragDetails != null) {
-                _touched = true;
-              }
-              return false;
-            },
-            child: ListWheelScrollView.useDelegate(
-            controller: _controller,
-            itemExtent: _extent,
-            // Барабан почти плоский — таким он нарисован. Перспектива здесь
-            // мешает: колонка узкая, и завал крайних строк читается сбоем
-            // вёрстки, а не объёмом.
-            diameterRatio: 2.4,
-            perspective: 0.002,
-            physics: const FixedExtentScrollPhysics(),
-            onSelectedItemChanged: (index) {
-              // Лестница яркости следует за видимой строкой всегда — она
-              // описывает барабан, а не выбор.
-              setState(() => _centre = index);
-              if (!_touched) return;
-              HapticFeedback.selectionClick();
-              widget.onChanged(widget.options[index]);
-            },
-            childDelegate: ListWheelChildBuilderDelegate(
-              childCount: widget.options.length,
-              builder: (context, index) {
-                // **Лестница прозрачности — то, чего не хватало больше всего.**
-                //
-                // Раньше строка была либо выбранной, либо приглушённой одинаково,
-                // и колесо читалось плоским списком. В эталоне яркость падает со
-                // ступенькой на каждую строку от центра: 1 → .55 → .4. Именно
-                // это и делает столбик похожим на барабан, а не перспектива.
-                final away = (index - _centre).abs();
-                final color = _chosen && away == 0
-                    ? AlmaPalette.inkLight
-                    : AlmaPalette.body.withValues(
-                        alpha: switch ((_chosen, away)) {
-                          (true, 1) => 0.55,
-                          (true, _) => 0.4,
-                          // Невыбранное колесо всё целиком на ступень тусклее:
-                          // его центральная строка светит ровно как соседка
-                          // выбранного, и слоновой кости в ней нет.
-                          (false, 0) => 0.55,
-                          (false, 1) => 0.4,
-                          (false, _) => 0.3,
-                        },
-                      );
-                return Center(
-                  child: Text(
-                    widget.caption(widget.options[index]),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AlmaType.displayL.copyWith(fontSize: 19, color: color),
-                  ),
-                );
-              },
-            ),
-          ),
-          ),
-        ]),
-      ),
-    );
-  }
 }
 
 /// Шестой шаг: восемь ударов, за которые считаются восемь систем.

@@ -7,6 +7,7 @@ import 'package:alma/design/wheel.dart';
 import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/net/alma_client.dart';
 import 'package:alma/screens/systems/pair_add_screen.dart';
+import 'package:alma/screens/systems/people_screen.dart';
 import 'package:alma/state/session.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -318,6 +319,109 @@ void main() {
           reason: 'время, названное наполовину, — опечатка, а не ответ');
       expect(buttons.last.onTap, isNotNull,
           reason: 'выключить обе кнопки значило бы запереть лист');
+    });
+  });
+
+  /// Второй потребитель той же рамы — страница людей.
+  ///
+  /// Именно здесь дольше всего стоял `showModalBottomSheet` с
+  /// `backgroundColor: night700` и `ListView` из `ListTile`: та самая плоская
+  /// синяя плашка. Заперто то, что ломается молча: **лист вместо списка** и
+  /// **когда число считается названным** — поворот барабана правит копию, а
+  /// поле экрана меняет только «Готово».
+  group('экран людей', () {
+    Widget peopleScreen() {
+      final transport = MockClient((request) async => http.Response(
+          jsonEncode(const <String, dynamic>{}), 200,
+          headers: {'content-type': 'application/json'}));
+      return SessionScope(
+        session: AlmaSession(AlmaClient(
+          baseUrl: Uri.parse('http://test.local'),
+          http: transport,
+        )),
+        child: MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: L.localizationsDelegates,
+          supportedLocales: L.supportedLocales,
+          home: const PeopleScreen(),
+        ),
+      );
+    }
+
+    /// Небо страницы дышит вечно — `pumpAndSettle` его не дождётся.
+    Future<void> settle(WidgetTester tester) async {
+      for (var i = 0; i < 12; i++) {
+        await tester.pump(const Duration(milliseconds: 60));
+      }
+    }
+
+    /// Открыть лист года. Год — единственная пилюля формы, чьё значение не
+    /// спутать ни с чьим: день и месяц открываются на единице оба.
+    Future<void> openYear(WidgetTester tester) async {
+      await tester.pumpWidget(peopleScreen());
+      await settle(tester);
+      await tester.ensureVisible(find.text('1990'));
+      await settle(tester);
+      await tester.tap(find.text('1990'));
+      await settle(tester);
+    }
+
+    /// Барабан листа и число, на котором он стоит.
+    final wheel = find.byType(ListWheelScrollView);
+    int atYear(WidgetTester tester) =>
+        1900 +
+        (tester.widget<ListWheelScrollView>(wheel).controller
+                as FixedExtentScrollController)
+            .selectedItem;
+
+    testWidgets('число называют общей рамой, а не списком платформы',
+        (tester) async {
+      await openYear(tester);
+      expect(find.byType(AlmaSheet), findsOneWidget,
+          reason: 'лист собирается общей рамой, а не заново на экране');
+      expect(find.byType(AlmaWheel), findsOneWidget);
+      expect(find.byType(ListTile), findsNothing,
+          reason: 'плоского списка цифр здесь больше нет');
+      // Заголовок листа — подпись самой пилюли, и второй раз то же слово над
+      // барабаном не печатается.
+      expect(find.text('Year'), findsOneWidget);
+      expect(find.text('YEAR'), findsNothing);
+      expect(
+          tester
+              .widget<AlmaButton>(find.descendant(
+                  of: find.byType(AlmaSheet),
+                  matching: find.byType(AlmaButton)))
+              .kind,
+          AlmaButtonKind.gold,
+          reason: 'единственное действие листа — золотое, как на W2');
+    });
+
+    testWidgets('«Готово» отдаёт то число, что стоит в полосе', (tester) async {
+      await openYear(tester);
+      await tester.drag(wheel, const Offset(0, -60));
+      await settle(tester);
+      final turned = atYear(tester);
+      expect(turned, isNot(1990), reason: 'барабан провернули');
+
+      await tester.tap(find.text('Done'));
+      await settle(tester);
+      expect(find.byType(AlmaSheet), findsNothing);
+      expect(find.text('$turned'), findsOneWidget);
+    });
+
+    testWidgets('лист, закрытый мимо «Готово», поля не трогает',
+        (tester) async {
+      await openYear(tester);
+      await tester.drag(wheel, const Offset(0, -60));
+      await settle(tester);
+      expect(atYear(tester), isNot(1990));
+
+      // Верх экрана — затемнение: та же дверь наружу, что свайп вниз.
+      await tester.tapAt(const Offset(400, 40));
+      await settle(tester);
+      expect(find.byType(AlmaSheet), findsNothing);
+      expect(find.text('1990'), findsOneWidget,
+          reason: 'поворот барабана — ещё не ответ, ответ даёт «Готово»');
     });
   });
 }

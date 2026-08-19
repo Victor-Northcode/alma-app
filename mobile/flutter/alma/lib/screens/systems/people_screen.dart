@@ -4,10 +4,12 @@ import 'package:intl/intl.dart';
 import '../../design/buttons.dart';
 import '../../design/emblem.dart';
 import '../../design/metrics.dart';
+import '../../design/night_sheet.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/section_label.dart';
 import '../../design/typography.dart';
+import '../../design/wheel.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
@@ -411,26 +413,51 @@ class _PeopleScreenState extends State<PeopleScreen> {
     );
   }
 
-  /// Число крутится колесом платформы — тем же, что в анкете на Android.
+  /// Число называют барабаном на общем листе — тем же, каким его называют в W2.
+  ///
+  /// Здесь стоял `showModalBottomSheet` с единственной настройкой
+  /// `backgroundColor: night700` и голым `ListView` из `ListTile`: плоская
+  /// синяя плашка поверх неба и список цифр системным шрифтом. Ровно это на
+  /// экране совместимости владелец назвал «просто синим экраном». Рама
+  /// (`design/night_sheet.dart`) и барабан (`design/wheel.dart`) теперь общие,
+  /// и своих чисел — ни высоты, ни цвета, ни радиуса — этот экран не держит.
+  ///
+  /// **Что не изменилось — когда значение считается названным.** Список отдавал
+  /// число нажатием на строку; лист отдаёт его нажатием «Готово». Закрытый
+  /// свайпом вниз или тапом по затемнению, он по-прежнему не меняет ничего:
+  /// поворот барабана правит копию, а не поле экрана.
   Widget _number(String label, int value, int min, int max, ValueChanged<int> onPick) =>
       InkWell(
         onTap: () async {
-          final picked = await showModalBottomSheet<int>(
+          var picked = value;
+          final done = await showAlmaSheet<bool>(
             context: context,
-            backgroundColor: AlmaPalette.night700,
-            builder: (context) => SizedBox(
-              height: 240,
-              child: ListView.builder(
-                itemCount: max - min + 1,
-                itemBuilder: (context, i) => ListTile(
-                  title: Text('${min + i}',
-                      textAlign: TextAlign.center, style: AlmaType.body),
-                  onTap: () => Navigator.of(context).pop(min + i),
-                ),
+            // Заголовок листа — подпись самой пилюли: своих слов лист не
+            // заводит, он называет то, по чему постучали. Поэтому и подпись
+            // над барабаном погашена — иначе одно слово стояло бы дважды.
+            title: label,
+            builder: (context, refresh) => [
+              AlmaWheel(
+                label: label,
+                showLabel: false,
+                min: min,
+                max: max,
+                value: picked,
+                // `refresh`, а не голое присваивание: `value` барабана читает
+                // ещё и `Semantics`, и без перестройки голос называл бы то
+                // число, на котором лист открылся, сколько его ни крути.
+                onChanged: (v) => refresh(() => picked = v),
               ),
-            ),
+              const SizedBox(height: 18),
+              // Единственное действие листа — золотое, как на W2: лист и есть
+              // отдельная поверхность со своим единственным ключом.
+              AlmaButton(
+                label: L.of(context).scrDone,
+                onTap: () => Navigator.of(context).pop(true),
+              ),
+            ],
           );
-          if (picked != null) onPick(picked);
+          if (done == true) onPick(picked);
         },
         child: Container(
           height: 54,
