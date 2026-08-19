@@ -179,10 +179,18 @@ async def test_a_chapter_truncated_every_time_carries_what_it_cost(natal):
             result=natal, chapter=chapter, provider=provider, model="claude-opus-5"
         )
 
-    assert len(provider.calls) == writer.MAX_ATTEMPTS
+    # **Число попыток здесь перестало быть тремя, и это не ослабление.** С
+    # 19.08.2026 писатель начинает со средней ступени обдумывания и
+    # останавливается, когда менять больше нечего: ни потолка поднять, ни
+    # ступени убавить. Тема этого теста — не счётчик попыток, а деньги: сколько
+    # бы их ни состоялось, все они оплачены и все уезжают вместе с отказом.
+    made = len(provider.calls)
+    assert 1 <= made <= writer.MAX_ATTEMPTS
     spend = getattr(caught.value, "spend", None)
     assert spend is not None, "отказ ушёл наружу без цены прогона"
-    assert spend.output_tokens == 400 * writer.MAX_ATTEMPTS
+    assert spend.output_tokens == 400 * made, (
+        "в цене прогона учтены не все состоявшиеся попытки"
+    )
     assert spend.cents > 0
 
 
@@ -224,7 +232,10 @@ def test_a_chapter_truncated_every_time_still_moves_the_month_ledger(
 
     assert response.status_code == 503, response.text
     assert response.json()["detail"]["error"] == "ai_unavailable"
-    assert len(scripted.calls) == writer.MAX_ATTEMPTS
+    # Столько, сколько было чем отличаться, а не ровно три — см. довод у
+    # `test_a_chapter_truncated_every_time_carries_what_it_cost`. Тема здесь —
+    # что книга расходов сдвинулась, а не сколько было попыток.
+    assert 1 <= len(scripted.calls) <= writer.MAX_ATTEMPTS
     assert _month_spend(user_id) > 0.0, (
         "три настоящие генерации, и в счёте аккаунта ноль — потолок месяца "
         "такого расхода не видит вовсе"

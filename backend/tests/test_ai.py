@@ -1909,11 +1909,17 @@ async def test_a_chapter_truncated_every_time_is_still_reported(natal):
         responses=[AnswerTruncated("cut off") for _ in range(writer.MAX_ATTEMPTS)]
     )
 
-    with pytest.raises(AnswerTruncated):
+    with pytest.raises(AnswerTruncated) as caught:
         await writer.write(
             result=natal, chapter=chapter, provider=provider, model="claude-opus-5"
         )
-    assert len(provider.calls) == writer.MAX_ATTEMPTS
+    # **Не три, а «столько, сколько было чем отличаться».** С 19.08.2026 писатель
+    # начинает со средней ступени обдумывания, и когда ни потолок поднять, ни
+    # ступень убавить, он останавливается вместо того, чтобы купить ту же
+    # неудачу ещё раз. Существенное здесь не число попыток, а два свойства,
+    # ради которых тест написан: цикл конечен, и наружу выходит именно обрыв.
+    assert 1 <= len(provider.calls) <= writer.MAX_ATTEMPTS
+    assert isinstance(caught.value, AnswerTruncated)
 
 
 async def test_an_attempt_that_wrote_nothing_never_repeats_itself(natal):
@@ -1933,6 +1939,17 @@ async def test_an_attempt_that_wrote_nothing_never_repeats_itself(natal):
     So this asserts the property rather than the mechanism: *no two attempts may
     be identical*. Whether the difference is a bigger ceiling or less
     deliberation is the writer's business; repeating a known failure is not.
+
+    **19.08.2026 свойство стало строже, и ожидание пришлось поправить.** Пока
+    лестница обдумывания начиналась с «пусть модель решает сама», три попытки
+    были тремя разными запросами. Со старта `medium` ступеней остаётся одна, и
+    третья попытка была бы побайтно второй. Писатель теперь не делает её вовсе:
+    когда ни потолок поднять, ни обдумывание убавить, он отказывается сразу.
+    Поэтому попыток тут две, а не три. Наружу выходит то же `AnswerTruncated`,
+    а не общий отказ: оно называет модель и потолок, и без них оператор не
+    поймёт, какое число менять. Требование «израсходуй все три» было следствием
+    прежней лестницы, а не свойством продукта: лишняя оплаченная копия того же
+    провала — это ровно то, от чего тест и написан.
     """
     from alma.ai.provider import AnswerTruncated
 
@@ -1959,10 +1976,14 @@ async def test_an_attempt_that_wrote_nothing_never_repeats_itself(natal):
         )
 
     seen = [(call["max_tokens"], call["effort"]) for call in provider.calls]
-    assert len(seen) == writer.MAX_ATTEMPTS
     assert len(set(seen)) == len(seen), (
         f"two attempts asked for the same thing and failed the same way: {seen}"
     )
+    assert 1 <= len(seen) <= writer.MAX_ATTEMPTS, seen
+    # И ни одна попытка не начинается с «пусть модель решает сама»: именно это
+    # значение израсходовало весь потолок на размышление и не написало ни слова
+    # в двух главах из трёх на живом замере.
+    assert all(effort in writer.EFFORT_LADDER for _room, effort in seen), seen
 
 
 async def test_her_own_broken_sentences_are_not_read_back_to_her(natal):
@@ -2230,3 +2251,51 @@ def test_a_retry_still_fits_after_the_complaint_lengthens_the_prompt():
                         paid=paid,
                         scale=1.0,
                     )
+
+
+async def test_no_generation_starts_with_unbounded_deliberation(natal):
+    """Ни один вызов не начинается с «пусть модель решает сама».
+
+    **Замер 19.08.2026, живая модель, ключ продукта.** Из трёх глав на этом
+    значении две израсходовали весь потолок вывода на размышление и **не
+    написали ни слова**, будучи полностью оплаченными; третья писалась 37
+    секунд за 6.62¢. Та же глава со средней ступени — 22 секунды, 3.76¢ и на
+    шестьдесят слов длиннее. По базе доля размышления в оплаченном выводе —
+    79–81 % при одной попытке, то есть за обдумывание платили вчетверо больше,
+    чем за то, что человек прочтёт.
+
+    Значение легко вернуть одной строкой, и вернётся оно тихо: продукт не
+    падает от него, он просто дорожает и замедляется. Поэтому сторож.
+    """
+    chapter = chapters.find("natal", "core")
+    offered = chapters.relevant_factors(chapter, natal.factors)
+    provider = ScriptedProvider(
+        responses=[_reply([("You lead with this.", offered[:1]),
+                           ("And this.", offered[1:2])])]
+    )
+    await writer.write(
+        result=natal, chapter=chapter, provider=provider, model="claude-sonnet-5"
+    )
+    assert provider.calls, "вызова не было — проверять нечего"
+    for call in provider.calls:
+        assert call["effort"] in writer.EFFORT_LADDER, (
+            f"генерация начата с усилия {call['effort']!r}: «пусть модель решает "
+            "сама» стоило вдвое дороже и вдвое дольше, а в двух случаях из трёх "
+            "не давало ни слова"
+        )
+
+
+def test_the_showcase_thinks_less_than_a_paid_chapter():
+    """Сорок слов витрины — самое дешёвое место, где можно не обдумывать.
+
+    Вызовов этих больше всех прочих вместе взятых: до сорока на каждого, кто
+    просто листает продукт и ничего не купил. Русский абзац на средней ступени
+    замерен в 30 секунд и 4.92¢ **за сорок слов**; на низкой — 15 секунд и
+    1.90¢. Платная глава остаётся на средней: там низкая давала текст короче
+    заказанного, то есть экономила на том, за что заплачено.
+    """
+    ladder = writer.EFFORT_LADDER
+    assert ladder.index(writer.SHOWCASE_EFFORT) > ladder.index(writer.DEFAULT_EFFORT), (
+        "витрина обдумывает столько же, сколько платная глава, или больше"
+    )
+    assert writer.SHOWCASE_EFFORT == ladder[-1]

@@ -452,6 +452,62 @@ def build_prompt(
     return "\n".join(lines)
 
 
+#: Сколько модель обдумывает ответ перед тем, как писать, — от большего к
+#: меньшему. Лестница односторонняя: ниже спускаются, вверх не поднимаются.
+#:
+#: **Прежде здесь не было ничего, и это стоило дороже всего остального.**
+#: Стартовым значением был `None` — «пусть модель решает сама», с доводом
+#: «такая проза этого заслуживает». Замер 19.08.2026 на живой модели показал,
+#: чем это оборачивается: из трёх глав две израсходовали весь потолок вывода на
+#: размышление и **не написали ни слова**, будучи полностью оплаченными; третья
+#: писалась 37 секунд за 6.62¢. Та же глава на `medium` — 22 секунды, 3.76¢ и
+#: на шестьдесят слов длиннее. То есть «сама решает» означало «дороже, дольше и
+#: чаще впустую», а не «тщательнее».
+#:
+#: По базе доля размышления в оплаченном выводе — 79–81 % у всех трёх видов
+#: текста, при одной попытке. Платим вчетверо больше за обдумывание, чем за то,
+#: что человек прочтёт.
+EFFORT_LADDER: tuple[str, ...] = ("medium", "low")
+
+#: С чего начинает глава. `medium`, а не `low`: на замере `low` давал главу
+#: короче заказанного (412 слов против 518 при заказанных ~480), то есть
+#: экономил на том, за что человек заплатил.
+DEFAULT_EFFORT = "medium"
+
+#: С чего начинает открывающий абзац витрины. Сорок слов — там обдумывать
+#: нечего, а вызовов этих больше всех остальных вместе взятых: до сорока на
+#: каждого, кто просто листает продукт. Русский абзац на `medium` замерен в
+#: 30 секунд и 4.92¢ **за сорок слов**; на `low` — 15 секунд и 1.90¢.
+SHOWCASE_EFFORT = "low"
+
+
+def _at_the_bottom(effort: str | None) -> bool:
+    """Ниже спускаться некуда — значит следующая попытка попросит то же самое.
+
+    **Повторить неизменившийся запрос — это купить тот же отказ второй раз.**
+    Пока лестница начиналась с `None`, три попытки были тремя разными
+    запросами и вопрос не возникал. Со старта `medium` ступеней остаётся одна,
+    и третья попытка была бы побайтно второй: те же токены, то же усилие, тот
+    же результат — за те же деньги и то же ожидание.
+    """
+    return effort == EFFORT_LADDER[-1]
+
+
+def _turn_down(effort: str | None) -> str:
+    """Следующая ступень вниз. С последней — она же.
+
+    Прежняя строка была `"low" if effort == "medium" else "medium"`, то есть с
+    `low` поднимала обдумывание **обратно вверх** — а попадали в неё ровно
+    тогда, когда предыдущая попытка уже задохнулась в размышлении. Пока старт
+    был `None`, это читалось как «первое понижение»; со стартом `medium` это
+    стало бы качелями между двумя ступенями до конца попыток.
+    """
+    if effort not in EFFORT_LADDER:
+        return EFFORT_LADDER[0]
+    index = EFFORT_LADDER.index(effort)
+    return EFFORT_LADDER[min(index + 1, len(EFFORT_LADDER) - 1)]
+
+
 async def write(
     *,
     result: CalcResult,
@@ -464,6 +520,7 @@ async def write(
     ledger: cost.Ledger | None = None,
     register: str | None = None,
     reader_gender: str | None = None,
+    effort: str = DEFAULT_EFFORT,
 ) -> Written:
     """Generate one chapter, validating every claim it makes.
 
@@ -589,11 +646,6 @@ async def write(
 
     complaint: str | None = None
     last: validator.Verdict | None = None
-    #: How hard the model may think before writing. `None` is "you decide",
-    #: which is what prose this careful deserves; it is turned down only after
-    #: a call has proven it deliberates until there is nothing left to write
-    #: with. See the `wrote_nothing` branch below.
-    effort: str | None = None
 
     for attempt in range(1, MAX_ATTEMPTS + 1):
         prompt = build_prompt(
@@ -762,8 +814,31 @@ async def write(
                     # already proven it needs.
                     max_tokens = floor = raised
                     reason = "ceiling raised to %d" % max_tokens
+                elif _at_the_bottom(effort):
+                    # Ни потолка поднять, ни обдумывание убавить: следующая
+                    # попытка попросила бы ровно то же. Отказываемся сейчас,
+                    # а не после ещё одной оплаченной копии того же провала.
+                    log.warning(
+                        "chapter %s/%s attempt %d: nothing left to change, "
+                        "refusing instead of repeating the request",
+                        result.system, chapter.slug, attempt,
+                    )
+                    # Тем же исключением, а не своим: оно уже называет модель и
+                    # потолок — то единственное, по чему оператор понимает,
+                    # какое число менять. Обернуть его в общий отказ значило бы
+                    # сэкономить генерацию ценой диагноза.
+                    #
+                    # **И обязательно с ценой прогона.** Ниже она прикрепляется
+                    # на последней попытке; выходя раньше, мимо той строки, я
+                    # унёс отказ без цены — роутер увидел бы обычную
+                    # недоступность, ответил 503 мимо `_charge_anyway`, и
+                    # состоявшиеся генерации исчезли бы из счёта целиком. Ровно
+                    # тот случай, когда самый дорогой исход стоит аккаунту ноль,
+                    # а «повторить» можно жать бесконечно.
+                    exc.spend = _spent_since(tally, opening, model)
+                    raise
                 else:
-                    effort = "low" if effort == "medium" else "medium"
+                    effort = _turn_down(effort)
                     reason = "no ceiling left to buy, thinking turned down to %s" % effort
                 complaint = None
                 log.warning(
@@ -796,8 +871,21 @@ async def write(
                 if raised > max_tokens:
                     max_tokens = floor = raised
                     reason = "ceiling now %d" % max_tokens
+                elif _at_the_bottom(effort):
+                    # Та же причина, что и в ветке выше: жалоба здесь одна и та
+                    # же на каждой попытке, поэтому без нового потолка и без
+                    # ступени обдумывания следующий запрос повторяет прошлый.
+                    log.warning(
+                        "chapter %s/%s attempt %d: nothing left to change after a "
+                        "cut-off, refusing instead of repeating the request",
+                        result.system, chapter.slug, attempt,
+                    )
+                    # Тем же исключением и с ценой прогона — см. довод в ветке
+                    # выше; без цены самый дорогой исход стоит аккаунту ноль.
+                    exc.spend = _spent_since(tally, opening, model)
+                    raise
                 else:
-                    effort = "low" if effort == "medium" else "medium"
+                    effort = _turn_down(effort)
                     reason = (
                         "no ceiling left to buy at %d, thinking turned down to %s"
                         % (max_tokens, effort)

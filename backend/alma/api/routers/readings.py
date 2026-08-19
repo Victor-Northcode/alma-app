@@ -979,6 +979,10 @@ async def _write_opening(
             register="opening",
             memory=memory,
             reader_gender=reader_gender,
+            # Сорок слов витрины обдумывать нечего, а вызовов этих больше всех
+            # прочих вместе взятых — до сорока на каждого, кто просто листает.
+            # Довод и замер — у `writer.SHOWCASE_EFFORT`.
+            effort=writer.SHOWCASE_EFFORT,
         )
     except ReadingRefused as exc:
         # Три попытки состоялись и стоили денег — счёт двигается, как и у
