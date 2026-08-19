@@ -33,6 +33,19 @@ model than the one that gets called is a budget that has been checked against
 nothing. And the money is recorded on the refusal paths too — those are the
 ones that ran three generations rather than one, and while they recorded
 nothing the ledger could only see the requests that worked.
+
+*Соединения с базой на время генерации не существует.* Каждый путь здесь
+разрезан на три части: короткая транзакция на чтение (права, рождение,
+воспоминания, тариф, месячный потолок, кэш) — **коммит** — генерация без
+единого открытого соединения — вторая короткая транзакция на запись главы и
+счётчиков. Разрез не косметический: пул по умолчанию у SQLAlchemy 2.0 — 5
+соединений плюс 10 overflow, а генерация занимает 10–40 секунд, так что до
+правки воркер физически не мог вести больше пятнадцати генераций, и
+шестнадцатый запрос — включая `GET /v1/billing/catalogue` — ждал
+`pool_timeout` и получал 500. Замерено: пятнадцать одновременных генераций,
+`pool.checkedout() == 15`, дешёвый запрос умер через 30.0 секунды. Роуты
+поэтому не берут `SessionDep`, а берут `SessionReleased` — см. довод там же,
+в `db/session.py`: соединение держит не роут, а `deps.visitor`.
 """
 
 from __future__ import annotations
@@ -65,6 +78,7 @@ from ...calc.contract import cache_key
 from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...config import settings
 from ...db.models import ChatMessage, ChatThread, Memory, Reading, UsageCounter, User, utcnow
+from ...db.session import SessionReleased, session_scope
 from ..cache import result_cache
 from ..deps import (
     CurrentUser,
@@ -334,6 +348,35 @@ def _welcome(*, mid: str) -> Allowance:
     )
 
 
+async def _stored_reading(
+    session,
+    *,
+    user_id: str,
+    system: str,
+    chapter: str,
+    calc_key: str,
+    locale: str,
+) -> Reading | None:
+    """Уже написанная строка — или `None`.
+
+    Была замыканием внутри `read` и внутри `_locked_chapter`, потому что искать
+    её надо дважды: до замка и под ним. Стала функцией, когда сессия перестала
+    жить весь запрос: замыкание, поймавшее сессию, — ровно тот способ, которым
+    закрытая транзакция протаскивается в генерацию.
+    """
+    return (
+        await session.execute(
+            select(Reading).where(
+                Reading.user_id == user_id,
+                Reading.system == system,
+                Reading.chapter == chapter,
+                Reading.calc_key == calc_key,
+                Reading.locale == locale,
+            )
+        )
+    ).scalar_one_or_none()
+
+
 async def _calc(system: str, birth, **options) -> CalcResult:
     try:
         return compute_cached(system, birth, cache=result_cache(), **options)
@@ -440,10 +483,15 @@ async def list_chapters(
 async def read(
     payload: ReadingRequest,
     user: CurrentUser,
-    session: SessionDep,
     provider: ProviderDep,
+    _released: SessionReleased,
 ) -> dict:
-    """Fetch a chapter, writing it the first time it is asked for."""
+    """Fetch a chapter, writing it the first time it is asked for.
+
+    Сессии у этого роута нет. Всё, что читается из базы, читается короткими
+    `session_scope` ниже, и последний из них закрывается **до** вызова модели —
+    см. правило в шапке модуля.
+    """
     try:
         chapter = (
             chapter_defs.find(payload.system, payload.chapter)
@@ -495,18 +543,54 @@ async def read(
     # несколько, назови») стоит ниже, в `_partner`, и обязан остаться там —
     # иначе неоплативший человек с двумя партнёрами получит 422 вместо
     # пейволла и не узнает, что глава вообще продаётся.
-    pair = (
-        await partner_profile_id(session, user, payload.partner_profile_id)
-        if payload.system == "compatibility"
-        else None
-    )
-    access = (
-        entitlements.PAIR_WITHOUT_PROFILE
-        if payload.system == "compatibility" and pair is None and not chapter.free
-        else await entitlements.check(
-            session, user, payload.system, chapter=chapter.slug, partner_id=pair
+
+    # ── права и, для пары, кредит: первая короткая транзакция ──────────────
+    #
+    # Открывается и закрывается здесь целиком. Всё, что стоит времени —
+    # расчёт карты и вызов модели, — лежит ниже и уже без соединения.
+    async with session_scope() as session:
+        pair = (
+            await partner_profile_id(session, user, payload.partner_profile_id)
+            if payload.system == "compatibility"
+            else None
         )
-    )
+        access = (
+            entitlements.PAIR_WITHOUT_PROFILE
+            if payload.system == "compatibility" and pair is None and not chapter.free
+            else await entitlements.check(
+                session, user, payload.system, chapter=chapter.slug, partner_id=pair
+            )
+        )
+        # **Месячный кредит подписчика тратится здесь — на первой платной главе
+        # про нового человека, и больше нигде.**
+        #
+        # Почему не в `entitlements.check`: тот вызывается на каждом рендере
+        # оглавления и каждом обновлении хаба, и кредит, списываемый проверкой
+        # прав, утекал бы от одного взгляда на экран. Почему не в `covers`: там
+        # нет базы и нет права на запись. Единственное место, где «человек
+        # действительно получает новый отчёт», — момент перед генерацией.
+        #
+        # Порядок с `access` тоже не случаен: подписка **покрывает**
+        # совместимость (`scope="all"`), поэтому закрытая глава сюда не
+        # доходит, и решение «включённая проверка или $4.99 сверх» принимается
+        # ровно один раз — тут.
+        #
+        # Развилки `if chapter.free` здесь больше нет. Она вела в
+        # `_teaser_or_paywall` — отдельный бесплатный тизер «Притяжение» со
+        # своим капом на число новых людей в месяц. Владелец снял его
+        # 17.08.2026 словами «тизер и глава I пары — одно и то же»: теперь это
+        # обычная закрытая глава, и её открывающий абзац пишется тем же путём,
+        # что у остальных сорока.
+        #
+        # **Что изменил разрез сессии:** кредит коммитится до генерации, а не
+        # вместе с главой. Это к лучшему, а не поблажка — `credits.spend`
+        # выписывает бессрочный грант на эту пару, поэтому повтор после
+        # сорвавшейся генерации попадает в первую ветку
+        # `_pair_credit_or_paywall` и не стоит второго кредита. Раньше откат
+        # возвращал кредит, и человек платил им дважды за один отчёт.
+        if access.allowed and payload.system == "compatibility" and pair is not None:
+            await _pair_credit_or_paywall(session, user, pair)
+
     if not access.allowed:
         # `and not chapter.free` здесь больше нет, и это не упрощение ради
         # краткости: бесплатная глава физически не может прийти сюда с отказом —
@@ -515,61 +599,32 @@ async def read(
         # означало бы, что мы допускаем «бесплатная и закрытая», а такого
         # состояния нет.
         return await _locked_chapter(
-            payload, user, session, provider,
+            payload, user, provider,
             chapter=chapter, language=language, access=access, pair=pair,
         )
 
-    # **Месячный кредит подписчика тратится здесь — на первой платной главе про
-    # нового человека, и больше нигде.**
-    #
-    # Почему не в `entitlements.check`: тот вызывается на каждом рендере
-    # оглавления и каждом обновлении хаба, и кредит, списываемый проверкой прав,
-    # утекал бы от одного взгляда на экран. Почему не в `covers`: там нет базы и
-    # нет права на запись. Единственное место, где «человек действительно
-    # получает новый отчёт», — момент перед генерацией, и он здесь.
-    #
-    # Порядок с `access` тоже не случаен: подписка **покрывает** совместимость
-    # (`scope="all"`), поэтому закрытая глава выше до этой строки не доходит, и
-    # решение «включённая проверка или $4.99 сверх» принимается ровно один
-    # раз — тут.
-    #
-    # Развилки `if chapter.free` здесь больше нет. Она вела в
-    # `_teaser_or_paywall` — отдельный бесплатный тизер «Притяжение» со своим
-    # капом на число новых людей в месяц. Владелец снял его 17.08.2026 словами
-    # «тизер и глава I пары — одно и то же»: теперь это обычная закрытая глава,
-    # и её открывающий абзац пишется тем же путём, что у остальных сорока.
-    if payload.system == "compatibility" and pair is not None:
-        await _pair_credit_or_paywall(session, user, pair)
+    # ── рождение и партнёр: вторая короткая транзакция ─────────────────────
+    async with session_scope() as session:
+        birth = await resolve_birth(
+            session, user, profile_id=payload.profile_id, birth=payload.birth
+        )
+        options = _options_for(payload.system, payload.house_system)
+        if payload.system == "compatibility":
+            options["other"] = await _partner(session, user, payload)
 
-    birth = await resolve_birth(
-        session, user, profile_id=payload.profile_id, birth=payload.birth
-    )
-    options = _options_for(payload.system, payload.house_system)
-    if payload.system == "compatibility":
-        options["other"] = await _partner(session, user, payload)
+    # Расчёт — арифметика с кэшем в памяти, к базе не ходит. Держать ради него
+    # соединение незачем, и держать было дорого: скан транзитов измерен в
+    # 1.35 секунды, а это ровно тот путь, которым неподписчик открывает
+    # «Сегодня».
     result = await _calc(payload.system, birth, **options)
     calc_key = _reading_key(payload.system, birth, options, result, chapter)
-
-    async def _lookup() -> Reading | None:
-        return (
-            await session.execute(
-                select(Reading).where(
-                    Reading.user_id == user.id,
-                    Reading.system == payload.system,
-                    Reading.chapter == chapter.slug,
-                    Reading.calc_key == calc_key,
-                    Reading.locale == language,
-                )
-            )
-        ).scalar_one_or_none()
 
     lock_key = f"{user.id}:{payload.system}:{chapter.slug}:{calc_key}:{language}"
     try:
         async with _write_lock(lock_key):
             return await _read_or_write(
-                payload, user, session, provider, chapter=chapter,
+                payload, user, provider, chapter=chapter,
                 language=language, result=result, calc_key=calc_key,
-                lookup=_lookup,
             )
     finally:
         _prune_lock(lock_key)
@@ -646,7 +701,6 @@ def _locked_payload(
 async def _locked_chapter(
     payload: ReadingRequest,
     user,
-    session,
     provider,
     *,
     chapter,
@@ -655,6 +709,11 @@ async def _locked_chapter(
     pair: str | None,
 ) -> dict:
     """Закрытая глава со своим открывающим абзацем.
+
+    **Массовый бесплатный путь, и потому разрезанный тщательнее прочих.** Сюда
+    приходит каждый, кто открыл любую из сорока закрытых глав, — то есть
+    почти весь трафик продукта. Сессии у него нет: чтения идут короткими
+    `session_scope`, а `_write_opening` зовёт модель, не держа соединения.
 
     **Абзац — лучшее усилие, стена — обязательство.** Всё, что может пойти не
     так в генерации (модель молчит, ключа нет, месячный потолок аккаунта
@@ -689,62 +748,58 @@ async def _locked_chapter(
     # 1.35 секунды, и он же стоит за экраном «Сегодня», в который неподписчик
     # заходит каждый день. Считать его ради строки, которая уже лежит в базе,
     # значит платить секундой за каждое открытие уже написанного.
-    try:
-        birth = await resolve_birth(
-            session, user, profile_id=payload.profile_id, birth=payload.birth
-        )
-        options = _options_for(payload.system, payload.house_system)
-        if payload.system == "compatibility":
-            options["other"] = await _partner(session, user, payload)
-    except HTTPException as exc:
-        # Нет анкеты, нет времени рождения, партнёр не назван — всё это
-        # законные 4xx для *открытой* главы, где человек действительно должен
-        # что-то доделать. На закрытой они превращают пейволл в форму ввода, и
-        # человек не узнаёт, что глава продаётся.
-        log.info(
-            "no opening for %s/%s — nothing to write from: %s",
-            payload.system, chapter.slug, exc.detail,
-        )
-        return wall()
+    async with session_scope() as session:
+        try:
+            birth = await resolve_birth(
+                session, user, profile_id=payload.profile_id, birth=payload.birth
+            )
+            options = _options_for(payload.system, payload.house_system)
+            if payload.system == "compatibility":
+                options["other"] = await _partner(session, user, payload)
+        except HTTPException as exc:
+            # Нет анкеты, нет времени рождения, партнёр не назван — всё это
+            # законные 4xx для *открытой* главы, где человек действительно должен
+            # что-то доделать. На закрытой они превращают пейволл в форму ввода, и
+            # человек не узнаёт, что глава продаётся.
+            log.info(
+                "no opening for %s/%s — nothing to write from: %s",
+                payload.system, chapter.slug, exc.detail,
+            )
+            return wall()
 
     calc_key = _opening_key(payload.system, birth, options, chapter)
     stored_chapter = opening_chapter_id(chapter.slug)
 
-    async def _lookup() -> Reading | None:
-        return (
-            await session.execute(
-                select(Reading).where(
-                    Reading.user_id == user.id,
-                    Reading.system == payload.system,
-                    Reading.chapter == stored_chapter,
-                    Reading.calc_key == calc_key,
-                    Reading.locale == language,
-                )
-            )
-        ).scalar_one_or_none()
-
-    found = await _lookup()
-    if found is not None:
-        # **Второй заход бесплатен, и это половина решения владельца.** Абзац
-        # пишется один раз на главу и живёт вечно; человек, обошедший все сорок
-        # закрытых глав по третьему разу, не стоит нам ничего сверх первого
-        # обхода — ни модели, ни расчёта.
-        return wall(
-            opening=found.body,
-            cached=True,
-            created_at=found.created_at.isoformat(),
+    async with session_scope() as session:
+        found = await _stored_reading(
+            session, user_id=user.id, system=payload.system,
+            chapter=stored_chapter, calc_key=calc_key, locale=language,
         )
+        if found is not None:
+            # **Второй заход бесплатен, и это половина решения владельца.** Абзац
+            # пишется один раз на главу и живёт вечно; человек, обошедший все сорок
+            # закрытых глав по третьему разу, не стоит нам ничего сверх первого
+            # обхода — ни модели, ни расчёта.
+            return wall(
+                opening=found.body,
+                cached=True,
+                created_at=found.created_at.isoformat(),
+            )
 
     lock_key = f"{user.id}:{payload.system}:{stored_chapter}:{calc_key}:{language}"
     try:
         async with _write_lock(lock_key):
-            again = await _lookup()
-            if again is not None:
-                return wall(
-                    opening=again.body,
-                    cached=True,
-                    created_at=again.created_at.isoformat(),
+            async with session_scope() as session:
+                again = await _stored_reading(
+                    session, user_id=user.id, system=payload.system,
+                    chapter=stored_chapter, calc_key=calc_key, locale=language,
                 )
+                if again is not None:
+                    return wall(
+                        opening=again.body,
+                        cached=True,
+                        created_at=again.created_at.isoformat(),
+                    )
             try:
                 result = await _calc(payload.system, birth, **options)
             except HTTPException as exc:
@@ -757,10 +812,9 @@ async def _locked_chapter(
                 )
                 return wall()
             written = await _write_opening(
-                payload, user, session, provider,
+                payload, user, provider,
                 chapter=chapter_defs.opening_of(chapter), language=language,
                 result=result, calc_key=calc_key, stored_chapter=stored_chapter,
-                lookup=_lookup,
             )
     finally:
         _prune_lock(lock_key)
@@ -774,7 +828,6 @@ async def _locked_chapter(
 async def _write_opening(
     payload: ReadingRequest,
     user,
-    session,
     provider,
     *,
     chapter,
@@ -782,7 +835,6 @@ async def _write_opening(
     result: CalcResult,
     calc_key: str,
     stored_chapter: str,
-    lookup,
 ) -> tuple[dict, bool, str] | None:
     """Сорок слов, один раз на главу. `None`, если написать не вышло.
 
@@ -798,34 +850,60 @@ async def _write_opening(
     надо по-бесплатному, а писать — первый абзац главы, а не законченную
     бесплатную заметку. Это ровно тот случай, ради которого `register` и
     отделён от `paid` (см. `voice.system_prompt`).
+
+    **Три части, и середина без соединения.** Читается всё, что нужно модели;
+    транзакция коммитится; модель пишет; строка и счётчики ложатся во второй
+    транзакции. Это самый массовый бесплатный путь продукта — тот самый, ради
+    которого пятнадцати соединений и не хватало.
     """
     _cheap, mid, _strong = models()
-    tier = await entitlements.tier_of(session, user)
-    memory = await _recall(session, user)
 
+    # `entitlements.tier_of` отсюда убран: он читал три таблицы и никуда не
+    # уходил — абзац всегда пишется на средней модели и по бесплатному потолку,
+    # тир на это не влияет. Один лишний запрос на каждой закрытой главе, то
+    # есть на самом массовом пути продукта.
+
+    # ── чтения перед моделью ───────────────────────────────────────────────
+    async with session_scope() as session:
+        try:
+            # **Спрашивается до генерации, а не после.** У обычной главы этот
+            # вопрос стоит после письма, и там это безобидно: без анкеты туда не
+            # дойти. Сюда — дойти можно, рождением прямо в теле запроса, и тогда
+            # писать абзац, который некуда положить, значит заплатить за текст,
+            # который тут же выбросят.
+            profile_id = await _profile_id(session, user)
+            # **Абзац не платит из потолка на чтение, и это не поблажка.**
+            #
+            # Здесь стоял `_guard_month` — тот же ограничитель, что бережёт деньги
+            # от человека, читающего много. Но открывающий абзац не чтение: это
+            # витрина, единственное, чем закрытая глава продаётся. Отказав в нём
+            # ради семи десятых цента, мы получаем экран, где над размытием пусто,
+            # — и владелец увидел ровно это: «все эти страницы должны выглядеть
+            # таким образом: кусочек текста главы и заблюренная часть».
+            #
+            # Пустое место вместо начала не экономит, а отменяет продажу.
+            #
+            # Расход всё равно ограничен, и дважды. Абзац пишется один раз на главу
+            # и живёт в кэше навсегда — сорок одна глава это около тридцати центов
+            # за всю жизнь аккаунта. А от петли (сменил дату рождения — ключ расчёта
+            # другой — пиши заново) стоит [_opening_allowance] ниже.
+            await _opening_allowance(session, user)
+            memory = await _recall(session, user)
+            reader_gender = await _reader_gender(session, user, payload)
+        except HTTPException as exc:
+            # 429 счётчика витрины или 400 «сначала сохрани дату рождения». И
+            # то и другое — причина не написать абзац, а не причина не показать
+            # цену. Ловится **внутри** транзакции нарочно: счёт попыток,
+            # который `_opening_allowance` уже увеличил, обязан сохраниться, —
+            # иначе ограничитель петли сам себя обнуляет на каждом отказе.
+            log.warning(
+                "no opening for %s/%s: %s", result.system, chapter.slug,
+                getattr(exc, "detail", exc),
+            )
+            return None
+
+    # Соединения здесь нет — и это те самые 10–40 секунд.
     try:
-        # **Спрашивается до генерации, а не после.** У обычной главы этот
-        # вопрос стоит после письма, и там это безобидно: без анкеты туда не
-        # дойти. Сюда — дойти можно, рождением прямо в теле запроса, и тогда
-        # писать абзац, который некуда положить, значит заплатить за текст,
-        # который тут же выбросят.
-        profile_id = await _profile_id(session, user)
-        # **Абзац не платит из потолка на чтение, и это не поблажка.**
-        #
-        # Здесь стоял `_guard_month` — тот же ограничитель, что бережёт деньги
-        # от человека, читающего много. Но открывающий абзац не чтение: это
-        # витрина, единственное, чем закрытая глава продаётся. Отказав в нём
-        # ради семи десятых цента, мы получаем экран, где над размытием пусто,
-        # — и владелец увидел ровно это: «все эти страницы должны выглядеть
-        # таким образом: кусочек текста главы и заблюренная часть».
-        #
-        # Пустое место вместо начала не экономит, а отменяет продажу.
-        #
-        # Расход всё равно ограничен, и дважды. Абзац пишется один раз на главу
-        # и живёт в кэше навсегда — сорок одна глава это около тридцати центов
-        # за всю жизнь аккаунта. А от петли (сменил дату рождения — ключ расчёта
-        # другой — пиши заново) стоит [_opening_allowance] ниже.
-        await _opening_allowance(session, user)
         written = await writer.write(
             result=result,
             chapter=chapter,
@@ -835,13 +913,14 @@ async def _write_opening(
             paid=False,
             register="opening",
             memory=memory,
-            reader_gender=await _reader_gender(session, user, payload),
+            reader_gender=reader_gender,
         )
     except ReadingRefused as exc:
         # Три попытки состоялись и стоили денег — счёт двигается, как и у
-        # обычной главы. `_charge_anyway` откатывает сессию и коммитит сумму
-        # отдельно, поэтому после него возвращать можно только константу.
-        await _charge_anyway(session, user, cents=exc.spend.cents)
+        # обычной главы. `_charge_anyway` открывает свою короткую транзакцию:
+        # выбрасывать здесь больше нечего, потому что сессии на время генерации
+        # не было.
+        await _charge_anyway(user, cents=exc.spend.cents)
         log.warning(
             "no opening for %s/%s: %s", result.system, chapter.slug, exc
         )
@@ -853,58 +932,66 @@ async def _write_opening(
         # оплаченные попытки уходили в лог и никуда больше. Стена всё равно
         # отдаётся — экран с ценой обязан отрисоваться, — но бесплатной она
         # больше не бывает.
-        await _charge_anyway(session, user, cents=_truncated_cents(exc))
+        await _charge_anyway(user, cents=_truncated_cents(exc))
         log.warning(
             "no opening for %s/%s — truncated every attempt: %s",
             result.system, chapter.slug, exc,
         )
         return None
     except (cost.BudgetExceeded, ModelUnavailable, HTTPException) as exc:
-        # `HTTPException` здесь — это 429 месячного потолка из `_guard_month`
-        # или 400 «сначала сохрани дату рождения» из `_profile_id`. Ловятся
-        # вместе с остальными намеренно: и то и другое — причина не написать
-        # абзац, а не причина не показать цену.
+        # Потолок вызова и молчащий провайдер: причина не написать абзац, а не
+        # причина не показать цену.
         log.warning(
             "no opening for %s/%s: %s", result.system, chapter.slug,
             getattr(exc, "detail", exc),
         )
         return None
 
-    record = Reading(
-        user_id=user.id,
-        profile_id=profile_id,
-        system=result.system,
-        chapter=stored_chapter,
-        locale=language,
-        calc_key=calc_key,
-        engine_version=result.engine_version,
-        model=written.model,
-        body=written.as_dict(),
-        cited_factors=list(written.cited_factors),
-        input_tokens=written.spend.input_tokens,
-        output_tokens=written.spend.output_tokens,
-        cost_cents=written.spend.cents,
-    )
-    session.add(record)
-    await _count(session, user, "openings_written")
-    await _spend(session, user, written.spend.cents)
-    try:
-        await session.flush()
-    except IntegrityError:
-        # Другой воркер написал тот же абзац между нашим поиском и вставкой.
-        # Его слова побеждают, как и у обычной главы; наша генерация всё равно
-        # состоялась, поэтому сумма записывается заново после отката.
-        await session.rollback()
-        log.warning(
-            "lost the opening race for %s/%s — returning the stored copy",
-            result.system, chapter.slug,
+    # ── запись абзаца и счётчиков ──────────────────────────────────────────
+    async with session_scope() as session:
+        record = Reading(
+            user_id=user.id,
+            profile_id=profile_id,
+            system=result.system,
+            chapter=stored_chapter,
+            locale=language,
+            calc_key=calc_key,
+            engine_version=result.engine_version,
+            model=written.model,
+            body=written.as_dict(),
+            cited_factors=list(written.cited_factors),
+            input_tokens=written.spend.input_tokens,
+            output_tokens=written.spend.output_tokens,
+            cost_cents=written.spend.cents,
         )
+        session.add(record)
+        await _count(session, user, "openings_written")
         await _spend(session, user, written.spend.cents)
-        await session.flush()
-        theirs = await lookup()
-        if theirs is None:
-            return None
-        return theirs.body, True, theirs.created_at.isoformat()
+        try:
+            await session.flush()
+        except IntegrityError:
+            # Другой воркер написал тот же абзац между нашим поиском и вставкой.
+            # Его слова побеждают, как и у обычной главы; наша генерация всё равно
+            # состоялась, поэтому сумма записывается заново после отката.
+            #
+            # Гонка стала **шире**, а не уже: между поиском и вставкой теперь
+            # лежит закрытая транзакция, а не открытая. Поэтому эта ветка и
+            # обязана была остаться — она единственное, что стоит между двумя
+            # воркерами и 500-й на UNIQUE.
+            await session.rollback()
+            log.warning(
+                "lost the opening race for %s/%s — returning the stored copy",
+                result.system, chapter.slug,
+            )
+            await _spend(session, user, written.spend.cents)
+            await session.flush()
+            theirs = await _stored_reading(
+                session, user_id=user.id, system=result.system,
+                chapter=stored_chapter, calc_key=calc_key, locale=language,
+            )
+            if theirs is None:
+                return None
+            return theirs.body, True, theirs.created_at.isoformat()
 
     return written.as_dict(), False, utcnow().isoformat()
 
@@ -1030,14 +1117,12 @@ async def _reader_gender(session, user, payload) -> str | None:
 async def _read_or_write(
     payload: ReadingRequest,
     user,
-    session,
     provider,
     *,
     chapter,
     language: str,
     result: CalcResult,
     calc_key: str,
-    lookup,
 ) -> dict:
     """The half of `read` that must run one-at-a-time per reading key.
 
@@ -1045,42 +1130,61 @@ async def _read_or_write(
     wall in `read` has already answered 402 otherwise, before the chart was
     even computed. No `access` argument reaches here for that reason — the one
     thing it used to decide, the blurred-preview flag, no longer exists.
+
+    **Три части: прочитать и закоммитить, написать без соединения, записать.**
+    Между чтением и записью лежит `writer.write` — 10–40 секунд и до трёх
+    попыток, — и это ровно тот отрезок, который держал соединение пула. Замок
+    `_write_lock` снаружи по-прежнему один на ключ главы, а защита от
+    межпроцессной гонки — ветка `IntegrityError` ниже — обязана была остаться и
+    осталась: между поиском и вставкой теперь закрытая транзакция, то есть окно
+    гонки шире, чем было.
     """
-    stored = await lookup()
-    if stored is not None:
-        # Written once, returned forever. The reading a person paid for must
-        # say the same thing the second time they open it — and the request
-        # that lost the race to the lock wakes up exactly here, having spent
-        # nothing.
-        return {
-            "reading": stored.body,
-            "cached": True,
-            "created_at": stored.created_at.isoformat(),
-        }
+    # ── всё, что нужно прочитать до модели ────────────────────────────────
+    async with session_scope() as session:
+        stored = await _stored_reading(
+            session, user_id=user.id, system=payload.system,
+            chapter=chapter.slug, calc_key=calc_key, locale=language,
+        )
+        if stored is not None:
+            # Written once, returned forever. The reading a person paid for must
+            # say the same thing the second time they open it — and the request
+            # that lost the race to the lock wakes up exactly here, having spent
+            # nothing.
+            return {
+                "reading": stored.body,
+                "cached": True,
+                "created_at": stored.created_at.isoformat(),
+            }
 
-    # One fact — is this chapter the free sample? — chooses both the model and
-    # the ceiling that model is spent against, so the two cannot disagree.
-    # They used to. Every chapter went to the strong model while `writer.write`
-    # guarded it with `paid=not chapter.free`, i.e. against the $0.05 free
-    # ceiling, and the astrocartography sample carries eleven thousand
-    # characters of line descriptions: $0.0530 projected on Opus 5. It raised
-    # BudgetExceeded on the first attempt and answered 503, so the one chapter
-    # that exists to sell astrocartography could not be read by anybody, ever.
-    # The same prompt projects $0.0318 on the mid model.
-    _cheap, mid, strong = models()
-    model = mid if chapter.free else strong
+        # One fact — is this chapter the free sample? — chooses both the model
+        # and the ceiling that model is spent against, so the two cannot
+        # disagree. They used to. Every chapter went to the strong model while
+        # `writer.write` guarded it with `paid=not chapter.free`, i.e. against
+        # the $0.05 free ceiling, and the astrocartography sample carries eleven
+        # thousand characters of line descriptions: $0.0530 projected on Opus 5.
+        # It raised BudgetExceeded on the first attempt and answered 503, so the
+        # one chapter that exists to sell astrocartography could not be read by
+        # anybody, ever. The same prompt projects $0.0318 on the mid model.
+        _cheap, mid, strong = models()
+        model = mid if chapter.free else strong
 
-    tier = await entitlements.tier_of(session, user)
-    memory = await _recall(session, user)
-    await _guard_month(
-        session,
-        user,
-        tier=tier,
-        locale=language,
-        projected=_chapter_projection(
-            result, chapter, model=model, locale=language, memory=memory
-        ),
-    )
+        tier = await entitlements.tier_of(session, user)
+        memory = await _recall(session, user)
+        await _guard_month(
+            session,
+            user,
+            tier=tier,
+            locale=language,
+            projected=_chapter_projection(
+                result, chapter, model=model, locale=language, memory=memory
+            ),
+        )
+        reader_gender = await _reader_gender(session, user, payload)
+        # **Переехал сюда с той стороны генерации, и это исправление.** Стоял
+        # после письма, где «без анкеты туда не дойти» — неправда: рождение
+        # можно прислать прямо в теле запроса, и тогда мы платили за главу,
+        # которую некуда положить, и отвечали 400. Тот же 400, только до денег.
+        profile_id = await _profile_id(session, user)
 
     try:
         written = await writer.write(
@@ -1091,14 +1195,14 @@ async def _read_or_write(
             locale=language,
             paid=not chapter.free,
             memory=memory,
-            reader_gender=await _reader_gender(session, user, payload),
+            reader_gender=reader_gender,
         )
     except ReadingRefused as exc:
         # Charged before the refusal is raised. Three attempts really happened
         # and really cost money, and a ceiling that only sees the requests
         # that succeeded is not a ceiling on what an account can spend — it is
         # a ceiling on what an account can spend *usefully*.
-        await _charge_anyway(session, user, cents=exc.spend.cents)
+        await _charge_anyway(user, cents=exc.spend.cents)
         raise HTTPException(
             422, detail={"error": "reading_refused", "message": str(exc)}
         ) from exc
@@ -1124,7 +1228,7 @@ async def _read_or_write(
         # оставалось ничего. Месячный потолок при этом не двигался, так что
         # «повторить» можно было жать бесконечно, и каждый раз за те же деньги.
         # Ответ читателю тот же 503 с той же фразой: меняется счёт, а не экран.
-        await _charge_anyway(session, user, cents=_truncated_cents(exc))
+        await _charge_anyway(user, cents=_truncated_cents(exc))
         log.error(
             "every attempt at %s/%s was truncated: %s", payload.system, chapter.slug, exc
         )
@@ -1138,48 +1242,52 @@ async def _read_or_write(
             detail={"error": "ai_unavailable", "message": str(exc)},
         ) from exc
 
-    profile_id = await _profile_id(session, user)
-    record = Reading(
-        user_id=user.id,
-        profile_id=profile_id,
-        system=payload.system,
-        chapter=chapter.slug,
-        locale=language,
-        calc_key=calc_key,
-        engine_version=result.engine_version,
-        model=written.model,
-        body=written.as_dict(),
-        cited_factors=list(written.cited_factors),
-        input_tokens=written.spend.input_tokens,
-        output_tokens=written.spend.output_tokens,
-        cost_cents=written.spend.cents,
-    )
-    session.add(record)
-    await _count(session, user, "readings_written")
-    await _spend(session, user, written.spend.cents)
-    try:
-        await session.flush()
-    except IntegrityError:
-        # Another worker wrote the same reading between our lookup and our
-        # insert. Their words win — the promise is that a chapter says the
-        # same thing every time it is opened, and theirs is the copy already
-        # stored. Our generation still happened and still cost money, so the
-        # spend is re-recorded after the rollback wipes it.
-        await session.rollback()
-        log.warning(
-            "lost the reading race for %s/%s — returning the stored copy",
-            payload.system, chapter.slug,
+    # ── запись главы и счётчиков ──────────────────────────────────────────
+    async with session_scope() as session:
+        record = Reading(
+            user_id=user.id,
+            profile_id=profile_id,
+            system=payload.system,
+            chapter=chapter.slug,
+            locale=language,
+            calc_key=calc_key,
+            engine_version=result.engine_version,
+            model=written.model,
+            body=written.as_dict(),
+            cited_factors=list(written.cited_factors),
+            input_tokens=written.spend.input_tokens,
+            output_tokens=written.spend.output_tokens,
+            cost_cents=written.spend.cents,
         )
+        session.add(record)
+        await _count(session, user, "readings_written")
         await _spend(session, user, written.spend.cents)
-        await session.flush()
-        theirs = await lookup()
-        if theirs is not None:
-            return {
-                "reading": theirs.body,
-                "cached": True,
-                "created_at": theirs.created_at.isoformat(),
-            }
-        raise
+        try:
+            await session.flush()
+        except IntegrityError:
+            # Another worker wrote the same reading between our lookup and our
+            # insert. Their words win — the promise is that a chapter says the
+            # same thing every time it is opened, and theirs is the copy already
+            # stored. Our generation still happened and still cost money, so the
+            # spend is re-recorded after the rollback wipes it.
+            await session.rollback()
+            log.warning(
+                "lost the reading race for %s/%s — returning the stored copy",
+                payload.system, chapter.slug,
+            )
+            await _spend(session, user, written.spend.cents)
+            await session.flush()
+            theirs = await _stored_reading(
+                session, user_id=user.id, system=payload.system,
+                chapter=chapter.slug, calc_key=calc_key, locale=language,
+            )
+            if theirs is not None:
+                return {
+                    "reading": theirs.body,
+                    "cached": True,
+                    "created_at": theirs.created_at.isoformat(),
+                }
+            raise
 
     return {
         "reading": written.as_dict(),
@@ -1483,19 +1591,27 @@ def _truncated_cents(exc: AnswerTruncated) -> float:
     return spend.cents if spend is not None else 0.0
 
 
-async def _charge_anyway(session, user, *, cents: float) -> None:
-    """Record what a failed request already spent, and commit it.
+async def _charge_anyway(user, *, cents: float) -> None:
+    """Record what a failed request already spent, in a transaction of its own.
 
-    Two things have to happen in this order. The half-written request is
-    thrown away first — a `Reading` row with no body, or a question with no
-    answer, is worse than nothing — and *then* the money is written and
-    committed on its own. Without the rollback the money would be committed
-    alongside the wreckage; without the commit it would be rolled back with
-    it, which is what used to happen: the router raised its 422 before
-    reaching `_spend`, so the only requests the month ledger could see were
-    the ones that worked. The refusal path spends *more* than the success path
-    — it is the one that retried — so that is not a ceiling on what an account
-    can spend, only on what it can spend usefully.
+    The money is written and committed on its own, because otherwise it would
+    be rolled back with the failure — which is what used to happen: the router
+    raised its 422 before reaching `_spend`, so the only requests the month
+    ledger could see were the ones that worked. The refusal path spends *more*
+    than the success path — it is the one that retried — so that is not a
+    ceiling on what an account can spend, only on what it can spend usefully.
+
+    **Отката больше нет, и он больше не нужен.** Раньше эта функция начиналась
+    с `session.rollback()`: до разреза сессия жила весь запрос, и в ней уже
+    лежала половина неудачной работы — `Reading` без тела, вопрос без ответа, —
+    которую надо было выбросить до коммита денег. Теперь между чтением и
+    записью транзакции нет вовсе, поэтому выбрасывать нечего: всё, что было
+    прочитано, уже закоммичено, а записи ещё не начиналось. Свой
+    `session_scope` — это то же «деньги отдельно от обломков», только без
+    обломков.
+
+    Отсюда же исчез и `session` в подписи: передать его значило бы пронести
+    открытую транзакцию через генерацию, ради которой всё и затевалось.
 
     **Money only.** This used to take a `metric` and increment the question
     counter as well, so a turn that produced an error screen cost a free reader
@@ -1505,13 +1621,12 @@ async def _charge_anyway(session, user, *, cents: float) -> None:
     an answer about yourself — is the one the whole taxonomy was built on.
     """
     user_id = user.id
-    await session.rollback()
-
-    if cents:
+    log.warning("charging %s for a request that produced nothing: %.4f¢", user_id, cents)
+    if not cents:
+        return
+    async with session_scope() as session:
         row = await _counter_row(session, user_id, cost.SPEND_METRIC)
         row.amount = (row.amount or 0.0) + cents
-    log.warning("charging %s for a request that produced nothing: %.4f¢", user_id, cents)
-    await session.commit()
 
 
 async def _asked(session, user, allowance: Allowance) -> int:
@@ -1693,8 +1808,8 @@ def _chat_projection(
 @router.get("/natal/spheres")
 async def natal_spheres(
     user: CurrentUser,
-    session: SessionDep,
     provider: ProviderDep,
+    _released: SessionReleased,
     locale: str = Query(default="en", max_length=i18n.MAX_TAG),
     profile_id: str | None = Query(default=None),
 ) -> dict:
@@ -1710,11 +1825,24 @@ async def natal_spheres(
     the sphere's localised title, read from the same `i18n.chapter_words`
     table the chapter list uses, so the two screens can never disagree about
     what a sphere is called.
+
+    Разрезан так же, как глава, и по той же причине: экран натальной карты —
+    первый, который видит новый человек, и генерация здесь идёт на каждого.
     """
     from ...ai import spheres as spheres_module
 
     language = i18n.resolve(locale)
-    birth = await resolve_birth(session, user, profile_id=profile_id, birth=None)
+
+    def _titled(blocks: list[dict]) -> list[dict]:
+        out = []
+        for block in blocks:
+            words = i18n.chapter_words("natal", block["chapter"], locale=language)
+            out.append({**block, "title": words.title})
+        return out
+
+    async with session_scope() as session:
+        birth = await resolve_birth(session, user, profile_id=profile_id, birth=None)
+
     result = await _calc("natal", birth, house_system="placidus")
     # The same identity rule a chapter's key follows: the birth and the whole
     # factor list. The natal chart does not move, so this is stable per person
@@ -1725,83 +1853,65 @@ async def natal_spheres(
         factors="|".join(result.factors), house_system="placidus",
     )
 
-    stored = (
-        await session.execute(
-            select(Reading).where(
-                Reading.user_id == user.id,
-                Reading.system == "natal",
-                Reading.chapter == "spheres",
-                Reading.calc_key == calc_key,
-                Reading.locale == language,
-            )
+    async with session_scope() as session:
+        stored = await _stored_reading(
+            session, user_id=user.id, system="natal", chapter="spheres",
+            calc_key=calc_key, locale=language,
         )
-    ).scalar_one_or_none()
-
-    def _titled(blocks: list[dict]) -> list[dict]:
-        out = []
-        for block in blocks:
-            words = i18n.chapter_words("natal", block["chapter"], locale=language)
-            out.append({**block, "title": words.title})
-        return out
-
-    if stored is not None:
-        return {
-            "spheres": _titled(stored.body.get("spheres", [])),
-            "cached": True,
-            "locale": language,
-        }
+        if stored is not None:
+            return {
+                "spheres": _titled(stored.body.get("spheres", [])),
+                "cached": True,
+                "locale": language,
+            }
 
     # The same race the chapter route had: the natal screen and a fast reload
     # can both arrive before the first write lands. One waits; the other pays.
     lock_key = f"{user.id}:natal:spheres:{calc_key}:{language}"
     try:
         async with _write_lock(lock_key):
-            again = (
-                await session.execute(
-                    select(Reading).where(
-                        Reading.user_id == user.id,
-                        Reading.system == "natal",
-                        Reading.chapter == "spheres",
-                        Reading.calc_key == calc_key,
-                        Reading.locale == language,
-                    )
+            # ── чтения перед моделью ───────────────────────────────────────
+            async with session_scope() as session:
+                again = await _stored_reading(
+                    session, user_id=user.id, system="natal", chapter="spheres",
+                    calc_key=calc_key, locale=language,
                 )
-            ).scalar_one_or_none()
-            if again is not None:
-                return {
-                    "spheres": _titled(again.body.get("spheres", [])),
-                    "cached": True,
-                    "locale": language,
-                }
+                if again is not None:
+                    return {
+                        "spheres": _titled(again.body.get("spheres", [])),
+                        "cached": True,
+                        "locale": language,
+                    }
 
-            # The mid model, and the cheap one is gone from here: measured on
-            # the owner's own first run, the cheap model burned all three
-            # attempts on rules it was told about («ты был», an invented
-            # factor, «ты должен») and the natal screen said Alma is silent.
-            # Three failed cheap generations cost more than one good mid one.
-            _cheap, mid, _strong = models()
+                # The mid model, and the cheap one is gone from here: measured on
+                # the owner's own first run, the cheap model burned all three
+                # attempts on rules it was told about («ты был», an invented
+                # factor, «ты должен») and the natal screen said Alma is silent.
+                # Three failed cheap generations cost more than one good mid one.
+                _cheap, mid, _strong = models()
 
-            # **Тот же месячный гейт, что у любой другой генерации.**
-            #
-            # Здесь его не было вовсе, и это единственная генерация продукта,
-            # которая жила мимо `guard_month`. Расход она при этом честно
-            # записывала (`_spend` ниже), так что превью сфер тратило общий
-            # месячный потолок и само же в него не упиралось — оно только
-            # приближало стену, за которой откажут *другим* экранам.
-            #
-            # Дыра открывается правкой даты рождения: `calc_key` включает весь
-            # список факторов, поэтому каждая новая дата — новое превью и новая
-            # генерация, сколько угодно раз подряд. Бесплатность сфер это не
-            # отменяет: потолок тира и есть форма, в которой «бесплатно» здесь
-            # записано, — и кэш выше проверен раньше, так что уже написанное
-            # превью открывается и в месяц, потраченный до копейки.
-            await _guard_month(
-                session,
-                user,
-                tier=await entitlements.tier_of(session, user),
-                locale=language,
-                projected=_spheres_projection(result, model=mid, locale=language),
-            )
+                # **Тот же месячный гейт, что у любой другой генерации.**
+                #
+                # Здесь его не было вовсе, и это единственная генерация продукта,
+                # которая жила мимо `guard_month`. Расход она при этом честно
+                # записывала (`_spend` ниже), так что превью сфер тратило общий
+                # месячный потолок и само же в него не упиралось — оно только
+                # приближало стену, за которой откажут *другим* экранам.
+                #
+                # Дыра открывается правкой даты рождения: `calc_key` включает весь
+                # список факторов, поэтому каждая новая дата — новое превью и новая
+                # генерация, сколько угодно раз подряд. Бесплатность сфер это не
+                # отменяет: потолок тира и есть форма, в которой «бесплатно» здесь
+                # записано, — и кэш выше проверен раньше, так что уже написанное
+                # превью открывается и в месяц, потраченный до копейки.
+                await _guard_month(
+                    session,
+                    user,
+                    tier=await entitlements.tier_of(session, user),
+                    locale=language,
+                    projected=_spheres_projection(result, model=mid, locale=language),
+                )
+                profile_row_id = await _profile_id(session, user)
 
             try:
                 blocks, spend = await spheres_module.write(
@@ -1813,49 +1923,43 @@ async def natal_spheres(
                     detail={"error": "ai_unavailable", "message": str(exc)},
                 ) from exc
 
-            profile_row_id = await _profile_id(session, user)
-            record = Reading(
-                user_id=user.id,
-                profile_id=profile_row_id,
-                system="natal",
-                chapter="spheres",
-                locale=language,
-                calc_key=calc_key,
-                engine_version=result.engine_version,
-                model=mid,
-                body={"spheres": blocks},
-                cited_factors=sorted({f for b in blocks for f in b["factors"]}),
-                input_tokens=spend.input_tokens,
-                output_tokens=spend.output_tokens,
-                cost_cents=spend.cents,
-            )
-            session.add(record)
-            await _spend(session, user, spend.cents)
-            try:
-                await session.flush()
-            except IntegrityError:
-                await session.rollback()
-                log.warning("lost the spheres race — returning the stored copy")
+            # ── запись превью ─────────────────────────────────────────────
+            async with session_scope() as session:
+                record = Reading(
+                    user_id=user.id,
+                    profile_id=profile_row_id,
+                    system="natal",
+                    chapter="spheres",
+                    locale=language,
+                    calc_key=calc_key,
+                    engine_version=result.engine_version,
+                    model=mid,
+                    body={"spheres": blocks},
+                    cited_factors=sorted({f for b in blocks for f in b["factors"]}),
+                    input_tokens=spend.input_tokens,
+                    output_tokens=spend.output_tokens,
+                    cost_cents=spend.cents,
+                )
+                session.add(record)
                 await _spend(session, user, spend.cents)
-                await session.flush()
-                theirs = (
-                    await session.execute(
-                        select(Reading).where(
-                            Reading.user_id == user.id,
-                            Reading.system == "natal",
-                            Reading.chapter == "spheres",
-                            Reading.calc_key == calc_key,
-                            Reading.locale == language,
-                        )
+                try:
+                    await session.flush()
+                except IntegrityError:
+                    await session.rollback()
+                    log.warning("lost the spheres race — returning the stored copy")
+                    await _spend(session, user, spend.cents)
+                    await session.flush()
+                    theirs = await _stored_reading(
+                        session, user_id=user.id, system="natal", chapter="spheres",
+                        calc_key=calc_key, locale=language,
                     )
-                ).scalar_one_or_none()
-                if theirs is not None:
-                    return {
-                        "spheres": _titled(theirs.body.get("spheres", [])),
-                        "cached": True,
-                        "locale": language,
-                    }
-                raise
+                    if theirs is not None:
+                        return {
+                            "spheres": _titled(theirs.body.get("spheres", [])),
+                            "cached": True,
+                            "locale": language,
+                        }
+                    raise
 
             return {"spheres": _titled(blocks), "cached": False, "locale": language}
     finally:
@@ -1922,8 +2026,8 @@ async def thread(thread_id: str, user: CurrentUser, session: SessionDep) -> dict
 async def chat(
     payload: ChatRequest,
     user: CurrentUser,
-    session: SessionDep,
     provider: ProviderDep,
+    _released: SessionReleased,
 ) -> dict:
     """One turn of conversation, answered only from the chart."""
     # Тело живёт в `_chat_turn`, потому что у хода беседы теперь два входа:
@@ -1931,7 +2035,11 @@ async def chat(
     # `/chat/stream`, где те же шаги рассказываются по мере работы. Логика
     # одна на двоих намеренно: отдельная копия для стрима — это дыра мимо
     # квоты ровно в тот день, когда правят одну из копий.
-    return await _chat_turn(payload, user, session, provider)
+    #
+    # Передаётся идентификатор, а не строка пользователя: у хода теперь три
+    # своих транзакции, и `User`, загруженный в чужой сессии, — ровно то, что
+    # тянет за собой закрытую транзакцию. `/chat/stream` делал так и раньше.
+    return await _chat_turn(payload, user.id, provider)
 
 
 async def _chat_gate(session, user, *, locale: str, message: str = "") -> tuple[Allowance, str]:
@@ -2070,38 +2178,33 @@ def _stage_for(system: str, result: CalcResult) -> tuple[str, str] | None:
 
 async def _chat_turn(
     payload: ChatRequest,
-    user,
-    session,
+    user_id: str,
     provider,
     *,
     stage: Callable[[str, str], Awaitable[None]] | None = None,
 ) -> dict:
-    """Один ход беседы — под замком аккаунта и с коммитом внутри него.
+    """Один ход беседы — под замком аккаунта.
 
     Тело хода живёт в `_answer_one_turn`; здесь только то, без чего оно
     считается неверно при двух одновременных отправках. См. `_chat_slot`:
     и порция вопросов, и месячный потолок — это «прочитал, сравнил, много
     позже записал», и два хода, идущие рядом, читают один и тот же ноль.
 
-    Коммит стоит **здесь, а не в зависимости**, ровно по той же причине.
-    Зависимость коммитит после возврата из роута, то есть уже без замка, — и
-    следующий ход, взяв замок, читал бы счётчик своей сессией, не видя чужой
-    незафиксированной записи. Тогда замок сторожил бы порядок и не сторожил бы
-    число, что и есть исходная ошибка, только медленнее. Пути отказа сюда не
-    доходят: `_charge_anyway` уже откатил и закоммитил сам.
+    Коммит стоит **внутри замка**, и это то же требование, что и было, просто
+    записанное иначе. Раньше здесь стоял явный `session.commit()`, потому что
+    сессия жила весь запрос и её коммитила зависимость — уже без замка, — и
+    следующий ход читал бы счётчик, не видя чужой незафиксированной записи.
+    Теперь пишущий `session_scope` внутри `_answer_one_turn` коммитит сам и
+    делает это, не выходя отсюда, так что замок по-прежнему сторожит число, а
+    не только порядок.
     """
-    async with _chat_slot(user.id):
-        answered = await _answer_one_turn(
-            payload, user, session, provider, stage=stage
-        )
-        await session.commit()
-        return answered
+    async with _chat_slot(user_id):
+        return await _answer_one_turn(payload, user_id, provider, stage=stage)
 
 
 async def _answer_one_turn(
     payload: ChatRequest,
-    user,
-    session,
+    user_id: str,
     provider,
     *,
     stage: Callable[[str, str], Awaitable[None]] | None = None,
@@ -2113,13 +2216,95 @@ async def _answer_one_turn(
 
     Зовётся только из `_chat_turn`, под замком аккаунта: всё, что здесь
     прочитано из счётчиков, обязано оставаться правдой до самой записи.
+
+    **Три транзакции и восемь расчётов между ними.** Первая читает всё, что
+    нужно модели, — квоту, рождение, партнёра, историю треда, воспоминания,
+    список написанных глав. Затем восемь систем считаются без базы: транзиты
+    одни стоят 1.35 секунды скана, и держать ради них соединение было чистым
+    убытком. Вторая транзакция спрашивает месячный потолок — ей нужна проекция,
+    а проекции нужны посчитанные системы. Третья пишет вопрос, ответ, счётчик и
+    расход, и она же коммитит их одним куском.
+
+    **Вопрос человека пишется в третьей, а не в первой**, и это не мелочь:
+    вопрос без ответа хуже, чем ничего, — правило, которое до разреза держал
+    откат в `_charge_anyway`. Теперь его держит порядок: если генерация не
+    состоялась, в треде не появляется ни строки. На то, что видит модель, это
+    не влияет — `history` и раньше собиралась **до** вставки вопроса.
     """
-    allowance, tier = await _chat_gate(
-        session, user, locale=payload.locale, message=payload.message
-    )
+    # ── 1. всё, что нужно прочитать до модели ─────────────────────────────
+    async with session_scope() as session:
+        user = await session.get(User, user_id)
+        if user is None:
+            # Аккаунт удалён между проверкой токена и этой строкой. Раньше эта
+            # ветка жила только в `/chat/stream`, где сессия запроса умирала
+            # раньше генератора; теперь у обоих входов транзакция своя, и
+            # проверка нужна обоим.
+            raise HTTPException(
+                status.HTTP_401_UNAUTHORIZED, detail="no such account"
+            )
+
+        allowance, tier = await _chat_gate(
+            session, user, locale=payload.locale, message=payload.message
+        )
+        birth = await resolve_birth(
+            session, user, profile_id=payload.profile_id, birth=None
+        )
+        # Партнёр читается один раз и до расчётов, а не внутри цикла по восьми
+        # системам: цикл — это секунды арифметики, и запрос в базу посреди него
+        # означал бы соединение, занятое ими всеми.
+        #
+        # `except` здесь сохраняет прежнее поведение вместе с прежним местом
+        # вызова: внутри цикла любой 4xx означал «эту систему не считаем» и
+        # уходил в `missing`. Вынесенный наружу, он без этой ветки уронил бы
+        # весь ход — 422 вместо ответа, потому что у человека две анкеты.
+        try:
+            partner = await _partner_for_chat(session, user)
+        except HTTPException:
+            partner = None
+
+        thread_id = payload.thread_id or None
+        if thread_id:
+            thread_row = await session.get(ChatThread, thread_id)
+            if thread_row is None or thread_row.user_id != user.id:
+                raise HTTPException(
+                    status.HTTP_404_NOT_FOUND, detail="no such conversation"
+                )
+
+        earlier = (
+            (
+                await session.execute(
+                    select(ChatMessage)
+                    .where(ChatMessage.thread_id == thread_id)
+                    .order_by(ChatMessage.created_at)
+                )
+            ).scalars().all()
+            if thread_id
+            else []
+        )
+        history = [(m.role, m.body) for m in earlier]
+
+        # What she has already cited in this thread, for the fence that notices
+        # she is circling the same four placements. The rows carry it and the
+        # history tuples do not, which is why this is read here rather than
+        # derived from `history`: the repetition people complained about after
+        # ten turns is in the citations, not in the prose.
+        already_cited = [
+            factor
+            for message in earlier[-conversation.MAX_HISTORY:]
+            if message.role != "user"
+            for factor in (message.cited_factors or [])
+        ]
+
+        memory = await _recall(session, user)
+        written_rows = (
+            await session.execute(
+                select(Reading.system, Reading.chapter).where(Reading.user_id == user.id)
+            )
+        ).all()
+
     _cheap, _mid, _strong = models()
 
-    birth = await resolve_birth(session, user, profile_id=payload.profile_id, birth=None)
+    # ── 2. восемь систем, без единого соединения ──────────────────────────
     results: list[CalcResult] = []
     missing: list[str] = []
     for system in CHAT_SYSTEMS:
@@ -2129,11 +2314,10 @@ async def _answer_one_turn(
                 # Needs a second chart, and most people have not added one. It
                 # is offered rather than assumed: asking the engine for a
                 # synastry with nobody in it would raise on every single turn.
-                other = await _partner_for_chat(session, user)
-                if other is None:
+                if partner is None:
                     missing.append(system)
                     continue
-                options["other"] = other
+                options["other"] = partner
             results.append(await _calc(system, birth, **options))
             if stage is not None:
                 named = _stage_for(system, results[-1])
@@ -2150,39 +2334,6 @@ async def _answer_one_turn(
             # unlock it.
             missing.append(system)
             continue
-
-    thread_row = None
-    if payload.thread_id:
-        thread_row = await session.get(ChatThread, payload.thread_id)
-        if thread_row is None or thread_row.user_id != user.id:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, detail="no such conversation")
-    if thread_row is None:
-        thread_row = ChatThread(user_id=user.id, title=payload.message[:80])
-        session.add(thread_row)
-        await session.flush()
-
-    earlier = (
-        await session.execute(
-            select(ChatMessage)
-            .where(ChatMessage.thread_id == thread_row.id)
-            .order_by(ChatMessage.created_at)
-        )
-    ).scalars().all()
-    history = [(m.role, m.body) for m in earlier]
-
-    # What she has already cited in this thread, for the fence that notices she
-    # is circling the same four placements. The rows carry it and the history
-    # tuples do not, which is why this is read here rather than derived from
-    # `history`: the repetition people complained about after ten turns is in
-    # the citations, not in the prose.
-    already_cited = [
-        factor
-        for message in earlier[-conversation.MAX_HISTORY:]
-        if message.role != "user"
-        for factor in (message.cited_factors or [])
-    ]
-
-    session.add(ChatMessage(thread_id=thread_row.id, role="user", body=payload.message))
 
     # `paid` is the voice tier and the per-call ceiling, not the allowance:
     # anyone who has given us money is written to as someone who has. What
@@ -2202,18 +2353,12 @@ async def _answer_one_turn(
     # spend — the welcome question, the purchase bundle and the plan all run
     # on models we deliberately pay for — and the caps are what bound them.
     paid = allowance.model != _cheap
-    memory = await _recall(session, user)
 
     # Alma knows which chapters already exist for this person, so she can
     # speak in their context — and offer to open the one that answers a
     # question she is about to answer thinner. Titles only, never bodies:
-    # bodies would multiply the prompt by the library's size.
-    from ...db.models import Reading as _Reading
-    written_rows = (
-        await session.execute(
-            select(_Reading.system, _Reading.chapter).where(_Reading.user_id == user.id)
-        )
-    ).all()
+    # bodies would multiply the prompt by the library's size. Строки прочитаны
+    # в первой транзакции; здесь только просеивание, оно к базе не ходит.
     # **Только настоящие главы, и проверяется это по каталогу, а не списком
     # исключений.** Здесь стояло `chapter != "spheres"`, и это было верно ровно
     # для одной из трёх псевдоглав, живущих в той же таблице: дневная заметка
@@ -2259,27 +2404,35 @@ async def _answer_one_turn(
             + ". Если вопрос глубже покрыт главой, которая ещё не написана, "
             "скажи об этом и предложи открыть её на экране системы."
         ]
+    # ── 3. месячный потолок: своя короткая транзакция ─────────────────────
+    #
+    # Отдельно от первой намеренно: проекция считается из результатов восьми
+    # систем, которых до расчёта не существует. Читать нечего, кроме суммы за
+    # месяц, — один запрос.
+    #
     # Потолок месяца сторожит генерацию, а кризисный ход её не совершает: он
     # отвечает строкой из каталога, ноль токенов, ноль центов. Тот же довод, что
     # у квоты выше, — и здесь он даже прямее: проекция считает стоимость
     # обращения, которого не будет.
     if not validator.crisis(payload.message):
-        await _guard_month(
-            session,
-            user,
-            tier=tier,
-            locale=payload.locale,
-            projected=_chat_projection(
-                question=payload.message,
-                results=results,
-                history=history,
-                model=allowance.model,
+        async with session_scope() as session:
+            await _guard_month(
+                session,
+                user,
+                tier=tier,
                 locale=payload.locale,
-                paid=paid,
-                memory=memory,
-            ),
-        )
+                projected=_chat_projection(
+                    question=payload.message,
+                    results=results,
+                    history=history,
+                    model=allowance.model,
+                    locale=payload.locale,
+                    paid=paid,
+                    memory=memory,
+                ),
+            )
 
+    # ── 4. сама генерация, без соединения: 10–40 секунд ───────────────────
     try:
         reply = await conversation.answer(
             question=payload.message,
@@ -2310,7 +2463,7 @@ async def _answer_one_turn(
         # списывается — `_charge_anyway` трогает только деньги, — потому что
         # правило «вопрос платится за ответ» ошибке не уступает.
         log.error("every attempt at a chat turn for %s was truncated: %s", user.id, exc)
-        await _charge_anyway(session, user, cents=_truncated_cents(exc))
+        await _charge_anyway(user, cents=_truncated_cents(exc))
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
@@ -2346,7 +2499,7 @@ async def _answer_one_turn(
         # cheapest tier the most expensive — is answered by the spend ledger
         # and the monthly ceiling, which both run on this exact path.
         log.warning("chat turn refused for %s: %s", user.id, exc)
-        await _charge_anyway(session, user, cents=exc.spend.cents)
+        await _charge_anyway(user, cents=exc.spend.cents)
         raise HTTPException(
             422,
             detail={
@@ -2366,53 +2519,86 @@ async def _answer_one_turn(
             },
         ) from exc
 
-    message = ChatMessage(
-        thread_id=thread_row.id,
-        role="alma",
-        body=reply.text(),
-        cited_factors=list(reply.cited_factors),
-        # Stored in the wire vocabulary rather than the internal one, because
-        # the only consumer of the column is the client that reads it back. A
-        # thread reopened a week later must render the way it rendered live —
-        # before this column, `GET /v1/chat/threads/{id}` returned no kind at
-        # all, so every reopened turn fell through to the legacy branch and the
-        # honest note vanished on relaunch.
-        turn_kind=reply.turn_kind,
-        # Та же тройка, что уходит в теле ответа, — сохранённая, чтобы
-        # перечитанная беседа показала ту же дверь в главу, что показала живая.
-        # См. довод у колонки в `db/models.py`.
-        source_chapter=source_chapter,
-        model=reply.model,
-        cost_cents=reply.spend.cents,
-    )
-    session.add(message)
-    thread_row.updated_at = utcnow()
-
-    if reply.remember:
-        await _remember(session, user, reply.remember, source=f"chat:{thread_row.id}")
-
-    # A turn is only counted if it was a reading. A free reader gets three
-    # questions a day, and before this line looked at `kind`, "hi" and "thanks"
-    # together spent two thirds of a day's allowance and answered nothing
-    # (`docs/CONVERSATION.md §3`). The money is charged either way — the
-    # generation happened, and `_spend` below records it — so what this decides
-    # is the promise, not the ledger: you pay a question for an answer about
-    # yourself, and greeting her is free.
-    if reply.spends_a_question:
-        asked = await _count(
-            session, user, allowance.metric, day=_period_start(allowance.period)
+    # ── 5. вопрос, ответ, счётчик и расход — одним куском ─────────────────
+    #
+    # Всё, что пишет этот ход, пишется здесь и коммитится на выходе из блока,
+    # не выходя из замка аккаунта (`_chat_slot` в `_chat_turn`). Ровно это
+    # требовал прежний явный `commit()` под замком: следующий ход обязан
+    # увидеть посчитанный вопрос своей сессией.
+    async with session_scope() as session:
+        thread_row = (
+            await session.get(ChatThread, thread_id) if thread_id else None
         )
-    else:
-        asked = await _asked(session, user, allowance)
-    await _spend(session, user, reply.spend.cents)
-    await session.flush()
+        if thread_row is None or thread_row.user_id != user_id:
+            # Тред либо не назывался (новая беседа), либо исчез между первой
+            # транзакцией и этой. Второе — гонка с удалением аккаунта или
+            # беседы, и ответ у неё один: ход уже сгенерирован и оплачен,
+            # выбрасывать его в 404 значит заплатить за воздух второй раз.
+            if thread_id:
+                log.warning(
+                    "thread %s vanished mid-turn for %s — the answer goes to a "
+                    "fresh thread rather than into the bin", thread_id, user_id,
+                )
+            thread_row = ChatThread(user_id=user_id, title=payload.message[:80])
+            session.add(thread_row)
+            await session.flush()
+
+        # Вопрос человека — здесь, рядом с ответом. См. довод в докстринге:
+        # вопрос без ответа хуже, чем ничего.
+        session.add(
+            ChatMessage(thread_id=thread_row.id, role="user", body=payload.message)
+        )
+
+        message = ChatMessage(
+            thread_id=thread_row.id,
+            role="alma",
+            body=reply.text(),
+            cited_factors=list(reply.cited_factors),
+            # Stored in the wire vocabulary rather than the internal one, because
+            # the only consumer of the column is the client that reads it back. A
+            # thread reopened a week later must render the way it rendered live —
+            # before this column, `GET /v1/chat/threads/{id}` returned no kind at
+            # all, so every reopened turn fell through to the legacy branch and the
+            # honest note vanished on relaunch.
+            turn_kind=reply.turn_kind,
+            # Та же тройка, что уходит в теле ответа, — сохранённая, чтобы
+            # перечитанная беседа показала ту же дверь в главу, что показала живая.
+            # См. довод у колонки в `db/models.py`.
+            source_chapter=source_chapter,
+            model=reply.model,
+            cost_cents=reply.spend.cents,
+        )
+        session.add(message)
+        thread_row.updated_at = utcnow()
+
+        if reply.remember:
+            await _remember(session, user, reply.remember, source=f"chat:{thread_row.id}")
+
+        # A turn is only counted if it was a reading. A free reader gets three
+        # questions a day, and before this line looked at `kind`, "hi" and "thanks"
+        # together spent two thirds of a day's allowance and answered nothing
+        # (`docs/CONVERSATION.md §3`). The money is charged either way — the
+        # generation happened, and `_spend` below records it — so what this decides
+        # is the promise, not the ledger: you pay a question for an answer about
+        # yourself, and greeting her is free.
+        if reply.spends_a_question:
+            asked = await _count(
+                session, user, allowance.metric, day=_period_start(allowance.period)
+            )
+        else:
+            asked = await _asked(session, user, allowance)
+        await _spend(session, user, reply.spend.cents)
+        await session.flush()
+        thread_row_id, message_id, message_body, message_created = (
+            thread_row.id, message.id, message.body, message.created_at.isoformat()
+        )
 
     return {
-        "thread_id": thread_row.id,
+        "thread_id": thread_row_id,
         "message": {
-            "id": message.id,
+            "id": message_id,
             "role": "alma",
-            "body": message.body,
+            "body": message_body,
             "cited_factors": list(reply.cited_factors),
             # `turn_kind` is the field the two shipped clients decode, in the
             # vocabulary they decode it in — `reading | chart_silent |
@@ -2429,7 +2615,7 @@ async def _answer_one_turn(
             "turn_kind": reply.turn_kind,
             "kind": reply.kind,
             "answered_from_chart": reply.answered_from_chart,
-            "created_at": message.created_at.isoformat(),
+            "created_at": message_created,
         },
         "questions_left": max(0, allowance.limit - asked),
         # The period is reported alongside the count because "two left" means
@@ -2446,8 +2632,8 @@ async def _answer_one_turn(
 async def chat_stream(
     payload: ChatRequest,
     user: CurrentUser,
-    session: SessionDep,
     provider: ProviderDep,
+    _released: SessionReleased,
 ) -> StreamingResponse:
     """Тот же ход беседы, рассказанный по мере работы — SSE.
 
@@ -2466,7 +2652,12 @@ async def chat_stream(
     # начинается со статуса 200, и отказ, случившийся после старта потока,
     # пришлось бы выдумывать заново внутри «успешного» ответа. Проверка ничего
     # не тратит, поэтому её второй заход внутри `_chat_turn` не удваивает счёт.
-    await _chat_gate(session, user, locale=payload.locale, message=payload.message)
+    #
+    # Своя короткая транзакция: соединение запроса уже возвращено пулу
+    # (`SessionReleased`), и брать его на весь стрим было бы ровно тем, от чего
+    # мы уходим.
+    async with session_scope() as session:
+        await _chat_gate(session, user, locale=payload.locale, message=payload.message)
 
     # Одно голое значение вместо строки пользователя: сессия запроса умрёт
     # раньше, чем генератор начнёт работать, и трогать через неё ORM-объект
@@ -2483,20 +2674,13 @@ async def chat_stream(
             await queue.put(("stage", {"stage": kind, "name": name}))
 
         async def work() -> None:
-            from ...db.session import session_scope
-
             try:
-                # Своя сессия с тем же правилом «commit по успеху», что у
-                # `get_session`: FastAPI отпускает yield-зависимости до того,
-                # как тело потока начинает писаться, и сессия запроса к этому
-                # моменту закрыта.
-                async with session_scope() as fresh:
-                    who = await fresh.get(User, user_id)
-                    if who is None:
-                        raise HTTPException(
-                            status.HTTP_401_UNAUTHORIZED, detail="no such account"
-                        )
-                    body = await _chat_turn(payload, who, fresh, provider, stage=tell)
+                # Никакой сессии здесь больше нет — и не только потому, что
+                # сессия запроса к этому моменту закрыта. `_chat_turn` сам
+                # берёт свои три коротких транзакции и ни одну из них не держит
+                # через генерацию; открытая сессия, переданная сюда, вернула бы
+                # ровно ту болезнь, ради которой всё это разрезано.
+                body = await _chat_turn(payload, user_id, provider, stage=tell)
                 await queue.put(("done", body))
             except HTTPException as exc:
                 # Тот же словарь, что ушёл бы телом ошибки на `/v1/chat`:

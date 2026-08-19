@@ -89,6 +89,7 @@ from ...db.models import (
     as_utc,
     utcnow,
 )
+from ...db.session import SessionReleased, session_scope
 from ..deps import CurrentUser, EdgeCountry, SessionDep, Visitor
 
 log = logging.getLogger("alma.api.billing")
@@ -181,8 +182,8 @@ async def price_list(
 @router.post("/checkout")
 async def checkout(
     user: CurrentUser,
-    session: SessionDep,
     edge: EdgeCountry,
+    _released: SessionReleased,
     product: str = Body(embed=True),
     country: str | None = Body(default=None, embed=True),
     email: str | None = Body(default=None, embed=True),
@@ -231,6 +232,12 @@ async def checkout(
     Nothing about a person's access is decided here — the signed webhook does
     that, and this endpoint could be replayed all day without granting anybody
     anything.
+
+    **`adapter.open_session` — обращение к чужому серверу, и на его время
+    соединения с базой нет.** Та же болезнь, что у генерации: транзакция
+    запроса открывается первым SELECT в `deps.visitor` и держалась через весь
+    HTTP к процессору. Поэтому `SessionReleased` вместо `SessionDep`, проверка
+    полки — в одной короткой транзакции, согласие и воронка — во второй.
     """
     try:
         prices.product(product)
@@ -244,7 +251,9 @@ async def checkout(
     # этот эндпоинт принимал любой ключ по имени, то есть архив покупался на
     # девять долларов дешевле одним запросом. Первый же A/B по цене бандла
     # (ТЗ §7) заводит вторую цену на один и тот же грант.
-    if not await entitlements.may_be_offered(session, user, product):
+    async with session_scope() as session:
+        offered = await entitlements.may_be_offered(session, user, product)
+    if not offered:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             detail={
@@ -328,7 +337,8 @@ async def checkout(
     # Only once the processor has actually opened something. A consent recorded
     # against a checkout that could not be created would be evidence of a
     # contract nobody could have entered into.
-    _record_consent(session, user=user, product=product, given=consent)
+    async with session_scope() as session:
+        _record_consent(session, user=user, product=product, given=consent)
 
     # And the same for the stage. `checkout_opened` used to exist only on the
     # browser's word, which meant a buyer with Do Not Track or GPC set produced
@@ -336,13 +346,19 @@ async def checkout(
     # decides advertising spend was computed on a denominator that
     # systematically excluded privacy-conscious buyers. Duplicate rows are
     # harmless: the funnel counts distinct accounts, not events.
+    #
+    # **Своя транзакция, а не общая с согласием**, и это уже не про пул. Замер
+    # воронки не должен уносить с собой доказательство waiver'а: неудачная
+    # запись `funnel` оставляет сессию непригодной, и общий коммит потерял бы
+    # обе строки — ту, которую можно потерять, и ту, которую нельзя.
     try:
-        await funnel.record(
-            session,
-            user_id=user.id,
-            stage="checkout_opened",
-            properties={"product": product, "currency": currency},
-        )
+        async with session_scope() as session:
+            await funnel.record(
+                session,
+                user_id=user.id,
+                stage="checkout_opened",
+                properties={"product": product, "currency": currency},
+            )
     except Exception:  # noqa: BLE001 - measurement never costs a sale
         log.exception("could not record checkout_opened for %s", user.id)
 
@@ -744,9 +760,9 @@ PAIR_PRODUCT = "pair.check"
 @router.post("/iap/verify")
 async def verify_store_purchase(
     user: CurrentUser,
-    session: SessionDep,
     background: BackgroundTasks,
     response: Response,
+    _released: SessionReleased,
     platform: str = Body(embed=True),
     product: str = Body(embed=True),
     transaction: str = Body(embed=True),
@@ -800,6 +816,15 @@ async def verify_store_purchase(
     `profile_id` в теле этого запроса, которого здесь поэтому и нет. Токена не
     оказалось — деньги записываются, грант не выписывается, ответ 202 и путь
     `POST /billing/pair/bind`; см. `billing/pairs.py`.
+
+    **Соединения с базой на время обращения к магазину нет.** `verify_purchase`
+    — это HTTP к Apple или Google: чужой сервер, чужой таймаут, секунды в
+    хорошем случае и минуты в плохом. Оно шло внутри транзакции запроса, то
+    есть занимало соединение пула ровно так же, как генерация, и по той же
+    причине — `deps.visitor` открывает транзакцию первым же SELECT. Роут
+    поэтому берёт `SessionReleased` вместо `SessionDep`, а всё, что делается
+    после ответа магазина, идёт одной короткой транзакцией ниже: `_ingest` со
+    вставкой-до-обработки и `_apply` внутри неё не разъезжаются.
     """
     adapter = _store_adapter(platform)
 
@@ -871,63 +896,76 @@ async def verify_store_purchase(
     # в ответе `not_offered`, ни один клиент не видит ожидаемого гранта, значит
     # ни один не подтверждает (Android) и не финиширует (iOS) транзакцию, а
     # Google возвращает неподтверждённую покупку через три дня.
-    honoured = await entitlements.may_be_offered(session, user, event.product)
-    if not honoured:
-        log.warning(
-            "account %s claimed %r on %s, which is not a price on this shelf "
-            "(transaction %s) — money recorded, grant refused",
-            user.id, event.product, platform, event.transaction_id,
+    # ── всё, что после магазина: одна короткая транзакция ──────────────────
+    async with session_scope() as session:
+        honoured = await entitlements.may_be_offered(session, user, event.product)
+        if not honoured:
+            log.warning(
+                "account %s claimed %r on %s, which is not a price on this shelf "
+                "(transaction %s) — money recorded, grant refused",
+                user.id, event.product, platform, event.transaction_id,
+            )
+            event = replace(event, grants=False)
+
+        # **За кого заплачено — из токена, который подписал магазин.**
+        #
+        # Стоит здесь, до `_ingest`, потому что `_apply` внутри него уже вызывает
+        # `entitlement_for`, а тому нужен готовый `partner_id`: грант пары называет
+        # профиль, и назвать его больше неоткуда. `intent_id` из тела идёт следом
+        # только на сверку — правило «стор источник правды» соблюдается тем, что
+        # разошедшийся intent пишет строку в лог и ничего не меняет.
+        if honoured and event.product == PAIR_PRODUCT:
+            event = replace(
+                event,
+                partner_id=await pair_intents.partner_for(
+                    session, user,
+                    token=event.account_token,
+                    intent_id=intent_id,
+                    transaction_id=event.transaction_id,
+                ),
+            )
+
+        # Вставка-до-обработки и применение — в одной транзакции, как и были.
+        # Разрезать здесь было бы не оптимизацией, а второй копией правил
+        # идемпотентности: `webhook_event.id` — первичный ключ, и именно он не
+        # даёт одному платежу стать двумя грантами.
+        outcome, fresh = await _ingest(session, adapter, event, event.payload, background)
+        if not fresh:
+            log.info("%s transaction %s was claimed already", platform, event.transaction_id)
+
+        held = await entitlements.for_user(session, user)
+        granted = next(
+            (row for row in held if row.transaction_id == event.transaction_id), None
         )
-        event = replace(event, grants=False)
 
-    # **За кого заплачено — из токена, который подписал магазин.**
-    #
-    # Стоит здесь, до `_ingest`, потому что `_apply` внутри него уже вызывает
-    # `entitlement_for`, а тому нужен готовый `partner_id`: грант пары называет
-    # профиль, и назвать его больше неоткуда. `intent_id` из тела идёт следом
-    # только на сверку — правило «стор источник правды» соблюдается тем, что
-    # разошедшийся intent пишет строку в лог и ничего не меняет.
-    if honoured and event.product == PAIR_PRODUCT:
-        event = replace(
-            event,
-            partner_id=await pair_intents.partner_for(
-                session, user,
-                token=event.account_token,
-                intent_id=intent_id,
-                transaction_id=event.transaction_id,
-            ),
+        # **Оплачено и не привязано — не ошибка, а незаконченный шаг.**
+        #
+        # 202, а не 200 и не 4xx. 4xx сказал бы клиенту «покупка не удалась», и
+        # честный клиент не финишировал бы транзакцию — а деньги уже списаны, и
+        # человек остался бы и без отчёта, и без понятного следующего действия.
+        # 200 сказал бы «всё открыто», и клиент показал бы пустой отчёт. 202 — это
+        # ровно то, что произошло: платёж принят, к кому его применить, ещё не
+        # решено, и решается это одним вызовом `POST /billing/pair/bind`.
+        #
+        # Считается **и на повторе тоже**, и это не мелочь: клиент, чья первая
+        # попытка привязки не дошла, ретраит ту же транзакцию, а `already_claimed`
+        # с кодом 200 сказал бы ему «всё в порядке, отчёт открыт». Он не открыт.
+        # Пока гранта нет, ответ обязан оставаться тем же: 202 и путь к привязке.
+        unbound = (
+            honoured
+            and event.product == PAIR_PRODUCT
+            and granted is None
+            and await _mark_unbound(session, event, user)
         )
+        if unbound:
+            response.status_code = status.HTTP_202_ACCEPTED
 
-    outcome, fresh = await _ingest(session, adapter, event, event.payload, background)
-    if not fresh:
-        log.info("%s transaction %s was claimed already", platform, event.transaction_id)
-
-    held = await entitlements.for_user(session, user)
-    granted = next(
-        (row for row in held if row.transaction_id == event.transaction_id), None
-    )
-
-    # **Оплачено и не привязано — не ошибка, а незаконченный шаг.**
-    #
-    # 202, а не 200 и не 4xx. 4xx сказал бы клиенту «покупка не удалась», и
-    # честный клиент не финишировал бы транзакцию — а деньги уже списаны, и
-    # человек остался бы и без отчёта, и без понятного следующего действия.
-    # 200 сказал бы «всё открыто», и клиент показал бы пустой отчёт. 202 — это
-    # ровно то, что произошло: платёж принят, к кому его применить, ещё не
-    # решено, и решается это одним вызовом `POST /billing/pair/bind`.
-    #
-    # Считается **и на повторе тоже**, и это не мелочь: клиент, чья первая
-    # попытка привязки не дошла, ретраит ту же транзакцию, а `already_claimed`
-    # с кодом 200 сказал бы ему «всё в порядке, отчёт открыт». Он не открыт.
-    # Пока гранта нет, ответ обязан оставаться тем же: 202 и путь к привязке.
-    unbound = (
-        honoured
-        and event.product == PAIR_PRODUCT
-        and granted is None
-        and await _mark_unbound(session, event, user)
-    )
-    if unbound:
-        response.status_code = status.HTTP_202_ACCEPTED
+        unlocked = sorted(await entitlements.unlocked_systems(session, user))
+        expires_at = (
+            as_utc(granted.expires_at).isoformat()
+            if granted is not None and granted.expires_at
+            else None
+        )
 
     return {
         # `not_offered` rather than the ingest outcome, so a client can tell
@@ -954,12 +992,8 @@ async def verify_store_purchase(
         # outcome string, which is for logs, but the list the paywall reads.
         # Returned from the same request so the app never has to guess how long
         # to wait before re-fetching `/billing/entitlements`.
-        "unlocked": sorted(await entitlements.unlocked_systems(session, user)),
-        "expires_at": (
-            as_utc(granted.expires_at).isoformat()
-            if granted is not None and granted.expires_at
-            else None
-        ),
+        "unlocked": unlocked,
+        "expires_at": expires_at,
     }
 
 

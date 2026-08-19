@@ -235,6 +235,22 @@ async def write_for(
     Everything from here down is `piece_for`'s body unchanged: the stored row
     first, the month ceiling before any spending, the validating writer, and
     the charge-anyway on a refusal.
+
+    **Соединение с базой не держится, пока пишет модель.** Между чтением
+    (`storage.stored`, `guard_month`) и записью строки лежит `writing.write` —
+    те же 10–40 секунд, что и у главы, — и до правки транзакция вызывающего
+    стояла открытой всё это время. Для часового джоба это не про пул: он
+    ходит одной сессией по списку подписчиков, то есть держал бы **одно**
+    соединение. Это про Postgres: `idle_in_transaction_session_timeout` в
+    `db/session.py` — 30 секунд, и транзакция, простоявшая через генерацию,
+    была бы убита сервером посреди рассылки.
+
+    Разрез сделан коммитом сессии вызывающего, а не своим `session_scope`, и
+    это не срезанный угол. Строка дневной заметки обязана лечь в ту же
+    транзакцию, в которой джоб потом делает `confirm`/`release`; а коммит здесь
+    — уже часть контракта этой функции, она делает его на пути отказа ниже.
+    Откат — не часть: он выбросил бы то, что вызывающий держал своим, и об этом
+    сказано там же.
     """
     language = _language(locale)
     on = occasion.on
@@ -269,6 +285,11 @@ async def write_for(
     await cost.guard_month(
         session, user, tier=tier, projected=_projection(result, chapter, model=model, locale=language)
     )
+
+    # Здесь кончается чтение. Коммит возвращает соединение в пул, и следующая
+    # строка — генерация — идёт без него. `expire_on_commit=False` у фабрики
+    # сессий, поэтому `user` и всё прочее остаётся читаемым.
+    await session.commit()
 
     try:
         written = await writing.write(
