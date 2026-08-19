@@ -21,7 +21,7 @@ from fastapi import APIRouter, HTTPException, status
 from ... import i18n
 from ...auth import entitlements
 from ...calc import BirthData, CalcResult, TimeRequired
-from ...calc.cache import compute_cached
+from ...calc.cache import compute_cached_async
 from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...db.models import Profile
 from ..cache import result_cache
@@ -88,8 +88,18 @@ def _ambiguous(exc: AmbiguousBirthTime) -> HTTPException:
 
 
 async def _run(system: str, birth: BirthData, **options) -> CalcResult:
+    """Расчёт — в рабочем потоке, и это здесь единственная нефункциональная строка.
+
+    Раньше это была прямая `compute_cached(...)` внутри `async def`, то есть
+    синхронная работа в событийном цикле. Замер на этой машине, изнутри
+    работающего приложения: пока шёл `POST /systems/transits`, цикл стоял
+    1.257 с, астрокартография — 0.306 с, и всё это время `/health` не
+    отвечал. `compute_cached_async` — та же функция в потоке; тот же замер
+    даёт 0.022 с. Почему поток помогает при одном GIL и почему это выигрыш
+    задержки, а не пропускной способности, — в докстринге `calc.cache`.
+    """
     try:
-        return compute_cached(system, birth, cache=result_cache(), **options)
+        return await compute_cached_async(system, birth, cache=result_cache(), **options)
     except AmbiguousBirthTime as exc:
         raise _ambiguous(exc) from exc
     except TimeRequired as exc:
@@ -155,22 +165,48 @@ async def birth_card(payload: CalcRequest, user: CurrentUser, session: SessionDe
 
 @router.post("/transits")
 async def transits(payload: TransitsRequest, user: CurrentUser, session: SessionDep) -> dict:
+    """Годовой скан — самый дорогой вызов в сервисе, и он обязан быть один на день.
+
+    **Один экран «Сегодня» считал его дважды.** Экран открывает два запроса
+    сразу (`today_model._loadSky` и `_loadLine`): `POST /systems/transits` и
+    `POST /v1/readings` для главы `transits/active`. Обе ручки зовут
+    `compute_cached` с одним и тем же рождением и одним и тем же годом — но
+    ключи расходились на двух мелочах, и обе были здесь:
+
+    * `include_moon=False` уезжал в опции всегда, а `readings._options_for`
+      его не шлёт вовсе. `contract.cache_key` собирает ключ из **переданных**
+      опций, так что `include_moon=False` и «ничего не передано» — два разных
+      ключа под один и тот же ответ (`transits_result` подставляет ровно этот
+      же `False`). Поэтому опция кладётся, только когда её просили;
+    * `start` по умолчанию был `now()`, а тот же скан из `readings` начинается
+      с полуночи. На ключ это не влияло — `MOMENT_OPTIONS` схлопывает `start`
+      в дату, — а вот на ответ влияло: две ручки считали **разные** числа под
+      один ключ, и содержимое дня решал тот воркер, который успел первым.
+      Ровно то, что запрещает `cache.py`: промах обязан быть неотличим от
+      попадания. `readings.py` в своём комментарии уже утверждал, что
+      «`systems.py` округляет так же»; теперь это правда.
+
+    Цена ошибки, замерено на этой машине: годовой скан — 1.26 с процессорного
+    времени, то есть каждое открытие «Сегодня» стоило 2.5 с вместо 1.26 с и
+    вдвое больше места в кэше. При десяти тысячах читателей утром это ровно
+    вдвое больше железа под ту же волну.
+    """
     birth = await resolve_birth(
         session, user, profile_id=payload.profile_id, birth=payload.birth
     )
-    start = (
-        datetime.combine(payload.start, datetime.min.time(), tzinfo=timezone.utc)
-        if payload.start
-        else datetime.now(timezone.utc)
+    start = datetime.combine(
+        payload.start or datetime.now(timezone.utc).date(),
+        datetime.min.time(),
+        tzinfo=timezone.utc,
     )
-    result = await _run(
-        "transits",
-        birth,
-        start=start,
-        days=payload.days,
-        include_moon=payload.include_moon,
-        house_system=payload.house_system,
-    )
+    options: dict = {
+        "start": start,
+        "days": payload.days,
+        "house_system": payload.house_system,
+    }
+    if payload.include_moon:
+        options["include_moon"] = True
+    result = await _run("transits", birth, **options)
     return await _respond(session, user, "transits", result)
 
 

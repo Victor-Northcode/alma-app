@@ -216,12 +216,22 @@ def test_the_sign_in_link_never_reaches_the_log(caplog):
 # ── 4. /ready перестал быть картой сервиса ─────────────────────────────────
 
 def test_ready_outside_the_sandbox_says_only_whether_it_is_ready(api, monkeypatch):
-    """`missing` — это перечень ещё не повешенных замков, по именам."""
+    """`missing` — это перечень ещё не повешенных замков, по именам.
+
+    Ключ модели и процессор выставлены здесь намеренно: этот тест про то, что
+    наружу уходит один флаг и ни слова больше, а с тех пор как готовность
+    включает и то и другое (`api/routers/health.py`), настроенное развёртывание —
+    единственное состояние, в котором флаг вообще может быть `true`. Без них
+    тест проверял бы уже не сокрытие подробностей, а их отсутствие.
+    """
     detailed = api.get("/ready").json()
     assert "missing" in detailed, "локально подробности на месте — они там для человека"
 
     monkeypatch.setenv("ALMA_ENV", "production")
     monkeypatch.setenv("ALMA_BASE_URL", "https://api.alma.example")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-not-a-real-key")
+    monkeypatch.setenv("ALMA_BILLING_PROVIDER", "appstore")
+    monkeypatch.setenv("APPLE_BUNDLE_ID", "ai.pazl.alma")
     settings.cache_clear()
 
     public = api.get("/ready")

@@ -428,6 +428,36 @@ class Settings(BaseSettings):
         default=10, alias="ALMA_WEEKLY_QUESTIONS"
     )
 
+    # ── регулярные прогоны ─────────────────────────────────────────────────
+    #: Сколько получателей утренняя рассылка обрабатывает одновременно.
+    #:
+    #: **Восемь, и это число выведено из арифметики, а не выбрано на глаз.**
+    #: Одна утренняя запись — вызов `claude-sonnet-5` на ~1400 входных и ~420
+    #: выходных токенов (`docs/THE-DAILY.md §2.2`), то есть порядка 8–12 секунд
+    #: ожидания сети, из которых наш процесс занят долями секунды. Строго
+    #: последовательный прогон на десяти тысячах подписчиков даёт в пиковый час
+    #: часы вместо минут — полный расчёт в `docs/DEPLOY.md §6`, и он же
+    #: показывает, что при восьми одновременных пиковый час укладывается в ~7
+    #: минут.
+    #:
+    #: **Почему не «все разом».** Каждый получатель держит свою сессию к базе и
+    #: свой запрос к модели. Тысяча одновременных корутин — это тысяча запросов
+    #: к Anthropic в одну секунду (429 на всех сразу, и каждый 429 стоит
+    #: попытки) и тысяча ожидающих соединений к Postgres, то есть отказ базы
+    #: обслуживать сам API. Предел здесь — не оптимизация, а то, что отделяет
+    #: параллельность от отказа: восемь одновременных генераций держат меньше
+    #: одного запроса в секунду к модели и восемь соединений к базе.
+    #:
+    #: Ручка, а не константа, потому что верхняя граница задаётся не нашим
+    #: кодом: её задают лимит аккаунта у Anthropic и размер пула базы, и оба
+    #: меняются без единой строки правок здесь.
+    daily_concurrency: int = Field(default=8, alias="ALMA_DAILY_CONCURRENCY")
+
+    #: Каталог для файла-замка регулярных прогонов — `notify/daily.single_run`.
+    #: Каталог, а не путь к файлу: замок нужен каждому регулярному процессу
+    #: отдельно, и один каталог переживёт появление второго.
+    run_lock_dir: str = Field(default=str(BASE_DIR / "data"), alias="ALMA_RUN_LOCK_DIR")
+
     @model_validator(mode="after")
     def _budgets_hold_together(self) -> Settings:
         """Refuse a set of ceilings that contradict each other.
@@ -562,6 +592,16 @@ class Settings(BaseSettings):
         return self.environment.lower() in {"production", "prod"}
 
     @property
+    def is_postgres(self) -> bool:
+        """Хранилище, которое переживёт больше одного пишущего процесса.
+
+        Спрошено по схеме URL, а не по наличию слова «postgres» где угодно в
+        строке: `postgresql+asyncpg://` и `postgresql://` — единственные две
+        формы, которые SQLAlchemy здесь примет, и обе начинаются одинаково.
+        """
+        return self.database_url.strip().lower().startswith("postgresql")
+
+    @property
     def allowed_origins(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
@@ -627,6 +667,14 @@ class Settings(BaseSettings):
             missing.append("ALMA_JWT_SECRET")
         if not self.anthropic_api_key:
             missing.append("ANTHROPIC_API_KEY")
+        # SQLite в проде — не «медленнее», а «один пишущий на весь сервис».
+        # Файл держит одну запись за раз (`db/session.py` включает WAL и
+        # пятисекундное ожидание именно поэтому), а прод — это несколько
+        # воркеров gunicorn плюс три регулярных процесса, то есть пять-шесть
+        # претендентов на одну блокировку. Отказ выглядит как «database is
+        # locked» посреди оплаченной генерации.
+        if not self.is_postgres:
+            missing.append("ALMA_DATABASE_URL")
         # Whichever processor is selected, named the way its own dashboard
         # names it. Listing Paddle's variables while `ALMA_BILLING_PROVIDER` is
         # "dodo" would send somebody to fill in credentials nothing reads.
@@ -647,13 +695,66 @@ class Settings(BaseSettings):
                 missing.extend(name for name, value in configured.items() if not value)
         return missing
 
+    #: Что прод обязан иметь, чтобы вообще запуститься, и почему именно это.
+    #:
+    #: Три, не больше. Каждая строка — переменная, её проверка и объяснение,
+    #: которое читает не программист: сообщение об отказе печатается целиком, а
+    #: «неверная конфигурация» без имени переменной — это сообщение, по
+    #: которому нельзя ничего сделать.
+    #:
+    #: **Почему это отказ, а не предупреждение.** До сих пор прод поднимался на
+    #: SQLite и с пустым ключом модели, и оба отказа обнаруживал первый
+    #: заплативший: файл-база отвечала «database is locked» под вторым воркером,
+    #: пустой ключ — пятьсот третьей ошибкой посреди главы, за которую человек
+    #: уже отдал деньги. Упавший деплой стоит десяти минут; тихо поднявшийся
+    #: неполный прод стоит доверия, и узнаём мы о нём последними.
+    #:
+    #: Биллинга здесь намеренно нет. Сервис считает все восемь систем без
+    #: процессора, а касса отвечает 503 с именами недостающих переменных — это
+    #: рабочее состояние, а не поломка. `/ready` его всё равно покажет.
+    def _production_failures(self) -> list[str]:
+        failures: list[str] = []
+        if self.jwt_secret == "dev-only-not-a-secret":
+            failures.append(
+                "ALMA_JWT_SECRET — всё ещё значение по умолчанию для разработки. "
+                "Любой сеансовый токен подделывается кем угодно, кто читал этот "
+                "репозиторий. Сгенерировать: "
+                'python -c "import secrets;print(secrets.token_urlsafe(48))"'
+            )
+        if not self.is_postgres:
+            failures.append(
+                f"ALMA_DATABASE_URL — сейчас {self.database_url.split('://')[0]!r}, "
+                "а в проде нужен postgresql+asyncpg://пользователь:пароль@хост/база. "
+                "SQLite держит одного пишущего на всю базу, а прод — это несколько "
+                "воркеров плюс три регулярных процесса: пятый претендент получает "
+                "«database is locked» посреди чужой оплаченной генерации."
+            )
+        if not self.anthropic_api_key:
+            failures.append(
+                "ANTHROPIC_API_KEY — пусто. Расчёты работают и без него, но всё, "
+                "что продаётся — главы, разговор, утренняя запись, — это вызов "
+                "модели, и без ключа он отвечает отказом уже после оплаты."
+            )
+        return failures
+
     def check_production_ready(self) -> None:
+        """Отказ стартовать в проде, называющий всё недостающее разом.
+
+        Разом — это половина ценности проверки. Отказ по первой же найденной
+        причине превращает настройку в очередь из трёх деплоев: поправил
+        секрет — узнал про базу, поправил базу — узнал про ключ. Список
+        собирается целиком и печатается целиком.
+        """
         if not self.is_production:
             return
-        if self.jwt_secret == "dev-only-not-a-secret":
+        failures = self._production_failures()
+        if failures:
             raise RuntimeError(
-                "ALMA_JWT_SECRET is still the development default in production — "
-                "every session token would be forgeable. Set a real secret."
+                "ALMA_ENV=production, но запускаться не с чем. Не хватает:\n  — "
+                + "\n  — ".join(failures)
+                + "\nЛибо допишите это в окружение, либо снимите ALMA_ENV=production. "
+                "Прод, поднявшийся наполовину, ломается не при старте, а у первого "
+                "заплатившего."
             )
 
 

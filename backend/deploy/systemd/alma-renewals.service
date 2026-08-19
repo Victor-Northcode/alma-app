@@ -1,0 +1,18 @@
+# Письмо за три дня до списания. **Написано, задокументировано и до сих пор
+# никогда не запускалось** — а обещание «предупредим за три дня» напечатано на
+# пейволе, в FAQ, на странице условий подписки и рядом с кнопкой оплаты.
+
+[Unit]
+Description=Alma — письмо за три дня до списания подписки
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/alma/backend
+ExecStart=/usr/bin/docker compose run --rm --no-deps app python -m alma.billing.renewals
+# ExecStartPost=/usr/bin/curl -fsS -m 10 --retry 3 https://hc-ping.com/ВАШ-UUID
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=multi-user.target

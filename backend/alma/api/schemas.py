@@ -16,7 +16,7 @@ from __future__ import annotations
 import re
 from datetime import date
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..i18n import MAX_TAG as MAX_LOCALE_TAG
 
@@ -179,10 +179,74 @@ class CalcRequest(BaseModel):
     locale: str = Field(default="en", max_length=MAX_LOCALE_TAG)
 
 
+#: Самое длинное окно транзитов, которое продукт действительно просит.
+#:
+#: Не догадка — перечень всех вызывающих: клиент шлёт `POST /systems/transits`
+#: с пустым телом (`today_model._loadSky`, `system_screen`), то есть берёт
+#: умолчание; `readings._options_for` шлёт ровно `days: 365`;
+#: `daily.service.SCAN_DAYS` — те же 365. Больше года не просит никто, и
+#: незачем: экран «Сегодня» смотрит на 30 дней вперёд, оглавление главы — на
+#: год.
+#:
+#: Потолок был 1095. Замерено на этой машине, сколько стоил его край:
+#:
+#:     days=1095, include_moon=True  — 11.9 с
+#:     days=1095, include_moon=False —  4.2 с
+#:     days= 365, include_moon=True  —  3.7 с
+#:     days= 365, include_moon=False —  1.26 с   ← что продукт просит на самом деле
+#:
+#: Двенадцать секунд — это одно тело запроса на четыре поля, и до правки они
+#: были двенадцатью секундами **застывшего событийного цикла**: воркер не
+#: отвечал никому, включая проверку живости. Теперь расчёт в потоке, так что
+#: это «всего лишь» занятый поток из `app.thread_pool_size()` — но пул конечен,
+#: и двадцать таких запросов выносят его целиком. Потолок и поток лечат разные
+#: половины одной беды, и нужны обе.
+MAX_TRANSIT_DAYS = 365
+
+#: И отдельный, куда более узкий, когда просят Луну.
+#:
+#: Луна проходит зодиак за 27.3 суток, то есть за месяц она успевает сделать
+#: каждый аспект к каждой натальной точке. Годовой список её контактов — это
+#: тринадцать копий одного и того же, и стоит эта копия дорого: Луна одна
+#: утраивает скан (1.26 с → 3.73 с на 365 днях), потому что двигается на два
+#: порядка быстрее остальных тел и ищется мелким шагом. `daily/service.py`
+#: держит `include_moon=False` жёстко и объясняет это теми же словами: "The
+#: Moon is excluded and stays so."
+#:
+#: 31 день — месяц, то есть полный оборот с запасом: всё, что Луна умеет,
+#: внутри окна уже есть. Замер на краю: 0.42 с.
+MAX_TRANSIT_DAYS_WITH_MOON = 31
+
+
 class TransitsRequest(CalcRequest):
-    days: int = Field(default=365, ge=1, le=1095)
+    days: int = Field(default=MAX_TRANSIT_DAYS, ge=1)
     include_moon: bool = False
     start: date | None = None
+
+    @field_validator("days")
+    @classmethod
+    def _within_a_year(cls, value: int) -> int:
+        # Своё сообщение вместо `le=` у Field: умолчание pydantic — "Input
+        # should be less than or equal to 365", а на том конце сидит человек,
+        # который пишет клиента, и ему важно не число, а что мы не жадничаем.
+        if value > MAX_TRANSIT_DAYS:
+            raise ValueError(
+                f"a transit scan looks at most {MAX_TRANSIT_DAYS} days ahead — "
+                "a year is the longest window anything in the product asks for, "
+                "and a longer one costs seconds of server time per request"
+            )
+        return value
+
+    @model_validator(mode="after")
+    def _the_moon_only_within_a_month(self) -> "TransitsRequest":
+        if self.include_moon and self.days > MAX_TRANSIT_DAYS_WITH_MOON:
+            raise ValueError(
+                "the Moon can only be scanned "
+                f"{MAX_TRANSIT_DAYS_WITH_MOON} days at a time — it goes round the "
+                "whole chart every 27 days, so a longer window is the same "
+                "aspects listed over and over, at three times the cost"
+            )
+        return self
 
 
 class SolarReturnRequest(CalcRequest):

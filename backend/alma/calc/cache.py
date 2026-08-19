@@ -33,9 +33,13 @@ routes now pass midnight for a transit scan for exactly that reason.
 from __future__ import annotations
 
 import json
+import threading
 from collections import OrderedDict
 from datetime import date, datetime, timezone
+from functools import partial
 from typing import Any, Protocol
+
+from anyio import to_thread
 
 from .contract import CalcResult, BirthData, cache_key
 
@@ -70,36 +74,70 @@ class MemoryCache:
     far more often than they are computed, and a shared mutable dict handed
     out repeatedly is the kind of thing that produces one wrong reading in a
     thousand and is never reproducible.
+
+    **Под замком, потому что читатели теперь в разных потоках.** Пока расчёт
+    шёл прямо в событийном цикле, `get`/`put` вызывались строго по одному —
+    поток был один, и `OrderedDict` был так же безопасен, как локальная
+    переменная. `compute_cached_async` увозит расчёт в пул потоков (см. ниже,
+    замер: 1.265 с → 0.022 с худшей задержки цикла), и с этого момента два
+    воркера кладут результат одновременно.
+
+    Чем это стоило бы — не догадка, а воспроизведённое падение. И `get`, и
+    `put` состоят из двух шагов над одним словарём: «найти/записать» и
+    «переставить в конец», а `put` вдобавок вытесняет старое. Между шагами
+    стоит вызов, то есть точка, в которой интерпретатор имеет право отдать
+    GIL другому потоку. Тот успевает вытеснить ключ, который первый только что
+    записал и ещё не переставил, — и `move_to_end` падает `KeyError` посреди
+    чужого запроса. На восьми потоках, ёмкости 8 и 256 ключах это ловится
+    пять раз из пяти (`tests/test_under_load.py`).
+
+    `hits`/`misses` (их читает `/ready`) под тем же замком, хотя сегодняшний
+    CPython их `+= 1`, похоже, не рвёт: точек проверки между чтением атрибута
+    и записью в нынешнем цикле интерпретатора нет. «Похоже» и «в нынешнем» —
+    ровно та причина, по которой на это не опираются: атомарность `+=` нигде
+    не обещана, на сборке без GIL её нет, а замок здесь уже взят и стоит
+    ноль.
+
+    Замок держится ровно на время работы со словарём. Сериализация и разбор
+    JSON — вне его: это самая долгая часть вызова (десятки килобайт у годового
+    скана), она ничего общего не трогает, и держать на ней замок означало бы
+    выстроить в очередь потоки, которые ради этого и заводились.
     """
 
     def __init__(self, capacity: int = 512) -> None:
         self.capacity = capacity
         self._entries: OrderedDict[str, str] = OrderedDict()
+        self._lock = threading.Lock()
         self.hits = 0
         self.misses = 0
 
     def get(self, key: str) -> CalcResult | None:
-        blob = self._entries.get(key)
-        if blob is None:
-            self.misses += 1
-            return None
-        self._entries.move_to_end(key)
-        self.hits += 1
+        with self._lock:
+            blob = self._entries.get(key)
+            if blob is None:
+                self.misses += 1
+                return None
+            self._entries.move_to_end(key)
+            self.hits += 1
         return _revive(json.loads(blob))
 
     def put(self, key: str, result: CalcResult) -> None:
-        self._entries[key] = result.to_json()
-        self._entries.move_to_end(key)
-        while len(self._entries) > self.capacity:
-            self._entries.popitem(last=False)
+        blob = result.to_json()
+        with self._lock:
+            self._entries[key] = blob
+            self._entries.move_to_end(key)
+            while len(self._entries) > self.capacity:
+                self._entries.popitem(last=False)
 
     def clear(self) -> None:
-        self._entries.clear()
-        self.hits = self.misses = 0
+        with self._lock:
+            self._entries.clear()
+            self.hits = self.misses = 0
 
     @property
     def size(self) -> int:
-        return len(self._entries)
+        with self._lock:
+            return len(self._entries)
 
 
 class NullCache:
@@ -257,7 +295,14 @@ def compute_cached(
     cache: ResultCache,
     **options,
 ) -> CalcResult:
-    """Compute a system, reusing a stored answer when there is one."""
+    """Compute a system, reusing a stored answer when there is one.
+
+    **Синхронная, и это единственное, что о ней надо помнить.** Из `async def`
+    её звать нельзя — там `compute_cached_async`, которая делает ровно то же
+    самое в рабочем потоке. Разница между двумя вызовами — полторы секунды
+    неотвечающего воркера, и в коде она не видна вообще никак: оба выглядят
+    как одна строка внутри `async` роутера.
+    """
     from .service import compute
 
     key = key_for(system, birth, options)
@@ -268,3 +313,49 @@ def compute_cached(
     result = compute(system, birth, **options)
     cache.put(key, result)
     return result
+
+
+async def compute_cached_async(
+    system: str,
+    birth: BirthData,
+    *,
+    cache: ResultCache,
+    **options,
+) -> CalcResult:
+    """`compute_cached` в рабочем потоке — единственный способ звать её из async.
+
+    ── чем платили за прямой вызов ──────────────────────────────────────────
+
+    Расчёт — обычный синхронный Python поверх numpy, и `async def` вокруг него
+    не делает его асинхронным: пока он идёт, воркер **не отвечает никому**.
+    Замер на этой машине (10 ядер), пульс каждые 10 мс внутри работающего
+    приложения, худший пропуск пульса — это то, сколько цикл стоял:
+
+        годовой скан транзитов прямо в цикле  — 1.265 с
+        тот же скан через `to_thread.run_sync` — 0.022 с
+
+    Полторы секунды — это не «медленный запрос». Это полторы секунды, в
+    которые не отвечает проверка живости балансировщика (и он выводит воркер
+    из ротации), не читается ни один чужой сокет и не двигается ни один уже
+    идущий поток беседы. Утренняя волна — пуш открывает «Сегодня» у всех
+    разом — складывает такие полторы секунды в очередь длиной в минуты.
+
+    ── почему поток помогает, если GIL один ─────────────────────────────────
+
+    Потому что GIL отпускается: и планировщиком каждые 5 мс, и самим numpy на
+    время векторных операций, из которых скан в основном и состоит. Цикл при
+    этом получает управление сотни раз в секунду — отсюда 0.022 с вместо
+    1.265 с. Пропускной способности поток не добавляет и не должен: 20
+    одновременных сканов в потоках заняли 22.3 с против 20 × 1.1 с
+    последовательно. Это выигрыш **задержки для всех остальных**, а не
+    производительности расчёта, и лимит пула (`api/app.thread_pool_size`)
+    поставлен исходя ровно из этого.
+
+    Образец — `auth/providers._verified_claims`, и обёртка здесь по той же
+    причине: два одинаковых `to_thread.run_sync` в двух роутерах — это третий
+    роутер, который её забудет, а заметить это можно будет только по графику
+    задержек.
+    """
+    return await to_thread.run_sync(
+        partial(compute_cached, system, birth, cache=cache, **options)
+    )

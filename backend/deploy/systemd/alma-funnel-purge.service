@@ -1,0 +1,17 @@
+# Удаление аналитики старше 180 дней. **Это всё, что делает истинным обещание
+# на странице приватности**, и оно тоже никогда не запускалось.
+
+[Unit]
+Description=Alma — чистка аналитики старше 180 дней
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/alma/backend
+ExecStart=/usr/bin/docker compose run --rm --no-deps app python -m alma.funnel --purge
+# ExecStartPost=/usr/bin/curl -fsS -m 10 --retry 3 https://hc-ping.com/ВАШ-UUID
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=multi-user.target

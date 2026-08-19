@@ -853,3 +853,317 @@ def test_a_recipient_with_no_usable_timezone_is_skipped_rather_than_guessed(db):
     report = run_async(work)
     assert report["due"] == 0
     assert vendor.sent == []
+
+
+# ── десять тысяч человек: порядок, параллельность, отказ вендора ────────────
+
+
+class Counting:
+    """`candidates`, который считает, сколько раз его позвали.
+
+    Единственный способ проверить порядок работ: «эфемериды не считались» — это
+    утверждение о том, что этой функции не касались, и никакой отчёт о прогоне
+    его не содержит.
+    """
+
+    def __init__(self, answer=None) -> None:
+        self.calls: list[str] = []
+        self.answer = [Contact()] if answer is None else answer
+
+    async def __call__(self, session, user, *, on, zone=None):
+        self.calls.append(user.id)
+        return list(self.answer)
+
+
+def test_a_non_subscriber_costs_no_ephemeris_at_all(db):
+    """Порядок отказов — это счёт за прогон, а не стиль.
+
+    `candidates()` вызывался *аргументом* внутри `rules.may_send`, то есть
+    вычислялся раньше, чем правило успевало сказать «не подписчик». Измерено на
+    машине разработки: `chart_for` — 33 мс, трёхдневный `transits.scan` —
+    112 мс, то есть ~145 мс процессорного времени на человека, которому по
+    правилам ничего не полагается. На десяти тысячах подписчиков в пиковый час
+    это минуты ядра, потраченные впустую, — и `rules.PER_MONTH` (десять записей
+    в месяц против тридцати с лишним утр) делает такое большинство.
+    """
+    vendor = Vendor()
+    sky = Counting()
+
+    async def work():
+        async with db.session_scope() as session:
+            await subscriber(session, tier="free")
+            await subscriber(session, preference="off")
+            await subscriber(session, seen_days_ago=70)
+            return await daily.run(
+                session, now=WHEN, transports={"ios": vendor},
+                candidates=sky, compose_piece=wrote,
+            )
+
+    report = run_async(work)
+    assert report["due"] == 3
+    assert sky.calls == [], "небо считали для тех, кому по правилам ничего не полагается"
+    assert vendor.sent == []
+
+
+def test_a_day_already_sent_costs_no_ephemeris_either(db):
+    """«Уже отправлено» — чтение по первичному ключу, и оно дешевле неба.
+
+    До перестановки это выяснялось только в `claim`, то есть после расчёта. При
+    ежечасном задании и окне в три часа каждый получатель выбирается трижды за
+    утро — значит две трети расчётов приходились на дни, которые уже отправлены.
+    """
+    vendor = Vendor()
+    sky = Counting()
+
+    async def work():
+        async with db.session_scope() as session:
+            await subscriber(session)
+            first = await daily.run(
+                session, now=WHEN, transports={"ios": vendor},
+                candidates=sky, compose_piece=wrote,
+            )
+            second = await daily.run(
+                session, now=WHEN + timedelta(hours=1), transports={"ios": vendor},
+                candidates=sky, compose_piece=wrote,
+            )
+            return first, second
+
+    first, second = run_async(work)
+    assert first["sent"] == 1
+    assert second["already"] == 1
+    assert len(sky.calls) == 1, "второй час пересчитал небо для уже отправленного дня"
+
+
+def test_a_claim_left_by_a_killed_run_is_taken_back_the_next_hour(db):
+    """Деплой посреди прогона больше не стоит человеку целого утра.
+
+    Захват дня пишется до отправки, и процесс, убитый между ними, оставляет
+    строку с `count == 0`, которую никто не разрешит. Внутри своего часа она
+    неотличима от живого захвата на другом хосте — и остаётся сиротой. Но
+    задание ежечасное, поэтому *следующий* час, застающий её неразрешённой,
+    застаёт её от процесса, которого уже нет: час — это и есть та отметка
+    времени, которой у `usage_counter` нет.
+    """
+    vendor = Vendor()
+
+    async def work():
+        async with db.session_scope() as session:
+            user = await subscriber(session)
+            session.add(
+                UsageCounter(
+                    id=daily.counter_key(user.id, date(2026, 8, 7)),
+                    user_id=user.id, day=date(2026, 8, 7),
+                    metric=daily.METRIC, count=0, amount=0.0,
+                )
+            )
+            await session.commit()
+            same_hour = await daily.run(
+                session, now=WHEN, transports={"ios": vendor},
+                candidates=one_contact, compose_piece=wrote,
+            )
+            next_hour = await daily.run(
+                session, now=WHEN + timedelta(hours=1), transports={"ios": vendor},
+                candidates=one_contact, compose_piece=wrote,
+            )
+            return same_hour, next_hour
+
+    same_hour, next_hour = run_async(work)
+    assert same_hour.get("orphaned") == 1, "внутри часа захват может быть живым"
+    assert next_hour.get("reclaimed") == 1
+    assert next_hour["sent"] == 1
+    assert len(vendor.sent) == 1
+
+
+def test_one_dead_vendor_does_not_cancel_the_morning_of_the_other(db):
+    """Протухший ключ FCM отменял утро и всем владельцам iPhone заодно.
+
+    Отказ учётных данных верен для всех токенов **одного** вендора и ни о чём
+    не говорит про второго — а прогон останавливался целиком. Обычное
+    полусломанное состояние (проворот ключа, чужой SenderId, не тот topic) в
+    четыре утра, молча, для всех.
+    """
+    apple = Vendor(platform="ios")
+    google = Vendor(platform="android", receipt=Receipt(Verdict.fatal, "SENDER_ID_MISMATCH"))
+
+    async def work():
+        async with db.session_scope() as session:
+            for _ in range(3):
+                user = await subscriber(session)
+                await tokens.register(
+                    session, user_id=user.id, platform="android",
+                    token=(new_id() * 3)[:64].replace("-", "d"), timezone="Europe/Warsaw",
+                )
+            await session.flush()
+            return await daily.run(
+                session, now=WHEN, transports={"ios": apple, "android": google},
+                candidates=one_contact, compose_piece=wrote,
+            )
+
+    report = run_async(work)
+    assert report["sent"] == 3, "утро iPhone отменил чужой вендор"
+    assert report["vendor down:android"] == 1
+    # И вендор, объявленный негодным, больше не опрашивается: три получателя,
+    # одна попытка.
+    assert len(google.sent) == 1
+    assert len(apple.sent) == 3
+
+
+def test_when_the_last_vendor_goes_the_run_ends_with_an_error(db):
+    """Ненулевой код возврата — это то, чем `ExecStartPost` отличает беду.
+
+    Таймер пингует мониторинг только после успешного `ExecStart`. Прогон,
+    которому некуда отправлять и который вернул отчёт как ни в чём не бывало, —
+    это зелёная галочка в мониторинге поверх молчащего продукта.
+    """
+    apple = Vendor(platform="ios", receipt=Receipt(Verdict.fatal, "InvalidProviderToken"))
+    google = Vendor(platform="android", receipt=Receipt(Verdict.fatal, "SENDER_ID_MISMATCH"))
+
+    async def work():
+        async with db.session_scope() as session:
+            for _ in range(4):
+                user = await subscriber(session)
+                await tokens.register(
+                    session, user_id=user.id, platform="android",
+                    token=(new_id() * 3)[:64].replace("-", "e"), timezone="Europe/Warsaw",
+                )
+            await session.flush()
+            await daily.run(
+                session, now=WHEN, transports={"ios": apple, "android": google},
+                candidates=one_contact, compose_piece=wrote,
+            )
+
+    with pytest.raises(PushUnavailable):
+        run_async(work)
+    # По одной попытке на вендора, а не по четыре: выбывший не опрашивается.
+    assert len(apple.sent) == 1
+    assert len(google.sent) == 1
+
+
+def test_ten_recipients_are_written_in_parallel_and_no_more_than_three_at_once(db):
+    """Строго по одному — это часы там, где могут быть минуты.
+
+    Одна утренняя запись — вызов модели на ~8–12 секунд ожидания сети
+    (`docs/THE-DAILY.md §2.2`), из которых процесс занят долями секунды.
+    Последовательный цикл складывает эти ожидания в сумму; предел — в том,
+    чтобы складывать их не все сразу, потому что «все сразу» — это 429 от
+    модели и исчерпанный пул базы, то есть не параллельность, а отказ.
+
+    Проверяется и то и другое: что генерации накладываются друг на друга, и
+    что их одновременно не больше, чем разрешено.
+    """
+    vendor = Vendor()
+    live = {"now": 0, "peak": 0}
+
+    async def slow(session, recipient, chosen, day, tier):
+        live["now"] += 1
+        live["peak"] = max(live["peak"], live["now"])
+        try:
+            await asyncio.sleep(0.02)
+            return Piece()
+        finally:
+            live["now"] -= 1
+
+    async def work():
+        async with db.session_scope() as session:
+            for _ in range(10):
+                await subscriber(session)
+            await session.commit()
+            return await daily.run(
+                session, now=WHEN, transports={"ios": vendor},
+                candidates=one_contact, compose_piece=slow,
+                sessions=db.session_factory(), concurrency=3,
+            )
+
+    report = run_async(work)
+    assert report["sent"] == 10, "параллельный путь потерял получателей"
+    assert len(vendor.sent) == 10
+    assert live["peak"] > 1, "генерации так и идут по одной"
+    assert live["peak"] <= 3, "предел одновременности не соблюдён — это и есть «все разом»"
+
+
+def test_the_parallel_path_still_sends_each_person_exactly_once(db):
+    """Идемпотентность — свойство строки в базе, а не цикла.
+
+    Захват дня решает гонку между двумя хостами; здесь та же гонка устроена
+    внутри одного процесса — десять задач по одному и тому же списку. Если бы
+    он решался переменной цикла, второй прогон отправил бы всё заново.
+    """
+    vendor = Vendor()
+
+    async def work():
+        async with db.session_scope() as session:
+            for _ in range(6):
+                await subscriber(session)
+            await session.commit()
+            first = await daily.run(
+                session, now=WHEN, transports={"ios": vendor},
+                candidates=one_contact, compose_piece=wrote,
+                sessions=db.session_factory(), concurrency=4,
+            )
+            second = await daily.run(
+                session, now=WHEN + timedelta(hours=1), transports={"ios": vendor},
+                candidates=one_contact, compose_piece=wrote,
+                sessions=db.session_factory(), concurrency=4,
+            )
+            return first, second
+
+    first, second = run_async(work)
+    assert first["sent"] == 6
+    assert second.get("sent", 0) == 0
+    assert second["already"] == 6
+    assert len(vendor.sent) == 6
+
+
+def test_a_broken_chart_in_the_parallel_path_does_not_take_the_others(db):
+    """То же ограждение, что и в последовательном пути, и оно должно быть одним.
+
+    Ветвей стало две, а правило «одна плохая карта не морит голодом очередь за
+    собой» — по-прежнему одно: `_attempt` общий для обеих.
+    """
+    vendor = Vendor()
+    seen: list[str] = []
+
+    async def poison(session, user, *, on, zone=None):
+        seen.append(user.id)
+        if len(seen) == 1:
+            raise ValueError("this chart has impossible coordinates")
+        return [Contact()]
+
+    async def work():
+        async with db.session_scope() as session:
+            for _ in range(5):
+                await subscriber(session)
+            await session.commit()
+            return await daily.run(
+                session, now=WHEN, transports={"ios": vendor},
+                candidates=poison, compose_piece=wrote,
+                sessions=db.session_factory(), concurrency=2,
+            )
+
+    report = run_async(work)
+    assert report["due"] == 5
+    assert report["errored"] == 1
+    assert report["sent"] == 4
+
+
+def test_two_runs_cannot_overlap(db, tmp_path, monkeypatch):
+    """Прогон, идущий дольше часа, встречает следующий запуск таймера.
+
+    Захват дня не даст отправить дважды — это его работа, — но не спасёт от
+    второго прогона остальное: удвоенный расход на модель на тех, кто попал в
+    щель между чтением списка и захватом, вдвое больше соединений к базе и
+    вдвое больше запросов к вендору.
+    """
+    from alma import config as config_module
+
+    monkeypatch.setenv("ALMA_RUN_LOCK_DIR", str(tmp_path / "locks"))
+    config_module.settings.cache_clear()
+
+    with daily.single_run("daily") as first:
+        assert first is True
+        with daily.single_run("daily") as second:
+            assert second is False, "второй прогон начался поверх первого"
+
+    # И замок отпускается: следующий час должен получить его снова.
+    with daily.single_run("daily") as later:
+        assert later is True

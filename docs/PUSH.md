@@ -1266,6 +1266,16 @@ about which process was alive at 08:00.
 
 **systemd timers on the same host as the API, plus a dead-man's switch.**
 
+> **Written, and they are in the repository.** `backend/deploy/systemd/` holds all
+> six units — three `.service` and three `.timer` — and `docs/DEPLOY.md §5` is
+> the owner-facing installation. They differ from the ini below in exactly one
+> line: `ExecStart` runs `docker compose run --rm --no-deps app python -m …`
+> rather than a `.venv` path, because the deployment is a container now
+> (`backend/Dockerfile`, `backend/docker-compose.yml`). Everything this section
+> argues — `Persistent=true`, `RandomizedDelaySec`, `systemctl list-timers`,
+> `ExecStartPost` as the dead-man's switch — is unchanged and is why they are
+> timers rather than a scheduler.
+
 ```ini
 # /etc/systemd/system/alma-daily.service
 [Unit]
@@ -1318,9 +1328,9 @@ Run all three the same way, so there is one mechanism to understand:
 
 | Timer | Command | When | Status today |
 | --- | --- | --- | --- |
-| `alma-daily` | `python -m alma.notify.daily` | **hourly**, on the hour (§8.4) | does not exist |
-| `alma-renewals` | `python -m alma.billing.renewals` | 09:17 UTC | **written, documented, never scheduled** |
-| `alma-funnel-purge` | `python -m alma.funnel --purge` | 03:41 UTC | **written, documented, never scheduled** |
+| `alma-daily` | `python -m alma.notify.daily` | **hourly**, on the hour (§8.4) | unit written — `backend/deploy/systemd/` |
+| `alma-renewals` | `python -m alma.billing.renewals` | 09:17 UTC | unit written; **still has to be enabled on the host** |
+| `alma-funnel-purge` | `python -m alma.funnel --purge` | 03:41 UTC | unit written; **still has to be enabled on the host** |
 
 That third column is the reason this section is long. Two of the three jobs already exist, are
 already documented in `backend/README.md`, and have never run — and one of them is the only
@@ -1384,8 +1394,9 @@ what hour it is.
 | FCM | $0. Google charges nothing to send. |
 | systemd timers | $0. They run on the host already paying for the API. |
 | Dead-man's-switch monitoring | $0 on Healthchecks.io's free tier; self-hostable. |
-| Compute | One `transits.scan` per subscriber per day. The module is vectorised — a whole year of transits is a handful of array evaluations — so a few thousand subscribers is minutes, not hours, on one core. |
-| Generation | $0.32 per subscriber per month at 12 dailies × $0.027, against $8.99 net and a $3.50 ceiling (§6). |
+| Compute | One `transits.scan` per subscriber per day. Measured: `chart_for` 33 ms, a three-day `transits.scan` 112 ms — 145 ms of core time per candidate. At ten thousand subscribers the peak hour is ~4 minutes of one core, *provided* the cheap refusals are answered first; before that ordering it was ~12, because the ephemeris was computed for everybody the rules were about to refuse. `docs/DEPLOY.md §6` carries the arithmetic. |
+| Generation | $0.32 per subscriber per month at 12 dailies × $0.027, against $8.99 net and a $3.50 ceiling (§6). At ten thousand subscribers, ~$1,430 a month against ~$89,900 of net revenue — 1.6%. |
+| Wall clock | The run is bounded-concurrent (`ALMA_DAILY_CONCURRENCY`, default 8), because the generation is 8–12 seconds of *waiting* and one-at-a-time turns a peak hour into ~100 minutes — longer than the interval between two runs of an hourly timer. |
 | **Total marginal operating cost** | **effectively zero**, which is the correct answer and is also why the only thing worth spending care on is *not sending the wrong ones*. |
 
 ---

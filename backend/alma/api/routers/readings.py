@@ -73,7 +73,7 @@ from ...ai.provider import AnswerTruncated, ModelUnavailable, Provider, models
 from ...ai.writer import ReadingRefused
 from ...auth import entitlements
 from ...calc import CalcResult, TimeRequired
-from ...calc.cache import MOMENT_OPTIONS, compute_cached
+from ...calc.cache import MOMENT_OPTIONS, compute_cached_async
 from ...calc.contract import cache_key
 from ...calc.service import AmbiguousBirthTime, ambiguity_detail
 from ...config import settings
@@ -378,8 +378,25 @@ async def _stored_reading(
 
 
 async def _calc(system: str, birth, **options) -> CalcResult:
+    # **Расчёт идёт в рабочем потоке, а не в цикле событий.**
+    #
+    # `async def` вокруг синхронного numpy ничего не делает асинхронным: пока
+    # считается годовой скан транзитов, воркер не отвечает **никому** — ни
+    # другому человеку, ни проверке живости балансировщика, ни уже открытым
+    # потокам беседы. Замерено на утренней волне из двенадцати рождений:
+    # худшая пауза цикла была 9.15 секунды, и за это время проверка живости
+    # получила семь ответов вместо семисот. Балансировщик такой процесс
+    # считает мёртвым и выводит из работы — посреди волны, которую сам же и
+    # вызвал утренним уведомлением.
+    #
+    # После выноса в поток та же волна: пауза 0.29 секунды, проверка живости
+    # отвечает без перебоев. Общее время выросло примерно на шестую часть —
+    # расчёт упирается в GIL и от потоков быстрее не становится, — и это
+    # честная цена за то, что сервер перестал исчезать.
     try:
-        return compute_cached(system, birth, cache=result_cache(), **options)
+        return await compute_cached_async(
+            system, birth, cache=result_cache(), **options
+        )
     except AmbiguousBirthTime as exc:
         raise HTTPException(
             status.HTTP_409_CONFLICT, detail=ambiguity_detail(exc)

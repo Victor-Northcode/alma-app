@@ -1,0 +1,10 @@
+[Unit]
+Description=Alma — чистка аналитики старше 180 дней; раз в сутки
+
+[Timer]
+OnCalendar=*-*-* 03:41:00
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

@@ -314,20 +314,30 @@ def _transports() -> Mapping[str, Transport]:
     return {name: transport_for(name) for name in configured_platforms()}
 
 
-def _factor_for(session_profile_self, partner_profile) -> tuple[str, int] | None:
+async def _factor_for(session_profile_self, partner_profile) -> tuple[str, int] | None:
     """Фактор из расчёта совместимости — тем же вызовом, что и API.
 
-    `compute_cached` с тем же процессным кэшем (`api.cache.result_cache`) и
-    теми же опциями, что у `/systems/compatibility` по умолчанию, — значит,
+    `compute_cached_async` с тем же процессным кэшем (`api.cache.result_cache`)
+    и теми же опциями, что у `/systems/compatibility` по умолчанию, — значит,
     ключ кэша совпадает и к моменту покупки расчёт обычно уже готов: человек
     только что смотрел на пару. Импорты внутри вызова, чтобы модуль пуша не
     тянул расчётный слой при импорте (`daily.py` так же прячет своих).
+
+    **В потоке, и здесь это дороже, чем кажется.** «Обычно готов» — не всегда:
+    покупку подтверждает и нотификация магазина, прилетающая через минуты в
+    воркер, который пары в глаза не видел, и там это честный промах кэша.
+    Синастрия — 0.073 с замерено на этой машине; при промахе она считалась
+    **внутри платёжной транзакции**, в событийном цикле, то есть за
+    подтверждение чужой покупки платил задержкой каждый, кто в эту секунду
+    что-то делал. Верхняя граница здесь тоже не наша: `compute` на паре без
+    известного времени рождения ходит по другим веткам движка. Поток снимает
+    вопрос целиком — см. `calc.cache.compute_cached_async`.
     """
     from ..api.cache import result_cache
-    from ..calc.cache import compute_cached
+    from ..calc.cache import compute_cached_async
     from ..daily.service import birth_of
 
-    result = compute_cached(
+    result = await compute_cached_async(
         "compatibility",
         birth_of(session_profile_self),
         cache=result_cache(),
@@ -498,7 +508,7 @@ async def _composed(session: AsyncSession, user: User, partner_id: str, devices)
 
         mine = await self_profile(session, user)
         if mine is not None and mine.id != partner.id:
-            factor = _factor_for(mine, partner)
+            factor = await _factor_for(mine, partner)
     except Exception as exc:
         # Расчёт недоступен или упал (нет эфемерид, двусмысленное время,
         # кривые координаты) — фактор не выдумывается, текст остаётся честным.

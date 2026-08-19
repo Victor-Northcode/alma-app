@@ -21,13 +21,32 @@ That is the right way round for this feature and the wrong way round for that
 one, and the two files disagreeing on purpose is worth more than a shared
 helper that is wrong for one of them.
 
-**Nothing schedules this**, exactly as nothing schedules `renewals.py` or
-`funnel.py --purge`. It is a function and a `__main__`, run as
-`python -m alma.notify.daily`. `docs/PUSH.md §8` recommends a systemd timer
-with a dead-man's switch, and makes the point that matters more than the
-choice: three jobs that do not run is one operations problem, and whoever
-wires the first should wire all three. A renewal notice a day late is
-survivable; a daily a day late is a lie about what day it is.
+**Nothing in this process schedules it.** It is a function and a `__main__`, run
+as `python -m alma.notify.daily`; the timer that calls it lives on the host —
+`backend/deploy/systemd/alma-daily.timer`, installed per `docs/DEPLOY.md §5`,
+with the dead-man's switch `docs/PUSH.md §8.3` argues for. Three jobs that do
+not run is one operations problem, and whoever wires the first should wire all
+three. A renewal notice a day late is survivable; a daily a day late is a lie
+about what day it is.
+
+**Работы делаются в порядке «дешёвое раньше дорогого», и это не стиль.**
+Измерено: расчёт карты — 33 мс, трёхдневный скан транзитов — 112 мс, то есть
+~145 мс процессорного времени на человека, а одна написанная запись — ещё
+8–12 секунд ожидания модели и полтора цента. Раньше эфемериды считались первыми
+— `candidates(...)` стоял аргументом внутри `rules.may_send`, — то есть до того,
+как правило успевало сказать «не подписчик», «выключено» или «уже отправлено».
+Большинство отказов дешёвые, так что большинство расчётов уходило впустую. См.
+`_one`.
+
+**Получателей обрабатывается несколько сразу, но не все.** `run(sessions=…)`
+разводит их по своим сессиям с ограничением `ALMA_DAILY_CONCURRENCY` (восемь).
+Строго по одному пиковый час десяти тысяч подписчиков занимает около ста минут
+— дольше, чем промежуток между двумя запусками ежечасного таймера; «все разом»
+— это 429 от модели и исчерпанный пул базы. Арифметика — `docs/DEPLOY.md §6`.
+
+**Отказ вендора — это про вендора.** `Verdict.fatal` снимает с прогона одного
+отправителя, а не прогон: протухший ключ FCM больше не отменяет утро владельцам
+iPhone. Прогон заканчивается ошибкой, только когда выбыли все.
 
 **What this file refuses to do quietly.** It will not start without a push
 credential, and it will not start without something to ask what today
@@ -42,11 +61,19 @@ from __future__ import annotations
 import argparse
 import asyncio
 import logging
+import os
 from collections import defaultdict
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 from typing import Callable, Mapping
 from zoneinfo import ZoneInfo
+
+try:  # POSIX only, and the deployment is Linux — see `single_run`.
+    import fcntl
+except ImportError:  # pragma: no cover - Windows
+    fcntl = None  # type: ignore[assignment]
 
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -296,6 +323,55 @@ async def claim(
     return row, "claimed"
 
 
+async def held(
+    session: AsyncSession, recipient: Recipient, *, day: date, outcome: dict
+) -> str | None:
+    """Кто уже держит этот день, или `None`, если он свободен.
+
+    Одно чтение по первичному ключу, и стоит оно здесь ради порядка: без него
+    «этому человеку уже отправлено сегодня» выяснялось только в `claim`, то
+    есть после того, как за него посчитали эфемериды. См. `_one`.
+
+    **Заодно это то место, где прогон переживает собственную смерть.** Строка с
+    `count == 0` — это захваченный и не разрешённый день: процесс убили между
+    захватом и отправкой. Внутри своего часа она неотличима от живого захвата
+    на другом хосте, и трогать её нельзя — иначе двое отправят одно утро
+    дважды, ровно то, ради чего вся эта бухгалтерия и заведена. Но час — это и
+    есть отметка времени, которой у `UsageCounter` нет: задание ходит ежечасно,
+    так что *следующий* час, застающий захват неразрешённым, застаёт его от
+    процесса, которого уже нет. Тогда день возвращается, и человек получает
+    своё утро в пределах `rules.WINDOW_HOURS` вместо того, чтобы потерять его
+    из-за деплоя.
+
+    Раньше он терялся молча и навсегда — это было записано как «принятая цена»
+    захвата до отправки. Цена принята за *сбой*, а не за перезапуск, который на
+    выкатке случается по расписанию.
+    """
+    row = await session.get(UsageCounter, counter_key(recipient.user.id, day))
+    if row is None:
+        return None
+    if row.count or 0:
+        return "already"
+    if recipient.local.hour > recipient.hour:
+        log.warning(
+            "user %s held an unresolved claim for %s from an earlier hour — a "
+            "run was killed between claiming the day and sending it. Taking the "
+            "day back, which is what the catch-up window is for.",
+            recipient.user.id, day,
+        )
+        await session.delete(row)
+        await session.commit()
+        outcome["reclaimed"] += 1
+        return None
+    log.warning(
+        "user %s holds an unresolved claim for %s inside this same hour — "
+        "either another host is sending it right now, or a run has just been "
+        "killed and the next hourly pass will take the day back",
+        recipient.user.id, day,
+    )
+    return "orphaned"
+
+
 async def confirm(session: AsyncSession, row: UsageCounter) -> None:
     """A vendor accepted it. The claim becomes the record."""
     row.count = 1
@@ -455,7 +531,7 @@ async def _measure(session: AsyncSession, user_id: str) -> None:
 
 
 class Aborted(PushUnavailable):
-    """A `fatal` verdict, carrying whether anything had already gone out.
+    """A `fatal` verdict, carrying whose it was and what had already gone out.
 
     **The flag is the whole point of this class existing.** `deliver` walks a
     person's devices in turn. If the iPhone accepts and the Android token then
@@ -470,11 +546,22 @@ class Aborted(PushUnavailable):
     healthy — a rotated FCM key, a wrong SenderId, an APNs topic mismatch —
     i.e. the ordinary half-broken state, at four in the morning, silently, for
     every dual-platform subscriber at once.
+
+    **`platform` — вторая половина той же истории.** Отказ учётных данных верен
+    для всех токенов *одного* вендора и ни о чём не говорит про второго, а
+    прогон до сих пор останавливался целиком: протухший ключ FCM отменял утро и
+    всем владельцам iPhone заодно. Имя платформы здесь — это то, что позволяет
+    `run` вывести из строя одного вендора и досчитать прогон на оставшемся.
+    Останавливается прогон только когда выбыли все — тогда идти действительно
+    некуда.
     """
 
-    def __init__(self, message: str, *, delivered: bool = False) -> None:
+    def __init__(
+        self, message: str, *, delivered: bool = False, platform: str = ""
+    ) -> None:
         super().__init__(message)
         self.delivered = delivered
+        self.platform = platform
 
 
 async def deliver(
@@ -535,9 +622,10 @@ async def deliver(
             await token_store.retire(session, device, receipt)
             raise Aborted(
                 f"{device.platform} refused every notification: "
-                f"{receipt.reason} ({receipt.detail}). Stopping the run rather "
-                "than repeating it for everybody else.",
+                f"{receipt.reason} ({receipt.detail}). Dropping this vendor for "
+                "the rest of the run rather than repeating it for everybody else.",
                 delivered=delivered,
+                platform=device.platform,
             )
         outcome = await token_store.retire(session, device, receipt)
         if receipt.verdict is Verdict.sent:
@@ -564,6 +652,43 @@ def reachable(recipient: Recipient, transports: Mapping[str, Transport]) -> bool
     return any(device.platform in transports for device in recipient.devices)
 
 
+@dataclass(slots=True)
+class _Fleet:
+    """Вендоры, которые ещё отвечают, и причина, если не отвечает никто.
+
+    Изменяемый, и это единственная причина, по которой он существует:
+    отказавший вендор должен выбыть **для всех оставшихся получателей**, а не
+    для одного, и при параллельном прогоне — сразу для всех задач в полёте.
+    Словарь транспортов, который передавали по значению, этого не умел.
+    """
+
+    transports: dict[str, Transport]
+    #: Непустая строка означает «идти больше некуда»: последний вендор выбыл.
+    #: Проверяется каждой задачей перед началом работы, поэтому тысяча
+    #: получателей за упавшим вендором не тратит ни расчёта, ни запроса.
+    stopped: str = ""
+
+
+def _quarantine(fleet: _Fleet, exc: Aborted, outcome: dict) -> None:
+    """Вывести одного вендора из прогона; остановить прогон, если он был последним."""
+    platform = exc.platform
+    if platform and platform in fleet.transports:
+        del fleet.transports[platform]
+        outcome[f"vendor down:{platform}"] += 1
+        log.error(
+            "%s is out for the rest of this run: %s. %s",
+            platform,
+            exc,
+            (
+                "Continuing on " + ", ".join(sorted(fleet.transports))
+                if fleet.transports
+                else "No vendor is left, so the run stops here"
+            ),
+        )
+    if not fleet.transports:
+        fleet.stopped = str(exc)
+
+
 async def run(
     session: AsyncSession,
     *,
@@ -571,6 +696,8 @@ async def run(
     transports: Mapping[str, Transport] | None = None,
     candidates: Callable | None = None,
     compose_piece: Callable | None = None,
+    sessions: Callable | None = None,
+    concurrency: int | None = None,
 ) -> dict:
     """One hourly pass. Returns what happened, which is the only report there is.
 
@@ -579,6 +706,28 @@ async def run(
     refused 412 — nothing qualified". The first is a broken job and the second
     is a quiet sky, and a log line that cannot tell them apart is a log line
     nobody can act on.
+
+    **`sessions` — это то, чем прогон перестаёт быть очередью из одного.**
+    Фабрика сессий (`db.session.session_factory()`). Когда она передана,
+    получатели обрабатываются `concurrency` штук одновременно, и **каждый в
+    своей сессии** — иначе никак: `AsyncSession` не переносит двух корутин
+    сразу, у неё одно соединение и одна транзакция, и «параллельность» на общей
+    сессии — это перемешанные транзакции и `InterfaceError` под нагрузкой.
+    Люди и устройства перечитываются в рабочей сессии по идентификаторам
+    (`_rebind`), потому что объект, загруженный в читающей сессии, в чужой —
+    отсоединённый.
+
+    Без неё всё идёт по одной на переданной сессии, ровно как раньше. Это не
+    режим совместимости ради тестов: одиночный вызов `run(session)` из чужого
+    кода — законный способ им пользоваться, и он не должен требовать знания про
+    фабрики.
+
+    Арифметика, ради которой это сделано, — в `docs/DEPLOY.md §6`: на десяти
+    тысячах подписчиков пиковый час строго последовательно — это порядка 100
+    минут, из которых 99 — ожидание ответа модели; при восьми одновременных —
+    около 7 минут. Часовое окно `rules.WINDOW_HOURS` первое ещё выдерживает, но
+    ровно до тех пор, пока не выдержит, и «утро», приехавшее к обеду, — это уже
+    не утро.
     """
     if transports is None:
         platforms = configured_platforms()
@@ -610,37 +759,50 @@ async def run(
     moment = moment_of(now)
     outcome: dict[str, int] = defaultdict(int)
     outcome["due"] = 0
+    fleet = _Fleet(transports=dict(transports))
 
-    for recipient in await due(session, now=moment):
-        outcome["due"] += 1
-        try:
-            await _one(
-                session,
-                recipient,
-                transports=transports,
-                candidates=candidates,
-                compose_piece=compose_piece,
-                entitlements=entitlements,
-                moment=moment,
-                outcome=outcome,
-            )
-        except Aborted as exc:
-            log.error("daily notifications aborted after %s", dict(outcome))
-            raise exc
-        except Exception:
-            # **One bad chart must not starve everybody behind it.** There was
-            # no guard here, and `due()` returns recipients in stable query
-            # order — so an exception from `candidates()` (which calls
-            # `chart_for` and `transits.scan` on stored profile data) or from
-            # `compose` poisoned the same position on every subsequent hourly
-            # run, forever, discarding the partial tally and logging nothing at
-            # all. One corrupt row — bad coordinates, an unparseable timezone,
-            # an ephemeris edge — was a total outage that looked like a quiet
-            # sky. `Aborted` still propagates above: that one is about
-            # everybody, and this one is about one chart.
-            log.exception("the daily failed for %s", recipient.user.id)
-            outcome["errored"] += 1
-            await _recover(session)
+    recipients = await due(session, now=moment)
+    outcome["due"] = len(recipients)
+
+    # Всё, что одинаково для каждого получателя, собрано один раз: два пути
+    # ниже — по одному и параллельно — обязаны звать `_attempt` с одним и тем
+    # же набором, и раскрытая дважды подпись рано или поздно разойдётся.
+    work = {
+        "fleet": fleet,
+        "candidates": candidates,
+        "compose_piece": compose_piece,
+        "entitlements": entitlements,
+        "moment": moment,
+        "outcome": outcome,
+    }
+
+    if sessions is None:
+        for recipient in recipients:
+            await _attempt(session, recipient, **work)
+    else:
+        limit = asyncio.Semaphore(
+            max(1, concurrency if concurrency is not None else _concurrency())
+        )
+
+        async def worker(recipient: Recipient) -> None:
+            # Семафор снаружи сессии, а не внутри: сессия — это соединение к
+            # базе, и открывать их по числу получателей, чтобы тут же встать в
+            # очередь за правом работать, значит исчерпать пул раньше, чем
+            # начнётся первая генерация.
+            async with limit:
+                if fleet.stopped:
+                    return
+                async with sessions() as own:
+                    bound = await _rebind(own, recipient)
+                    if bound is None:
+                        # Аккаунт удалён или устройства отвязаны между чтением
+                        # списка и этой секундой. Не ошибка: список составлен
+                        # минуты назад, а человек имеет право уйти в любую.
+                        outcome["vanished"] += 1
+                        return
+                    await _attempt(own, bound, **work)
+
+        await asyncio.gather(*(worker(recipient) for recipient in recipients))
 
     swept = await token_store.sweep(session, now=moment)
     if swept:
@@ -648,11 +810,115 @@ async def run(
     await session.commit()
 
     report = dict(outcome)
-    if outcome["failed"] or outcome["errored"]:
+    if outcome["failed"] or outcome["errored"] or fleet.stopped:
         log.error("daily notifications: %s", report)
     else:
         log.info("daily notifications: %s", report)
+
+    if fleet.stopped:
+        # Прогон кончился раньше списка, и это должно быть исключением, а не
+        # строкой в отчёте: `ExecStart` таймера обязан завершиться ненулевым
+        # кодом, иначе `ExecStartPost` пингует мониторинг и «всё хорошо».
+        raise PushUnavailable(
+            f"every push vendor is out: {fleet.stopped} Report: {report}"
+        )
     return report
+
+
+def _concurrency() -> int:
+    from ..config import settings
+
+    return settings().daily_concurrency
+
+
+async def _rebind(session: AsyncSession, recipient: Recipient) -> Recipient | None:
+    """Перечитать человека и его устройства в той сессии, которая их изменит.
+
+    `due()` читает весь список одной сессией; работает по нему — другая, своя
+    у каждой задачи. Объект SQLAlchemy принадлежит сессии, которая его
+    загрузила: `token_store.retire` на чужом объекте либо промахивается мимо
+    транзакции, либо роняет `DetachedInstanceError` при первом обращении к
+    непрогруженному полю. Два запроса по индексам — цена, которую платит только
+    параллельный путь.
+
+    Часовой пояс, час доставки и язык не перечитываются: их разрешил `due()`
+    по самому свежему устройству, и это тот же ответ, который дала бы вторая
+    попытка. Перерешать его здесь значило бы иметь два места, где выбирается
+    чей-то часовой пояс.
+    """
+    user = await session.get(User, recipient.user.id)
+    if user is None or not user.is_active:
+        return None
+    devices = (
+        await session.execute(
+            select(DeviceToken).where(
+                DeviceToken.user_id == user.id, DeviceToken.disabled_at.is_(None)
+            )
+        )
+    ).scalars().all()
+    if not devices:
+        return None
+    return Recipient(
+        user=user,
+        devices=list(devices),
+        zone=recipient.zone,
+        local=recipient.local,
+        hour=recipient.hour,
+        locale=recipient.locale,
+    )
+
+
+async def _attempt(
+    session: AsyncSession,
+    recipient: Recipient,
+    *,
+    fleet: _Fleet,
+    candidates: Callable,
+    compose_piece: Callable | None,
+    entitlements,
+    moment: datetime,
+    outcome: dict,
+) -> None:
+    """Одна попытка, с обоими ограждениями: чужая беда и общая.
+
+    Раньше эти два `except` стояли в теле цикла `run`. Вынесены, потому что
+    ветвей стало две — по одной и параллельно, — а правило «одна плохая карта
+    не морит голодом очередь за собой» должно быть одним и тем же в обеих.
+    """
+    if fleet.stopped:
+        return
+    try:
+        await _one(
+            session,
+            recipient,
+            transports=fleet.transports,
+            candidates=candidates,
+            compose_piece=compose_piece,
+            entitlements=entitlements,
+            moment=moment,
+            outcome=outcome,
+        )
+    except Aborted as exc:
+        # **Отказ вендора — это про вендора, а не про прогон.** Раньше отсюда
+        # летело наружу и останавливало утро целиком: протухший ключ FCM
+        # отменял рассылку и всем владельцам iPhone. Теперь выбывает вендор, а
+        # прогон досчитывается на оставшемся; если оставшегося нет, `_Fleet`
+        # взводит `stopped` и `run` завершается ошибкой в самом конце.
+        _quarantine(fleet, exc, outcome)
+        await _recover(session)
+    except Exception:
+        # **One bad chart must not starve everybody behind it.** There was
+        # no guard here, and `due()` returns recipients in stable query
+        # order — so an exception from `candidates()` (which calls
+        # `chart_for` and `transits.scan` on stored profile data) or from
+        # `compose` poisoned the same position on every subsequent hourly
+        # run, forever, discarding the partial tally and logging nothing at
+        # all. One corrupt row — bad coordinates, an unparseable timezone,
+        # an ephemeris edge — was a total outage that looked like a quiet
+        # sky.
+        log.exception("the daily failed for %s", recipient.user.id)
+        outcome["errored"] += 1
+        await _recover(session)
 
 
 async def _recover(session: AsyncSession) -> None:
@@ -690,26 +956,57 @@ async def _one(
     moment: datetime,
     outcome: dict,
 ) -> None:
-    """One person's morning. Every exit records why, and `run` counts them."""
+    """One person's morning. Every exit records why, and `run` counts them.
+
+    **Порядок здесь — это счёт за прогон, а не стиль.** Эфемериды считались
+    первыми: `candidates(...)` стоял аргументом внутри вызова `rules.may_send`,
+    то есть Python вычислял его *до* того, как правило успевало сказать «этот
+    человек не подписчик» или «он выключил уведомления». Измерено на этой
+    машине: `chart_for` — 33 мс, трёхдневный `transits.scan` — 112 мс, итого
+    ~145 мс процессорного времени на человека. На десяти тысячах подписчиков в
+    пиковый час это ~10 минут ядра, потраченных на людей, которым по правилам
+    ничего не полагается, — а таких большинство: `rules.PER_MONTH` держит
+    десять записей в месяц против тридцати с лишним утр, так что две трети
+    отказов дешёвые.
+
+    Теперь дешёвое спрашивается первым. `rules.may_send` вызывается дважды, и
+    оба раза это **одно и то же правило в одном и том же порядке**: первый раз
+    с пустым списком кандидатов, что доводит его ровно до места, где нужны
+    эфемериды, и возвращает «nothing qualified»; всё, что он успел отвергнуть
+    до этого места, отвергнуто без единого расчёта. Дублировать порядок правил
+    здесь было бы хуже вдвойне — два места, которые разойдутся, и `rules.py`
+    остался бы без единственного своего читателя.
+    """
     day = recipient.local.date()
 
     tier = await entitlements.tier_of(session, recipient.user, at=moment)
     past = await history(session, recipient.user.id, before=day)
-    decision = rules.may_send(
-        tier=tier,
-        stored_preference=recipient.user.daily_push,
-        last_seen=as_utc(recipient.user.last_seen_at),
-        local=recipient.local,
-        hour=recipient.hour,
-        history=past,
-        # The zone goes with the day. `day` was resolved on `recipient.zone`,
-        # and the selection package would otherwise bracket it on the birth
-        # zone — the one rung that is wrong for everybody who has moved.
-        candidates=await candidates(session, recipient.user, on=day, zone=recipient.zone),
-        now=moment,
-    )
-    if not decision.send or decision.chosen is None:
-        outcome[f"refused:{decision.reason}"] += 1
+    # Всё, кроме кандидатов, — то есть всё, что не стоит ни одной эфемериды.
+    # Собрано один раз, потому что `may_send` спрашивается дважды и оба раза
+    # об одном и том же человеке; разойтись этим двум вызовам нельзя.
+    verdict = {
+        "tier": tier,
+        "stored_preference": recipient.user.daily_push,
+        "last_seen": as_utc(recipient.user.last_seen_at),
+        "local": recipient.local,
+        "hour": recipient.hour,
+        "history": past,
+        "now": moment,
+    }
+
+    # Дешёвая половина: не подписчик, выключено, спит, не его час, тихие часы,
+    # уже было на этой неделе. Ни одна из них не смотрит в небо.
+    cheap = rules.may_send(candidates=(), **verdict)
+    if not cheap.send and cheap.reason != "nothing qualified":
+        outcome[f"refused:{cheap.reason}"] += 1
+        return
+
+    # «Уже отправлено» — одно чтение по первичному ключу, и оно тоже дешевле
+    # неба. Настоящий захват дня ниже остаётся за `claim`: он решает гонку,
+    # которую это чтение только предугадывает.
+    state = await held(session, recipient, day=day, outcome=outcome)
+    if state is not None:
+        outcome[state] += 1
         return
 
     if not reachable(recipient, transports):
@@ -717,6 +1014,18 @@ async def _one(
         # is our missing credential, not a vendor's refusal, and it is counted
         # under its own name rather than under `failed`.
         outcome["no transport"] += 1
+        return
+
+    # И только теперь — небо.
+    decision = rules.may_send(
+        # The zone goes with the day. `day` was resolved on `recipient.zone`,
+        # and the selection package would otherwise bracket it on the birth
+        # zone — the one rung that is wrong for everybody who has moved.
+        candidates=await candidates(session, recipient.user, on=day, zone=recipient.zone),
+        **verdict,
+    )
+    if not decision.send or decision.chosen is None:
+        outcome[f"refused:{decision.reason}"] += 1
         return
 
     row, state = await claim(session, user_id=recipient.user.id, day=day)
@@ -782,11 +1091,86 @@ async def _one(
         outcome["failed"] += 1
 
 
-async def _run(now: datetime | None = None) -> dict:
-    from ..db.session import session_scope
+@contextmanager
+def single_run(name: str = "daily"):
+    """Не дать второму прогону начаться, пока идёт первый. Отдаёт True/False.
 
-    async with session_scope() as session:
-        return await run(session, now=now)
+    **Задание ходит ежечасно, а прогон на десяти тысячах подписчиков может идти
+    дольше часа** — если модель отвечает медленнее обычного, если вендор
+    держит соединения, если кто-то поднял `ALMA_DAILY_CONCURRENCY` в единицу.
+    Тогда таймер запускает второй экземпляр поверх первого, и оба идут по
+    одному и тому же списку. Захват дня в `UsageCounter` не даст отправить
+    дважды — это его работа, — но не спасёт от второго прогона всё остальное:
+    удвоенный расход на модель на тех, кто попал в щель между чтением и
+    захватом, удвоенное число соединений к базе и вдвое больше запросов к
+    вендору. `systemd` умеет это сам, но только если задание запущено им;
+    запущенное вручную «чтобы догнать» — не умеет.
+
+    **Замок файловый, и он снимается сам.** `flock` держит ядро, а не мы: если
+    процесс убит `kill -9`, потерял связь или контейнер снесли, дескриптор
+    закрывается вместе с процессом и замок исчезает. Файл с записанным PID,
+    который надо было бы «протухать» по времени, пережил бы падение и запер бы
+    задание до тех пор, пока кто-нибудь не заметил. Здесь заметить нечего.
+
+    **Он про один хост.** Два хоста с общей базой и разными файловыми системами
+    друг друга не увидят, и это честная граница рекомендованного развёртывания
+    (`docs/DEPLOY.md`): один сервер, таймеры рядом с приложением. Если хостов
+    станет два, замок переезжает в базу (`pg_try_advisory_lock`), и это ровно
+    эта функция и ничего больше.
+
+    На платформе без `fcntl` (Windows) замка нет и об этом говорится вслух —
+    молчаливое «всегда свободно» здесь было бы худшим из вариантов.
+    """
+    from ..config import settings
+
+    if fcntl is None:  # pragma: no cover - зависит от платформы, не от кода
+        log.warning(
+            "this platform has no fcntl, so two %s runs can overlap. Fine on a "
+            "developer's machine, not fine on the host that actually sends.",
+            name,
+        )
+        yield True
+        return
+
+    directory = Path(settings().run_lock_dir)
+    directory.mkdir(parents=True, exist_ok=True)
+    with open(directory / f"{name}.lock", "a+") as handle:
+        try:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            # Замок у кого-то другого. Не ошибка — вызывающий получает False и
+            # сам решает, что это значит; см. `_run`.
+            yield False
+            return
+        # PID пишется не для машины, а для человека, который в шесть утра
+        # хочет знать, кого именно смотреть в `docker compose ps`.
+        handle.seek(0)
+        handle.truncate()
+        handle.write(f"{os.getpid()}\n")
+        handle.flush()
+        try:
+            yield True
+        finally:
+            # Явное снятие, хотя закрытие дескриптора снимет его и так: разница
+            # видна ровно в тот момент, когда `close()` почему-то не случился.
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+async def _run(now: datetime | None = None) -> dict:
+    from ..db.session import session_factory, session_scope
+
+    with single_run("daily") as acquired:
+        if not acquired:
+            # Не ошибка и не повод будить человека: следующий час подберёт всех,
+            # кого не успел этот, — окно `rules.WINDOW_HOURS` ровно для этого.
+            log.warning(
+                "a daily run is still in progress; this hour is skipped. If this "
+                "repeats, the run is taking longer than an hour — raise "
+                "ALMA_DAILY_CONCURRENCY or look at what the model is doing."
+            )
+            return {"skipped": "another daily run holds the lock"}
+        async with session_scope() as session:
+            return await run(session, now=now, sessions=session_factory())
 
 
 if __name__ == "__main__":  # pragma: no cover - the cron entry point

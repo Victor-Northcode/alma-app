@@ -1,0 +1,129 @@
+# Alma — прод одной командой: `docker compose up -d --build`.
+#
+# Три службы: приложение, Postgres и обратный прокси с TLS. Больше ничего нет и
+# не должно быть — ни брокера, ни очереди, ни воркеров: регулярные задания
+# запускаются таймерами `deploy/systemd/` и это осознанный выбор, разобранный в
+# `docs/PUSH.md §8.2`.
+#
+# **Секреты живут в `.env` рядом с этим файлом и в git не попадают.** Заполнить
+# его надо один раз, взяв за образец `.env.example`; `docs/DEPLOY.md §3` —
+# список того, что там обязано быть. Compose читает `.env` сам, без указаний.
+#
+# Порт приложения наружу **не опубликован намеренно**: единственный путь снаружи
+# идёт через прокси, то есть через TLS. Опубликованный 8000 — это тот же сервис
+# по http, мимо шифрования, и об этом обычно узнают из чужого журнала.
+
+name: alma
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # Пароль и имя базы — из `.env`. Хост-порт не публикуется: базе незачем быть
+    # видимой из интернета, а изнутри сети compose её видно по имени `db`.
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-alma}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?нужен POSTGRES_PASSWORD в .env}
+      POSTGRES_DB: ${POSTGRES_DB:-alma}
+      # Не сортировать по локали: индексы, построенные при одной локали,
+      # молча ломаются при её смене в новой версии образа.
+      POSTGRES_INITDB_ARGS: "--locale-provider=icu --icu-locale=und"
+    volumes:
+      # **Единственный том, потеря которого невосполнима.** Всё остальное —
+      # код и картинки — восстанавливается из репозитория; здесь лежат люди,
+      # их карты, их покупки и их права. `docs/DEPLOY.md §7` — про резервные
+      # копии, и это раздел, который надо прочитать до первого платящего.
+      - alma-db:/var/lib/postgresql/data
+    healthcheck:
+      # `-U` обязателен: без него `pg_isready` спрашивает от имени `root`,
+      # которого в базе нет, и здоровая база считается больной.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-alma} -d ${POSTGRES_DB:-alma}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Postgres по умолчанию рассчитан на очень скромную машину. Две ручки,
+    # которые стоит поднять на десяти тысячах пользователей, и обе — про то,
+    # сколько он держит в памяти вместо диска. Полный разбор — `DEPLOY.md §6`.
+    command: >
+      postgres
+        -c max_connections=${POSTGRES_MAX_CONNECTIONS:-100}
+        -c shared_buffers=${POSTGRES_SHARED_BUFFERS:-256MB}
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        # Не «запущена», а «отвечает»: `create_all` в lifespan идёт к базе на
+        # первой же секунде, и контейнер, стартовавший на полсекунды раньше
+        # Postgres, падает с отказом соединения.
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      # Собрано здесь, а не в `.env`, потому что имя хоста `db` — это имя
+      # службы двумя строчками выше, а не то, что владелец должен знать.
+      ALMA_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-alma}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-alma}
+      ALMA_ENV: production
+      ALMA_RUN_LOCK_DIR: /var/lib/alma
+    volumes:
+      # Записываемое состояние: замки регулярных прогонов. Именованный том, а не
+      # каталог хоста, — чтобы не зависеть от прав на хосте; переживает
+      # пересборку образа и не переживает падение машины, что для замка и нужно.
+      - alma-var:/var/lib/alma
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys;sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+    # Ограничение по памяти названо, а не оставлено на «сколько дадут». Восемь
+    # воркеров gunicorn с ядром эфемерид в каждом — это единицы гигабайт, и
+    # разница между «контейнер перезапустился» и «сервер ушёл в своп и умер
+    # целиком, вместе с базой» стоит одной строки.
+    mem_limit: ${ALMA_MEM_LIMIT:-3g}
+
+  proxy:
+    # **Caddy, а не nginx, и это выбор в пользу владельца.** Caddy сам получает
+    # и сам продлевает сертификат Let's Encrypt: нужен домен, указывающий на эту
+    # машину, и всё. nginx требует certbot, задания на продление и ручного
+    # перезапуска, и первое, что обычно случается, — просроченный сертификат на
+    # девяностый день. Тем, у кого nginx уже есть, готовый конфиг лежит в
+    # `deploy/nginx.conf` — он делает ровно то же самое.
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      # HTTP/3. Не обязателен; полезен на мобильном интернете, который у этого
+      # продукта — основной.
+      - "443:443/udp"
+    environment:
+      # Домен и почта для Let's Encrypt. Без домена (`localhost`) Caddy выдаёт
+      # самоподписанный сертификат — этого хватает, чтобы проверить сборку.
+      ALMA_DOMAIN: ${ALMA_DOMAIN:-localhost}
+      ALMA_ACME_EMAIL: ${ALMA_ACME_EMAIL:-}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      # Вклейки глав, которые прокси отдаёт сам, минуя приложение. Каталог
+      # рабочей копии, а не том: файлы лежат в репозитории, `git pull` обновляет
+      # их, и никакого отдельного ритуала наполнения тома не нужно. У приложения
+      # внутри образа своя копия тех же файлов — 2.4 МБ дубля против одного
+      # способа ошибиться.
+      - ./static:/srv/alma/static:ro
+      # Сертификаты. **Терять этот том нельзя без последствий**: Let's Encrypt
+      # ограничивает 5 выпусков на домен в неделю, и пересоздание тома на каждом
+      # деплое упирается в этот предел за один день.
+      - alma-caddy-data:/data
+      - alma-caddy-config:/config
+
+volumes:
+  alma-db:
+  alma-var:
+  alma-caddy-data:
+  alma-caddy-config:

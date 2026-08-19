@@ -1,0 +1,11 @@
+[Unit]
+Description=Alma — письмо за три дня до списания; раз в сутки
+
+[Timer]
+# 09:17 UTC. Не 09:00: круглые часы — это когда просыпается весь интернет.
+OnCalendar=*-*-* 09:17:00
+Persistent=true
+RandomizedDelaySec=120
+
+[Install]
+WantedBy=timers.target

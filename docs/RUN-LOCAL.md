@@ -5,6 +5,12 @@ The storefront and the backend run directly on the machine: Node for
 container, and the backend's dependencies install fine into the
 interpreter itself when an isolated environment is not wanted.
 
+**Production is a different document.** `docs/DEPLOY.md` is the one with
+the container, the Postgres, the TLS and the timers; nothing on this page
+is meant to face the internet. The two differ on purpose: what makes a
+laptop pleasant — SQLite in a file, no keys, one process — is exactly what
+production refuses to start on (`config.check_production_ready`).
+
 ## Backend
 
 ```bash
@@ -13,11 +19,17 @@ cp backend/.env.example backend/.env.local  # dev defaults boot as-is
 python -m uvicorn alma.api.app:app --port 8000   # run from backend/
 ```
 
-`GET /ready` answers `ready: true` with the database, the ephemeris and
-the places index all checked. `ANTHROPIC_API_KEY`, the sign-in providers
-and the billing keys are listed as missing rather than failing anything:
-every calculation works without them — what they gate is the writing,
-accounts and money.
+`GET /ready` lists what it checked: the database, the ephemeris, the
+places index, the model key and the billing credentials. On a fresh
+checkout the last two are empty, so **it answers `ready: false`, and that
+is the correct answer** — readiness means the service can do what it
+promises, and without a model key nothing that sells works. Nothing is
+blocked by it: every calculation runs, and `/health` (which is what the
+container and the load balancer actually probe) stays `ok`.
+
+`missing` names what to fill in. That detail is served only in a local
+sandbox; in production the same route answers a single boolean, because a
+list of unset secrets is a map for whoever is looking for a way in.
 
 ## Storefront
 

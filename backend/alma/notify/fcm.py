@@ -199,16 +199,49 @@ class FCM:
         }
 
     async def send(self, token: DeviceToken, push: Push) -> Receipt:
+        """Одна отправка, с ровно одной перевыдачей токена на 401.
+
+        **401 — это не «наш ключ не годится», а «этот bearer протух».** Токен
+        кэшируется на пятьдесят минут против часа жизни, и десяти минут запаса
+        не хватает ровно в двух случаях, оба обыденные: часы хоста ушли вперёд
+        относительно Google, и прогон, начавшийся за минуту до границы, дошёл
+        до тысячного получателя уже за ней. До этой ветки такой 401 читался как
+        `Verdict.fatal` — то есть «учётные данные неверны для всех», — и
+        останавливал **весь утренний прогон** на всех подписчиках Android.
+        Один просроченный кэш вместо одной перевыдачи стоил целого утра.
+        Симметрично `apns.send`, где ровно та же однократная попытка сделана
+        для `ExpiredProviderToken`.
+
+        Одна, а не в цикле: 401 на *свежевыданном* токене — это уже не
+        истёкший кэш, а действительно негодный сервис-аккаунт (удалён, у него
+        отобрали роль), и повторять по нему бессмысленно — второй ответ будет
+        тем же, и `read` честно назовёт его `fatal`.
+
+        403 сюда не попадает намеренно. Это «аутентификация прошла, прав нет» —
+        сервис-аккаунту не дали роль Firebase Messaging Sender, — и никакая
+        перевыдача токена этого не исправит.
+        """
         import httpx
 
-        bearer = await access_token()
         url = ENDPOINT.format(project=settings().fcm_project_id)
+        body = self.message(token, push)
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(
                 url,
-                json=self.message(token, push),
-                headers={"Authorization": f"Bearer {bearer}"},
+                json=body,
+                headers={"Authorization": f"Bearer {await access_token()}"},
             )
+            if response.status_code == 401:
+                log.info(
+                    "FCM answered 401; the cached access token is stale. "
+                    "Minting a new one and retrying this notification once."
+                )
+                _forget_token()
+                response = await client.post(
+                    url,
+                    json=body,
+                    headers={"Authorization": f"Bearer {await access_token()}"},
+                )
         return self.read(response.status_code, response.text)
 
     @staticmethod

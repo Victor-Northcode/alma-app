@@ -298,6 +298,11 @@ def test_a_reader_who_leaves_mid_turn_does_not_erase_what_the_turn_cost(stream_d
 
     Тест держит ход в модели, закрывает поток (это и есть ушедший читатель),
     отпускает модель и ждёт записи.
+
+    Роут зовётся напрямую, поэтому и его подпись здесь видна: сессии у него
+    больше нет — `SessionReleased` вместо `SessionDep`, — и ход берёт свои
+    короткие транзакции сам. Проверяемое от этого не изменилось ни на строку:
+    вопрос в том, остаются ли деньги, вопрос и ответ после ухода читателя.
     """
     natal_factors = compute("natal", BIRTH).factors
 
@@ -325,12 +330,16 @@ def test_a_reader_who_leaves_mid_turn_does_not_erase_what_the_turn_cost(stream_d
 
         async with session_module.session_scope() as session:
             who = await session.get(User, user_id)
-            response = await route.chat_stream(
-                ChatRequest(message="What should I do about work?"),
-                who,
-                session,
-                lambda: held,
-            )
+
+        # `_released` — четвёртый параметр роута, зависимость «соединение
+        # запроса возвращено пулу». При прямом вызове отдавать нечего, поэтому
+        # `None`: FastAPI подставил бы сюда ровно его.
+        response = await route.chat_stream(
+            ChatRequest(message="What should I do about work?"),
+            who,
+            lambda: held,
+            None,
+        )
 
         events = response.body_iterator
         first = await events.__anext__()

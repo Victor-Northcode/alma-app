@@ -1,0 +1,41 @@
+# Утренняя рассылка. Ежечасно — 10:00 наступает двадцать шесть раз вокруг
+# света, и раз в сутки можно быть утром только где-то одним.
+#
+# Установка: см. `docs/DEPLOY.md §5`. Коротко:
+#   sudo cp deploy/systemd/*.service deploy/systemd/*.timer /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now alma-daily.timer alma-renewals.timer alma-funnel-purge.timer
+#   systemctl list-timers | grep alma      # последний запуск и следующий
+
+[Unit]
+Description=Alma — утренняя рассылка (ежечасно, шлёт тем, у кого сейчас утро)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/alma/backend
+
+# `run --rm` — отдельный одноразовый контейнер из того же образа, с тем же
+# `.env` и той же сетью, что и приложение. Не `exec` в работающий контейнер:
+# `exec` унаследовал бы его окружение и его судьбу, и перезапуск приложения
+# посреди рассылки убивал бы её вместе с ним.
+#
+# `--no-deps`: базу поднимать не надо, она уже работает.
+ExecStart=/usr/bin/docker compose run --rm --no-deps app python -m alma.notify.daily
+
+# **Мёртвая рука.** `ExecStartPost` выполняется только если `ExecStart`
+# завершился успешно, поэтому упавший прогон — это неотправленный пинг, а
+# неотправленный пинг — это письмо. Таймер, переставший срабатывать, невидим
+# по-другому: логи чистые, счётчики нулевые, и первым это замечает подписчик.
+# Завести проверку на healthchecks.io (бесплатно до 20 штук) и подставить UUID.
+# ExecStartPost=/usr/bin/curl -fsS -m 10 --retry 3 https://hc-ping.com/ВАШ-UUID
+
+# Прогон на десяти тысячах подписчиков в пиковый час — единицы минут
+# (`docs/DEPLOY.md §6`). Полчаса — это «что-то повисло», а не «сегодня
+# медленно»; свой замок (`notify/daily.single_run`) не даст следующему часу
+# наложиться, но зависший процесс надо снимать.
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=multi-user.target
