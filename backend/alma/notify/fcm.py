@@ -31,7 +31,7 @@ from pathlib import Path
 
 from ..config import settings
 from ..db.models import DeviceToken
-from .transport import Push, PushUnavailable, Receipt, Verdict
+from .transport import CHANNEL_DAILY, Push, PushUnavailable, Receipt, Verdict
 
 log = logging.getLogger("alma.notify.fcm")
 
@@ -47,12 +47,17 @@ SCOPE = "https://www.googleapis.com/auth/firebase.messaging"
 #: gives — a job that starts just before the boundary should not discover it.
 _LIFETIME = 50 * 60
 
-#: The channel the daily posts on, and it must never be the one the renewal
-#: notice uses. An Android channel is the unit a person silences, and a shared
-#: one would let somebody switch off "you are about to be charged $9.99" by
-#: switching off the horoscope. Channel ids are permanent for an install, so
-#: this is a decision that is very cheap now and very expensive later.
-CHANNEL = "alma.daily"
+#: What a notification with no category asked for gets. **Not the channel every
+#: notification gets**, which is what this constant used to be: `message` wrote
+#: `"channel_id": CHANNEL` unconditionally, so the pair push — "the report you
+#: paid for is ready" — travelled on the daily's channel, and a person who had
+#: silenced their morning horoscope silently never heard about their purchase.
+#: The category is `Push.channel` now and it is the composer's decision; this
+#: is only the floor under a `Push` built before that field existed.
+#:
+#: An Android channel is the unit a person silences, and the ids are permanent
+#: for an install — see `transport.CHANNEL_DAILY` for why both live there.
+CHANNEL = CHANNEL_DAILY
 
 #: Twelve hours. The counterpart of `apns-expiration`: better absent than late.
 TTL_SECONDS = 12 * 60 * 60
@@ -158,8 +163,13 @@ class FCM:
         # `body` and `body_loc_key` are mutually exclusive here too — Android
         # prefers the literal and would silently ignore the key, which is a
         # payload that means two things depending on who reads it.
+        # **The channel comes off the `Push`, not off this module.** Which
+        # category a notification belongs to is a product decision — see
+        # `transport.Push.channel` — and a sender that chose it would be
+        # deciding what a person is allowed to silence. `or CHANNEL` is the
+        # floor, not a policy: a `Push` built without the field is a daily.
         alert: dict = {
-            "channel_id": CHANNEL,
+            "channel_id": push.channel or CHANNEL,
             "notification_priority": "PRIORITY_DEFAULT",
         }
         # Как и в APNs: собранный сервером заголовок («отчёт пары готов» несёт

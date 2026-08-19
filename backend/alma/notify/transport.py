@@ -41,10 +41,22 @@ written twice is a rule that will eventually be two different rules.
 * `loc-key` versus `body_loc_key`; `apns-collapse-id` versus `collapse_key`;
   `apns-expiration` as an absolute epoch second versus `ttl` as a duration
   string; `apns-priority: 5` versus `android.priority: "normal"`.
-* Android notification channels, which exist on one platform only and matter
-  enormously there — the daily must never share a channel with the renewal
-  notice, or a person silencing a horoscope silences a legal commitment.
+* The *spelling* `channel_id`, the `NotificationChannel` object, and the fact
+  that only one of the two platforms has the concept at all.
 * Which environment a token belongs to, a question Google does not have.
+
+**The one thing about channels that is not an accident of one vendor**, and
+therefore lives here as `Push.channel`: *which category of notification this
+is*. A daily and a "the report you paid for is ready" are different promises to
+the reader, and on Android the channel is the unit a person silences — so the
+daily must never share one with a purchase confirmation or a renewal notice,
+or somebody switching off a horoscope switches off "you are about to be charged
+$9.99". That is a product decision and it belongs to whoever composes the
+notification. It used to be a constant inside `fcm.py`, stamped onto every
+notification the sender was handed, which meant the pair push travelled on the
+daily's channel: a person who had silenced the daily would silently never learn
+their purchase had completed. A sender may translate the category into its own
+vocabulary; it may not choose it.
 
 **Refusing loudly is part of the interface.** `transport_for` raises rather
 than returning something that quietly does nothing, because a push system that
@@ -64,6 +76,30 @@ from ..db.models import DeviceToken
 
 #: The two platforms, spelled the way `DeviceToken.platform` spells them.
 PLATFORMS: tuple[str, ...] = ("ios", "android")
+
+#: The daily's own channel on Android, and nothing else's.
+#:
+#: **A channel id is permanent for an install.** Android remembers the person's
+#: choice against the id, and an app that renames one loses every "keep quiet"
+#: and every "always show" it was ever told. So these two strings are cheap to
+#: decide now and impossible to change later, and they are written here rather
+#: than in `fcm.py` because the client has to create channels with exactly
+#: these ids — `docs/PUSH.md §2.6` prints them, and a sender that invented its
+#: own would be a sender deciding what a person is allowed to silence.
+CHANNEL_DAILY = "alma.daily"
+
+#: Everything that answers something the person just did: the pair report they
+#: paid for is written, and — when it is wired — the renewal notice.
+#:
+#: Separate from the daily because the two are silenced for opposite reasons.
+#: "I do not want a horoscope every morning" is a common, reasonable, entirely
+#: expected thing to want; "do not tell me when the thing I paid $4.99 for is
+#: ready" is not, and one channel would make the first choice imply the second.
+#: **On Android an unknown channel id is worse than a wrong one**: on API 26+ a
+#: notification posted to a channel the app never created is dropped by the
+#: system without a trace on the device, so this id and the client's
+#: `NotificationChannel` have to agree exactly or the pair push does not exist.
+CHANNEL_TRANSACTIONAL = "alma.transactional"
 
 
 class PushUnavailable(RuntimeError):
@@ -172,6 +208,13 @@ class Push:
     #: Groups consecutive dailies so somebody who did not read Tuesday's does
     #: not find three separate rows on Thursday.
     thread: str = "daily"
+    #: Which category of notification this is — see the module docstring. Read
+    #: by the Android sender as the channel id; iOS has no equivalent and
+    #: ignores it, which is why it is a plain field rather than a platform
+    #: branch. Defaulted to the daily's because the daily is the only thing
+    #: this package sent for its first year, and a default of "" would have
+    #: made the omission a silent Android-only outage rather than a type error.
+    channel: str = CHANNEL_DAILY
     #: Two sends for the same day replace each other rather than stacking.
     #: Cheap insurance against a retry that raced a success.
     collapse_id: str = ""

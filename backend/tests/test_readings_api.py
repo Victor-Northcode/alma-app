@@ -751,6 +751,78 @@ def test_the_wall_speaks_the_reader_s_language_and_names_what_is_still_free(
         config_module.settings.cache_clear()
 
 
+def test_a_message_in_crisis_is_answered_without_the_model_and_kept_in_the_thread(
+    api, auth_headers, scripted
+):
+    """Кризис на проводе: без астрологии, без цитат, без обращения к модели.
+
+    Сценарий провайдера намеренно пуст. Если ход всё-таки пойдёт к модели, он
+    упрётся в кончившийся сценарий и тест упадёт — то есть «модель не звали» тут
+    проверено тем же способом, что и на уровне модуля.
+    """
+    from alma.i18n import replies as i18n_replies
+
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    body = api.post(
+        "/v1/chat",
+        json={"message": "я не хочу жить", "locale": "ru"},
+        headers=auth_headers,
+    )
+    assert body.status_code == 200, body.text
+    answer = body.json()["message"]
+    assert answer["body"] == i18n_replies.CRISIS["ru"]
+    assert answer["cited_factors"] == []
+    assert answer["turn_kind"] == "conversation", "никакой пометки о карте"
+    assert answer["answered_from_chart"] is False
+    assert scripted.calls == [], "человека в беде отдали модели"
+
+    # И он остаётся в беседе: перечитанный тред показывает ту же реплику, а не
+    # дыру на месте самого важного сообщения в нём.
+    thread = api.get(
+        f"/v1/chat/threads/{body.json()['thread_id']}", headers=auth_headers
+    ).json()
+    assert [m["body"] for m in thread["messages"]] == [
+        "я не хочу жить", i18n_replies.CRISIS["ru"],
+    ]
+
+
+def test_the_question_wall_never_stands_in_front_of_a_crisis(
+    api, auth_headers, scripted, monkeypatch
+):
+    """Стена ограничивает генерацию, а кризисный ход её не совершает.
+
+    Ответ на такое сообщение — строка из каталога: ноль токенов, ноль центов.
+    Показать вместо неё «вопросы на сегодня кончились» значит показать счётчик
+    тому, кто написал самое важное, что он тут напишет, — и показать его за
+    фразу, которая ничего не стоит.
+    """
+    monkeypatch.setenv("ALMA_WELCOME_BUNDLE", "0")
+    monkeypatch.setenv("ALMA_FREE_QUESTIONS", "1")
+    from alma import config as config_module
+    from alma.i18n import replies as i18n_replies
+
+    config_module.settings.cache_clear()
+    try:
+        api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+        factors = _factors_for(api, auth_headers)
+        scripted.responses.append(_chat_reply(factors[:1]))
+        api.post("/v1/chat", json={"message": "what am i like"}, headers=auth_headers)
+
+        blocked = api.post(
+            "/v1/chat", json={"message": "what about work"}, headers=auth_headers
+        )
+        assert blocked.status_code == 429, "стена на месте для обычного вопроса"
+
+        care = api.post(
+            "/v1/chat", json={"message": "i don't want to live anymore"},
+            headers=auth_headers,
+        )
+        assert care.status_code == 200, care.text
+        assert care.json()["message"]["body"] == i18n_replies.CRISIS["en"]
+    finally:
+        config_module.settings.cache_clear()
+
+
 def test_someone_elses_conversation_is_not_readable(api, auth_headers, scripted):
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     factors = _factors_for(api, auth_headers)

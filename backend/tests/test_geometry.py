@@ -143,7 +143,7 @@ def test_a_second_clause_is_not_an_object_of_the_first_verb():
 
 def test_relations_reads_both_factor_spellings():
     """Glyph pairs and the transiting/natal sentence form are one vocabulary."""
-    aspects, configurations = geometry.relations(
+    aspects, configurations, frames = geometry.relations(
         [
             "♀ △ ♄ · 6°50′",
             "transiting uranus retrograde □ natal neptune · orb 0.17°",
@@ -156,11 +156,15 @@ def test_relations_reads_both_factor_spellings():
     # Quintile is a letter rather than a glyph and needs its own path.
     assert aspects[frozenset(("mercury", "pluto"))] == {"quintile"}
     assert configurations["grand cross"] == {"moon", "saturn", "venus", "uranus"}
+    # Одна и та же пара тел в двух рамках — два разных утверждения, и рамка
+    # снимается с той же строки, что и аспект.
+    assert frames[frozenset(("venus", "saturn"))] == {"natal"}
+    assert frames[frozenset(("uranus", "neptune"))] == {"transit"}
 
 
 def test_the_node_answers_to_either_computation():
     """`true_node` and `mean_node` are one point and prose names it once."""
-    aspects, _ = geometry.relations(["☉ ⚼ ☊ · 0°11′"])
+    aspects, _, _ = geometry.relations(["☉ ⚼ ☊ · 0°11′"])
     pair = next(iter(aspects))
     assert "sun" in pair
     assert pair & {"true_node", "mean_node"}
@@ -225,3 +229,132 @@ def test_sits_on_is_a_conjunction_claim():
 )
 def test_the_conjunction_phrasing_does_not_overreach(text, factors):
     assert not geometry.drift(text, factors)
+
+
+# ── натальное и транзитное — два разных утверждения ────────────────────────
+#
+# Проверки выше спрашивают «есть ли такой аспект», и на этот вопрос
+# `transiting saturn □ natal ascendant` отвечает «есть» ровно так же, как
+# `♄ □ ASC`. Но чат получает карту рождения и сегодняшнее небо одним списком,
+# и это тот самый случай, где вопрос стоит иначе: не «есть ли», а «в них ли».
+# `voice.py` говорит об этом прямее всего: «"Transiting Saturn is on your
+# Midheaven" is true; "Saturn is on your Midheaven" is a claim about the birth
+# chart» — и до сих пор эту разницу не сторожило ничего.
+
+#: Карта рождения и транзиты вместе — ровно так, как их видит ход беседы.
+BOTH_FRAMES = [
+    "venus 7°40′ ♒︎ · house 1",
+    "saturn 24°06′ ♑︎ · house 6",
+    "ascendant 20°24′ ♌︎",
+    "♀ △ ♄ · 6°50′",
+    "transiting saturn □ natal ascendant · orb 11.52°",
+]
+
+
+def test_a_transit_described_as_a_birth_chart_aspect_is_caught():
+    """Временное небо, поданное как свойство человека."""
+    verdict = geometry.drift("Your Saturn squares your Ascendant.", BOTH_FRAMES)
+    assert verdict.contradicted
+    assert "transit passing now" in verdict.contradicted[0]
+
+
+def test_naming_the_transit_makes_the_same_sentence_true():
+    assert not geometry.drift(
+        "Transiting Saturn squares your Ascendant right now.", BOTH_FRAMES
+    )
+
+
+def test_two_claims_in_one_sentence_do_not_share_a_frame():
+    """Обратное направление снято, и вот прозой, на которой оно ошибалось.
+
+    Первая версия читала слово «transiting» по предложению, а не по
+    утверждению: здесь их два, оба верны, и второе получало рамку первого — ход
+    уходил на попытку из-за верного текста. Цена ошибки в эту сторону —
+    потерянный вопрос; цена пропуска — ошибка в слове.
+    """
+    assert not geometry.drift(
+        "Transiting Saturn squares your Ascendant, and your Venus trines your "
+        "Saturn underneath it.",
+        BOTH_FRAMES,
+    )
+
+
+def test_a_natal_aspect_named_plainly_is_left_alone():
+    assert not geometry.drift("Your Venus trines your Saturn.", BOTH_FRAMES)
+
+
+def test_a_reply_that_talks_about_transits_keeps_its_pronouns():
+    """Осознанная слепота, и без неё проверка ловила бы хорошую прозу.
+
+    `claims` намеренно тянет подлежащее через границу предложения, поэтому во
+    втором предложении слова «transiting» нет, а утверждение — о транзите.
+    Спрашивать с него рамку значит отвергать верный текст, и правило «названо
+    натальным» выключено везде, где ответ про транзиты вообще говорит.
+    """
+    assert not geometry.drift(
+        "Transiting Saturn is the weather this month. Your Saturn squares your "
+        "Ascendant while it passes.",
+        BOTH_FRAMES,
+    )
+
+
+def test_a_chart_with_only_one_frame_is_never_faulted_for_the_other():
+    """У главы транзитов нет натального списка, и наоборот — рамка одна."""
+    natal_only = ["venus 7°40′ ♒︎ · house 1", "saturn 24°06′ ♑︎ · house 6",
+                  "♀ △ ♄ · 6°50′"]
+    assert not geometry.drift("Your Venus trines your Saturn.", natal_only)
+
+
+# ── подлежащее, а не ближайшее слово ───────────────────────────────────────
+#
+# Измерено на живом `/v1/chat` 19 августа 2026, вопрос «что сейчас движется в
+# моём небе и при чём тут мой натальный Сатурн». Модель написала верную фразу —
+# три аспекта от одного подлежащего-местоимения, — а разбор взял подлежащим
+# ближайшее тело слева, то есть дополнение предыдущей клаузы, и обвинил карту
+# в аспекте, которого никто не заявлял. Две попытки из трёх умерли так, и
+# человек получил 422 на совершенно обычный вопрос.
+
+#: Транзитный Юпитер в трёх контактах — та самая форма, что сломалась.
+SKY = [
+    "mars 25°20′ ♑︎ · house 6",
+    "ascendant 20°24′ ♌︎",
+    "neptune 12°55′ ♒︎ · house 6",
+    "transiting jupiter △ natal ascendant · orb 2°04′",
+    "transiting jupiter □ natal mars · orb 3°11′",
+    "transiting jupiter ⚹ natal neptune · orb 1°22′",
+]
+
+#: Два подлежащих в одном предложении, и оба говорят правду.
+TWO_SUBJECTS = ["venus 7°40′ ♒︎", "saturn 24°06′ ♑︎", "mars 25°20′ ♑︎",
+                "pluto 12°00′ ♐︎", "♀ △ ♄ · 1°02′", "♂ □ ♇ · 2°14′"]
+
+
+def test_a_list_of_aspects_from_one_pronoun_is_read_from_its_antecedent():
+    """Дословно фраза, на которой ход умирал."""
+    assert not geometry.drift(
+        "Transiting Jupiter is the loud one this month. It's trine your "
+        "ascendant, it squares your natal Mars, and, retrograde, it's sextile "
+        "your natal Neptune.",
+        SKY,
+    )
+
+
+def test_the_same_list_with_one_aspect_wrong_is_still_caught():
+    """Разбор стал точнее, а не мягче: проверка обязана остаться проверкой."""
+    verdict = geometry.drift(
+        "Transiting Jupiter is loud. It's trine your ascendant, it trines your "
+        "natal Mars.",
+        SKY,
+    )
+    assert verdict.contradicted
+    assert "jupiter square mars, not trine" in verdict.contradicted[0]
+
+
+def test_two_subjects_in_one_sentence_keep_their_own_verbs():
+    """Клауза, а не предложение: после запятой с союзом подлежащее новое."""
+    assert not geometry.drift(
+        "Venus trines Saturn, and Mars squares Pluto.", TWO_SUBJECTS
+    )
+    assert geometry.drift(
+        "Venus trines Saturn, and Mars trines Pluto.", TWO_SUBJECTS
+    ).contradicted

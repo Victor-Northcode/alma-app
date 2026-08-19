@@ -219,3 +219,59 @@ def test_no_chapter_is_invented_for_none_or_several(api, auth_headers, scripted,
         "/v1/chat", json={"message": "and now?"}, headers=auth_headers
     ).json()
     assert both["source_chapter"] is None, "из двух глав нельзя честно назвать одну"
+
+
+def test_the_chapter_survives_a_reread_of_the_thread(api, auth_headers, scripted, owns):
+    """Карточка «из главы» была только у живого ответа — и пропадала назавтра.
+
+    Ход беседы называл главу в теле ответа и нигде её не сохранял, поэтому
+    `GET /v1/chat/threads/{id}` отдавал ту же реплику без источника: человек
+    возвращался в беседу, а дверь в главу, на которую ответ ссылается словами,
+    исчезала. Та же болезнь, что была у `turn_kind`, и лечится тем же — колонка,
+    то же имя поля на проводе, тот же разбор на клиенте.
+    """
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    factors = _factors_for(api, auth_headers)
+    scripted.responses.append(_chapter_reply(factors))
+    assert api.post(
+        "/v1/readings",
+        json={"system": "numerology", "chapter": "life-path"},
+        headers=auth_headers,
+    ).status_code == 200
+
+    scripted.responses.append(_chat_reply(factors[:1]))
+    live = api.post(
+        "/v1/chat", json={"message": "What am I built for?"}, headers=auth_headers
+    ).json()
+    assert live["source_chapter"] is not None
+
+    thread = api.get(
+        f"/v1/chat/threads/{live['thread_id']}", headers=auth_headers
+    ).json()
+    answers = [m for m in thread["messages"] if m["role"] == "alma"]
+    assert answers, thread
+    assert answers[0]["source_chapter"] == live["source_chapter"], (
+        "перечитанная беседа обязана показать ту же дверь, что показала живая"
+    )
+    # Реплика человека главы не имеет и иметь не может — поле у неё пустое,
+    # а не отсутствующее: клиент разбирает оба сообщения одним кодом.
+    asked = [m for m in thread["messages"] if m["role"] == "user"]
+    assert asked[0]["source_chapter"] is None
+
+
+def test_a_turn_with_no_chapter_stores_nothing_rather_than_a_guess(
+    api, auth_headers, scripted, owns
+):
+    """Null — обычное состояние поля, и в архиве оно остаётся null."""
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    factors = _factors_for(api, auth_headers)
+    scripted.responses.append(_chat_reply(factors[:1]))
+    live = api.post(
+        "/v1/chat", json={"message": "hi there"}, headers=auth_headers
+    ).json()
+    assert live["source_chapter"] is None
+
+    thread = api.get(
+        f"/v1/chat/threads/{live['thread_id']}", headers=auth_headers
+    ).json()
+    assert all(m["source_chapter"] is None for m in thread["messages"])

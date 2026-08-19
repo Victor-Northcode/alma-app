@@ -916,11 +916,23 @@ class ChatTurn {
     required this.body,
     required this.citedFactors,
     this.kind = ChatTurnKind.conversation,
+    this.sourceChapter,
   });
 
   final bool mine;
   final String body;
   final List<String> citedFactors;
+
+  /// Глава, из которой вырос этот ответ, — та же и тем же разбором, что у
+  /// живого [ChatReply].
+  ///
+  /// **Второй случай той же болезни, что `turn_kind`.** Карточка «из главы»
+  /// жила только в теле живого ответа: человек возвращался в беседу назавтра, и
+  /// дверь исчезала — при том что сам ответ на главу ссылался словами. Теперь
+  /// сервер хранит тройку в сообщении и отдаёт её в архиве под тем же именем,
+  /// а разбор здесь — тот же `SourceChapter.from`, чтобы у одного поля не
+  /// оказалось двух прочтений.
+  final SourceChapter? sourceChapter;
 
   /// Тот же вид реплики, что и у живого ответа.
   ///
@@ -941,6 +953,7 @@ class ChatTurn {
       body: json['body'] as String? ?? '',
       citedFactors: cited,
       kind: ChatTurnKind.of(json['turn_kind'] as String?, citedFactors: cited),
+      sourceChapter: SourceChapter.from(json['source_chapter']),
     );
   }
 }

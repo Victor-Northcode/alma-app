@@ -28,11 +28,47 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from ..i18n.placements import placement
+from ..i18n.placements import _base, placement
 from .rules import QUIET_START, Chosen
-from .transport import Push
+from .transport import CHANNEL_DAILY, Push
 
 TITLE_KEY = "push.daily.title"
+
+#: The headline, in seven languages, **composed here rather than resolved on
+#: the device** — and that is a correction, not a preference.
+#:
+#: `docs/PUSH.md §1.6` says the title stays a `loc-key` so that a phone whose
+#: language we guessed wrong still gets a correct headline. That argument
+#: depends on the key existing in the app's **native** bundle, which is where
+#: iOS looks: `UNNotificationContent` resolves `title-loc-key` against
+#: `Localizable.strings` in the main bundle, and Android against `strings.xml`.
+#: The product is one Flutter app now, its seven catalogues are `.arb` files
+#: compiled into Dart, and there is no `Localizable.strings` in the tree at all
+#: — `knownRegions` in the Xcode project is `(en, Base)`. So the key resolved
+#: against nothing, and iOS renders an unresolved `title-loc-key` as **the raw
+#: key**: every daily would have arrived headed `push.daily.title`.
+#:
+#: The words are the app's own — `pushDailyTitle` in `lib/l10n/app_*.arb`,
+#: already written, already reviewed, already shipped in all seven. Nothing is
+#: invented here (push copy across the seven locales is explicitly somebody
+#: else's task — `SCREENS-V3.md` W7), and
+#: `tests/test_notify_strings.py` asserts this table still equals theirs, the
+#: same "one source, two mirrors" guard the placement names already have.
+#:
+#: **How to undo this**, because it should be undone rather than kept: when the
+#: client ships a native catalogue carrying `push.daily.title` in seven
+#: languages, drop the `title=` argument in `compose` below. The key is still
+#: computed and still carried, precisely so that flip is one line — and the
+#: senders already prefer a literal title over a key, so nothing else moves.
+TITLES: dict[str, str] = {
+    "en": "Exact today",
+    "es": "Aspecto exacto hoy",
+    "de": "Heute exakt",
+    "it": "Esatto oggi",
+    "fr": "Exact aujourd'hui",
+    "pt-BR": "Aspecto exato hoje",
+    "ru": "Точный аспект сегодня",
+}
 
 #: The English source set, and the whole of it. Eleven body strings plus a
 #: title: five aspects × two doors, and the valve.
@@ -52,7 +88,13 @@ TITLE_KEY = "push.daily.title"
 #: valve should be dropped and the 60-day silence accepted — that is the honest
 #: failure and a manufactured piece is not.
 STRINGS: dict[str, str] = {
-    TITLE_KEY: "In your chart today",
+    # One English title, not two. This read "In your chart today" while the app
+    # shipped "Exact today" in all seven languages — the server's own source set
+    # and its two mirrors had quietly separated on the one string that reaches a
+    # lock screen. The app's wins, for the reason `test_notify_strings.py`
+    # already gives about the placement names: the words a person sees in the
+    # notification and the words they see in the app have to be the same words.
+    TITLE_KEY: TITLES["en"],
     "push.daily.exact.conjunction": "%1$@ meets your %2$@ exactly at %3$@.",
     "push.daily.exact.opposition": "%1$@ opposes your %2$@ exactly at %3$@.",
     "push.daily.exact.square": "%1$@ squares your %2$@ exactly at %3$@.",
@@ -153,9 +195,22 @@ def compose(
         title_key=TITLE_KEY,
         body_key=body_key(chosen),
         args=tuple(args),
+        # The headline in the reader's language, because the key resolves
+        # against a native bundle this product no longer has — see `TITLES`,
+        # which also says how to take this line back out.
+        title=TITLES[_base(locale)],
         body=(teaser or "").strip(),
         thread="daily",
+        channel=CHANNEL_DAILY,
         collapse_id=f"daily-{local.date().isoformat()}",
         expires_at=expires(local),
-        data={"kind": "daily", "date": local.date().isoformat()},
+        # **`type`, not `kind`, and that was a real disconnection.** The routing
+        # key is whatever the app reads, and the app reads `type`:
+        # `AppDelegate.swift` lifts the string fields of `userInfo` and
+        # `main.dart` records `push_opened{type: payload['type']}`. This payload
+        # said `kind`, so every tap on a daily was counted with a null type
+        # while the pair push — written later, against the client rather than
+        # against `docs/PUSH.md §1.6` — was counted correctly. One name, and it
+        # is the one already on the phone; §1.6 has been corrected to match.
+        data={"type": "daily", "date": local.date().isoformat()},
     )

@@ -54,6 +54,19 @@ SHARED = {
     "cabBodyTrueNode": "true_node",
 }
 
+#: The notification's own headline, held to the same rule for a harder reason.
+#:
+#: The placement names below are mirrored because a word on the chart and the
+#: same word in a push about that chart have to agree. This one is mirrored
+#: because the server **sends** it: iOS resolves `title-loc-key` against
+#: `Localizable.strings` in the app's native bundle, the Flutter port has no
+#: such file (`knownRegions` is `(en, Base)`), and an unresolved key renders as
+#: the raw key on the lock screen. So `message.TITLES` composes the headline
+#: from these seven strings, and this is what stops the two copies drifting —
+#: which they already had: the server's English source said "In your chart
+#: today" while every one of the seven catalogues said "Exact today".
+TITLE = "pushDailyTitle"
+
 #: Android's directory suffix per locale. `values` with no suffix is English.
 #:
 #: **Russian was missing here for as long as Russian has existed.** It is in
@@ -173,3 +186,27 @@ def test_the_server_agrees_with_the_words_the_app_already_shows(locale):
             f"{ours} in {locale}: the app says {catalogue[key]!r} and the "
             f"server would send {PLACEMENTS[ours][locale]!r}"
         )
+
+
+@pytest.mark.parametrize("locale", sorted(FLUTTER_FILES))
+def test_the_headline_the_server_sends_is_the_headline_the_app_wrote(locale):
+    """Не «переведено», а «совпадает» — потому что отправляет его сервер.
+
+    Ключ `title-loc-key` разрешается в **нативном** бандле, которого у порта
+    нет вовсе, и неразрешённый ключ iOS показывает сырой строкой. Поэтому
+    заголовок собирается на сервере (`message.TITLES`), и единственное, что
+    держит две копии одной фразы вместе, — эта сверка.
+    """
+    catalogue = json.loads((FLUTTER / FLUTTER_FILES[locale]).read_text(encoding="utf-8"))
+    assert TITLE in catalogue, f"{TITLE} is gone from {FLUTTER_FILES[locale]}"
+    assert message.TITLES[locale] == catalogue[TITLE], (
+        f"{locale}: the app says {catalogue[TITLE]!r} and the notification "
+        f"would arrive headed {message.TITLES[locale]!r}"
+    )
+
+
+def test_the_composed_headline_covers_every_locale_the_product_ships():
+    from alma.i18n.placements import LOCALES
+
+    assert set(message.TITLES) == set(LOCALES)
+    assert all(value.strip() for value in message.TITLES.values())

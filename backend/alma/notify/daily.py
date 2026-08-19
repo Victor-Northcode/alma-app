@@ -54,7 +54,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db.models import DeviceToken, Profile, UsageCounter, User, as_utc, utcnow
 from . import message, rules, tokens as token_store
-from .transport import PushUnavailable, Transport, Verdict, configured_platforms, transport_for
+from .transport import (
+    PushUnavailable,
+    Receipt,
+    Transport,
+    Verdict,
+    configured_platforms,
+    transport_for,
+)
 
 log = logging.getLogger("alma.notify.daily")
 
@@ -79,6 +86,27 @@ HISTORY_DAYS = 40
 FUNNEL_STAGES = ("daily_sent", "daily_opened")
 
 _warned_about_funnel = False
+
+
+def moment_of(now: datetime | None) -> datetime:
+    """The instant this pass is running at, and it is always UTC-aware.
+
+    **One function, called by everything that takes a `now`, because a naive
+    datetime is how a daily ends up in somebody's night.** The value arrives
+    from four places — `utcnow()`, the `--at` replay, a test, and a caller in
+    another module — and only the first two are guaranteed to carry a zone.
+    A naive one is not merely untidy: `rules.local_now` reads it as UTC and
+    resolves a plausible-looking local morning from it, while `is_dormant`
+    subtracts it from an aware `last_seen_at` and raises `TypeError` — so the
+    same missing `tzinfo` produces a silent wrong answer on one line and a
+    crash three lines later. Treating it as UTC is correct rather than merely
+    convenient: every instant this job is ever handed is UTC, and the ones the
+    database returns are UTC with the zone stripped by SQLite (`as_utc` exists
+    for exactly that).
+    """
+    if now is None:
+        return utcnow()
+    return now if now.tzinfo is not None else now.replace(tzinfo=timezone.utc)
 
 
 def counter_key(user_id: str, day: date) -> str:
@@ -121,7 +149,7 @@ async def due(session: AsyncSession, *, now: datetime | None = None) -> list[Rec
     they are a row that should have had its tokens deleted, and counting them
     as "refused" would hide that.
     """
-    moment = now or utcnow()
+    moment = moment_of(now)
 
     rows = (
         await session.execute(
@@ -465,6 +493,19 @@ async def deliver(
     the credential is wrong for everybody, and continuing would spend a
     thousand requests proving the same thing to the same vendor. It aborts
     *carrying* what had already been delivered — see `Aborted`.
+
+    **A socket that dies is one device's answer, not one person's.** Every
+    verdict below is a sentence a vendor said; a `ReadTimeout`, a DNS failure
+    or a TLS reset is the vendor saying nothing, and it used to travel as an
+    exception — out of this loop, past the second phone, up into `run`'s
+    per-recipient guard. Which was survivable for the run and wrong twice for
+    the person: their iPhone was never tried because their tablet's connection
+    dropped, and the day stayed *claimed* rather than released, so it was lost
+    outright and the next run reported it as an orphaned claim — the log line
+    that means "a process was killed mid-pass", printed for a routine network
+    blip. Read as `retry`, which is what it is: nothing is known about the
+    token, the row is untouched, and the day goes back for the next hourly run
+    inside the window.
     """
     delivered = False
     for device in recipient.devices:
@@ -477,7 +518,19 @@ async def deliver(
             # run's own report under it. `run` names the configured platforms
             # once, at the start, which is where an operator would look.
             continue
-        receipt = await transport.send(device, push)
+        try:
+            receipt = await transport.send(device, push)
+        except PushUnavailable:
+            # A credential the sender only discovers when it reaches for it —
+            # an unreadable `.p8`, a provider token Apple called expired inside
+            # its own refresh floor. True of every token, so it is the run's
+            # problem and it goes up as one.
+            raise
+        except Exception as exc:
+            log.warning(
+                "device %s (%s) could not be reached: %s", device.id, device.platform, exc
+            )
+            receipt = Receipt(Verdict.retry, exc.__class__.__name__, str(exc)[:200])
         if receipt.verdict is Verdict.fatal:
             await token_store.retire(session, device, receipt)
             raise Aborted(
@@ -554,7 +607,7 @@ async def run(
 
     from ..auth import entitlements
 
-    moment = now or utcnow()
+    moment = moment_of(now)
     outcome: dict[str, int] = defaultdict(int)
     outcome["due"] = 0
 

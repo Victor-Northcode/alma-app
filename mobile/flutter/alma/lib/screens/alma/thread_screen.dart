@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
 import '../../design/palette.dart';
@@ -8,6 +9,7 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
+import '../systems/chapter_screen.dart';
 import 'chat_turn.dart';
 
 /// Одна прошлая беседа, целиком.
@@ -98,9 +100,31 @@ class _ThreadScreenState extends State<ThreadScreen> {
                 // то же сообщение с тихой строкой в живой ленте и без неё после
                 // перезапуска.
                 kind: turn.kind,
+                // И глава-источник — по тому же правилу и ровно по той же
+                // причине. Сервер хранит её в сообщении; не прочитать её здесь
+                // значило бы оставить в архиве ответ, который словами
+                // ссылается на главу, и дверь в неё только в живой ленте.
+                sourceChapter: turn.sourceChapter,
+                onOpenSource: _open,
               ),
         ],
       ),
     );
+  }
+
+  /// Открыть главу-источник — тем же маршрутом, что и живая лента.
+  ///
+  /// Копия из `AlmaScreen._openSourceChapter`, и копия намеренная: экран
+  /// прошлой беседы открыт из корневого навигатора, стек вкладки систем отсюда
+  /// так же недостижим, а заводить общий вход в него ради одной карточки
+  /// значило бы связать две вкладки навсегда.
+  void _open(SourceChapter source) {
+    final system = SystemSlug.from(source.system);
+    // Система с сервера свежее сборки: вести некуда, и молчание честнее экрана
+    // с ошибкой под карточкой, которая выглядит как приглашение.
+    if (system == null) return;
+    Navigator.of(context, rootNavigator: true).push(CupertinoPageRoute(
+      builder: (context) => ChapterScreen(system: system, chapter: source.slug),
+    ));
   }
 }

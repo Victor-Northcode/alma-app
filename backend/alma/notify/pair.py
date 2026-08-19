@@ -65,6 +65,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+from datetime import timedelta
 from typing import Mapping
 
 from sqlalchemy.exc import IntegrityError
@@ -73,7 +74,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..db.models import Profile, UsageCounter, User, as_utc, utcnow
 from ..i18n.placements import _base, placement
 from . import tokens as token_store
-from .transport import Push, Transport, Verdict, configured_platforms, transport_for
+from .transport import (
+    CHANNEL_TRANSACTIONAL,
+    Push,
+    Receipt,
+    Transport,
+    Verdict,
+    configured_platforms,
+    transport_for,
+)
 
 log = logging.getLogger("alma.notify.pair")
 
@@ -208,6 +217,21 @@ BODIES: dict[str, str] = {
 #: докстринг про вторую щель в дизайне «ключ, не предложение».
 TITLE_KEY = "push.pair.title"
 
+#: Сколько вендор имеет право держать этот пуш, если телефон выключен.
+#:
+#: **Здесь стояло `expires_at=None` — и это значило не «не протухает», а прямо
+#: обратное.** У APNs заголовок `apns-expiration` необязателен, но его
+#: отсутствие равно нулю: «попытаться доставить один раз и не хранить». То есть
+#: человек, купивший отчёт и убравший телефон в карман с севшей батареей, не
+#: узнавал о покупке никогда — а строка `UsageCounter` при этом уже
+#: подтверждена, потому что вендор ответил «принял». Дневная заметка живёт до
+#: 22:00 своего дня, потому что она про день; купленный отчёт не про день, но
+#: и не вечен: неделя — это горизонт, за которым уведомление «готово»
+#: перестаёт быть новостью и становится напоминанием о том, что человек и так
+#: уже открыл. Двенадцать часов FCM (`fcm.TTL_SECONDS`) остаются потолком на
+#: Android — там `ttl` считается от отправки и его хватает.
+DELIVERY_WINDOW = timedelta(days=7)
+
 
 def counter_key(user_id: str, partner_id: str) -> str:
     """Ключ строки `UsageCounter`: одна пара — один пуш, навсегда.
@@ -271,10 +295,16 @@ def compose(
         title=title,
         body=BODIES[tongue],
         thread="pair",
+        # **Свой канал Android, а не канал дневной заметки.** Канал — единица,
+        # которую человек выключает; «не хочу гороскоп каждое утро» — обычное
+        # и законное желание, «не говорите мне, что готово купленное за $4.99»
+        # — нет. Раньше `fcm.message` шил `alma.daily` всем подряд, и первое
+        # желание молча влекло второе. См. `transport.CHANNEL_TRANSACTIONAL`.
+        channel=CHANNEL_TRANSACTIONAL,
         collapse_id=f"pair-{partner_id}"[:64],
-        # Без `expires_at`: купленный отчёт не протухает к вечеру, в отличие
-        # от дневной заметки, чей смысл кончается вместе с днём.
-        expires_at=None,
+        # Не «до вечера», как у дневной заметки, но и не «никогда»: пустое поле
+        # APNs читает как ноль — одна попытка и не хранить. См. DELIVERY_WINDOW.
+        expires_at=utcnow() + DELIVERY_WINDOW,
         data={"type": "pair_ready", "profile_id": partner_id},
     )
 
@@ -328,6 +358,24 @@ async def report_ready(
         log.debug("pair push skipped for %s: source %r is not a sale", user.id, source)
         return "skipped: source"
 
+    # **Грант проверяется здесь, а не только у зовущего.** Все три вызова стоят
+    # сразу за строкой, которая грант выписала, — но это соглашение, а не
+    # правило: перестановка двух строк в чужом файле, ранний `return` на
+    # ветке отказа, четвёртый путь оплаты, написанный по образцу третьего, — и
+    # «ваш отчёт готов» уезжает человеку, у которого отчёта нет. Он открывает
+    # пуш и упирается в пейволл за то, что ему только что пообещали. Проверка
+    # стоит одного SELECT по строкам, которые тот же запрос уже трогал, и
+    # делает «не может уйти тому, кто не покупал» свойством этого модуля, а не
+    # свойством порядка строк в трёх других.
+    from ..auth import entitlements
+
+    if partner_id not in await entitlements.unlocked_pairs(session, user):
+        log.warning(
+            "pair push for %s refused: no live pair grant for %s (source %r)",
+            user.id, partner_id, source,
+        )
+        return "skipped: no grant"
+
     if transports is None:
         transports = _transports()
     if not transports:
@@ -371,7 +419,18 @@ async def report_ready(
         delivered = False
         for device in reachable:
             transport = transports[device.platform]
-            receipt = await transport.send(device, push)
+            try:
+                receipt = await transport.send(device, push)
+            except Exception as exc:
+                # Оборванный сокет — ответ про одно устройство, а не про
+                # человека: второй телефон обязан быть опрошен. Тот же довод,
+                # что в `daily.deliver`, и та же трактовка — `retry`: про токен
+                # ничего не узнали, строку не трогаем.
+                log.warning(
+                    "pair push device %s (%s) unreachable: %s",
+                    device.id, device.platform, exc,
+                )
+                receipt = Receipt(Verdict.retry, exc.__class__.__name__, str(exc)[:200])
             outcome = await token_store.retire(session, device, receipt)
             if receipt.verdict is Verdict.sent:
                 delivered = True

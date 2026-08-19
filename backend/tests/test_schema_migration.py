@@ -319,3 +319,74 @@ def test_a_boot_gives_the_old_funnel_both_halves_of_the_join(
     assert before is None
     assert sorted(a or "" for a in after) == ["", "a-browser-with-no-account"]
     assert claims == ["u1"]
+
+
+@pytest.fixture
+def thread_without_a_source(tmp_path, monkeypatch):
+    """База с `chat_message` вчерашней формы — без `source_chapter`.
+
+    Отдельная фикстура, а не ещё две колонки в `old_database`: та описывает
+    конкретный случай из прошлого (`entitlement` и `purchase`), и дописывать в
+    неё каждую новую колонку значит превращать сценарий в свалку. Здесь важно
+    ровно одно — беседа, написанная до колонки, читается после неё.
+    """
+    from alma import config as config_module
+    from alma.db import session as session_module
+
+    asyncio.run(session_module.dispose())
+    monkeypatch.setenv("ALMA_DATABASE_URL", database_url(tmp_path, "threads.db"))
+    monkeypatch.setenv("ALMA_JWT_SECRET", "test-secret-not-the-default")
+    config_module.settings.cache_clear()
+
+    async def build() -> None:
+        async with session_module.engine().begin() as connection:
+            # Без FK на `chat_thread`: строится одна таблица, и внешний ключ на
+            # несуществующую соседку Postgres не примет, а проверяется здесь не он.
+            await connection.execute(text(_ddl("""
+                CREATE TABLE chat_message (
+                    id VARCHAR(32) PRIMARY KEY,
+                    thread_id VARCHAR(32) NOT NULL,
+                    role VARCHAR(12) NOT NULL,
+                    body TEXT NOT NULL,
+                    cited_factors JSON NOT NULL,
+                    turn_kind VARCHAR(16),
+                    model VARCHAR(64),
+                    cost_cents FLOAT NOT NULL,
+                    created_at DATETIME NOT NULL
+                )
+            """)))
+            await connection.execute(text(
+                "INSERT INTO chat_message VALUES ('m1', 't1', 'alma', 'Said before "
+                "the column existed.', '[]', 'reading', 'haiku', 0.4, "
+                "'2026-01-01 00:00:00')"
+            ))
+
+    run_async(build)
+    yield session_module
+    asyncio.run(session_module.dispose())
+    config_module.settings.cache_clear()
+
+
+def test_a_conversation_written_before_the_column_still_reads(thread_without_a_source):
+    """Колонка добавляется сама, а старая реплика честно отвечает «главы нет».
+
+    Самодельный механизм не регистрируют — он читает желаемую схему прямо из
+    `Base.metadata`, поэтому весь вклад этой колонки в миграцию — то, что она
+    объявлена nullable. Проверяется именно это: боот доводит базу, а строка,
+    написанная до колонки, читается с null, а не падает и не выдумывает главу.
+    """
+    from alma.db.models import ChatMessage
+
+    async def bring_forward() -> list[str]:
+        return await reconcile()
+
+    applied = run_async(bring_forward)
+    assert any("source_chapter" in statement for statement in applied), applied
+
+    async def read() -> ChatMessage:
+        async with thread_without_a_source.session_scope() as session:
+            rows = (await session.execute(select(ChatMessage))).scalars().all()
+            return rows[0]
+
+    row = run_async(read)
+    assert row.source_chapter is None

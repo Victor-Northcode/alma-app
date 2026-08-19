@@ -38,6 +38,7 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 
 from ..calc import CalcResult
+from ..i18n import replies as i18n_replies
 from . import cost, geometry, validator, voice
 from .provider import AnswerTruncated, Provider
 from .validator import Paragraph
@@ -174,6 +175,31 @@ REPEAT_OPENING_WORDS = 4
 #: looking for a second way to say it would be the fence inventing work. The
 #: refusals this catches run 60 to 200 characters.
 REPEAT_OPENING_FLOOR = 40
+
+#: Сколько слов — это уже не реплика.
+#:
+#: **У главы потолок длины сторожится, у беседы не сторожился ничем.**
+#: `validator.check` принимает `most_words`, писатель передаёт полтора
+#: заказанных потолка (`writer.py`), и довод там записан: абзац, выросший на
+#: треть экрана, перестаёт быть тем, чем его заказывали. Чат просил «две-три
+#: коротких абзаца, часто одна строка» и не проверял ничего — а проверять здесь
+#: даже нужнее: главу человек открыл читать, а в беседе он задал вопрос и ждёт
+#: ответа, и три экрана прозы на «и что с работой?» — это не щедрость.
+#:
+#: 340, и число **измерено, а не выведено**. Первая версия стояла на 280 —
+#: полтора потолка от «трёх коротких абзацев», посчитанных на бумаге. Живой
+#: прогон против 8018 показал, что бумага врёт: ответ на вопрос про деньги —
+#: отказ плюс три абзаца чтения, ровно та форма, которую правила и просят, —
+#: вышел на **271 слово**, а ответ про лекарство на 162. Порог, который тратит
+#: попытку на верхний из двух хороших ответов, ловит не стену текста, а работу.
+#:
+#: 340 оставляет измеренному максимуму четверть запаса и всё ещё ловит то, ради
+#: чего проверка заводится: пять-шесть абзацев на «и что с работой?». Порог
+#: щедрый намеренно, как и у главы: каждая жалоба стоит попытки, а их три.
+#:
+#: Мягкая, а не жёсткая: ход тратит на неё одну попытку и никогда 422 — длина
+#: это то, как ответ читается, а не то, правду ли он говорит.
+MAX_ANSWER_WORDS = 340
 
 #: How many different placements she must already have named before "you have
 #: brought nothing new" can be a fair complaint. Three, because below that the
@@ -377,6 +403,14 @@ sextile, orb, life path, Birth Card, Soul Card.
 minutes does not need "transiting Saturn, retrograde, is sextile your natal \
 Uranus" to be told they are steadier than they feel.
 
+WHERE AN ANSWER STOPS — held by what you write, never by a note under it
+- No diagnosis, illness, treatment, medicine or dose. No death, no pregnancy. \
+Not as a prediction and not as reassurance: a chart rules nothing in or out.
+- No investment, purchase, sale or legal step. Name the disposition; the \
+decision and the professional are theirs.
+- Nothing about a third person beyond what their own birth data carries.
+- Nothing sexual, and nothing you would not say to a fifteen-year-old.
+
 WHEN YOU DECLINE
 - Medical, legal or financial decisions: describe the disposition, say the \
 decision is theirs and the chart is no substitute for a professional. A chart \
@@ -440,6 +474,16 @@ class Answer:
     remember: tuple[str, ...]
     model: str
     spend: cost.Spend
+    #: Which catalogue sentence this turn is, when it is not hers at all.
+    #:
+    #: `None` for every generated reply, which is all but two shapes of turn:
+    #: `"crisis"` — the reader may be in danger and the model was never asked;
+    #: `"withheld"` — what came back crossed a line the product does not cross,
+    #: three times running, and the honest sentence stands where it would have.
+    #: The router reads it to keep those two out of the memory it stores about
+    #: a person, and the tests read it to tell "she answered safely" from "we
+    #: answered for her", which are two different guarantees.
+    standin: str | None = None
 
     def text(self) -> str:
         return "\n\n".join(p.text for p in self.paragraphs)
@@ -728,6 +772,14 @@ def _nudge(
             "before."
         )
 
+    written = len(body.split())
+    if written > MAX_ANSWER_WORDS:
+        return "longer than a reply", (
+            f"That is {written} words. This is a conversation, not a chapter: "
+            "two or three short paragraphs at most. Keep every part of what they "
+            "asked and cut the elaboration around it."
+        )
+
     if _one_sided_refusal(body):
         return "declined with nothing offered", (
             "You declined and offered nothing. A refusal has two halves. Keep the "
@@ -855,6 +907,34 @@ async def answer(
     but not her citations, and the repetition people actually complained about
     after ten turns is in the citations.
     """
+    # **Кризис отвечается до модели, без карты и без единого варианта.**
+    #
+    # `CHAT_RULES` просит об этом с тех пор, как правило написали, и просьба
+    # исполняется по-разному от прогона к прогону — как всякая просьба к
+    # модели. Разброс здесь стоит не абзаца стиля: человеку, который написал
+    # «я не хочу жить», астрологическая трактовка приходит один раз, и второй
+    # попытки у продукта не будет. Поэтому этот ход не доходит до провайдера
+    # вовсе — ни промта, ни схемы, ни фактов, ни денег.
+    #
+    # Отвергнутая альтернатива — проверять кризис после генерации, как
+    # проверяется всё остальное. Она защищает от плохого ответа и не защищает
+    # от расхода: три попытки на вопросе, который не нужно было задавать
+    # модели, — и всё равно наш собственный текст в конце.
+    #
+    # Стоит **до** проверки фактов намеренно: у человека может не быть даты
+    # рождения, и `raise ValueError("no calculated facts")` на этом сообщении
+    # означал бы экран ошибки вместо единственной фразы, которая тут уместна.
+    if validator.crisis(question):
+        log.info("chat turn answered as care: the message carried crisis language")
+        return Answer(
+            paragraphs=(Paragraph(i18n_replies.reply("crisis", locale), ()),),
+            kind=ASIDE,
+            remember=(),
+            model=model,
+            spend=cost.cost(model, 0, 0),
+            standin="crisis",
+        )
+
     allowed = [factor for result in results for factor in result.factors]
     if not allowed:
         raise ValueError("no calculated facts to answer from")
@@ -1018,8 +1098,41 @@ async def answer(
             continue
 
         body = "\n\n".join(p.text for p in paragraphs)
-        breaches = validator.safety(body) + _breaches(body)
+        forbidden = validator.safety(body)
+        breaches = forbidden + _breaches(body)
         if breaches:
+            # **Пересёкший границу текст не уходит наружу ни при каком исходе.**
+            #
+            # До сих пор развилки было две: переписать или, на третьей попытке,
+            # 422. Вторая ветка честна по отношению к тексту и жестока по
+            # отношению к человеку: он спросил про лекарство, потратил вопрос и
+            # получил экран ошибки, а в беседе на этом месте не осталось
+            # ничего. Хуже того, 422 — это единственный исход, о котором
+            # читатель не может судить: он выглядит одинаково и когда ответ был
+            # опасен, и когда упала сеть.
+            #
+            # Теперь на месте отвергнутого ответа стоит наша собственная фраза
+            # из каталога, обычной репликой: она сохраняется в треде,
+            # перечитывается вместе с ним и — поскольку это `aside` — не стоит
+            # читателю вопроса. Деньги за три попытки записаны, как и были.
+            #
+            # Только `validator.safety`, не `_breaches`. Второе — это ложь
+            # Alma о себе самой («я пишу только по-английски»); подменять её
+            # фразой про решение, которое принадлежит врачу, значило бы отвечать
+            # не на то. Та ветка остаётся 422, как была.
+            if forbidden and attempt == MAX_ATTEMPTS:
+                log.warning(
+                    "chat reply withheld after %d attempts: %s",
+                    attempt, "; ".join(forbidden),
+                )
+                return Answer(
+                    paragraphs=(Paragraph(i18n_replies.reply("answer_withheld", locale), ()),),
+                    kind=ASIDE,
+                    remember=(),
+                    model=model,
+                    spend=ledger.total(model),
+                    standin="withheld",
+                )
             complaint = "The reply broke a rule: " + "; ".join(breaches)
             log.warning("chat attempt %d broke a rule: %s", attempt, "; ".join(breaches))
             continue
@@ -1042,9 +1155,16 @@ async def answer(
                 " Everything else in the reply can stay — fix the sentence, or "
                 "drop it and answer without that claim."
             )
+            # Считанные штуки и ни одной цитаты — и на живом отказе по этой
+            # ветке нечего было посмотреть: три попытки подряд пишут «1
+            # contradicted», а какая именно фраза и чем она не подошла, знает
+            # только пропавший ответ. Одна претензия целиком в лог: это
+            # единственная жёсткая проверка, которая судит смысл, и цена её
+            # ошибки — потерянный вопрос читателя.
+            first = (wrong.contradicted or wrong.unsupported or ("",))[0]
             log.warning(
-                "chat attempt %d geometry: %d contradicted, %d unsupported",
-                attempt, len(wrong.contradicted), len(wrong.unsupported),
+                "chat attempt %d geometry: %d contradicted, %d unsupported — %s",
+                attempt, len(wrong.contradicted), len(wrong.unsupported), first,
             )
             continue
 

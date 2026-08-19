@@ -212,7 +212,7 @@ Both problems have the same answer, and it is one Apple built for exactly this:
     "relevance-score": 0.6,
     "sound": "default"
   },
-  "kind": "daily",
+  "type": "daily",
   "date": "2026-08-07"
 }
 ```
@@ -229,9 +229,28 @@ Both problems have the same answer, and it is one Apple built for exactly this:
 does not light the screen and does not break through a Focus. `relevance-score` between 0 and
 1 ranks it inside the notification summary; a daily belongs in the summary, not above it.
 `thread-id: "daily"` groups consecutive dailies so a person who did not read Tuesday's does
-not find three separate rows on Thursday. Custom keys (`kind`, `date`) go **beside** `aps`,
+not find three separate rows on Thursday. Custom keys (`type`, `date`) go **beside** `aps`,
 never inside it, and are what the app reads from `UNNotificationContent.userInfo` to open the
 right screen.
+
+**`type`, and this file used to print `kind`.** The routing key is whatever the app actually
+reads, and the app reads `type`: `ios/Runner/AppDelegate.swift` lifts the string fields of
+`userInfo` onto the method channel, and `lib/main.dart` records
+`push_opened{type: payload['type']}`. The daily sent `kind` — a name nothing on the phone has
+ever looked for — while the pair push, written later against the client rather than against
+this section, sent `type`. So every tap on a daily was counted with a null type, and any tap
+routing built on the documented name would have had nothing to switch on. One name, and it is
+the one already on the device. The values are a closed set, one per reason we ever interrupt
+somebody:
+
+| `type` | other keys | what the tap must open |
+| --- | --- | --- |
+| `daily` | `date` — the recipient's **local** ISO date | Today, on that date |
+| `pair_ready` | `profile_id` — the partner's profile | that pair's report, first chapter |
+
+Both are asserted in `backend/tests/test_notify_channels.py` on the way through both vendors'
+envelopes, including that the values are strings: FCM rejects a non-string `data` value with
+`INVALID_ARGUMENT`, and `AppDelegate` silently drops any `userInfo` field that is not a string.
 
 **One thing `loc-args` does not do, and it is easy to miss.** The OS substitutes the arguments
 **verbatim**. There is no nested lookup, so sending `"Ascendant"` as an argument puts an
@@ -501,7 +520,7 @@ device against `strings.xml`:
         "notification_priority": "PRIORITY_DEFAULT"
       }
     },
-    "data": { "kind": "daily", "date": "2026-08-07" }
+    "data": { "type": "daily", "date": "2026-08-07" }
   }
 }
 ```
@@ -516,7 +535,9 @@ device against `strings.xml`:
   person silences. **The daily needs its own channel, separate from the renewal notice**, so
   that "I don't want the horoscope every morning" is expressible without also switching off
   "you are about to be charged $9.99". Putting both on one channel forces a choice nobody
-  should have to make and turns an annoyed person into an uninformed one.
+  should have to make and turns an annoyed person into an uninformed one. It comes off
+  `Push.channel` rather than out of `fcm.py`: which category a notification belongs to is a
+  product decision, and the two ids the client must create are in **§2.6**.
 - Note that `notification` blocks are handled by the system when the app is backgrounded,
   while `data`-only messages are delivered to the app's service. We want the system to draw
   it — that is what makes it arrive reliably — so the `notification` block is not optional
@@ -601,6 +622,102 @@ a reviewer asks about.
 *"make changes outside the app without the user's knowledge or consent."* We send no ads and no
 promotions, per §1.9's rule, so this is a line to stay on the right side of rather than a
 requirement to satisfy.
+
+### 2.6 The two channels the client must create, with their exact ids
+
+**This is the one part of §2 that the app has to build and the server cannot.** A channel id
+is a string the two sides agree on and nothing verifies. On API 26+ a notification posted to a
+channel the app never created is **dropped by the system with no trace on the device** — the
+send succeeds, FCM answers 200, the row is confirmed, and the phone shows nothing. That is the
+worst failure shape this document keeps returning to, and here it is one typo away.
+
+The server sends exactly two. They are `alma.notify.transport.CHANNEL_DAILY` and
+`CHANNEL_TRANSACTIONAL`, and they ride on `Push.channel` — a sender does not choose them:
+
+| id | what goes on it | user-visible name (translate) | importance |
+| --- | --- | --- | --- |
+| `alma.daily` | the morning note, and nothing else | "Daily note" / «Заметка дня» | `IMPORTANCE_DEFAULT` |
+| `alma.transactional` | "your pair report is ready", and — when it is wired — the renewal notice | "Purchases and reports" / «Покупки и разборы» | `IMPORTANCE_DEFAULT` |
+
+**Two and not one, and the reason is what a person is choosing when they silence one.** The
+channel is the unit Android gives them, and *"I don't want a horoscope every morning"* is a
+common, reasonable thing to want. *"Don't tell me when the thing I paid $4.99 for is ready"* is
+not, and one shared channel makes the first choice silently imply the second. It also makes the
+renewal notice — "you are about to be charged $9.99" — switchable off by somebody annoyed at an
+astrology notification, which is the version of this that ends in a chargeback.
+
+**Two and not five.** A channel per notification *type* is the mistake in the other direction:
+a settings screen with five switches nobody can tell apart, each of which is a permanent id.
+The split that matters is *content the person subscribed to* against *answers to things the
+person just did*, and that is two.
+
+**When the client is unfrozen**, in `MainActivity.onCreate` (or an `Application` subclass —
+what matters is that it runs before any notification can arrive, including a cold start from a
+tap):
+
+```kotlin
+// mobile/flutter/alma/android/app/src/main/kotlin/ai/pazl/alma/MainActivity.kt
+private fun createChannels() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    val manager = getSystemService(NotificationManager::class.java)
+    manager.createNotificationChannel(
+        NotificationChannel(
+            "alma.daily",                       // notify/transport.py: CHANNEL_DAILY
+            getString(R.string.channel_daily),
+            NotificationManager.IMPORTANCE_DEFAULT,
+        )
+    )
+    manager.createNotificationChannel(
+        NotificationChannel(
+            "alma.transactional",               // notify/transport.py: CHANNEL_TRANSACTIONAL
+            getString(R.string.channel_transactional),
+            NotificationManager.IMPORTANCE_DEFAULT,
+        )
+    )
+}
+```
+
+Four things about that snippet are not stylistic:
+
+- **The ids are literals and they are permanent.** Android stores the person's choice against
+  the id; renaming one throws away every "keep quiet" and every "always show" the app was ever
+  told, and there is no migration. Both strings are also asserted server-side by
+  `backend/tests/test_notify_channels.py`, so a change on one side fails a test rather than a
+  release.
+- **The names are `R.string`, not literals.** The channel name is what a person reads in system
+  settings, so it goes through the same seven-language gate as everything else. The ids do not:
+  they are never shown.
+- **Creating a channel that already exists is a no-op** except for the name and description,
+  which are updated — so calling this on every launch is correct and is how a translated name
+  follows a language change.
+- **`IMPORTANCE_DEFAULT` on both**, matching the server's `notification_priority:
+  PRIORITY_DEFAULT`. Not `HIGH`: heads-up for a morning horoscope is the behaviour reviews call
+  bullying, and the pair push answers something the person did seconds ago on a phone they are
+  already holding.
+
+The **iOS side needs none of this** — Apple has no channels — and that asymmetry is why
+`Push.channel` is a plain field rather than a platform branch: `apns.py` ignores it, which
+`test_the_channel_never_leaks_into_the_apple_payload` asserts, because an unrecognised key
+inside `aps` is a 400 from Apple.
+
+**One more thing to fix in the same unfreeze, because it decides the hour rather than the
+channel.** `AlmaPush._timezone()` in `lib/notify/push_devices.dart` — and its twin
+`AlmaClient._deviceTimezone()` in `lib/net/alma_client.dart` — reads the IANA name by following
+the `/etc/localtime` symlink and looking for `zoneinfo/` in the target. That is correct on
+Darwin, where the link resolves straight to `/var/db/timezone/zoneinfo/Europe/Madrid`. **On
+Android there is no `/etc/localtime`**: the zone lives in the `persist.sys.timezone` system
+property and the data in the `com.android.tzdata` APEX, so both functions fall through to their
+`'UTC'` fallback. A device reporting UTC is not refused — UTC is a real zone — so
+`rules.zone_for` believes it, and every Android subscriber would be sent their morning note at
+10:00 UTC: half past eleven at night in Auckland, three in the morning in Los Angeles. It is
+the failure `zone_for`'s own docstring is written against, arriving through the front door.
+
+The fix is a one-line platform channel — `TimeZone.getDefault().getID()` in `MainActivity.kt`,
+answered to Dart — and it belongs in the same change as the channels, because both are "what
+the Android client owes the notification before the first one is sent". Until then the escape
+hatch is real but manual: `PATCH /v1/notifications {"timezone": …}` sets the zone a person
+*chose*, which outranks the device's, and `GET /v1/notifications` reports
+`timezone_source: "device"` so the wrong answer is at least visible on the settings screen.
 
 ---
 
@@ -1041,17 +1158,41 @@ Every user-facing string here exists in en, es, de, it, fr, pt-BR. `LOCALES` is
 `src/lib/i18n/index.ts:41`, and `scripts/check-locales.mjs` fails the build on English left
 behind. Three places, three different owners:
 
-**In the app bundles** — `mobile/ios/Alma/…/Localizable.strings` and
-`mobile/android/app/src/main/res/values*/strings.xml`:
+**In the app** — `mobile/flutter/alma/lib/l10n/app_*.arb`, seven files. The two native
+catalogues this paragraph used to name are gone: the product is one Flutter app since 17
+August 2026 and `mobile/ios/Alma/…/Localizable.strings` and
+`mobile/android/…/res/values*/strings.xml` no longer exist.
 
-- **The notification templates** — every `loc-key` in §1.6 and `body_loc_key` in §2.3. The
-  shape a translator needs is a format string with *positional* placeholders, because the six
-  languages put the words in different orders. That is the whole reason for `loc-args` rather
-  than a pre-composed sentence, and it is easy to undo by accident.
 - **The Settings control** — `THE-DAILY.md §5.4` already writes the English source set for the
   three positions and their detail lines, and says who should translate them and against what
   reasoning. Do not invent a second set.
 - **The denied state**, shown once (§5.6).
+- **The channel names** from §2.6, when Android is unfrozen. Names only — the ids are never
+  shown and are never translated.
+
+**The notification templates are the exception, and the reason is mechanical.** An `.arb` is
+compiled into Dart; a `loc-key` is resolved by the *operating system*, against
+`Localizable.strings` in the iOS main bundle and `strings.xml` on Android. Neither exists in
+this tree — the Xcode project's `knownRegions` is `(en, Base)` — so a `title-loc-key` resolves
+against nothing, and **iOS renders an unresolved key as the raw key**: every daily would have
+arrived on the lock screen headed `push.daily.title`.
+
+Until a native catalogue ships, therefore:
+
+- **the headline is composed on the server**, from `alma/notify/message.py: TITLES` — seven
+  strings that are the app's own `pushDailyTitle`, mirrored rather than rewritten, and held
+  equal to it by `tests/test_notify_strings.py`;
+- **the body is the piece's own validated first sentence** (`transport.Push.body`), which was
+  already true for a different reason — see §1.6's note on the teaser;
+- **the pair push is composed whole** (`notify/pair.py`), because a headline carrying a
+  partner's name cannot live in a bundle at all;
+- **`body_key` and `args` are still computed and still carried.** They are the design in §1.6
+  and they cost nothing, so the day a native catalogue lands, deleting one `title=` argument in
+  `message.compose` restores it. The senders already prefer a literal over a key.
+
+The order matters when that day comes: **the catalogue first, the revert second.** A key
+sent before the bundle has it is a raw key on a lock screen, which is exactly the state this
+paragraph exists to record.
 
 **On the server** — the new placement-name table in `alma/i18n/` from §1.6. Roughly 102
 strings, and the test that matters is not "is it translated" but **"does it agree with the two

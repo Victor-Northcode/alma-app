@@ -1,10 +1,18 @@
-"""The four sentences the server writes to a reader itself, in all seven.
+"""The sentences the server writes to a reader itself, in all seven.
 
 Almost everything a reader sees is prose a model generated in their language,
-or a chart, or a string from an app bundle. These four are neither: they are
-what the chat route says when there is no reply to give — the validator refused
-what came back, the model provider is down, the day's questions are spent, the
-month's money is. Every one of them replaces something that was `str(exc)`.
+or a chart, or a string from an app bundle. These are neither: they are what
+the chat route says when there is no reply to give — the validator refused what
+came back, the model provider is down, the day's questions are spent, the
+month's money is. Most of them replace something that was `str(exc)`.
+
+**Two of them are not failures at all**, and they arrived with the legal
+review. `WITHHELD` is what stands in a thread where the answer crossed a line
+the product does not cross; `CRISIS` is what stands where a reader said
+something that must never be answered with astrology. Both are delivered as
+ordinary turns of hers rather than as HTTP errors, for the reason spelled out
+at each: a person who wrote either of those messages should get a sentence in
+the conversation, not an error screen where the conversation was.
 
 **What `str(exc)` actually put on a person's screen.** A Russian speaker asked
 three times about her Moon and got, three times:
@@ -182,8 +190,106 @@ BUDGET: dict[str, str] = {
           "или прямо сейчас, с подпиской.",
 }
 
+#: Человек написал, что может себе навредить.
+#:
+#: **Единственная строка в этой таблице, которая не заменяет ошибку.** Всё
+#: остальное здесь — то, что говорится вместо ответа, которого не получилось;
+#: эта говорится вместо ответа, которого не должно быть. Кризисное сообщение не
+#: доходит до модели вовсе (`validator.crisis` → `conversation.answer`), и
+#: причина ровно та: ответ на «я не хочу жить» приходит один раз. Модель, у
+#: которой в системном промте лежит правило про заботу, выполняет его
+#: по-разному от прогона к прогону, а разброс здесь недопустим — это не стиль.
+#:
+#: **Ни одного номера телефона.** Продукт продаётся во всех сторах мира, и
+#: 988 — это Америка, 112 — Европа, а неверный номер под этой фразой хуже, чем
+#: отсутствие номера. Названо то, что есть везде: экстренная служба своей
+#: страны, кризисная линия, один живой человек рядом.
+#:
+#: Русская строка обходит прошедшее время в обращении к читателю («написал/
+#: написала») по тому же правилу, по которому его обходят главы: род читателя
+#: неизвестен, и угадывать его в этом сообщении — последнее, что стоит делать.
+CRISIS: dict[str, str] = {
+    "en": "I am going to stop here, because this matters more than anything I "
+          "could read in a chart. Please talk to someone who can be with you "
+          "right now — the emergency number where you are, a crisis line, or "
+          "one person you trust. I will still be here afterwards.",
+    "es": "Me detengo aquí, porque esto importa más que cualquier cosa que yo "
+          "pueda leer en una carta. Por favor, habla con alguien que pueda "
+          "acompañarte ahora mismo: el número de emergencias de tu país, una "
+          "línea de crisis, o una persona en quien confíes. Yo seguiré aquí "
+          "después.",
+    "de": "Ich höre hier auf, denn das wiegt schwerer als alles, was ich in "
+          "einem Chart lesen könnte. Bitte sprich mit jemandem, der jetzt bei "
+          "dir sein kann — dem Notruf in deinem Land, einer Krisenhotline oder "
+          "einem Menschen, dem du vertraust. Ich bin danach noch da.",
+    "it": "Mi fermo qui, perché questo conta più di qualsiasi cosa io possa "
+          "leggere in un tema. Per favore parla con qualcuno che possa starti "
+          "vicino adesso: il numero di emergenza del tuo paese, una linea di "
+          "ascolto, o una persona di cui ti fidi. Io resto qui per dopo.",
+    "fr": "Je m'arrête ici, parce que cela compte plus que tout ce que je "
+          "pourrais lire dans un thème. Parle s'il te plaît à quelqu'un qui "
+          "peut être auprès de toi maintenant : le numéro d'urgence de ton "
+          "pays, une ligne d'écoute, ou une personne en qui tu as confiance. "
+          "Je serai encore là ensuite.",
+    "pt-BR": "Eu paro por aqui, porque isso pesa mais do que qualquer coisa "
+             "que eu possa ler num mapa. Por favor, fale com alguém que possa "
+             "estar com você agora: o número de emergência do seu país, uma "
+             "linha de apoio, ou uma pessoa em quem você confia. Eu continuo "
+             "aqui depois.",
+    "ru": "Я остановлюсь здесь: это важнее всего, что я могу прочитать в "
+          "карте. Пожалуйста, поговори с тем, кто может быть рядом прямо "
+          "сейчас, — со службой экстренной помощи в твоей стране, с кризисной "
+          "линией или с одним человеком, которому ты доверяешь. Я никуда не "
+          "денусь и буду здесь потом.",
+}
+
+#: Ответ пересёк юридическую границу и потому не отдан.
+#:
+#: **Не отказ и не ошибка — подмена.** Раньше ответ, трижды нарушивший правило,
+#: уходил в 422: читатель видел экран ошибки, а в ленте не оставалось ничего.
+#: Теперь на его месте стоит эта фраза, обычной репликой Alma: она сохраняется
+#: в беседе, перечитывается вместе с ней и не стоит читателю вопроса. Сам
+#: нарушивший текст не уходит никуда и никогда — граница держится ответом.
+#:
+#: Названа причина, а не механика: решение принадлежит человеку и тому, кто в
+#: нём разбирается. И названо, что можно спросить вместо — потому что отказ без
+#: второй половины в этом продукте считается браком с тех пор, как это
+#: посчитали.
+WITHHELD: dict[str, str] = {
+    "en": "I started that answer and stopped it. It was going somewhere a "
+          "chart has no business going — towards a decision that belongs to "
+          "you and to someone qualified, not to me. Ask me what the pattern "
+          "looks like, and that part I will read you.",
+    "es": "Empecé esa respuesta y la detuve. Iba hacia donde una carta no "
+          "tiene nada que hacer: hacia una decisión que es tuya y de alguien "
+          "cualificado, no mía. Pregúntame cómo es el patrón y esa parte sí "
+          "te la leo.",
+    "de": "Ich habe diese Antwort begonnen und wieder abgebrochen. Sie ging "
+          "dorthin, wo ein Chart nichts zu suchen hat — zu einer Entscheidung, "
+          "die dir und einem Fachmenschen gehört, nicht mir. Frag mich nach "
+          "dem Muster, diesen Teil lese ich dir vor.",
+    "it": "Ho cominciato questa risposta e l'ho fermata. Andava dove un tema "
+          "non deve andare: verso una decisione che è tua e di chi se ne "
+          "intende, non mia. Chiedimi com'è la trama e quella parte te la "
+          "leggo.",
+    "fr": "J'ai commencé cette réponse et je l'ai arrêtée. Elle allait là où "
+          "un thème n'a rien à faire : vers une décision qui t'appartient, à "
+          "toi et à quelqu'un de qualifié, pas à moi. Demande-moi à quoi "
+          "ressemble le motif, cette partie-là je te la lis.",
+    "pt-BR": "Comecei essa resposta e a interrompi. Ela ia para onde um mapa "
+             "não tem o que fazer: para uma decisão que é sua e de alguém "
+             "qualificado, não minha. Me pergunte como é o desenho e essa "
+             "parte eu leio para você.",
+    "ru": "Я начала этот ответ и остановила его. Он уходил туда, куда карте "
+          "ходить незачем, — к решению, которое принадлежит тебе и тому, кто в "
+          "нём разбирается, а не мне. Спроси меня, как выглядит сам рисунок, — "
+          "эту часть я прочитаю.",
+}
+
 BY_ERROR: dict[str, dict[str, str]] = {
     "answer_refused": REFUSED,
+    "answer_withheld": WITHHELD,
+    "crisis": CRISIS,
     "ai_unavailable": UNAVAILABLE,
     "question_limit.day": LIMIT_DAY,
     "question_limit.month": LIMIT_MONTH,

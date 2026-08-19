@@ -268,18 +268,43 @@ class Drift:
         return " ".join(parts)
 
 
-def relations(factors: list[str] | tuple[str, ...]) -> tuple[dict, dict]:
-    """What the engine actually asserts: aspects between pairs, and memberships.
+#: Как проза шести языков называет транзит.
+#:
+#: Отдельно от `_BODY_NAMES`, потому что это не тело, а **рамка**: то же
+#: «Сатурн» в двух рамках — два разных утверждения, и `voice.py` говорит об этом
+#: прямее всего: «"Transiting Saturn is on your Midheaven" is true; "Saturn is
+#: on your Midheaven" is a claim about the birth chart». Проверяется по
+#: `_fold`, поэтому пишется без диакритики.
+_TRANSIT_WORD = re.compile(r"\btransit|\btransitier|\bтранзит")
 
-    Returns `(aspects, configurations)` where `aspects` maps an unordered pair
-    of engine keys to the set of aspect names asserted between them, and
-    `configurations` maps a configuration name to the set of its members.
+
+def relations(
+    factors: list[str] | tuple[str, ...],
+) -> tuple[dict, dict, dict]:
+    """What the engine actually asserts: aspects, memberships, and whose.
+
+    Returns `(aspects, configurations, frames)`. `aspects` maps an unordered
+    pair of engine keys to the set of aspect names asserted between them;
+    `configurations` maps a configuration name to the set of its members;
+    `frames` maps the same pairs to which side of the chart asserted them —
+    `{"natal"}`, `{"transit"}`, or both when the pair holds in each.
+
+    **The third one exists because the first two cannot tell a birth chart from
+    today's sky.** `_body_in` reads `transiting uranus □ natal neptune` and
+    `♅ □ ♆` to the same pair, which is right for "does this aspect exist" and
+    wrong for "does it exist *in them*". A chat turn is handed the natal chart
+    and the transits together, so the confusion has somewhere to happen: a
+    sentence that says *your Saturn squares your Ascendant*, when the only such
+    square is Saturn passing overhead this month, describes a temporary sky as
+    a permanent fact about a person — in the sentence they will quote back.
     """
     aspects: dict[frozenset[str], set[str]] = {}
     configurations: dict[str, set[str]] = {}
+    frames: dict[frozenset[str], set[str]] = {}
 
     for raw in factors:
         text = str(raw)
+        frame = "transit" if _TRANSIT_WORD.search(_fold(text)) else "natal"
 
         # `stellium: mean_node, moon, true_node (3 bodies in Virgo)`
         head, sep, tail = text.partition(":")
@@ -305,6 +330,7 @@ def relations(factors: list[str] | tuple[str, ...]) -> tuple[dict, dict]:
             first, second = _body_in(left), _body_in(right)
             if first and second:
                 aspects.setdefault(frozenset((first, second)), set()).add(aspect)
+                frames.setdefault(frozenset((first, second)), set()).add(frame)
             break
         else:
             # Quintile and biquintile are letters rather than glyphs — `☿ Q ♇`
@@ -316,8 +342,9 @@ def relations(factors: list[str] | tuple[str, ...]) -> tuple[dict, dict]:
                 second = _body_in(text[match.end():])
                 if first and second:
                     aspects.setdefault(frozenset((first, second)), set()).add(aspect)
+                    frames.setdefault(frozenset((first, second)), set()).add(frame)
 
-    return aspects, configurations
+    return aspects, configurations, frames
 
 
 def _body_in(fragment: str) -> str | None:
@@ -372,6 +399,39 @@ def claims(text: str) -> list[Claim]:
     if not bodies:
         return []
 
+    #: Где в тексте стоят слова аспектов. Нужно подлежащему: тело после такого
+    #: слова — уже чьё-то дополнение, и вторым подлежащим в той же клаузе быть
+    #: не может. Собирается один раз, потому что перебор ниже идёт по аспектам,
+    #: а вопрос «был ли раньше в этой клаузе глагол» — про все аспекты сразу.
+    verbs = sorted(
+        m.start()
+        for words in ASPECT_WORDS.values()
+        for word in words
+        for m in re.finditer(rf"\b{re.escape(word)}\b", folded)
+        if not _NOT_AN_ASPECT.search(folded[max(0, m.start() - 8):m.start()])
+    )
+
+    #: Где начинается каждая клауза: начала предложений плюс запятая с союзом.
+    #:
+    #: Клауза, а не предложение, и разница решает. «Venus trines Saturn, and
+    #: Mars squares Pluto» — два подлежащих в одном предложении, и Марс во
+    #: втором из них снова подлежащее, хотя глагол в предложении уже был.
+    clause_starts = sorted(
+        {lo for lo, _hi in bounds} | {m.end() for m in _CLAUSE_JOIN.finditer(folded)}
+    )
+
+    def _is_object(pos: int) -> bool:
+        """Стоит ли это тело в своей клаузе после слова аспекта.
+
+        Тогда оно кем-то уже сказано и вторым подлежащим быть не может.
+        """
+        start = 0
+        for boundary in clause_starts:
+            if boundary > pos:
+                break
+            start = boundary
+        return any(start <= verb < pos for verb in verbs)
+
     found: list[Claim] = []
 
     # A conjunction is the one aspect prose usually declines to name. It says a
@@ -415,13 +475,42 @@ def claims(text: str) -> list[Claim]:
                     folded[lo:hi]
                 ):
                     continue
-                # The subject may be a pronoun standing for a body named
-                # earlier; the object may not.
-                before = [k for pos, _end, k in bodies if pos < hit.start()]
                 after = [(pos, end, k) for pos, end, k in bodies if hit.end() < pos <= hi]
-                if not before or not after:
+                if not after:
                     continue
-                subject = before[-1]
+
+                # **Подлежащее — не просто ближайшее тело слева.**
+                #
+                # Так было, и на живом ходе это стоило читателю вопроса.
+                # Измерено на `/v1/chat`, вопрос «что сейчас движется в моём
+                # небе и при чём тут мой натальный Сатурн»: *«It's trine your
+                # ascendant, it squares your natal Mars, and, retrograde, it's
+                # sextile your natal Neptune»* — верная фраза, три аспекта от
+                # одного подлежащего-местоимения. Ближайшим телом слева от
+                # `squares` стоит `ascendant` — **дополнение предыдущей
+                # клаузы**, — и проверка обвинила карту в «ascendant square
+                # mars», которого никто не заявлял. Две попытки из трёх умерли
+                # так, третья на другом, и человек получил 422.
+                #
+                # Разделяет их грамматика, и она регулярному выражению
+                # доступна: тело, стоящее **после** слова аспекта в той же
+                # клаузе, — чужое дополнение и подлежащим быть не может.
+                # «Mercury is caught in the grand cross — it squares Mars»
+                # этим не задето: перед `squares` слова аспекта нет, и Меркурий
+                # остаётся подлежащим, как и был.
+                # Правило целиком в одну строку: **ближайшее слева тело,
+                # которое ещё никому не дополнение.** Тело, стоящее в своём
+                # предложении после слова аспекта, уже занято чужим глаголом;
+                # перешагнув через него, разбор находит то самое подлежащее,
+                # которое местоимение и заменяет, — здесь транзитный Юпитер из
+                # предыдущей фразы, а не Асцендент из предыдущей клаузы.
+                candidates = [
+                    k for pos, _end, k in bodies
+                    if pos < hit.start() and not _is_object(pos)
+                ]
+                if not candidates:
+                    continue
+                subject = candidates[-1]
                 # "it squares Mars and Pluto" is two claims, not one. Taking
                 # only the first object would have checked Mars and let Pluto
                 # through — which is half of the measured failure.
@@ -502,9 +591,25 @@ def drift(text: str, factors: list[str] | tuple[str, ...]) -> Drift:
     if not factors:
         return Drift()
 
-    aspects, configurations = relations(factors)
+    aspects, configurations, frames = relations(factors)
     contradicted: list[str] = []
     unsupported: list[str] = []
+
+    # **Молчание, когда рамку назвать нельзя.**
+    #
+    # Правило рамки читает то предложение, из которого снято утверждение, а
+    # `claims` намеренно ходит за подлежащим через границу предложения:
+    # «Transiting Saturn sits on your Mercury. It squares your Ascendant too» —
+    # второе утверждение о транзите, и слова «transiting» в нём нет. Спрашивать
+    # с него рамку значило бы ловить хорошую прозу.
+    #
+    # Поэтому проверка «названо натальным, а есть только в транзитах» включена
+    # только там, где во всём ответе транзит не упомянут ни разу. Это и есть
+    # измеренный отказ — транзит, поданный молча как свойство человека, — а
+    # ответ, который про транзиты говорит, разбирается предложением и остаётся
+    # без этой проверки: пропущенная проверка отпускает верную прозу, ложная
+    # отвергает её.
+    mentions_a_transit = bool(_TRANSIT_WORD.search(_fold(text)))
 
     for claim in claims(text):
         if claim.kind == "membership":
@@ -535,11 +640,53 @@ def drift(text: str, factors: list[str] | tuple[str, ...]) -> Drift:
                 f"\"{_trim(claim.clause)}\" — the chart has {claim.first} "
                 f"{actual} {claim.second}, not {claim.relation}"
             )
+        # Аспект есть и назван верно. Остаётся вопрос, чей он.
+        #
+        # **Проверяется одно направление из двух, и второе снято намеренно.**
+        # Первая версия ловила и обратное — натальный аспект, названный
+        # транзитом, — читая слово «transiting» в предложении утверждения. На
+        # живой прозе это отвергает верный текст: *«Transiting Saturn squares
+        # your Ascendant, and your Venus trines your Saturn underneath it»* —
+        # одно предложение, два утверждения, и второе получало рамку первого.
+        # Оба утверждения там верны, а ход уходил на попытку. Цена ошибки в эту
+        # сторону — потерянный вопрос читателя; цена пропуска — «транзитная
+        # Венера» вместо «твоя Венера», ошибка в слове, а не в человеке.
+        #
+        # Оставшееся направление — то, ради которого правило заводилось:
+        # сегодняшнее небо, поданное молча как свойство человека, в той самой
+        # фразе, которую он потом процитирует.
+        elif not mentions_a_transit and _frames_of(
+            frames, claim.first, claim.second
+        ) == {"transit"}:
+            contradicted.append(
+                f"\"{_trim(claim.clause)}\" — that is a transit passing now, "
+                f"not their birth chart: their natal {claim.first} makes no "
+                f"{claim.relation} to {claim.second}. Say transiting, or drop it"
+            )
 
     return Drift(
         contradicted=tuple(dict.fromkeys(contradicted)),
         unsupported=tuple(dict.fromkeys(unsupported)),
     )
+
+
+def _frames_of(frames: dict, first: str, second: str) -> set[str]:
+    """Which side of the chart holds this pair, tolerating the node's two keys.
+
+    Empty when the pair is unknown, which is the caller's cue to say nothing:
+    a frame nobody asserted cannot be the wrong one.
+    """
+    direct = frames.get(frozenset((first, second)))
+    if direct is not None:
+        return direct
+    if first in _NODE_KEYS or second in _NODE_KEYS:
+        for pair, held in frames.items():
+            a, b = tuple(pair) if len(pair) == 2 else (next(iter(pair)),) * 2
+            if (_same_body(a, first) and _same_body(b, second)) or (
+                _same_body(a, second) and _same_body(b, first)
+            ):
+                return held
+    return set()
 
 
 def _lookup(aspects: dict, first: str, second: str) -> set[str] | None:

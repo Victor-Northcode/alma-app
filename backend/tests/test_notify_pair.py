@@ -76,6 +76,29 @@ def _profile(user_id: str, birth: dict, *, is_self: bool, name: str | None = Non
     )
 
 
+async def granted(session, user: User, profile_id: str) -> None:
+    """Выписать грант пары — то, ответом на что этот пуш и является.
+
+    Раньше стенд его не писал, и половина файла проверяла отправку человеку,
+    который отчёт не покупал. Это перестало проходить, когда `report_ready`
+    начал спрашивать про грант сам, — и правильно: тест, воспроизводящий
+    состояние, которого в проде не бывает, проверяет не тот код.
+    """
+    from alma.auth import entitlements
+
+    await entitlements.grant(
+        session,
+        user,
+        system=entitlements.pair_system(profile_id),
+        kind="consumable",
+        scope=entitlements.SCOPE_PAIR,
+        source="appstore",
+        amount_cents=499,
+        transaction_id=f"test-{profile_id}",
+    )
+    await session.flush()
+
+
 async def buyer(
     session,
     *,
@@ -83,7 +106,7 @@ async def buyer(
     locale: str | None = None,
     partner_name: str = "Marcus",
 ) -> tuple[User, Profile]:
-    """Один покупатель: свой профиль, партнёр и (обычно) один телефон."""
+    """Один покупатель: свой профиль, оплаченный партнёр и (обычно) телефон."""
     user = User(id=new_id(), provider="guest", locale="en", last_seen_at=utcnow())
     session.add(user)
     await session.flush()
@@ -91,6 +114,7 @@ async def buyer(
     partner = _profile(user.id, LUCAS, is_self=False, name=partner_name)
     session.add_all([me, partner])
     await session.flush()
+    await granted(session, user, partner.id)
     if with_token:
         await tokens.register(
             session,
@@ -206,6 +230,7 @@ def test_a_second_partner_is_a_second_push(db):
             other = _profile(user.id, SOFIA, is_self=False, name="Katya")
             session.add(other)
             await session.flush()
+            await granted(session, user, other.id)
             await pair.report_ready(
                 session, user, partner_id=partner.id, source="appstore",
                 transports={"ios": vendor},
@@ -247,6 +272,66 @@ def test_no_device_tokens_means_silence_without_errors(db, caplog):
     assert claimed is None, "день не занят: токен может появиться позже"
     worst = [r for r in caplog.records if r.levelno > logging.WARNING]
     assert worst == [], f"тишина не должна стоить ошибок в логе: {worst}"
+
+
+def test_a_push_cannot_reach_somebody_who_did_not_buy_the_report(db, caplog):
+    """Второй замок, и он местный.
+
+    Все три вызывающих стоят сразу за строкой, которая грант выписала, — но это
+    соглашение, а не правило: перестановка двух строк в чужом файле, ранний
+    выход на ветке отказа, четвёртый путь оплаты по образцу третьего. Цена
+    ошибки — «ваш отчёт готов» человеку, который по тапу упирается в пейволл за
+    то, что ему только что пообещали.
+    """
+    vendor = Vendor()
+
+    async def work():
+        async with db.session_scope() as session:
+            user, partner = await buyer(session)
+            # Профиль есть, телефон есть, источник — настоящий магазин; нет
+            # только гранта, то есть самой покупки.
+            unpaid = _profile(user.id, SOFIA, is_self=False, name="Katya")
+            session.add(unpaid)
+            await session.flush()
+            with caplog.at_level(logging.DEBUG, logger="alma.notify.pair"):
+                outcome = await pair.report_ready(
+                    session, user, partner_id=unpaid.id, source="appstore",
+                    transports={"ios": vendor},
+                )
+            claimed = await session.get(
+                UsageCounter, pair.counter_key(user.id, unpaid.id)
+            )
+            return outcome, claimed
+
+    outcome, claimed = run_async(work)
+    assert outcome == "skipped: no grant"
+    assert vendor.sent == []
+    assert claimed is None, "пары не занимали — грант может появиться позже"
+
+
+def test_a_revoked_grant_stops_being_a_reason_to_push(db):
+    """Возврат денег — это не «отчёт готов».
+
+    `unlocked_pairs` читает живые гранты, а не историю покупок, поэтому
+    отозванный грант закрывает и пуш тоже, одним и тем же правилом.
+    """
+    vendor = Vendor()
+
+    async def work():
+        async with db.session_scope() as session:
+            from alma.auth import entitlements
+
+            user, partner = await buyer(session)
+            for row in await entitlements.for_user(session, user):
+                await entitlements.revoke(session, row)
+            await session.flush()
+            return await pair.report_ready(
+                session, user, partner_id=partner.id, source="appstore",
+                transports={"ios": vendor},
+            )
+
+    assert run_async(work) == "skipped: no grant"
+    assert vendor.sent == []
 
 
 def test_a_dev_grant_is_silent(db):

@@ -393,10 +393,18 @@ def is_dormant(last_seen: datetime | None, now: datetime | None = None) -> bool:
     `User.last_seen_at` is bumped by `accounts.touch` on every authenticated
     request, so it means "the app made a call", which is as close to "opened
     it" as this system can get without a second event.
+
+    Both sides are forced UTC-aware before they are subtracted. `last_seen`
+    comes back naive from SQLite whatever the column says, and `now` is
+    whatever a caller passed — and mixing the two raises `TypeError`, which in
+    this job means one recipient counted under `errored` with a stack trace
+    that says nothing about a timezone.
     """
     if last_seen is None:
         return False
     moment = now or datetime.now(timezone.utc)
+    if moment.tzinfo is None:
+        moment = moment.replace(tzinfo=timezone.utc)
     if last_seen.tzinfo is None:
         last_seen = last_seen.replace(tzinfo=timezone.utc)
     return moment - last_seen > DORMANT_AFTER
@@ -423,12 +431,23 @@ def too_soon(today: date, history: Sequence[date]) -> str:
     feature has to have. A transit heavy enough to earn an interruption is in
     orb for weeks; it is on the Today page tomorrow, and the person can go and
     look.
+
+    **A send day in the future is not nonsense, and dropping it was a bug.**
+    History used to be filtered to `day <= today` before anything was counted,
+    which reads as obviously right and is wrong for one population: somebody
+    who flies *west across the date line*. Auckland's morning of the 8th
+    happens at 22:00 UTC on the 7th; land in Honolulu and their local date is
+    still the 7th, so `counter_key` is a different row and the gap saw an empty
+    history. The result is two dailies inside two hours — the precise failure
+    the claim-before-send design exists to prevent, arrived at from the
+    calendar instead of from the job. So the comparison is now absolute: a
+    daily three days away in *either* direction is a daily we have just sent.
     """
-    recent = sorted(d for d in history if d <= today)
+    recent = sorted(history)
     if not recent:
         return ""
 
-    if any(0 < (today - day).days <= MIN_GAP_DAYS for day in recent):
+    if any(0 < abs((today - day).days) <= MIN_GAP_DAYS for day in recent):
         return f"a daily went out inside the last {MIN_GAP_DAYS} days"
 
     week = today - timedelta(days=6)

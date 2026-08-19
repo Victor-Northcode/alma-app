@@ -288,7 +288,9 @@ class _ChatTurnViewState extends State<ChatTurnView>
               padding: const EdgeInsets.only(top: 10),
               child: _SettlingParagraph(
                 text: paragraph,
-                style: AlmaType.voice,
+                // Роль чтения, а не дисплея: длинный ответ курсивной антиквой
+                // читался тяжело. Довод целиком — у `AlmaType.chatVoice`.
+                style: AlmaType.chatVoice,
                 progress: _cascade,
                 startLine: line,
               ),
@@ -652,7 +654,7 @@ class _SettlingParagraph extends StatelessWidget {
         // **Мерить надо ровно тем стилем, каким `Text` потом рисует.**
         //
         // `Text` со стилем-наследником сливает его с окружающим
-        // `DefaultTextStyle`, и всё, чего в `AlmaType.voice` не задано —
+        // `DefaultTextStyle`, и всё, чего в `AlmaType.chatVoice` не задано —
         // интервал, запасные семейства, — приходит оттуда и делает строку
         // шире промера. Мерил голым стилем — и вымеренная строка на экране
         // переносилась: «…still pull four / ways at once». Слитый стиль

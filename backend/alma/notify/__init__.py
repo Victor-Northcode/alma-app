@@ -41,6 +41,8 @@ from __future__ import annotations
 from .rules import Decision, Preference, may_send
 from .tokens import BadToken, forget, register, remove, retire, sweep
 from .transport import (
+    CHANNEL_DAILY,
+    CHANNEL_TRANSACTIONAL,
     PLATFORMS,
     Push,
     PushUnavailable,
@@ -53,6 +55,8 @@ from .transport import (
 
 __all__ = [
     "BadToken",
+    "CHANNEL_DAILY",
+    "CHANNEL_TRANSACTIONAL",
     "Decision",
     "PLATFORMS",
     "Preference",

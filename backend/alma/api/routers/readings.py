@@ -55,7 +55,7 @@ from sqlalchemy.exc import IntegrityError
 from ... import i18n
 from ...i18n import replies as i18n_replies
 from ...ai import chapters as chapter_defs
-from ...ai import conversation, cost, voice, writer
+from ...ai import conversation, cost, validator, voice, writer
 from ...ai.provider import ModelUnavailable, Provider, models
 from ...ai.writer import ReadingRefused
 from ...auth import entitlements
@@ -1753,6 +1753,11 @@ async def thread(thread_id: str, user: CurrentUser, session: SessionDep) -> dict
                 # honest rather than a guess about a conversation nobody can
                 # re-derive.
                 "turn_kind": m.turn_kind,
+                # Под тем же именем и в той же форме, что у живого `/v1/chat`,
+                # — иначе у клиента два разбора одного поля и они разойдутся в
+                # тот день, когда правят один. Null на всём, что главу назвать
+                # не могло, и на всём, что написано до колонки.
+                "source_chapter": m.source_chapter,
                 "created_at": m.created_at.isoformat(),
             }
             for m in messages
@@ -1776,7 +1781,7 @@ async def chat(
     return await _chat_turn(payload, user, session, provider)
 
 
-async def _chat_gate(session, user, *, locale: str) -> tuple[Allowance, str]:
+async def _chat_gate(session, user, *, locale: str, message: str = "") -> tuple[Allowance, str]:
     """Какая порция отвечает этому человеку сейчас — или честный 429.
 
     Вынесено из тела хода, потому что спрашивающих двое: сам `_chat_turn` и
@@ -1785,6 +1790,14 @@ async def _chat_gate(session, user, *, locale: str) -> tuple[Allowance, str]:
     в «ошибку внутри успешного ответа». Ничего не тратит: списание было и
     остаётся после состоявшегося ответа, поэтому второй заход этой проверки
     в одном запросе безвреден.
+
+    `message` — только ради кризисной ветки, и она стоит стены. Человеку,
+    написавшему, что он может себе навредить, ответ не генерируется вовсе
+    (`validator.crisis` → `conversation.answer`): модель не зовут, токены не
+    тратятся, деньги не двигаются. Дать такому сообщению упереться в «вопросы
+    на сегодня кончились» значит показать счётчик тому, кто написал самое
+    важное, что он тут напишет, — и показать его за фразу, которая ничего не
+    стоит. Стена остаётся ровно там, где есть что ограничивать.
     """
     _cheap, mid, strong = models()
     tier = await entitlements.tier_of(session, user)
@@ -1814,7 +1827,7 @@ async def _chat_gate(session, user, *, locale: str) -> tuple[Allowance, str]:
             allowance = welcome
 
     asked = await _asked(session, user, allowance)
-    if asked >= allowance.limit:
+    if asked >= allowance.limit and not validator.crisis(message):
         # Localised, first person, and it ends on what the reader can still
         # have. The English fragment this replaces — "that is 3 questions
         # today. They come back tomorrow — a subscription raises the limit." —
@@ -1915,7 +1928,9 @@ async def _chat_turn(
     `stage` — рассказчик стрима: его зовут на настоящих шагах подготовки
     (см. `_stage_for`), и когда его нет, ход ведёт себя ровно как всегда.
     """
-    allowance, tier = await _chat_gate(session, user, locale=payload.locale)
+    allowance, tier = await _chat_gate(
+        session, user, locale=payload.locale, message=payload.message
+    )
     _cheap, _mid, _strong = models()
 
     birth = await resolve_birth(session, user, profile_id=payload.profile_id, birth=None)
@@ -2058,21 +2073,26 @@ async def _chat_turn(
             + ". Если вопрос глубже покрыт главой, которая ещё не написана, "
             "скажи об этом и предложи открыть её на экране системы."
         ]
-    await _guard_month(
-        session,
-        user,
-        tier=tier,
-        locale=payload.locale,
-        projected=_chat_projection(
-            question=payload.message,
-            results=results,
-            history=history,
-            model=allowance.model,
+    # Потолок месяца сторожит генерацию, а кризисный ход её не совершает: он
+    # отвечает строкой из каталога, ноль токенов, ноль центов. Тот же довод, что
+    # у квоты выше, — и здесь он даже прямее: проекция считает стоимость
+    # обращения, которого не будет.
+    if not validator.crisis(payload.message):
+        await _guard_month(
+            session,
+            user,
+            tier=tier,
             locale=payload.locale,
-            paid=paid,
-            memory=memory,
-        ),
-    )
+            projected=_chat_projection(
+                question=payload.message,
+                results=results,
+                history=history,
+                model=allowance.model,
+                locale=payload.locale,
+                paid=paid,
+                memory=memory,
+            ),
+        )
 
     try:
         reply = await conversation.answer(
@@ -2156,6 +2176,10 @@ async def _chat_turn(
         # all, so every reopened turn fell through to the legacy branch and the
         # honest note vanished on relaunch.
         turn_kind=reply.turn_kind,
+        # Та же тройка, что уходит в теле ответа, — сохранённая, чтобы
+        # перечитанная беседа показала ту же дверь в главу, что показала живая.
+        # См. довод у колонки в `db/models.py`.
+        source_chapter=source_chapter,
         model=reply.model,
         cost_cents=reply.spend.cents,
     )
@@ -2240,7 +2264,7 @@ async def chat_stream(
     # начинается со статуса 200, и отказ, случившийся после старта потока,
     # пришлось бы выдумывать заново внутри «успешного» ответа. Проверка ничего
     # не тратит, поэтому её второй заход внутри `_chat_turn` не удваивает счёт.
-    await _chat_gate(session, user, locale=payload.locale)
+    await _chat_gate(session, user, locale=payload.locale, message=payload.message)
 
     # Одно голое значение вместо строки пользователя: сессия запроса умрёт
     # раньше, чем генератор начнёт работать, и трогать через неё ORM-объект

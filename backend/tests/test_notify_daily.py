@@ -467,7 +467,13 @@ def test_the_payload_carries_a_key_and_words_rather_than_a_sentence(db):
     assert push.body_key == "push.daily.exact.square"
     assert push.args == ("Saturn", "Sun", "4:20 pm")
     assert push.collapse_id == "daily-2026-08-07"
-    assert push.data == {"kind": "daily", "date": "2026-08-07"}
+    # `type`, because `type` is what the app reads: `AppDelegate.swift` lifts
+    # the string fields of `userInfo` and `main.dart` records
+    # `push_opened{type: payload['type']}`. This used to say `kind` — the name
+    # `docs/PUSH.md §1.6` printed and nothing on the phone has ever looked
+    # for — so every tap on a daily was counted with a null type while the pair
+    # push, written against the client, was counted correctly.
+    assert push.data == {"type": "daily", "date": "2026-08-07"}
     assert push.expires_at is not None and push.expires_at.hour == 22
 
 
@@ -778,10 +784,19 @@ def test_no_piece_means_no_push_and_the_day_is_given_back(db):
 def test_the_notification_body_is_the_validated_teaser(db):
     """The merge of the two designs that arrived at this from different sides.
 
-    The title stays a localisation key, resolved by the operating system in the
-    device's language. The body is the piece's own opening sentence, which went
-    through `validator.check` with the paragraph it belongs to — rather than a
-    key pointing at a reading that was never written.
+    The body is the piece's own opening sentence, which went through
+    `validator.check` with the paragraph it belongs to — rather than a key
+    pointing at a reading that was never written.
+
+    **The title used to be a key here too, and the key resolved against
+    nothing.** iOS looks `title-loc-key` up in `Localizable.strings` in the
+    app's native bundle; the Flutter port has no such file — `knownRegions` is
+    `(en, Base)` — and an unresolved key is rendered as the raw key, so every
+    daily would have arrived headed `push.daily.title`. The headline is composed
+    from `message.TITLES` now, whose seven strings are the app's own
+    `pushDailyTitle` and are held to it by `test_notify_strings.py`. The key is
+    still carried, so putting a native catalogue in the bundle is a one-line
+    revert.
     """
     vendor = Vendor()
 
@@ -794,18 +809,23 @@ def test_the_notification_body_is_the_validated_teaser(db):
             )
             return vendor.sent[0]
 
+    from alma.notify import message
+
     push = run_async(work)
-    assert push.title_key == "push.daily.title"
+    assert push.title_key == "push.daily.title", "the key is still carried"
+    assert push.title == message.TITLES["en"]
     assert push.body == Piece().teaser
 
     from alma.notify.apns import APNs
 
     alert = APNs.payload(push)["aps"]["alert"]
-    assert alert["title-loc-key"] == "push.daily.title"
+    assert alert["title"] == message.TITLES["en"]
+    # One or the other, never both, on either half of the alert: Apple resolves
+    # `loc-key` against the bundle and takes the literal literally, and a
+    # payload carrying both means two different things depending on which the
+    # system reaches for first.
+    assert "title-loc-key" not in alert
     assert alert["body"] == Piece().teaser
-    # One or the other, never both: Apple resolves `loc-key` against the
-    # bundle and takes `body` literally, and a payload carrying both means two
-    # different things depending on which the system reaches for first.
     assert "loc-key" not in alert
 
 

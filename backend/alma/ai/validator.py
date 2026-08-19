@@ -232,6 +232,20 @@ def check(
 #: Not a content filter — a product rule. Alma describes patterns; an app that
 #: tells someone when they will die, or that their test results will be fine,
 #: is a different and much worse product.
+#:
+#: **И это же — юридическая граница, которую держит ответ, а не дисклеймер.**
+#: Продукт продаётся во всех сторах мира, и «медицинский совет» перестаёт быть
+#: медицинским советом не оттого, что под ним написано «это развлечение».
+#: Ниже — те же шесть правил, что были, плюс границы, которые до сих пор
+#: просились только в промте: лечение, диагноз, деньги, право, самоповреждение,
+#: возраст. Просьба — это предпочтение; проверка — это правило.
+#:
+#: **Ни один из них не про слово, все про утверждение.** «Инвестируй» ловится
+#: только с объектом, которого в карте нет и быть не может (крипта, акции,
+#: недвижимость); «you have depression» ловится, а «you have a heaviness about
+#: mornings» — нет. Отрицание в том же предложении снимает совпадение (см.
+#: `safety`), поэтому «я не скажу тебе, когда ты умрёшь» — единственный
+#: правильный ответ на этот вопрос — проходит.
 FORBIDDEN_PATTERNS: tuple[tuple[str, str], ...] = (
     (r"\byou will (die|be diagnosed|get (cancer|sick))\b", "predicts death or diagnosis"),
     (r"\byou (will|are going to) be pregnant\b", "predicts pregnancy"),
@@ -240,6 +254,72 @@ FORBIDDEN_PATTERNS: tuple[tuple[str, str], ...] = (
     (r"\bdo not (see|consult) a (doctor|lawyer)\b", "discourages professional advice"),
     (r"\byour (partner|husband|wife|ex) (is|has been) (cheating|lying)\b",
      "asserts a third party's private conduct"),
+
+    # ── медицина ───────────────────────────────────────────────────────────
+    # Самая дорогая из границ: совет бросить назначенное — это вред, который
+    # наступает в тот же день. Промт просил «скажи, что это разговор с тем, кто
+    # назначил»; здесь это перестаёт быть просьбой.
+    (r"\b(stop|come off|quit|skip|halve|double) (taking )?(your |the |his |her )?"
+     r"(medication|medicine|meds|pills|tablets|antidepressants?|antipsychotics?|"
+     r"insulin|chemo|chemotherapy|treatment)\b",
+     "tells the reader what to do with a prescribed treatment"),
+    # Доза — единственное число, которого в карте нет ни при каких условиях.
+    (r"\b\d+\s?(mg|mcg|milligrams?)\b", "names a dose"),
+    (r"\byou (have|suffer from|are suffering from) "
+     r"(depression|bipolar|adhd|autism|schizophreni\w*|ocd|ptsd|anorexi\w*|bulimi\w*|"
+     r"cancer|diabetes|an eating disorder|a personality disorder|an anxiety disorder)\b",
+     "asserts a diagnosis"),
+    (r"\byou are (bipolar|autistic|schizophrenic|clinically depressed|manic)\b",
+     "asserts a diagnosis"),
+    (r"\b(will|would|can) (cure|heal|fix) (your|the|his|her) "
+     r"(illness|disease|cancer|depression|condition|symptoms)\b",
+     "promises a cure"),
+
+    # ── деньги ─────────────────────────────────────────────────────────────
+    # Инвестиционная рекомендация — лицензируемая деятельность почти везде.
+    # Привязано к объекту, а не к глаголу: «вложись в себя» — нормальная фраза
+    # главы про второй дом, и она обязана остаться.
+    (r"\b(invest|put your money) in (crypto\w*|bitcoin|ethereum|stocks?|shares|"
+     r"the market|property|real estate|gold|that coin|this coin)\b",
+     "recommends an investment"),
+    (r"\b(you should|i (would )?(recommend|suggest|advise)|my advice is to) "
+     r"(invest|sell your|buy shares|buy stock|take out a loan|borrow against)\b",
+     "recommends a financial move"),
+    (r"\b(sell|buy) (your (shares|stock|stocks|crypto|bitcoin|flat|house|home)|"
+     r"before the (crash|drop))\b", "tells the reader to buy or sell"),
+
+    # ── право ──────────────────────────────────────────────────────────────
+    (r"\byou should (sue|file (a )?(lawsuit|suit|claim)|press charges|plead|"
+     r"sign (the|that|this) (contract|agreement)|refuse to sign)\b",
+     "gives legal advice"),
+    (r"\byou (do not|don't) need (a|to see a) (lawyer|solicitor|attorney|doctor|"
+     r"therapist|psychiatrist)\b", "tells the reader not to get professional help"),
+
+    # ── самоповреждение ────────────────────────────────────────────────────
+    # Ни одного контекста, в котором эта фраза от Alma допустима. Кризисный
+    # разговор ведёт `conversation`, своим текстом, мимо модели вовсе.
+    (r"\b(kill yourself|take your own life|end your life|hurt yourself|"
+     r"harm yourself|cut yourself)\b", "speaks to self-harm"),
+
+    # ── предсказание беды ──────────────────────────────────────────────────
+    (r"\byou (only )?have \w+ (years|months|weeks) (left|to live)\b",
+     "predicts a lifespan"),
+    (r"\byour (mother|father|child|son|daughter|partner|husband|wife) will "
+     r"(die|be diagnosed|get (cancer|sick))\b", "predicts a death or diagnosis"),
+    (r"\b(there will be|expect) an? (accident|crash|earthquake|fire|disaster|attack)\b",
+     "predicts a catastrophe"),
+
+    # ── третьи лица ────────────────────────────────────────────────────────
+    (r"\byour (partner|husband|wife|ex|boss|mother|father|friend) is "
+     r"(abusive|a narcissist|manipulating you|using you|hiding)\b",
+     "asserts a third party's private conduct"),
+
+    # ── возраст и секс ─────────────────────────────────────────────────────
+    # Узко и намеренно: восьмой дом, Венера и Марс говорят о близости, и это
+    # астрология, а не эротика. Ловится только то, что в сторе называется
+    # explicit — акт и анатомия, а не тема.
+    (r"\b(blowjob|cunnilingus|masturbat\w+|your (genitals|penis|vagina|clitoris|"
+     r"nipples|breasts))\b", "explicit sexual content"),
 )
 
 
@@ -289,6 +369,75 @@ def safety(text: str) -> list[str]:
             reasons.append(reason)
             break
     return reasons
+
+
+#: Что человек написал, когда ему нужен не гороскоп, а живой человек.
+#:
+#: **Единственная проверка в этом модуле, которая смотрит на вопрос, а не на
+#: ответ, и единственная, написанная на семи языках.** Обе особенности из
+#: одного довода. Все правила выше ловят то, что сказала Alma, — если она
+#: ошиблась, попытку можно потратить и переписать. Здесь ошибиться нельзя ни
+#: разу: ответ модели на «я не хочу жить» приходит один раз, и если он приходит
+#: с трактовкой Луны, продукт уже сделал то, чего делать не имел права. Поэтому
+#: путь кризисного сообщения не проходит через модель вовсе (см.
+#: `conversation.answer`), а раз он детерминированный, он обязан работать в том
+#: языке, на котором человек пишет, — английский список закрыл бы шесть седьмых
+#: читателей.
+#:
+#: **Ловится намерение о себе, а не тема смерти.** «Когда я умру» — вопрос о
+#: предсказании, на него отвечает `FORBIDDEN_PATTERNS` и обычный отказ; «я хочу
+#: умереть» — это другое, и разница здесь везде проведена по первому лицу и
+#: воле: `want to die`, `хочу умереть`, `ich will sterben`, а не по слову
+#: «умереть». Идиомы («dying to know», «умираю с голоду») не первого лица и не
+#: волевые, и мимо проходят.
+#:
+#: Сравнение идёт по `_normalise`, поэтому шаблоны пишутся без диакритики и без
+#: дефисов: `suicidio` покрывает `suicídio`, `self harm` — `self-harm`.
+CRISIS_PATTERNS: tuple[str, ...] = (
+    # английский
+    r"\bkill(ing)? myself\b", r"\bend (my life|it all)\b", r"\btake my own life\b",
+    r"\b(commit|committing) suicide\b", r"\bsuicidal\b", r"\bsuicide\b",
+    r"\b(want|wanted|wanna) to die\b", r"\b(don't|do not|dont) want to (live|be here)\b",
+    r"\b(hurt|hurting|harm|harming|cut|cutting) myself\b", r"\bself harm\b",
+    r"\bno reason to live\b", r"\bbetter off dead\b", r"\bno point in living\b",
+    # испанский
+    r"\bmatarme\b", r"\bsuicid", r"\bquitarme la vida\b", r"\bacabar con mi vida\b",
+    # «no me quiero vivir» — сломанный испанский, но пишут именно так, и
+    # проверка на кризис не место, где спрашивают с человека грамматику.
+    r"\bno (me |ya )?quiero (seguir )?vivi", r"\bquiero morir(me)?\b", r"\bhacerme dano\b",
+    # немецкий
+    r"\bmich umbringen\b", r"\bselbstmord\b", r"\bsuizid", r"\bnicht mehr leben\b",
+    r"\bmir das leben nehmen\b", r"\bmich verletzen\b", r"\bich will sterben\b",
+    # итальянский
+    r"\buccidermi\b", r"\bsuicid", r"\bfarla finita\b", r"\btogliermi la vita\b",
+    r"\bnon voglio (piu )?vivere\b", r"\bvoglio morire\b", r"\bfarmi del male\b",
+    # французский
+    r"\bme tuer\b", r"\bsuicid", r"\ben finir avec la vie\b",
+    r"\bmettre fin a mes jours\b", r"\bje ne veux plus vivre\b",
+    r"\bje veux mourir\b", r"\bme faire du mal\b",
+    # португальский
+    r"\bme matar\b", r"\bacabar com a minha vida\b", r"\btirar a minha vida\b",
+    r"\bnao quero (mais )?viver\b", r"\bquero morrer\b", r"\bme machucar\b",
+    # русский
+    r"\bубить себя\b", r"\bпокончить с собой\b", r"\bсуицид", r"\bсамоубийств",
+    r"\bне хочу жить\b", r"\bне хочется жить\b", r"\bхочу умереть\b",
+    r"\bсвести счеты с жизнью\b", r"\bпричинить себе вред\b", r"\b(режу|резал|резать) себя\b",
+    r"\bнет смысла жить\b", r"\bлучше бы я умер",
+)
+
+_CRISIS = re.compile("|".join(CRISIS_PATTERNS), re.UNICODE)
+
+
+def crisis(text: str) -> bool:
+    """Whether this message is somebody in danger rather than a question.
+
+    Deliberately **not** negation-aware, unlike `safety`. There the negation
+    saves a correct refusal from its own subject matter; here the sentence
+    belongs to the reader, and "I don't want to live" is the thing itself
+    rather than a denial of it. Reading a negation as an all-clear is the one
+    mistake this function is not allowed to make.
+    """
+    return bool(_CRISIS.search(_normalise(text)))
 
 
 #: The four dignities the engine puts in a factor string, and the words prose
