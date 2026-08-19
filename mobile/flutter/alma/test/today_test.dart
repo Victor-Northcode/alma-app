@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
+
 import 'package:alma/main.dart';
 import 'package:alma/net/alma_client.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -272,5 +274,58 @@ void main() {
 
     // И один-единственный запрос: пустой опенинг не переспрашивается.
     expect(readingCalls, 1);
+  });
+
+  testWidgets('подпись панели переносится между словами, а не внутри слова',
+      (tester) async {
+    // **Дефект, который видно на первом же экране.** Подпись стояла
+    // `Flexible` рядом с `Expanded`-линией, то есть два гибких ребёнка с
+    // равным весом: подписи доставалась ровно половина свободного места,
+    // сколько бы ей ни было нужно. На «YOUR HOROSCOPE TODAY» половины не
+    // хватало даже на одно слово целиком, и перенос уходил внутрь слова —
+    // «YOUR HOR / OSCOPE / TODAY».
+    //
+    // **Проверяется решение, а не отрисовка, и это осознанный выбор.**
+    // Померить ширину подписи в пробирке нельзя: `flutter_test` подставляет
+    // свой шрифт, у которого все глифы одной ширины и заметно шире, чем у
+    // Golos. На нём строка переполнена при любой вёрстке, поэтому проверка
+    // «слово влезло» сторожила бы шрифт пробирки, а не продукт — и падала бы
+    // ровно так же на починенном коде.
+    //
+    // Font-независимо здесь ровно одно: кто уступает первым при дележе
+    // свободного места. Подпись обязана весить больше декоративной линии; при
+    // равных весах ей достаётся половина строки, сколько бы ни было нужно, и
+    // перенос уходит внутрь слова. Отрисовка проверена глазами на симуляторе.
+    await tester.pumpWidget(AlmaApp(client: richClient()));
+    for (var i = 0; i < 8; i++) {
+      await tester.pump(const Duration(milliseconds: 60));
+    }
+    await tester.pump(const Duration(seconds: 4));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+
+    // Подпись и линия — оба гибкие дети одной строки. Берём их веса.
+    final row = tester.widget<Row>(
+      find.ancestor(
+        of: find.text('YOUR HOROSCOPE TODAY'),
+        matching: find.byType(Row),
+      ).first,
+    );
+    final weights = row.children.whereType<Flexible>().map((f) => f.flex);
+    expect(weights.length, greaterThanOrEqualTo(2),
+        reason: 'в строке подписи больше нет двух гибких детей — проверку надо '
+            'переписать под новую вёрстку');
+
+    final labelWeight = weights.first;
+    final lineWeight = weights.last;
+    expect(
+      labelWeight,
+      greaterThan(lineWeight),
+      reason: 'подпись весит не больше декоративной линии ($labelWeight против '
+          '$lineWeight): при дележе свободного места ей достанется половина '
+          'строки, и на узкой панели перенос уйдёт внутрь слова — '
+          '«YOUR HOR / OSCOPE / TODAY»',
+    );
   });
 }
