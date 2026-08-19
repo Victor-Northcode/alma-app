@@ -230,8 +230,10 @@ hold a birth date (`billing.py:344–348`).
 against its own id so a retry cannot grant twice (`routers/billing.py:508–516`). Carries a
 `user_id` when we can work out whose it is.
 
-- **Kept**: indefinitely. On erase the payload is redacted and `user_id` nulled
-  (`accounts.py:365–369`).
+- **Kept**: 180 days, then deleted outright by `backend/tools/prune.py` (scheduled daily,
+  `docs/DEPLOY.md §5`). Before that: on erase the payload is redacted and `user_id` nulled
+  (`accounts.py:365–369`), so an erased person's delivery is already anonymous while the
+  row waits out its retention.
 - **Identity**: yes, until erased. **Tracking**: no.
 
 ### 1.10 Sign-in links — `magic_link`
@@ -240,9 +242,12 @@ against its own id so a retry cannot grant twice (`routers/billing.py:508–516`
 asked, created/expires/used timestamps.
 
 - **Sent to**: **Resend**, as the recipient of the letter (§2.3).
-- **Kept**: rows for the person's address are hard-deleted on erase, as are rows created by
-  their guest id (`accounts.py:382–384`). There is no expiry sweep — an unused link row
-  survives until the account is erased.
+- **Kept**: until the link expires. `backend/tools/prune.py` (scheduled daily,
+  `docs/DEPLOY.md §5`) deletes every row past its own `expires_at` — the row is unreadable
+  after that point anyway, since `consume_magic_link` refuses an expired or used link.
+  Rows for the person's address are additionally hard-deleted on erase, as are rows created
+  by their guest id (`accounts.py:382–384`). Before that sweep existed, the address of
+  somebody who asked for a letter and never finished signing in stayed with us for ever.
 - **Identity**: yes. **Tracking**: no.
 
 ### 1.11 Counters — `usage_counter`
@@ -468,7 +473,7 @@ recipient.
 | Consent with no payment | **Deleted** | `accounts.erase:377` |
 | Consent joined to a payment | **Detached** (`user_id` nulled) | `accounts.erase:370–374` |
 | Purchases | **Kept, detached, payload redacted** | `accounts.erase:360–364` |
-| Webhook deliveries | **Kept, detached, payload redacted** | `accounts.erase:365–369` |
+| Webhook deliveries | **Detached, payload redacted**, then deleted at 180 days | `accounts.erase:365–369`, `tools/prune.py` |
 | Device tokens (push) | **Deleted** | `notify.tokens.forget`, called from `accounts.erase` |
 | The `user` row | **Kept as a tombstone**, email/name/subject nulled | `accounts.erase:386–390` |
 

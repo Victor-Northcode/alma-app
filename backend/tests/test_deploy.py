@@ -223,7 +223,19 @@ def test_gunicorn_waits_long_enough_to_finish_a_paid_generation():
 
     assert conf.graceful_timeout >= 120
     assert conf.timeout >= 180
-    assert conf.worker_class == "uvicorn.workers.UvicornWorker"
+    # Наследник `UvicornWorker`, а не он сам, и это не косметика: оригинал не
+    # задаёт `timeout_graceful_shutdown`, а без него uvicorn ждёт закрытия
+    # открытых соединений без предела и не доходит до остановки приложения —
+    # то есть `graceful_timeout` выше тратится на ожидание SSE, а ожидание
+    # оплаченных ходов беседы не запускается вовсе. Довод целиком в
+    # `alma/api/worker.py`; арифметику трёх чисел сторожит
+    # `test_ten_thousand.test_the_process_lets_connections_go_before_it_waits_for_the_work`.
+    from alma.api.worker import AlmaUvicornWorker
+
+    assert conf.worker_class == "alma.api.worker.AlmaUvicornWorker"
+    assert issubclass(AlmaUvicornWorker, importlib.import_module(
+        "uvicorn.workers"
+    ).UvicornWorker)
     # По ядрам, а не одна штука: прод жил одним процессом на одном ядре.
     assert conf.workers >= 2
     # Журнал доступа с настоящим адресом клиента, а не с адресом прокси.

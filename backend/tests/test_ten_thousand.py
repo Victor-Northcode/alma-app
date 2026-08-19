@@ -137,12 +137,79 @@ def test_different_limiters_do_not_share_one_source(schema):
     run_async(go)
 
 
+def test_the_digest_of_a_source_cannot_be_reversed(schema):
+    """Отпечаток без секрета — это не отпечаток, а кодировка.
+
+    **Проверка ниже (`…_never_stored_in_the_clear`) ищет подстроку, и её одной
+    мало.** Она проходит на `blake2b` без секрета, а такой хеш ничего не
+    скрывает: адресов IPv4 всего 2³², на этой машине замерено 2,5 млн
+    `blake2b`/с одним ядром — всё пространство за полчаса. Номер окна в хеш не
+    входит, поэтому одна посчитанная таблица обращала бы все строки во всех
+    окнах и навсегда. Дамп `rate_window` был бы журналом адресов посетителей с
+    одним лишним шагом — то есть ровно тем, чего privacy-страница обещает не
+    делать.
+
+    Тест перебирает не 2³² адреса, а один: если отпечаток совпадает с
+    несекретным `blake2b` того же источника, значит секрета в нём нет.
+    """
+    import hashlib
+
+    async def go():
+        window = deps.SharedWindow(name="probe_reverse", limit=5, seconds=3600)
+        source = "203.0.113.77"
+        stored = window.digest(source)
+
+        guess = hashlib.blake2b(
+            source.encode("utf-8", "replace"),
+            digest_size=16,
+            person=b"probe_reverse"[:16],
+        ).hexdigest()
+        assert stored != guess, (
+            "отпечаток берётся без секрета — значит перебирается за полчаса, и "
+            "таблица потолков становится журналом адресов"
+        )
+
+        # И тот же источник у другого ограничителя — другой отпечаток: сравнивать
+        # посетителей между потолками мы не должны уметь вовсе.
+        other = deps.SharedWindow(name="probe_reverse_2", limit=5, seconds=3600)
+        assert other.digest(source) != stored
+
+    run_async(go)
+
+
+def test_the_source_is_never_held_in_memory_either(schema):
+    """Обещание «мы не храним адрес» — про сервис, а не про одну таблицу.
+
+    Кеш отказов держал ключ таким, каким его дали: сетевой адрес (`deps.py`,
+    гостевой потолок) или почтовый ящик, приведённый к нижнему регистру
+    (`routers/auth.py`). До двадцати тысяч на ограничитель, в памяти каждого
+    воркера, вычищаемых только при переполнении и никогда по истечении окна.
+    Таблицу мы при этом отпечатывали — то есть адрес не хранился ровно там, где
+    его никто и не искал бы.
+    """
+    async def go():
+        window = deps.SharedWindow(name="probe_rss", limit=5, seconds=3600)
+        async with session_module.session_scope() as session:
+            await window.hit(session, "203.0.113.90")
+            await window.hit(session, "sofia@example.com")
+
+        held = " ".join(window._seen)
+        assert "203.0.113.90" not in held, "сырой адрес остался в памяти воркера"
+        assert "sofia@example.com" not in held, "сырая почта осталась в памяти"
+        assert "example.com" not in held
+        assert len(window._seen) == 2, "кеш перестал работать вовсе"
+
+    run_async(go)
+
+
 def test_the_source_is_never_stored_in_the_clear(schema):
     """Таблица потолков не должна становиться журналом IP-адресов и почты.
 
     Privacy-страница обещает, что аналитика не хранит адресов; таблица,
     набитая ими через заднюю дверь, сделала бы это обещание неправдой. В
     строку идёт отпечаток.
+
+    Подстрочная проверка — самая грубая из трёх: см. соседние две.
     """
     from sqlalchemy import select
 
@@ -282,35 +349,6 @@ def test_spending_a_quota_is_one_statement_with_no_read_before_it(schema):
     assert not lowered.startswith("select"), "счётчик снова читается перед записью"
 
 
-def test_charging_the_month_writes_before_it_sums(schema):
-    """Порядок, который и закрывает гонку на деньгах.
-
-    Расход записан **до** того, как месячная сумма прочитана, поэтому два
-    одновременных вызова видят сумму, включающую их обоих. Прежний порядок —
-    прочитать сумму, сравнить, записать много позже — давал обоим один и тот
-    же ноль, и на двух воркерах это две генерации по цене одной.
-    """
-    async def prepare():
-        async with session_module.session_scope() as session:
-            _new_user(session, "u-money-3")
-
-    run_async(prepare)
-
-    async def charge():
-        async with session_module.session_scope() as session:
-            await counters.charge_and_check_month(
-                session, user_id="u-money-3", cents=5.0, ceiling_dollars=10.0
-            )
-
-    statements = [
-        line.lower() for line in _statements_while(charge)
-        if "usage_counter" in line.lower()
-    ]
-    assert len(statements) == 2, " | ".join(statements)
-    assert "on conflict" in statements[0], "сумма прочитана раньше, чем расход записан"
-    assert statements[1].startswith("select sum")
-
-
 def test_a_refund_puts_the_question_back(schema):
     """Ход, отменённый после списания, не должен стоить человеку вопроса."""
     async def go():
@@ -329,30 +367,59 @@ def test_a_refund_puts_the_question_back(schema):
     run_async(go)
 
 
-def test_the_month_is_charged_before_it_is_read(schema):
-    """Месячный потолок: расход записан до того, как сумма прочитана.
+def test_the_month_ledger_is_written_in_one_statement(schema):
+    """Что от месячных денег осталось проверять — и почему только это.
 
-    Ровно этот порядок закрывает гонку, которую не закрывает число запросов:
-    два одновременных вызова видят сумму, включающую их обоих. Проверяется и
-    пересчёт центов в доллары — ошибка в сто раз здесь стоила бы денег.
+    Здесь стояли три теста на `counters.charge_and_check_month`: он писал расход,
+    читал сумму и отказывал. Примитив снят — его **не звал никто**, а живой
+    месячный потолок (`ai/cost.guard_month`) остался прежним. Тесты на код,
+    которого нет в работе, — это зелёный цвет вместо проверки; довод, почему
+    потолок не переведён на резерв, стоит в `db/counters.py`.
+
+    Проверять осталось то, что действительно чинилось: книга расходов больше не
+    **теряет** записи при одновременной работе. Именно потеря делала
+    предохранитель неработающим по-настоящему — он считал нас дешевле, чем мы
+    есть, ровно под нагрузкой, ради которой поставлен.
     """
-    async def go():
+    from alma.ai import cost
+
+    async def prepare():
         async with session_module.session_scope() as session:
-            user_id = _new_user(session, "u-money-1")
-            await session.flush()
+            _new_user(session, "u-money-3")
 
-            # 40 центов при потолке в один доллар — проходит.
-            assert await counters.charge_and_check_month(
-                session, user_id=user_id, cents=40.0, ceiling_dollars=1.0
-            ) == pytest.approx(0.4)
+    run_async(prepare)
 
-            with pytest.raises(counters.QuotaExceeded) as refused:
-                await counters.charge_and_check_month(
-                    session, user_id=user_id, cents=80.0, ceiling_dollars=1.0
-                )
-            assert refused.value.spent == pytest.approx(1.2)
+    async def charge():
+        async with session_module.session_scope() as session:
+            await counters.add(
+                session,
+                user_id="u-money-3",
+                day=date.today(),
+                metric=cost.SPEND_METRIC,
+                cents=5.0,
+            )
 
-    run_async(go)
+    statements = [
+        line.lower() for line in _statements_while(charge)
+        if "usage_counter" in line.lower()
+    ]
+    assert len(statements) == 1, (
+        "расход снова пишется больше чем одним запросом: " + " | ".join(statements)
+    )
+    assert "on conflict" in statements[0] and "returning" in statements[0]
+
+
+def test_the_dead_month_primitive_stays_dead():
+    """Снятый примитив не должен вернуться без вызывающего.
+
+    Он объявлял гонку на деньгах закрытой, стоя в двух шагах от живой гонки, и
+    читался как сделанная работа. Если он понадобится — он вернётся вместе с
+    тем, кто его зовёт, и этот тест придётся переписать осознанно.
+    """
+    assert not hasattr(counters, "charge_and_check_month"), (
+        "примитив вернулся; проверьте, что у него есть вызывающий в alma/, а не "
+        "только тесты"
+    )
 
 
 def test_the_month_total_agrees_with_the_ledger_that_already_existed(schema):
@@ -369,8 +436,9 @@ def test_the_month_total_agrees_with_the_ledger_that_already_existed(schema):
         async with session_module.session_scope() as session:
             user_id = _new_user(session, "u-money-2")
             await session.flush()
-            await counters.charge_and_check_month(
-                session, user_id=user_id, cents=17.5, ceiling_dollars=100.0
+            await counters.add(
+                session, user_id=user_id, day=date.today(),
+                metric=cost.SPEND_METRIC, cents=17.5,
             )
 
         async with session_module.session_scope() as session:
@@ -575,6 +643,63 @@ def test_the_process_waits_for_a_paid_turn_before_it_goes(schema):
     asyncio.run(go())
 
 
+def _gunicorn_conf():
+    """Настоящий `gunicorn.conf.py`, а не переписанные из него числа.
+
+    Файл конфигурации модулем не является (`gunicorn.conf` не импортируется),
+    поэтому загружается по пути. Числа берутся из него, чтобы
+    `ALMA_GRACEFUL_TIMEOUT=60` в проде не сделал арифметику ниже неправдой
+    молча: тест обязан падать от настройки, а не переставать её замечать.
+    """
+    import importlib.util
+    import pathlib
+
+    path = pathlib.Path(__file__).resolve().parents[1] / "gunicorn.conf.py"
+    spec = importlib.util.spec_from_file_location("alma_gunicorn_conf", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _graceful_timeout() -> int:
+    return _gunicorn_conf().graceful_timeout
+
+
+def test_the_process_lets_connections_go_before_it_waits_for_the_work():
+    """Окно в сто секунд не наступало вовсе, и это худший вид неработающей защиты.
+
+    `UvicornWorker` не задаёт `timeout_graceful_shutdown`, а без него
+    `uvicorn.Server.shutdown` ждёт закрытия открытых соединений **без предела** и
+    только потом запускает остановку приложения. `/v1/chat/stream` — соединение,
+    которое само не закроется всю генерацию. То есть при выкладке с живым
+    читателем порядок был: SIGTERM → ждём SSE → SIGKILL на 120-й секунде, а
+    `lifespan` со всем ожиданием оплаченных ходов не запускался ни разу.
+
+    Код был, тесты на него зелёные, до него не доходило управление.
+
+    Три числа обязаны складываться: соединения отпускаются, потом ждётся работа,
+    и всё это внутри того, что даёт gunicorn.
+    """
+    from alma.api import worker
+
+    app_module = import_module("alma.api.app")
+    conf = _gunicorn_conf()
+
+    assert conf.worker_class == "alma.api.worker.AlmaUvicornWorker", (
+        "воркер снова чужой — значит timeout_graceful_shutdown не задан"
+    )
+    assert worker.AlmaUvicornWorker.CONFIG_KWARGS["timeout_graceful_shutdown"] == (
+        worker.CONNECTION_GRACE_SECONDS
+    )
+    assert (
+        worker.CONNECTION_GRACE_SECONDS + app_module.STREAM_TURN_GRACE_SECONDS
+        < conf.graceful_timeout
+    ), (
+        "отпустить соединения и дождаться работы вместе не влезают в "
+        "graceful_timeout — SIGKILL придёт посреди оплаченного хода"
+    )
+
+
 def test_waiting_for_a_turn_has_an_end(caplog):
     """Ждать дольше, чем нам самим дано, бессмысленно: придёт SIGKILL.
 
@@ -589,7 +714,7 @@ def test_waiting_for_a_turn_has_an_end(caplog):
     # объект FastAPI — `alma/api/__init__.py` кладёт его под тем же именем.
     app_module = import_module("alma.api.app")
 
-    assert app_module.STREAM_TURN_GRACE_SECONDS < 120, (
+    assert app_module.STREAM_TURN_GRACE_SECONDS < _graceful_timeout(), (
         "ожидание длиннее graceful_timeout — процесс убьют посреди него"
     )
 
@@ -735,9 +860,13 @@ def test_the_prune_deletes_what_the_privacy_page_promised(schema):
     run_async(fill)
 
     counted = run_async(lambda: prune_tool._prune(dry_run=True))
+    # Сравнение целым словарём, а не по ключам: новая растущая таблица, забытая
+    # в чистке, обязана ронять именно этот тест. Ссылок входа здесь нет ни одной
+    # просроченной — ноль, а не отсутствие ключа.
     assert counted == {
         "funnel events": 1,
         "webhook deliveries": 1,
+        "sign-in links": 0,
         "rate windows": 1,
         "calc cache": 1,
     }
@@ -762,9 +891,11 @@ def test_the_prune_keeps_the_retention_the_privacy_page_prints():
     """Число живёт в двух местах и обязано быть одним.
 
     `funnel.PURGE_AFTER_DAYS` печатается на privacy-странице как
-    `FUNNEL_RETENTION_DAYS`; чистка вебхуков берёт то же число нарочно — тело
-    доставки несёт имя и адрес покупателя, и другого срока про персональные
-    данные продукт нигде не называл.
+    `FUNNEL_RETENTION_DAYS`; чистка вебхуков берёт то же число нарочно — чтобы в
+    системе не заводился ещё один срок хранения. (Прежняя формулировка здесь
+    говорила «другого срока про персональные данные продукт нигде не называл» —
+    это неправда: privacy-страница называет и 90, и 60 на пуш-токен, и 30 на
+    окно резервных копий. Число выбрано ради единственности, а не унаследовано.)
     """
     from alma import funnel
 
@@ -1041,3 +1172,157 @@ def test_the_opening_allowance_still_refuses_at_sixty_one(schema):
         assert caught.value.detail == {"error": "opening_allowance"}
 
     run_async(go)
+
+
+# ── 8. образ выкладки: команда, которой нет в образе, не выполнится ────────
+
+
+def test_the_deploy_image_carries_the_commands_the_document_tells_you_to_run():
+    """Самая дешёвая и самая дорогая находка проверки разом.
+
+    `.dockerignore` исключал `tools/`, а `Dockerfile` копировал только
+    `alma data static gunicorn.conf.py`. Значит `python -m tools.migrate`,
+    который выкладка велит выполнить внутри контейнера, был
+    `ModuleNotFoundError`. Само по себе — досадно; вместе с тем, что схему на
+    старте перестал создавать сам воркер, — смертельно: чистый сервер не
+    поднимается и не поднимется никогда, потому что `verify_schema`
+    отказывается работать на пустой базе, `restart: unless-stopped` заводит
+    воркер снова, и так по кругу. Правка, сделанная ради выкладки, ломала
+    выкладку.
+
+    Признак, по которому это и нашлось: все systemd-юниты, когда-либо
+    работавшие в проде, зовут `python -m alma.*`, и только новые, ни разу не
+    выполнявшиеся команды — `tools.*`.
+    """
+    import pathlib
+    import re
+
+    root = pathlib.Path(__file__).resolve().parents[1]
+    ignored = root.joinpath(".dockerignore").read_text()
+    dockerfile = root.joinpath("Dockerfile").read_text()
+    deploy = root.parent.joinpath("docs", "DEPLOY.md").read_text()
+
+    # Какие модули документ велит запускать внутри образа.
+    wanted = set(re.findall(r"python -m (tools\.\w+)", deploy))
+    assert wanted, "документ больше не зовёт tools.* — проверку надо переписать"
+
+    lines = {line.strip() for line in ignored.splitlines()}
+    assert "tools/" not in lines, (
+        "`tools/` снова исключён из образа: " + ", ".join(sorted(wanted)) +
+        " станут ModuleNotFoundError, а без миграции чистый сервер не встанет"
+    )
+    assert re.search(r"^COPY .*\btools\b", dockerfile, re.M), (
+        "Dockerfile не копирует tools/ — команды выкладки не окажутся в образе"
+    )
+    # Тесты в образе по-прежнему не нужны: гейт для них — машина сборки.
+    assert "tests/" in lines
+
+
+def test_the_model_client_has_every_timeout_named():
+    """`None` на чтении держал бы воркер вечно, и тихо.
+
+    Свой `httpx.AsyncClient` отменяет умолчания SDK (600/600/600), поэтому их
+    приходится называть заново. Стояло `Timeout(None, connect=5.0)` с доводом
+    «читать ответ мы обязаны сколько угодно, длинная глава наблюдалась три
+    минуты». Довод не про то: `read` у httpx — ожидание одного чтения из
+    сокета, а не всего ответа, и поток байтов его не трогает. Зато собеседник,
+    доведший рукопожатие и замолчавший, держал бы задачу вечно, не возвращал
+    соединение в пул из сорока, а `pool=None` заставлял бы сорок первую
+    генерацию ждать его тоже вечно. `timeout` gunicorn такую задачу не снимет:
+    uvicorn стучит в его пульс независимо от того, идёт ли работа.
+    """
+    from alma.ai.provider import AnthropicProvider
+
+    # Живой объект, а не текст файла: довод в комментарии рядом с правкой
+    # цитирует прежнее значение, и проверка по исходнику падала бы на
+    # собственном объяснении. Спрашиваем у клиента то, чем он будет пользоваться.
+    timeout = AnthropicProvider(api_key="test-key")._client.timeout
+
+    assert timeout.connect == 5.0, "подключение либо быстрое, либо его нет"
+    for field in ("read", "write", "pool"):
+        value = getattr(timeout, field)
+        assert value is not None, (
+            f"у клиента модели снова нет предела `{field}` — молчащий узел на "
+            "той стороне выводит воркер из строя навсегда, и тихо"
+        )
+        assert value <= 600.0
+
+
+def test_the_prune_sweeps_expired_sign_in_links(schema):
+    """Самая тихая из растущих таблиц: она не «растёт», она копит адреса.
+
+    `magic_link` хранит почту **открытым текстом** и не выметалась ничем:
+    единственный `delete` по ней жил в удалении аккаунта. То есть адрес
+    человека, который запросил письмо и аккаунт так и не завёл, оставался у нас
+    навсегда — и в списке растущих таблиц эта не значилась вовсе, потому что
+    искали объём, а не персональные данные.
+
+    Удалять безопасно: `consume_magic_link` отказывает и просроченной ссылке, и
+    использованной, значит после `expires_at` строка не читается ничем.
+    """
+    from importlib import import_module
+
+    from alma.db.models import MagicLink
+
+    prune = import_module("tools.prune")
+
+    async def go():
+        now = datetime.now(timezone.utc)
+        async with session_module.session_scope() as session:
+            session.add(MagicLink(
+                token_hash="a" * 64, email="stale@example.com",
+                guest_user_id=None, created_at=now - timedelta(days=30),
+                expires_at=now - timedelta(days=30) + timedelta(minutes=15),
+            ))
+            session.add(MagicLink(
+                token_hash="b" * 64, email="fresh@example.com",
+                guest_user_id=None, created_at=now,
+                expires_at=now + timedelta(minutes=15),
+            ))
+
+        counted = await prune._prune(dry_run=False)
+        assert counted["sign-in links"] == 1, (
+            "просроченные ссылки входа не выметаются — почта того, кто так и не "
+            "вошёл, остаётся у нас навсегда"
+        )
+
+        from sqlalchemy import select
+
+        async with session_module.session_scope() as session:
+            left = (await session.execute(select(MagicLink.email))).scalars().all()
+        assert left == ["fresh@example.com"], "живая ссылка не должна пострадать"
+
+    run_async(go)
+
+
+def test_the_store_filing_says_the_same_as_the_code(schema):
+    """Документ для магазина обязан говорить то же, что делает код.
+
+    Он говорил «Kept: indefinitely» про доставки вебхуков — в том же коммите, в
+    котором появилась чистка на 180 дней. Расхождение здесь дороже обычного: это
+    не внутренняя заметка, а то, что подаётся в магазин.
+    """
+    import pathlib
+    import re
+
+    from importlib import import_module
+
+    prune = import_module("tools.prune")
+    doc = (
+        pathlib.Path(__file__).resolve().parents[2]
+        / "mobile" / "store" / "DATA-INVENTORY.md"
+    ).read_text()
+
+    webhook = doc[doc.index("### 1.9"):doc.index("### 1.10")]
+    assert "indefinitely" not in webhook, (
+        "документ обещает магазину бессрочное хранение доставок, а код их удаляет"
+    )
+    assert str(prune.WEBHOOK_RETENTION_DAYS) in webhook, (
+        "срок в документе и срок в коде разошлись"
+    )
+
+    links = doc[doc.index("### 1.10"):doc.index("### 1.11")]
+    assert "no expiry sweep" not in links, (
+        "документ утверждает, что ссылки входа не выметаются, а теперь выметаются"
+    )
+    assert re.search(r"prune", links), "чистка ссылок в документе не названа"

@@ -83,6 +83,10 @@ COPY --chown=root:root alma ./alma
 COPY --chown=root:root data ./data
 COPY --chown=root:root static ./static
 COPY --chown=root:root gunicorn.conf.py ./gunicorn.conf.py
+# Миграция и чистка — шаги выкладки, а не разработки: их зовут внутри этого
+# образа (`docs/DEPLOY.md` §2 и §5). Без этой строки чистый сервер не встаёт:
+# схему на старте больше никто не создаёт, а создать её нечем.
+COPY --chown=root:root tools ./tools
 
 # Единственное записываемое место. Сюда же compose монтирует именованный том,
 # так что замок прогона переживает пересборку образа и не переживает падение

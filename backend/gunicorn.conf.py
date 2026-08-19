@@ -8,7 +8,9 @@
 
 Класс воркера — `uvicorn.workers.UvicornWorker`: приложение асинхронное, и
 синхронный воркер выполнял бы одновременно ровно один запрос на процесс,
-превращая `/v1/chat/stream` в очередь.
+превращая `/v1/chat/stream` в очередь. Точнее — наследник от него, `AlmaUvicornWorker`
+ниже: одно число оригинал не задаёт, и без него остановка процесса ведёт себя
+не так, как здесь написано.
 """
 
 from __future__ import annotations
@@ -31,7 +33,12 @@ def _int(name: str, default: int) -> int:
 
 
 bind = os.getenv("ALMA_BIND", "0.0.0.0:8000")
-worker_class = "uvicorn.workers.UvicornWorker"
+#: Наследник `UvicornWorker`, задающий `timeout_graceful_shutdown`. Без него
+#: uvicorn ждёт закрытия соединений без предела, и остановка приложения — а с
+#: ней ожидание оплаченных ходов беседы — не запускается вовсе. Довод целиком
+#: в `alma/api/worker.py`; здесь только путь, потому что gunicorn импортирует
+#: класс по точечному имени, а `gunicorn.conf` модулем не является.
+worker_class = "alma.api.worker.AlmaUvicornWorker"
 
 #: **Число воркеров: по ядрам, но не по классической формуле.**
 #:
