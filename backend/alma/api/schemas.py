@@ -112,6 +112,11 @@ class ProfileOut(BaseModel):
     timezone: str
     place_label: str | None
     on_ambiguous: str | None = None
+    #: Солнечный знак по дате рождения — для глифа в строке списка людей.
+    #: `None` в двух случаях, и оба честные: день перехода Солнца из знака в
+    #: знак (без часа рождения ответа нет) и отказ эфемериды. Клиент рисует
+    #: тогда инициал, а не выдуманный знак. См. `engine/sunsign.py`.
+    sun_sign: str | None = None
 
 
 class PlaceOut(BaseModel):

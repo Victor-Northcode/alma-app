@@ -149,6 +149,7 @@ class _MyPairsScreenState extends State<MyPairsScreen> {
                         final ref =>
                           '${l.pairRowChapters} · ${l.pairRowBought(_shortDate(l, ref.purchasedAt))}',
                       },
+                      sunSign: person.sunSign,
                       onTap: () => Navigator.of(context).pop(person),
                     ),
                   for (final ref in orphans)
@@ -221,8 +222,19 @@ class _MyPairsScreenState extends State<MyPairsScreen> {
 
   /// Строка пары: аватар, имя, состояние, «→». Некликабельной остаётся только
   /// осиротевшая — и без стрелки: в этом продукте «→» значит «ведёт дальше».
+  /// Глиф знака или `null`, если сервер промолчал либо назвал незнакомое.
+  static String? _signGlyph(String? sign) => const {
+        'Aries': '♈︎', 'Taurus': '♉︎', 'Gemini': '♊︎', 'Cancer': '♋︎',
+        'Leo': '♌︎', 'Virgo': '♍︎', 'Libra': '♎︎', 'Scorpio': '♏︎',
+        'Sagittarius': '♐︎', 'Capricorn': '♑︎', 'Aquarius': '♒︎',
+        'Pisces': '♓︎',
+      }[sign];
+
   Widget _row(L l,
-      {required String name, required String note, VoidCallback? onTap}) {
+      {required String name,
+      required String note,
+      String? sunSign,
+      VoidCallback? onTap}) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
@@ -241,14 +253,25 @@ class _MyPairsScreenState extends State<MyPairsScreen> {
               border: Border.all(
                   color: AlmaPalette.gold.withValues(alpha: 0.45)),
             ),
-            // На холсте в круге знак зодиака; знака второго человека клиент
-            // не знает без отдельного расчёта на каждую строку — стоит
-            // инициал тем же засечным золотом. TODO(owner): глиф знака, когда
-            // он появится в ответе `/pairs` или профиле.
+            // Знак зодиака, как на холсте, — сервер считает его по дате и
+            // отдаёт полем профиля. Знака нет (день перехода Солнца из знака
+            // в знак, часа рождения не спрашивали) — стоит инициал: выдуманный
+            // глиф был бы чужим знаком в кружке живого человека.
+            //
+            // Шрифт назван явно: без 'Apple Symbols' система отдаёт
+            // астрологические знаки эмодзи-шрифту, и вместо золотого глифа
+            // встаёт фиолетовая наклейка — уже ловили это на медальонах пары.
             child: Text(
-              name.isEmpty ? '·' : name.characters.first.toUpperCase(),
-              style: AlmaType.numeral
-                  .copyWith(fontSize: 17, color: AlmaPalette.goldBright),
+              _signGlyph(sunSign) ??
+                  (name.isEmpty ? '·' : name.characters.first.toUpperCase()),
+              style: AlmaType.numeral.copyWith(
+                fontSize: 17,
+                color: AlmaPalette.goldBright,
+                fontFamily: _signGlyph(sunSign) != null ? 'Apple Symbols' : null,
+                fontFamilyFallback: _signGlyph(sunSign) != null
+                    ? const ['Segoe UI Symbol', 'Noto Sans Symbols 2', 'serif']
+                    : null,
+              ),
             ),
           ),
           const SizedBox(width: 13),

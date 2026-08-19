@@ -232,6 +232,7 @@ class Profile {
     this.birthTime,
     this.placeLabel,
     this.interest,
+    this.sunSign,
   });
 
   final String id;
@@ -257,6 +258,13 @@ class Profile {
   /// вопроса или пропущен, и NBO работает без него.
   final String? interest;
 
+  /// Солнечный знак по дате рождения — для глифа в строке списка людей.
+  ///
+  /// Считает сервер и имеет право промолчать: в день перехода Солнца из знака
+  /// в знак ответ зависит от часа рождения, которого у партнёра может не быть.
+  /// `null` — рисуем инициал, а не выдуманный знак.
+  final String? sunSign;
+
   bool get birthTimeKnown => birthTime != null;
 
   factory Profile.fromJson(Map<String, dynamic> json) => Profile(
@@ -271,6 +279,7 @@ class Profile {
         birthTime: json['birth_time'] as String?,
         placeLabel: json['place_label'] as String?,
         interest: json['interest'] as String?,
+        sunSign: json['sun_sign'] as String?,
       );
 }
 

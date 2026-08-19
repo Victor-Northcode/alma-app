@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 
 from ...db.models import Profile
+from ...engine.sunsign import sun_sign_of_date
 from ...i18n import replies as i18n_replies
 from ..deps import CurrentUser, SessionDep, load_profile
 from ..schemas import ProfileInput, ProfileOut
+
+log = logging.getLogger("alma.api.profiles")
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -33,7 +38,22 @@ def _out(profile: Profile) -> ProfileOut:
         timezone=profile.timezone,
         place_label=profile.place_label,
         on_ambiguous=profile.on_ambiguous,
+        sun_sign=_sun_sign(profile),
     )
+
+
+def _sun_sign(profile: Profile) -> str | None:
+    """Знак Солнца для строки списка — дёшево и с правом промолчать.
+
+    Полный расчёт ради одного глифа был бы десятком эфемеридных проходов на
+    экран «Мои пары»; здесь хватает даты. Отказ эфемериды (нет ядра, дата вне
+    диапазона) — не повод ронять список людей: профиль важнее украшения.
+    """
+    try:
+        return sun_sign_of_date(profile.birth_date)
+    except Exception:  # noqa: BLE001 — украшение не имеет права ломать список
+        log.warning("не смог назвать знак для профиля %s", profile.id, exc_info=True)
+        return None
 
 
 @router.get("", response_model=list[ProfileOut])

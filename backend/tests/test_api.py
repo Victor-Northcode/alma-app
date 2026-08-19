@@ -804,3 +804,25 @@ def test_interest_saves_to_self_and_never_to_partner(api, auth_headers):
         "is_self": True, "interest": "fame",
     })
     assert refused.status_code == 422
+
+
+def test_sun_sign_comes_with_the_profile_and_stays_silent_on_the_border(api, auth_headers):
+    """Знак Солнца — для глифа в списке людей, и на границе знаков его нет.
+
+    В день перехода Солнца из знака в знак ответ зависит от часа рождения,
+    которого у партнёра может не быть вовсе. Назвать знак наугад значило бы
+    напечатать человеку чужой глиф — продукт молчит вместо этого.
+    """
+    sure = api.post("/v1/profiles", headers=auth_headers, json={
+        "name": "Уверенно", "birth_date": "2003-04-14",
+        "latitude": 55.0, "longitude": 37.0, "timezone": "Europe/Moscow",
+        "is_self": True,
+    }).json()
+    assert sure["sun_sign"] == "Aries"
+
+    border = api.post("/v1/profiles", headers=auth_headers, json={
+        "name": "Граница", "birth_date": "1988-03-20",
+        "latitude": 55.0, "longitude": 37.0, "timezone": "Europe/Moscow",
+        "is_self": False,
+    }).json()
+    assert border["sun_sign"] is None, "20 марта 1988 Солнце меняет знак — молчим"
