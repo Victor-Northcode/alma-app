@@ -40,6 +40,7 @@ from difflib import SequenceMatcher
 from ..calc import CalcResult
 from ..i18n import replies as i18n_replies
 from . import cost, geometry, validator, voice
+from . import provider as provider_module
 from .provider import AnswerTruncated, Provider
 from .validator import Paragraph
 
@@ -71,6 +72,20 @@ MAX_ATTEMPTS = 3
 #: truncated. Thinking is kept: the whole promise is that she reads the chart
 #: rather than pattern-matches it, and that is the part that does the reading.
 MAX_ANSWER_TOKENS = 4096
+
+#: С чего беседа начинает обдумывать ответ.
+#:
+#: **Здесь стоял `None` — «пусть модель решает сама», — и это было дороже
+#: всего остального в беседе.** Замер 20.08.2026 на живой модели: три вопроса
+#: из трёх на этом значении израсходовали весь потолок вывода на размышление и
+#: **не написали ни слова**, будучи полностью оплаченными. То есть первая
+#: попытка каждого такого хода — деньги и ожидание в никуда, а отвечал уже
+#: повтор, которому лестница ниже усилие и так понижала.
+#:
+#: `medium`, а не `low`, — осознанно консервативно: беседа живая, и понижать в
+#: ней обдумывание до дна без слова владельца я не стал. Замер обеих ступеней
+#: и тексты рядом отданы ему; `low` быстрее на треть и дешевле на треть.
+DEFAULT_EFFORT = "medium"
 MAX_HISTORY = 12
 
 # ── what kind of turn this was ─────────────────────────────────────────────
@@ -964,7 +979,7 @@ async def answer(
     complaint: str | None = None
     #: Turned down only after a turn spends its whole allowance thinking. See
     #: the `wrote_nothing` branch below.
-    effort: str | None = None
+    effort: str = DEFAULT_EFFORT
 
     # The four fences in `_nudge` — repetition, a one-sided refusal, a reply
     # that brings no new placement, a dignity its citation does not carry — are
@@ -1049,7 +1064,18 @@ async def answer(
             # a reader loses all three attempts and their turn. The lever that
             # helps is the one that moves the split between thinking and words.
             if exc.wrote_nothing:
-                effort = "low" if effort == "medium" else "medium"
+                if provider_module.at_the_bottom(effort):
+                    # Ни ступени ниже, ни другой жалобы: следующая попытка
+                    # попросила бы ровно то же. Отказываемся сейчас, а не после
+                    # ещё одной оплаченной копии того же провала — и тем же
+                    # исключением, потому что оно называет модель и потолок.
+                    exc.spend = ledger.total(model)
+                    log.warning(
+                        "chat attempt %d: nothing left to change, refusing "
+                        "instead of repeating the request", attempt,
+                    )
+                    raise
+                effort = provider_module.turn_down(effort)
                 complaint = None
                 log.warning(
                     "chat attempt %d spent its whole allowance thinking; "

@@ -2299,3 +2299,54 @@ def test_the_showcase_thinks_less_than_a_paid_chapter():
         "витрина обдумывает столько же, сколько платная глава, или больше"
     )
     assert writer.SHOWCASE_EFFORT == ladder[-1]
+
+
+def test_the_effort_ladder_lives_in_one_place():
+    """Одна лестница на весь сервис — потому что дважды написанная сломалась дважды.
+
+    Ступени были продублированы в `writer.py` и в `conversation.py` одним и тем
+    же выражением `"low" if effort == "medium" else "medium"`, и оба экземпляра
+    делали одно: с нижней ступени поднимали обдумывание **обратно вверх** — а
+    попадали в них ровно тогда, когда предыдущая попытка уже задохнулась в
+    размышлении. Пока обе стартовали с «пусть модель решает», это читалось как
+    первое понижение и прожило долго.
+
+    Тест сторожит не значения, а единственность: третья копия лестницы — это
+    третий экземпляр той же ошибки.
+    """
+    from alma.ai import conversation, provider
+
+    assert writer.EFFORT_LADDER is provider.EFFORT_LADDER
+    assert writer._turn_down is provider.turn_down
+    assert provider.turn_down("low") == "low", "лестница снова поднимается вверх"
+    assert provider.turn_down("medium") == "low"
+    assert provider.at_the_bottom("low") is True
+    # И у беседы своего стартового значения-сюрприза нет: оно с той же лестницы.
+    assert conversation.DEFAULT_EFFORT in provider.EFFORT_LADDER
+
+
+async def test_a_chat_turn_does_not_start_with_unbounded_deliberation(natal):
+    """Беседа тоже начинает с названной ступени, а не с «реши сама».
+
+    Замер 20.08.2026: три вопроса из трёх на прежнем значении израсходовали
+    весь потолок вывода на размышление и **не написали ни слова**, будучи
+    полностью оплаченными. Отвечал уже повтор — то есть каждый такой ход стоил
+    двух генераций вместо одной.
+    """
+    from alma.ai import conversation
+
+    provider = ScriptedProvider(responses=[json.dumps({
+        "answer": [{"text": "Your Mars sits in the first house.",
+                    "factors": [natal.factors[0]]}],
+        "remember": [],
+    })])
+    await conversation.answer(
+        question="What am I like?", results=[natal],
+        provider=provider, model="claude-sonnet-5", paid=True,
+    )
+    assert provider.calls, "вызова не было — проверять нечего"
+    for call in provider.calls:
+        assert call["effort"] in writer.EFFORT_LADDER, (
+            f"ход беседы начат с усилия {call['effort']!r}: на этом значении "
+            "три вопроса из трёх не дали ни слова и были оплачены"
+        )

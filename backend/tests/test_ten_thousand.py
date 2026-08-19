@@ -42,6 +42,21 @@ def _new_user(session, user_id: str = "u-limits-1"):
     return user_id
 
 
+def _utc_today():
+    """Тот же день, каким его видит код: UTC, а не часы машины.
+
+    **Стоило одного ложного падения и одной настоящей находки.** Тесты ниже
+    брали `date.today()`, а `readings._count` и `counters.add` — UTC. Пока
+    машина в UTC, это одно и то же; в Новосибирске в 00:02 20-го числа UTC ещё
+    19-е, и прибавки ложились в строку другого дня — счётчик показывал
+    нетронутую пятёрку, и тест обвинял продукт в потерянном обновлении.
+
+    Заодно нашлось настоящее: `_opening_allowance` был единственным местом
+    самого продукта, считавшим месяц по местному времени.
+    """
+    return datetime.now(timezone.utc).date()
+
+
 def _user_model():
     """Модель пользователя — импортом внутри, как и всё в этом файле.
 
@@ -270,7 +285,7 @@ def test_a_quota_is_spent_and_checked_without_a_gap(schema):
         async with session_module.session_scope() as session:
             user_id = _new_user(session, "u-quota-1")
             await session.flush()
-            today = date.today()
+            today = _utc_today()
 
             assert await counters.spend_and_check(
                 session, user_id=user_id, day=today, metric="q", limit=2
@@ -333,7 +348,7 @@ def test_spending_a_quota_is_one_statement_with_no_read_before_it(schema):
     async def spend():
         async with session_module.session_scope() as session:
             await counters.spend_and_check(
-                session, user_id="u-quota-2", day=date.today(), metric="q", limit=3
+                session, user_id="u-quota-2", day=_utc_today(), metric="q", limit=3
             )
 
     statements = [
@@ -355,7 +370,7 @@ def test_a_refund_puts_the_question_back(schema):
         async with session_module.session_scope() as session:
             user_id = _new_user(session, "u-quota-3")
             await session.flush()
-            today = date.today()
+            today = _utc_today()
             await counters.spend_and_check(
                 session, user_id=user_id, day=today, metric="q", limit=1
             )
@@ -394,7 +409,7 @@ def test_the_month_ledger_is_written_in_one_statement(schema):
             await counters.add(
                 session,
                 user_id="u-money-3",
-                day=date.today(),
+                day=_utc_today(),
                 metric=cost.SPEND_METRIC,
                 cents=5.0,
             )
@@ -437,7 +452,7 @@ def test_the_month_total_agrees_with_the_ledger_that_already_existed(schema):
             user_id = _new_user(session, "u-money-2")
             await session.flush()
             await counters.add(
-                session, user_id=user_id, day=date.today(),
+                session, user_id=user_id, day=_utc_today(),
                 metric=cost.SPEND_METRIC, cents=17.5,
             )
 
@@ -1023,7 +1038,7 @@ def test_two_workers_asking_at_once_do_not_lose_a_question(schema):
     """
     from alma.api.routers import readings
 
-    today = date.today()
+    today = _utc_today()
 
     async def go():
         async with session_module.session_scope() as session:
@@ -1069,7 +1084,7 @@ def test_money_two_workers_spent_at_once_is_not_lost(schema):
     from alma.ai import cost
     from alma.api.routers import readings
 
-    today = date.today()
+    today = _utc_today()
 
     async def go():
         async with session_module.session_scope() as session:
@@ -1146,7 +1161,7 @@ def test_the_opening_allowance_still_refuses_at_sixty_one(schema):
 
     from alma.api.routers import readings
 
-    month = date.today().replace(day=1)
+    month = _utc_today().replace(day=1)
 
     async def go():
         async with session_module.session_scope() as session:
@@ -1326,3 +1341,64 @@ def test_the_store_filing_says_the_same_as_the_code(schema):
         "документ утверждает, что ссылки входа не выметаются, а теперь выметаются"
     )
     assert re.search(r"prune", links), "чистка ссылок в документе не названа"
+
+
+def test_the_showcase_files_its_month_by_the_same_clock_as_the_money(schema, monkeypatch):
+    """Витрина считает месяц по UTC, как вся остальная бухгалтерия.
+
+    `_opening_allowance` был единственным местом продукта, бравшим
+    `date.today()` — часы машины. `_period_start`, `cost.month_bounds` и
+    `counters.add` берут `datetime.now(timezone.utc)`. На сервере в UTC это
+    совпадает, поэтому расхождение прожило незамеченным; на машине в другом
+    поясе окно витрины открывалось бы и закрывалось на несколько часов раньше
+    остальных счётчиков, а в сутки смены месяца абзацы легли бы в строку одного
+    месяца, а деньги за них — в строку другого.
+
+    Проверяется поведением, а не текстом: подменяем **местные** часы датой из
+    другого месяца и смотрим, в какую строку легла запись. Проверка по
+    исходнику здесь не годится — довод рядом с правкой цитирует снятое
+    `date.today()`, и тест падал бы на собственном объяснении.
+    """
+    from datetime import date as real_date
+
+    from alma.api.routers import readings
+
+    utc_month = datetime.now(timezone.utc).date().replace(day=1)
+    # Заведомо другой месяц: если код возьмёт местные часы, строка будет эта.
+    wrong = (utc_month - timedelta(days=45)).replace(day=1)
+
+    class LocalClock(real_date):
+        @classmethod
+        def today(cls):
+            return wrong
+
+    monkeypatch.setattr(readings, "date", LocalClock)
+
+    async def go():
+        async with session_module.session_scope() as session:
+            _new_user(session, "u-showcase-tz")
+
+        async with session_module.session_scope() as session:
+            user = await session.get(_user_model(), "u-showcase-tz")
+            await readings._opening_allowance(session, user)
+
+        from alma.db.models import UsageCounter
+
+        async with session_module.session_scope() as session:
+            right = await session.get(
+                UsageCounter,
+                counters.counter_id("u-showcase-tz", utc_month, readings.OPENING_METRIC),
+            )
+            stray = await session.get(
+                UsageCounter,
+                counters.counter_id("u-showcase-tz", wrong, readings.OPENING_METRIC),
+            )
+        assert right is not None and right.count == 1, (
+            "абзац витрины не записан в месяц по UTC"
+        )
+        assert stray is None, (
+            "абзац витрины лёг в месяц по часам машины — окно разъедется с "
+            "деньгами за него на любом сервере не в UTC"
+        )
+
+    run_async(go)
