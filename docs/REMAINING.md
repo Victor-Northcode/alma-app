@@ -32,6 +32,18 @@
 > раздел VIII (решения, тексты, арт, ключи, консоли, право) — он ждёт
 > владельца — и хвост мелочей вёрстки из X.
 
+> **Обновление 19 августа 2026.** Каталог локализации прочищен: 253 мёртвых
+> ключа удалены из всех семи языков вместе с блоками `@описание` (778 → 525),
+> включая все строки снятых товаров — недельного и годового плана, архива,
+> добора, кредита и лестницы цен. Двадцать один кандидат на удаление оказался
+> живым косвенно и оставлен: одиннадцать `pushDaily*` (их читает сервер —
+> `backend/alma/notify/message.py` и `tests/test_notify_strings.py`) и десять
+> `paywallV3*`, заведённых под ненаписанные кадры фазы Ф1. Денежные документы
+> `docs/design/` приведены в соответствие: `money-map.md` переписан, его
+> байт-в-байт копия и `payments-spec.md` удалены (см. VR.1, VR.2).
+> **Одна лгущая строка осталась живой** — имя набора «All eight systems»,
+> отдельный пункт ниже.
+
 
 ---
 
@@ -357,10 +369,10 @@
 *Требует:* Офлайн заменяет кнопку на месте — та же высота 56, обводка «Try again» — вместо добавления абзаца  
 *Сейчас:* lib/screens/offer_screen.dart:1206-1222 — замена действительно на месте (ветка `if (price == null) … else …`), обводка есть (AlmaButtonKind.outline, label: l.stateRetry). Но абзац l.paywallStoreUnavailable всё-таки печатается (:1212), а высота кнопки 50, не 56 (:1218). То же во второй копии блока — :663-669
 
-**Тихого ряда «One system, bought once · $5.99» на витрине нет**  
-[свободно | нет | S | прежние документы]  
-*Требует:* Тихий ряд «One system, bought once · $5.99», ведущий на S46  
-*Сейчас:* grep 'bought once|One system' по lib/screens/offer_screen.dart — ноль. В каталоге есть только paywallArchiveNote / cabArchiveNote «All eight systems, bought once» (app_en.arb:123, :2094) — другая строка и про другое, и в offer_screen она не вызывается
+**Тихого ряда «One system, bought once · $5.99» на витрине нет** — ⛔️ **отпало 19 августа 2026**  
+[свободно | отпало | S | прежние документы]  
+*Требует:* ~~Тихий ряд «One system, bought once · $5.99», ведущий на S46~~  
+*Сейчас:* Требование снято вместе с продуктом: витрины-лестницы (offer_screen.dart) в дереве больше нет, цены $5.99 нет в каталоге (двери $4.99), а «одна цена на экране» (правило 1 ТЗ v3 §5) запрещает тихий ряд с чужой ценой везде, кроме V8. Строка `cabArchiveNote` («All eight systems, bought once») из каталога удалена как мёртвая; `paywallArchiveNote` осталась — она живая и стоит на наборе из **пяти** разборов, см. пункт про имя набора
 
 
 ### Поведение — 39
@@ -936,10 +948,10 @@
 *Требует:* Ключ paywallRenewShort должен быть переведён во всех семи каталогах; проверка `grep -c` должна дать 1 в каждом  
 *Сейчас:* Проверено скриптом из самого документа: app_en.arb — 1, app_ru/de/es/fr/it/pt.arb — 0. Сгенерированный lib/l10n/alma_l10n_ru.dart:1669-1670 возвращает английский текст 'Payment is charged to your Apple ID…'. Ключ живой: используется в lib/screens/offer_screen.dart:1198, а сам offer_screen до сих пор открывается из lib/screens/journey/journey_screen.dart:356 и lib/screens/all_alma_sheet.dart:36
 
-**VR.1 Лестница подписок снята из кода покупок — но её строки живы, и одна из них показывается**  
-[свободно | наполовину | M | спека W3–VR]  
+**VR.1 Лестница подписок снята из кода покупок — но её строки живы, и одна из них показывается** — ✅ **сделано 19 августа 2026**  
+[свободно | да | M | спека W3–VR]  
 *Требует:* Снять LadderKey.weekly/annual, порядок «неделя, месяц, год», paywallWeeklyTitle/Note, paywallAnnualTitle/Note, paywallPerMonthSavings  
-*Сейчас:* Половина сделана: lib/billing/ladder.dart:21-41 — восемь ключей, weekly/annual нет; ladderFor (:279-335) блоков «weekly, monthly, annual» не содержит. Труп: paywallWeeklyTitle/Note, paywallAnnualTitle/Note, paywallUpgradeTitle/Note, paywallPerMonthSavings объявлены в lib/l10n/alma_l10n.dart:2904-3240 и лежат во всех семи локалях (app_de.arb:468-523 и т.д.), а lib/screens/settings/settings_screen.dart:996-1001 — живой вызов: 'weekly' => l.paywallWeeklyTitle в _planName, то есть недельный план всё ещё умеет назваться человеку
+*Сейчас:* Сделано целиком. lib/billing/ladder.dart:21-41 — восемь ключей, weekly/annual нет; ladderFor блоков «weekly, monthly, annual» не содержит. Живой вызов `'weekly' => l.paywallWeeklyTitle` из `_planName` в settings_screen.dart убран, недельный план назваться человеку больше не может. Строки paywallWeeklyTitle/Note, paywallAnnualTitle/Note, paywallUpgradeTitle/Note, paywallPerMonthSavings удалены из всех семи каталогов вместе с блоками `@описание` (grep «paywallWeekly\|paywallAnnual\|paywallUpgrade\|paywallPerMonthSavings» по lib/l10n — пусто)
 
 **Ключей живого слоя (home.living_layer, live.transits/solar/day) на клиенте нет**  
 [свободно | нет | M | спека W3–VR]  
@@ -949,7 +961,7 @@
 **Локализация v3: 68 ключей во всех семи языках, но новые ключи холста отсутствуют**  
 [свободно | наполовину | M | ТЗ]  
 *Требует:* Все строки экранов v3 в семи локалях, включая quiz.interest_*, chapter.what_rest_holds, chapter.more_count, home.badge_in_subscription, state.unbound_title, state.teaser_cap  
-*Сейчас:* grep -c '"paywallV3' по каждому из mobile/…/alma/lib/l10n/app_{en,ru,de,fr,es,it,pt}.arb = 68 везде. Из перечисленных в спеке новых ключей нет ни одного (grep по app_en.arb на quizInterest, chapterWhatRestHolds, chapterMoreCount, homeBadgeInSubscription, stateUnbound, stateTeaserCap — по нулю). При этом часть заведённых v3-ключей мертва (paywallV3DoorBundleLink, paywallV3BundleCta, paywallV3BundleSaving, paywallV3State*), а в ARB остались строки снятых SKU: app_ru.arb:468 paywallAnnualNote, :522 paywallWeeklyNote
+*Сейчас:* grep -c '"paywallV3' по каждому из mobile/…/alma/lib/l10n/app_{en,ru,de,fr,es,it,pt}.arb = 68 везде. Из перечисленных в спеке новых ключей нет ни одного (grep по app_en.arb на quizInterest, chapterWhatRestHolds, chapterMoreCount, homeBadgeInSubscription, stateUnbound, stateTeaserCap — по нулю). При этом часть заведённых v3-ключей мертва (paywallV3BundleCta, paywallV3BundleSaving, paywallV3DoorChaptersCount, paywallV3DoorCtaUnlock, paywallV3DoorPitch, paywallV3DoorPlateChapter, paywallV3DoorPrice, paywallV3DoorTitleAll, paywallV3DoorTitleSystem, paywallV3PairPrice) — они ждут своих кадров и **удалению не подлежат**. Строк снятых SKU в каталогах больше нет: 19 августа 2026 из всех семи файлов удалены paywallWeekly*, paywallAnnual*, paywallUpgrade*, paywallPerMonthSavings, cabArchiveNote и ещё 248 мёртвых ключей (каталог 778 → 525)
 
 **Плашки честности об отмене подписки (sub.cancel_honesty) нет ни строкой, ни видом**  
 [свободно | нет | M | спека W3–VR]  
@@ -976,10 +988,10 @@
 *Требует:* Названия систем как имена ступеней лестницы должны умереть  
 *Сейчас:* lib/billing/ladder.dart:100 — LadderKey.pairCheck => systemTitle(l, SystemSlug.compatibility), то есть ступень пары по-прежнему зовётся именем системы; :117-119 switch продолжает раздавать paywallSystemTransits/SolarReturn/Compatibility. Сам файл это и признаёт в комментарии :92-96 («Названия ступеней временно взяты у прежней лестницы»)
 
-**Бандл в настройках и в старой витрине называется «All eight systems»**  
+**Бандл в настройках называется «All eight systems» — единственная строка снятого продукта, которую человек ещё видит**  
 [свободно | наполовину | S | холст]  
 *Требует:* Купленный навсегда бандл называется «Все пять разборов».  
-*Сейчас:* settings_screen.dart:1009 — `return system == '*' ? l.paywallArchiveTitle : (system ?? '')`, app_en.arb:2098 paywallArchiveTitle = «All eight systems». Та же строка стоит именем ступени бандла в ladder.dart:97-98 (`LadderKey.bundleStatic => l.paywallArchiveTitle`) и печатается в offer_screen.dart:1130. На самом экране V8 имя правильное (plans_screen.dart:73 → paywallV3BundleTitle «All five readings»).
+*Сейчас:* Это последняя лгущая строка каталога: набор `bundle.static` — **пять** разборов за $19.99, а называется он словами архива «все восемь систем за $38.99», которого нет. Два живых места, оба вне l10n: `lib/billing/ladder.dart` — `LadderKey.bundleStatic => l.paywallArchiveTitle` в `title()` и `=> l.paywallArchiveNote` в `note()`; `lib/screens/settings/settings_screen.dart` — `system == '*' ? l.paywallArchiveTitle : (system ?? '')` в имени двери. Тексты: `paywallArchiveTitle` = «All eight systems», `paywallArchiveNote` = «All eight systems, bought once». Старая витрина `offer_screen.dart`, где та же строка печаталась третьим местом, из дерева удалена. **Правильные строки уже заведены и переведены на семь языков:** `paywallV3BundleTitle` («All five readings»), `paywallV3BundleIncludes`, `paywallV3BundlePrice` — на V8 стоят именно они (`plans_screen.dart:73`). Правка — две подстановки в `ladder.dart` и одна в `settings_screen.dart`; после неё `paywallArchiveTitle/Note` становятся мёртвыми и удаляются из всех семи каталогов. Комментарий в `ladder.dart:90-93` («названия ступеней временно взяты у прежней лестницы… свой словарь заводит фаза Ф1») описывает именно этот долг — но словарь уже заведён, так что ждать Ф1 больше не нужно.
 
 **Восьми строк каталога V0 нет ни в одной из семи локалей**  
 [свободно | нет | S | спека V0–V5]  
@@ -1165,10 +1177,10 @@
 *Требует:* Шесть фактов от владельца: применимое право, подсудность, представитель по ст. 27 GDPR, адрес регистрации, регистрационный номер, управляющий  
 *Сейчас:* lib/screens/legal/legal_text.dart:171 blank('governing law'), :173 blank('venue'), :223 blank('EU representative'), :328 factBlank('Registered address'), :329 factBlank('Registration number'), :330 factBlank('Represented by'). Плюс ещё два, не названные в документе: :341 factBlank('VAT identification'), :348 factBlank('Under §18 (2) MStV') — они теперь внутри приложения, а не только на вебе
 
-**VR.2 Кредитная арифметика из кода вычищена; money-map.md — обе копии — целиком старая**  
+**VR.2 Кредитная арифметика из кода вычищена; money-map.md — обе копии — целиком старая** — ✅ **документы сделаны 19 августа 2026**, остаётся `paywallArchiveTitle/Note` на живом экране  
 [свободно | наполовину | M | спека W3–VR]  
 *Требует:* Снять LadderKey.archive/archiveUpgrade и поле replaces, ветку held.ownsArchive, paywallArchive/Upgrade, и выправить обе копии money-map.md  
-*Сейчас:* Код чист: в lib/billing/ladder.dart archive/archiveUpgrade/replaces отсутствуют (grep по lib «archiveUpgrade\|replaces» — пусто), ownsArchive остался только как проверка «уже владеет» (ladder.dart:330, models.dart:899, cancel_save_screen.dart:78) — это не кредитная арифметика. backend/alma/billing/catalogue.py:24-32 фиксирует, что лестницы, WITHDRAWN_CENTS и annual_credit нет (это же закрывает А7 №14). Документы не тронуты: docs/design/money-map.md:16-20,32,42,48,58 держит «дверь $5.99 (+добор архива $29.99)», «архив $33.00 (кредит двери)», «архив $38.99», S37/S43; docs/design/handoff_all_screens/money-map.md — тот же файл байт в байт (оба 7650 байт)
+*Сейчас:* Код чист: в lib/billing/ladder.dart archive/archiveUpgrade/replaces отсутствуют (grep по lib «archiveUpgrade\|replaces» — пусто), ownsArchive остался только как проверка «уже владеет» (ladder.dart:330, models.dart:899, cancel_save_screen.dart:78) — это не кредитная арифметика. backend/alma/billing/catalogue.py:24-32 фиксирует, что лестницы, WITHDRAWN_CENTS и annual_credit нет (это же закрывает А7 №14). Документы выправлены: `docs/design/money-map.md` переписан под каталог v3 (восемь товаров, кадры V1–V9, отдельный раздел «чего в продукте нет»), байт-в-байт копия `handoff_all_screens/money-map.md` удалена — файл один, ссылка из `handoff_all_screens/README.md` ведёт на него. Из `paywallArchive*`/`paywallUpgrade*` удалены `paywallUpgradeTitle/Note` (были мертвы); **`paywallArchiveTitle`/`paywallArchiveNote` удалить нельзя — они живые**, см. пункт про имя набора ниже
 
 **VR.6 В handoff-HTML остались S32, S43 и цены $38.99/$5.99**  
 [свободно | нет | S | спека W3–VR]  

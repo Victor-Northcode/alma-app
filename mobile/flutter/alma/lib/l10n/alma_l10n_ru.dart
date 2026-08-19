@@ -12,22 +12,10 @@ class LRu extends L {
   String get cabAccountLabel => 'аккаунт';
 
   @override
-  String get cabAcrossSystems => 'по всем твоим системам';
-
-  @override
   String get cabActiveNow => 'активно сейчас';
 
   @override
-  String get cabAddAPerson => 'Добавить человека';
-
-  @override
   String get cabAddBirthData => 'Ввести данные рождения';
-
-  @override
-  String get cabAddBirthTime => 'Добавить время рождения';
-
-  @override
-  String get cabAdvice => 'что с этим делать';
 
   @override
   String get cabAllAlmaPill => 'Вся Alma';
@@ -99,9 +87,6 @@ class LRu extends L {
   String get cabArcanaWheelOfFortune => 'Колесо Фортуны';
 
   @override
-  String get cabArchiveNote => 'Все восемь систем — одной покупкой.';
-
-  @override
   String get cabAreaBody => 'Тело';
 
   @override
@@ -115,63 +100,6 @@ class LRu extends L {
 
   @override
   String get cabAreaQuiet => 'Сегодня здесь нет точных аспектов.';
-
-  @override
-  String get cabAscendant => 'Асцендент';
-
-  @override
-  String get cabAskAlma => 'Спросить Alma';
-
-  @override
-  String get cabAspectMeaningConjunction =>
-      'Стоят в одной точке: работают как одно целое и усиливают друг друга.';
-
-  @override
-  String get cabAspectMeaningOpposition =>
-      'Стоят напротив: тянут в разные стороны, и выбирать приходится каждый раз.';
-
-  @override
-  String get cabAspectMeaningQuincunx =>
-      'Не видят друг друга: два требования, которые не сводятся вместе.';
-
-  @override
-  String get cabAspectMeaningSextile =>
-      'Помогают друг другу, если приложить усилие.';
-
-  @override
-  String get cabAspectMeaningSquare =>
-      'Мешают друг другу: то место, где приходится справляться.';
-
-  @override
-  String get cabAspectMeaningTrine =>
-      'Складываются легко — настолько, что этим редко пользуешься нарочно.';
-
-  @override
-  String get cabAxisCharacter => 'Характер';
-
-  @override
-  String get cabAxisDirection => 'Направление';
-
-  @override
-  String get cabAxisGrowth => 'Рост';
-
-  @override
-  String get cabAxisMind => 'Ум';
-
-  @override
-  String get cabAxisRelationships => 'Отношения';
-
-  @override
-  String get cabAxisResources => 'Ресурсы';
-
-  @override
-  String get cabAxisRhythms => 'Ритмы';
-
-  @override
-  String get cabAxisWeakPoint => 'Слабое место';
-
-  @override
-  String get cabAxisWork => 'Работа';
 
   @override
   String get cabBirthDataLabel => 'данные рождения';
@@ -237,19 +165,6 @@ class LRu extends L {
   String get cabCalculatedWord => 'рассчитано';
 
   @override
-  String get cabChapterEndDoor =>
-      'Остальное в этой системе написано так же — из твоих позиций, и остаётся твоим.';
-
-  @override
-  String get cabChapterEndPlan =>
-      'Эта глава создаётся один раз. Транзиты, соляр и совместимость обновляются, пока действует подписка.';
-
-  @override
-  String cabChapterProgress(int p1, int p2) {
-    return '$p1 из $p2';
-  }
-
-  @override
   String get cabChapters => 'главы';
 
   @override
@@ -282,85 +197,25 @@ class LRu extends L {
   String get cabExportReady => 'Твой файл готов.';
 
   @override
-  String get cabFactBirthdayNumber => 'число дня рождения';
-
-  @override
   String get cabFactBirthplace => 'место рождения';
 
   @override
   String get cabFactCrossings => 'пересечения';
 
   @override
-  String get cabFactDestinyNumber => 'число судьбы';
-
-  @override
   String get cabFactElement => 'стихия';
-
-  @override
-  String get cabFactKarmicDebt => 'кармический долг';
-
-  @override
-  String get cabFactLifePath => 'жизненный путь';
 
   @override
   String get cabFactLines => 'линии';
 
   @override
-  String get cabFactPersonalityCard => 'карта личности';
-
-  @override
   String get cabFactReturn => 'возвращение';
-
-  @override
-  String get cabFactRuler => 'управитель';
-
-  @override
-  String get cabFactYear => 'год';
 
   @override
   String get cabFactYearRuler => 'управитель года';
 
   @override
-  String get cabFactorAcrossAxes => 'систем по девяти осям';
-
-  @override
-  String get cabFactorAgree => 'согласны';
-
-  @override
-  String get cabFactorDisagree => 'расходятся';
-
-  @override
-  String get cabFactorSeenByOne => 'видит одна';
-
-  @override
-  String get cabFreeChapterNote => 'Одна глава каждой системы бесплатна.';
-
-  @override
-  String get cabFreeTag => 'бесплатно';
-
-  @override
   String get cabFromYourPositions => 'Написано из твоих собственных позиций';
-
-  @override
-  String get cabFullReading => 'Полное чтение';
-
-  @override
-  String get cabGroupAllOfIt => 'всё сразу';
-
-  @override
-  String get cabGroupHowWeMatch => 'как мы совпадаем';
-
-  @override
-  String get cabGroupRightNow => 'прямо сейчас';
-
-  @override
-  String get cabGroupThisYear => 'в этом году';
-
-  @override
-  String get cabGroupWhereToBe => 'где быть';
-
-  @override
-  String get cabGroupWhoAmI => 'кто я';
 
   @override
   String get cabGuest => 'Гость';
@@ -368,9 +223,6 @@ class LRu extends L {
   @override
   String get cabGuestNoteApp =>
       'Ты не в аккаунте. Твоя карта живёт только на этом телефоне.';
-
-  @override
-  String get cabHoldToTurn => 'Держи, чтобы открыть';
 
   @override
   String get cabHoroscopeLocked =>
@@ -419,10 +271,6 @@ class LRu extends L {
   String get cabHouse9 => '9-й дом';
 
   @override
-  String get cabLanguageNote =>
-      'Я читаю и пишу на языке твоего телефона. Поменяешь его — поменяюсь и я.';
-
-  @override
   String get cabLegalImprint => 'Реквизиты';
 
   @override
@@ -439,13 +287,6 @@ class LRu extends L {
 
   @override
   String get cabLocked => 'Открой, чтобы прочитать';
-
-  @override
-  String get cabLockedNote =>
-      'Персональный текст создаётся по данным твоей карты при первом открытии.';
-
-  @override
-  String get cabLunarDay => 'Лунный день';
 
   @override
   String get cabManageInStore => 'Управлять этой подпиской в App Store';
@@ -467,36 +308,12 @@ class LRu extends L {
   }
 
   @override
-  String get cabNeedsBirthTime => 'Для этого нужно время рождения.';
-
-  @override
-  String get cabNextChapter => 'дальше';
-
-  @override
   String get cabNoBirthData =>
       'Введи дату рождения — и я смогу тебя прочитать.';
 
   @override
   String get cabNoneActive =>
       'Сегодня нет аспектов в расчётном диапазоне (орбисе). Это нормальный результат, а не пустой экран.';
-
-  @override
-  String get cabNotCalculated => 'не рассчитано';
-
-  @override
-  String get cabNotPrediction =>
-      'Здесь нет предсказаний. Каждая строка называет позицию, из которой она прочитана.';
-
-  @override
-  String get cabOneTimeNote => 'Один платёж.';
-
-  @override
-  String cabOpenSystemNamed(String p1) {
-    return 'Открыть: $p1';
-  }
-
-  @override
-  String get cabOpenTag => 'открыто';
 
   @override
   String cabPairJoin(String p1, String p2) {
@@ -526,12 +343,6 @@ class LRu extends L {
 
   @override
   String get cabPhaseWaxingGibbous => 'растущая луна';
-
-  @override
-  String get cabPlacementsLabel => 'твои позиции';
-
-  @override
-  String get cabPlanAnnualPlan => 'Вся Alma — на год';
 
   @override
   String get cabPlanCancelFailed =>
@@ -577,9 +388,6 @@ class LRu extends L {
       'Файл не собрался. Попробуй ещё раз через минуту.';
 
   @override
-  String get cabPlanExportSaved => 'Сохранено как alma-export.json.';
-
-  @override
   String get cabPlanExporting => 'Готовлю твой файл…';
 
   @override
@@ -590,18 +398,7 @@ class LRu extends L {
   String get cabPlanFreePlan => 'Бесплатно';
 
   @override
-  String get cabPlanGuestNote =>
-      'Ты не в аккаунте. Твоя карта живёт только в этом браузере.';
-
-  @override
-  String get cabPlanKeepAccount => 'Оставить аккаунт';
-
-  @override
   String get cabPlanKeepPlan => 'Оставить план';
-
-  @override
-  String get cabPlanNeedsAccount =>
-      'Для этого нужен аккаунт, к которому это можно привязать.';
 
   @override
   String get cabPlanOneTimeNote => 'Куплено один раз.';
@@ -645,10 +442,6 @@ class LRu extends L {
   String get cabPlansTitle => 'Всё открыто — каждый день';
 
   @override
-  String get cabPreviewNote =>
-      'Глава уже написана. Остальное откроется вместе с системой.';
-
-  @override
   String get cabPullToTurn => 'Тяни дальше, чтобы открыть';
 
   @override
@@ -660,32 +453,10 @@ class LRu extends L {
   String get cabReadFrom => 'прочитано из';
 
   @override
-  String get cabReadWholeDay => 'Прочитать весь день';
-
-  @override
   String get cabReadingChart => 'Читаю твою карту';
 
   @override
-  String get cabRebuilds => 'Пересобирается, когда добавляется система';
-
-  @override
-  String get cabRefused =>
-      'Я не смогла написать это из твоей карты — и не стала.';
-
-  @override
   String get cabSaveFile => 'Сохранить файл';
-
-  @override
-  String get cabScoreAttraction => 'притяжение';
-
-  @override
-  String get cabScoreEndurance => 'выносливость';
-
-  @override
-  String get cabScoreFriction => 'трение';
-
-  @override
-  String get cabScoreWarmth => 'тепло';
 
   @override
   String get cabSettingsDate => 'Дата';
@@ -721,24 +492,10 @@ class LRu extends L {
   String get cabSettingsLanguage => 'Язык';
 
   @override
-  String get cabSettingsLetters => 'Письма';
-
-  @override
-  String get cabSettingsLettersNote =>
-      'Alma отправляет три письма: ссылку для входа, чек за покупку и предупреждение за три дня до продления плана. Все три — только про твои собственные действия. Рассылки нет, отписываться не от чего.';
-
-  @override
-  String get cabSettingsLettersNoteStore =>
-      'Alma отправляет одно: ссылку для входа. Чек за покупки в приложении и предупреждение перед продлением присылает Apple, потому что Apple принимает платёж. Рассылки нет, отписываться не от чего.';
-
-  @override
   String get cabSettingsPlace => 'Место';
 
   @override
   String get cabSettingsPlan => 'План';
-
-  @override
-  String get cabSettingsPrivacy => 'Твои настройки приватности';
 
   @override
   String get cabSettingsTime => 'Время';
@@ -786,16 +543,6 @@ class LRu extends L {
   String get cabSignIn => 'Войти';
 
   @override
-  String get cabSkyBehind => 'Небо за словами';
-
-  @override
-  String get cabSkyEventBody =>
-      'Для таких дней и существует утреннее уведомление — оно приходит в 08:00, когда что-то в твоей карте точно. Это часть подписки.';
-
-  @override
-  String get cabSpheresLabel => 'что говорит карта';
-
-  @override
   String get cabStatusAddPerson => 'добавь человека';
 
   @override
@@ -809,24 +556,6 @@ class LRu extends L {
 
   @override
   String get cabStatusOpen => 'открыто';
-
-  @override
-  String get cabStrongestAspects => 'что в карте соглашается, а что спорит';
-
-  @override
-  String cabSunInSign(String p1) {
-    return 'Солнце — $p1';
-  }
-
-  @override
-  String get cabSynthLead =>
-      'Три согласные системы — самое близкое к доказательству. Две несогласные — ещё полезнее: это конфликт, который ты проживаешь.';
-
-  @override
-  String get cabSynthSingle => 'видит одна';
-
-  @override
-  String get cabSynthTitle => 'Где три системы сходятся насчёт тебя';
 
   @override
   String get cabSystemAstrocartography => 'Астрокартография';
@@ -853,37 +582,11 @@ class LRu extends L {
   String get cabSystemTransits => 'Транзиты';
 
   @override
-  String get cabSystemFinished => 'Здесь всё прочитано';
-
-  @override
   String get cabUnknownTime => 'время рождения неизвестно';
-
-  @override
-  String get cabUpcoming => 'впереди';
-
-  @override
-  String get cabWritingNote =>
-      'Пишется один раз — и завтра скажет то же самое.';
-
-  @override
-  String get cabYourDay => 'Твой день';
-
-  @override
-  String get dailyActionQuieter => 'Пореже';
-
-  @override
-  String get dailyActionTurnOff => 'Выключить их';
-
-  @override
-  String get dailyActionTurnedOff =>
-      'Выключено. «Сегодня» всегда на месте, когда ты открываешь приложение.';
 
   @override
   String get dailyAskBody =>
       'Одно уведомление, в выбранный тобой час, в те дни, когда что-то в твоей карте точно. Примерно раз в неделю. Никогда ночью, и выключить можно прямо из самого уведомления.';
-
-  @override
-  String get dailyAskNo => 'Не сейчас';
 
   @override
   String get dailyAskTitle => 'Скажи мне в то утро, когда это случится';
@@ -930,27 +633,7 @@ class LRu extends L {
   }
 
   @override
-  String get dailyEmptyBody =>
-      'Другие аспекты в расчётном диапазоне — ниже. Сегодня ни один не достигает точного положения.';
-
-  @override
-  String get dailyEmptyTitle => 'Сегодня нет точных аспектов';
-
-  @override
   String get dailyRetrograde => 'ретроградный';
-
-  @override
-  String dailyRunningBody(String p1) {
-    return 'Ближе всего $p1. Остальное движется медленно.';
-  }
-
-  @override
-  String dailyRunningNearest(String p1, String p2) {
-    return 'Ближе всего — $p1; точный момент: $p2. Остальные аспекты меняются медленно.';
-  }
-
-  @override
-  String get dailyRunningTitle => 'Сегодня нет точных аспектов';
 
   @override
   String get dailySettingHour => 'Приходит в';
@@ -964,10 +647,6 @@ class LRu extends L {
 
   @override
   String get dailySettingOff => 'Выключено';
-
-  @override
-  String get dailySettingOffDetail =>
-      'Без уведомлений. «Сегодня» всегда на месте, когда ты открываешь приложение.';
 
   @override
   String get dailySettingOnlyMattersDetail =>
@@ -984,12 +663,6 @@ class LRu extends L {
   String get dailySettingTimezone => 'Твоё время';
 
   @override
-  String get dailySettingTimezoneBirth => 'из твоих данных рождения';
-
-  @override
-  String get dailySettingTimezoneChosen => 'твой выбор';
-
-  @override
   String get dailySettingTimezoneDevice => 'с твоего устройства';
 
   @override
@@ -1000,71 +673,16 @@ class LRu extends L {
       'Уведомления для Alma выключены. Включить их можно в настройках телефона.';
 
   @override
-  String get dailyStatusNotDelivering =>
-      'Уведомления пока не приходят на этот телефон. Все обновления доступны в разделе «Сегодня».';
-
-  @override
   String get dailyStatusOpenSettings => 'Открыть настройки';
-
-  @override
-  String get dailyStatusProvisional =>
-      'Приходит тихо. Уведомления Alma идут прямо в Центр уведомлений — без баннера и звука, пока ты не решишь иначе.';
-
-  @override
-  String get dailyStatusRegistered =>
-      'Этот телефон зареги­стрирован для утренних уведомлений.';
-
-  @override
-  String get dailyStatusUpgrade => 'Пусть приходят как положено';
-
-  @override
-  String get dailySubscriberOnly => 'Утреннее уведомление — часть плана.';
-
-  @override
-  String dailyTodayAt(String p1) {
-    return 'Точный момент — $p1';
-  }
-
-  @override
-  String get dailyTodayLabel => 'Точный аспект сегодня';
-
-  @override
-  String dailyTodaySince(String p1) {
-    return 'В расчётном диапазоне с $p1';
-  }
-
-  @override
-  String dailyTodayUntil(String p1) {
-    return 'в орбисе до $p1';
-  }
 
   @override
   String get dailyVerifiedLabel => 'Точные даты транзитов в ближайшие 30 дней';
 
   @override
-  String get dailyVerifiedNote =>
-      'Посчитано из твоей собственной карты, на этом устройстве, по тому же правилу, что и уведомление.';
-
-  @override
-  String get dailyYour => '—';
-
-  @override
-  String get journeyAboutSub => 'Можно пропустить.';
-
-  @override
   String get journeyAboutTitle => 'Немного о тебе';
 
   @override
-  String get journeyAscendant => 'Асцендент';
-
-  @override
-  String get journeyBack => 'Назад';
-
-  @override
   String get journeyBuildMySky => 'Рассчитать мою карту';
-
-  @override
-  String get journeyCalculated => 'все восемь систем · рассчитаны бесплатно';
 
   @override
   String get journeyCaptureDay => 'День рождения';
@@ -1081,10 +699,6 @@ class LRu extends L {
 
   @override
   String get journeyCaptureMonthShort => 'Месяц';
-
-  @override
-  String get journeyCaptureNoPlaces =>
-      'Нет места с таким названием. Попробуй ближайший крупный город.';
 
   @override
   String get journeyCaptureSearchPlace => 'Город рождения';
@@ -1157,9 +771,6 @@ class LRu extends L {
       'Девять осей. Где три традиции согласны — это идёт в твою основу.';
 
   @override
-  String get journeyCeremonySkip => 'Пропустить церемонию';
-
-  @override
   String get journeyClose => 'Закрыть';
 
   @override
@@ -1172,19 +783,6 @@ class LRu extends L {
   String get journeyDateTitle => 'Когда всё началось?';
 
   @override
-  String get journeyDialogLabel => 'Знакомимся';
-
-  @override
-  String get journeyFreeChapterLabel => 'твоя первая глава · бесплатно';
-
-  @override
-  String get journeyFreeLabel => 'твоё, бесплатно, навсегда';
-
-  @override
-  String get journeyFreeNote =>
-      'Эти системы не стоят ничего и никогда. Они твои, читаешь ты дальше или нет.';
-
-  @override
   String get journeyGenderFemale => 'Женский';
 
   @override
@@ -1194,97 +792,14 @@ class LRu extends L {
   String get journeyGenderSkip => 'Не скажу';
 
   @override
-  String get journeyHandoffSub =>
-      'Три коротких правила помогут разобраться в Alma.';
-
-  @override
-  String get journeyHandoffTitle => 'Сохранено. Теперь читай себя медленно.';
-
-  @override
   String get journeyHourLabel => 'Час';
-
-  @override
-  String journeyInsightLifePath(String p1) {
-    return 'Жизненный путь $p1';
-  }
-
-  @override
-  String journeyInsightSun(String p1) {
-    return 'Солнце — $p1';
-  }
-
-  @override
-  String get journeyIntentSelf => 'Лучше понять себя';
-
-  @override
-  String get journeyIntentShifting => 'Разобраться в переменах';
-
-  @override
-  String get journeyIntentUs => 'Разобраться в отношениях';
-
-  @override
-  String get journeyIntentWhere => 'Исследовать разные места';
-
-  @override
-  String get journeyIntentSkip => 'Пропустить — я знаю, чего хочу';
-
-  @override
-  String get journeyIntentTitle => 'Что ты хочешь узнать в первую очередь?';
-
-  @override
-  String get journeyKeepMySky => 'Сохранить мою карту';
 
   @override
   String get journeyLockedWithoutTime =>
       'Без времени рождения недоступны дома, соляр и астро­картография.';
 
   @override
-  String get journeyMeridiemLabel => 'AM или PM';
-
-  @override
   String get journeyMinuteLabel => 'Мин';
-
-  @override
-  String get journeyMonth1 => 'Январь';
-
-  @override
-  String get journeyMonth10 => 'Октябрь';
-
-  @override
-  String get journeyMonth11 => 'Ноябрь';
-
-  @override
-  String get journeyMonth12 => 'Декабрь';
-
-  @override
-  String get journeyMonth2 => 'Февраль';
-
-  @override
-  String get journeyMonth3 => 'Март';
-
-  @override
-  String get journeyMonth4 => 'Апрель';
-
-  @override
-  String get journeyMonth5 => 'Май';
-
-  @override
-  String get journeyMonth6 => 'Июнь';
-
-  @override
-  String get journeyMonth7 => 'Июль';
-
-  @override
-  String get journeyMonth8 => 'Август';
-
-  @override
-  String get journeyMonth9 => 'Сентябрь';
-
-  @override
-  String get journeyMoon => 'Луна';
-
-  @override
-  String get journeyNameAria => 'Твоё имя';
 
   @override
   String get journeyNamePlaceholder => 'София';
@@ -1315,154 +830,16 @@ class LRu extends L {
   String get quizInterestFuture => 'Что впереди';
 
   @override
-  String get journeyNeedsTime => 'нужно время рождения';
-
-  @override
-  String get journeyNeedsTimeRow => 'Соляр · карта мира';
-
-  @override
-  String get journeyOfferCta => 'Прочитать';
-
-  @override
-  String get journeyOfferFine =>
-      'Один платёж. Твоё навсегда. Для покупки не нужен аккаунт.';
-
-  @override
-  String get journeyOfferSkip => 'Не сейчас — впусти меня';
-
-  @override
-  String get journeyOfferSub =>
-      'Числа выше — твои, и они остаются бесплатными. Это открывает всю систему — каждую главу чтения, написанную из твоих позиций, а не по шаблону.';
-
-  @override
-  String journeyOfferTitle(String p1) {
-    return 'Твоё чтение: $p1';
-  }
-
-  @override
-  String get journeyOpenToday => 'Открыть раздел «Сегодня»';
-
-  @override
-  String get journeyPhaseFirstQuarter => 'первая четверть';
-
-  @override
-  String get journeyPhaseFullMoon => 'полнолуние';
-
-  @override
-  String get journeyPhaseLastQuarter => 'последняя четверть';
-
-  @override
-  String get journeyPhaseNewMoon => 'новолуние';
-
-  @override
-  String get journeyPhaseWaningCrescent => 'убывающий серп';
-
-  @override
-  String get journeyPhaseWaningGibbous => 'убывающая луна';
-
-  @override
-  String get journeyPhaseWaxingCrescent => 'растущий серп';
-
-  @override
-  String get journeyPhaseWaxingGibbous => 'растущая луна';
-
-  @override
-  String get journeyPlacePlaceholder => 'Город';
-
-  @override
   String get journeyPlaceSub => 'Достаточно указать город.';
 
   @override
   String get journeyPlaceTitle => 'Где всё началось?';
 
   @override
-  String get journeyRule1 =>
-      'Открывай главы по одной — так в них проще разобраться.';
-
-  @override
-  String get journeyRule2 =>
-      'Сравнивай интерпретации: расхождения помогают увидеть тему с разных сторон.';
-
-  @override
-  String get journeyRule3 =>
-      'Спрашивай меня своими словами. Первый вопрос — бесплатно.';
-
-  @override
-  String get journeySignAquarius => 'Водолей';
-
-  @override
-  String get journeySignAries => 'Овен';
-
-  @override
-  String get journeySignCancer => 'Рак';
-
-  @override
-  String get journeySignCapricorn => 'Козерог';
-
-  @override
-  String get journeySignGemini => 'Близнецы';
-
-  @override
-  String get journeySignLeo => 'Лев';
-
-  @override
-  String get journeySignLibra => 'Весы';
-
-  @override
-  String get journeySignPisces => 'Рыбы';
-
-  @override
-  String get journeySignSagittarius => 'Стрелец';
-
-  @override
-  String get journeySignScorpio => 'Скорпион';
-
-  @override
-  String get journeySignTaurus => 'Телец';
-
-  @override
-  String get journeySignVirgo => 'Дева';
-
-  @override
-  String get journeyStaysFree => 'Всё выше остаётся бесплатным, навсегда';
-
-  @override
-  String journeyStep(String p1, String p2) {
-    return 'Шаг $p1 из $p2';
-  }
-
-  @override
-  String get journeySystemAstrocartography => 'Астрокартография';
-
-  @override
-  String get journeySystemBirthCard => 'Карта рождения';
-
-  @override
-  String get journeySystemCompatibility => 'Совместимость';
-
-  @override
-  String get journeySystemNatal => 'Натальная карта';
-
-  @override
-  String get journeySystemNumerology => 'Нумерология';
-
-  @override
-  String get journeySystemSolarReturn => 'Соляр';
-
-  @override
-  String get journeySystemSynthesis => 'Перекрёстный синтез';
-
-  @override
-  String get journeySystemTransits => 'Транзиты';
-
-  @override
   String get journeyTimeTitle => 'Во сколько всё началось?';
 
   @override
   String get cabinetBack => 'Назад';
-
-  @override
-  String get cabinetSections => 'Разделы';
 
   @override
   String pushDailyConjunction(String p1, String p2, String p3) {
@@ -1522,20 +899,7 @@ class LRu extends L {
       'Этот аккаунт удалён. От него ничего не осталось.';
 
   @override
-  String get stateLoading => 'Читаю твоё небо…';
-
-  @override
   String get stateLoadingShort => 'Секунду';
-
-  @override
-  String get stateLocked => 'Открой, чтобы прочитать';
-
-  @override
-  String get stateNeedsBirthTime => 'Для этого нужно время рождения.';
-
-  @override
-  String get stateNothingToSay =>
-      'Я не смогла прочитать это в твоей карте — и не стану выдумывать.';
 
   @override
   String get stateOffline =>
@@ -1543,10 +907,6 @@ class LRu extends L {
 
   @override
   String get stateRetry => 'Попробовать ещё раз';
-
-  @override
-  String get stateSomethingWrong =>
-      'Что-то пошло не так. Ничего не потерялось.';
 
   @override
   String get stateUnavailable =>
@@ -1575,44 +935,7 @@ class LRu extends L {
   String get tabToday => 'Сегодня';
 
   @override
-  String get paywallAnnualTitle => 'Вся Alma — на год';
-
-  @override
-  String get paywallArchiveNote => 'Все восемь систем — одной покупкой.';
-
-  @override
-  String get paywallArchiveTitle => 'Все восемь систем';
-
-  @override
   String get paywallDoorNote => 'Один платёж.';
-
-  @override
-  String get paywallDoorSub =>
-      'Числа выше — твои. Это открывает всю систему: каждая глава пишется из твоих собственных позиций, а не по шаблону.';
-
-  @override
-  String get paywallEverythingSub =>
-      'Персональный текст создаётся по данным твоей карты при первом открытии.';
-
-  @override
-  String get paywallEverythingTitle =>
-      'Открой всё остальное, что говорит твоя карта';
-
-  @override
-  String get paywallFreeNote =>
-      'Каждый расчёт всегда бесплатен целиком. Цену имеют только слова.';
-
-  @override
-  String get paywallHonestyOnce => 'разовое — значит разовое';
-
-  @override
-  String get paywallHonestySeller => 'Apple принимает платёж и присылает чек';
-
-  @override
-  String get paywallLabel => 'сколько это стоит';
-
-  @override
-  String get paywallManage => 'Управлять подпиской';
 
   @override
   String get paywallManageNote =>
@@ -1641,34 +964,11 @@ class LRu extends L {
       'Alma сейчас не отвечает, поэтому покупка не подтвердилась. Всё откроется само, как только связь вернётся.';
 
   @override
-  String get paywallOneTimeFine =>
-      'Один платёж. Твоё навсегда. Для покупки не нужен аккаунт.';
-
-  @override
-  String get paywallOwned => 'твоё';
-
-  @override
   String get paywallOwnedAll => 'Всё открыто. Сорок одна глава — твоя.';
 
   @override
   String get paywallPending =>
       'Ждёт одобрения. Ничего не списано, и это откроется само в момент одобрения.';
-
-  @override
-  String paywallPerMonthSavings(String p1, int p2) {
-    return '$p1 в месяц · экономия $p2%%';
-  }
-
-  @override
-  String get paywallPitchDoor1 =>
-      'Один платёж открывает каждую главу этой системы.';
-
-  @override
-  String get paywallPitchDoor2 =>
-      'Каждая глава пишется из твоих собственных позиций при первом открытии.';
-
-  @override
-  String get paywallPitchDoor3 => 'Читай когда угодно, на семи языках.';
 
   @override
   String get paywallPitchPlan1 =>
@@ -1685,10 +985,6 @@ class LRu extends L {
   String get paywallPrivacy => 'Политика конфиденциальности';
 
   @override
-  String get paywallRefused =>
-      'Это не та покупка, что была запрошена. Ничего лишнего не списано.';
-
-  @override
   String get paywallRestore => 'Восстановить покупки';
 
   @override
@@ -1703,17 +999,10 @@ class LRu extends L {
       'В Google Play нечего восстановить для этого аккаунта.';
 
   @override
-  String get paywallRestoredOther =>
-      'Эти покупки привязаны к другому аккаунту Alma. Войди в тот аккаунт, чтобы восстановить их.';
-
-  @override
   String get paywallRestoring => 'Спрашиваю App Store…';
 
   @override
   String get paywallRestoringPlay => 'Спрашиваю Google Play…';
-
-  @override
-  String get paywallSkip => 'Не сейчас — впусти меня';
 
   @override
   String get paywallStoreUnavailable =>
@@ -1754,21 +1043,8 @@ class LRu extends L {
   String get paywallTerms => 'Условия';
 
   @override
-  String get paywallUpgradeNote => 'Цена уже учитывает купленную систему.';
-
-  @override
-  String get paywallUpgradeTitle => 'Доплата за все системы';
-
-  @override
   String get paywallVerifyLater =>
       'Apple принял платёж. В эту секунду мы не смогли его подтвердить — скоро всё откроется само, ничего не потеряно.';
-
-  @override
-  String get paywallWeeklyNote =>
-      'Обновляемые разборы и вопросы на неделю. Продлевается каждую неделю, пока не отменишь.';
-
-  @override
-  String get paywallWeeklyTitle => 'Всё живое — на неделю';
 
   @override
   String get paywallWithdrawn =>
@@ -1792,48 +1068,10 @@ class LRu extends L {
       'Твоя карта уже рассчитана — и навсегда бесплатна. План открывает написанное.';
 
   @override
-  String get scrAddPersonBirthTime => 'время рождения';
-
-  @override
-  String get scrAddPersonBirthday => 'дата рождения';
-
-  @override
-  String get scrAddPersonBirthplace => 'место рождения';
-
-  @override
-  String get scrAddPersonEyebrow => 'второе рождение';
-
-  @override
-  String get scrAddPersonLead =>
-      'Нужны имя, дата и место рождения; время — если известно. Без точного времени сравнение тоже работает, но учитывает меньше факторов.';
-
-  @override
-  String get scrAddPersonName => 'имя';
-
-  @override
-  String get scrAddPersonNamePlaceholder => 'Имя';
-
-  @override
-  String get scrAddPersonRelationPlaceholder =>
-      'Партнёр, мама, друг… (необязательно)';
-
-  @override
-  String get scrAddPersonSave => 'Сохранить человека';
-
-  @override
   String get scrAddPersonSaving => 'Сохраняю…';
 
   @override
-  String get scrAddPersonTimeUnknown => 'Время рождения неизвестно';
-
-  @override
-  String get scrAddPersonTitle => 'Добавить человека';
-
-  @override
   String get scrChatCouldAsk => 'можно спросить';
-
-  @override
-  String get scrChatMoreQuestions => 'Ещё вопросы';
 
   @override
   String get scrChatNoChart =>
@@ -1890,21 +1128,11 @@ class LRu extends L {
       'Я не смогла ответить, не выдумав позицию, — и не стала. Спроси иначе, и я попробую снова.';
 
   @override
-  String get scrChatRule =>
-      'Каждый ответ называет позиции, из которых он прочитан. Здесь нет предсказаний.';
-
-  @override
-  String get scrChatSend => 'Отправить';
-
-  @override
   String get scrChatSilent =>
       'На это я ответила из того, что знаю сама, а не из твоей карты.';
 
   @override
   String get scrChatThinking => 'Читаю твою карту';
-
-  @override
-  String get scrChatThinkingStill => 'Всё ещё читаю — я не пролистываю.';
 
   @override
   String get scrChatUnavailable =>
@@ -1918,41 +1146,7 @@ class LRu extends L {
       'Это не отправилось. Ничего не потерялось — твой вопрос на месте.';
 
   @override
-  String get scrCompatChoose => 'Сравнить с кем-то другим';
-
-  @override
-  String scrCompatReadAgainst(String p1) {
-    return 'Ты и $p1';
-  }
-
-  @override
   String get scrDone => 'Готово';
-
-  @override
-  String scrEmptyChapters(int p1) {
-    return '$p1 глав';
-  }
-
-  @override
-  String get scrEmptyExample => 'как выглядит строка';
-
-  @override
-  String get scrEmptyExampleNote =>
-      'Каждое предложение Alma называет позицию, из которой оно прочитано, — как строка выше. Здесь нет предсказаний, и не показывается ничего, что не было рассчитано.';
-
-  @override
-  String get scrEmptyExampleTag => 'пример — не твоя карта';
-
-  @override
-  String get scrEmptyLead =>
-      'В Alma восемь систем и 41 глава. «Общий портрет» сравнивает три из них: натальную карту, нумерологию и аркан рождения.';
-
-  @override
-  String get scrEmptyTitle => 'Восемь систем, одна карта';
-
-  @override
-  String get scrJourneyFreeNote =>
-      'Всё выше — расчёты, а расчёты всегда бесплатны целиком. Это остаётся твоим, читаешь ты дальше или нет.';
 
   @override
   String get scrKeep => 'Оставить';
@@ -1961,15 +1155,7 @@ class LRu extends L {
   String get scrPeopleChange => 'Изменить';
 
   @override
-  String get scrPeopleConsent =>
-      'Это их данные рождения, не твои. Сначала спроси у них разрешения.';
-
-  @override
   String get scrPeopleEyebrow => 'совместимость';
-
-  @override
-  String get scrPeopleLead =>
-      'Совместимость сравнивает твою карту с чьей-то ещё. Само сравнение всегда рассчитывается целиком и бесплатно.';
 
   @override
   String get scrPeopleRemove => 'Убрать';
@@ -1980,12 +1166,6 @@ class LRu extends L {
   @override
   String get scrPeopleRemoveWhat =>
       'Уйдут их данные рождения — и каждое чтение совместимости, написанное из них. Оплаченные чтения нельзя написать заново слово в слово.';
-
-  @override
-  String get scrPeopleSaved => 'сохранено';
-
-  @override
-  String get scrPeopleTitle => 'Люди';
 
   @override
   String get scrPeopleUnnamed => 'Без имени';
@@ -2014,14 +1194,8 @@ class LRu extends L {
   String get scrSignInEmailPlaceholder => 'Твой адрес почты';
 
   @override
-  String get scrSignInEyebrow => 'твой аккаунт';
-
-  @override
   String get scrSignInFailed =>
       'Войти не получилось. В аккаунте ничего не изменилось.';
-
-  @override
-  String get scrSignInGoogle => 'Продолжить через Google';
 
   @override
   String get scrSignInLead => 'Твоя карта следует за тобой на любой телефон.';
@@ -2036,16 +1210,6 @@ class LRu extends L {
   @override
   String get scrSignInPrivacy =>
       'Адрес нужен только для ссылки на вход — больше ни для чего. Рассылки нет.';
-
-  @override
-  String get scrSignInReason1 => 'Твоя карта переживёт новый телефон.';
-
-  @override
-  String get scrSignInReason2 =>
-      'Всё купленное можно восстановить. Покупка принадлежит аккаунту, который забрал её первым, — войди до переустановки.';
-
-  @override
-  String get scrSignInReason3 => 'Пароля нет. И не будет.';
 
   @override
   String get scrSignInSendLink => 'Прислать ссылку для входа';
@@ -2067,9 +1231,6 @@ class LRu extends L {
 
   @override
   String get cabPeopleAdd => 'Добавить человека';
-
-  @override
-  String get cabPeopleRemove => 'Убрать';
 
   @override
   String get splashTagline => 'Записано в небе ещё до твоего вопроса.';
@@ -2160,23 +1321,6 @@ class LRu extends L {
       'Собственная карта отношений — небо вас двоих как одно';
 
   @override
-  String cabLegalEffective(String p1) {
-    return 'Действует с $p1';
-  }
-
-  @override
-  String get cabPlanDeleteMismatchGuest => 'Это не код этого аккаунта.';
-
-  @override
-  String get paywallArtCaption =>
-      'Каждая глава открывается своей вклейкой — нарисованной для этой колоды.';
-
-  @override
-  String cabPlanCancelPeriodEnds(String date) {
-    return 'План действует до $date.';
-  }
-
-  @override
   String get todayReadWholeSky => 'Прочитать всё небо';
 
   @override
@@ -2192,24 +1336,6 @@ class LRu extends L {
   @override
   String readerAskAboutIt(String aspect) {
     return 'Спросить Alma про $aspect';
-  }
-
-  @override
-  String get readerTermYours => 'у тебя';
-
-  @override
-  String readerReadInChapter(String system, String chapter) {
-    return 'Прочитать в «$system» — $chapter';
-  }
-
-  @override
-  String readerTomorrow(String event) {
-    return 'Завтра $event';
-  }
-
-  @override
-  String readerWrittenAt(String time) {
-    return 'Написано в $time по твоему времени';
   }
 
   @override

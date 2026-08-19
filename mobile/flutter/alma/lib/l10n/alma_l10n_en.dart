@@ -12,22 +12,10 @@ class LEn extends L {
   String get cabAccountLabel => 'account';
 
   @override
-  String get cabAcrossSystems => 'across your systems';
-
-  @override
   String get cabActiveNow => 'active now';
 
   @override
-  String get cabAddAPerson => 'Add a person';
-
-  @override
   String get cabAddBirthData => 'Enter my birth data';
-
-  @override
-  String get cabAddBirthTime => 'Add my birth time';
-
-  @override
-  String get cabAdvice => 'what to do with it';
 
   @override
   String get cabAllAlmaPill => 'All of Alma';
@@ -99,9 +87,6 @@ class LEn extends L {
   String get cabArcanaWheelOfFortune => 'Wheel of Fortune';
 
   @override
-  String get cabArchiveNote => 'All eight systems, bought once.';
-
-  @override
   String get cabAreaBody => 'Body';
 
   @override
@@ -115,63 +100,6 @@ class LEn extends L {
 
   @override
   String get cabAreaQuiet => 'Nothing exact here today.';
-
-  @override
-  String get cabAscendant => 'Ascendant';
-
-  @override
-  String get cabAskAlma => 'Ask Alma a question';
-
-  @override
-  String get cabAspectMeaningConjunction =>
-      'Very close together: their themes blend and become stronger.';
-
-  @override
-  String get cabAspectMeaningOpposition =>
-      'Across from each other: their needs can pull in different directions.';
-
-  @override
-  String get cabAspectMeaningQuincunx =>
-      'An awkward angle: their needs often require adjustment.';
-
-  @override
-  String get cabAspectMeaningSextile =>
-      'A supportive connection that becomes stronger when you act on it.';
-
-  @override
-  String get cabAspectMeaningSquare =>
-      'A tense connection that can create pressure and motivate change.';
-
-  @override
-  String get cabAspectMeaningTrine =>
-      'An easy, natural connection that may feel effortless.';
-
-  @override
-  String get cabAxisCharacter => 'Character';
-
-  @override
-  String get cabAxisDirection => 'Direction';
-
-  @override
-  String get cabAxisGrowth => 'Growth';
-
-  @override
-  String get cabAxisMind => 'Mind';
-
-  @override
-  String get cabAxisRelationships => 'Relationships';
-
-  @override
-  String get cabAxisResources => 'Resources';
-
-  @override
-  String get cabAxisRhythms => 'Rhythms';
-
-  @override
-  String get cabAxisWeakPoint => 'Weak point';
-
-  @override
-  String get cabAxisWork => 'Work';
 
   @override
   String get cabBirthDataLabel => 'birth data';
@@ -237,19 +165,6 @@ class LEn extends L {
   String get cabCalculatedWord => 'calculated';
 
   @override
-  String get cabChapterEndDoor =>
-      'The rest of this system is written the same way — from your positions, yours to keep.';
-
-  @override
-  String get cabChapterEndPlan =>
-      'This chapter is written once. Transits, the year and compatibility are rewritten as the sky moves — that is the plan.';
-
-  @override
-  String cabChapterProgress(int p1, int p2) {
-    return '$p1 of $p2';
-  }
-
-  @override
   String get cabChapters => 'chapters';
 
   @override
@@ -282,85 +197,25 @@ class LEn extends L {
   String get cabExportReady => 'Your file is ready.';
 
   @override
-  String get cabFactBirthdayNumber => 'birthday number';
-
-  @override
   String get cabFactBirthplace => 'birthplace';
 
   @override
   String get cabFactCrossings => 'crossings';
 
   @override
-  String get cabFactDestinyNumber => 'destiny number';
-
-  @override
   String get cabFactElement => 'element';
-
-  @override
-  String get cabFactKarmicDebt => 'karmic debt';
-
-  @override
-  String get cabFactLifePath => 'life path';
 
   @override
   String get cabFactLines => 'lines';
 
   @override
-  String get cabFactPersonalityCard => 'personality card';
-
-  @override
   String get cabFactReturn => 'return';
-
-  @override
-  String get cabFactRuler => 'ruler';
-
-  @override
-  String get cabFactYear => 'year';
 
   @override
   String get cabFactYearRuler => 'year ruler';
 
   @override
-  String get cabFactorAcrossAxes => 'systems across nine axes';
-
-  @override
-  String get cabFactorAgree => 'agree';
-
-  @override
-  String get cabFactorDisagree => 'disagree';
-
-  @override
-  String get cabFactorSeenByOne => 'seen by one';
-
-  @override
-  String get cabFreeChapterNote => 'One chapter of every system is free.';
-
-  @override
-  String get cabFreeTag => 'free';
-
-  @override
   String get cabFromYourPositions => 'Written from your own positions';
-
-  @override
-  String get cabFullReading => 'Full reading';
-
-  @override
-  String get cabGroupAllOfIt => 'all of it';
-
-  @override
-  String get cabGroupHowWeMatch => 'how we match';
-
-  @override
-  String get cabGroupRightNow => 'right now';
-
-  @override
-  String get cabGroupThisYear => 'this year';
-
-  @override
-  String get cabGroupWhereToBe => 'where to be';
-
-  @override
-  String get cabGroupWhoAmI => 'who am I';
 
   @override
   String get cabGuest => 'Guest';
@@ -368,9 +223,6 @@ class LEn extends L {
   @override
   String get cabGuestNoteApp =>
       'You are not signed in. Your chart lives on this phone only.';
-
-  @override
-  String get cabHoldToTurn => 'Hold to open it';
 
   @override
   String get cabHoroscopeLocked =>
@@ -419,10 +271,6 @@ class LEn extends L {
   String get cabHouse9 => '9th house';
 
   @override
-  String get cabLanguageNote =>
-      'I read and write in the language of your phone. Change it there and I change with it.';
-
-  @override
   String get cabLegalImprint => 'Imprint';
 
   @override
@@ -439,13 +287,6 @@ class LEn extends L {
 
   @override
   String get cabLocked => 'Unlock to read';
-
-  @override
-  String get cabLockedNote =>
-      'Written from your own positions the first time you open it — your chart, never a template.';
-
-  @override
-  String get cabLunarDay => 'Lunar day';
 
   @override
   String get cabManageInStore => 'Manage this subscription in the App Store';
@@ -467,35 +308,11 @@ class LEn extends L {
   }
 
   @override
-  String get cabNeedsBirthTime => 'This one needs your birth time.';
-
-  @override
-  String get cabNextChapter => 'next';
-
-  @override
   String get cabNoBirthData => 'Add your birth date and I can read you.';
 
   @override
   String get cabNoneActive =>
       'No transit is active today. That is a real result, not an empty screen.';
-
-  @override
-  String get cabNotCalculated => 'not calculated';
-
-  @override
-  String get cabNotPrediction =>
-      'Nothing here is a prediction. Every line names the placement it was read from.';
-
-  @override
-  String get cabOneTimeNote => 'One payment.';
-
-  @override
-  String cabOpenSystemNamed(String p1) {
-    return 'Open $p1';
-  }
-
-  @override
-  String get cabOpenTag => 'open';
 
   @override
   String cabPairJoin(String p1, String p2) {
@@ -525,12 +342,6 @@ class LEn extends L {
 
   @override
   String get cabPhaseWaxingGibbous => 'waxing gibbous';
-
-  @override
-  String get cabPlacementsLabel => 'your placements';
-
-  @override
-  String get cabPlanAnnualPlan => 'Everything, for a year';
 
   @override
   String get cabPlanCancelFailed =>
@@ -578,9 +389,6 @@ class LEn extends L {
       'The file could not be made. Try again in a moment.';
 
   @override
-  String get cabPlanExportSaved => 'Saved as alma-export.json.';
-
-  @override
   String get cabPlanExporting => 'Preparing your file…';
 
   @override
@@ -591,18 +399,7 @@ class LEn extends L {
   String get cabPlanFreePlan => 'Free';
 
   @override
-  String get cabPlanGuestNote =>
-      'You are not signed in. Your chart lives in this browser only.';
-
-  @override
-  String get cabPlanKeepAccount => 'Keep my account';
-
-  @override
   String get cabPlanKeepPlan => 'Keep my plan';
-
-  @override
-  String get cabPlanNeedsAccount =>
-      'This needs an account we can attach to you.';
 
   @override
   String get cabPlanOneTimeNote => 'Bought once.';
@@ -646,10 +443,6 @@ class LEn extends L {
   String get cabPlansTitle => 'Everything open, every day';
 
   @override
-  String get cabPreviewNote =>
-      'The chapter is written. The rest opens with the system.';
-
-  @override
   String get cabPullToTurn => 'Keep pulling to open it';
 
   @override
@@ -661,32 +454,10 @@ class LEn extends L {
   String get cabReadFrom => 'read from';
 
   @override
-  String get cabReadWholeDay => 'Read the whole day';
-
-  @override
   String get cabReadingChart => 'Reading your chart';
 
   @override
-  String get cabRebuilds => 'Rebuilds itself when a system is added';
-
-  @override
-  String get cabRefused =>
-      'I could not write this from your chart, so I did not.';
-
-  @override
   String get cabSaveFile => 'Save the file';
-
-  @override
-  String get cabScoreAttraction => 'attraction';
-
-  @override
-  String get cabScoreEndurance => 'endurance';
-
-  @override
-  String get cabScoreFriction => 'friction';
-
-  @override
-  String get cabScoreWarmth => 'warmth';
 
   @override
   String get cabSettingsDate => 'Date';
@@ -720,24 +491,10 @@ class LEn extends L {
   String get cabSettingsLanguage => 'Language';
 
   @override
-  String get cabSettingsLetters => 'Letters';
-
-  @override
-  String get cabSettingsLettersNote =>
-      'Alma sends three: your sign-in link, a receipt for anything you buy, and a warning three days before a plan renews. All three are about something you did. There is no newsletter and nothing to unsubscribe from.';
-
-  @override
-  String get cabSettingsLettersNoteStore =>
-      'Alma sends one: your sign-in link. Apple sends the receipt for anything you buy in the app and the warning before a plan renews, because Apple takes the payment. There is no newsletter and nothing to unsubscribe from.';
-
-  @override
   String get cabSettingsPlace => 'Place';
 
   @override
   String get cabSettingsPlan => 'Plan';
-
-  @override
-  String get cabSettingsPrivacy => 'Your privacy choices';
 
   @override
   String get cabSettingsTime => 'Time';
@@ -785,16 +542,6 @@ class LEn extends L {
   String get cabSignIn => 'Sign in';
 
   @override
-  String get cabSkyBehind => 'The sky behind it';
-
-  @override
-  String get cabSkyEventBody =>
-      'Days like this are what the morning notification is for — it arrives at 08:00 when something in your chart is exact. Part of the plan.';
-
-  @override
-  String get cabSpheresLabel => 'what the chart says';
-
-  @override
   String get cabStatusAddPerson => 'add a person';
 
   @override
@@ -808,24 +555,6 @@ class LEn extends L {
 
   @override
   String get cabStatusOpen => 'open';
-
-  @override
-  String get cabStrongestAspects => 'what agrees and what argues';
-
-  @override
-  String cabSunInSign(String p1) {
-    return 'Sun in $p1';
-  }
-
-  @override
-  String get cabSynthLead =>
-      'Three agreeing is the closest thing to proof. Two disagreeing is more useful still — that\'s the conflict you keep living out.';
-
-  @override
-  String get cabSynthSingle => 'seen by one';
-
-  @override
-  String get cabSynthTitle => 'Where three systems agree about you';
 
   @override
   String get cabSystemAstrocartography => 'Astrocartography';
@@ -852,37 +581,11 @@ class LEn extends L {
   String get cabSystemTransits => 'Transits';
 
   @override
-  String get cabSystemFinished => 'You have read all of this one';
-
-  @override
   String get cabUnknownTime => 'birth time unknown';
-
-  @override
-  String get cabUpcoming => 'coming up';
-
-  @override
-  String get cabWritingNote =>
-      'It is written once, and it will say the same thing tomorrow.';
-
-  @override
-  String get cabYourDay => 'Your day';
-
-  @override
-  String get dailyActionQuieter => 'Fewer of these';
-
-  @override
-  String get dailyActionTurnOff => 'Turn these off';
-
-  @override
-  String get dailyActionTurnedOff =>
-      'Turned off. Today is still here whenever you open it.';
 
   @override
   String get dailyAskBody =>
       'One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and it can be turned off from the notification itself.';
-
-  @override
-  String get dailyAskNo => 'Not now';
 
   @override
   String get dailyAskTitle => 'Tell me the morning it happens';
@@ -929,27 +632,7 @@ class LEn extends L {
   }
 
   @override
-  String get dailyEmptyBody =>
-      'Active transits are shown below. None reaches its exact point today.';
-
-  @override
-  String get dailyEmptyTitle => 'No transit is exact today';
-
-  @override
   String get dailyRetrograde => 'retrograde';
-
-  @override
-  String dailyRunningBody(String p1) {
-    return 'The closest is $p1. Everything else is moving slowly.';
-  }
-
-  @override
-  String dailyRunningNearest(String p1, String p2) {
-    return 'The closest is $p1, exact on $p2. Everything else is moving slowly.';
-  }
-
-  @override
-  String get dailyRunningTitle => 'Nothing exact today';
 
   @override
   String get dailySettingHour => 'Arrives at';
@@ -963,10 +646,6 @@ class LEn extends L {
 
   @override
   String get dailySettingOff => 'Off';
-
-  @override
-  String get dailySettingOffDetail =>
-      'No notifications. Today is still here whenever you open it.';
 
   @override
   String get dailySettingOnlyMattersDetail =>
@@ -983,12 +662,6 @@ class LEn extends L {
   String get dailySettingTimezone => 'Time zone';
 
   @override
-  String get dailySettingTimezoneBirth => 'from your birth data';
-
-  @override
-  String get dailySettingTimezoneChosen => 'you chose this';
-
-  @override
   String get dailySettingTimezoneDevice => 'from your device';
 
   @override
@@ -999,71 +672,16 @@ class LEn extends L {
       'Notifications are off for Alma. You can turn them on in your phone\'s settings.';
 
   @override
-  String get dailyStatusNotDelivering =>
-      'Notifications aren’t set up on this phone yet. You can still see Today in the app.';
-
-  @override
   String get dailyStatusOpenSettings => 'Open settings';
-
-  @override
-  String get dailyStatusProvisional =>
-      'Arriving quietly. Alma\'s notifications go straight to Notification Center — no banner, no sound — until you decide otherwise.';
-
-  @override
-  String get dailyStatusRegistered => 'This phone is registered for the daily.';
-
-  @override
-  String get dailyStatusUpgrade => 'Choose how notifications appear';
-
-  @override
-  String get dailySubscriberOnly =>
-      'Daily updates are included with an active subscription. Today remains free.';
-
-  @override
-  String dailyTodayAt(String p1) {
-    return 'Exact at $p1';
-  }
-
-  @override
-  String get dailyTodayLabel => 'Exact today';
-
-  @override
-  String dailyTodaySince(String p1) {
-    return 'Active since $p1';
-  }
-
-  @override
-  String dailyTodayUntil(String p1) {
-    return 'active until $p1';
-  }
 
   @override
   String get dailyVerifiedLabel => 'Exact transit dates in the next 30 days';
 
   @override
-  String get dailyVerifiedNote =>
-      'Counted from your own chart, on this device, with the same rule the notification uses.';
-
-  @override
-  String get dailyYour => 'your';
-
-  @override
-  String get journeyAboutSub => 'You can skip this.';
-
-  @override
   String get journeyAboutTitle => 'A little about you';
 
   @override
-  String get journeyAscendant => 'Ascendant';
-
-  @override
-  String get journeyBack => 'Back';
-
-  @override
   String get journeyBuildMySky => 'Build my sky';
-
-  @override
-  String get journeyCalculated => 'all eight systems · calculated';
 
   @override
   String get journeyCaptureDay => 'Day of birth';
@@ -1080,10 +698,6 @@ class LEn extends L {
 
   @override
   String get journeyCaptureMonthShort => 'Month';
-
-  @override
-  String get journeyCaptureNoPlaces =>
-      'No place by that name. Try the nearest larger town.';
 
   @override
   String get journeyCaptureSearchPlace => 'Where were you born?';
@@ -1155,9 +769,6 @@ class LEn extends L {
       'Nine life areas compared across your birth chart, numerology and Tarot Birth Card.';
 
   @override
-  String get journeyCeremonySkip => 'Skip the ceremony';
-
-  @override
   String get journeyClose => 'Close';
 
   @override
@@ -1170,19 +781,6 @@ class LEn extends L {
   String get journeyDateTitle => 'When were you born?';
 
   @override
-  String get journeyDialogLabel => 'Getting to know you';
-
-  @override
-  String get journeyFreeChapterLabel => 'your first chapter · free';
-
-  @override
-  String get journeyFreeLabel => 'yours, free, forever';
-
-  @override
-  String get journeyFreeNote =>
-      'The results above stay free, whether or not you continue.';
-
-  @override
   String get journeyGenderFemale => 'Female';
 
   @override
@@ -1192,98 +790,14 @@ class LEn extends L {
   String get journeyGenderSkip => 'Prefer not to say';
 
   @override
-  String get journeyHandoffSub =>
-      'Three rules that make this work — the only onboarding we\'ll ever give you.';
-
-  @override
-  String get journeyHandoffTitle => 'Saved. Now read yourself slowly.';
-
-  @override
   String get journeyHourLabel => 'Hour';
-
-  @override
-  String journeyInsightLifePath(String p1) {
-    return 'Life path $p1';
-  }
-
-  @override
-  String journeyInsightSun(String p1) {
-    return 'Sun in $p1';
-  }
-
-  @override
-  String get journeyIntentSelf => 'Who am I, really';
-
-  @override
-  String get journeyIntentShifting =>
-      'Something\'s shifting and I don\'t know why';
-
-  @override
-  String get journeyIntentUs => 'Explore a relationship';
-
-  @override
-  String get journeyIntentWhere => 'Where I should live';
-
-  @override
-  String get journeyIntentSkip => 'Skip — I know what I want';
-
-  @override
-  String get journeyIntentTitle => 'What\'s loudest in you right now?';
-
-  @override
-  String get journeyKeepMySky => 'Keep my sky';
 
   @override
   String get journeyLockedWithoutTime =>
       'Houses, solar return and map stay locked';
 
   @override
-  String get journeyMeridiemLabel => 'AM or PM';
-
-  @override
   String get journeyMinuteLabel => 'Min';
-
-  @override
-  String get journeyMonth1 => 'January';
-
-  @override
-  String get journeyMonth10 => 'October';
-
-  @override
-  String get journeyMonth11 => 'November';
-
-  @override
-  String get journeyMonth12 => 'December';
-
-  @override
-  String get journeyMonth2 => 'February';
-
-  @override
-  String get journeyMonth3 => 'March';
-
-  @override
-  String get journeyMonth4 => 'April';
-
-  @override
-  String get journeyMonth5 => 'May';
-
-  @override
-  String get journeyMonth6 => 'June';
-
-  @override
-  String get journeyMonth7 => 'July';
-
-  @override
-  String get journeyMonth8 => 'August';
-
-  @override
-  String get journeyMonth9 => 'September';
-
-  @override
-  String get journeyMoon => 'Moon';
-
-  @override
-  String get journeyNameAria => 'Your name';
 
   @override
   String get journeyNamePlaceholder => 'Sofia';
@@ -1314,154 +828,16 @@ class LEn extends L {
   String get quizInterestFuture => 'What lies ahead';
 
   @override
-  String get journeyNeedsTime => 'needs birth time';
-
-  @override
-  String get journeyNeedsTimeRow => 'Solar return · map';
-
-  @override
-  String get journeyOfferCta => 'Read it';
-
-  @override
-  String get journeyOfferFine =>
-      'One payment. Yours permanently. No account needed to buy.';
-
-  @override
-  String get journeyOfferSkip => 'Skip for now';
-
-  @override
-  String get journeyOfferSub =>
-      'The insights above stay free. This unlocks the full personalised reading for this system.';
-
-  @override
-  String journeyOfferTitle(String p1) {
-    return 'Your $p1, written';
-  }
-
-  @override
-  String get journeyOpenToday => 'Open Today';
-
-  @override
-  String get journeyPhaseFirstQuarter => 'first quarter';
-
-  @override
-  String get journeyPhaseFullMoon => 'full moon';
-
-  @override
-  String get journeyPhaseLastQuarter => 'last quarter';
-
-  @override
-  String get journeyPhaseNewMoon => 'new moon';
-
-  @override
-  String get journeyPhaseWaningCrescent => 'waning crescent';
-
-  @override
-  String get journeyPhaseWaningGibbous => 'waning gibbous';
-
-  @override
-  String get journeyPhaseWaxingCrescent => 'waxing crescent';
-
-  @override
-  String get journeyPhaseWaxingGibbous => 'waxing gibbous';
-
-  @override
-  String get journeyPlacePlaceholder => 'City';
-
-  @override
   String get journeyPlaceSub => 'City is enough.';
 
   @override
   String get journeyPlaceTitle => 'Where were you born?';
 
   @override
-  String get journeyRule1 =>
-      'Start with one chapter. Explore the rest whenever you’re ready.';
-
-  @override
-  String get journeyRule2 =>
-      'When two systems differ, notice the tension: they may describe different sides of you.';
-
-  @override
-  String get journeyRule3 =>
-      'Ask in your own words. Your first question is free.';
-
-  @override
-  String get journeySignAquarius => 'Aquarius';
-
-  @override
-  String get journeySignAries => 'Aries';
-
-  @override
-  String get journeySignCancer => 'Cancer';
-
-  @override
-  String get journeySignCapricorn => 'Capricorn';
-
-  @override
-  String get journeySignGemini => 'Gemini';
-
-  @override
-  String get journeySignLeo => 'Leo';
-
-  @override
-  String get journeySignLibra => 'Libra';
-
-  @override
-  String get journeySignPisces => 'Pisces';
-
-  @override
-  String get journeySignSagittarius => 'Sagittarius';
-
-  @override
-  String get journeySignScorpio => 'Scorpio';
-
-  @override
-  String get journeySignTaurus => 'Taurus';
-
-  @override
-  String get journeySignVirgo => 'Virgo';
-
-  @override
-  String get journeyStaysFree => 'Everything above stays free, forever';
-
-  @override
-  String journeyStep(String p1, String p2) {
-    return 'Step $p1 of $p2';
-  }
-
-  @override
-  String get journeySystemAstrocartography => 'Astrocartography';
-
-  @override
-  String get journeySystemBirthCard => 'Birth Card';
-
-  @override
-  String get journeySystemCompatibility => 'Compatibility';
-
-  @override
-  String get journeySystemNatal => 'Natal chart';
-
-  @override
-  String get journeySystemNumerology => 'Numerology';
-
-  @override
-  String get journeySystemSolarReturn => 'Solar return';
-
-  @override
-  String get journeySystemSynthesis => 'Cross-synthesis';
-
-  @override
-  String get journeySystemTransits => 'Transits';
-
-  @override
   String get journeyTimeTitle => 'What time were you born?';
 
   @override
   String get cabinetBack => 'Back';
-
-  @override
-  String get cabinetSections => 'Sections';
 
   @override
   String pushDailyConjunction(String p1, String p2, String p3) {
@@ -1521,20 +897,7 @@ class LEn extends L {
       'This account has been deleted. Nothing of it is kept.';
 
   @override
-  String get stateLoading => 'Reading your sky…';
-
-  @override
   String get stateLoadingShort => 'One moment';
-
-  @override
-  String get stateLocked => 'Unlock to read';
-
-  @override
-  String get stateNeedsBirthTime => 'This one needs your birth time.';
-
-  @override
-  String get stateNothingToSay =>
-      'I couldn\'t read this from your chart, and I won\'t invent it.';
 
   @override
   String get stateOffline =>
@@ -1542,9 +905,6 @@ class LEn extends L {
 
   @override
   String get stateRetry => 'Try again';
-
-  @override
-  String get stateSomethingWrong => 'Something went wrong. Nothing was lost.';
 
   @override
   String get stateUnavailable =>
@@ -1573,44 +933,7 @@ class LEn extends L {
   String get tabToday => 'Today';
 
   @override
-  String get paywallAnnualTitle => 'Everything, for a year';
-
-  @override
-  String get paywallArchiveNote => 'All eight systems, bought once.';
-
-  @override
-  String get paywallArchiveTitle => 'All eight systems';
-
-  @override
   String get paywallDoorNote => 'One payment.';
-
-  @override
-  String get paywallDoorSub =>
-      'The numbers above are yours. This opens the whole system — every chapter written from your own positions, not from a template.';
-
-  @override
-  String get paywallEverythingSub =>
-      'Written from your own positions the first time you open it — your chart, never a template.';
-
-  @override
-  String get paywallEverythingTitle => 'Open the rest of what your chart says';
-
-  @override
-  String get paywallFreeNote =>
-      'Every calculation stays free — all eight systems. You pay only for the written chapters.';
-
-  @override
-  String get paywallHonestyOnce => 'one-time purchases do not renew';
-
-  @override
-  String get paywallHonestySeller =>
-      'Apple takes the payment and sends the receipt';
-
-  @override
-  String get paywallLabel => 'what it costs';
-
-  @override
-  String get paywallManage => 'Manage your subscription';
 
   @override
   String get paywallManageNote =>
@@ -1639,36 +962,12 @@ class LEn extends L {
       'Alma is not answering right now, so the purchase could not be confirmed. It will open by itself once she does.';
 
   @override
-  String get paywallOneTimeFine =>
-      'One payment. Yours permanently. No account needed to buy.';
-
-  @override
-  String get paywallOwned => 'yours';
-
-  @override
   String get paywallOwnedAll =>
       'Everything is open. All forty-one chapters are yours.';
 
   @override
   String get paywallPending =>
       'Waiting for approval. Nothing has been charged, and this opens by itself the moment it is approved.';
-
-  @override
-  String paywallPerMonthSavings(String p1, int p2) {
-    return '$p1 a month · save $p2%%';
-  }
-
-  @override
-  String get paywallPitchDoor1 =>
-      'One payment opens every chapter of this system.';
-
-  @override
-  String get paywallPitchDoor2 =>
-      'Each chapter is written from your own positions the first time you open it.';
-
-  @override
-  String get paywallPitchDoor3 =>
-      'Read it whenever you like, in seven languages.';
 
   @override
   String get paywallPitchPlan1 =>
@@ -1683,10 +982,6 @@ class LEn extends L {
 
   @override
   String get paywallPrivacy => 'Privacy Policy';
-
-  @override
-  String get paywallRefused =>
-      'That purchase is not the one that was asked for. Nothing extra has been charged.';
 
   @override
   String get paywallRestore => 'Restore purchases';
@@ -1704,17 +999,10 @@ class LEn extends L {
       'Google Play has nothing to restore for this account.';
 
   @override
-  String get paywallRestoredOther =>
-      'These purchases already belong to another Alma account. Sign in with that one and they come with you.';
-
-  @override
   String get paywallRestoring => 'Asking the App Store…';
 
   @override
   String get paywallRestoringPlay => 'Asking Google Play…';
-
-  @override
-  String get paywallSkip => 'Skip for now';
 
   @override
   String get paywallStoreUnavailable =>
@@ -1755,22 +1043,8 @@ class LEn extends L {
   String get paywallTerms => 'Terms';
 
   @override
-  String get paywallUpgradeNote =>
-      'The price already includes credit for the system you bought.';
-
-  @override
-  String get paywallUpgradeTitle => 'The rest of the archive';
-
-  @override
   String get paywallVerifyLater =>
       'Apple has taken the payment. We could not confirm it this second — it will open by itself shortly, and nothing is lost.';
-
-  @override
-  String get paywallWeeklyNote =>
-      'Live readings and questions for one week. Renews weekly until you cancel.';
-
-  @override
-  String get paywallWeeklyTitle => 'All live features, weekly';
 
   @override
   String get paywallWithdrawn =>
@@ -1794,48 +1068,10 @@ class LEn extends L {
       'Your chart is already calculated — and always free. The plan opens the writing.';
 
   @override
-  String get scrAddPersonBirthTime => 'their birth time';
-
-  @override
-  String get scrAddPersonBirthday => 'their birthday';
-
-  @override
-  String get scrAddPersonBirthplace => 'their birthplace';
-
-  @override
-  String get scrAddPersonEyebrow => 'a second birth';
-
-  @override
-  String get scrAddPersonLead =>
-      'Add their name, birth date, birthplace and birth time if known. Without an exact time, Alma can still compare fewer chart factors.';
-
-  @override
-  String get scrAddPersonName => 'their name';
-
-  @override
-  String get scrAddPersonNamePlaceholder => 'Name';
-
-  @override
-  String get scrAddPersonRelationPlaceholder =>
-      'Partner, mother, friend… (optional)';
-
-  @override
-  String get scrAddPersonSave => 'Save this person';
-
-  @override
   String get scrAddPersonSaving => 'Saving…';
 
   @override
-  String get scrAddPersonTimeUnknown => 'Birth time unknown';
-
-  @override
-  String get scrAddPersonTitle => 'Add a person';
-
-  @override
   String get scrChatCouldAsk => 'you could ask';
-
-  @override
-  String get scrChatMoreQuestions => 'More questions';
 
   @override
   String get scrChatNoChart =>
@@ -1892,21 +1128,11 @@ class LEn extends L {
       'I could not answer that one without inventing a placement, so I did not. Ask it another way and I will try again.';
 
   @override
-  String get scrChatRule =>
-      'Every answer names the placements it was read from. Nothing here is a prediction.';
-
-  @override
-  String get scrChatSend => 'Send';
-
-  @override
   String get scrChatSilent =>
       'I answered that one from what I know, not from your chart.';
 
   @override
   String get scrChatThinking => 'Reading your chart';
-
-  @override
-  String get scrChatThinkingStill => 'Still reading — I don\'t skim.';
 
   @override
   String get scrChatUnavailable =>
@@ -1920,41 +1146,7 @@ class LEn extends L {
       'That did not go through. Nothing was lost — your question is still in the box.';
 
   @override
-  String get scrCompatChoose => 'Compare with somebody else';
-
-  @override
-  String scrCompatReadAgainst(String p1) {
-    return 'You and $p1';
-  }
-
-  @override
   String get scrDone => 'Done';
-
-  @override
-  String scrEmptyChapters(int p1) {
-    return '$p1 chapters';
-  }
-
-  @override
-  String get scrEmptyExample => 'what a line looks like';
-
-  @override
-  String get scrEmptyExampleNote =>
-      'Every sentence Alma writes names the placement it was read from, like the one above. Nothing is a prediction, and nothing is shown that was not calculated.';
-
-  @override
-  String get scrEmptyExampleTag => 'example — not your chart';
-
-  @override
-  String get scrEmptyLead =>
-      'Alma brings eight astrology and self-reflection systems together in 41 chapters. Combined Insights compares three of them: your birth chart, numerology and Tarot Birth Card.';
-
-  @override
-  String get scrEmptyTitle => 'Eight systems, one chart';
-
-  @override
-  String get scrJourneyFreeNote =>
-      'Everything above is calculated, and calculations are always free. It stays yours whether you read further or not.';
 
   @override
   String get scrKeep => 'Keep';
@@ -1963,15 +1155,7 @@ class LEn extends L {
   String get scrPeopleChange => 'Change';
 
   @override
-  String get scrPeopleConsent =>
-      'It is their birth data, not yours. Ask them first.';
-
-  @override
   String get scrPeopleEyebrow => 'compatibility';
-
-  @override
-  String get scrPeopleLead =>
-      'Compatibility compares your chart against somebody else\'s. The comparison itself is always calculated in full.';
 
   @override
   String get scrPeopleRemove => 'Remove';
@@ -1982,12 +1166,6 @@ class LEn extends L {
   @override
   String get scrPeopleRemoveWhat =>
       'Their birth goes, and so does every compatibility reading written from it. Readings you paid for cannot be written again word for word.';
-
-  @override
-  String get scrPeopleSaved => 'saved';
-
-  @override
-  String get scrPeopleTitle => 'People';
 
   @override
   String get scrPeopleUnnamed => 'Unnamed';
@@ -2016,14 +1194,8 @@ class LEn extends L {
   String get scrSignInEmailPlaceholder => 'Your email address';
 
   @override
-  String get scrSignInEyebrow => 'your account';
-
-  @override
   String get scrSignInFailed =>
       'That did not sign you in. Nothing has changed on your account.';
-
-  @override
-  String get scrSignInGoogle => 'Continue with Google';
 
   @override
   String get scrSignInLead => 'Your chart follows you to any phone.';
@@ -2038,16 +1210,6 @@ class LEn extends L {
   @override
   String get scrSignInPrivacy =>
       'We use your address for the sign-in link and nothing else. There is no newsletter.';
-
-  @override
-  String get scrSignInReason1 => 'Your chart survives a new phone.';
-
-  @override
-  String get scrSignInReason2 =>
-      'Anything you bought can be restored. A purchase belongs to the account that claimed it first, so sign in before you reinstall.';
-
-  @override
-  String get scrSignInReason3 => 'There is no password. There never will be.';
 
   @override
   String get scrSignInSendLink => 'Email me a sign-in link';
@@ -2069,9 +1231,6 @@ class LEn extends L {
 
   @override
   String get cabPeopleAdd => 'Add a person';
-
-  @override
-  String get cabPeopleRemove => 'Remove';
 
   @override
   String get splashTagline => 'Written in the sky before you asked.';
@@ -2161,24 +1320,6 @@ class LEn extends L {
       'The relationship\'s own chart — the sky of the two of you as one';
 
   @override
-  String cabLegalEffective(String p1) {
-    return 'Effective $p1';
-  }
-
-  @override
-  String get cabPlanDeleteMismatchGuest =>
-      'That is not the code on this account.';
-
-  @override
-  String get paywallArtCaption =>
-      'Every chapter opens with its own plate — painted for this deck.';
-
-  @override
-  String cabPlanCancelPeriodEnds(String date) {
-    return 'Your plan stays active until $date.';
-  }
-
-  @override
   String get todayReadWholeSky => 'Read the whole sky';
 
   @override
@@ -2194,24 +1335,6 @@ class LEn extends L {
   @override
   String readerAskAboutIt(String aspect) {
     return 'Ask Alma about $aspect';
-  }
-
-  @override
-  String get readerTermYours => 'yours';
-
-  @override
-  String readerReadInChapter(String system, String chapter) {
-    return 'Read it in $system — $chapter';
-  }
-
-  @override
-  String readerTomorrow(String event) {
-    return 'Tomorrow $event';
-  }
-
-  @override
-  String readerWrittenAt(String time) {
-    return 'Written at $time, your time';
   }
 
   @override

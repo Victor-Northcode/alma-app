@@ -97,20 +97,27 @@ enum LadderKey {
     return LadderKey.from(id.substring(prefix.length).replaceAll('_', '-'));
   }
 
-  /// Названия ступеней временно взяты у прежней лестницы: бандл говорит
-  /// словами архива, подписка — словами месячного плана, пара — именем системы.
-  /// Свой словарь `paywall.v3.*` заводит фаза Ф1 (приложение А11); подставлять
-  /// сюда английские заглушки нельзя — экран, на котором одна строка не
-  /// переведена, читается как сломанный, а не как незаконченный.
+  /// Названия ступеней — из словаря v3, а не из прежней лестницы.
+  ///
+  /// **Набор говорил словами архива, и это была ложь о товаре.** Здесь стояли
+  /// `paywallArchiveTitle` («All eight systems») и `paywallArchiveNote` («All
+  /// eight systems, bought once») — имя и подпись архива за $38.99, которого
+  /// в продукте нет с монетизации v3. А продаётся набор из **пяти** разборов
+  /// за $19.99. Человек читал про восемь систем и платил за пять; на экране
+  /// планов при этом уже стояла верная строка, то есть продукт называл один и
+  /// тот же товар двумя разными именами.
+  ///
+  /// Заимствование помечалось временным «до фазы Ф1» — но словарь `paywall.v3`
+  /// давно заведён и переведён на семь языков, ждать было нечего.
   String title(L l) => switch (this) {
-        LadderKey.bundleStatic => l.paywallArchiveTitle,
+        LadderKey.bundleStatic => l.paywallV3BundleTitle,
         LadderKey.subMonthly => l.paywallMonthlyTitle,
         LadderKey.pairCheck => systemTitle(l, SystemSlug.compatibility),
         _ => systemTitle(l, system ?? SystemSlug.natal),
       };
 
   String note(L l) => switch (this) {
-        LadderKey.bundleStatic => l.paywallArchiveNote,
+        LadderKey.bundleStatic => l.paywallV3BundleIncludes,
         LadderKey.subMonthly => l.paywallMonthlyNote,
         _ => l.paywallDoorNote,
       };

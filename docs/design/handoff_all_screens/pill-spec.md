@@ -5,7 +5,7 @@
 Это событие, а не мебель: статичная строка «Everything open, every day → See the plans» в залоченной секции Today остаётся всегда; пилюля лишь изредка указывает на неё.
 
 ## 1. Условия появления
-- Только free-тариф. Подписчику и купившему годовой — никогда.
+- Только тому, кто ещё ничего не купил: подписчику и владельцу любой открытой системы — никогда (`main.dart` `_aimPill`: `unlocked.isNotEmpty || hasPlan` → пилюля уходит навсегда). Годового плана, к которому это правило отсылало раньше, в каталоге нет — подписка одна, месячная.
 - Поверхности: Today и экраны систем. Никогда: пергамент главы, церемония расчёта, анкета (journey), любой шит/пейволл/диалог, People, Settings.
 - Триггер: экран «уселся» — каскад появления отыгран **и** 6 с без ввода **и** скролл в покое. Клавиатура открыта → не появляется.
 - Капы: ≤3 показов за сессию · ≥90 с тишины между показами · счётчик сбрасывается раз в календарные сутки (локальные).
@@ -37,7 +37,7 @@
 4. Оверлайн «all of alma» · заголовок «Everything open, every day» (Playfair 26).
 5. Подзаголовок: «Your chart is already calculated — and always free. The plan opens the writing.»
 6. Три проверяемых факта (буллеты 15/1.5): утренний гороскоп из своей карты · транзиты/соляр/совместимость живут · 30 вопросов Alma в месяц.
-7. Золотая CTA 56: «See the plans · from $4.99» → открывает лестницу планов (S8). Це́ны — только из каталога локали.
+7. Золотая CTA 56: «See the plans · from {price}» → открывает перечень планов (кадр **V8**; лестница S8 снята вместе с недельной и годовой подписками). Це́ны — только из каталога локали; `{price}` — самая дешёвая ступень, а не зашитое число.
 8. «Not now» — текстовая, 15, hit-area ≥44.
 9. Сноска честности: «One-time doors exist too · cancel any time in your Apple ID settings».
 
@@ -56,7 +56,7 @@
 `sheetNotNow`: en Not now · ru Не сейчас · de Nicht jetzt · es Ahora no · it Non ora · fr Pas maintenant · pt-BR Agora não
 `sheetFootnote`: en One-time doors exist too · cancel any time in your Apple ID settings · ru Есть и разовые двери · отменить можно в любой момент в настройках Apple ID · de Es gibt auch Einmal-Türen · jederzeit in den Apple-ID-Einstellungen kündbar · es También hay puertas de pago único · cancela cuando quieras en los ajustes de tu Apple ID · it Esistono anche porte una tantum · annulla quando vuoi nelle impostazioni dell'ID Apple · fr Il existe aussi des portes à l'unité · annulable à tout moment dans les réglages de ton identifiant Apple · pt-BR Também existem portas avulsas · cancele quando quiser nos ajustes do seu ID Apple
 
-Правило буллетов шита: три факта берутся из тех же ключей, что и лестница S8 — не дублировать строки.
+Правило буллетов шита: три факта берутся из тех же ключей, что и перечень планов (**V8**) — не дублировать строки.
 
 ## 8. Аналитика (минимум)
 `pill_shown {surface, session_count}` · `pill_expired` · `pill_tapped` · `sheet_dismissed {via}` · `sheet_cta_tapped` · `pill_retired {reason: three_dismissals|purchase}`.

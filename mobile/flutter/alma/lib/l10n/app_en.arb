@@ -4,31 +4,15 @@
   "@cabAccountLabel": {
     "description": "from Cabinet/cab.accountLabel"
   },
-  "cabAcrossSystems": "across your systems",
-  "@cabAcrossSystems": {
-    "description": "from Cabinet/cab.acrossSystems"
-  },
-  "cabActiveNow": "active now",
+      "cabActiveNow": "active now",
   "@cabActiveNow": {
     "description": "from Cabinet/cab.activeNow"
   },
-  "cabAddAPerson": "Add a person",
-  "@cabAddAPerson": {
-    "description": "from Cabinet/cab.addAPerson"
-  },
-  "cabAddBirthData": "Enter my birth data",
+      "cabAddBirthData": "Enter my birth data",
   "@cabAddBirthData": {
     "description": "from Cabinet/cab.addBirthData"
   },
-  "cabAddBirthTime": "Add my birth time",
-  "@cabAddBirthTime": {
-    "description": "from Cabinet/cab.addBirthTime"
-  },
-  "cabAdvice": "what to do with it",
-  "@cabAdvice": {
-    "description": "from Cabinet/cab.advice"
-  },
-  "cabAllAlmaPill": "All of Alma",
+          "cabAllAlmaPill": "All of Alma",
   "@cabAllAlmaPill": {
     "description": "from Cabinet/cab.allAlmaPill"
   },
@@ -120,11 +104,7 @@
   "@cabArcanaWheelOfFortune": {
     "description": "from Cabinet/cab.arcana.wheel_of_fortune"
   },
-  "cabArchiveNote": "All eight systems, bought once.",
-  "@cabArchiveNote": {
-    "description": "from Cabinet/cab.archiveNote"
-  },
-  "cabAreaBody": "Body",
+      "cabAreaBody": "Body",
   "@cabAreaBody": {
     "description": "from Cabinet/cab.area.body"
   },
@@ -144,75 +124,7 @@
   "@cabAreaQuiet": {
     "description": "from Cabinet/cab.areaQuiet"
   },
-  "cabAscendant": "Ascendant",
-  "@cabAscendant": {
-    "description": "from Cabinet/cab.ascendant"
-  },
-  "cabAskAlma": "Ask Alma a question",
-  "@cabAskAlma": {
-    "description": "from Cabinet/cab.askAlma"
-  },
-  "cabAspectMeaningConjunction": "Very close together: their themes blend and become stronger.",
-  "@cabAspectMeaningConjunction": {
-    "description": "from Cabinet/cab.aspect.meaning.conjunction"
-  },
-  "cabAspectMeaningOpposition": "Across from each other: their needs can pull in different directions.",
-  "@cabAspectMeaningOpposition": {
-    "description": "from Cabinet/cab.aspect.meaning.opposition"
-  },
-  "cabAspectMeaningQuincunx": "An awkward angle: their needs often require adjustment.",
-  "@cabAspectMeaningQuincunx": {
-    "description": "from Cabinet/cab.aspect.meaning.quincunx"
-  },
-  "cabAspectMeaningSextile": "A supportive connection that becomes stronger when you act on it.",
-  "@cabAspectMeaningSextile": {
-    "description": "from Cabinet/cab.aspect.meaning.sextile"
-  },
-  "cabAspectMeaningSquare": "A tense connection that can create pressure and motivate change.",
-  "@cabAspectMeaningSquare": {
-    "description": "from Cabinet/cab.aspect.meaning.square"
-  },
-  "cabAspectMeaningTrine": "An easy, natural connection that may feel effortless.",
-  "@cabAspectMeaningTrine": {
-    "description": "from Cabinet/cab.aspect.meaning.trine"
-  },
-  "cabAxisCharacter": "Character",
-  "@cabAxisCharacter": {
-    "description": "from Cabinet/cab.axis.Character"
-  },
-  "cabAxisDirection": "Direction",
-  "@cabAxisDirection": {
-    "description": "from Cabinet/cab.axis.Direction"
-  },
-  "cabAxisGrowth": "Growth",
-  "@cabAxisGrowth": {
-    "description": "from Cabinet/cab.axis.Growth"
-  },
-  "cabAxisMind": "Mind",
-  "@cabAxisMind": {
-    "description": "from Cabinet/cab.axis.Mind"
-  },
-  "cabAxisRelationships": "Relationships",
-  "@cabAxisRelationships": {
-    "description": "from Cabinet/cab.axis.Relationships"
-  },
-  "cabAxisResources": "Resources",
-  "@cabAxisResources": {
-    "description": "from Cabinet/cab.axis.Resources"
-  },
-  "cabAxisRhythms": "Rhythms",
-  "@cabAxisRhythms": {
-    "description": "from Cabinet/cab.axis.Rhythms"
-  },
-  "cabAxisWeakPoint": "Weak point",
-  "@cabAxisWeakPoint": {
-    "description": "from Cabinet/cab.axis.Weak-point"
-  },
-  "cabAxisWork": "Work",
-  "@cabAxisWork": {
-    "description": "from Cabinet/cab.axis.Work"
-  },
-  "cabBirthDataLabel": "birth data",
+                                                                      "cabBirthDataLabel": "birth data",
   "@cabBirthDataLabel": {
     "description": "from Cabinet/cab.birthDataLabel"
   },
@@ -296,27 +208,7 @@
   "@cabCalculatedWord": {
     "description": "from Cabinet/cab.calculatedWord"
   },
-  "cabChapterEndDoor": "The rest of this system is written the same way — from your positions, yours to keep.",
-  "@cabChapterEndDoor": {
-    "description": "from Cabinet/cab.chapterEnd.door"
-  },
-  "cabChapterEndPlan": "This chapter is written once. Transits, the year and compatibility are rewritten as the sky moves — that is the plan.",
-  "@cabChapterEndPlan": {
-    "description": "from Cabinet/cab.chapterEnd.plan"
-  },
-  "cabChapterProgress": "{p1} of {p2}",
-  "@cabChapterProgress": {
-    "description": "from Cabinet/cab.chapterProgress",
-    "placeholders": {
-      "p1": {
-        "type": "int"
-      },
-      "p2": {
-        "type": "int"
-      }
-    }
-  },
-  "cabChapters": "chapters",
+              "cabChapters": "chapters",
   "@cabChapters": {
     "description": "from Cabinet/cab.chapters"
   },
@@ -356,11 +248,7 @@
   "@cabExportReady": {
     "description": "from Cabinet/cab.exportReady"
   },
-  "cabFactBirthdayNumber": "birthday number",
-  "@cabFactBirthdayNumber": {
-    "description": "from Cabinet/cab.fact.birthdayNumber"
-  },
-  "cabFactBirthplace": "birthplace",
+      "cabFactBirthplace": "birthplace",
   "@cabFactBirthplace": {
     "description": "from Cabinet/cab.fact.birthplace"
   },
@@ -368,103 +256,27 @@
   "@cabFactCrossings": {
     "description": "from Cabinet/cab.fact.crossings"
   },
-  "cabFactDestinyNumber": "destiny number",
-  "@cabFactDestinyNumber": {
-    "description": "from Cabinet/cab.fact.destinyNumber"
-  },
-  "cabFactElement": "element",
+      "cabFactElement": "element",
   "@cabFactElement": {
     "description": "from Cabinet/cab.fact.element"
   },
-  "cabFactKarmicDebt": "karmic debt",
-  "@cabFactKarmicDebt": {
-    "description": "from Cabinet/cab.fact.karmicDebt"
-  },
-  "cabFactLifePath": "life path",
-  "@cabFactLifePath": {
-    "description": "from Cabinet/cab.fact.lifePath"
-  },
-  "cabFactLines": "lines",
+          "cabFactLines": "lines",
   "@cabFactLines": {
     "description": "from Cabinet/cab.fact.lines"
   },
-  "cabFactPersonalityCard": "personality card",
-  "@cabFactPersonalityCard": {
-    "description": "from Cabinet/cab.fact.personalityCard"
-  },
-  "cabFactReturn": "return",
+      "cabFactReturn": "return",
   "@cabFactReturn": {
     "description": "from Cabinet/cab.fact.return"
   },
-  "cabFactRuler": "ruler",
-  "@cabFactRuler": {
-    "description": "from Cabinet/cab.fact.ruler"
-  },
-  "cabFactYear": "year",
-  "@cabFactYear": {
-    "description": "from Cabinet/cab.fact.year"
-  },
-  "cabFactYearRuler": "year ruler",
+          "cabFactYearRuler": "year ruler",
   "@cabFactYearRuler": {
     "description": "from Cabinet/cab.fact.yearRuler"
   },
-  "cabFactorAcrossAxes": "systems across nine axes",
-  "@cabFactorAcrossAxes": {
-    "description": "from Cabinet/cab.factor.acrossAxes"
-  },
-  "cabFactorAgree": "agree",
-  "@cabFactorAgree": {
-    "description": "from Cabinet/cab.factor.agree"
-  },
-  "cabFactorDisagree": "disagree",
-  "@cabFactorDisagree": {
-    "description": "from Cabinet/cab.factor.disagree"
-  },
-  "cabFactorSeenByOne": "seen by one",
-  "@cabFactorSeenByOne": {
-    "description": "from Cabinet/cab.factor.seenByOne"
-  },
-  "cabFreeChapterNote": "One chapter of every system is free.",
-  "@cabFreeChapterNote": {
-    "description": "from Cabinet/cab.freeChapterNote"
-  },
-  "cabFreeTag": "free",
-  "@cabFreeTag": {
-    "description": "from Cabinet/cab.freeTag"
-  },
-  "cabFromYourPositions": "Written from your own positions",
+                          "cabFromYourPositions": "Written from your own positions",
   "@cabFromYourPositions": {
     "description": "from Cabinet/cab.fromYourPositions"
   },
-  "cabFullReading": "Full reading",
-  "@cabFullReading": {
-    "description": "from Cabinet/cab.fullReading"
-  },
-  "cabGroupAllOfIt": "all of it",
-  "@cabGroupAllOfIt": {
-    "description": "from Cabinet/cab.group.allOfIt"
-  },
-  "cabGroupHowWeMatch": "how we match",
-  "@cabGroupHowWeMatch": {
-    "description": "from Cabinet/cab.group.howWeMatch"
-  },
-  "cabGroupRightNow": "right now",
-  "@cabGroupRightNow": {
-    "description": "from Cabinet/cab.group.rightNow"
-  },
-  "cabGroupThisYear": "this year",
-  "@cabGroupThisYear": {
-    "description": "from Cabinet/cab.group.thisYear"
-  },
-  "cabGroupWhereToBe": "where to be",
-  "@cabGroupWhereToBe": {
-    "description": "from Cabinet/cab.group.whereToBe"
-  },
-  "cabGroupWhoAmI": "who am I",
-  "@cabGroupWhoAmI": {
-    "description": "from Cabinet/cab.group.whoAmI"
-  },
-  "cabGuest": "Guest",
+                              "cabGuest": "Guest",
   "@cabGuest": {
     "description": "from Cabinet/cab.guest"
   },
@@ -472,11 +284,7 @@
   "@cabGuestNoteApp": {
     "description": "from Cabinet/cab.guestNoteApp"
   },
-  "cabHoldToTurn": "Hold to open it",
-  "@cabHoldToTurn": {
-    "description": "from Cabinet/cab.holdToTurn"
-  },
-  "cabHoroscopeLocked": "The horoscope is written from your own chart every morning, and it comes with the plan.",
+      "cabHoroscopeLocked": "The horoscope is written from your own chart every morning, and it comes with the plan.",
   "@cabHoroscopeLocked": {
     "description": "from Cabinet/cab.horoscopeLocked"
   },
@@ -536,11 +344,7 @@
   "@cabHouse9": {
     "description": "from Cabinet/cab.house.9"
   },
-  "cabLanguageNote": "I read and write in the language of your phone. Change it there and I change with it.",
-  "@cabLanguageNote": {
-    "description": "from Cabinet/cab.languageNote"
-  },
-  "cabLegalImprint": "Imprint",
+      "cabLegalImprint": "Imprint",
   "@cabLegalImprint": {
     "description": "from Cabinet/cab.legal.imprint"
   },
@@ -564,15 +368,7 @@
   "@cabLocked": {
     "description": "from Cabinet/cab.locked"
   },
-  "cabLockedNote": "Written from your own positions the first time you open it — your chart, never a template.",
-  "@cabLockedNote": {
-    "description": "from Cabinet/cab.lockedNote"
-  },
-  "cabLunarDay": "Lunar day",
-  "@cabLunarDay": {
-    "description": "from Cabinet/cab.lunarDay"
-  },
-  "cabManageInStore": "Manage this subscription in the App Store",
+          "cabManageInStore": "Manage this subscription in the App Store",
   "@cabManageInStore": {
     "description": "from Cabinet/cab.manageInStore"
   },
@@ -597,15 +393,7 @@
       }
     }
   },
-  "cabNeedsBirthTime": "This one needs your birth time.",
-  "@cabNeedsBirthTime": {
-    "description": "from Cabinet/cab.needsBirthTime"
-  },
-  "cabNextChapter": "next",
-  "@cabNextChapter": {
-    "description": "from Cabinet/cab.nextChapter"
-  },
-  "cabNoBirthData": "Add your birth date and I can read you.",
+          "cabNoBirthData": "Add your birth date and I can read you.",
   "@cabNoBirthData": {
     "description": "from Cabinet/cab.noBirthData"
   },
@@ -613,32 +401,7 @@
   "@cabNoneActive": {
     "description": "from Cabinet/cab.noneActive"
   },
-  "cabNotCalculated": "not calculated",
-  "@cabNotCalculated": {
-    "description": "from Cabinet/cab.notCalculated"
-  },
-  "cabNotPrediction": "Nothing here is a prediction. Every line names the placement it was read from.",
-  "@cabNotPrediction": {
-    "description": "from Cabinet/cab.notPrediction"
-  },
-  "cabOneTimeNote": "One payment.",
-  "@cabOneTimeNote": {
-    "description": "from Cabinet/cab.oneTimeNote"
-  },
-  "cabOpenSystemNamed": "Open {p1}",
-  "@cabOpenSystemNamed": {
-    "description": "from Cabinet/cab.openSystemNamed",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "cabOpenTag": "open",
-  "@cabOpenTag": {
-    "description": "from Cabinet/cab.openTag"
-  },
-  "cabPairJoin": "{p1} and {p2}",
+                      "cabPairJoin": "{p1} and {p2}",
   "@cabPairJoin": {
     "description": "from Cabinet/cab.pairJoin",
     "placeholders": {
@@ -682,15 +445,7 @@
   "@cabPhaseWaxingGibbous": {
     "description": "from Cabinet/cab.phase.waxing-gibbous"
   },
-  "cabPlacementsLabel": "your placements",
-  "@cabPlacementsLabel": {
-    "description": "from Cabinet/cab.placementsLabel"
-  },
-  "cabPlanAnnualPlan": "Everything, for a year",
-  "@cabPlanAnnualPlan": {
-    "description": "from Cabinet/cab.plan.annualPlan"
-  },
-  "cabPlanCancelFailed": "We could not reach the payment processor, so nothing has changed. Try again in a moment.",
+      "cabPlanCancelFailed": "We could not reach the payment processor, so nothing has changed. Try again in a moment.",
   "@cabPlanCancelFailed": {
     "description": "from Cabinet/cab.plan.cancelFailed"
   },
@@ -743,11 +498,7 @@
   "@cabPlanExportFailed": {
     "description": "from Cabinet/cab.plan.exportFailed"
   },
-  "cabPlanExportSaved": "Saved as alma-export.json.",
-  "@cabPlanExportSaved": {
-    "description": "from Cabinet/cab.plan.exportSaved"
-  },
-  "cabPlanExporting": "Preparing your file…",
+      "cabPlanExporting": "Preparing your file…",
   "@cabPlanExporting": {
     "description": "from Cabinet/cab.plan.exporting"
   },
@@ -759,23 +510,11 @@
   "@cabPlanFreePlan": {
     "description": "from Cabinet/cab.plan.freePlan"
   },
-  "cabPlanGuestNote": "You are not signed in. Your chart lives in this browser only.",
-  "@cabPlanGuestNote": {
-    "description": "from Cabinet/cab.plan.guestNote"
-  },
-  "cabPlanKeepAccount": "Keep my account",
-  "@cabPlanKeepAccount": {
-    "description": "from Cabinet/cab.plan.keepAccount"
-  },
-  "cabPlanKeepPlan": "Keep my plan",
+          "cabPlanKeepPlan": "Keep my plan",
   "@cabPlanKeepPlan": {
     "description": "from Cabinet/cab.plan.keepPlan"
   },
-  "cabPlanNeedsAccount": "This needs an account we can attach to you.",
-  "@cabPlanNeedsAccount": {
-    "description": "from Cabinet/cab.plan.needsAccount"
-  },
-  "cabPlanOneTimeNote": "Bought once.",
+      "cabPlanOneTimeNote": "Bought once.",
   "@cabPlanOneTimeNote": {
     "description": "from Cabinet/cab.plan.oneTimeNote"
   },
@@ -840,11 +579,7 @@
   "@cabPlansTitle": {
     "description": "from Cabinet/cab.plans.title"
   },
-  "cabPreviewNote": "The chapter is written. The rest opens with the system.",
-  "@cabPreviewNote": {
-    "description": "from Cabinet/cab.previewNote"
-  },
-  "cabPullToTurn": "Keep pulling to open it",
+      "cabPullToTurn": "Keep pulling to open it",
   "@cabPullToTurn": {
     "description": "from Cabinet/cab.pullToTurn"
   },
@@ -861,43 +596,15 @@
   "@cabReadFrom": {
     "description": "from Cabinet/cab.readFrom"
   },
-  "cabReadWholeDay": "Read the whole day",
-  "@cabReadWholeDay": {
-    "description": "from Cabinet/cab.readWholeDay"
-  },
-  "cabReadingChart": "Reading your chart",
+      "cabReadingChart": "Reading your chart",
   "@cabReadingChart": {
     "description": "from Cabinet/cab.readingChart"
   },
-  "cabRebuilds": "Rebuilds itself when a system is added",
-  "@cabRebuilds": {
-    "description": "from Cabinet/cab.rebuilds"
-  },
-  "cabRefused": "I could not write this from your chart, so I did not.",
-  "@cabRefused": {
-    "description": "from Cabinet/cab.refused"
-  },
-  "cabSaveFile": "Save the file",
+          "cabSaveFile": "Save the file",
   "@cabSaveFile": {
     "description": "from Cabinet/cab.saveFile"
   },
-  "cabScoreAttraction": "attraction",
-  "@cabScoreAttraction": {
-    "description": "from Cabinet/cab.score.attraction"
-  },
-  "cabScoreEndurance": "endurance",
-  "@cabScoreEndurance": {
-    "description": "from Cabinet/cab.score.endurance"
-  },
-  "cabScoreFriction": "friction",
-  "@cabScoreFriction": {
-    "description": "from Cabinet/cab.score.friction"
-  },
-  "cabScoreWarmth": "warmth",
-  "@cabScoreWarmth": {
-    "description": "from Cabinet/cab.score.warmth"
-  },
-  "cabSettingsDate": "Date",
+                  "cabSettingsDate": "Date",
   "@cabSettingsDate": {
     "description": "from Cabinet/cab.settings.date"
   },
@@ -937,19 +644,7 @@
   "@cabSettingsLanguage": {
     "description": "from Cabinet/cab.settings.language"
   },
-  "cabSettingsLetters": "Letters",
-  "@cabSettingsLetters": {
-    "description": "from Cabinet/cab.settings.letters"
-  },
-  "cabSettingsLettersNote": "Alma sends three: your sign-in link, a receipt for anything you buy, and a warning three days before a plan renews. All three are about something you did. There is no newsletter and nothing to unsubscribe from.",
-  "@cabSettingsLettersNote": {
-    "description": "from Cabinet/cab.settings.lettersNote"
-  },
-  "cabSettingsLettersNoteStore": "Alma sends one: your sign-in link. Apple sends the receipt for anything you buy in the app and the warning before a plan renews, because Apple takes the payment. There is no newsletter and nothing to unsubscribe from.",
-  "@cabSettingsLettersNoteStore": {
-    "description": "from Cabinet/cab.settings.lettersNoteStore"
-  },
-  "cabSettingsPlace": "Place",
+              "cabSettingsPlace": "Place",
   "@cabSettingsPlace": {
     "description": "from Cabinet/cab.settings.place"
   },
@@ -957,11 +652,7 @@
   "@cabSettingsPlan": {
     "description": "from Cabinet/cab.settings.plan"
   },
-  "cabSettingsPrivacy": "Your privacy choices",
-  "@cabSettingsPrivacy": {
-    "description": "from Cabinet/cab.settings.privacy"
-  },
-  "cabSettingsTime": "Time",
+      "cabSettingsTime": "Time",
   "@cabSettingsTime": {
     "description": "from Cabinet/cab.settings.time"
   },
@@ -1021,19 +712,7 @@
   "@cabSignIn": {
     "description": "from Cabinet/cab.signIn"
   },
-  "cabSkyBehind": "The sky behind it",
-  "@cabSkyBehind": {
-    "description": "from Cabinet/cab.skyBehind"
-  },
-  "cabSkyEventBody": "Days like this are what the morning notification is for — it arrives at 08:00 when something in your chart is exact. Part of the plan.",
-  "@cabSkyEventBody": {
-    "description": "from Cabinet/cab.skyEvent.body"
-  },
-  "cabSpheresLabel": "what the chart says",
-  "@cabSpheresLabel": {
-    "description": "from Cabinet/cab.spheresLabel"
-  },
-  "cabStatusAddPerson": "add a person",
+              "cabStatusAddPerson": "add a person",
   "@cabStatusAddPerson": {
     "description": "from Cabinet/cab.status.addPerson"
   },
@@ -1053,32 +732,7 @@
   "@cabStatusOpen": {
     "description": "from Cabinet/cab.status.open"
   },
-  "cabStrongestAspects": "what agrees and what argues",
-  "@cabStrongestAspects": {
-    "description": "from Cabinet/cab.strongestAspects"
-  },
-  "cabSunInSign": "Sun in {p1}",
-  "@cabSunInSign": {
-    "description": "from Cabinet/cab.sunInSign",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "cabSynthLead": "Three agreeing is the closest thing to proof. Two disagreeing is more useful still — that's the conflict you keep living out.",
-  "@cabSynthLead": {
-    "description": "from Cabinet/cab.synth.lead"
-  },
-  "cabSynthSingle": "seen by one",
-  "@cabSynthSingle": {
-    "description": "from Cabinet/cab.synth.single"
-  },
-  "cabSynthTitle": "Where three systems agree about you",
-  "@cabSynthTitle": {
-    "description": "from Cabinet/cab.synth.title"
-  },
-  "cabSystemAstrocartography": "Astrocartography",
+                      "cabSystemAstrocartography": "Astrocartography",
   "@cabSystemAstrocartography": {
     "description": "from Cabinet/cab.system.astrocartography"
   },
@@ -1110,47 +764,15 @@
   "@cabSystemTransits": {
     "description": "from Cabinet/cab.system.transits"
   },
-  "cabSystemFinished": "You have read all of this one",
-  "@cabSystemFinished": {
-    "description": "from Cabinet/cab.systemFinished"
-  },
-  "cabUnknownTime": "birth time unknown",
+      "cabUnknownTime": "birth time unknown",
   "@cabUnknownTime": {
     "description": "from Cabinet/cab.unknownTime"
   },
-  "cabUpcoming": "coming up",
-  "@cabUpcoming": {
-    "description": "from Cabinet/cab.upcoming"
-  },
-  "cabWritingNote": "It is written once, and it will say the same thing tomorrow.",
-  "@cabWritingNote": {
-    "description": "from Cabinet/cab.writingNote"
-  },
-  "cabYourDay": "Your day",
-  "@cabYourDay": {
-    "description": "from Cabinet/cab.yourDay"
-  },
-  "dailyActionQuieter": "Fewer of these",
-  "@dailyActionQuieter": {
-    "description": "from Daily/daily.action.quieter"
-  },
-  "dailyActionTurnOff": "Turn these off",
-  "@dailyActionTurnOff": {
-    "description": "from Daily/daily.action.turnOff"
-  },
-  "dailyActionTurnedOff": "Turned off. Today is still here whenever you open it.",
-  "@dailyActionTurnedOff": {
-    "description": "from Daily/daily.action.turnedOff"
-  },
-  "dailyAskBody": "One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and it can be turned off from the notification itself.",
+                          "dailyAskBody": "One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and it can be turned off from the notification itself.",
   "@dailyAskBody": {
     "description": "from Daily/daily.ask.body"
   },
-  "dailyAskNo": "Not now",
-  "@dailyAskNo": {
-    "description": "from Daily/daily.ask.no"
-  },
-  "dailyAskTitle": "Tell me the morning it happens",
+      "dailyAskTitle": "Tell me the morning it happens",
   "@dailyAskTitle": {
     "description": "from Daily/daily.ask.title"
   },
@@ -1217,44 +839,11 @@
       }
     }
   },
-  "dailyEmptyBody": "Active transits are shown below. None reaches its exact point today.",
-  "@dailyEmptyBody": {
-    "description": "from Daily/daily.empty.body"
-  },
-  "dailyEmptyTitle": "No transit is exact today",
-  "@dailyEmptyTitle": {
-    "description": "from Daily/daily.empty.title"
-  },
-  "dailyRetrograde": "retrograde",
+          "dailyRetrograde": "retrograde",
   "@dailyRetrograde": {
     "description": "from Daily/daily.retrograde"
   },
-  "dailyRunningBody": "The closest is {p1}. Everything else is moving slowly.",
-  "@dailyRunningBody": {
-    "description": "from Daily/daily.running.body",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "dailyRunningNearest": "The closest is {p1}, exact on {p2}. Everything else is moving slowly.",
-  "@dailyRunningNearest": {
-    "description": "from Daily/daily.running.nearest",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      },
-      "p2": {
-        "type": "String"
-      }
-    }
-  },
-  "dailyRunningTitle": "Nothing exact today",
-  "@dailyRunningTitle": {
-    "description": "from Daily/daily.running.title"
-  },
-  "dailySettingHour": "Arrives at",
+              "dailySettingHour": "Arrives at",
   "@dailySettingHour": {
     "description": "from Daily/daily.setting.hour"
   },
@@ -1270,11 +859,7 @@
   "@dailySettingOff": {
     "description": "from Daily/daily.setting.off"
   },
-  "dailySettingOffDetail": "No notifications. Today is still here whenever you open it.",
-  "@dailySettingOffDetail": {
-    "description": "from Daily/daily.setting.off.detail"
-  },
-  "dailySettingOnlyMattersDetail": "A few times a year. The slow ones only — the transits that last months.",
+      "dailySettingOnlyMattersDetail": "A few times a year. The slow ones only — the transits that last months.",
   "@dailySettingOnlyMattersDetail": {
     "description": "from Daily/daily.setting.onlyMatters.detail"
   },
@@ -1290,15 +875,7 @@
   "@dailySettingTimezone": {
     "description": "from Daily/daily.setting.timezone"
   },
-  "dailySettingTimezoneBirth": "from your birth data",
-  "@dailySettingTimezoneBirth": {
-    "description": "from Daily/daily.setting.timezone.birth"
-  },
-  "dailySettingTimezoneChosen": "you chose this",
-  "@dailySettingTimezoneChosen": {
-    "description": "from Daily/daily.setting.timezone.chosen"
-  },
-  "dailySettingTimezoneDevice": "from your device",
+          "dailySettingTimezoneDevice": "from your device",
   "@dailySettingTimezoneDevice": {
     "description": "from Daily/daily.setting.timezone.device"
   },
@@ -1310,98 +887,23 @@
   "@dailyStatusDenied": {
     "description": "from Daily/daily.status.denied"
   },
-  "dailyStatusNotDelivering": "Notifications aren’t set up on this phone yet. You can still see Today in the app.",
-  "@dailyStatusNotDelivering": {
-    "description": "from Daily/daily.status.notDelivering"
-  },
-  "dailyStatusOpenSettings": "Open settings",
+      "dailyStatusOpenSettings": "Open settings",
   "@dailyStatusOpenSettings": {
     "description": "from Daily/daily.status.openSettings"
   },
-  "dailyStatusProvisional": "Arriving quietly. Alma's notifications go straight to Notification Center — no banner, no sound — until you decide otherwise.",
-  "@dailyStatusProvisional": {
-    "description": "from Daily/daily.status.provisional"
-  },
-  "dailyStatusRegistered": "This phone is registered for the daily.",
-  "@dailyStatusRegistered": {
-    "description": "from Daily/daily.status.registered"
-  },
-  "dailyStatusUpgrade": "Choose how notifications appear",
-  "@dailyStatusUpgrade": {
-    "description": "from Daily/daily.status.upgrade"
-  },
-  "dailySubscriberOnly": "Daily updates are included with an active subscription. Today remains free.",
-  "@dailySubscriberOnly": {
-    "description": "from Daily/daily.subscriberOnly"
-  },
-  "dailyTodayAt": "Exact at {p1}",
-  "@dailyTodayAt": {
-    "description": "from Daily/daily.today.at",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "dailyTodayLabel": "Exact today",
-  "@dailyTodayLabel": {
-    "description": "from Daily/daily.today.label"
-  },
-  "dailyTodaySince": "Active since {p1}",
-  "@dailyTodaySince": {
-    "description": "from Daily/daily.today.since",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "dailyTodayUntil": "active until {p1}",
-  "@dailyTodayUntil": {
-    "description": "from Daily/daily.today.until",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "dailyVerifiedLabel": "Exact transit dates in the next 30 days",
+                                  "dailyVerifiedLabel": "Exact transit dates in the next 30 days",
   "@dailyVerifiedLabel": {
     "description": "from Daily/daily.verified.label"
   },
-  "dailyVerifiedNote": "Counted from your own chart, on this device, with the same rule the notification uses.",
-  "@dailyVerifiedNote": {
-    "description": "from Daily/daily.verified.note"
-  },
-  "dailyYour": "your",
-  "@dailyYour": {
-    "description": "from Daily/daily.your"
-  },
-  "journeyAboutSub": "You can skip this.",
-  "@journeyAboutSub": {
-    "description": "from Journey/journey.aboutSub"
-  },
-  "journeyAboutTitle": "A little about you",
+              "journeyAboutTitle": "A little about you",
   "@journeyAboutTitle": {
     "description": "from Journey/journey.aboutTitle"
   },
-  "journeyAscendant": "Ascendant",
-  "@journeyAscendant": {
-    "description": "from Journey/journey.ascendant"
-  },
-  "journeyBack": "Back",
-  "@journeyBack": {
-    "description": "from Journey/journey.back"
-  },
-  "journeyBuildMySky": "Build my sky",
+          "journeyBuildMySky": "Build my sky",
   "@journeyBuildMySky": {
     "description": "from Journey/journey.buildMySky"
   },
-  "journeyCalculated": "all eight systems · calculated",
-  "@journeyCalculated": {
-    "description": "from Journey/journey.calculated"
-  },
-  "journeyCaptureDay": "Day of birth",
+      "journeyCaptureDay": "Day of birth",
   "@journeyCaptureDay": {
     "description": "from Journey/journey.capture.day"
   },
@@ -1421,11 +923,7 @@
   "@journeyCaptureMonthShort": {
     "description": "from Journey/journey.capture.monthShort"
   },
-  "journeyCaptureNoPlaces": "No place by that name. Try the nearest larger town.",
-  "@journeyCaptureNoPlaces": {
-    "description": "from Journey/journey.capture.noPlaces"
-  },
-  "journeyCaptureSearchPlace": "Where were you born?",
+      "journeyCaptureSearchPlace": "Where were you born?",
   "@journeyCaptureSearchPlace": {
     "description": "from Journey/journey.capture.searchPlace"
   },
@@ -1505,11 +1003,7 @@
   "@journeyCeremony8Line": {
     "description": "from Journey/journey.ceremony.8.line"
   },
-  "journeyCeremonySkip": "Skip the ceremony",
-  "@journeyCeremonySkip": {
-    "description": "from Journey/journey.ceremonySkip"
-  },
-  "journeyClose": "Close",
+      "journeyClose": "Close",
   "@journeyClose": {
     "description": "from Journey/journey.close"
   },
@@ -1525,23 +1019,7 @@
   "@journeyDateTitle": {
     "description": "from Journey/journey.dateTitle"
   },
-  "journeyDialogLabel": "Getting to know you",
-  "@journeyDialogLabel": {
-    "description": "from Journey/journey.dialogLabel"
-  },
-  "journeyFreeChapterLabel": "your first chapter · free",
-  "@journeyFreeChapterLabel": {
-    "description": "from Journey/journey.freeChapterLabel"
-  },
-  "journeyFreeLabel": "yours, free, forever",
-  "@journeyFreeLabel": {
-    "description": "from Journey/journey.freeLabel"
-  },
-  "journeyFreeNote": "The results above stay free, whether or not you continue.",
-  "@journeyFreeNote": {
-    "description": "from Journey/journey.freeNote"
-  },
-  "journeyGenderFemale": "Female",
+                  "journeyGenderFemale": "Female",
   "@journeyGenderFemale": {
     "description": "from Journey/journey.genderFemale"
   },
@@ -1553,133 +1031,19 @@
   "@journeyGenderSkip": {
     "description": "from Journey/journey.genderSkip"
   },
-  "journeyHandoffSub": "Three rules that make this work — the only onboarding we'll ever give you.",
-  "@journeyHandoffSub": {
-    "description": "from Journey/journey.handoffSub"
-  },
-  "journeyHandoffTitle": "Saved. Now read yourself slowly.",
-  "@journeyHandoffTitle": {
-    "description": "from Journey/journey.handoffTitle"
-  },
-  "journeyHourLabel": "Hour",
+          "journeyHourLabel": "Hour",
   "@journeyHourLabel": {
     "description": "from Journey/journey.hourLabel"
   },
-  "journeyInsightLifePath": "Life path {p1}",
-  "@journeyInsightLifePath": {
-    "description": "from Journey/journey.insight.lifePath",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "journeyInsightSun": "Sun in {p1}",
-  "@journeyInsightSun": {
-    "description": "from Journey/journey.insight.sun",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "journeyIntentSelf": "Who am I, really",
-  "@journeyIntentSelf": {
-    "description": "from Journey/journey.intent.self"
-  },
-  "journeyIntentShifting": "Something's shifting and I don't know why",
-  "@journeyIntentShifting": {
-    "description": "from Journey/journey.intent.shifting"
-  },
-  "journeyIntentUs": "Explore a relationship",
-  "@journeyIntentUs": {
-    "description": "from Journey/journey.intent.us"
-  },
-  "journeyIntentWhere": "Where I should live",
-  "@journeyIntentWhere": {
-    "description": "from Journey/journey.intent.where"
-  },
-  "journeyIntentSkip": "Skip — I know what I want",
-  "@journeyIntentSkip": {
-    "description": "from Journey/journey.intentSkip"
-  },
-  "journeyIntentTitle": "What's loudest in you right now?",
-  "@journeyIntentTitle": {
-    "description": "from Journey/journey.intentTitle"
-  },
-  "journeyKeepMySky": "Keep my sky",
-  "@journeyKeepMySky": {
-    "description": "from Journey/journey.keepMySky"
-  },
-  "journeyLockedWithoutTime": "Houses, solar return and map stay locked",
+                                      "journeyLockedWithoutTime": "Houses, solar return and map stay locked",
   "@journeyLockedWithoutTime": {
     "description": "from Journey/journey.lockedWithoutTime"
   },
-  "journeyMeridiemLabel": "AM or PM",
-  "@journeyMeridiemLabel": {
-    "description": "from Journey/journey.meridiemLabel"
-  },
-  "journeyMinuteLabel": "Min",
+      "journeyMinuteLabel": "Min",
   "@journeyMinuteLabel": {
     "description": "from Journey/journey.minuteLabel"
   },
-  "journeyMonth1": "January",
-  "@journeyMonth1": {
-    "description": "from Journey/journey.month.1"
-  },
-  "journeyMonth10": "October",
-  "@journeyMonth10": {
-    "description": "from Journey/journey.month.10"
-  },
-  "journeyMonth11": "November",
-  "@journeyMonth11": {
-    "description": "from Journey/journey.month.11"
-  },
-  "journeyMonth12": "December",
-  "@journeyMonth12": {
-    "description": "from Journey/journey.month.12"
-  },
-  "journeyMonth2": "February",
-  "@journeyMonth2": {
-    "description": "from Journey/journey.month.2"
-  },
-  "journeyMonth3": "March",
-  "@journeyMonth3": {
-    "description": "from Journey/journey.month.3"
-  },
-  "journeyMonth4": "April",
-  "@journeyMonth4": {
-    "description": "from Journey/journey.month.4"
-  },
-  "journeyMonth5": "May",
-  "@journeyMonth5": {
-    "description": "from Journey/journey.month.5"
-  },
-  "journeyMonth6": "June",
-  "@journeyMonth6": {
-    "description": "from Journey/journey.month.6"
-  },
-  "journeyMonth7": "July",
-  "@journeyMonth7": {
-    "description": "from Journey/journey.month.7"
-  },
-  "journeyMonth8": "August",
-  "@journeyMonth8": {
-    "description": "from Journey/journey.month.8"
-  },
-  "journeyMonth9": "September",
-  "@journeyMonth9": {
-    "description": "from Journey/journey.month.9"
-  },
-  "journeyMoon": "Moon",
-  "@journeyMoon": {
-    "description": "from Journey/journey.moon"
-  },
-  "journeyNameAria": "Your name",
-  "@journeyNameAria": {
-    "description": "from Journey/journey.nameAria"
-  },
-  "journeyNamePlaceholder": "Sofia",
+                                                          "journeyNamePlaceholder": "Sofia",
   "@journeyNamePlaceholder": {
     "description": "from Journey/journey.namePlaceholder"
   },
@@ -1715,80 +1079,7 @@
   "@quizInterestFuture": {
     "description": "V0 · quiz.interest_future"
   },
-  "journeyNeedsTime": "needs birth time",
-  "@journeyNeedsTime": {
-    "description": "from Journey/journey.needsTime"
-  },
-  "journeyNeedsTimeRow": "Solar return · map",
-  "@journeyNeedsTimeRow": {
-    "description": "from Journey/journey.needsTimeRow"
-  },
-  "journeyOfferCta": "Read it",
-  "@journeyOfferCta": {
-    "description": "from Journey/journey.offerCta"
-  },
-  "journeyOfferFine": "One payment. Yours permanently. No account needed to buy.",
-  "@journeyOfferFine": {
-    "description": "from Journey/journey.offerFine"
-  },
-  "journeyOfferSkip": "Skip for now",
-  "@journeyOfferSkip": {
-    "description": "from Journey/journey.offerSkip"
-  },
-  "journeyOfferSub": "The insights above stay free. This unlocks the full personalised reading for this system.",
-  "@journeyOfferSub": {
-    "description": "from Journey/journey.offerSub"
-  },
-  "journeyOfferTitle": "Your {p1}, written",
-  "@journeyOfferTitle": {
-    "description": "from Journey/journey.offerTitle",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "journeyOpenToday": "Open Today",
-  "@journeyOpenToday": {
-    "description": "from Journey/journey.openToday"
-  },
-  "journeyPhaseFirstQuarter": "first quarter",
-  "@journeyPhaseFirstQuarter": {
-    "description": "from Journey/journey.phase.firstQuarter"
-  },
-  "journeyPhaseFullMoon": "full moon",
-  "@journeyPhaseFullMoon": {
-    "description": "from Journey/journey.phase.fullMoon"
-  },
-  "journeyPhaseLastQuarter": "last quarter",
-  "@journeyPhaseLastQuarter": {
-    "description": "from Journey/journey.phase.lastQuarter"
-  },
-  "journeyPhaseNewMoon": "new moon",
-  "@journeyPhaseNewMoon": {
-    "description": "from Journey/journey.phase.newMoon"
-  },
-  "journeyPhaseWaningCrescent": "waning crescent",
-  "@journeyPhaseWaningCrescent": {
-    "description": "from Journey/journey.phase.waningCrescent"
-  },
-  "journeyPhaseWaningGibbous": "waning gibbous",
-  "@journeyPhaseWaningGibbous": {
-    "description": "from Journey/journey.phase.waningGibbous"
-  },
-  "journeyPhaseWaxingCrescent": "waxing crescent",
-  "@journeyPhaseWaxingCrescent": {
-    "description": "from Journey/journey.phase.waxingCrescent"
-  },
-  "journeyPhaseWaxingGibbous": "waxing gibbous",
-  "@journeyPhaseWaxingGibbous": {
-    "description": "from Journey/journey.phase.waxingGibbous"
-  },
-  "journeyPlacePlaceholder": "City",
-  "@journeyPlacePlaceholder": {
-    "description": "from Journey/journey.placePlaceholder"
-  },
-  "journeyPlaceSub": "City is enough.",
+                                                                      "journeyPlaceSub": "City is enough.",
   "@journeyPlaceSub": {
     "description": "from Journey/journey.placeSub"
   },
@@ -1796,115 +1087,7 @@
   "@journeyPlaceTitle": {
     "description": "from Journey/journey.placeTitle"
   },
-  "journeyRule1": "Start with one chapter. Explore the rest whenever you’re ready.",
-  "@journeyRule1": {
-    "description": "from Journey/journey.rule.1"
-  },
-  "journeyRule2": "When two systems differ, notice the tension: they may describe different sides of you.",
-  "@journeyRule2": {
-    "description": "from Journey/journey.rule.2"
-  },
-  "journeyRule3": "Ask in your own words. Your first question is free.",
-  "@journeyRule3": {
-    "description": "from Journey/journey.rule.3"
-  },
-  "journeySignAquarius": "Aquarius",
-  "@journeySignAquarius": {
-    "description": "from Journey/journey.sign.Aquarius"
-  },
-  "journeySignAries": "Aries",
-  "@journeySignAries": {
-    "description": "from Journey/journey.sign.Aries"
-  },
-  "journeySignCancer": "Cancer",
-  "@journeySignCancer": {
-    "description": "from Journey/journey.sign.Cancer"
-  },
-  "journeySignCapricorn": "Capricorn",
-  "@journeySignCapricorn": {
-    "description": "from Journey/journey.sign.Capricorn"
-  },
-  "journeySignGemini": "Gemini",
-  "@journeySignGemini": {
-    "description": "from Journey/journey.sign.Gemini"
-  },
-  "journeySignLeo": "Leo",
-  "@journeySignLeo": {
-    "description": "from Journey/journey.sign.Leo"
-  },
-  "journeySignLibra": "Libra",
-  "@journeySignLibra": {
-    "description": "from Journey/journey.sign.Libra"
-  },
-  "journeySignPisces": "Pisces",
-  "@journeySignPisces": {
-    "description": "from Journey/journey.sign.Pisces"
-  },
-  "journeySignSagittarius": "Sagittarius",
-  "@journeySignSagittarius": {
-    "description": "from Journey/journey.sign.Sagittarius"
-  },
-  "journeySignScorpio": "Scorpio",
-  "@journeySignScorpio": {
-    "description": "from Journey/journey.sign.Scorpio"
-  },
-  "journeySignTaurus": "Taurus",
-  "@journeySignTaurus": {
-    "description": "from Journey/journey.sign.Taurus"
-  },
-  "journeySignVirgo": "Virgo",
-  "@journeySignVirgo": {
-    "description": "from Journey/journey.sign.Virgo"
-  },
-  "journeyStaysFree": "Everything above stays free, forever",
-  "@journeyStaysFree": {
-    "description": "from Journey/journey.staysFree"
-  },
-  "journeyStep": "Step {p1} of {p2}",
-  "@journeyStep": {
-    "description": "from Journey/journey.step",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      },
-      "p2": {
-        "type": "String"
-      }
-    }
-  },
-  "journeySystemAstrocartography": "Astrocartography",
-  "@journeySystemAstrocartography": {
-    "description": "from Journey/journey.system.astrocartography"
-  },
-  "journeySystemBirthCard": "Birth Card",
-  "@journeySystemBirthCard": {
-    "description": "from Journey/journey.system.birth-card"
-  },
-  "journeySystemCompatibility": "Compatibility",
-  "@journeySystemCompatibility": {
-    "description": "from Journey/journey.system.compatibility"
-  },
-  "journeySystemNatal": "Natal chart",
-  "@journeySystemNatal": {
-    "description": "from Journey/journey.system.natal"
-  },
-  "journeySystemNumerology": "Numerology",
-  "@journeySystemNumerology": {
-    "description": "from Journey/journey.system.numerology"
-  },
-  "journeySystemSolarReturn": "Solar return",
-  "@journeySystemSolarReturn": {
-    "description": "from Journey/journey.system.solar-return"
-  },
-  "journeySystemSynthesis": "Cross-synthesis",
-  "@journeySystemSynthesis": {
-    "description": "from Journey/journey.system.synthesis"
-  },
-  "journeySystemTransits": "Transits",
-  "@journeySystemTransits": {
-    "description": "from Journey/journey.system.transits"
-  },
-  "journeyTimeTitle": "What time were you born?",
+                                                                                                      "journeyTimeTitle": "What time were you born?",
   "@journeyTimeTitle": {
     "description": "from Journey/journey.timeTitle"
   },
@@ -1912,11 +1095,7 @@
   "@cabinetBack": {
     "description": "from Localizable/cabinet.back"
   },
-  "cabinetSections": "Sections",
-  "@cabinetSections": {
-    "description": "from Localizable/cabinet.sections"
-  },
-  "pushDailyConjunction": "{p1} meets your {p2} at {p3}.",
+      "pushDailyConjunction": "{p1} meets your {p2} at {p3}.",
   "@pushDailyConjunction": {
     "description": "from Localizable/push.daily.conjunction",
     "placeholders": {
@@ -2059,27 +1238,11 @@
   "@stateAccountDeleted": {
     "description": "from Localizable/state.accountDeleted"
   },
-  "stateLoading": "Reading your sky…",
-  "@stateLoading": {
-    "description": "from Localizable/state.loading"
-  },
-  "stateLoadingShort": "One moment",
+      "stateLoadingShort": "One moment",
   "@stateLoadingShort": {
     "description": "from Localizable/state.loadingShort"
   },
-  "stateLocked": "Unlock to read",
-  "@stateLocked": {
-    "description": "from Localizable/state.locked"
-  },
-  "stateNeedsBirthTime": "This one needs your birth time.",
-  "@stateNeedsBirthTime": {
-    "description": "from Localizable/state.needsBirthTime"
-  },
-  "stateNothingToSay": "I couldn't read this from your chart, and I won't invent it.",
-  "@stateNothingToSay": {
-    "description": "from Localizable/state.nothingToSay"
-  },
-  "stateOffline": "Alma is not answering right now. Nothing here is guessed, so there is nothing to show until she does.",
+              "stateOffline": "Alma is not answering right now. Nothing here is guessed, so there is nothing to show until she does.",
   "@stateOffline": {
     "description": "from Localizable/state.offline"
   },
@@ -2087,11 +1250,7 @@
   "@stateRetry": {
     "description": "from Localizable/state.retry"
   },
-  "stateSomethingWrong": "Something went wrong. Nothing was lost.",
-  "@stateSomethingWrong": {
-    "description": "from Localizable/state.somethingWrong"
-  },
-  "stateUnavailable": "Something on our side is not working. It is not you, and it is not your chart.",
+      "stateUnavailable": "Something on our side is not working. It is not you, and it is not your chart.",
   "@stateUnavailable": {
     "description": "from Localizable/state.unavailable"
   },
@@ -2123,55 +1282,11 @@
   "@tabToday": {
     "description": "from Localizable/tab.today"
   },
-  "paywallAnnualTitle": "Everything, for a year",
-  "@paywallAnnualTitle": {
-    "description": "from Paywall/paywall.annualTitle"
-  },
-  "paywallArchiveNote": "All eight systems, bought once.",
-  "@paywallArchiveNote": {
-    "description": "from Paywall/paywall.archiveNote"
-  },
-  "paywallArchiveTitle": "All eight systems",
-  "@paywallArchiveTitle": {
-    "description": "from Paywall/paywall.archiveTitle"
-  },
   "paywallDoorNote": "One payment.",
   "@paywallDoorNote": {
     "description": "from Paywall/paywall.doorNote"
   },
-  "paywallDoorSub": "The numbers above are yours. This opens the whole system — every chapter written from your own positions, not from a template.",
-  "@paywallDoorSub": {
-    "description": "from Paywall/paywall.doorSub"
-  },
-  "paywallEverythingSub": "Written from your own positions the first time you open it — your chart, never a template.",
-  "@paywallEverythingSub": {
-    "description": "from Paywall/paywall.everythingSub"
-  },
-  "paywallEverythingTitle": "Open the rest of what your chart says",
-  "@paywallEverythingTitle": {
-    "description": "from Paywall/paywall.everythingTitle"
-  },
-  "paywallFreeNote": "Every calculation stays free — all eight systems. You pay only for the written chapters.",
-  "@paywallFreeNote": {
-    "description": "from Paywall/paywall.freeNote"
-  },
-  "paywallHonestyOnce": "one-time purchases do not renew",
-  "@paywallHonestyOnce": {
-    "description": "from Paywall/paywall.honestyOnce"
-  },
-  "paywallHonestySeller": "Apple takes the payment and sends the receipt",
-  "@paywallHonestySeller": {
-    "description": "from Paywall/paywall.honestySeller"
-  },
-  "paywallLabel": "what it costs",
-  "@paywallLabel": {
-    "description": "from Paywall/paywall.label"
-  },
-  "paywallManage": "Manage your subscription",
-  "@paywallManage": {
-    "description": "from Paywall/paywall.manage"
-  },
-  "paywallManageNote": "Plans bought in the app are cancelled in your Apple ID settings, not here.",
+                                  "paywallManageNote": "Plans bought in the app are cancelled in your Apple ID settings, not here.",
   "@paywallManageNote": {
     "description": "from Paywall/paywall.manageNote"
   },
@@ -2199,15 +1314,7 @@
   "@paywallOffline": {
     "description": "from Paywall/paywall.offline"
   },
-  "paywallOneTimeFine": "One payment. Yours permanently. No account needed to buy.",
-  "@paywallOneTimeFine": {
-    "description": "from Paywall/paywall.oneTimeFine"
-  },
-  "paywallOwned": "yours",
-  "@paywallOwned": {
-    "description": "from Paywall/paywall.owned"
-  },
-  "paywallOwnedAll": "Everything is open. All forty-one chapters are yours.",
+          "paywallOwnedAll": "Everything is open. All forty-one chapters are yours.",
   "@paywallOwnedAll": {
     "description": "from Paywall/paywall.ownedAll"
   },
@@ -2215,31 +1322,7 @@
   "@paywallPending": {
     "description": "from Paywall/paywall.pending"
   },
-  "paywallPerMonthSavings": "{p1} a month · save {p2}%%",
-  "@paywallPerMonthSavings": {
-    "description": "from Paywall/paywall.perMonthSavings",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      },
-      "p2": {
-        "type": "int"
-      }
-    }
-  },
-  "paywallPitchDoor1": "One payment opens every chapter of this system.",
-  "@paywallPitchDoor1": {
-    "description": "from Paywall/paywall.pitchDoor1"
-  },
-  "paywallPitchDoor2": "Each chapter is written from your own positions the first time you open it.",
-  "@paywallPitchDoor2": {
-    "description": "from Paywall/paywall.pitchDoor2"
-  },
-  "paywallPitchDoor3": "Read it whenever you like, in seven languages.",
-  "@paywallPitchDoor3": {
-    "description": "from Paywall/paywall.pitchDoor3"
-  },
-  "paywallPitchPlan1": "The subscription keeps the three living systems written; the five still readings can be bought once and stay yours for ever.",
+                  "paywallPitchPlan1": "The subscription keeps the three living systems written; the five still readings can be bought once and stay yours for ever.",
   "@paywallPitchPlan1": {
     "description": "from Paywall/paywall.pitchPlan1"
   },
@@ -2255,11 +1338,7 @@
   "@paywallPrivacy": {
     "description": "from Paywall/paywall.privacy"
   },
-  "paywallRefused": "That purchase is not the one that was asked for. Nothing extra has been charged.",
-  "@paywallRefused": {
-    "description": "from Paywall/paywall.refused"
-  },
-  "paywallRestore": "Restore purchases",
+      "paywallRestore": "Restore purchases",
   "@paywallRestore": {
     "description": "from Paywall/paywall.restore"
   },
@@ -2275,11 +1354,7 @@
   "@paywallRestoredNonePlay": {
     "description": "Play-вариант ключа paywallRestoredNone: Android обязан называть свой магазин своими словами"
   },
-  "paywallRestoredOther": "These purchases already belong to another Alma account. Sign in with that one and they come with you.",
-  "@paywallRestoredOther": {
-    "description": "from Paywall/paywall.restoredOther"
-  },
-  "paywallRestoring": "Asking the App Store…",
+      "paywallRestoring": "Asking the App Store…",
   "@paywallRestoring": {
     "description": "from Paywall/paywall.restoring"
   },
@@ -2287,11 +1362,7 @@
   "@paywallRestoringPlay": {
     "description": "Play-вариант ключа paywallRestoring: Android обязан называть свой магазин своими словами"
   },
-  "paywallSkip": "Skip for now",
-  "@paywallSkip": {
-    "description": "from Paywall/paywall.skip"
-  },
-  "paywallStoreUnavailable": "The App Store is not answering. Nothing here can be bought until it does — and nothing you already own has changed.",
+      "paywallStoreUnavailable": "The App Store is not answering. Nothing here can be bought until it does — and nothing you already own has changed.",
   "@paywallStoreUnavailable": {
     "description": "from Paywall/paywall.storeUnavailable"
   },
@@ -2339,25 +1410,9 @@
   "@paywallTerms": {
     "description": "from Paywall/paywall.terms"
   },
-  "paywallUpgradeNote": "The price already includes credit for the system you bought.",
-  "@paywallUpgradeNote": {
-    "description": "from Paywall/paywall.upgradeNote"
-  },
-  "paywallUpgradeTitle": "The rest of the archive",
-  "@paywallUpgradeTitle": {
-    "description": "from Paywall/paywall.upgradeTitle"
-  },
-  "paywallVerifyLater": "Apple has taken the payment. We could not confirm it this second — it will open by itself shortly, and nothing is lost.",
+          "paywallVerifyLater": "Apple has taken the payment. We could not confirm it this second — it will open by itself shortly, and nothing is lost.",
   "@paywallVerifyLater": {
     "description": "from Paywall/paywall.verifyLater"
-  },
-  "paywallWeeklyNote": "Live readings and questions for one week. Renews weekly until you cancel.",
-  "@paywallWeeklyNote": {
-    "description": "from Paywall/paywall.weeklyNote"
-  },
-  "paywallWeeklyTitle": "All live features, weekly",
-  "@paywallWeeklyTitle": {
-    "description": "from Paywall/paywall.weeklyTitle"
   },
   "paywallWithdrawn": "Apple has taken that purchase back — refunded or revoked — so nothing is open under it.",
   "@paywallWithdrawn": {
@@ -2384,63 +1439,15 @@
   "@pillSheetSub": {
     "description": "from Pill/pill.sheetSub"
   },
-  "scrAddPersonBirthTime": "their birth time",
-  "@scrAddPersonBirthTime": {
-    "description": "from Screens/scr.addPerson.birthTime"
-  },
-  "scrAddPersonBirthday": "their birthday",
-  "@scrAddPersonBirthday": {
-    "description": "from Screens/scr.addPerson.birthday"
-  },
-  "scrAddPersonBirthplace": "their birthplace",
-  "@scrAddPersonBirthplace": {
-    "description": "from Screens/scr.addPerson.birthplace"
-  },
-  "scrAddPersonEyebrow": "a second birth",
-  "@scrAddPersonEyebrow": {
-    "description": "from Screens/scr.addPerson.eyebrow"
-  },
-  "scrAddPersonLead": "Add their name, birth date, birthplace and birth time if known. Without an exact time, Alma can still compare fewer chart factors.",
-  "@scrAddPersonLead": {
-    "description": "from Screens/scr.addPerson.lead"
-  },
-  "scrAddPersonName": "their name",
-  "@scrAddPersonName": {
-    "description": "from Screens/scr.addPerson.name"
-  },
-  "scrAddPersonNamePlaceholder": "Name",
-  "@scrAddPersonNamePlaceholder": {
-    "description": "from Screens/scr.addPerson.namePlaceholder"
-  },
-  "scrAddPersonRelationPlaceholder": "Partner, mother, friend… (optional)",
-  "@scrAddPersonRelationPlaceholder": {
-    "description": "from Screens/scr.addPerson.relationPlaceholder"
-  },
-  "scrAddPersonSave": "Save this person",
-  "@scrAddPersonSave": {
-    "description": "from Screens/scr.addPerson.save"
-  },
-  "scrAddPersonSaving": "Saving…",
+                                      "scrAddPersonSaving": "Saving…",
   "@scrAddPersonSaving": {
     "description": "from Screens/scr.addPerson.saving"
   },
-  "scrAddPersonTimeUnknown": "Birth time unknown",
-  "@scrAddPersonTimeUnknown": {
-    "description": "from Screens/scr.addPerson.timeUnknown"
-  },
-  "scrAddPersonTitle": "Add a person",
-  "@scrAddPersonTitle": {
-    "description": "from Screens/scr.addPerson.title"
-  },
-  "scrChatCouldAsk": "you could ask",
+          "scrChatCouldAsk": "you could ask",
   "@scrChatCouldAsk": {
     "description": "from Screens/scr.chat.couldAsk"
   },
-  "scrChatMoreQuestions": "More questions",
-  "@scrChatMoreQuestions": {
-    "description": "from Screens/scr.chat.moreQuestions"
-  },
-  "scrChatNoChart": "I can talk without your chart, but I would only be guessing. Give me your birth data and I can read you instead.",
+      "scrChatNoChart": "I can talk without your chart, but I would only be guessing. Give me your birth data and I can read you instead.",
   "@scrChatNoChart": {
     "description": "from Screens/scr.chat.noChart"
   },
@@ -2511,15 +1518,7 @@
   "@scrChatRefused": {
     "description": "from Screens/scr.chat.refused"
   },
-  "scrChatRule": "Every answer names the placements it was read from. Nothing here is a prediction.",
-  "@scrChatRule": {
-    "description": "from Screens/scr.chat.rule"
-  },
-  "scrChatSend": "Send",
-  "@scrChatSend": {
-    "description": "from Screens/scr.chat.send"
-  },
-  "scrChatSilent": "I answered that one from what I know, not from your chart.",
+          "scrChatSilent": "I answered that one from what I know, not from your chart.",
   "@scrChatSilent": {
     "description": "from Screens/scr.chat.silent"
   },
@@ -2527,11 +1526,7 @@
   "@scrChatThinking": {
     "description": "from Screens/scr.chat.thinking"
   },
-  "scrChatThinkingStill": "Still reading — I don't skim.",
-  "@scrChatThinkingStill": {
-    "description": "from Screens/scr.chat.thinkingStill"
-  },
-  "scrChatUnavailable": "Something on my side is not working. Your chart is untouched, and your question is still in the box.",
+      "scrChatUnavailable": "Something on my side is not working. Your chart is untouched, and your question is still in the box.",
   "@scrChatUnavailable": {
     "description": "from Screens/scr.chat.unavailable"
   },
@@ -2543,57 +1538,11 @@
   "@scrChatWentWrong": {
     "description": "from Screens/scr.chat.wentWrong"
   },
-  "scrCompatChoose": "Compare with somebody else",
-  "@scrCompatChoose": {
-    "description": "from Screens/scr.compat.choose"
-  },
-  "scrCompatReadAgainst": "You and {p1}",
-  "@scrCompatReadAgainst": {
-    "description": "from Screens/scr.compat.readAgainst",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "scrDone": "Done",
+          "scrDone": "Done",
   "@scrDone": {
     "description": "from Screens/scr.done"
   },
-  "scrEmptyChapters": "{p1} chapters",
-  "@scrEmptyChapters": {
-    "description": "from Screens/scr.empty.chapters",
-    "placeholders": {
-      "p1": {
-        "type": "int"
-      }
-    }
-  },
-  "scrEmptyExample": "what a line looks like",
-  "@scrEmptyExample": {
-    "description": "from Screens/scr.empty.example"
-  },
-  "scrEmptyExampleNote": "Every sentence Alma writes names the placement it was read from, like the one above. Nothing is a prediction, and nothing is shown that was not calculated.",
-  "@scrEmptyExampleNote": {
-    "description": "from Screens/scr.empty.exampleNote"
-  },
-  "scrEmptyExampleTag": "example — not your chart",
-  "@scrEmptyExampleTag": {
-    "description": "from Screens/scr.empty.exampleTag"
-  },
-  "scrEmptyLead": "Alma brings eight astrology and self-reflection systems together in 41 chapters. Combined Insights compares three of them: your birth chart, numerology and Tarot Birth Card.",
-  "@scrEmptyLead": {
-    "description": "from Screens/scr.empty.lead"
-  },
-  "scrEmptyTitle": "Eight systems, one chart",
-  "@scrEmptyTitle": {
-    "description": "from Screens/scr.empty.title"
-  },
-  "scrJourneyFreeNote": "Everything above is calculated, and calculations are always free. It stays yours whether you read further or not.",
-  "@scrJourneyFreeNote": {
-    "description": "from Screens/scr.journey.freeNote"
-  },
-  "scrKeep": "Keep",
+                              "scrKeep": "Keep",
   "@scrKeep": {
     "description": "from Screens/scr.keep"
   },
@@ -2601,19 +1550,11 @@
   "@scrPeopleChange": {
     "description": "from Screens/scr.people.change"
   },
-  "scrPeopleConsent": "It is their birth data, not yours. Ask them first.",
-  "@scrPeopleConsent": {
-    "description": "from Screens/scr.people.consent"
-  },
-  "scrPeopleEyebrow": "compatibility",
+      "scrPeopleEyebrow": "compatibility",
   "@scrPeopleEyebrow": {
     "description": "from Screens/scr.people.eyebrow"
   },
-  "scrPeopleLead": "Compatibility compares your chart against somebody else's. The comparison itself is always calculated in full.",
-  "@scrPeopleLead": {
-    "description": "from Screens/scr.people.lead"
-  },
-  "scrPeopleRemove": "Remove",
+      "scrPeopleRemove": "Remove",
   "@scrPeopleRemove": {
     "description": "from Screens/scr.people.remove"
   },
@@ -2625,15 +1566,7 @@
   "@scrPeopleRemoveWhat": {
     "description": "from Screens/scr.people.removeWhat"
   },
-  "scrPeopleSaved": "saved",
-  "@scrPeopleSaved": {
-    "description": "from Screens/scr.people.saved"
-  },
-  "scrPeopleTitle": "People",
-  "@scrPeopleTitle": {
-    "description": "from Screens/scr.people.title"
-  },
-  "scrPeopleUnnamed": "Unnamed",
+          "scrPeopleUnnamed": "Unnamed",
   "@scrPeopleUnnamed": {
     "description": "from Screens/scr.people.unnamed"
   },
@@ -2665,19 +1598,11 @@
   "@scrSignInEmailPlaceholder": {
     "description": "from Screens/scr.signIn.emailPlaceholder"
   },
-  "scrSignInEyebrow": "your account",
-  "@scrSignInEyebrow": {
-    "description": "from Screens/scr.signIn.eyebrow"
-  },
-  "scrSignInFailed": "That did not sign you in. Nothing has changed on your account.",
+      "scrSignInFailed": "That did not sign you in. Nothing has changed on your account.",
   "@scrSignInFailed": {
     "description": "from Screens/scr.signIn.failed"
   },
-  "scrSignInGoogle": "Continue with Google",
-  "@scrSignInGoogle": {
-    "description": "from Screens/scr.signIn.google"
-  },
-  "scrSignInLead": "Your chart follows you to any phone.",
+      "scrSignInLead": "Your chart follows you to any phone.",
   "@scrSignInLead": {
     "description": "from Screens/scr.signIn.lead"
   },
@@ -2693,19 +1618,7 @@
   "@scrSignInPrivacy": {
     "description": "from Screens/scr.signIn.privacy"
   },
-  "scrSignInReason1": "Your chart survives a new phone.",
-  "@scrSignInReason1": {
-    "description": "from Screens/scr.signIn.reason1"
-  },
-  "scrSignInReason2": "Anything you bought can be restored. A purchase belongs to the account that claimed it first, so sign in before you reinstall.",
-  "@scrSignInReason2": {
-    "description": "from Screens/scr.signIn.reason2"
-  },
-  "scrSignInReason3": "There is no password. There never will be.",
-  "@scrSignInReason3": {
-    "description": "from Screens/scr.signIn.reason3"
-  },
-  "scrSignInSendLink": "Email me a sign-in link",
+              "scrSignInSendLink": "Email me a sign-in link",
   "scrSignInSendLinkShort": "Email me a sign-in link",
   "@scrSignInSendLinkShort": {
     "description": "Короткий вариант подписи кнопки для узких экранов. Совпадает с полным везде, кроме немецкого: короче «Anmeldelink per E-Mail senden» в языке ничего нет, а в остальных сокращать нечего."
@@ -2724,8 +1637,7 @@
   "cabCompatNeedsSecond": "Compatibility needs a second person.",
   "cabPeopleTitle": "People",
   "cabPeopleAdd": "Add a person",
-  "cabPeopleRemove": "Remove",
-  "splashTagline": "Written in the sky before you asked.",
+    "splashTagline": "Written in the sky before you asked.",
   "@splashTagline": {
     "description": "Подпись под знаком на заставке."
   },
@@ -2868,33 +1780,7 @@
   "@cabCompatBulletComposite": {
     "description": "S23, третий пункт. strings-batch2.md."
   },
-  "cabLegalEffective": "Effective {p1}",
-  "@cabLegalEffective": {
-    "description": "Дата вступления документа в силу (S40). {p1} — дата, прогнанная через DateFormat локали, а не вписанная в текст словами: тело документа по-английски, а строка над ним читается на семи языках. strings-batch2.md.",
-    "placeholders": {
-      "p1": {
-        "type": "String"
-      }
-    }
-  },
-  "cabPlanDeleteMismatchGuest": "That is not the code on this account.",
-  "@cabPlanDeleteMismatchGuest": {
-    "description": "Отказ удалить аккаунт гостю. Гость заводился кодом, а не адресом, и общий cabPlanDeleteMismatch звал бы его сверить адрес, которого у него нет. strings-batch2.md."
-  },
-  "paywallArtCaption": "Every chapter opens with its own plate — painted for this deck.",
-  "@paywallArtCaption": {
-    "description": "Подпись под картиной на витрине (S42/S43): картина там не украшение, и подпись говорит, что вклейка написана под эту главу. strings-batch2.md."
-  },
-  "cabPlanCancelPeriodEnds": "Your plan stays active until {date}.",
-  "@cabPlanCancelPeriodEnds": {
-    "description": "Первый шаг отмены: оплаченный период дослуживает. {date} — из каталога подписок, локализованная. strings-batch2.md.",
-    "placeholders": {
-      "date": {
-        "type": "String"
-      }
-    }
-  },
-  "todayReadWholeSky": "Read the whole sky",
+                  "todayReadWholeSky": "Read the whole sky",
   "@todayReadWholeSky": {
     "description": "today-reading-spec §6 · todayReadWholeSky"
   },
@@ -2925,41 +1811,7 @@
       }
     }
   },
-  "readerTermYours": "yours",
-  "@readerTermYours": {
-    "description": "today-reading-spec §6 · readerTermYours"
-  },
-  "readerReadInChapter": "Read it in {system} — {chapter}",
-  "@readerReadInChapter": {
-    "description": "today-reading-spec §6 · readerReadInChapter",
-    "placeholders": {
-      "system": {
-        "type": "String"
-      },
-      "chapter": {
-        "type": "String"
-      }
-    }
-  },
-  "readerTomorrow": "Tomorrow {event}",
-  "@readerTomorrow": {
-    "description": "today-reading-spec §6 · readerTomorrow",
-    "placeholders": {
-      "event": {
-        "type": "String"
-      }
-    }
-  },
-  "readerWrittenAt": "Written at {time}, your time",
-  "@readerWrittenAt": {
-    "description": "today-reading-spec §6 · readerWrittenAt",
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
-  "readerTextSize": "Text size",
+                  "readerTextSize": "Text size",
   "@readerTextSize": {
     "description": "today-reading-spec §6 · readerTextSize"
   },
