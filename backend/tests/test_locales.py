@@ -597,6 +597,11 @@ def test_a_placeholder_survives_every_translation():
     # count, and «your 0 questions» was the sentence a placeholder would buy.
     for locale in i18n.LOCALES:
         assert "{limit}" in replies.BY_ERROR["question_limit.month"][locale]
+        # The other two walls that count something: a week's allowance and the
+        # finite bundle a purchase includes. Both name their number, and both
+        # are reached through the same `question_limit.{period}` key.
+        assert "{limit}" in replies.BY_ERROR["question_limit.week"][locale]
+        assert "{limit}" in replies.BY_ERROR["question_limit.once"][locale]
         assert "{limit}" not in replies.BY_ERROR["question_limit.day"][locale]
         assert "40" in replies.reply("question_limit.month", locale, limit=40)
 

@@ -989,6 +989,21 @@ async def answer(
                 effort=effort,
             )
         except AnswerTruncated as exc:
+            # **Оборванный ход всё равно оплачен, и записывается он здесь.**
+            #
+            # Тот же довод, что в `writer.py`: `ledger.record` стоит ниже этого
+            # `except`, так что обрыв по `max_tokens` был единственным способом
+            # позвать модель бесплатно — для счёта. Модель подумала, токены
+            # произведены, счёт выставлен; месячный потолок обязан это увидеть,
+            # иначе повторяющийся длинный вопрос стоит нам сколько угодно, а
+            # аккаунту — ноль. `ledger.check` намеренно не зовётся: он подменил
+            # бы `AnswerTruncated` на `BudgetExceeded` и убил бы починку ниже.
+            if exc.completion is not None:
+                ledger.record(cost.cost(
+                    model, exc.completion.input_tokens, exc.completion.output_tokens,
+                    cache_read_tokens=exc.completion.cache_read_tokens,
+                    cache_write_tokens=exc.completion.cache_write_tokens,
+                ))
             # **She wrote past the ceiling, and the reader got an error.**
             #
             # `writer.write` has handled this since a free sample chapter died
@@ -1026,6 +1041,9 @@ async def answer(
                     attempt, effort, exc,
                 )
                 if attempt == MAX_ATTEMPTS:
+                    # Цена прогона уезжает вместе с отказом — см. довод у
+                    # второго такого же `raise` ниже.
+                    exc.spend = ledger.total(model)
                     raise
                 continue
             complaint = (
@@ -1037,6 +1055,11 @@ async def answer(
             )
             log.warning("chat attempt %d was truncated: %s", attempt, exc)
             if attempt == MAX_ATTEMPTS:
+                # Столько же, сколько несёт `AnswerRefused.spend`, и по той же
+                # причине: роутер отвечает на это 503 и обязан сперва записать
+                # потраченное. Без `spend` три оплаченные генерации выглядели
+                # для месячного счёта как несостоявшийся запрос.
+                exc.spend = ledger.total(model)
                 raise
             continue
 

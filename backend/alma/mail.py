@@ -124,7 +124,24 @@ async def send_magic_link(*, to: str, token: str, locale: str = "en") -> bool:
 
     if not config.resend_api_key:
         # Not an error in development; the caller surfaces the link instead.
-        log.info("mail not configured — sign-in link for %s: %s", to, url)
+        #
+        # **Ссылка в лог не пишется, и это не про аккуратность.** В ней живой
+        # одноразовый токен входа: строка лога становится входом в аккаунт, а
+        # логи ходят туда, куда почта не ходит, — в агрегатор, в тикет, в чат
+        # поддержки, в архив на полгода, — и переживают те двадцать минут, на
+        # которые ссылка выписана, целиком. Одна такая строка про адрес клиента
+        # — это чужой аккаунт у любого, кто читает логи.
+        #
+        # Для отладки оставлено ровно то, чем она полезна: что письмо не ушло,
+        # кому оно предназначалось и почему. Кому нужна сама ссылка — это
+        # локальная разработка, и там она приезжает в теле ответа
+        # (`routers/auth.py`, `_may_show_debug_token`), а не через лог.
+        log.info(
+            "mail not configured — no sign-in link sent to %s (it would have "
+            "expired in %d minutes)",
+            to,
+            config.magic_link_minutes,
+        )
         return False
 
     return await _post({

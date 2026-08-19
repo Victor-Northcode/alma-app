@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Request, status
 from sqlalchemy import select
 
 from ...auth import accounts, tokens
@@ -23,7 +23,7 @@ from ...auth.providers import InvalidIdentityToken, verify_apple, verify_google
 from ...config import settings
 from ...db.models import AuthProvider, MagicLink, User, as_utc, utcnow
 from ...mail import send_magic_link
-from ..deps import CurrentUser, SessionDep
+from ..deps import CurrentUser, SessionDep, local_sandbox, request_source, window
 from ..schemas import (
     AppleSignIn,
     GoogleSignIn,
@@ -88,7 +88,7 @@ async def whoami(user: CurrentUser) -> SessionOut:
 @router.post("/google", response_model=SessionOut)
 async def google(payload: GoogleSignIn, user: CurrentUser, session: SessionDep) -> SessionOut:
     try:
-        identity = verify_google(payload.credential)
+        identity = await verify_google(payload.credential)
     except InvalidIdentityToken as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
@@ -106,7 +106,7 @@ async def google(payload: GoogleSignIn, user: CurrentUser, session: SessionDep) 
 @router.post("/apple", response_model=SessionOut)
 async def apple(payload: AppleSignIn, user: CurrentUser, session: SessionDep) -> SessionOut:
     try:
-        identity = verify_apple(payload.identity_token, full_name=payload.full_name)
+        identity = await verify_apple(payload.identity_token, full_name=payload.full_name)
     except InvalidIdentityToken as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
@@ -121,15 +121,79 @@ async def apple(payload: AppleSignIn, user: CurrentUser, session: SessionDep) ->
     return _session_out(signed_in)
 
 
+#: Сколько писем со ссылкой входа уходит на **один адрес** за час.
+#:
+#: Потолок здесь не про перебор, а про человека на том конце. Адрес в теле
+#: запроса — чужой ровно так же легко, как свой, ответ по замыслу одинаков для
+#: знакомого и незнакомого, и до этой правки одна строка в цикле означала
+#: почтовый ящик, заваленный письмами **с нашего домена и нашей подписью**: мы
+#: становимся орудием травли, платим за каждое письмо и попадаем в спам-листы
+#: собственной репутацией. Три штуки в час покрывают «письмо не пришло, пришлите
+#: ещё раз» и не покрывают ничего сверх.
+MAGIC_LINKS_PER_EMAIL_PER_HOUR = 3
+
+#: И сколько их за час уходит от **одного источника**, какие бы адреса он ни
+#: называл. Первый потолок сам по себе не мешает пройтись списком из тысячи
+#: чужих адресов по разу — это те же тысяча писем, только веером. Второй потолок
+#: и есть ответ на перебор; он выше первого, потому что за одним адресом сети
+#: сидит не один человек (см. `deps.GUEST_MINTS_PER_HOUR`), а вход по ссылке —
+#: единственная дверь для того, кто не пользуется Google и Apple.
+MAGIC_LINKS_PER_SOURCE_PER_HOUR = 10
+
+MAGIC_LINK_WINDOW_SECONDS = 3600.0
+
+
+def _too_many_links() -> HTTPException:
+    """Один и тот же отказ для обоих потолков.
+
+    Разные ответы («этот адрес просил недавно» / «вы просили недавно») сказали
+    бы спрашивающему, писали ли на чужой ящик, — то самое различие, которое
+    остальная часть этого маршрута старательно не выдаёт.
+    """
+    return HTTPException(
+        status.HTTP_429_TOO_MANY_REQUESTS,
+        detail={
+            "error": "magic_link_rate_limit",
+            "message": "too many sign-in links requested — try again a bit later",
+        },
+        headers={"Retry-After": str(int(MAGIC_LINK_WINDOW_SECONDS))},
+    )
+
+
 @router.post("/magic-link", status_code=status.HTTP_202_ACCEPTED)
 async def request_magic_link(
-    payload: MagicLinkRequest, user: CurrentUser, session: SessionDep
+    request: Request, payload: MagicLinkRequest, user: CurrentUser, session: SessionDep
 ) -> dict:
     """Send a sign-in link.
 
     Always answers the same way. Whether the address has an account here is
     not information this endpoint is willing to hand out.
+
+    **Два потолка, и оба до записи строки в `MagicLink`.** По адресу получателя
+    — потому что письмо уходит человеку, который нас об этом не просил; по
+    источнику запроса — потому что первый потолок обходится списком адресов.
+    Отказ раньше `new_magic_token`: иначе в таблице копились бы живые ссылки,
+    которых никто не заказывал, и каждая из них — вход в аккаунт.
     """
+    # Адрес приводится к нижнему регистру только для ключа счётчика: в базу и в
+    # письмо идёт то, что прислали. `Sofia@` и `sofia@` — один почтовый ящик и
+    # обязаны делить потолок, иначе он снимается сменой регистра.
+    if not window(
+        request,
+        "magic_link_email",
+        limit=MAGIC_LINKS_PER_EMAIL_PER_HOUR,
+        seconds=MAGIC_LINK_WINDOW_SECONDS,
+    ).hit(payload.email.strip().lower()):
+        raise _too_many_links()
+
+    if not window(
+        request,
+        "magic_link_source",
+        limit=MAGIC_LINKS_PER_SOURCE_PER_HOUR,
+        seconds=MAGIC_LINK_WINDOW_SECONDS,
+    ).hit(request_source(request)):
+        raise _too_many_links()
+
     token, token_hash = tokens.new_magic_token()
     session.add(
         MagicLink(
@@ -162,19 +226,12 @@ async def request_magic_link(
 def _may_show_debug_token() -> bool:
     """Можно ли вернуть токен входа в теле ответа.
 
-    Два условия разом: окружение из **белого списка** локальных и локальный же
-    адрес сервиса. Белый список, а не чёрный: неизвестное имя окружения — повод
-    молчать, а не повод считать его песочницей. Адрес — вторая половина замка:
-    стенд, которому забыли сменить ALMA_ENV, обычно уже смотрит наружу, и по
-    адресу это видно.
+    Правило переехало в `deps.local_sandbox`: тот же замок сторожит подробности
+    `/ready`, а два экземпляра одного правила расходятся ровно в тот день, когда
+    его ужесточают в одном месте. Имя оставлено здесь, потому что здесь оно
+    читается по делу — «показывать ли отладочный токен».
     """
-    config = settings()
-    return config.environment.lower() in {
-        "development",
-        "dev",
-        "local",
-        "test",
-    } and ("localhost" in config.base_url or "127.0.0.1" in config.base_url)
+    return local_sandbox()
 
 
 @router.post("/magic-link/consume", response_model=SessionOut)

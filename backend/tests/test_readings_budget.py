@@ -505,6 +505,91 @@ def test_a_subscriber_gets_the_mid_model_counted_by_the_month(
     assert body["questions_left"] == settings().subscriber_questions_per_month - 1
 
 
+def test_every_period_an_allowance_can_carry_has_a_sentence_for_its_wall():
+    """`_chat_gate` собирает ключ фразы из периода порции — и промах это 500.
+
+    Периодов четыре: день (свободный слой), месяц (подписка и приветственный
+    бандл), неделя (недельный A/B, ТЗ §8) и `once` (бандл покупки). Фраз в
+    `i18n/replies.py` было две, и `replies.reply()` индексирует, а не `.get`,
+    потому что молча отдать читателю английский — тоже брак. Значит недостающая
+    фраза — это `KeyError` посреди 429: вместо переведённого отказа, который
+    продаёт план, читатель получает экран ошибки.
+
+    Периоды перечислены вызовом самих конструкторов порции, а не списком строк:
+    пятый период, добавленный завтра, попадёт сюда сам, а не через год.
+    """
+    periods = {
+        route._allowance("free", mid="m").period,
+        route._allowance("subscriber", mid="m").period,
+        route._allowance("subscriber", mid="m", weekly=True).period,
+        route._bundle(strong="s").period,
+        route._welcome(mid="m").period,
+    }
+    assert periods == {"day", "month", "week", "once"}
+
+    silent = sorted(p for p in periods if f"question_limit.{p}" not in i18n_replies.BY_ERROR)
+    assert not silent, (
+        "у периода нет фразы для стены — `replies.reply()` бросит KeyError, и "
+        f"читатель увидит 500 вместо 429: {silent}"
+    )
+
+
+def test_a_weekly_allowance_at_its_wall_answers_429_rather_than_raising(
+    api, auth_headers, scripted, as_tier, monkeypatch
+):
+    """День, когда недельный A/B включат обратно, не должен быть пятисотым.
+
+    Порция по недельному сроку оставлена в коде намеренно (см. довод в
+    `_chat_gate`), и до этой правки она доходила до стены с ключом
+    `question_limit.week`, которого в таблице не было. Первый же подписчик
+    эксперимента, упёршийся в свою десятку, получал бы `KeyError` — и получал
+    бы его ровно на том экране, который эксперимент и продаёт.
+
+    `has_kind` подменена, а не выписана грантом: кинда `weekly` больше нет ни в
+    каталоге, ни в `EntitlementKind` — это утверждает
+    `test_there_are_no_weekly_or_annual_kinds_any_more`, — и выписать её честно
+    сегодня нечем. Подменяется ровно та функция, которая в тот день ответит
+    `True` сама.
+    """
+    from alma import config as config_module
+    from alma.auth import entitlements
+
+    async def weekly(session, user, kind):
+        return kind == "weekly"
+
+    monkeypatch.setattr(entitlements, "has_kind", weekly)
+    monkeypatch.setenv("ALMA_WEEKLY_QUESTIONS", "1")
+    config_module.settings.cache_clear()
+    try:
+        as_tier("subscriber")
+        api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+        scripted.responses.append(_chat_reply(_numerology_factors()))
+
+        first = api.post(
+            "/v1/chat",
+            json={"message": "come sono fatta", "locale": "it"},
+            headers=auth_headers,
+        )
+        assert first.status_code == 200, first.text
+        assert first.json()["questions_period"] == "week"
+
+        blocked = api.post(
+            "/v1/chat",
+            json={"message": "e adesso", "locale": "it"},
+            headers=auth_headers,
+        )
+        assert blocked.status_code == 429, blocked.text
+        detail = blocked.json()["detail"]
+        assert detail["error"] == "question_limit"
+        assert detail["period"] == "week"
+        # Её фраза, на языке читателя, и кончается тем, что у него всё равно
+        # есть, — как у остальных трёх стен.
+        assert detail["message"] == i18n_replies.LIMIT_WEEK["it"].format(limit=1)
+        assert "otto i sistemi" in detail["message"]
+    finally:
+        config_module.settings.cache_clear()
+
+
 def test_a_subscribers_turns_do_not_come_back_at_midnight(api, auth_headers, scripted, as_tier):
     """The counter a subscriber is measured by is filed under the month.
 

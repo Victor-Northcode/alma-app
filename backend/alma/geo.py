@@ -304,8 +304,28 @@ def timezone_at(latitude: float, longitude: float) -> str | None:
     return zone
 
 
+@lru_cache(maxsize=1)
+def _zone_names() -> frozenset[str]:
+    """Все зоны tzdata, один раз за жизнь процесса.
+
+    `available_timezones()` каждый вызов заново обходит каталог `zoneinfo` и
+    собирает множество из ~600 имён — это десятки миллисекунд **синхронной**
+    работы в событийном цикле.
+
+    А стоит эта функция на горячем пути: `deps.device_timezone` — зависимость
+    без маршрута, её проходит **каждый** запрос от каждого клиента, потому что
+    все три приложения шлют `X-Alma-Timezone` на любой вызов. То есть цена
+    платилась не за проверку часового пояса, а за факт запроса.
+
+    Кэш на процесс, а не на вызов: список зон меняется с обновлением tzdata, то
+    есть с выкладкой нового образа, а её переживает разве что перезапуск.
+    Заморожено, чтобы вызывающий не мог отредактировать общий кэш случайно.
+    """
+    return frozenset(available_timezones())
+
+
 def is_known_timezone(name: str) -> bool:
-    return name in available_timezones()
+    return name in _zone_names()
 
 
 def offset_at(timezone_name: str, when: datetime) -> float:

@@ -64,16 +64,34 @@ the read side.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Body, HTTPException, status
+from fastapi import APIRouter, Body, HTTPException, Request, status
 
 from ... import funnel
-from ..deps import ANON_ID_HEADER, AnonymousId, SessionDep, Visitor
+from ..deps import ANON_ID_HEADER, AnonymousId, SessionDep, Visitor, request_source, window
 
 router = APIRouter(prefix="/events", tags=["events"])
+
+#: Дневная норма событий для вызывающего **без аккаунта**, посчитанная по
+#: источнику запроса.
+#:
+#: Тот же потолок, что у аккаунта (`funnel.DAILY_LIMIT`), но по другому ключу, и
+#: ключ — весь смысл правки. Считать аноним по `X-Alma-Anon` значило считать по
+#: строке, которую присылает сам клиент: `crypto.randomUUID()` в консоли — и
+#: счёт начинается с нуля, сколько угодно раз. То есть потолка не было, была
+#: подсказка честному клиенту. Источник запроса вызывающий себе не назначает
+#: (см. `deps.request_source`), поэтому потолок стоит здесь.
+#:
+#: Счёт по `anon_id` в базе (`funnel.spend_anonymous_allowance`) при этом
+#: остаётся: он про другое — про размер таблицы под одним идентификатором, и
+#: переживает перезапуск процесса, чего счётчик в памяти не умеет. Два потолка,
+#: две разные вещи под защитой; снят один — второй ещё стоит.
+ANON_EVENTS_PER_SOURCE_PER_DAY = funnel.DAILY_LIMIT
+ANON_EVENT_WINDOW_SECONDS = 86_400.0
 
 
 @router.post("")
 async def record_stage(
+    request: Request,
     user: Visitor,
     anon: AnonymousId,
     session: SessionDep,
@@ -182,6 +200,27 @@ async def record_stage(
     # объяснено в `clean_properties`: незнакомый ярлык выбрасывается, а не
     # отказывается, потому что маяк глотает свои ошибки и рунг воронки исчез бы
     # на релиз из-за одного лишнего слова.
+
+    # Потолок вызывающего без аккаунта — по источнику запроса, и он первый:
+    # стоит один поиск в словаре, не ходит в базу и, в отличие от счёта по
+    # `anon_id`, не снимается новым значением заголовка. Тот, кто норму уже
+    # выбрал, после этой строки не заставляет нас ещё и считать строки таблицы.
+    if user is None and not window(
+        request,
+        "anon_events",
+        limit=ANON_EVENTS_PER_SOURCE_PER_DAY,
+        seconds=ANON_EVENT_WINDOW_SECONDS,
+    ).hit(request_source(request)):
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "error": "event_rate_limit",
+                "message": (
+                    f"{ANON_EVENTS_PER_SOURCE_PER_DAY} events is a day's worth "
+                    "for one visitor"
+                ),
+            },
+        )
 
     try:
         # Two ceilings for the two kinds of caller, and the same number. An

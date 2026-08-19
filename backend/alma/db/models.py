@@ -178,11 +178,32 @@ class User(Base):
     #: silently logging someone out mid-purchase.
     merged_into_id: Mapped[str | None] = mapped_column(ForeignKey("user.id"))
 
+    #: **Ленивые, а не `selectin`, и это правка производительности, а не вкуса.**
+    #:
+    #: `lazy="selectin"` означает: каждый раз, когда откуда угодно загружается
+    #: строка `user`, следом уходят ещё два запроса — за профилями и за правами.
+    #: Строка `user` загружается на **каждом** запросе к API (`deps.visitor` →
+    #: `accounts.resolve`), то есть это были два лишних обращения к базе на
+    #: любой вызов, включая те, которым ни профили, ни права не нужны вовсе.
+    #:
+    #: Платили за них ни за что: ни одна строка в `alma/` не читает
+    #: `user.profiles` и `user.entitlements`. Всё, что работает с профилями и
+    #: правами, ходит своими запросами — `select(Profile).where(...)` в
+    #: `deps.load_profile` и `resolve_birth`, `auth/entitlements.py` за
+    #: грантами, `accounts.erase` бьёт `delete(table).where(table.user_id ==
+    #: ...)` напрямую. Каскад `delete-orphan` тоже никого не грузил: `User`
+    #: никогда не удаляется через `session.delete` — удаление аккаунта это
+    #: `erase`, оставляющая надгробие.
+    #:
+    #: Связи оставлены объявленными: они держат `back_populates` для
+    #: `Profile.user` и `Entitlement.user` и описывают форму схемы. Тот, кому
+    #: коллекция понадобится, попросит её явно — `selectinload(User.profiles)`
+    #: в своём запросе, — и заплатит за неё там, где она нужна.
     profiles: Mapped[list["Profile"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan", lazy="selectin"
+        back_populates="user", cascade="all, delete-orphan"
     )
     entitlements: Mapped[list["Entitlement"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan", lazy="selectin"
+        back_populates="user", cascade="all, delete-orphan"
     )
 
     @property

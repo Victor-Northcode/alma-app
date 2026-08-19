@@ -35,10 +35,18 @@ The rule now:
   `funnel.claim`; without it, the stages recorded before the account and the
   stages recorded after it are two people, and the conversion rate the pricing
   model rests on reads as zero.
+* **Сколько строк может появиться, тоже имеет предел.** «Когда» без «сколько» —
+  половина правила: каждый месячный бюджет отмерян на `user.id`, а `user.id`
+  выдавался по одному HTTP-вызову, так что ротация гостей брала столько
+  бюджетов, сколько раз позвонила. Потолок стоит по источнику запроса — см.
+  `GUEST_MINTS_PER_HOUR` и `request_source`.
 """
 
 from __future__ import annotations
 
+import ipaddress
+import logging
+import time
 from datetime import date as date_type
 from typing import Annotated
 
@@ -54,8 +62,195 @@ from ..db.models import Profile
 from ..geo import is_known_timezone
 from .schemas import BirthInput
 
+log = logging.getLogger("alma.api.deps")
+
 #: The header a client reads to pick up a freshly minted guest token.
 ISSUED_TOKEN_HEADER = "X-Alma-Token"
+
+
+# ── откуда пришёл запрос, и сколько раз оттуда уже приходили ───────────────
+#
+# Три потолка в этом сервисе (гости здесь, письма входа в `routers/auth.py`,
+# события анонима в `routers/events.py`) считаются по «источнику запроса», и
+# все три — про одно: то, что клиент назначает себе сам, потолком быть не
+# может. Токен гостя выдаётся любому, `X-Alma-Anon` клиент генерирует
+# сам, адрес в теле письма пишет тоже он. Единственное, что остаётся, —
+# сетевой адрес, с которого пришло соединение.
+
+#: Заголовки, которыми край (CDN, балансировщик) сообщает адрес клиента.
+#:
+#: Все четыре **перезаписываются** краем поверх присланного клиентом — это то
+#: же основание, на котором `region.py` верит `CF-IPCountry`. `X-Forwarded-For`
+#: намеренно не в списке, хотя он первый, о котором думают: прокси его
+#: **дописывают**, а не перезаписывают, поэтому первый элемент цепочки — текст,
+#: сочинённый вызывающим, и потолок по нему снимается одной строкой заголовка.
+CLIENT_IP_HEADERS: tuple[str, ...] = (
+    "cf-connecting-ip",    # Cloudflare
+    "true-client-ip",      # Cloudflare Enterprise, Akamai
+    "fastly-client-ip",    # Fastly
+    "x-real-ip",           # nginx, Traefik
+)
+
+#: Сказано ли уже в лог, что источник запросов неразличим. Один раз на процесс:
+#: это свойство деплоя, а не запроса, и строка на каждый запрос утонет.
+_warned_about_source = False
+
+
+def request_source(request: Request) -> str:
+    """Кто стучится, с точки зрения потолков. Никогда не пусто.
+
+    Край, если он есть, иначе адрес сокета. **Заголовок здесь — не дыра, а
+    заявленное допущение деплоя**: край перезаписывает его поверх присланного
+    клиентом, ровно как `CF-IPCountry`, на котором уже стоит вся ценовая логика.
+    Сервис, выставленный в интернет напрямую, этих заголовков не получает — и
+    тогда любой может их прислать; поэтому если края нет, его не должно быть и в
+    списке выше. Это решение владельца деплоя, а не свойство кода.
+
+    Обратный случай — адрес сокета, оказавшийся петлёй или приватной сетью при
+    молчащем крае: значит, перед нами прокси, который не представился, и **все
+    клиенты мира сложились в один ключ**. Потолок тогда бьёт по живым людям, а
+    не по скрипту, и это надо увидеть в логе, а не по жалобам. Тот же приём, что
+    `region.observe`: два состояния, неразличимые на проводе, разведены строкой.
+    """
+    global _warned_about_source
+
+    for name in CLIENT_IP_HEADERS:
+        value = (request.headers.get(name) or "").split(",")[0].strip()
+        if value:
+            return value
+
+    peer = request.client.host if request.client else ""
+    if not peer:
+        return "unknown"
+
+    if not _warned_about_source:
+        try:
+            address = ipaddress.ip_address(peer)
+        except ValueError:  # TestClient шлёт «testclient», это не адрес
+            address = None
+        if address is not None and (address.is_loopback or address.is_private):
+            _warned_about_source = True
+            log.warning(
+                "requests arrive from %s and no edge header names the client: "
+                "per-source ceilings are counting everybody as one caller — "
+                "set one of %s at the proxy",
+                peer,
+                ", ".join(CLIENT_IP_HEADERS),
+            )
+    return peer
+
+
+class FixedWindow:
+    """Сколько раз этот ключ приходил за последнее окно. В памяти процесса.
+
+    **Приблизительный, и это выбрано, а не упущено.** Состояние живёт в одном
+    процессе: два воркера дают вдвое больший потолок, рестарт обнуляет счёт. Тот
+    же компромисс уже записан в `funnel.spend_allowance` — «общего состояния у
+    сервиса нет», — и цена честная: потолок здесь стоит против скрипта, который
+    крутит запросы тысячами, а не против точного бюджета. Точный вариант — Redis
+    или строка в базе на каждый запрос без аккаунта, то есть новая зависимость
+    либо запись в базу от неаутентифицированного вызова: и то и другое дороже
+    того, что защищаем.
+
+    Окно фиксированное, а не скользящее: на стыке двух окон пропускается до
+    двойного лимита, зато на ключ хранится пара чисел вместо списка отметок —
+    важно, потому что ключей столько, сколько адресов, и платит за них память
+    процесса. `max_keys` — та же забота: словарь, растущий по адресам, сам стал
+    бы способом уронить сервис.
+    """
+
+    __slots__ = ("limit", "seconds", "max_keys", "_counts")
+
+    def __init__(self, *, limit: int, seconds: float, max_keys: int = 20_000) -> None:
+        self.limit = limit
+        self.seconds = seconds
+        self.max_keys = max_keys
+        self._counts: dict[str, list[float]] = {}
+
+    def hit(self, key: str) -> bool:
+        """Засчитать обращение. `False` — потолок уже выбран."""
+        now = time.monotonic()
+        entry = self._counts.get(key)
+        if entry is None or now - entry[0] >= self.seconds:
+            if len(self._counts) >= self.max_keys:
+                self._forget_stale(now)
+            self._counts[key] = [now, 1.0]
+            return self.limit >= 1
+        entry[1] += 1
+        return entry[1] <= self.limit
+
+    def _forget_stale(self, now: float) -> None:
+        for key, entry in list(self._counts.items()):
+            if now - entry[0] >= self.seconds:
+                del self._counts[key]
+        if len(self._counts) >= self.max_keys:
+            # Ни одно окно не истекло — значит, идёт наплыв с многих адресов.
+            # Забываем всё: потолок на следующем окне мягче, чем процесс,
+            # съевший память под словарь чужих адресов.
+            self._counts.clear()
+
+
+def window(request: Request, name: str, *, limit: int, seconds: float) -> FixedWindow:
+    """Именованный счётчик, живущий столько же, сколько приложение.
+
+    На `app.state`, а не в модуле, и это не вкусовщина: модульный словарь
+    переживает `create_app()`, а значит и тест, и один прогон набора выбрал бы
+    потолок за всех остальных. Здесь у каждого приложения свои счётчики —
+    и в проде их ровно одни на процесс, как и задумано.
+    """
+    counters: dict[str, FixedWindow] = getattr(request.app.state, "rate_windows", None)
+    if counters is None:
+        counters = {}
+        request.app.state.rate_windows = counters
+    found = counters.get(name)
+    if found is None:
+        found = counters[name] = FixedWindow(limit=limit, seconds=seconds)
+    return found
+
+
+#: Сколько гостевых аккаунтов один источник может завести за час.
+#:
+#: **Считаем по источнику, потому что деньги висят на `user.id`.** Месячные
+#: потолки генераций (`free_month_budget` и соседи) — это столько-то долларов на
+#: аккаунт, а аккаунт до этой правки стоил один запрос без токена: скрипт брал
+#: столько бюджетов, сколько раз позвонил. Ограничивать по чему-то, что клиент
+#: присылает сам (`X-Alma-Anon`, `User-Agent`, тело запроса), — значит просить
+#: скрипт ограничить себя. Остаётся сеть.
+#:
+#: Число — компромисс, и он смещён в сторону живого человека. За одним адресом
+#: сидит не один человек: CGNAT мобильного оператора, офис, университет,
+#: институтский Wi-Fi — а продукт мобильный, и первая же минута нового человека
+#: обязана быть без стены. Тридцать в час — это тридцать *новых* людей с одного
+#: адреса в час; заметить это может разве что рекламный залп на общий NAT, а
+#: скрипт упирается на тридцать первом. Точное значение — вопрос владельца:
+#: ниже — риск отказать настоящему новичку, выше — дороже утечка.
+GUEST_MINTS_PER_HOUR = 30
+GUEST_MINT_WINDOW_SECONDS = 3600.0
+
+
+def local_sandbox() -> bool:
+    """Можно ли показывать этому вызывающему внутренности сервиса.
+
+    Один замок на два места — токен входа в теле ответа (`routers/auth.py`) и
+    подробности готовности (`routers/health.py`). Две копии одного правила
+    разъезжаются ровно тогда, когда правило ужесточают: чинят то место, о
+    котором вспомнили.
+
+    Оба условия разом: окружение из **белого списка** локальных и локальный же
+    адрес сервиса. Белый список, а не чёрный: неизвестное имя окружения — повод
+    молчать, а не считать его песочницей. Адрес — вторая половина: стенд,
+    которому забыли сменить `ALMA_ENV`, обычно уже смотрит наружу, и по адресу
+    это видно.
+    """
+    from ..config import settings
+
+    config = settings()
+    return config.environment.lower() in {
+        "development",
+        "dev",
+        "local",
+        "test",
+    } and ("localhost" in config.base_url or "127.0.0.1" in config.base_url)
 
 #: The header a client *sends* to say which browser or installation this is,
 #: when it has no account yet.
@@ -264,6 +459,7 @@ def _minted_locale(accept_language: str | None) -> str:
 
 
 async def current_user(
+    request: Request,
     response: Response,
     session: SessionDep,
     known: Visitor,
@@ -290,6 +486,39 @@ async def current_user(
     """
     if known is not None:
         return known
+
+    # **Гость бесплатен для человека и не бесконечен для скрипта.**
+    #
+    # Всё, что стоит денег, отмеряется на `user.id`: месячный бюджет генераций,
+    # дневная норма вопросов, счётчики `UsageCounter`. Строка `user` при этом
+    # заводилась любому запросу без токена — то есть цена нового месячного
+    # бюджета равнялась одному HTTP-вызову, и «потолок на аккаунт» на самом деле
+    # не был потолком ни на что. Ротация гостей обходила его целиком.
+    #
+    # Отказ стоит **до** `create_guest`, а не после: смысл в том, чтобы строка
+    # не появилась. Кто уже предъявил токен, сюда не доходит — это возврат
+    # выше, — так что потолок не касается ни одного существующего аккаунта, ни
+    # гостевого, ни настоящего. `Retry-After` в часах, потому что окно часовое:
+    # клиенту честнее увидеть срок, чем гадать.
+    if not window(
+        request,
+        "guest_mint",
+        limit=GUEST_MINTS_PER_HOUR,
+        seconds=GUEST_MINT_WINDOW_SECONDS,
+    ).hit(request_source(request)):
+        log.warning("guest minting refused: one source asked for more than %d in an hour",
+                    GUEST_MINTS_PER_HOUR)
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "error": "guest_rate_limit",
+                "message": (
+                    "too many new sessions from here — wait a little, or sign in "
+                    "with an account you already have"
+                ),
+            },
+            headers={"Retry-After": str(int(GUEST_MINT_WINDOW_SECONDS))},
+        )
 
     user = await accounts.create_guest(session, locale=_minted_locale(accept_language))
     await funnel.claim(session, anon_id=anon, user_id=user.id)

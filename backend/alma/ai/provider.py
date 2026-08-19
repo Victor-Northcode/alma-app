@@ -53,11 +53,38 @@ class AnswerTruncated(ModelUnavailable):
     requested, two of them lost attempts to this and one came back 503 to the
     reader. The message string has always said "raise the ceiling for this call
     rather than retrying it"; nothing read it.
+
+    **`completion` несёт счётчики оборванного вызова, и без него они пропадали
+    навсегда.** Обрыв по `max_tokens` — это не «вызова не было»: модель
+    подумала, написала (или не написала) и выставила счёт за всё, что
+    произвела. Раньше исключение поднималось *до* сборки `Completion`, поэтому
+    единственное место, где жили `usage.input_tokens` и `usage.output_tokens`,
+    — локальная переменная, которую тут же съедал `raise`. Русская глава на
+    сильной модели, обрезанная трижды, стоила около $0.6 и двигала счётчик
+    аккаунта на ноль: месячный потолок не приближался, человек жал «повторить»,
+    и каждый повтор стоил столько же. Теперь оборванный вызов приходит к
+    вызывающему вместе со своей ценой, а записать её — его обязанность.
+
+    `spend` заполняет уже вызывающий (`writer.write`, `conversation.answer`) —
+    перед тем, как отпустить исключение наружу после последней попытки. Здесь
+    ему взяться неоткуда: провайдер знает про один вызов и ничего не знает про
+    прогон из трёх, а роутеру для `_charge_anyway` нужен именно прогон.
     """
 
-    def __init__(self, message: str, *, wrote_nothing: bool = False) -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        wrote_nothing: bool = False,
+        completion: "Completion | None" = None,
+    ) -> None:
         super().__init__(message)
         self.wrote_nothing = wrote_nothing
+        self.completion = completion
+        #: `cost.Spend` прогона, если вызывающий его проставил. Не типизировано
+        #: строже, чтобы `provider.py` не знал про `cost.py`: этот модуль —
+        #: тонкий слой над вендором, и деньги считаются этажом выше.
+        self.spend: Any | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -195,14 +222,14 @@ class AnthropicProvider:
         # It is worth being loud about which half ran out. With thinking on,
         # a model can spend the entire allowance reasoning and emit no text at
         # all — that is a budget the caller set too low, not a model fault.
-        if message.stop_reason == "max_tokens":
-            spent = "the answer was cut off" if text else "nothing was written at all"
-            raise AnswerTruncated(
-                f"{model} reached max_tokens={max_tokens} and {spent}"
-                " — raise the ceiling for this call rather than retrying it",
-                wrote_nothing=not text,
-            )
-        return Completion(
+        #
+        # **Собирается до развилки, а не после.** Счёт за оборванный вызов
+        # выставлен ровно такой же, как за удачный, и до этой перестановки он
+        # умирал вместе с локальными переменными: `raise` стоял выше, чем
+        # единственное место, где usage превращался в число. Теперь у обеих
+        # веток на руках одни и те же счётчики, и «сколько это стоило» больше не
+        # зависит от того, чем вызов кончился.
+        completion = Completion(
             text=text,
             model=message.model,
             input_tokens=message.usage.input_tokens,
@@ -211,6 +238,15 @@ class AnthropicProvider:
             cache_read_tokens=getattr(message.usage, "cache_read_input_tokens", 0) or 0,
             cache_write_tokens=getattr(message.usage, "cache_creation_input_tokens", 0) or 0,
         )
+        if message.stop_reason == "max_tokens":
+            spent = "the answer was cut off" if text else "nothing was written at all"
+            raise AnswerTruncated(
+                f"{model} reached max_tokens={max_tokens} and {spent}"
+                " — raise the ceiling for this call rather than retrying it",
+                wrote_nothing=not text,
+                completion=completion,
+            )
+        return completion
 
 
 @dataclass

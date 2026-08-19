@@ -41,7 +41,7 @@ import asyncio
 import json
 import logging
 import re
-from contextlib import suppress
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from collections.abc import AsyncIterator, Awaitable, Callable
@@ -56,7 +56,7 @@ from ... import i18n
 from ...i18n import replies as i18n_replies
 from ...ai import chapters as chapter_defs
 from ...ai import conversation, cost, validator, voice, writer
-from ...ai.provider import ModelUnavailable, Provider, models
+from ...ai.provider import AnswerTruncated, ModelUnavailable, Provider, models
 from ...ai.writer import ReadingRefused
 from ...auth import entitlements
 from ...calc import CalcResult, TimeRequired
@@ -173,6 +173,61 @@ def _prune_lock(key: str) -> None:
         _WRITE_LOCKS.pop(key, None)
 
 
+#: Ходы беседы, у которых больше нет читателя.
+#:
+#: `/chat/stream` перестал отменять свою задачу, когда клиент уходит (см. довод
+#: в `finally` там же), и задача, которую никто не ждёт, обязана быть где-то
+#: записана: `asyncio` держит на задачи только слабые ссылки, и брошенная
+#: пропадает в сборщике мусора посреди генерации — то есть ровно тем способом,
+#: от которого мы уходим. Строка убирается сама, когда ход дописан.
+_STREAM_TURNS: set[asyncio.Task] = set()
+
+
+#: Один замок на аккаунт, на всё время хода беседы.
+#:
+#: **Порция вопросов и месячный потолок читались до записи и без замка.** Обе
+#: проверки — `_chat_gate` и `_guard_month` — это «прочитать счётчик, сравнить,
+#: и много позже записать»; между чтением и записью лежит целая генерация, и
+#: два одновременных сообщения проходили обе стены с одним и тем же нулём в
+#: руках. Двойное нажатие «отправить» на телефоне даёт ровно это, и стоит оно
+#: двух генераций там, где оплачена одна.
+#:
+#: Замок на аккаунт, а не на тред: обходятся оба ограничителя, и оба они —
+#: про аккаунт. Держится он до коммита, а не до конца проверки, потому что у
+#: второго запроса своя сессия и своя транзакция: отпущенный раньше коммита
+#: замок показал бы ему ту же незафиксированную порцию, что и до правки.
+#:
+#: Одного процесса это не переживает — как и `_WRITE_LOCKS` выше; на нескольких
+#: воркерах щель сужается до окна коммита, но не закрывается. Настоящее
+#: лекарство там — уникальность в базе, и его стоит завести в тот день, когда
+#: воркеров станет больше одного.
+_CHAT_LOCKS: dict[str, asyncio.Lock] = {}
+#: Сколько ходов этого аккаунта держат замок или стоят за ним. Считается, чтобы
+#: строку можно было убрать безопасно: удалять «когда не заперто» нельзя —
+#: ожидающий уже держит *старый* объект замка, а следующий создал бы новый, и
+#: двое пошли бы через разные замки, то есть мимо замка вовсе.
+_CHAT_WAITING: dict[str, int] = {}
+
+
+@asynccontextmanager
+async def _chat_slot(user_id: str) -> AsyncIterator[None]:
+    """Пока это открыто, у аккаунта идёт ровно один ход беседы."""
+    lock = _CHAT_LOCKS.get(user_id)
+    if lock is None:
+        lock = _CHAT_LOCKS[user_id] = asyncio.Lock()
+    _CHAT_WAITING[user_id] = _CHAT_WAITING.get(user_id, 0) + 1
+    try:
+        async with lock:
+            yield
+    finally:
+        left = _CHAT_WAITING.get(user_id, 1) - 1
+        if left > 0:
+            _CHAT_WAITING[user_id] = left
+        else:
+            _CHAT_WAITING.pop(user_id, None)
+            _CHAT_LOCKS.pop(user_id, None)
+
+
 #: The metric each allowance is counted under. The monthly one has its own
 #: name rather than sharing the daily one — see `_counter`.
 DAILY_QUESTIONS_METRIC = "questions"
@@ -196,7 +251,11 @@ class Allowance:
     tier: str
     model: str
     limit: int
-    period: str      # "day" | "month"
+    #: "day" | "week" | "month" | "once". Каждый из четырёх — ещё и ключ фразы
+    #: для стены (`question_limit.{period}` в `_chat_gate`), поэтому период,
+    #: добавленный без строки в `i18n/replies.py`, — это 500 вместо 429.
+    #: Стережёт `test_every_period_an_allowance_can_carry_has_a_sentence_for_its_wall`.
+    period: str
     metric: str
 
 
@@ -787,6 +846,19 @@ async def _write_opening(
             "no opening for %s/%s: %s", result.system, chapter.slug, exc
         )
         return None
+    except AnswerTruncated as exc:
+        # Обрезанные попытки — тоже состоявшиеся генерации, и стоят они ровно
+        # столько же. Ветка стоит **выше** `ModelUnavailable`, потому что
+        # `AnswerTruncated` — его наследник: попав в общий `except` ниже, три
+        # оплаченные попытки уходили в лог и никуда больше. Стена всё равно
+        # отдаётся — экран с ценой обязан отрисоваться, — но бесплатной она
+        # больше не бывает.
+        await _charge_anyway(session, user, cents=_truncated_cents(exc))
+        log.warning(
+            "no opening for %s/%s — truncated every attempt: %s",
+            result.system, chapter.slug, exc,
+        )
+        return None
     except (cost.BudgetExceeded, ModelUnavailable, HTTPException) as exc:
         # `HTTPException` здесь — это 429 месячного потолка из `_guard_month`
         # или 400 «сначала сохрани дату рождения» из `_profile_id`. Ловятся
@@ -1041,6 +1113,24 @@ async def _read_or_write(
                 "error": "budget_exceeded",
                 "message": i18n_replies.reply("budget_exceeded", payload.locale),
             },
+        ) from exc
+    except AnswerTruncated as exc:
+        # **Самый дорогой исход, и до этой ветки он стоил аккаунту ноль.**
+        #
+        # Три попытки, обрезанные все три, — это три настоящих генерации: на
+        # русской главе сильной моделью около $0.6. `AnswerTruncated` наследует
+        # `ModelUnavailable`, поэтому попадал в ветку ниже, отвечал 503 мимо
+        # `_charge_anyway`, а откат сессии довершал дело — в леджере не
+        # оставалось ничего. Месячный потолок при этом не двигался, так что
+        # «повторить» можно было жать бесконечно, и каждый раз за те же деньги.
+        # Ответ читателю тот же 503 с той же фразой: меняется счёт, а не экран.
+        await _charge_anyway(session, user, cents=_truncated_cents(exc))
+        log.error(
+            "every attempt at %s/%s was truncated: %s", payload.system, chapter.slug, exc
+        )
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"error": "ai_unavailable", "message": str(exc)},
         ) from exc
     except ModelUnavailable as exc:
         raise HTTPException(
@@ -1379,6 +1469,20 @@ async def _spend(session, user, cents: float) -> None:
     await session.flush()
 
 
+def _truncated_cents(exc: AnswerTruncated) -> float:
+    """Во сколько обошёлся прогон, кончившийся обрывом на каждой попытке.
+
+    `AnswerTruncated.spend` проставляет тот, кто вёл цикл попыток
+    (`writer.write`, `conversation.answer`), — только он знает, что попыток
+    было три, а не одна. Ноль здесь означает ровно одно: исключение пришло не
+    из такого цикла, а из одиночного вызова провайдера, и прогона, за который
+    надо платить, не было. Отдельной функцией, а не `getattr` на трёх
+    площадках, чтобы четвёртая не завела свою версию этого «ноль».
+    """
+    spend = getattr(exc, "spend", None)
+    return spend.cents if spend is not None else 0.0
+
+
 async def _charge_anyway(session, user, *, cents: float) -> None:
     """Record what a failed request already spent, and commit it.
 
@@ -1533,6 +1637,32 @@ def _chapter_projection(
     )
 
 
+def _spheres_projection(result: CalcResult, *, model: str, locale: str) -> float:
+    """Во что обойдётся превью пяти сфер — тем же способом, что и глава.
+
+    Считается из тех же кусков, что соберёт `spheres.write`: его собственный
+    промт, тот же системный блок и тот же стартовый потолок вывода. Отдельная
+    функция, а не `_chapter_projection`, потому что у сфер нет `Chapter` — ни
+    вопроса, ни числа слов, — и подстановка «какой-нибудь главы» вместо них
+    измеряла бы не ту строку, которую мы собираемся отправить.
+    """
+    from ...ai import spheres as spheres_module
+
+    prompt = spheres_module.build_prompt(result, locale=locale)
+    system = voice.system_prompt(locale=locale, paid=False)
+    latin = i18n.resolve(locale) in ("en", "es", "de", "it", "fr", "pt-BR")
+    return cost.estimate(
+        model,
+        prompt_chars=len(prompt) + len(system),
+        # Стартовый потолок `spheres.write`, а не `MAX_TOKENS`: выше него он
+        # поднимается только через `affordable_output`, то есть ровно в те
+        # деньги, которые уже разрешил потолок вызова. Проекция обязана
+        # называть ожидаемую цену, а не худшую из мыслимых, иначе месячная
+        # стена встаёт перед человеком, который до неё не дошёл.
+        max_output_tokens=2600 if latin else spheres_module.MAX_TOKENS,
+    )
+
+
 def _chat_projection(
     *,
     question: str,
@@ -1650,6 +1780,29 @@ async def natal_spheres(
             # factor, «ты должен») and the natal screen said Alma is silent.
             # Three failed cheap generations cost more than one good mid one.
             _cheap, mid, _strong = models()
+
+            # **Тот же месячный гейт, что у любой другой генерации.**
+            #
+            # Здесь его не было вовсе, и это единственная генерация продукта,
+            # которая жила мимо `guard_month`. Расход она при этом честно
+            # записывала (`_spend` ниже), так что превью сфер тратило общий
+            # месячный потолок и само же в него не упиралось — оно только
+            # приближало стену, за которой откажут *другим* экранам.
+            #
+            # Дыра открывается правкой даты рождения: `calc_key` включает весь
+            # список факторов, поэтому каждая новая дата — новое превью и новая
+            # генерация, сколько угодно раз подряд. Бесплатность сфер это не
+            # отменяет: потолок тира и есть форма, в которой «бесплатно» здесь
+            # записано, — и кэш выше проверен раньше, так что уже написанное
+            # превью открывается и в месяц, потраченный до копейки.
+            await _guard_month(
+                session,
+                user,
+                tier=await entitlements.tier_of(session, user),
+                locale=language,
+                projected=_spheres_projection(result, model=mid, locale=language),
+            )
+
             try:
                 blocks, spend = await spheres_module.write(
                     result, provider=provider(), model=mid, locale=language
@@ -1923,10 +2076,43 @@ async def _chat_turn(
     *,
     stage: Callable[[str, str], Awaitable[None]] | None = None,
 ) -> dict:
+    """Один ход беседы — под замком аккаунта и с коммитом внутри него.
+
+    Тело хода живёт в `_answer_one_turn`; здесь только то, без чего оно
+    считается неверно при двух одновременных отправках. См. `_chat_slot`:
+    и порция вопросов, и месячный потолок — это «прочитал, сравнил, много
+    позже записал», и два хода, идущие рядом, читают один и тот же ноль.
+
+    Коммит стоит **здесь, а не в зависимости**, ровно по той же причине.
+    Зависимость коммитит после возврата из роута, то есть уже без замка, — и
+    следующий ход, взяв замок, читал бы счётчик своей сессией, не видя чужой
+    незафиксированной записи. Тогда замок сторожил бы порядок и не сторожил бы
+    число, что и есть исходная ошибка, только медленнее. Пути отказа сюда не
+    доходят: `_charge_anyway` уже откатил и закоммитил сам.
+    """
+    async with _chat_slot(user.id):
+        answered = await _answer_one_turn(
+            payload, user, session, provider, stage=stage
+        )
+        await session.commit()
+        return answered
+
+
+async def _answer_one_turn(
+    payload: ChatRequest,
+    user,
+    session,
+    provider,
+    *,
+    stage: Callable[[str, str], Awaitable[None]] | None = None,
+) -> dict:
     """Один ход беседы: квота, карта, модель, счёт — и готовый ответ.
 
     `stage` — рассказчик стрима: его зовут на настоящих шагах подготовки
     (см. `_stage_for`), и когда его нет, ход ведёт себя ровно как всегда.
+
+    Зовётся только из `_chat_turn`, под замком аккаунта: всё, что здесь
+    прочитано из счётчиков, обязано оставаться правдой до самой записи.
     """
     allowance, tier = await _chat_gate(
         session, user, locale=payload.locale, message=payload.message
@@ -2114,6 +2300,22 @@ async def _chat_turn(
             detail={
                 "error": "budget_exceeded",
                 "message": i18n_replies.reply("budget_exceeded", payload.locale),
+            },
+        ) from exc
+    except AnswerTruncated as exc:
+        # Ход, обрезанный все три раза, — три оплаченные генерации, и до этой
+        # ветки они уходили в 503 ниже, ничего не записав. Тот же довод, что у
+        # главы: `AnswerTruncated` — наследник `ModelUnavailable`, поэтому
+        # порядок веток здесь и есть починка. Вопрос из квоты по-прежнему не
+        # списывается — `_charge_anyway` трогает только деньги, — потому что
+        # правило «вопрос платится за ответ» ошибке не уступает.
+        log.error("every attempt at a chat turn for %s was truncated: %s", user.id, exc)
+        await _charge_anyway(session, user, cents=_truncated_cents(exc))
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "error": "ai_unavailable",
+                "message": i18n_replies.reply("ai_unavailable", payload.locale),
             },
         ) from exc
     except ModelUnavailable as exc:
@@ -2311,6 +2513,12 @@ async def chat_stream(
                 await queue.put(("error", {"status": 500, "detail": {"error": "internal"}}))
 
         task = asyncio.create_task(work())
+        # Ссылка живёт вне генератора: задача, на которую никто не смотрит,
+        # может быть собрана сборщиком мусора посреди работы — это
+        # документированное поведение `asyncio.create_task`, а ниже мы как раз
+        # перестаём её ждать.
+        _STREAM_TURNS.add(task)
+        task.add_done_callback(_STREAM_TURNS.discard)
         try:
             while True:
                 kind, data = await queue.get()
@@ -2318,12 +2526,36 @@ async def chat_stream(
                 if kind in ("done", "error"):
                     return
         finally:
-            # Клиент ушёл посреди генерации — не жечь модель дальше. После
-            # нормального конца задача уже завершена и cancel — пустой жест.
+            # **Клиент ушёл — ход дописывается, а не отменяется.**
+            #
+            # Здесь стоял `task.cancel()` с доводом «не жечь модель дальше», и
+            # довод не выдержал арифметики. Отмена приходит в `_chat_turn` в
+            # любую точку — в том числе после того, как `conversation.answer`
+            # уже вернул ответ, — и уносит с собой всю транзакцию: `session_scope`
+            # на `CancelledError` делает rollback. То есть генерация состоялась и
+            # была оплачена, а в базе не остаётся ни расхода, ни списанного
+            # вопроса, ни самого ответа. Сорванная связь — это норма мобильной
+            # сети, лифт и блокировка экрана, а не редкость; при отмене за неё
+            # платили мы, и месячный потолок этого не видел.
+            #
+            # Сэкономить отмена могла только хвост уже начатого вызова —
+            # произведённые токены не возвращаются, — и меняла этот хвост на
+            # потерю всей суммы и потерю ответа. Теперь задача доживает свою
+            # жизнь сама: она пишет ответ в тред, считает вопрос и коммитит
+            # расход своей собственной сессией. Человек, вернувшийся в беседу,
+            # находит там ответ, за который мы заплатили, — деньги купили
+            # написанное, а не воздух.
+            #
+            # Ограничитель на «сколько таких можно завести» — не отмена, а
+            # квота: `_chat_turn` берёт замок аккаунта и проверяет порцию
+            # внутри него, так что оборванные ходы одного человека идут
+            # по одному и упираются в ту же стену, что обычные.
             if not task.done():
-                task.cancel()
-                with suppress(asyncio.CancelledError):
-                    await task
+                log.info(
+                    "chat stream for %s lost its reader mid-turn — finishing the "
+                    "turn anyway so the generation it already paid for is recorded",
+                    user_id,
+                )
 
     return StreamingResponse(
         turns(),

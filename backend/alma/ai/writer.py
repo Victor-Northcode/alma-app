@@ -639,6 +639,32 @@ async def write(
                 provider, system, prompt, model, max_tokens, schema=schema, effort=effort
             )
         except AnswerTruncated as exc:
+            # **Оборванная попытка оплачена, поэтому она записывается здесь, а
+            # не ниже.**
+            #
+            # `tally.record` стоял после этого `except`, и это была единственная
+            # ветка, по которой настоящий вызов модели проходил мимо счёта.
+            # Обрыв по `max_tokens` не отменяет счёт — модель подумала и
+            # произвела токены, — а прогон, обрезанный все три раза, стоил
+            # русской главой на сильной модели около $0.6 и двигал месячный
+            # потолок на ноль. Дальше человек жал «повторить», и повтор стоил
+            # столько же: ограничитель, который видит только удачные вызовы,
+            # ограничивает не расход, а пользу.
+            #
+            # `tally.check` здесь намеренно **не** зовётся: он поднял бы
+            # `BudgetExceeded` вместо `AnswerTruncated`, и цикл потерял бы обе
+            # свои починки — прибавку потолка и убавку размышления, — то есть
+            # ровно то, ради чего эта ветка написана. Потраченное всё равно
+            # войдёт в сумму: следующая удачная попытка спросит `check` уже с
+            # ним внутри, а `Written.spend` и `ReadingRefused.spend` считаются
+            # по тому же `tally`.
+            if exc.completion is not None:
+                tally.record(cost.cost(
+                    model, exc.completion.input_tokens, exc.completion.output_tokens,
+                    cache_read_tokens=exc.completion.cache_read_tokens,
+                    cache_write_tokens=exc.completion.cache_write_tokens,
+                ))
+
             def afford(desired: int) -> int:
                 """As much of the raise as the per-call ceiling will pay for.
 
@@ -768,6 +794,13 @@ async def write(
                     result.system, chapter.slug, attempt, reason, exc,
                 )
             if attempt == MAX_ATTEMPTS:
+                # **Наружу уходит вместе с ценой прогона.** Без неё роутер
+                # ловил это как обычный `ModelUnavailable`, отвечал 503 мимо
+                # `_charge_anyway`, и откат сессии стирал даже то, что успели
+                # записать соседние шаги запроса. Три настоящих генерации
+                # исчезали из счёта целиком — самый дорогой исход стоил
+                # аккаунту ноль.
+                exc.spend = _spent_since(tally, opening, model)
                 raise
             continue
 

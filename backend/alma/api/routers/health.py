@@ -4,6 +4,21 @@
 human before a launch: is everything this service needs actually configured.
 The second one lists what is missing by name, because "not ready" without a
 reason is a message that gets ignored.
+
+**Кому этот список виден — отдельный вопрос, и раньше ответ был «всем».**
+`/ready` открыт без токена (иначе он не годится ни балансировщику, ни проверке
+деплоя) и при этом отдавал имя окружения, версию эфемерид, статистику кэша и
+**поимённый перечень ненастроенных секретов**. Последнее — готовая карта для
+атакующего: `missing` называет, какой замок ещё не повешен, а `checks` говорит,
+какие двери вообще есть. Разведка такого качества обычно стоит недели.
+
+Поэтому здесь два ответа на один маршрут. Наружу — булево «готов»: балансировщик
+и `deploy --wait` спрашивают ровно его, а узнать, отвечает ли сервис, всё равно
+можно любым запросом, так что это не новость. Подробности — только в локальной
+песочнице (`deps.local_sandbox`, тот же замок, что на отладочном токене входа), а
+в проде их место в логе процесса: `app.lifespan` пишет `running in production
+without: …` на старте, и читает это тот, у кого есть доступ к машине, — то есть
+ровно тот, кому список и предназначался.
 """
 
 from __future__ import annotations
@@ -18,6 +33,7 @@ from ...config import settings
 from ...db import healthy
 from ...engine import ephemeris
 from ..cache import result_cache
+from ..deps import local_sandbox
 
 router = APIRouter(tags=["service"])
 _STARTED = time.time()
@@ -25,6 +41,12 @@ _STARTED = time.time()
 
 @router.get("/health")
 async def health() -> dict:
+    """Живость. Публично и намеренно бессодержательно.
+
+    Ни имени окружения, ни версий: единственное, что здесь сообщается сверх
+    самого факта ответа, — сколько процесс живёт, и это то, ради чего маршрут
+    существует (перезапускающийся под нагрузкой воркер виден только так).
+    """
     return {"status": "ok", "uptime_seconds": round(time.time() - _STARTED, 1)}
 
 
@@ -48,8 +70,14 @@ async def ready() -> dict:
         "ai": config.ai_enabled,
         "billing": config.billing_enabled,
     }
+    answer = {"ready": database and ephemeris_ok and geo.index_available()}
+    if not local_sandbox():
+        # Всё, что ниже, — про устройство сервиса, а не про то, отвечает ли он.
+        # Наружу уходит один флаг: балансировщик спрашивает только его.
+        return answer
+
     return {
-        "ready": database and ephemeris_ok and geo.index_available(),
+        **answer,
         "production_ready": not missing,
         "missing": missing,
         "checks": checks,
