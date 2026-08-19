@@ -112,6 +112,64 @@ def estimate(model: str, *, prompt_chars: int, max_output_tokens: int) -> float:
     return cost(model, approximate_input, max_output_tokens).dollars
 
 
+#: Во сколько раз настоящий счёт оказался **больше** проекции. Замер, а не
+#: формула, и живёт он здесь одним местом, чтобы обновлялся одним местом.
+#:
+#: `estimate` называет себя worst-case, и это неправда дважды. Четыре символа
+#: на токен занижают наши списки факторов — у открывающего абзаца 2 864 токена
+#: входа против 1 875 в проекции. А `max_output_tokens` — потолок **одной**
+#: попытки, тогда как в `Reading.cost_cents` ложится весь цикл попыток
+#: (`writer.MAX_ATTEMPTS`): 1 616 токенов вывода против 780 в проекции. То есть
+#: это поправка не к ценам, а к предсказанию, и без неё всякий потолок,
+#: посчитанный по проекции, стоит вдвое ниже, чем думает тот, кто его ставил.
+#:
+#: **Откуда числа.** `backend/data/alma.db` на 19.08.2026 — единственные
+#: настоящие данные, какие у нас есть: 07.08–19.08, 41 аккаунт, 202 написанные
+#: главы, 49 оплаченных ходов беседы.
+#:
+#: | статья | замер | проекция | множитель |
+#: |---|---|---|---|
+#: | платная глава, opus | 11.19¢ (n=69) | 6.07¢ | 1.83 |
+#: | открывающий абзац, sonnet | 3.556¢ (n=44) | 1.73¢ | 2.05 |
+#: | ход беседы, sonnet | 7.68¢ (n=49) | 3.20¢ | 2.40 |
+#:
+#: **Чего эта выборка не знает.** Это двенадцать дней одного разработчика, а не
+#: месяц живых читателей. По главам она приличная: английские и русские сошлись
+#: в пределах 3 % (10.98¢ против 11.27¢ на opus), то есть множитель не про язык.
+#: По беседе — сорок девять ходов, и 2.40 самый шаткий из трёх: его надо
+#: пересчитать первым, как только ходов станет заметно больше.
+MEASURED_OVER_PROJECTED: dict[str, float] = {
+    "chapter": 1.83,
+    "opening": 2.05,
+    "chat_turn": 2.40,
+}
+
+
+def at_measured_rate(projected: float, kind: str) -> float:
+    """Проекция, пересчитанная в то, что показывает счёт.
+
+    Этим считаются потолки тиров: потолок обязан покрывать обещание в тех
+    деньгах, которые с нас возьмут, а не в тех, которые мы предсказали.
+
+    Запрос, которым получены множители, — чтобы следующий замер мерил то же
+    самое, а не похожее:
+
+    ```sql
+    select count(*), avg(cost_cents) from reading
+      where model = 'claude-opus-5';                    -- платная глава
+    select count(*), avg(cost_cents) from reading
+      where chapter like 'opening:%';                   -- открывающий абзац
+    select count(*), avg(cost_cents) from chat_message
+      where model = 'claude-sonnet-5' and cost_cents > 0;  -- ход беседы
+    ```
+
+    Незнакомая статья — `KeyError`, а не «умножу на единицу»: молчаливая
+    единица здесь означала бы потолок, посчитанный по проекции, то есть ровно
+    ту ошибку, ради которой этот множитель заведён.
+    """
+    return projected * MEASURED_OVER_PROJECTED[kind]
+
+
 def ceiling(*, paid: bool) -> float:
     """What a *single* generation may cost. See `month_ceiling` for the other."""
     config = settings()
@@ -294,6 +352,27 @@ class Ledger:
 #: readings router should import this rather than repeat the string.
 SPEND_METRIC = "spend_cents"
 
+#: Вторая статья того же леджера: деньги, потраченные на **показ**, а не на
+#: чтение. `month_spend` её не суммирует, и это не поблажка, а разделение
+#: расходов на два вида.
+#:
+#: Открывающий абзац закрытой главы — единственное, чем эта глава продаётся:
+#: он пишется до всякого решения о покупке и каждому, включая тех, кто не купит
+#: никогда. Поэтому он и освобождён от `_guard_month` (довод — в
+#: `readings._write_opening`). Но пока его расход ложился сюда же, освобождение
+#: ничего не значило: тридцать шесть достижимых в одиночку абзацев (сорок стен
+#: минус четыре главы совместимости, которым нужен второй человек) по 3.556¢ —
+#: это $1.28 против $1.10 `free_month_budget`, то есть человек, посмотревший
+#: витрину целиком, получал 429 `month_budget` на первом же бесплатном вопросе.
+#: Витрина отменяла продажу тем самым способом, от которого её освободили.
+#:
+#: Деньги при этом не пропадают, а переезжают в статью со своим потолком:
+#: `readings.OPENING_ALLOWANCE` (шестьдесят абзацев в месяц на аккаунт, отказ
+#: живой) и `readings.SHOWCASE_MONTH_CEILING` (во что этот потолок обходится в
+#: деньгах, сторожит CI). Смотреть на неё — `month_showcase_spend`; складывать
+#: со счётом чтения нельзя, это разные статьи, и сумма их не решение, а отчёт.
+SHOWCASE_METRIC = "showcase_cents"
+
 #: Tier → the setting that holds its monthly allowance. Kept as a mapping so
 #: that the tiers a caller may name and the ceilings that exist are the same
 #: list, read from one place.
@@ -341,22 +420,49 @@ def month_bounds(at: datetime | None = None) -> tuple[date, date]:
 async def month_spend(
     session: AsyncSession, user: User, *, at: datetime | None = None
 ) -> float:
-    """Everything this account has cost us this calendar month, in dollars.
+    """Что этот аккаунт **начитал** за календарный месяц, в долларах.
 
-    `UsageCounter` stores the figure in **cents**, and every ceiling in this
-    module is in dollars. The conversion happens here and only here, so that
-    no caller can compare a cents total against a dollar ceiling and be wrong
-    by a factor of a hundred in the direction that costs money.
+    Заголовок был «everything this account has cost us», и с 19.08.2026 это
+    неправда: показ считается отдельно (`month_showcase_spend`).
 
     A calendar month rather than a rolling window because it is the unit the
     person is billed in, and therefore the only one a support conversation
     can be had about.
+
+    **Читается ровно одна статья — `SPEND_METRIC`.** Расход витрины лежит в
+    соседней и сюда не попадает нарочно; довод записан у `SHOWCASE_METRIC`.
+    Тот, кому нужен весь счёт аккаунта, складывает две функции сам и видит, что
+    складывает.
+    """
+    return await _month_total(session, user, SPEND_METRIC, at=at)
+
+
+async def month_showcase_spend(
+    session: AsyncSession, user: User, *, at: datetime | None = None
+) -> float:
+    """Во что нам обошёлся показ этому аккаунту в этом месяце, в долларах.
+
+    Отдельная функция, а не флаг у `month_spend`: у той есть ровно один
+    вызывающий, которому нельзя ошибиться, — `guard_month`, — и параметр со
+    значением по умолчанию рано или поздно кто-нибудь передал бы туда.
+    """
+    return await _month_total(session, user, SHOWCASE_METRIC, at=at)
+
+
+async def _month_total(
+    session: AsyncSession, user: User, metric: str, *, at: datetime | None = None
+) -> float:
+    """Сумма одной статьи за календарный месяц, в долларах.
+
+    `UsageCounter` хранит центы, а все потолки этого модуля — в долларах; деление
+    на сто живёт здесь и только здесь, чтобы ни один вызывающий не сравнил центы
+    с долларовым потолком и не ошибся в сто раз в сторону, которая стоит денег.
     """
     first, following = month_bounds(at)
     total = await session.scalar(
         select(func.sum(UsageCounter.amount)).where(
             UsageCounter.user_id == user.id,
-            UsageCounter.metric == SPEND_METRIC,
+            UsageCounter.metric == metric,
             UsageCounter.day >= first,
             UsageCounter.day < following,
         )

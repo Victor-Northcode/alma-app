@@ -207,9 +207,14 @@ def test_walking_every_locked_chapter_costs_about_what_the_owner_was_told():
 
     Число здесь не круглое, и это намеренно: оно должно ловить не «стало
     чуть-чуть дороже», а «кто-то удлинил открывающий абзац или подключил его к
-    сильной модели», то есть удвоение. Верхняя граница — проекция потолка, где
-    вся разрешённая длина считается израсходованной; настоящий счёт примерно
-    вдвое ниже, потому что сорок слов столько токенов не занимают.
+    сильной модели», то есть удвоение.
+
+    **Здесь стояло «настоящий счёт примерно вдвое ниже», и это была неправда в
+    обе стороны.** Проекция не верхняя граница: `cost.estimate` считает одну
+    попытку и четыре символа на токен, а в счёт ложится весь цикл попыток и наши
+    длинные списки факторов. По замеру абзац стоит 3.556¢ против 1.73¢ проекции
+    — счёт вдвое **выше**, а не ниже. Обе величины проверяются ниже; первая
+    сторожит промт, вторая — деньги.
 
     И это плата за жизнь аккаунта, а не за месяц: `_opening_key` намеренно не
     включает движущиеся факторы, поэтому повторные заходы бесплатны, а
@@ -218,6 +223,38 @@ def test_walking_every_locked_chapter_costs_about_what_the_owner_was_told():
     _cheap, mid, _strong = models()
     sweep = sum(_opening_projections(mid).values())
     assert 0.40 < sweep < 1.00, f"обход всех закрытых глав стоит ${sweep:.4f}"
+
+    # Тот же обход в деньгах, которые с нас возьмут. Здесь и стояла ошибка,
+    # которую этот тест сам же и повторял в docstring: настоящий счёт не вдвое
+    # ниже проекции, а вдвое выше.
+    measured = cost.at_measured_rate(sweep, "opening")
+    assert 1.20 < measured < 1.70, (
+        f"по замеренной ставке обход всех закрытых глав стоит ${measured:.4f}"
+    )
+
+
+def test_the_showcase_ceiling_is_priced_at_measured_rates():
+    """У витрины свой потолок, и в рантайме он выражен в абзацах.
+
+    Отказывать по деньгам там, где отказ отменяет продажу, нельзя — довод в
+    `readings._write_opening`, — поэтому витрину держит счёт абзацев
+    (`OPENING_ALLOWANCE`, шестьдесят в месяц на аккаунт). Но счёт абзацев не
+    видит того, от чего этот потолок в первую очередь и защищает: удлинили
+    абзац, подключили сильную модель, добавили систему — цена шестидесяти
+    абзацев уехала, а шестьдесят осталось шестьюдесятью. Это единственное
+    место, где цена витрины проверяется в деньгах, и проверяется в
+    **замеренных**, потому что платим мы в них.
+    """
+    _cheap, mid, _strong = models()
+    projected = _opening_projections(mid)
+    per_opening = cost.at_measured_rate(
+        sum(projected.values()) / len(projected), "opening"
+    )
+    worst_month = route.OPENING_ALLOWANCE * per_opening
+    assert worst_month <= route.SHOWCASE_MONTH_CEILING, (
+        f"шестьдесят абзацев стоят ${worst_month:.4f} против объявленного "
+        f"потолка витрины ${route.SHOWCASE_MONTH_CEILING:.2f}"
+    )
 
 
 def test_the_strong_model_is_what_the_free_ceiling_refuses():
@@ -344,6 +381,11 @@ def test_a_locked_chapter_pays_for_forty_words_and_never_for_the_chapter(
     писателя зовут по разу на главу, а не по разу на просмотр; каждый вызов
     записан в месячный счёт, потому что вызов без записи — дыра в потолке, а
     не экономия; и второй обход тех же глав не стоит уже ничего.
+
+    Счёт здесь — счёт **витрины** (`month_showcase_spend`). С 19.08.2026 у
+    показа своя статья, и требование к ней то же самое, слово в слово: вызов без
+    записи — дыра в потолке. Что расход при этом не попадает в счёт чтения,
+    держит `test_the_showcase_does_not_spend_the_month_the_questions_come_from`.
     """
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     factors = _natal_factors()
@@ -361,7 +403,7 @@ def test_a_locked_chapter_pays_for_forty_words_and_never_for_the_chapter(
         assert body["opening"]["body"]
 
     assert len(scripted.calls) == 3, "по одному абзацу на главу, и ни одной главы"
-    walked = _spent(user_id)
+    walked = _showcase_spent(user_id)
     assert walked > 0.0, "написанный абзац обязан быть записан в счёт"
 
     for chapter in locked:
@@ -371,7 +413,9 @@ def test_a_locked_chapter_pays_for_forty_words_and_never_for_the_chapter(
         assert again.status_code == 200 and again.json()["cached"] is True
 
     assert len(scripted.calls) == 3, "второй заход снова заплатил за те же слова"
-    assert _spent(user_id) == pytest.approx(walked), "перечитывание стены бесплатно"
+    assert _showcase_spent(user_id) == pytest.approx(walked), (
+        "перечитывание стены бесплатно"
+    )
 
 
 # ── which model and how many turns each tier gets ──────────────────────────
@@ -755,7 +799,78 @@ def test_a_chat_turn_is_recorded_where_the_ledger_reads_it(api, auth_headers, sc
     assert read_async(read_back) > 0.0
 
 
+def test_the_showcase_does_not_spend_the_month_the_questions_come_from(
+    api, auth_headers, scripted
+):
+    """Открывающий абзац пишется в свою статью, и беседа её не читает.
+
+    Это вторая половина освобождения витрины от `_guard_month`. Первая — не
+    звать ограничитель — была сделана давно и одна ничего не значила: расход
+    абзаца всё равно ложился в ту же строку леджера, которую `guard_month`
+    читает на беседе. Арифметика отказа: достижимых открывающих абзацев
+    тридцать шесть, по замеру 3.556¢ каждый, это $1.28 против `free_month_budget`
+    $1.10 — человек, посмотревший витрину целиком, получал 429 `month_budget` на
+    первом же бесплатном вопросе. Витрина отменяла продажу тем самым способом,
+    от которого её освободили.
+
+    Проверяется одним абзацем, а не тридцатью шестью: строка леджера либо та,
+    либо не та, и на одном абзаце это видно так же точно, а стоит секунду.
+    Вторую половину — что тридцати шести хватало, чтобы упереться, — считает
+    `assert` ниже по замеренной ставке: без него починка читается как забота о
+    трёх центах одного абзаца, а речь о долларе двадцати восьми.
+    """
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    user_id = api.get("/v1/auth/session", headers=auth_headers).json()["user_id"]
+    scripted.responses.append(_opening(_natal_factors()))
+
+    response = api.post(
+        "/v1/readings", json={"system": "natal", "chapter": "career"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["opening"], "абзац не написан — мерить нечего"
+
+    assert _spent(user_id) == 0.0, (
+        "расход витрины лёг в тот же счёт, из которого оплачиваются вопросы, — "
+        "значит показ снова отменяет продажу"
+    )
+    assert _showcase_spent(user_id) > 0.0, (
+        "витрина написала абзац и не записала его никуда — это расход, "
+        "которого никто не видит"
+    )
+
+    _cheap, mid, _strong = models()
+    projected = _opening_projections(mid)
+    per_opening = cost.at_measured_rate(
+        sum(projected.values()) / len(projected), "opening"
+    )
+    reachable = 36  # сорок минус четыре главы совместимости: им нужен второй человек
+    would_have_spent = reachable * per_opening
+    assert would_have_spent > settings().free_month_budget, (
+        f"вся достижимая витрина стоит ${would_have_spent:.4f} против потолка "
+        f"${settings().free_month_budget:.2f} — если это перестало быть правдой, "
+        "перечитай тест: он мог начать защищать не то"
+    )
+
+
 # ── the path that spends the most and used to record the least ─────────────
+
+def _showcase_spent(user_id: str) -> float:
+    """Сколько этот аккаунт стоил нам на показе — вторая статья леджера."""
+
+    from alma.ai import cost
+    from alma.db import get_session
+    from alma.db.models import User
+
+    async def read_back() -> float:
+        async for session in get_session():
+            return await cost.month_showcase_spend(
+                session, await session.get(User, user_id)
+            )
+        return 0.0
+
+    return read_async(read_back)
+
 
 def _spent(user_id: str) -> float:
 
@@ -873,42 +988,67 @@ def test_no_tier_is_promised_more_than_its_ceiling_can_fund():
     of magnitude means the documented one is a lie and the ledger is quietly
     doing the product's job.
 
-    Priced through the router's own projection helpers, because that is what
-    `guard_month` adds, and against the heaviest month each tier can honestly
-    have: every chat turn used, plus the most written content that tier can
-    reach in one month.
+    Priced against the heaviest month each tier can honestly have: every chat
+    turn used, plus the most written content that tier can reach in one month.
+
+    **По замеренным ставкам, а не по проекции, и это исправление самого теста.**
+    Он собирал промты роутера и спрашивал `cost.estimate`, то есть считал
+    обещание в предсказанных деньгах. Предсказание занижает счёт вдвое: глава на
+    opus стоит 11.19¢ против 6.07¢ проекции, ход беседы 7.68¢ против 3.20¢
+    (`cost.MEASURED_OVER_PROJECTED`, там же — откуда числа и чего выборка не
+    знает). Поэтому тест оставался зелёным, пока подписчик, взявший обещанное,
+    упирался в 429 на 59 % пути: $6.86 настоящих против потолка $4.50, который
+    выглядел двойным запасом над $3.36 предсказанных.
+
+    Проекции остались тем, из чего считается, — они единственное, что умеет
+    измерить *наш промт*, а не средний; множитель переводит их в те деньги,
+    которые с нас берут. Обновлять его — в `cost.MEASURED_OVER_PROJECTED`, одним
+    местом, когда данных станет больше.
+
+    **Открывающих абзацев здесь больше нет ни в одной строке.** Витрина платит
+    из своей статьи (`cost.SHOWCASE_METRIC`), которую `guard_month` не читает, и
+    свой потолок имеет тоже свой — `test_the_showcase_ceiling_is_priced_at_measured_rates`
+    ниже. Пока они были здесь, они не столько считались, сколько занимали место:
+    свободному аккаунту витрина съедала весь потолок раньше первого вопроса.
     """
     config = settings()
     _cheap, mid, strong = models()
     birth, other = _birth(SOFIA), _birth(LUCAS)
-    turn = _chat_turn_projection(birth)
+    projected_turn = _chat_turn_projection(birth)
 
-    samples = sum(_free_chapter_projections(mid).values())
-    # **Обход всех закрытых глав входит в худший месяц каждого тира, кто может
-    # его совершить.** Свободный аккаунт — очевидно; но и покупатель тоже, и
-    # это ровно тот случай, который заставил поднять `owner_month_budget` с
-    # 3.25 до 3.60: человек может обойти сорок стен, раздумывая, купить бандл и
-    # дочитать весь архив в том же месяце. Подписчику абзацы не пишутся вовсе —
-    # ему всё открыто, — поэтому в его строке их нет.
-    openings = sum(_opening_projections(mid).values())
-    everything = _whole_archive_projection(birth, other, mid=mid)
+    def turn(model: str) -> float:
+        return cost.at_measured_rate(projected_turn(model), "chat_turn")
+
+    samples = cost.at_measured_rate(
+        sum(_free_chapter_projections(mid).values()), "chapter"
+    )
+    everything = cost.at_measured_rate(
+        _whole_archive_projection(birth, other, mid=mid), "chapter"
+    )
 
     heaviest = {
         # The free chat is one welcome question ever, on the mid model; the
         # daily allowance is zero and the cheap tier is gone.
-        "free": config.free_welcome_bundle * turn(mid) + samples + openings,
+        "free": config.free_welcome_bundle * turn(mid) + samples,
         # An owner may have bought the archive, so the whole of it is written
         # in the month they bought it — plus the five-question bundle on the
         # strong model, all conceivably in the same month.
-        "owner": config.owner_question_bundle * turn(strong) + everything + openings,
+        "owner": config.owner_question_bundle * turn(strong) + everything,
         "subscriber": config.subscriber_questions_per_month * turn(mid) + everything,
     }
-    for tier, needed in heaviest.items():
-        ceiling = cost.month_ceiling(tier)
-        assert needed <= ceiling, (
-            f"the {tier} tier is promised ${needed:.4f} of generation against a "
-            f"${ceiling:.2f} ceiling"
-        )
+    # Считаются все три, а не до первого падения: когда множители въехали сюда
+    # впервые, не покрывали обещание сразу два тира, и остановка на владельце
+    # прятала подписчика до следующего прогона.
+    short = {
+        tier: (needed, cost.month_ceiling(tier))
+        for tier, needed in heaviest.items()
+        if needed > cost.month_ceiling(tier)
+    }
+    assert not short, "; ".join(
+        f"the {tier} tier is promised ${needed:.4f} of generation against a "
+        f"${ceiling:.2f} ceiling"
+        for tier, (needed, ceiling) in short.items()
+    )
 
 
 def _chat_turn_projection(birth):

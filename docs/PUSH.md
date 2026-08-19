@@ -1001,7 +1001,7 @@ reason not to ask a model to write a lock-screen sentence.
 
 The **reading behind it** is a generation. `THE-DAILY.md §2` priced it properly through
 `ai/cost.py`; at the measured cadence it is a rounding error against $8.99 net and against the
-`ALMA_SUBSCRIBER_MONTH_BUDGET` ceiling of $3.50 that `ai/cost.py` enforces before the call
+`ALMA_SUBSCRIBER_MONTH_BUDGET` ceiling of $7.30 that `ai/cost.py` enforces before the call
 rather than regretting after it. It must still be counted through `cost.guard_month` like
 everything else rather than around it — a budget with an exception in it is not a budget.
 

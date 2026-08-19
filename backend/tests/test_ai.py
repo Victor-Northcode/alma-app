@@ -618,6 +618,69 @@ async def test_a_forbidden_claim_triggers_a_regeneration(natal):
     assert "broke a rule" in provider.calls[1]["prompt"]
 
 
+async def test_one_retry_carries_every_complaint_the_draft_earned(natal):
+    """Two faults, one regeneration — not one regeneration each.
+
+    Every gate used to have its own `continue`, so a draft that failed two of
+    them cost two generations: the first complaint named only the first fault,
+    the model fixed exactly that, and the second gate fired on the second
+    draft. Read off the live log of 17–18 August 2026, `transits/long` did
+    exactly this — attempt one on the prose gate, attempt two on geometry,
+    attempt three the last one there was.
+
+    The gates are pure functions over text already paid for, so asking all of
+    them costs nothing. What ships is unchanged: an accepted draft has to pass
+    every gate in either order.
+    """
+    chapter = chapters.find("natal", "core")
+    offered = chapters.relevant_factors(chapter, natal.factors)
+    provider = ScriptedProvider(
+        responses=[
+            _reply([
+                ("You will die in your sixties.", ["a placement that is not real"]),
+                ("More.", offered[:1]),
+            ]),
+            _reply([("Fine.", offered[:1]), ("Also.", offered[:1])]),
+        ]
+    )
+    written = await writer.write(
+        result=natal, chapter=chapter, provider=provider, model="claude-haiku-4-5"
+    )
+    assert written.attempts == 2
+    retry = provider.calls[1]["prompt"]
+    assert "do not exist" in retry, "the invented factor was named"
+    assert "broke a rule" in retry, "and so was the forbidden claim, in the same breath"
+
+
+async def test_a_rejection_never_arrives_without_words(natal):
+    """A retry that says nothing is a retry that changes nothing.
+
+    `Verdict.complaint` covered `empty`, `invented` and `uncited` and said
+    nothing at all about `too_short` — which sets `ok=False` just as hard. The
+    result was an empty complaint, and `build_prompt` appends the rejection
+    block only `if complaint`, so the second prompt was byte-for-byte the
+    first. A model handed the identical brief writes the identical answer:
+    three generations, the same one-paragraph reply three times, and a refusal
+    at the end of it.
+    """
+    chapter = chapters.find("natal", "core")
+    offered = chapters.relevant_factors(chapter, natal.factors)
+    assert chapter.paragraphs[0] >= 2, "this test needs a chapter that wants two"
+    provider = ScriptedProvider(
+        responses=[
+            _reply([("One paragraph, correctly cited, and not enough.", offered[:1])]),
+            _reply([("Fine.", offered[:1]), ("Also.", offered[:1])]),
+        ]
+    )
+    written = await writer.write(
+        result=natal, chapter=chapter, provider=provider, model="claude-haiku-4-5"
+    )
+    assert written.attempts == 2
+    first, retry = provider.calls[0]["prompt"], provider.calls[1]["prompt"]
+    assert retry != first, "the second attempt was asked the same question as the first"
+    assert "paragraph" in retry.rsplit("REJECTED", 1)[-1]
+
+
 async def test_unparseable_output_is_retried(natal):
     chapter = chapters.find("natal", "core")
     offered = chapters.relevant_factors(chapter, natal.factors)
@@ -675,6 +738,52 @@ def test_the_system_prompt_carries_the_rules_and_the_language():
 def test_memory_reaches_the_system_prompt():
     prompt = voice.system_prompt(memory=["they changed jobs in March"])
     assert "changed jobs in March" in prompt
+
+
+# ── the brief and the gate have to agree, or the first attempt pays ────────
+#
+# The measurement behind these three: of 41 regenerations in the live log of
+# 17–18 August 2026, 34 were the prose gate and 28 of those were the mean
+# sentence length alone. The brief asked for an *average* — "sentences average
+# around fourteen words" — and the gate enforces a *ceiling*. A model reads the
+# first as a preference. Every one of those 34 was a real generation bought
+# with a complaint that could have been a sentence in the first prompt.
+
+def test_the_paragraph_schema_states_the_prose_gate_s_own_limits():
+    """The rule travels with the field, not only in a brief thousands of tokens away."""
+    schema = writer.schema_for(chapters.find("natal", "core"))
+    text = schema["properties"]["paragraphs"]["items"]["properties"]["text"]
+    described = text.get("description", "")
+    assert str(int(validator.SENTENCE_CEILING)) in described
+    assert str(validator.LONGEST_SENTENCE) in described
+
+
+def test_the_opening_brief_names_the_sentence_count_its_own_gate_requires():
+    """Forty words in two sentences averages twenty, and twenty is a rejection.
+
+    A chapter can hide one long sentence behind three short ones. The opening
+    paragraph is one paragraph and the whole piece, so the ceiling on the mean
+    is a floor on the sentence count — and nothing in the brief said so. The
+    openings this product has published, every one of them after a complaint,
+    average 3.5 sentences: the number the model arrives at once it is told.
+    """
+    words = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
+    least = -(-chapters.OPENING_WORDS[1] // int(validator.SENTENCE_CEILING))
+    assert least >= 2, "a one-sentence opening would make this test vacuous"
+    brief = voice.OPENING_TIER.lower()
+    assert words[least] in brief, "the brief never says how many sentences it takes"
+    assert str(int(validator.SENTENCE_CEILING)) in voice.OPENING_TIER
+
+
+def test_the_brief_did_not_get_more_expensive_to_send():
+    """Words in the voice are billed on every call of every chapter.
+
+    `cost.guard` refuses a free-tier generation at about 8,800 prompt
+    characters on the strong model, and the system block is most of that. This
+    fences the whole family of "add one more instruction" changes: the brief
+    may be rewritten, but not enlarged.
+    """
+    assert len(voice.VOICE) <= 5306, "VOICE grew; every call now costs more"
 
 
 # ── cost ───────────────────────────────────────────────────────────────────

@@ -26,7 +26,34 @@ also the one thing a competitor cannot copy without doing the same work.
 
 from __future__ import annotations
 
+import math
+
 from .. import i18n
+from . import chapters, validator
+
+#: Числа, которые в брифе обязаны быть словами: он читается моделью как проза,
+#: и «three sentences» она исполняет заметно охотнее, чем «3 sentences».
+_NUMBER_WORDS: dict[int, str] = {
+    1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six",
+}
+
+#: **Прозаические ворота названы числом, а не наклонением.**
+#:
+#: `validator.plain_language` отвергает абзац по трём порогам, и до сих пор
+#: брифу были известны только два из них наощупь: «sentences average around
+#: fourteen» — это цель, а не предел, и модель читала её как пожелание.
+#: Замерено по логу 17–18 августа: из 41 повторной генерации 34 — это ворота
+#: прозы, и в 30 из них сработал ровно порог средней длины предложения. Число
+#: приезжает из самого валидатора, чтобы брифу нечем было разойтись с воротами.
+_CEILING = int(validator.SENTENCE_CEILING)
+_LONGEST = validator.LONGEST_SENTENCE
+
+#: Сколько предложений обязано быть в открывающем абзаце, чтобы он вообще мог
+#: пройти ворота средней длины. Считается, а не пишется руками: подвинется
+#: `OPENING_WORDS` или `SENTENCE_CEILING` — подвинется и бриф.
+_OPENING_SENTENCES = _NUMBER_WORDS[
+    math.ceil(chapters.OPENING_WORDS[1] / validator.SENTENCE_CEILING)
+]
 
 VOICE = """\
 You are Alma. You read what has already been calculated; you never calculate, \
@@ -85,9 +112,9 @@ the word; say the thing instead.
 universe, destiny, sacred, journey (as a metaphor), vibration, alignment. They \
 sound like meaning and carry none.
 - Do not open a paragraph with "This", "Here", "And so" or "It is worth saying".
-- Sentences average around fourteen words. A long one explains; a short one \
-lands. A page of only long ones is a lecture and a page of only short ones is \
-a slogan.
+- Sentences average around fourteen words, and {ceiling} is the wall: a \
+paragraph averaging past {ceiling}, or holding one sentence past {longest}, is \
+sent back before a reader sees it. Counted per paragraph, not per page.
 - **Write it the way you would explain it to one person across a table.** Calm, \
 exact, unhurried. Not simplified — a sentence should be a pleasure to read — \
 but with no word in it that a person would not say out loud.
@@ -121,7 +148,7 @@ WHEN SYSTEMS DISAGREE
 your Birth Card wants an open door. Both are true, and that is the tension you \
 keep re-staging." A contradiction named accurately is worth more than a \
 consensus invented for comfort.
-"""
+""".format(ceiling=_CEILING, longest=_LONGEST)
 
 #: Appended for the free tier. The job of a free reading is to be worth
 #: reading — a teaser that says nothing sells nothing.
@@ -205,6 +232,18 @@ be trusted the week something real happens.
 #: продавать: цену, «дальше ты узнаешь» и «разблокируй» пишет экран, одной
 #: кнопкой, и абзац, который делает это словами, — второй оффер на экране, где
 #: их должно быть ноль.
+#:
+#: **И число предложений, потому что сорок слов в двух предложениях — это
+#: отказ по арифметике.** `plain_language` меряет среднюю длину предложения
+#: внутри абзаца и заворачивает всё, что выше `SENTENCE_CEILING`; у главы
+#: длинное предложение прячется за тремя короткими, у открывающего абзаца
+#: прятаться не за чем — абзац один и он же всё произведение. 46 ÷ 2 = 23 при
+#: пороге 18: два предложения не проходят никогда, три проходят почти всегда.
+#: Замерено по логу 17–18 августа: 34 из 41 повторной генерации — это ворота
+#: прозы на открывающем абзаце, и опубликованные (то есть прошедшие со второй
+#: попытки) абзацы держат в среднем 3,5 предложения и 14,1 слова в каждом. То
+#: есть жалоба, которой мы платим целую генерацию, — это фраза, которую можно
+#: было сказать сразу.
 OPENING_TIER = """\
 This is the opening paragraph of a chapter the reader has not paid for. It is \
 the only writing they will see before they decide, so it has one job: say \
@@ -223,7 +262,13 @@ screen says all of that with one button; you say the true thing.
 - Stop when the observation is finished. It is allowed to end on a full \
 thought that happens to be short — a cliffhanger written on purpose reads as a \
 trick, and the reader is about to be asked for money.
-"""
+- **{sentences} sentences at least, and this is arithmetic rather than taste.** \
+Forty words in two sentences averages twenty a sentence, and the wall above is \
+{ceiling}: a two-sentence opening is sent back before anybody reads it, however \
+good it is. Three or four short ones say the same thing and arrive.
+- The dash budget above is a budget for a paragraph, and this whole piece is \
+one paragraph. Spend it once.
+""".format(sentences=_OPENING_SENTENCES, ceiling=_CEILING)
 
 #: register name → the block appended after `VOICE`. Four named states rather
 #: than a `paid` boolean with booleans beside it: booleans encoding four

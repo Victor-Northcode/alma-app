@@ -78,7 +78,26 @@ CHAPTER_SCHEMA: dict = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "text": {"type": "string"},
+                    # **Правило прозы стоит там, где пишется поле.**
+                    #
+                    # Бриф говорит то же самое, но он в системном блоке, за
+                    # несколькими тысячами токенов от места, где модель
+                    # сочиняет именно этот абзац. `description` читается
+                    # вплотную к полю, и числа сюда приезжают из самого
+                    # валидатора — разойтись брифу, схеме и воротам больше
+                    # нечем. Замер, ради которого это написано: 30 из 41
+                    # повторных генераций 17–18 августа — это ровно
+                    # порог средней длины предложения.
+                    "text": {
+                        "type": "string",
+                        "description": (
+                            "One paragraph. Its sentences average at most "
+                            f"{int(validator.SENTENCE_CEILING)} words and none "
+                            f"of them runs past {validator.LONGEST_SENTENCE}; a "
+                            "paragraph over either is rejected before it is "
+                            "read. Count within this paragraph alone."
+                        ),
+                    },
                     "factors": {
                         "type": "array",
                         "minItems": 1,
@@ -836,25 +855,47 @@ async def write(
         )
         last = verdict
 
+        # **Одна попытка — одна жалоба, но жалоба обо всём сразу.**
+        #
+        # Раньше каждые ворота стояли своим `continue`, и черновик, провалив
+        # двое ворот, стоил две генерации: первая жалоба называла только
+        # первую беду, модель чинила ровно её, и вторые ворота срабатывали на
+        # уже оплаченном втором черновике. В логе это `transits/long`: попытка
+        # 1 — проза, попытка 2 — геометрия, попытка 3 — последняя. Проверки
+        # здесь чистые функции над уже полученным текстом, спросить их все
+        # стоит ноль, а сэкономленная попытка — это целая генерация.
+        #
+        # Что публикуется, от этого не меняется: принятый черновик обязан
+        # пройти все ворота и в старом порядке, и в новом. Меняется только
+        # число оплаченных попыток на пути к нему.
+        #
+        # Две породы жалоб, и разница между ними прежняя. `hard` — про правду
+        # (выдуманная позиция, запрещённое обещание, переврана геометрия,
+        # латиница в русской прозе): такое переписывается независимо от
+        # бюджета, а на последней попытке кончается отказом. Проза — про то,
+        # как это читается, и на исходе бюджета публикуется как есть.
+        complaints: list[str] = []
+        hard = False
+
         if not verdict.ok:
-            complaint = verdict.complaint()
+            complaints.append(verdict.complaint())
+            hard = True
             log.warning(
                 "chapter %s/%s attempt %d rejected: %s",
                 result.system, chapter.slug, attempt, ", ".join(verdict.reasons),
             )
-            continue
 
         body = "\n\n".join(p.text for p in paragraphs)
         breaches = validator.safety(body)
         if breaches:
-            complaint = (
+            complaints.append(
                 "The reading broke a rule: "
                 + "; ".join(breaches)
                 + ". Describe the disposition, never the event, and leave the "
                 "decision with the reader."
             )
+            hard = True
             log.warning("chapter %s/%s safety: %s", result.system, chapter.slug, breaches)
-            continue
 
         # How it is written, on the same footing as what it says.
         #
@@ -881,8 +922,55 @@ async def write(
                 + ", ".join(in_title[:4])
                 + ". Title it with what the chapter actually says."
             ]
-        if ornate and _can_try_again(attempt, tally, paid=paid, scale=script_scale):
-            complaint = (
+        if i18n.resolve(locale) == "ru":
+            leaked = validator.russian_latin_leak(body, result.factors)
+            if leaked:
+                complaints.append(
+                    "В русском тексте остались английские слова: "
+                    + ", ".join(leaked[:5])
+                    + ". Переведи их — латиницей в прозе может быть только «Alma»."
+                )
+                hard = True
+                log.warning("chapter %s/%s latin leak: %s", result.system, chapter.slug, leaked[:5])
+            # With a known reader the grammar is *supposed* to agree — the
+            # gate only stands when the gender is unknown.
+            gendered = [] if reader_gender in ("female", "male") else validator.russian_gendered(body)
+            if gendered:
+                complaints.append(
+                    "Эти обороты выдают пол читателя: "
+                    + ", ".join(f"«{b.strip()}»" for b in gendered)
+                    + ". Перепиши в настоящем времени или безличным оборотом."
+                )
+                hard = True
+                log.warning("chapter %s/%s gendered ru: %s", result.system, chapter.slug, gendered)
+
+        # What the prose says *about* the placements it cited.
+        #
+        # Checked against `result.factors` rather than the paragraph's own
+        # citations, so a later paragraph may refer back to geometry an earlier
+        # one established. Rejected rather than warned, on the same footing as
+        # an invented factor, because it is the same failure wearing a
+        # citation: measured live, "your sun is in a trine to your Saturn at
+        # 1°12′, a soft aspect" carried the orb straight off `☉ ⚻ ♄ · 1°12′`
+        # and renamed the aspect — a quincunx sold as a trine, with the reader
+        # told in the same clause that it was soft.
+        wrong = geometry.drift(body, result.factors)
+        if wrong:
+            complaints.append(wrong.complaint())
+            hard = True
+            log.warning(
+                "chapter %s/%s geometry: %d contradicted, %d unsupported",
+                result.system, chapter.slug,
+                len(wrong.contradicted), len(wrong.unsupported),
+            )
+
+        # **Проза считается последней, потому что она единственная умеет
+        # сдаться.** Всё выше — про правду и переписывается всегда; эта — про
+        # то, как читается, и на исходе попыток или бюджета публикуется как
+        # есть. Раз мы всё равно возвращаемся к модели из-за жёсткой жалобы,
+        # добавить к ней прозаическую стоит ноль: попытка уже потрачена.
+        if ornate and (hard or _can_try_again(attempt, tally, paid=paid, scale=script_scale)):
+            complaints.append(
                 "The writing has to change before this can be published: "
                 + "; ".join(ornate[:4])
                 + ". Say the same things the same way you would to one person "
@@ -892,8 +980,7 @@ async def write(
                 "chapter %s/%s plain-language: %s",
                 result.system, chapter.slug, "; ".join(ornate[:2]),
             )
-            continue
-        if ornate:
+        elif ornate:
             # **Out of attempts or out of budget, and this one publishes anyway.**
             #
             # The difference between this gate and the ones above it is the
@@ -913,46 +1000,12 @@ async def write(
                 result.system, chapter.slug, "; ".join(ornate[:2]),
             )
 
-        if i18n.resolve(locale) == "ru":
-            leaked = validator.russian_latin_leak(body, result.factors)
-            if leaked:
-                complaint = (
-                    "В русском тексте остались английские слова: "
-                    + ", ".join(leaked[:5])
-                    + ". Переведи их — латиницей в прозе может быть только «Alma»."
-                )
-                log.warning("chapter %s/%s latin leak: %s", result.system, chapter.slug, leaked[:5])
-                continue
-            # With a known reader the grammar is *supposed* to agree — the
-            # gate only stands when the gender is unknown.
-            gendered = [] if reader_gender in ("female", "male") else validator.russian_gendered(body)
-            if gendered:
-                complaint = (
-                    "Эти обороты выдают пол читателя: "
-                    + ", ".join(f"«{b.strip()}»" for b in gendered)
-                    + ". Перепиши в настоящем времени или безличным оборотом."
-                )
-                log.warning("chapter %s/%s gendered ru: %s", result.system, chapter.slug, gendered)
-                continue
-
-        # What the prose says *about* the placements it cited.
-        #
-        # Checked against `result.factors` rather than the paragraph's own
-        # citations, so a later paragraph may refer back to geometry an earlier
-        # one established. Rejected rather than warned, on the same footing as
-        # an invented factor, because it is the same failure wearing a
-        # citation: measured live, "your sun is in a trine to your Saturn at
-        # 1°12′, a soft aspect" carried the orb straight off `☉ ⚻ ♄ · 1°12′`
-        # and renamed the aspect — a quincunx sold as a trine, with the reader
-        # told in the same clause that it was soft.
-        wrong = geometry.drift(body, result.factors)
-        if wrong:
-            complaint = wrong.complaint()
-            log.warning(
-                "chapter %s/%s geometry: %d contradicted, %d unsupported",
-                result.system, chapter.slug,
-                len(wrong.contradicted), len(wrong.unsupported),
-            )
+        # Один `continue` на все ворота. Пустой жалобы здесь быть не может:
+        # каждая ветка выше кладёт в список текст, а `Verdict.complaint`
+        # обязали говорить и про «слишком мало абзацев» — молчаливая жалоба
+        # означала повтор с тем же промтом и тем же ответом.
+        if complaints:
+            complaint = "\n".join(part for part in complaints if part)
             continue
 
         # **The workings are cited but not displayed**, and the difference

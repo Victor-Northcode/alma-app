@@ -62,12 +62,37 @@ class Verdict:
     #: model asked to open with an acknowledgement will invent a factor for the
     #: acknowledgement, which is the failure this whole module exists to stop.
     uncited_allowed: int = 0
+    #: How many paragraphs arrived and how many this piece needs. Carried for
+    #: the same reason as `uncited_allowed`: so `complaint` can say what to do
+    #: rather than only that something is wrong. Both default to zero, which
+    #: is what every caller that never sets `minimum` above one will see.
+    written: int = 0
+    needed: int = 0
 
     def complaint(self) -> str:
-        """What to tell the model on the retry, in its own terms."""
+        """What to tell the model on the retry, in its own terms.
+
+        **Every fault that can set `ok=False` has to produce words here.**
+        `too_short` did not, and the consequence was a retry that changed
+        nothing: `writer.build_prompt` only appends the rejection block `if
+        complaint`, so an empty string meant the second prompt was byte-for-byte
+        the first one. A model handed the identical brief writes the identical
+        answer, so a chapter that came back one paragraph short spent all three
+        attempts on the same reply and was then refused — three real
+        generations, no chapter, and nothing in the prompt that could have
+        told the model what to change.
+        """
         parts: list[str] = []
         if self.empty:
             parts.append("The reading was empty. Write the chapter.")
+        if self.too_short:
+            parts.append(
+                f"You wrote {self.written} paragraph(s); this needs {self.needed}. "
+                "Add the missing one(s), each naming a factor it was read from."
+                if self.needed
+                else "This is shorter than the chapter needs. Add a paragraph, "
+                "naming a factor it was read from."
+            )
         if self.invented:
             listed = "; ".join(self.invented[:6])
             parts.append(
@@ -206,10 +231,10 @@ def check(
     # Порог щедрый намеренно — полтора заказанных потолка. Ловить надо грубый
     # перебор, а не пять лишних слов: каждая жалоба стоит попытки, а их три.
     if most_words is not None:
-        written = sum(len(p.text.split()) for p in paragraphs)
-        if written > most_words:
+        words_written = sum(len(p.text.split()) for p in paragraphs)
+        if words_written > most_words:
             reasons.append(
-                f"{written} words where at most {most_words} were asked for; "
+                f"{words_written} words where at most {most_words} were asked for; "
                 "cut it back to the length in the brief"
             )
     if invented:
@@ -225,6 +250,8 @@ def check(
         too_short=too_short,
         reasons=tuple(reasons),
         uncited_allowed=tolerated,
+        written=len(paragraphs),
+        needed=minimum,
     )
 
 

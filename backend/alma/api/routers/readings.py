@@ -928,16 +928,30 @@ async def _write_opening(
             # Здесь стоял `_guard_month` — тот же ограничитель, что бережёт деньги
             # от человека, читающего много. Но открывающий абзац не чтение: это
             # витрина, единственное, чем закрытая глава продаётся. Отказав в нём
-            # ради семи десятых цента, мы получаем экран, где над размытием пусто,
+            # ради нескольких центов, мы получаем экран, где над размытием пусто,
             # — и владелец увидел ровно это: «все эти страницы должны выглядеть
             # таким образом: кусочек текста главы и заблюренная часть».
             #
             # Пустое место вместо начала не экономит, а отменяет продажу.
             #
-            # Расход всё равно ограничен, и дважды. Абзац пишется один раз на главу
-            # и живёт в кэше навсегда — сорок одна глава это около тридцати центов
-            # за всю жизнь аккаунта. А от петли (сменил дату рождения — ключ расчёта
-            # другой — пиши заново) стоит [_opening_allowance] ниже.
+            # **Убрать вызов было половиной дела, и без второй половины
+            # освобождение не работало.** Расход абзаца всё равно ложился в ту же
+            # статью леджера, которую `_guard_month` читает на беседе, — то есть
+            # витрина не платила за себя, а платила за человека вперёд. По замеру
+            # (`cost.MEASURED_OVER_PROJECTED`) абзац стоит 3.556¢, а достижимы в
+            # одиночку тридцать шесть стен из сорока — четыре главы совместимости
+            # требуют второго человека. Это $1.28 против $1.10 `free_month_budget`:
+            # тот, кто просто посмотрел витрину целиком, получал 429
+            # `month_budget` на первом же бесплатном вопросе. Поэтому `_spend` ниже пишет в
+            # `cost.SHOWCASE_METRIC` — отдельную статью, которую беседа не читает.
+            #
+            # Расход при этом ограничен, и дважды. Абзац пишется один раз на главу
+            # и живёт в кэше навсегда: сорок закрытых глав — это $1.42 за всю
+            # жизнь аккаунта по замеру (44 абзаца в `data/alma.db`; прежние
+            # «около тридцати центов» здесь были посчитаны по проекции, которая
+            # занижает счёт вдвое). А от петли (сменил дату рождения — ключ
+            # расчёта другой — пиши заново) стоит [_opening_allowance] ниже: он и
+            # есть потолок витрины, и в деньгах его цена названа рядом с ним.
             await _opening_allowance(session, user)
             memory = await _recall(session, user)
             reader_gender = await _reader_gender(session, user, payload)
@@ -971,7 +985,9 @@ async def _write_opening(
         # обычной главы. `_charge_anyway` открывает свою короткую транзакцию:
         # выбрасывать здесь больше нечего, потому что сессии на время генерации
         # не было.
-        await _charge_anyway(user, cents=exc.spend.cents)
+        await _charge_anyway(
+            user, cents=exc.spend.cents, ledger=cost.SHOWCASE_METRIC
+        )
         log.warning(
             "no opening for %s/%s: %s", result.system, chapter.slug, exc
         )
@@ -983,7 +999,9 @@ async def _write_opening(
         # оплаченные попытки уходили в лог и никуда больше. Стена всё равно
         # отдаётся — экран с ценой обязан отрисоваться, — но бесплатной она
         # больше не бывает.
-        await _charge_anyway(user, cents=_truncated_cents(exc))
+        await _charge_anyway(
+            user, cents=_truncated_cents(exc), ledger=cost.SHOWCASE_METRIC
+        )
         log.warning(
             "no opening for %s/%s — truncated every attempt: %s",
             result.system, chapter.slug, exc,
@@ -1017,7 +1035,9 @@ async def _write_opening(
         )
         session.add(record)
         await _count(session, user, "openings_written")
-        await _spend(session, user, written.spend.cents)
+        await _spend(
+            session, user, written.spend.cents, ledger=cost.SHOWCASE_METRIC
+        )
         try:
             await session.flush()
         except IntegrityError:
@@ -1034,7 +1054,9 @@ async def _write_opening(
                 "lost the opening race for %s/%s — returning the stored copy",
                 result.system, chapter.slug,
             )
-            await _spend(session, user, written.spend.cents)
+            await _spend(
+                session, user, written.spend.cents, ledger=cost.SHOWCASE_METRIC
+            )
             await session.flush()
             theirs = await _stored_reading(
                 session, user_id=user.id, system=result.system,
@@ -1598,13 +1620,22 @@ async def _count(session, user, metric: str, amount: int = 1, *, day: date | Non
     return count
 
 
-async def _spend(session, user, cents: float) -> None:
+async def _spend(
+    session, user, cents: float, *, ledger: str = cost.SPEND_METRIC
+) -> None:
     """Record what a generation cost, in cents, against today.
 
     These rows are what `cost.month_spend` sums to decide whether an account
     has spent its month, which is why the metric name is imported from there
     rather than written out again: a typo here would not fail anything, it
     would just make every account look free.
+
+    **`ledger` выбирает статью, а не отменяет запись.** По умолчанию это счёт
+    чтения — тот, который читает `_guard_month`. Витрина (открывающий абзац
+    закрытой главы) пишет в `cost.SHOWCASE_METRIC`: её расход — наша плата за
+    показ, а не потребление человека, и складывать их в одно число значит
+    отказывать человеку в вопросе за то, что мы ему что-то показали. Довод
+    целиком — у `cost.SHOWCASE_METRIC` и на месте вызова в `_write_opening`.
 
     **Одним запросом по той же причине, что и `_count`, но потеря здесь
     обиднее.** Недосчитанные вопросы — это порция, отданная сверх обещанного;
@@ -1616,7 +1647,7 @@ async def _spend(session, user, cents: float) -> None:
         session,
         user_id=user.id,
         day=datetime.now(timezone.utc).date(),
-        metric=cost.SPEND_METRIC,
+        metric=ledger,
         cents=cents,
     )
 
@@ -1635,7 +1666,9 @@ def _truncated_cents(exc: AnswerTruncated) -> float:
     return spend.cents if spend is not None else 0.0
 
 
-async def _charge_anyway(user, *, cents: float) -> None:
+async def _charge_anyway(
+    user, *, cents: float, ledger: str = cost.SPEND_METRIC
+) -> None:
     """Record what a failed request already spent, in a transaction of its own.
 
     The money is written and committed on its own, because otherwise it would
@@ -1657,6 +1690,12 @@ async def _charge_anyway(user, *, cents: float) -> None:
     Отсюда же исчез и `session` в подписи: передать его значило бы пронести
     открытую транзакцию через генерацию, ради которой всё и затевалось.
 
+    **`ledger` — та же статья, что у `_spend`, и по той же причине.** Три
+    попытки, кончившиеся отказом на открывающем абзаце, — это деньги, потраченные
+    на показ, и человек, которому мы не смогли ничего показать, тем более не
+    должен из-за этого лишиться бесплатного вопроса. Не путать с параметром,
+    которого здесь больше нет, — см. следующий абзац.
+
     **Money only.** This used to take a `metric` and increment the question
     counter as well, so a turn that produced an error screen cost a free reader
     one of three. The parameter is gone rather than left unused: it is one
@@ -1677,7 +1716,7 @@ async def _charge_anyway(user, *, cents: float) -> None:
             session,
             user_id=user_id,
             day=datetime.now(timezone.utc).date(),
-            metric=cost.SPEND_METRIC,
+            metric=ledger,
             cents=cents,
         )
 
@@ -1701,6 +1740,26 @@ OPENING_ALLOWANCE = 60
 #: Метрика в `usage_counter`. День ставится первым числом месяца — так
 #: существующая таблица «за день» даёт месячное ведро без новой схемы.
 OPENING_METRIC = "opening"
+
+#: Во что `OPENING_ALLOWANCE` обходится в деньгах: потолок витрины, выраженный
+#: в долларах. В рантайме витрину держит счёт абзацев выше — отказывать по
+#: деньгам там, где отказ отменяет продажу, значило бы вернуть ту самую ошибку,
+#: — а это число сторожит CI: `test_readings_budget.py` умножает шестьдесят
+#: абзацев на **замеренную** ставку и сверяется с ним. Сработает оно на том,
+#: чего счёт абзацев не видит: удлинили абзац, подключили сильную модель,
+#: добавили систему — цена шестидесяти абзацев уехала, а число осталось шесть
+#: десятков.
+#:
+#: 60 × 3.556¢ = $2.13 по замеру на 19.08.2026; тест считает то же самое через
+#: округлённый множитель и получает $2.16. Запас до $2.50 — около пятнадцати
+#: процентов, то есть тест падает раньше, чем счёт удивляет.
+#:
+#: **Это отдельная статья, а не прибавка к `free_month_budget`.** Худший месяц
+#: бесплатного аккаунта теперь читается так: до $1.10 чтения плюс до $2.50
+#: показа, и второе слагаемое достаётся только тому, кто крутит дату рождения
+#: по кругу; обычный человек тратит на показ $1.42 один раз за жизнь аккаунта и
+#: больше никогда.
+SHOWCASE_MONTH_CEILING = 2.50
 
 
 async def _opening_allowance(session, user) -> None:
