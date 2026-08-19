@@ -1766,7 +1766,7 @@ class LDe extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Diese Karte wird kostenlos berechnet, wie deine. Wie das erste Kapitel — die Anziehung — beginnt, liest du, bevor du etwas entscheidest.';
+      'Diese Karte wird kostenlos berechnet, wie deine. Du zahlst nur für die Kapitel, die über euch beide geschrieben werden.';
 
   @override
   String get pairInputCta => 'Lies, was euch zueinander zieht';
@@ -1784,8 +1784,7 @@ class LDe extends L {
   }
 
   @override
-  String get pairRowFreeChapter =>
-      'wie die Anziehung beginnt, liest du kostenlos';
+  String get pairRowNotOpened => 'noch nicht geöffnet';
 
   @override
   String get pairCreditOverline => 'diesen Monat';
@@ -1811,7 +1810,7 @@ class LDe extends L {
 
   @override
   String get pairHookNote =>
-      'Das Geburtsdatum genügt — wie die Anziehung beginnt, liest du, bevor du irgendetwas bezahlst.';
+      'Das Geburtsdatum genügt, und der Vergleich wird kostenlos berechnet. Bezahlt werden die Kapitel.';
 
   @override
   String get pairCheckAnotherPlain => 'Noch jemanden checken';

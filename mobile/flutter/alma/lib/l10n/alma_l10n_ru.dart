@@ -1765,7 +1765,7 @@ class LRu extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Эта карта считается бесплатно, как и твоя. Как начинается первая глава — притяжение, — ты читаешь до любых решений.';
+      'Эта карта считается бесплатно, как и твоя. Платишь только за главы, написанные про вас двоих.';
 
   @override
   String get pairInputCta => 'Прочитать, что вас тянет друг к другу';
@@ -1783,8 +1783,7 @@ class LRu extends L {
   }
 
   @override
-  String get pairRowFreeChapter =>
-      'начало главы «притяжение» читается бесплатно';
+  String get pairRowNotOpened => 'ещё не открыты';
 
   @override
   String get pairCreditOverline => 'в этом месяце';
@@ -1812,7 +1811,7 @@ class LRu extends L {
 
   @override
   String get pairHookNote =>
-      'Достаточно даты рождения — начало главы «притяжение» ты читаешь бесплатно, до всякой оплаты.';
+      'Достаточно даты рождения, и сравнение считается бесплатно. Платишь за главы.';
 
   @override
   String get pairCheckAnotherPlain => 'Проверить кого-то ещё';

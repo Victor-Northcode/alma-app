@@ -1760,7 +1760,7 @@ class LIt extends L {
 
   @override
   String get pairInputFreeNote =>
-      'La sua carta si calcola gratis, come la tua. Come comincia il primo capitolo — l\'attrazione — lo leggi prima di decidere.';
+      'La sua carta si calcola gratis, come la tua. Paghi solo i capitoli scritti su voi due.';
 
   @override
   String get pairInputCta => 'Leggi cosa vi attira';
@@ -1778,8 +1778,7 @@ class LIt extends L {
   }
 
   @override
-  String get pairRowFreeChapter =>
-      'come comincia l\'attrazione si legge gratis';
+  String get pairRowNotOpened => 'non ancora aperti';
 
   @override
   String get pairCreditOverline => 'questo mese';
@@ -1799,7 +1798,7 @@ class LIt extends L {
 
   @override
   String get pairHookNote =>
-      'Basta la data di nascita — leggi come comincia l\'attrazione prima di pagare qualsiasi cosa.';
+      'Basta la data di nascita, e il confronto si calcola gratis. Paghi i capitoli.';
 
   @override
   String get pairCheckAnotherPlain => 'Analizza un\'altra persona';

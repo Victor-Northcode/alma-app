@@ -212,14 +212,21 @@ LIMIT_ONCE: dict[str, str] = {
 }
 
 #: A partner past the ladder's rung. Ends on what opens more, like the rest.
+#:
+#: **Говорит про сохранённого человека, а не про «бесплатное сравнение».**
+#: Стояло «One saved comparison comes free», и после решения владельца
+#: 19.08.2026 («мы не даем бесплатно пару никакую все за деньги можно писать
+#: только имя») это читалось обещанием бесплатного отчёта о паре, которого нет.
+#: Бесплатно ровно то, что здесь и считается, — место под человека, с которым
+#: сравнивают; написанные главы платны на любой ступени лестницы.
 PARTNER_LIMIT: dict[str, str] = {
-    "en": "One saved comparison comes free. The compatibility door holds two, and the plan holds as many people as your life does.",
-    "es": "Una comparación guardada es gratis. La puerta de compatibilidad guarda dos, y el plan, tantas personas como tu vida.",
-    "de": "Ein gespeicherter Vergleich ist frei. Die Partnerschafts-Tür hält zwei, der Plan so viele Menschen wie dein Leben.",
-    "it": "Un confronto salvato è gratis. La porta dell'affinità ne tiene due, il piano tante persone quante ne ha la tua vita.",
-    "fr": "Une comparaison enregistrée est offerte. La porte de compatibilité en garde deux, l'abonnement autant de personnes que ta vie.",
-    "pt-BR": "Uma comparação salva é grátis. A porta da compatibilidade guarda duas, e o plano, quantas pessoas a sua vida tiver.",
-    "ru": "Одно сохранённое сравнение — бесплатно. Дверь совместимости вмещает двоих, а подписка — столько людей, сколько их в твоей жизни.",
+    "en": "A free account saves one person to compare with. The compatibility door holds two, and the plan holds as many people as your life does.",
+    "es": "Una cuenta gratuita guarda una persona para comparar. La puerta de compatibilidad guarda dos, y el plan, tantas personas como tu vida.",
+    "de": "Ein freies Konto speichert einen Menschen zum Vergleichen. Die Partnerschafts-Tür hält zwei, der Plan so viele Menschen wie dein Leben.",
+    "it": "Un account gratuito salva una persona da confrontare. La porta dell'affinità ne tiene due, il piano tante persone quante ne ha la tua vita.",
+    "fr": "Un compte gratuit enregistre une personne à comparer. La porte de compatibilité en garde deux, l'abonnement autant de personnes que ta vie.",
+    "pt-BR": "Uma conta gratuita salva uma pessoa para comparar. A porta da compatibilidade guarda duas, e o plano, quantas pessoas a sua vida tiver.",
+    "ru": "Свободный аккаунт хранит одного человека для сравнения. Дверь совместимости вмещает двоих, а подписка — столько людей, сколько их в твоей жизни.",
 }
 
 #: Совместимость просят без второго человека.

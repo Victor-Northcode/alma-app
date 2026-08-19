@@ -1759,7 +1759,7 @@ class LPt extends L {
 
   @override
   String get pairInputFreeNote =>
-      'O mapa se calcula de graça, como o seu. Como começa o primeiro capítulo — a atração — você lê antes de decidir qualquer coisa.';
+      'O mapa se calcula de graça, como o seu. Você paga só pelos capítulos escritos sobre vocês dois.';
 
   @override
   String get pairInputCta => 'Ler o que os atrai';
@@ -1777,7 +1777,7 @@ class LPt extends L {
   }
 
   @override
-  String get pairRowFreeChapter => 'como a atração começa lê-se de graça';
+  String get pairRowNotOpened => 'ainda não abertos';
 
   @override
   String get pairCreditOverline => 'este mês';
@@ -1803,7 +1803,7 @@ class LPt extends L {
 
   @override
   String get pairHookNote =>
-      'Basta a data de nascimento — você lê como a atração começa antes de pagar qualquer coisa.';
+      'Basta a data de nascimento, e a comparação se calcula de graça. Você paga os capítulos.';
 
   @override
   String get pairCheckAnotherPlain => 'Analisar outra pessoa';

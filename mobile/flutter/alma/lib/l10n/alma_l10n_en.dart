@@ -1750,7 +1750,7 @@ class LEn extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Their chart is calculated for free, like yours. How the first chapter — attraction — begins, you read before deciding anything.';
+      'Their chart is calculated for free, like yours. You pay only for the chapters written about the two of you.';
 
   @override
   String get pairInputCta => 'Read what pulls you together';
@@ -1768,7 +1768,7 @@ class LEn extends L {
   }
 
   @override
-  String get pairRowFreeChapter => 'how Attraction begins is free to read';
+  String get pairRowNotOpened => 'not opened yet';
 
   @override
   String get pairCreditOverline => 'this month';
@@ -1794,7 +1794,7 @@ class LEn extends L {
 
   @override
   String get pairHookNote =>
-      'A date of birth is enough — you read how Attraction begins before paying anything.';
+      'A date of birth is enough, and the comparison is calculated free. The chapters are what you pay for.';
 
   @override
   String get pairCheckAnotherPlain => 'Check someone else';

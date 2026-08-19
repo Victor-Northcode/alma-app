@@ -2341,9 +2341,9 @@
   "@pairInputPlace": {
       "description": "W2 · четвёртое поле, которого нет на холсте: сервер требует координаты и пояс (дома). Расхождение записано в SCREENS-V3 §W2 как вопрос владельцу"
   },
-  "pairInputFreeNote": "Their chart is calculated for free, like yours. How the first chapter — attraction — begins, you read before deciding anything.",
+  "pairInputFreeNote": "Their chart is calculated for free, like yours. You pay only for the chapters written about the two of you.",
   "@pairInputFreeNote": {
-      "description": "monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают"
+      "description": "monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают. «Free» здесь — про расчёт, и только: решение владельца 19.08.2026 («мы не даем бесплатно пару никакую все за деньги можно писать только имя») снимает у пары любой бесплатный текст, включая открывающий абзац"
   },
   "pairInputCta": "Read what pulls you together",
   "@pairInputCta": {
@@ -2366,9 +2366,9 @@
           }
       }
   },
-  "pairRowFreeChapter": "how Attraction begins is free to read",
-  "@pairRowFreeChapter": {
-      "description": "V5 · строка человека без купленного отчёта; кадра нет (SCREENS-V3 §V5), фраза собрана из pair.hook_note"
+  "pairRowNotOpened": "not opened yet",
+  "@pairRowNotOpened": {
+      "description": "V5 · хвост строки человека без купленного отчёта, рядом с pairRowChapters; кадра нет (SCREENS-V3 §V5). Был pairRowFreeChapter («how Attraction begins is free to read») — обещание снято владельцем 19.08.2026 вместе с открывающим абзацем пары, и имя ключа ушло вместе с обещанием"
   },
   "pairCreditOverline": "this month",
   "@pairCreditOverline": {
@@ -2399,7 +2399,7 @@
   "@pairHookTitle": {
       "description": "monetization v3 · А11 pair.hook_title · V5"
   },
-  "pairHookNote": "A date of birth is enough — you read how Attraction begins before paying anything.",
+  "pairHookNote": "A date of birth is enough, and the comparison is calculated free. The chapters are what you pay for.",
   "@pairHookNote": {
       "description": "monetization v3 · А11 pair.hook_note · V5"
   },

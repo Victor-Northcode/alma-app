@@ -3047,10 +3047,10 @@ abstract class L {
   /// **'Place of birth'**
   String get pairInputPlace;
 
-  /// monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают
+  /// monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают. «Free» здесь — про расчёт, и только: решение владельца 19.08.2026 («мы не даем бесплатно пару никакую все за деньги можно писать только имя») снимает у пары любой бесплатный текст, включая открывающий абзац
   ///
   /// In en, this message translates to:
-  /// **'Their chart is calculated for free, like yours. How the first chapter — attraction — begins, you read before deciding anything.'**
+  /// **'Their chart is calculated for free, like yours. You pay only for the chapters written about the two of you.'**
   String get pairInputFreeNote;
 
   /// monetization v3 · А11 pair.input_cta · W2
@@ -3077,11 +3077,11 @@ abstract class L {
   /// **'bought {date}'**
   String pairRowBought(String date);
 
-  /// V5 · строка человека без купленного отчёта; кадра нет (SCREENS-V3 §V5), фраза собрана из pair.hook_note
+  /// V5 · хвост строки человека без купленного отчёта, рядом с pairRowChapters; кадра нет (SCREENS-V3 §V5). Был pairRowFreeChapter («how Attraction begins is free to read») — обещание снято владельцем 19.08.2026 вместе с открывающим абзацем пары, и имя ключа ушло вместе с обещанием
   ///
   /// In en, this message translates to:
-  /// **'how Attraction begins is free to read'**
-  String get pairRowFreeChapter;
+  /// **'not opened yet'**
+  String get pairRowNotOpened;
 
   /// monetization v3 · А11 pair.credit_overline · V5
   ///
@@ -3110,7 +3110,7 @@ abstract class L {
   /// monetization v3 · А11 pair.hook_note · V5
   ///
   /// In en, this message translates to:
-  /// **'A date of birth is enough — you read how Attraction begins before paying anything.'**
+  /// **'A date of birth is enough, and the comparison is calculated free. The chapters are what you pay for.'**
   String get pairHookNote;
 
   /// V5 · кнопка без цены: полка молчит или месячная проверка ещё не потрачена. Эталона на холсте нет (§V5, «кредит не потрачен»); это pair.check_another без цены

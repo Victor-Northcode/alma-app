@@ -1,9 +1,9 @@
-"""Флоу P4 сверху: кредит подписчика и кап бесплатных тизеров, через HTTP.
+"""Флоу P4 сверху: кредит подписчика и стена свободного аккаунта, через HTTP.
 
 `test_pair_credits.py` проверяет правила кредита как правила. Здесь — то, что
 их **кто-то спрашивает**: что вторая проверка подписчика в одном цикле упирается
 в 402 до генерации, что первая тратит включённую и превращается в обычный грант,
-и что бесплатный тизер второму новому человеку в месяц заменяется пейволлом.
+и что свободный аккаунт не получает про пару ни единого написанного слова.
 
 Все три — про деньги в разные стороны. Не спросить кредит значит раздавать
 отчёты по 26¢ без счёта; спросить его слишком строго значит показать пейволл
@@ -283,46 +283,31 @@ def test_a_grandfathered_plan_is_not_counted_against_the_monthly_credit(store_ap
 # ней ушли `pair.teaser_cap`, `TEASER_CAP_DEFAULT` и счётчик `pair_teaser`.
 #
 # Молча удалять их было бы неправильно: они защищали настоящие деньги, и то,
-# что защищало, обязано быть проверено по-новому. Тесты ниже держат ровно те же
-# три обещания в новой форме — свободный аккаунт не получает генерацию отчёта
-# даром, повторный заход не стоит ничего, подписчик проходит без стены.
+# что защищало, обязано быть проверено по-новому.
+#
+# Кап держал число **бесплатных генераций** в месяц. Теперь их ноль — владелец,
+# 19.08.2026: «мы не даем бесплатно пару никакую все за деньги можно писать
+# только имя», — и капу нечего считать: заходов в стену сколько угодно, стоят
+# они ноль. Тесты ниже проверяют именно это, а не «сколько раз можно»:
+# провайдер не позвался ни разу, окно абзацев не тронуто, подписчик проходит
+# без стены.
 
 
-def _opening_reply() -> str:
-    """Заготовка открывающего абзаца главы I пары: один абзац."""
-    from alma.ai import chapters as chapter_defs
-    from alma.calc import compute
+def test_a_free_account_gets_a_price_and_not_one_written_word(store_api, scripted):
+    """У пары бесплатного текста нет вообще — ни отчёта, ни открывающего абзаца.
 
-    result = compute(
-        "compatibility", _birth(SOFIA), other=_birth(LUCAS), house_system="placidus"
-    )
-    offered = chapter_defs.relevant_factors(
-        chapter_defs.find("compatibility", "attraction"), result.factors
-    )
-    return json.dumps(
-        {
-            "title": "What pulls",
-            "teaser": "A line.",
-            "paragraphs": [
-                {"text": "Forty words about the two of you.", "factors": offered[:1]},
-            ],
-        }
-    )
+    Тест назывался «свободный аккаунт получает начало главы пары и цену» и
+    проверял ровно то, чего больше нет. Владелец, 19.08.2026: «мы не даем
+    бесплатно пару никакую все за деньги можно писать только имя». Бесплатны
+    расчёт синастрии и место под человека; любой написанный текст пары платный.
 
-
-def test_a_free_account_gets_the_opening_of_the_pair_chapter_and_a_price(
-    store_api, scripted
-):
-    """То, что раньше давал тизер, — доказательство «это про нас», — осталось.
-
-    Чего не осталось: полного отчёта даром. Тизер был двумя абзацами платной
-    генерации; теперь это сорок слов из тех же позиций и цена рядом. Кап на
-    число людей в месяц не нужен именно поэтому: свободный аккаунт, добавляющий
-    партнёра за партнёром, до дорогой генерации больше не доходит вовсе.
+    **Проверяется не только пустое поле, но и молчание провайдера.** `opening:
+    null` можно получить и потому, что модель отказала, — а это стоит трёх
+    оплаченных попыток. Обещание здесь сильнее: генерации не случилось вовсе,
+    и `scripted.calls` — единственное, что это доказывает.
     """
     headers = _headers(store_api)
     partner, _ = _profiles(store_api, headers)
-    scripted.responses.append(_opening_reply())
 
     response = _read(store_api, headers, partner=partner, chapter="attraction")
 
@@ -331,27 +316,64 @@ def test_a_free_account_gets_the_opening_of_the_pair_chapter_and_a_price(
     assert body["locked"] is True
     assert body["reading"] is None, "полный отчёт даром не отдаётся"
     assert body["product"] == "pair.check"
-    assert body["opening"]["cited_factors"], "абзац обязан быть с позициями"
+    assert body["opening"] is None, "написанного начала у пары нет"
+    assert body["needs_partner"] is False, "человек назван — закрыто деньгами"
+    assert scripted.calls == [], "модель не должна была позваться ни разу"
 
 
-def test_an_opening_already_written_is_never_paid_for_twice(store_api, scripted):
-    """Перечитывание не стоит ничего — как и у тизера, и по той же причине.
+@pytest.mark.parametrize("chapter", ["attraction", "friction", "overlays", "together"])
+def test_no_pair_chapter_writes_anything_for_free(store_api, scripted, chapter):
+    """Все четыре, а не только глава I.
 
-    Текст уже на экране, за него ничего не просили, и второй раз он не
-    генерируется вовсе. Прежде это держал ключ счётчика без месяца в нём;
-    теперь — строка в `Reading` с ключом, в котором нет ни даты, ни движущихся
-    факторов.
+    Глава I была тизером и стоит отдельного теста выше; остальные три никогда
+    ничего не обещали и всё равно писали абзац — тем же путём. Параметризация
+    здесь ровно затем, чтобы пятая глава пары, добавленная завтра, не завела
+    себе бесплатное начало молча.
     """
     headers = _headers(store_api)
     partner, _ = _profiles(store_api, headers)
-    scripted.responses.append(_opening_reply())
 
-    first = _read(store_api, headers, partner=partner, chapter="attraction").json()
-    again = _read(store_api, headers, partner=partner, chapter="attraction").json()
+    body = _read(store_api, headers, partner=partner, chapter=chapter).json()
 
-    assert first["cached"] is False and again["cached"] is True
-    assert again["opening"]["body"] == first["opening"]["body"]
-    assert len(scripted.calls) == 1
+    assert body["locked"] is True
+    assert body["opening"] is None
+    assert scripted.calls == []
+
+
+def test_the_pair_wall_does_not_spend_the_monthly_opening_window(store_api, scripted):
+    """Окно открывающих абзацев бережёт витрину натальной карты, а не пары.
+
+    `_opening_allowance` — шестьдесят абзацев в месяц на аккаунт, последняя
+    линия против петли «сменил дату рождения — пиши заново». Пара до неё больше
+    не доходит, и это важно проверить счётчиком, а не только пустым полем:
+    заходы в закрытые главы пары ничем не ограничены (человека заводят
+    бесплатно), и если бы они тратили окно, то выедали бы его целиком — а
+    расплачивался бы за это натальный экран, где абзац и правда продаёт.
+    """
+    from sqlalchemy import select
+
+    from alma.db import session as db_session
+    from alma.db.models import UsageCounter
+    from conftest import read_async
+
+    headers = _headers(store_api)
+    partner, _ = _profiles(store_api, headers)
+
+    for _ in range(3):
+        _read(store_api, headers, partner=partner, chapter="attraction")
+
+    # `read_async`, а не `run_async`: соединения приложения принадлежат циклу
+    # портального потока TestClient, и читать ими из тела теста — тот самый
+    # «attached to a different loop» (см. довод в conftest).
+    async def counters() -> list[str]:
+        async with db_session.session_scope() as session:
+            rows = await session.execute(
+                select(UsageCounter).where(UsageCounter.metric == "opening")
+            )
+            return [row.id for row in rows.scalars()]
+
+    assert read_async(counters) == [], "пара не тратит окно абзацев"
+    assert scripted.calls == []
 
 
 def test_a_subscriber_never_meets_the_wall_on_the_pair_chapter(store_api, apple, scripted):

@@ -924,22 +924,29 @@ def test_a_compatibility_reading_says_who_is_missing_rather_than_failing(
     assert scripted.calls == []
 
 
-def test_a_pair_chapter_is_locked_like_any_other_and_priced_like_a_pair(
+def test_a_pair_chapter_is_locked_and_writes_nothing_at_all(
     api, auth_headers, scripted
 ):
-    """Глава I пары («Притяжение») больше не бесплатный тизер.
+    """Глава пары закрыта ценой и **пуста** — в отличие от всех прочих сорока.
 
-    Владелец, 17.08.2026: «тизер и глава I пары — одно и то же». Вместе с
-    `free=True` снят и весь второй механизм — кап `pair.teaser_cap`, счётчик
-    `pair_teaser`, — потому что от чего он защищал, от того теперь защищает
-    сама стена. Остаётся обычная закрытая глава: открывающий абзац и цена
-    `pair.check`, а не `door.compatibility`, которого не существует.
+    Две правки владельца подряд, и вторая отменяет половину первой. 17.08.2026:
+    «тизер и глава I пары — одно и то же» — глава перестала быть бесплатной, но
+    получила открывающий абзац, как остальные. 19.08.2026: «мы не даем
+    бесплатно пару никакую все за деньги можно писать только имя» — абзаца
+    больше нет тоже.
+
+    Довод в деньгах: человека для пары заводят бесплатно и сколько угодно раз,
+    поэтому абзац здесь — не витрина, а кран, который открывает любой, кто
+    ввёл чужую дату рождения. У натальной карты такого крана нет, и её абзац
+    остаётся (`test_a_locked_chapter_answers_with_its_opening_paragraph`).
+
+    Цена при этом на месте и остаётся `pair.check`, а не `door.compatibility`,
+    которого не существует: стена обязана продавать, даже когда молчит.
     """
     from tests.conftest import LUCAS
 
     api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
     api.post("/v1/profiles", json={**LUCAS, "relation": "partner"}, headers=auth_headers)
-    scripted.responses.append(_opening_reply(_pair_factors("attraction")))
 
     response = api.post(
         "/v1/readings",
@@ -951,34 +958,8 @@ def test_a_pair_chapter_is_locked_like_any_other_and_priced_like_a_pair(
     assert body["locked"] is True
     assert body["needs_partner"] is False
     assert body["product"] == "pair.check"
-    assert body["opening"]["cited_factors"]
-
-
-def _pair_factors(chapter: str) -> list[str]:
-    """Настоящие факторы синастрии Софии и Лукаса для этой главы."""
-    from datetime import date
-
-    from alma.ai import chapters as chapter_defs
-    from alma.calc import BirthData, compute
-    from tests.conftest import LUCAS
-
-    def birth(payload: dict) -> BirthData:
-        return BirthData(
-            date=date.fromisoformat(payload["birth_date"]),
-            time=payload["birth_time"],
-            latitude=payload["latitude"],
-            longitude=payload["longitude"],
-            timezone=payload["timezone"],
-            place_label=payload["place_label"],
-            name=payload["name"],
-        )
-
-    result = compute(
-        "compatibility", birth(SOFIA), other=birth(LUCAS), house_system="placidus"
-    )
-    return chapter_defs.relevant_factors(
-        chapter_defs.find("compatibility", chapter), result.factors
-    )
+    assert body["opening"] is None, "написанного начала у пары нет"
+    assert scripted.calls == [], "и генерации не случилось — не только поле пустое"
 
 
 def test_a_compatibility_reading_is_written_about_two_people(api, auth_headers, scripted, owns):

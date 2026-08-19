@@ -1765,7 +1765,7 @@ class LFr extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Sa carte est calculée gratuitement, comme la tienne. Comment commence le premier chapitre — l\'attirance —, tu le lis avant de décider quoi que ce soit.';
+      'Sa carte est calculée gratuitement, comme la tienne. Tu ne paies que les chapitres écrits sur vous deux.';
 
   @override
   String get pairInputCta => 'Lire ce qui vous attire';
@@ -1783,8 +1783,7 @@ class LFr extends L {
   }
 
   @override
-  String get pairRowFreeChapter =>
-      'le début de l\'attirance se lit gratuitement';
+  String get pairRowNotOpened => 'pas encore ouverts';
 
   @override
   String get pairCreditOverline => 'ce mois-ci';
@@ -1810,7 +1809,7 @@ class LFr extends L {
 
   @override
   String get pairHookNote =>
-      'La date de naissance suffit — tu lis le début de l\'attirance avant de payer quoi que ce soit.';
+      'La date de naissance suffit, et la comparaison est calculée gratuitement. Tu paies les chapitres.';
 
   @override
   String get pairCheckAnotherPlain => 'Analyser quelqu\'un d\'autre';
