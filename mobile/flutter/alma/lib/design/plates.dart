@@ -50,9 +50,8 @@ class AlmaPlates {
       'milestones': 'plate-saturn',
     },
     SystemSlug.numerology: {
-      // Времянка: чужая вклейка до генерации «дороги». Помечено в plates-map.md.
-      'life-path': 'plate-soulurge',
-      'birthday-number': null,
+      'life-path': 'plate-road',
+      'birthday-number': 'plate-seal',
       'personal-year': 'plate-year',
       'pinnacles': 'plate-eleven',
       'name': 'plate-expression',
@@ -64,8 +63,8 @@ class AlmaPlates {
     },
     SystemSlug.transits: {
       'active': 'plate-sky',
-      'ahead': null,
-      'long': null,
+      'ahead': 'plate-ahead',
+      'long': 'plate-longwave',
     },
     SystemSlug.solarReturn: {
       'year-shape': 'plate-solar',
@@ -80,8 +79,8 @@ class AlmaPlates {
     },
     SystemSlug.astrocartography: {
       'lines': 'plate-lines',
-      'here': 'plate-whereto',
-      'crossings': null,
+      'here': 'plate-here',
+      'crossings': 'plate-crossings',
     },
     // Синтез — система «всё вместе», и одна картина на все четыре главы здесь
     // правило, а не дыра: четыре разных арта под «где системы согласны» и «где

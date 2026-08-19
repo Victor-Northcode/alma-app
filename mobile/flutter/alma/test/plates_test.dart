@@ -37,14 +37,11 @@ void main() {
     SystemSlug.synthesis: ['agreement', 'disagreement', 'single', 'whole'],
   };
 
-  /// Дыры, о которых известно: арт под них ещё не нарисован. Список закрытый —
-  /// новая дыра обязана появиться здесь осознанно, а не проскользнуть.
-  const knownGaps = <String>{
-    'numerology/birthday-number',
-    'transits/ahead',
-    'transits/long',
-    'astrocartography/crossings',
-  };
+  /// Дыр не осталось: последние шесть вклеек владелец прислал, и все главы
+  /// каталога названы. Множество пустое намеренно — оно и есть сторож. Стоит
+  /// добавить главу и забыть про картину, как арка молча покажет римскую цифру
+  /// вместо картины, а этот тест — упадёт.
+  const knownGaps = <String>{};
 
   test('карта знает ровно те главы, что есть в движке', () {
     for (final entry in chapters.entries) {
@@ -60,7 +57,7 @@ void main() {
     expect(total, 41);
   });
 
-  test('дыр ровно четыре, и все они известны', () {
+  test('дыр не осталось: у каждой главы есть картина', () {
     final gaps = <String>{};
     AlmaPlates.all.forEach((system, map) {
       map.forEach((chapter, plate) {
