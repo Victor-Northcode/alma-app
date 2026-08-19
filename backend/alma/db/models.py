@@ -797,6 +797,24 @@ class ChatMessage(Base):
     source_chapter: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     model: Mapped[str | None] = mapped_column(String(64))
     cost_cents: Mapped[float] = mapped_column(Float, default=0.0)
+    #: Токены и попытки этого хода — то же, что `Reading` хранит про главу.
+    #:
+    #: **Заведено, потому что без них счёт беседы не раскладывается.** У главы
+    #: эти три числа есть, и по ним стоимость разложилась на «ошибка оценщика
+    #: ×1.25» и «повторы ×1.47» — то есть стало видно, что чинить. У беседы
+    #: хранилась одна итоговая стоимость, и её множитель ×2.40 к проекции
+    #: остался неатрибутируемым: восемь центов за ход — это один дорогой ход
+    #: или три обычных, и от ответа зависит, чинить промпт или потолок вывода.
+    #: На бесплатном слое беседа — главная статья расхода, так что цена этого
+    #: незнания измеряется сотнями долларов в месяц на десяти тысячах.
+    #:
+    #: Все три `nullable`, и null — честное значение для строк, написанных до
+    #: колонок: задним числом ход не пересчитать, а ноль читался бы как
+    #: измеренный ноль. Запросы замера обязаны отбрасывать null, а не считать
+    #: его нулём.
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    attempts: Mapped[int | None] = mapped_column(Integer, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     thread: Mapped[ChatThread] = relationship(back_populates="messages")

@@ -485,6 +485,22 @@ class Answer:
     #: answered for her", which are two different guarantees.
     standin: str | None = None
 
+    #: Сколько обращений к модели стоил этот ход.
+    #:
+    #: **Заведено ради счёта, а не ради интерфейса.** У главы это число лежит в
+    #: `Written.attempts` и попадает в базу, и именно поэтому стоимость главы
+    #: удалось разложить: ×1.25 — ошибка оценщика, ×1.47 — повторы. У беседы
+    #: такого числа не хранилось нигде, и её множитель ×2.40 — самое шаткое
+    #: место всей экономики: неизвестно, дорог ли один ход или их несколько.
+    #: Один ход стоит около восьми центов, и на бесплатном слое это главная
+    #: статья расхода, так что неатрибутируемой она быть не должна.
+    #:
+    #: Единица — честное значение для ответов, которые модель не писала:
+    #: кризисная строка берётся из каталога и не стоит ничего, но обращением
+    #: к продукту она всё-таки является, и ноль здесь означал бы «хода не
+    #: было», а не «ход был бесплатным». Бесплатность видна по `spend`.
+    attempts: int = 1
+
     def text(self) -> str:
         return "\n\n".join(p.text for p in self.paragraphs)
 
@@ -1155,6 +1171,7 @@ async def answer(
                     model=model,
                     spend=ledger.total(model),
                     standin="withheld",
+                    attempts=attempt,
                 )
             complaint = "The reply broke a rule: " + "; ".join(breaches)
             log.warning("chat attempt %d broke a rule: %s", attempt, "; ".join(breaches))
@@ -1230,6 +1247,7 @@ async def answer(
             remember=tuple(str(item).strip() for item in remember if str(item).strip())[:2],
             model=model,
             spend=ledger.total(model),
+            attempts=attempt,
         )
 
     raise AnswerRefused(

@@ -2681,6 +2681,12 @@ async def _answer_one_turn(
             source_chapter=source_chapter,
             model=reply.model,
             cost_cents=reply.spend.cents,
+            # Токены и попытки — рядом со стоимостью, из того же `Spend`, что
+            # её и посчитал. Без них восемь центов за ход неразложимы на «один
+            # дорогой» и «три обычных»; довод целиком у колонок в `db/models.py`.
+            input_tokens=reply.spend.input_tokens,
+            output_tokens=reply.spend.output_tokens,
+            attempts=reply.attempts,
         )
         session.add(message)
         thread_row.updated_at = utcnow()

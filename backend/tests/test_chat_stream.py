@@ -275,3 +275,65 @@ def test_a_turn_with_no_chapter_stores_nothing_rather_than_a_guess(
         f"/v1/chat/threads/{live['thread_id']}", headers=auth_headers
     ).json()
     assert all(m["source_chapter"] is None for m in thread["messages"])
+
+
+def test_a_chat_turn_records_its_tokens_and_its_attempts(api, auth_headers, scripted, owns):
+    """Ход беседы кладёт в базу то же, что глава: токены и число попыток.
+
+    **Заведено ради счёта, а не ради интерфейса.** У главы эти три числа
+    хранились всегда, и именно поэтому её стоимость удалось разложить: ×1.25 —
+    ошибка оценщика, ×1.47 — повторы. У беседы лежала одна итоговая стоимость,
+    и её множитель к проекции (×2.40 по замеру) оставался неатрибутируемым:
+    восемь центов за ход — это один дорогой ход или три обычных, и от ответа
+    зависит, что чинить, промпт или потолок вывода. На бесплатном слое беседа
+    — главная статья расхода, так что цена этого незнания измеряется сотнями
+    долларов в месяц на десяти тысячах пользователей.
+
+    Проверяется не значение, а наличие и связность: токены положительны, а
+    попытки — то же число, которое насчитал сам ход. Значения тут заведомо
+    искусственные (модель подменена), и утверждать про них что-либо было бы
+    проверкой заготовки, а не продукта.
+    """
+    from sqlalchemy import select
+
+    from alma.db.models import ChatMessage
+
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    factors = _factors_for(api, auth_headers)
+
+    scripted.responses.append(_chat_reply(factors[:1]))
+    said = api.post(
+        "/v1/chat", json={"message": "What am I built for?"}, headers=auth_headers
+    )
+    assert said.status_code == 200, said.text
+
+    from tests.conftest import run_async
+    from alma.db import session as session_module
+
+    async def stored():
+        async with session_module.session_scope() as session:
+            rows = (await session.execute(
+                select(ChatMessage).where(ChatMessage.role == "alma")
+            )).scalars().all()
+            return [
+                (r.cost_cents, r.input_tokens, r.output_tokens, r.attempts) for r in rows
+            ]
+
+    rows = run_async(stored)
+    assert len(rows) == 1, "ответ не сохранён — проверять нечего"
+    cents, input_tokens, output_tokens, attempts = rows[0]
+
+    assert input_tokens is not None and input_tokens > 0, (
+        "у хода беседы не сохранены входные токены — стоимость снова "
+        "неразложима"
+    )
+    assert output_tokens is not None and output_tokens > 0, (
+        "у хода беседы не сохранены выходные токены"
+    )
+    assert attempts is not None and attempts >= 1, (
+        "у хода беседы не сохранено число попыток — восемь центов останутся "
+        "неотличимы от трёх по три"
+    )
+    # Связность: заготовка отвечает с первого раза, и стоимость одной попытки.
+    assert attempts == 1, "заготовка ответила сразу, а в базе больше одной попытки"
+    assert cents > 0
