@@ -14,6 +14,7 @@ import 'notify/push_devices.dart';
 import 'screens/alma/alma_screen.dart';
 import 'screens/journey/journey_screen.dart';
 import 'screens/launch_screen.dart';
+import 'screens/onboarding/coach_marks.dart';
 import 'screens/settings/settings_screen.dart';
 import 'screens/systems/chapter_screen.dart';
 import 'screens/paywall/pair_bind_screen.dart';
@@ -22,6 +23,7 @@ import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
 import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
 import 'state/ask_alma.dart';
+import 'state/onboarding_memory.dart';
 import 'state/paywall_guard.dart';
 import 'state/session.dart';
 
@@ -44,6 +46,21 @@ void main() {
       ),
     ));
 }
+
+/// Открыт ли отладочный вход, объявленный сборкой.
+///
+/// **`bool.fromEnvironment` понимает только слово `true`.** Оба комментария в
+/// этом файле обещают `--dart-define=ALMA_JOURNEY=1`, и ровно эта команда
+/// молчала: `bool.fromEnvironment('ALMA_JOURNEY')` на значении `1` читает
+/// «ничего не сказано» и возвращает умолчание, то есть `false`. Дверь для
+/// проверки была нарисована на стене — найдено на симуляторе, когда тем же
+/// способом не открылась обучалка.
+///
+/// Теперь дверь открывает любое значение, кроме тех, которыми её закрывают
+/// вслух. Сборке, где ключ не назван, значение приходит пустым, и обе ветки
+/// по-прежнему мертвы.
+bool buildDoorOpen(String value) =>
+    value.isNotEmpty && value != 'false' && value != '0';
 
 /// Корень. Порт `AlmaApp.swift` + `RootView.swift`.
 class AlmaApp extends StatefulWidget {
@@ -421,6 +438,51 @@ class _CabinetShellState extends State<CabinetShell> {
   /// она сама; см. соображение у ветки, которая её показывает.
   bool _journeyRunning = false;
 
+  /// Про обучалку уже спрашивали в этом запуске. Спрашивает `build`, а он
+  /// зовётся на каждую смену вкладки, — без признака вопрос ушёл бы на диск
+  /// десятки раз за минуту.
+  bool _coachAsked = false;
+
+  /// Дать кабинету осесть перед проводкой.
+  ///
+  /// Каскад прихода вкладки — 550 мс с лесенкой (`AlmaArrive`), и накладка,
+  /// легшая поверх ещё летящих блоков, показала бы человеку затемнение раньше,
+  /// чем сам продукт. Пауза — про то, что первый кадр кабинета принадлежит
+  /// кабинету.
+  static const _coachBreath = Duration(milliseconds: 900);
+
+  /// Показать маленькую проводку — один раз в жизни установки.
+  ///
+  /// **Вход для проверки.** Обучалку видит только тот, кто только что прошёл
+  /// анкету, — то есть один раз, и снять её рядом с макетом нечем.
+  /// `--dart-define=ALMA_ONBOARDING=1` показывает её на каждом запуске, ровно
+  /// как `ALMA_JOURNEY=1` показывает анкету; в обычной сборке константа пуста, и
+  /// ветка мертва.
+  void _maybeCoach() {
+    if (_coachAsked) return;
+    _coachAsked = true;
+    final forced =
+        buildDoorOpen(const String.fromEnvironment('ALMA_ONBOARDING'));
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      if (!forced && !await OnboardingMemory.due()) return;
+      await Future<void>.delayed(_coachBreath);
+      if (!mounted) return;
+      // Отметка **до** показа: «один раз в жизни установки» обязано выполняться
+      // и для того, кто закрыл проводку убийством приложения. Принудительный
+      // показ отметку тоже ставит — и тоже её игнорирует.
+      await OnboardingMemory.markSeen();
+      if (!mounted) return;
+      await showCoachMarks(
+        context,
+        goTo: (stop) => _goTo(switch (stop) {
+          CoachStop.systems => CabinetTab.systems,
+          CoachStop.today => CabinetTab.today,
+        }),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = SessionScope.of(context);
@@ -454,7 +516,7 @@ class _CabinetShellState extends State<CabinetShell> {
     // `UserDefaults` (`JourneyModel.swift`), здесь — то же самое сборкой:
     // `--dart-define=ALMA_JOURNEY=1`. В обычной сборке константа пуста, и
     // ветка мертва.
-    const forced = bool.fromEnvironment('ALMA_JOURNEY');
+    final forced = buildDoorOpen(const String.fromEnvironment('ALMA_JOURNEY'));
     // Без рождения кабинету нечего считать: новый человек попадает в
     // путешествие, как на iOS его встречает полноэкранная обложка. Пока
     // сессия не готова — ночь без всего, а не мигающий каркас.
@@ -473,9 +535,21 @@ class _CabinetShellState extends State<CabinetShell> {
     if (forced || _journeyRunning || (session.ready && !session.hasBirthData)) {
       _journeyRunning = true;
       return JourneyScreen(
-        onDone: () => setState(() => _journeyRunning = false),
+        onDone: () {
+          // **Обучалка взводится здесь и больше нигде.** Это единственная точка
+          // в приложении, где известно, что человек только что прошёл анкету, —
+          // а «маленькая проводка для нового» адресована ровно ему. Тому, кто
+          // обновил приложение с уже построенной картой, кабинет знаком, и
+          // накладка поверх знакомого экрана читалась бы поломкой.
+          OnboardingMemory.arm();
+          setState(() => _journeyRunning = false);
+        },
       );
     }
+    // Кабинет действительно открывается — можно спрашивать про обучалку.
+    // Строкой ниже всех `return` выше: ни поверх церемонии, ни поверх заставки,
+    // ни поверх экрана отказа сети её быть не должно.
+    _maybeCoach();
     return Scaffold(
       backgroundColor: AlmaPalette.night,
       extendBody: true,

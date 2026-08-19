@@ -3357,6 +3357,32 @@
   "@paywallV3DoorWhatRestHolds": {
     "description": "monetization v3 · А11 chapter.what_rest_holds · V1 — оверлайн над чипами глав в конце бесплатной главы"
   },
+  "paywallV3DoorMoreCount": "{count, plural, one{+{count} more} other{+{count} more}}",
+  "@paywallV3DoorMoreCount": {
+    "description": "monetization v3 · А11 chapter.more_count · V1 — шестой, приглушённый чип: сколько глав не поместилось в пять видимых",
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "paywallV3DoorOverline": "your {system} reading",
+  "@paywallV3DoorOverline": {
+    "description": "monetization v3 · А11 door.overline · V1 — оверлайн карточки. На холсте «your natal reading»; имя системы вставкой, потому что блок поднимается у любой системы с дверью, а не только у натала",
+    "placeholders": {
+      "system": {
+        "type": "String"
+      }
+    }
+  },
+  "paywallV3DoorChaptersLine": "Every chapter written from your own positions, not from a template.",
+  "@paywallV3DoorChaptersLine": {
+    "description": "monetization v3 · А11 door.chapters_count · V1 — подпись под заголовком карточки. Счётный вариант того же ключа занят paywallV3DoorChaptersCount (V2/W3/W5), а холст просит здесь фразу, а не число; перечисление глав холста («Love, money, work, the shadow») натальное и на четырёх других системах было бы неправдой — их имена и без того стоят чипами выше"
+  },
+  "paywallV3DoorCtaNoPrice": "Open the whole reading",
+  "@paywallV3DoorCtaNoPrice": {
+    "description": "monetization v3 · door.cta · V1 без цены — магазин отвечает не мгновенно, и кнопка обязана рисоваться до его ответа: та же подпись без хвоста с ценой"
+  },
   "paywallV3WhatNextOverline": "what next",
   "@paywallV3WhatNextOverline": {
     "description": "monetization v3 · А11 next.overline · V3 — и он же заголовок блока-приглашения в конце последней главы"
@@ -3594,5 +3620,33 @@
   "paywallV3StateProcessingNote": "Apple has taken it; we are writing it down. This finishes by itself, even if you close the app.",
   "@paywallV3StateProcessingNote": {
     "description": "monetization v3 · state.processing_note · W6"
+  },
+  "onbSystemsTitle": "Your eight systems",
+  "@onbSystemsTitle": {
+    "description": "onboarding · coach.systems.title — первый шаг обучалки, заголовок карточки"
+  },
+  "onbSystemsBody": "All eight are calculated from your birth, and the calculation stays free — always. Only the written chapters are paid, and the first chapter of your natal chart is already open.",
+  "@onbSystemsBody": {
+    "description": "onboarding · coach.systems.body — восемь систем по рождению; расчёт бесплатен всегда, платны написанные главы, первая глава натала открыта"
+  },
+  "onbTodayTitle": "A page for every day",
+  "@onbTodayTitle": {
+    "description": "onboarding · coach.today.title — второй шаг обучалки, заголовок карточки"
+  },
+  "onbTodayBody": "The note of the day is written from your own chart. The living layer — transits, solar return, compatibility — is recalculated together with the sky.",
+  "@onbTodayBody": {
+    "description": "onboarding · coach.today.body — заметка дня из собственной карты, живой слой пересчитывается вместе с небом"
+  },
+  "onbNext": "Next",
+  "@onbNext": {
+    "description": "onboarding · coach.next — кнопка перехода к следующему шагу"
+  },
+  "onbDone": "Got it",
+  "@onbDone": {
+    "description": "onboarding · coach.done — кнопка последнего шага; закрывает обучалку"
+  },
+  "onbClose": "Close",
+  "@onbClose": {
+    "description": "onboarding · coach.close — подпись крестика для озвучки экрана"
   }
 }

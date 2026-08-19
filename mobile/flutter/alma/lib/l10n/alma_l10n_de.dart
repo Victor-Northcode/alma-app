@@ -2541,6 +2541,29 @@ class LDe extends L {
   String get paywallV3DoorWhatRestHolds => 'was der Rest bereithält';
 
   @override
+  String paywallV3DoorMoreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count weitere',
+      one: '+$count weiteres',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorOverline(String system) {
+    return 'deine Deutung: $system';
+  }
+
+  @override
+  String get paywallV3DoorChaptersLine =>
+      'Jedes Kapitel aus deinen eigenen Positionen geschrieben, nicht aus einer Vorlage.';
+
+  @override
+  String get paywallV3DoorCtaNoPrice => 'Die ganze Deutung öffnen';
+
+  @override
   String get paywallV3WhatNextOverline => 'wie es weitergeht';
 
   @override
@@ -2726,4 +2749,27 @@ class LDe extends L {
   @override
   String get paywallV3StateProcessingNote =>
       'Apple hat die Zahlung angenommen; wir schreiben sie gerade gut. Das schließt sich von selbst ab, auch wenn du die App schließt.';
+
+  @override
+  String get onbSystemsTitle => 'Deine acht Systeme';
+
+  @override
+  String get onbSystemsBody =>
+      'Alle acht werden aus deiner Geburt berechnet, und die Berechnung bleibt kostenlos — immer. Bezahlt werden nur die geschriebenen Kapitel, und das erste Kapitel deines Geburts­horoskops ist schon offen.';
+
+  @override
+  String get onbTodayTitle => 'Für jeden Tag eine eigene Seite';
+
+  @override
+  String get onbTodayBody =>
+      'Die Notiz des Tages entsteht aus deinem eigenen Horoskop. Die lebendige Schicht — Transite, Solarhoroskop, Partnerschaft — wird gemeinsam mit dem Himmel neu berechnet.';
+
+  @override
+  String get onbNext => 'Weiter';
+
+  @override
+  String get onbDone => 'Verstanden';
+
+  @override
+  String get onbClose => 'Schließen';
 }

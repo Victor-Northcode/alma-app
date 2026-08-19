@@ -725,6 +725,10 @@
   "paywallV3CancelNote": "Отмена откроет настройки Apple ID · подписка работает до {date}",
   "paywallV3CancelNoteNoDate": "Отмена откроет настройки Apple ID",
   "paywallV3DoorWhatRestHolds": "о чём остальные главы",
+  "paywallV3DoorMoreCount": "{count, plural, one{+{count} глава} few{+{count} главы} many{+{count} глав} other{+{count} главы}}",
+  "paywallV3DoorOverline": "твой разбор: {system}",
+  "paywallV3DoorChaptersLine": "Каждая глава написана по твоим собственным положениям, а не по шаблону.",
+  "paywallV3DoorCtaNoPrice": "Открыть весь разбор",
   "paywallV3WhatNextOverline": "что дальше",
   "paywallV3WhatNextInviteLine": "Последняя глава прочитана — посмотри, куда это ведёт",
   "paywallV3WhatNextReadOpening": "Прочитать первую главу",
@@ -770,5 +774,12 @@
   "liveDayNote": "Длинное чтение, области, что впереди",
   "paywallV3SubBadge": "подписка активна",
   "paywallV3SubCancelHonesty": "Если однажды отменишь: главы, купленные навсегда, остаются читаемыми. Главы, открытые только подпиской, закрываются вместе с ней — расчёт бесплатен в любом случае.",
-  "paywallV3StateProcessingNote": "Apple платёж принял; мы его записываем. Это завершится само, даже если ты закроешь приложение."
+  "paywallV3StateProcessingNote": "Apple платёж принял; мы его записываем. Это завершится само, даже если ты закроешь приложение.",
+  "onbSystemsTitle": "Твои восемь систем",
+  "onbSystemsBody": "Все восемь посчитаны по твоему рождению, и расчёт остаётся бесплатным — всегда. Платны только написанные главы, а первая глава твоей натальной карты уже открыта.",
+  "onbTodayTitle": "Своя страница у каждого дня",
+  "onbTodayBody": "Заметка дня написана по твоей собственной карте. Живой слой — транзиты, соляр, совместимость — пере­считывается вместе с небом.",
+  "onbNext": "Дальше",
+  "onbDone": "Понятно",
+  "onbClose": "Закрыть"
 }

@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 
 import '../../billing/alma_store.dart';
 import '../../billing/ladder.dart';
+import '../../design/art.dart';
 import '../../design/buttons.dart';
 import '../../design/gilt_page.dart';
 import '../../design/layout.dart';
@@ -542,6 +543,12 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// Названия следующих платных глав — для чипов оффера V1. Имена уже в
   /// оглавлении, отдельных строк им не нужно (SCREENS-V3 §V1): чипы делают
   /// работу, которую не сделает цена, — показывают, что за дверью, именами.
+  ///
+  /// **Список отдаётся целиком, не обрезанный.** Обрезка стояла здесь (`take(4)`),
+  /// и из-за неё блок не мог знать, сколько глав он не показал, — а холст просит
+  /// шестым чипом именно это число («+10 more»). Сколько имён поместится и что
+  /// написать на остатке, решает [_ChapterEndOffer]: это вопрос кадра, а не
+  /// оглавления.
   List<String> get _upcomingTitles {
     final list = _list;
     final current = _entry;
@@ -549,7 +556,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
     return [
       for (final entry in list.chapters)
         if (entry.index > current.index && !entry.free) entry.title,
-    ].take(4).toList();
+    ];
   }
 
   /// Первое пересечение порога дочитанности. Здесь решаются обе концовки v3 —
@@ -1145,12 +1152,15 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // текст кончился, а не оборвался на середине. Без неё абзац просто
           // упирается в подсказку о протяжке, и дочитавший не знает, дочитал
           // ли он.
-          const SizedBox(height: 20),
-          const _EndMark(),
           // Обе концовки v3 встают **после** знака конца и до подсказки
           // протяжки: они продолжение текста, а не наклейка поверх него, и
           // появляются только по факту дочитывания ([_noteEndOfChapter]).
           if (_endOffer)
+            // **Знак конца рисует сам оффер.** На кадре V1 ✦ стоит между
+            // текстом главы и оверлайном «what the rest holds» с отбивкой 16 с
+            // обеих сторон — то есть это и есть та самая звёздочка, и вторая,
+            // на двадцати точках выше, читалась бы сбоем вёрстки, а не двумя
+            // разными знаками.
             _ChapterEndOffer(
               system: widget.system,
               chips: _upcomingTitles,
@@ -1162,9 +1172,13 @@ class _ChapterScreenState extends State<ChapterScreen> {
                   !SessionScope.of(context).entitlements.ownsArchive,
               onOpened: _afterOffer,
             )
-          else if (_whatNextInvite) ...[
-            const SizedBox(height: 16),
-            _WhatNextInvite(onTap: _openWhatNext),
+          else ...[
+            const SizedBox(height: 20),
+            const _EndMark(),
+            if (_whatNextInvite) ...[
+              const SizedBox(height: 16),
+              _WhatNextInvite(onTap: _openWhatNext),
+            ],
           ],
           const SizedBox(height: 34),
           // Хвост: следующая глава и полоса подтверждения. Полоса наливается
@@ -2186,25 +2200,55 @@ class _ChapterEndOfferState extends State<_ChapterEndOffer> {
     _store.buy(_sku);
   }
 
+  /// Сколько имён глав стоит на кадре. Пятое — последнее: шестым чипом идёт
+  /// остаток («+10 more»), и он делает работу, которой пять имён уже не делают,
+  /// — говорит, что список на этом не кончился.
+  static const _visibleChips = 5;
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
+    final price = _store.price(_sku);
+    // **Молчание магазина — состояние, а не событие.** Пока цены нет и полка
+    // молчит, строка об этом стоит под кнопкой всё время; загрузка молчанием не
+    // считается — там кнопка просто ждёт цену и объявлять ей нечего.
+    final silent = price == null && _store.state == StoreState.silent;
+    final notice = _store.notice;
+    // Одна правда не звучит дважды: извещение «магазин молчит» рядом с
+    // постоянной строкой о том же — это две строки об одном на пергаменте, где
+    // и одной хватает.
+    final noticeText = notice == null ||
+            (silent && notice.message == StoreMessage.storeSilent)
+        ? null
+        : paywallNoticeText(l, notice.message);
+    final visible = widget.chips.take(_visibleChips).toList();
+    final hidden = widget.chips.length - visible.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 16),
-        // Оверлайн — как у меты главы: прописные золотом на пергаменте.
+        // Звёздочка между двумя гаснущими волосами — та самая точка в конце
+        // текста ([_EndMark]), и здесь она же служит разделителем кадра V1.
+        const _EndMark(),
+        const SizedBox(height: 16),
+        // Оверлайн — как у меты главы: прописные золотом на пергаменте. Кегль
+        // и разрядка холста (Golos 600 10.5, ls 2.2) — это `readerHead`;
+        // `AlmaType.overline` на точку крупнее и разряжен сильнее.
         Text(
           l.paywallV3DoorWhatRestHolds.toUpperCase(),
-          style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep),
+          style: AlmaType.readerHead.copyWith(color: AlmaPalette.goldDeep),
         ),
-        if (widget.chips.isNotEmpty) ...[
+        if (visible.isNotEmpty) ...[
           const SizedBox(height: 10),
           Wrap(
             spacing: 7,
             runSpacing: 7,
             children: [
-              for (final title in widget.chips) _Chip(title),
+              for (final title in visible) _Chip(title),
+              // Шестой чип приглушён намеренно: он не название главы, а счёт
+              // неназванных, и стоять вровень с именами ему не по чину.
+              if (hidden > 0)
+                _Chip(l.paywallV3DoorMoreCount(hidden), muted: true),
             ],
           ),
         ],
@@ -2225,47 +2269,109 @@ class _ChapterEndOfferState extends State<_ChapterEndOffer> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (widget.paidChapters case final chapters?) ...[
-                Text(
-                  l.paywallV3DoorTitle(chapters),
-                  style: AlmaType.displayL.copyWith(
-                      fontSize: 20, height: 1.2, color: AlmaPalette.ink),
+              Row(
+                // Обложка выше текстовой колонки, и колонка равняется по её
+                // верху, а не по середине: холст ставит `align-items:flex-start`.
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _OfferCover(widget.system),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l
+                              .paywallV3DoorOverline(
+                                  LadderKey.systemTitle(l, widget.system))
+                              .toUpperCase(),
+                          style: AlmaType.readerHead.copyWith(
+                              letterSpacing: 2, color: AlmaPalette.goldDeep),
+                        ),
+                        if (widget.paidChapters case final chapters?) ...[
+                          const SizedBox(height: 5),
+                          Text(
+                            l.paywallV3DoorTitle(chapters),
+                            style: AlmaType.displayL.copyWith(
+                                fontSize: 20,
+                                height: 1.2,
+                                color: AlmaPalette.ink),
+                          ),
+                        ],
+                        const SizedBox(height: 6),
+                        Text(
+                          l.paywallV3DoorChaptersLine,
+                          style: AlmaType.meta.copyWith(
+                            fontSize: 13,
+                            height: 1.5,
+                            color: AlmaPalette.inkMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              DecoratedBox(
+                // **Единственная тень в тёплую охру на весь холст.** Все прочие
+                // золотые кнопки продукта стоят на ночи и светятся ореолом
+                // ([PaywallHalo]); эта лежит на пергаменте, где ореол не виден
+                // вовсе, и её от бумаги отделяет падающая тень — `0 6px 15px
+                // rgba(120,96,40,.3)`. Погашенная кнопка тени не отбрасывает:
+                // приподнятой выглядит вещь, которую можно нажать.
+                decoration: BoxDecoration(
+                  borderRadius:
+                      BorderRadius.circular(AlmaPalette.buttonRadius),
+                  boxShadow: price == null
+                      ? null
+                      : const [
+                          BoxShadow(
+                            color: Color(0x4D786028),
+                            blurRadius: 15,
+                            offset: Offset(0, 6),
+                          ),
+                        ],
                 ),
-                const SizedBox(height: 16),
-              ],
-              if (_store.price(_sku) case final price?)
-                AlmaButton(
+                child: AlmaButton(
                   // Прямоугольник 15, как у кнопки запертой главы: на бумаге
                   // кнопка обязана читаться частью страницы, а не наклейкой.
                   radius: AlmaPalette.buttonRadius,
+                  // **Кнопка рисуется и без цены.** Магазин отвечает не
+                  // мгновенно, и пустое место на месте главного действия
+                  // читалось бы поломкой; цена дорисовывается хвостом, когда
+                  // приедет. Нажать её до цены нельзя: число на кнопке обязано
+                  // совпасть со списанным.
                   label: _store.busy != null
                       ? l.stateLoadingShort
-                      : l.paywallV3DoorCta(price),
+                      : price == null
+                          ? l.paywallV3DoorCtaNoPrice
+                          : l.paywallV3DoorCta(price),
                   // Внутри карточки кнопке остаётся ~260 точек, и полная
                   // подпись не влезает даже нижней ступенью кегля — цену
                   // съедало многоточие, а цена здесь главное слово. Короткий
                   // вариант по правилу дома: тот же смысл, цена на месте.
-                  shortLabel: _store.busy != null
+                  shortLabel: _store.busy != null || price == null
                       ? null
                       : l.paywallV3DoorCtaShort(price),
-                  onTap:
-                      _store.busy != null || _store.restoring ? null : _buy,
-                )
-              else
-                // Цену выдумать нельзя: молчащий магазин — не «$4.99». Тот же
-                // ответ, что у запертой главы, — правда и попытка ещё раз.
-                Column(children: [
-                  Text(l.paywallStoreUnavailable,
-                      textAlign: TextAlign.center,
-                      style: AlmaType.meta
-                          .copyWith(color: AlmaPalette.inkMuted)),
-                  const SizedBox(height: 14),
-                  AlmaButton(
-                    radius: AlmaPalette.buttonRadius,
-                    label: l.stateRetry,
-                    onTap: _store.load,
-                  ),
-                ]),
+                  onTap: price == null ||
+                          _store.busy != null ||
+                          _store.restoring
+                      ? null
+                      : _buy,
+                ),
+              ),
+              if (silent) ...[
+                const SizedBox(height: 10),
+                // Карточку не прячем и цену не выдумываем: то, что мы продаём,
+                // известно и без App Store, а «$4.99» из головы — это число,
+                // которое не совпадёт со списанным.
+                Text(
+                  l.paywallStoreUnavailable,
+                  textAlign: TextAlign.center,
+                  style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted),
+                ),
+              ],
               const SizedBox(height: 10),
               Text(
                 l.paywallV3DoorForever,
@@ -2276,13 +2382,13 @@ class _ChapterEndOfferState extends State<_ChapterEndOffer> {
                   color: AlmaPalette.inkMuted2,
                 ),
               ),
-              if (_store.notice case final notice?) ...[
+              if (noticeText != null) ...[
                 const SizedBox(height: 10),
                 Text(
-                  paywallNoticeText(l, notice.message),
+                  noticeText,
                   textAlign: TextAlign.center,
                   style: AlmaType.meta.copyWith(
-                    color: notice.tone == StoreTone.bad
+                    color: notice!.tone == StoreTone.bad
                         ? AlmaPalette.ink
                         : AlmaPalette.goldDeep,
                   ),
@@ -2323,12 +2429,65 @@ class _ChapterEndOfferState extends State<_ChapterEndOffer> {
   }
 }
 
+/// Обложка оффера V1: карта системы 66 × 88 в тонком золотом канте.
+///
+/// **Карта колоды, а не вклейка главы — и это не выбор из двух похожих.**
+/// Карточка продаёт разбор целиком, а не одну главу из него, и холст ставит в
+/// неё ровно `card-natal.jpg` — файл, который [AlmaArt.card] и раздаёт («карта
+/// системы для колоды «Мои системы» и для героя двери»). Вклейки глав
+/// ([PlateArch], [PlateStore]) ехали бы по сети и живут в арке с радиусом 75 —
+/// прямоугольником со скруглением 9 они не бывают.
+///
+/// **Механизм загрузки — тот же, что у колоды и у карточки V9**: ассет из
+/// бандла через кэш образов Flutter. Продающий слой лежит в бандле намеренно
+/// (см. `art.dart`): оффер встречается на первом же импульсе, и пустая рамка в
+/// секунду, когда человек решает платить, — это ровно та цена, которой мы
+/// платить не хотим.
+///
+/// **Картинка не доехала — место занимает пергамент.** Ассет из бандла не
+/// теряется, но `errorBuilder` обязателен всё равно: дыра в сборке не должна
+/// ронять карточку, ради которой экран существует. На месте картины остаётся
+/// та же бумага, что и вокруг, со звёздочкой посередине — рамка выглядит
+/// пустой вклейкой, а не сломанным виджетом, и все числа кадра остаются на
+/// местах.
+class _OfferCover extends StatelessWidget {
+  const _OfferCover(this.system);
+
+  final SystemSlug system;
+
+  @override
+  Widget build(BuildContext context) => Container(
+        width: 66,
+        height: 88,
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(9),
+          border: Border.all(
+              color: AlmaPalette.goldDeep.withValues(alpha: 0.55)),
+          gradient: AlmaGradient.parchment,
+        ),
+        child: Image.asset(
+          AlmaArt.card(system),
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => Center(
+            child: Text('✦',
+                style: AlmaType.numeral
+                    .copyWith(fontSize: 13, color: AlmaPalette.goldDeep)),
+          ),
+        ),
+      );
+}
+
 /// Чип с названием главы за дверью. Числа холста V1: Playfair 14.5, кант
 /// золота на 0.4, радиус 15, поля 6 × 13.
 class _Chip extends StatelessWidget {
-  const _Chip(this.title);
+  const _Chip(this.title, {this.muted = false});
 
   final String title;
+
+  /// Шестой чип — счёт неназванных глав («+10 more»). Приглушён по холсту:
+  /// чернила на 0.6 и кант золота на 0.28 вместо 0.4.
+  final bool muted;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -2336,12 +2495,17 @@ class _Chip extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
           border: Border.all(
-              color: AlmaPalette.goldDeep.withValues(alpha: 0.4)),
+              color: AlmaPalette.goldDeep
+                  .withValues(alpha: muted ? 0.28 : 0.4)),
         ),
         child: Text(
           title,
-          style: AlmaType.numeral
-              .copyWith(fontSize: 14.5, color: AlmaPalette.ink),
+          style: AlmaType.numeral.copyWith(
+            fontSize: 14.5,
+            color: muted
+                ? AlmaPalette.ink.withValues(alpha: 0.6)
+                : AlmaPalette.ink,
+          ),
         ),
       );
 }

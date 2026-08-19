@@ -2535,6 +2535,29 @@ class LPt extends L {
   String get paywallV3DoorWhatRestHolds => 'o que o resto guarda';
 
   @override
+  String paywallV3DoorMoreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count outros',
+      one: '+$count outro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorOverline(String system) {
+    return 'a sua leitura: $system';
+  }
+
+  @override
+  String get paywallV3DoorChaptersLine =>
+      'Cada capítulo escrito a partir das suas próprias posições, não a partir de um modelo.';
+
+  @override
+  String get paywallV3DoorCtaNoPrice => 'Abrir a leitura inteira';
+
+  @override
   String get paywallV3WhatNextOverline => 'o que vem depois';
 
   @override
@@ -2718,4 +2741,27 @@ class LPt extends L {
   @override
   String get paywallV3StateProcessingNote =>
       'A Apple já recebeu o pagamento; estamos anotando. Isso se conclui sozinho, mesmo se você fechar o app.';
+
+  @override
+  String get onbSystemsTitle => 'Seus oito sistemas';
+
+  @override
+  String get onbSystemsBody =>
+      'Os oito são calculados a partir do seu nascimento, e o cálculo continua gratuito, sempre. Paga-se apenas pelos capítulos escritos, e o primeiro capítulo do seu mapa natal já está aberto.';
+
+  @override
+  String get onbTodayTitle => 'Uma página para cada dia';
+
+  @override
+  String get onbTodayBody =>
+      'A nota do dia é escrita a partir do seu próprio mapa. A camada viva — trânsitos, revolução solar, compatibilidade — é recalculada junto com o céu.';
+
+  @override
+  String get onbNext => 'Avançar';
+
+  @override
+  String get onbDone => 'Entendi';
+
+  @override
+  String get onbClose => 'Fechar';
 }

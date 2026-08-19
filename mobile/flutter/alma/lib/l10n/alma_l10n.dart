@@ -4457,6 +4457,30 @@ abstract class L {
   /// **'what the rest holds'**
   String get paywallV3DoorWhatRestHolds;
 
+  /// monetization v3 · А11 chapter.more_count · V1 — шестой, приглушённый чип: сколько глав не поместилось в пять видимых
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{+{count} more} other{+{count} more}}'**
+  String paywallV3DoorMoreCount(int count);
+
+  /// monetization v3 · А11 door.overline · V1 — оверлайн карточки. На холсте «your natal reading»; имя системы вставкой, потому что блок поднимается у любой системы с дверью, а не только у натала
+  ///
+  /// In en, this message translates to:
+  /// **'your {system} reading'**
+  String paywallV3DoorOverline(String system);
+
+  /// monetization v3 · А11 door.chapters_count · V1 — подпись под заголовком карточки. Счётный вариант того же ключа занят paywallV3DoorChaptersCount (V2/W3/W5), а холст просит здесь фразу, а не число; перечисление глав холста («Love, money, work, the shadow») натальное и на четырёх других системах было бы неправдой — их имена и без того стоят чипами выше
+  ///
+  /// In en, this message translates to:
+  /// **'Every chapter written from your own positions, not from a template.'**
+  String get paywallV3DoorChaptersLine;
+
+  /// monetization v3 · door.cta · V1 без цены — магазин отвечает не мгновенно, и кнопка обязана рисоваться до его ответа: та же подпись без хвоста с ценой
+  ///
+  /// In en, this message translates to:
+  /// **'Open the whole reading'**
+  String get paywallV3DoorCtaNoPrice;
+
   /// monetization v3 · А11 next.overline · V3 — и он же заголовок блока-приглашения в конце последней главы
   ///
   /// In en, this message translates to:
@@ -4732,6 +4756,48 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Apple has taken it; we are writing it down. This finishes by itself, even if you close the app.'**
   String get paywallV3StateProcessingNote;
+
+  /// onboarding · coach.systems.title — первый шаг обучалки, заголовок карточки
+  ///
+  /// In en, this message translates to:
+  /// **'Your eight systems'**
+  String get onbSystemsTitle;
+
+  /// onboarding · coach.systems.body — восемь систем по рождению; расчёт бесплатен всегда, платны написанные главы, первая глава натала открыта
+  ///
+  /// In en, this message translates to:
+  /// **'All eight are calculated from your birth, and the calculation stays free — always. Only the written chapters are paid, and the first chapter of your natal chart is already open.'**
+  String get onbSystemsBody;
+
+  /// onboarding · coach.today.title — второй шаг обучалки, заголовок карточки
+  ///
+  /// In en, this message translates to:
+  /// **'A page for every day'**
+  String get onbTodayTitle;
+
+  /// onboarding · coach.today.body — заметка дня из собственной карты, живой слой пересчитывается вместе с небом
+  ///
+  /// In en, this message translates to:
+  /// **'The note of the day is written from your own chart. The living layer — transits, solar return, compatibility — is recalculated together with the sky.'**
+  String get onbTodayBody;
+
+  /// onboarding · coach.next — кнопка перехода к следующему шагу
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onbNext;
+
+  /// onboarding · coach.done — кнопка последнего шага; закрывает обучалку
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get onbDone;
+
+  /// onboarding · coach.close — подпись крестика для озвучки экрана
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get onbClose;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

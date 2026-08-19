@@ -2532,6 +2532,31 @@ class LRu extends L {
   String get paywallV3DoorWhatRestHolds => 'о чём остальные главы';
 
   @override
+  String paywallV3DoorMoreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count главы',
+      many: '+$count глав',
+      few: '+$count главы',
+      one: '+$count глава',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorOverline(String system) {
+    return 'твой разбор: $system';
+  }
+
+  @override
+  String get paywallV3DoorChaptersLine =>
+      'Каждая глава написана по твоим собственным положениям, а не по шаблону.';
+
+  @override
+  String get paywallV3DoorCtaNoPrice => 'Открыть весь разбор';
+
+  @override
   String get paywallV3WhatNextOverline => 'что дальше';
 
   @override
@@ -2722,4 +2747,27 @@ class LRu extends L {
   @override
   String get paywallV3StateProcessingNote =>
       'Apple платёж принял; мы его записываем. Это завершится само, даже если ты закроешь приложение.';
+
+  @override
+  String get onbSystemsTitle => 'Твои восемь систем';
+
+  @override
+  String get onbSystemsBody =>
+      'Все восемь посчитаны по твоему рождению, и расчёт остаётся бесплатным — всегда. Платны только написанные главы, а первая глава твоей натальной карты уже открыта.';
+
+  @override
+  String get onbTodayTitle => 'Своя страница у каждого дня';
+
+  @override
+  String get onbTodayBody =>
+      'Заметка дня написана по твоей собственной карте. Живой слой — транзиты, соляр, совместимость — пере­считывается вместе с небом.';
+
+  @override
+  String get onbNext => 'Дальше';
+
+  @override
+  String get onbDone => 'Понятно';
+
+  @override
+  String get onbClose => 'Закрыть';
 }

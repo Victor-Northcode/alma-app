@@ -11,6 +11,7 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
+import '../onboarding/coach_anchors.dart';
 
 /// Хаб: восемь систем одной колодой.
 ///
@@ -80,6 +81,10 @@ class SystemsScreen extends StatelessWidget {
     if (hub == null) return null;
     final ready = hub.systems.where((e) => CabinetWordsMore.isReady(e.status)).length;
     return Padding(
+      // Ключ — якорь обучалки, и больше ничего: ни узла в дереве, ни точки в
+      // разметке он не прибавляет. Счётчик подсвечивается первым шагом, потому
+      // что он и есть доказательство того, что шаг говорит.
+      key: CoachAnchors.systemsTally,
       padding: const EdgeInsets.only(top: 18),
       child: Text(
         '$ready/${hub.systems.length} ${l.cabCalculatedWord}',
@@ -104,6 +109,10 @@ class SystemsScreen extends StatelessWidget {
     return [
       for (var i = 0; i < entries.length; i += 2)
         Padding(
+          // Второй якорь обучалки — на первом ряду. Вместе со счётчиком он даёт
+          // рамку на всю верхушку экрана: заголовок, «8/8 рассчитано» и первые
+          // две карты колоды.
+          key: i == 0 ? CoachAnchors.systemsFirstRow : null,
           padding: const EdgeInsets.only(top: _gap),
           child: Row(children: [
             Expanded(child: _card(l, session, entries[i], i, height)),

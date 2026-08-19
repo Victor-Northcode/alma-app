@@ -1,4 +1,5 @@
 import 'package:alma/l10n/alma_l10n.dart';
+import 'package:alma/design/typography.dart';
 import 'package:alma/screens/alma/chat_turn.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -82,6 +83,52 @@ void main() {
       expect(p.getMaxIntrinsicWidth(double.infinity),
           lessThanOrEqualTo(p.size.width + 0.5),
           reason: 'кусок «$text» шире своей строки: обрежется по краю');
+    }
+  });
+
+  testWidgets('ответ Alma набран ролью чтения, а не курсивным дисплеем',
+      (tester) async {
+    // **Правило вида, поставленное числом, потому что жалоба была про вид.**
+    //
+    // Ответ печатался `AlmaType.voice` — Playfair Display, курсив, 18.5/1.5 —
+    // и на трёх абзацах курсивная антиква читается тяжело. Роль чтения у
+    // продукта уже была, применялась только к главам, и довод в её же
+    // документации: у Playfair высокий контраст, на семнадцати точках тонкие
+    // штрихи на тёмном пропадают, курсив добавляет наклон и связки.
+    //
+    // Проверяется нарисованное, а не константа: сравнение `chatVoice` с самим
+    // собой не заметило бы, что вью снова печатает `voice`.
+    await tester.pumpWidget(MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: L.localizationsDelegates,
+      supportedLocales: L.supportedLocales,
+      home: const Scaffold(
+        body: SingleChildScrollView(
+          child: ChatTurnView(
+            mine: false,
+            body: 'Saturn in the seventh describes a slowness about '
+                'commitment, and not a verdict on it.',
+          ),
+        ),
+      ),
+    ));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 80));
+    }
+
+    final body = tester
+        .renderObjectList<RenderParagraph>(find.byType(RichText))
+        .where((p) => p.text.toPlainText().contains('Saturn in the seventh'))
+        .toList();
+    expect(body, isNotEmpty, reason: 'тело ответа не нарисовалось');
+    for (final p in body) {
+      final style = p.text.style!;
+      expect(style.fontFamily, AlmaType.readingBody().fontFamily,
+          reason: 'ответ ушёл с гарнитуры чтения');
+      expect(style.fontStyle, isNot(FontStyle.italic),
+          reason: 'длинный абзац снова курсивом');
+      expect(style.fontSize, AlmaType.readingBody().fontSize);
+      expect(style.height, AlmaType.readingBody().height);
     }
   });
 }

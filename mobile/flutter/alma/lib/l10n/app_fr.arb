@@ -728,6 +728,10 @@
   "paywallV3CancelNote": "Résilier ouvre les réglages de ton identifiant Apple · ton abonnement court jusqu'au {date}",
   "paywallV3CancelNoteNoDate": "Résilier ouvre les réglages de ton identifiant Apple",
   "paywallV3DoorWhatRestHolds": "ce que réserve la suite",
+  "paywallV3DoorMoreCount": "{count, plural, one{+{count} autre} other{+{count} autres}}",
+  "paywallV3DoorOverline": "ta lecture : {system}",
+  "paywallV3DoorChaptersLine": "Chaque chapitre écrit à partir de tes propres positions, jamais d'après un modèle.",
+  "paywallV3DoorCtaNoPrice": "Ouvrir toute la lecture",
   "paywallV3WhatNextOverline": "la suite",
   "paywallV3WhatNextInviteLine": "Le dernier chapitre est lu — regarde où cela mène",
   "paywallV3WhatNextReadOpening": "Lire le premier chapitre",
@@ -773,5 +777,12 @@
   "liveDayNote": "La longue lecture, les domaines, ce qui vient",
   "paywallV3SubBadge": "abonnement actif",
   "paywallV3SubCancelHonesty": "Si un jour tu annules : les chapitres achetés pour toujours restent lisibles. Les chapitres ouverts seulement par l'abonnement se referment avec lui — le calcul reste gratuit dans tous les cas.",
-  "paywallV3StateProcessingNote": "Apple a pris le paiement ; nous l'enregistrons. Cela se termine tout seul, même si tu fermes l'app."
+  "paywallV3StateProcessingNote": "Apple a pris le paiement ; nous l'enregistrons. Cela se termine tout seul, même si tu fermes l'app.",
+  "onbSystemsTitle": "Tes huit systèmes",
+  "onbSystemsBody": "Les huit sont calculés à partir de ta naissance, et le calcul reste gratuit — toujours. Seuls les chapitres écrits sont payants : le premier chapitre de ton thème natal est déjà ouvert.",
+  "onbTodayTitle": "Une page pour chaque jour",
+  "onbTodayBody": "La note du jour est écrite à partir de ton propre thème. La couche vivante — transits, révolution solaire, compatibilité — se recalcule avec le ciel.",
+  "onbNext": "Suivant",
+  "onbDone": "Compris",
+  "onbClose": "Fermer"
 }

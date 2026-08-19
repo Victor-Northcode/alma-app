@@ -7,6 +7,7 @@ import '../../design/art.dart';
 import '../../design/buttons.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
+import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
@@ -185,6 +186,10 @@ class _CancelSaveScreenState extends State<CancelSaveScreen> {
     return PaywallShell(
       intent: PaywallIntent.cancelSave(widget.system),
       seed: 0x0D005609,
+      // Небо кадра V9 — приглушённое: купол на 0.8 от полного, вуаль плотнее.
+      // Экран стоит на разговоре о деньгах, и всё, что на нём светится, обязано
+      // светиться после карточки разбора, а не вместе с ней.
+      mood: SkyMood.hushed,
       builder: (context, deal) {
         final key = deal.first;
         final price = key == null ? null : deal.price(key);

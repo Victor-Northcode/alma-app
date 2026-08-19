@@ -158,4 +158,60 @@ void main() {
       expect(find.text('READ FROM'), findsOneWidget);
     });
   });
+
+  group('глава-источник в архиве беседы', () {
+    // **Карточка «из главы» жила только в живом ответе.** Сервер называл главу
+    // в теле `/v1/chat` и нигде её не хранил, поэтому та же реплика,
+    // перечитанная из `GET /v1/chat/threads/{id}`, приходила без источника:
+    // человек возвращался в беседу, а дверь в главу, на которую ответ
+    // ссылается словами, исчезала. Та же болезнь, что была у `turn_kind`, и
+    // лечится тем же — одно имя поля на проводе и один разбор на клиенте.
+    test('реплика из архива читает источник тем же разбором, что и живая', () {
+      final turn = ChatTurn.fromJson(const {
+        'role': 'alma',
+        'body': 'Twelve is the number that keeps coming back.',
+        'cited_factors': ['life path 3'],
+        'turn_kind': 'reading',
+        'source_chapter': {
+          'system': 'numerology',
+          'slug': 'life-path',
+          'title': 'Life path',
+        },
+      });
+      expect(turn.sourceChapter?.system, 'numerology');
+      expect(turn.sourceChapter?.slug, 'life-path');
+      expect(turn.sourceChapter?.title, 'Life path');
+    });
+
+    test('нет главы — нет карточки, и это обычное состояние', () {
+      final none = ChatTurn.fromJson(const {
+        'role': 'alma',
+        'body': 'Hello. What would you like to look at?',
+        'cited_factors': <String>[],
+        'source_chapter': null,
+      });
+      expect(none.sourceChapter, isNull);
+
+      // Беседа, написанная до колонки, поля не несёт вовсе. Отсутствие ключа
+      // и `null` — одно и то же, а не два разных состояния экрана.
+      final old = ChatTurn.fromJson(const {
+        'role': 'alma',
+        'body': 'Said before the column existed.',
+        'cited_factors': <String>[],
+      });
+      expect(old.sourceChapter, isNull);
+    });
+
+    test('полтройки — не карточка', () {
+      // Полкарточки хуже её отсутствия: заголовок без слага — приглашение,
+      // которое никуда не ведёт.
+      final half = ChatTurn.fromJson(const {
+        'role': 'alma',
+        'body': 'Something.',
+        'cited_factors': <String>[],
+        'source_chapter': {'system': 'numerology', 'title': 'Life path'},
+      });
+      expect(half.sourceChapter, isNull);
+    });
+  });
 }

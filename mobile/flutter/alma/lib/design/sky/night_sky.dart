@@ -8,6 +8,22 @@ import '../art.dart';
 import '../palette.dart';
 import 'sky_field.dart';
 
+/// Вуаль над фотографией — три остановки скрима из `SKILL.md`. Ночь как она
+/// есть: сверху полупрозрачно, к низу почти глухо.
+const _veilNight = <Color>[
+  Color(0x800A0D1C),
+  Color(0xAD090C1A),
+  Color(0xF0070A16),
+];
+
+/// Та же вуаль, но плотнее: `.55 / .70 / .95` вместо `.50 / .68 / .94`.
+/// Числа кадра V9 (`SCREENS-V3` §V9) — см. [SkyMood.hushed].
+const _veilHushed = <Color>[
+  Color(0x8C0A0D1C),
+  Color(0xB3090C1A),
+  Color(0xF2070A16),
+];
+
 /// Что это за экран — и сколько неба ему полагается.
 ///
 /// Порт `NightSky.Mood`.
@@ -23,7 +39,32 @@ enum SkyMood {
 
   /// Путешествие — вопросы, церемония, портрет. Всё включено и поднято. Это
   /// единственный экран, где небо **и есть** содержание.
-  ceremony(starIntensity: 1.0, density: 1.25, grain: 0.30, hasMotes: true, hasComet: true);
+  ceremony(starIntensity: 1.0, density: 1.25, grain: 0.30, hasMotes: true, hasComet: true),
+
+  /// Кабинет с приглушённым куполом — отмена подписки (V9) и её сестра W6.
+  ///
+  /// **Почему числа именно такие.** Холст рисует V9 тем же небом, что и
+  /// остальные кадры, кроме двух величин: купол там `rgba(58,52,132,.4)`
+  /// вместо `.5`, а вертикальная вуаль плотнее — `.55/.70/.95` против
+  /// `.50/.68/.94`. Отсюда обе цифры: [domeAlpha] `0.8` — это ровно `.4 / .5`,
+  /// то есть купол гасится долей, а не переписывается своим цветом (цвет у
+  /// него один на продукт, и второй завёл бы вторую ночь); [veil] — те же три
+  /// остановки, пересчитанные в байты.
+  ///
+  /// **Поле звёзд не тронуто.** Спека называет ровно две величины, и
+  /// приглушать заодно звёзды значило бы дорисовать за холст: экран отмены
+  /// обязан быть тише, а не темнее целиком. Небо здесь — фон разговора о
+  /// деньгах, и вся его приглушённость в том, чтобы карточка разбора и две
+  /// кнопки читались первыми.
+  hushed(
+    starIntensity: 0.9,
+    density: 1.0,
+    grain: 0.26,
+    hasMotes: true,
+    hasComet: false,
+    domeAlpha: 0.8,
+    veil: _veilHushed,
+  );
 
   const SkyMood({
     required this.starIntensity,
@@ -31,12 +72,21 @@ enum SkyMood {
     required this.grain,
     required this.hasMotes,
     required this.hasComet,
+    this.domeAlpha = 1.0,
+    this.veil = _veilNight,
   });
 
   final double starIntensity;
   final double density;
   final double grain;
   final bool hasMotes;
+
+  /// Доля яркости купола — той самой ауры, которой порт собирает верхнее
+  /// свечение кадра. `1.0` у всех, кому холст рисует полный купол.
+  final double domeAlpha;
+
+  /// Три остановки вуали над фотографией.
+  final List<Color> veil;
 
   /// **Только церемония.** Это решение дизайна, а не настройка.
   ///
@@ -144,7 +194,7 @@ class _NightSkyState extends State<NightSky> with SingleTickerProviderStateMixin
           // которой фон перестаёт читаться как заливка. Она всегда под скримом
           // и никогда сама по себе: на голой туманности текст нечитаем, а
           // сорок восемь эталонных экранов ставят её именно так.
-          const _SkyPhoto(),
+          _SkyPhoto(widget.mood.veil),
           // Аура стоит высоко и в стороне. Никогда по центру: центральное
           // свечение оказывается ровно под первым абзацем.
           Positioned(
@@ -157,6 +207,7 @@ class _NightSkyState extends State<NightSky> with SingleTickerProviderStateMixin
               diameter: 520,
               drift: still ? AuraDrift.none : AuraDrift.a,
               clock: _clock,
+              dim: widget.mood.domeAlpha,
             ),
           ),
           if (widget.mood == SkyMood.ceremony)
@@ -316,6 +367,7 @@ class _Aura extends StatelessWidget {
     required this.diameter,
     required this.drift,
     required this.clock,
+    this.dim = 1.0,
   });
 
   final AuraTone tone;
@@ -323,22 +375,27 @@ class _Aura extends StatelessWidget {
   final AuraDrift drift;
   final ValueNotifier<double> clock;
 
+  /// Доля яркости пятна. Гасится **прозрачностью цвета, а не `Opacity`**:
+  /// слой поверх размытого пятна во весь экран — это лишний буфер на каждом
+  /// кадре ради того, что складывается в одно умножение.
+  final double dim;
+
   List<Color> get _colours => switch (tone) {
         AuraTone.indigo => [
-            AlmaPalette.indigoBright.withValues(alpha: 0.42),
-            AlmaPalette.indigo.withValues(alpha: 0.22),
+            AlmaPalette.indigoBright.withValues(alpha: 0.42 * dim),
+            AlmaPalette.indigo.withValues(alpha: 0.22 * dim),
             const Color(0x00000000),
           ],
         AuraTone.deep => [
-            AlmaPalette.indigoDeep.withValues(alpha: 0.38),
+            AlmaPalette.indigoDeep.withValues(alpha: 0.38 * dim),
             const Color(0x00000000),
           ],
         AuraTone.gold => [
-            AlmaPalette.gold.withValues(alpha: 0.20),
+            AlmaPalette.gold.withValues(alpha: 0.20 * dim),
             const Color(0x00000000),
           ],
         AuraTone.violet => [
-            const Color(0xFF4A3A9E).withValues(alpha: 0.34),
+            const Color(0xFF4A3A9E).withValues(alpha: 0.34 * dim),
             const Color(0x00000000),
           ],
       };
@@ -402,7 +459,11 @@ class _Aura extends StatelessWidget {
 /// полупрозрачно, к низу почти глухо, чтобы нижние две трети экрана держали
 /// текст.
 class _SkyPhoto extends StatelessWidget {
-  const _SkyPhoto();
+  const _SkyPhoto(this.veil);
+
+  /// Три остановки скрима — приходят от [SkyMood], потому что плотность вуали
+  /// это свойство кадра, а не фотографии.
+  final List<Color> veil;
 
   @override
   Widget build(BuildContext context) {
@@ -417,17 +478,13 @@ class _SkyPhoto extends StatelessWidget {
           // ночь под фотографией уже залита, и её достаточно.
           errorBuilder: (_, _, _) => const SizedBox.shrink(),
         ),
-        const DecoratedBox(
+        DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
-                Color(0x800A0D1C),
-                Color(0xAD090C1A),
-                Color(0xF0070A16),
-              ],
-              stops: [0, 0.55, 1],
+              colors: veil,
+              stops: const [0, 0.55, 1],
             ),
           ),
         ),

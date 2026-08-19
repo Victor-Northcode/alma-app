@@ -2524,6 +2524,29 @@ class LEn extends L {
   String get paywallV3DoorWhatRestHolds => 'what the rest holds';
 
   @override
+  String paywallV3DoorMoreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count more',
+      one: '+$count more',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorOverline(String system) {
+    return 'your $system reading';
+  }
+
+  @override
+  String get paywallV3DoorChaptersLine =>
+      'Every chapter written from your own positions, not from a template.';
+
+  @override
+  String get paywallV3DoorCtaNoPrice => 'Open the whole reading';
+
+  @override
   String get paywallV3WhatNextOverline => 'what next';
 
   @override
@@ -2706,4 +2729,27 @@ class LEn extends L {
   @override
   String get paywallV3StateProcessingNote =>
       'Apple has taken it; we are writing it down. This finishes by itself, even if you close the app.';
+
+  @override
+  String get onbSystemsTitle => 'Your eight systems';
+
+  @override
+  String get onbSystemsBody =>
+      'All eight are calculated from your birth, and the calculation stays free — always. Only the written chapters are paid, and the first chapter of your natal chart is already open.';
+
+  @override
+  String get onbTodayTitle => 'A page for every day';
+
+  @override
+  String get onbTodayBody =>
+      'The note of the day is written from your own chart. The living layer — transits, solar return, compatibility — is recalculated together with the sky.';
+
+  @override
+  String get onbNext => 'Next';
+
+  @override
+  String get onbDone => 'Got it';
+
+  @override
+  String get onbClose => 'Close';
 }

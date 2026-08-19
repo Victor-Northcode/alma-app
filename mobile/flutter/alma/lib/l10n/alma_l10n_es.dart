@@ -2531,6 +2531,29 @@ class LEs extends L {
   String get paywallV3DoorWhatRestHolds => 'lo que guarda el resto';
 
   @override
+  String paywallV3DoorMoreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count más',
+      one: '+$count más',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorOverline(String system) {
+    return 'tu lectura: $system';
+  }
+
+  @override
+  String get paywallV3DoorChaptersLine =>
+      'Cada capítulo escrito desde tus propias posiciones, no desde una plantilla.';
+
+  @override
+  String get paywallV3DoorCtaNoPrice => 'Abrir la lectura entera';
+
+  @override
   String get paywallV3WhatNextOverline => 'lo que sigue';
 
   @override
@@ -2708,4 +2731,27 @@ class LEs extends L {
   @override
   String get paywallV3StateProcessingNote =>
       'Apple ya tomó el pago; lo estamos anotando. Esto se completa solo, aunque cierres la app.';
+
+  @override
+  String get onbSystemsTitle => 'Tus ocho sistemas';
+
+  @override
+  String get onbSystemsBody =>
+      'Los ocho se calculan a partir de tu nacimiento, y el cálculo sigue siendo gratuito, siempre. Solo se pagan los capítulos escritos, y el primer capítulo de tu carta natal ya está abierto.';
+
+  @override
+  String get onbTodayTitle => 'Una página para cada día';
+
+  @override
+  String get onbTodayBody =>
+      'La nota del día está escrita a partir de tu propia carta. La capa viva — tránsitos, revolución solar, compatibilidad — se recalcula junto con el cielo.';
+
+  @override
+  String get onbNext => 'Siguiente';
+
+  @override
+  String get onbDone => 'Entendido';
+
+  @override
+  String get onbClose => 'Cerrar';
 }

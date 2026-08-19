@@ -19,6 +19,7 @@ import '../../net/models.dart';
 import '../../state/nbo.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
+import '../onboarding/coach_anchors.dart';
 import '../../billing/ladder.dart';
 import '../paywall/paywall_router.dart';
 import 'reading_screen.dart';
@@ -98,7 +99,11 @@ class _TodayScreenState extends State<TodayScreen> {
             // (`gapLarge`), потому что панели не было вовсе и отбивка была
             // общей.
             const SizedBox(height: 22),
-            _HoroscopePanel(model: model, subscriber: true),
+            // Ключ — якорь обучалки: панель дня и есть то, о чём говорит второй
+            // шаг. Он один на оба состояния экрана, потому что панель одна:
+            // подписка меняет то, что внутри, а не форму страницы.
+            _HoroscopePanel(
+                key: CoachAnchors.todayPanel, model: model, subscriber: true),
             // Области — вторая панель, и только подписчику: под замком
             // гороскоп целиком, а не его первый абзац.
             const SizedBox(height: 14),
@@ -146,7 +151,11 @@ class _TodayScreenState extends State<TodayScreen> {
   List<Widget> _freeSections(AlmaSession session, TodayModel? model) {
     final sections = <(NboCard, Widget)>[
       if (model != null)
-        (NboCard.horoscope, _HoroscopePanel(model: model, subscriber: false)),
+        (
+          NboCard.horoscope,
+          _HoroscopePanel(
+              key: CoachAnchors.todayPanel, model: model, subscriber: false)
+        ),
       (NboCard.solar, const _PlanInvitation()),
     ];
     final order = nboOrder(todaySignals(session));
@@ -435,7 +444,8 @@ class _PanelLabel extends StatelessWidget {
 /// фраза о том, что это такое и где живёт, и дверь. Панель при этом остаётся
 /// той же самой: подписка меняет то, что внутри, а не форму экрана.
 class _HoroscopePanel extends StatelessWidget {
-  const _HoroscopePanel({required this.model, required this.subscriber});
+  const _HoroscopePanel(
+      {super.key, required this.model, required this.subscriber});
 
   final TodayModel model;
   final bool subscriber;

@@ -725,6 +725,10 @@
   "paywallV3CancelNote": "Disdire apre le impostazioni del tuo Apple ID · l'abbonamento resta fino al {date}",
   "paywallV3CancelNoteNoDate": "Disdire apre le impostazioni del tuo Apple ID",
   "paywallV3DoorWhatRestHolds": "cosa custodisce il resto",
+  "paywallV3DoorMoreCount": "{count, plural, one{+{count} altro} other{+{count} altri}}",
+  "paywallV3DoorOverline": "la tua lettura: {system}",
+  "paywallV3DoorChaptersLine": "Ogni capitolo scritto dalle tue posizioni, non da un modello.",
+  "paywallV3DoorCtaNoPrice": "Apri tutta la lettura",
   "paywallV3WhatNextOverline": "cosa viene dopo",
   "paywallV3WhatNextInviteLine": "L'ultimo capitolo è letto — guarda dove porta",
   "paywallV3WhatNextReadOpening": "Leggi il primo capitolo",
@@ -770,5 +774,12 @@
   "liveDayNote": "La lettura lunga, le aree, ciò che arriva",
   "paywallV3SubBadge": "abbonamento attivo",
   "paywallV3SubCancelHonesty": "Se un giorno annulli: i capitoli comprati per sempre restano leggibili. I capitoli aperti solo dall'abbonamento si chiudono con esso — il calcolo resta gratuito in ogni caso.",
-  "paywallV3StateProcessingNote": "Apple ha preso il pagamento; lo stiamo registrando. Si completa da solo, anche se chiudi l'app."
+  "paywallV3StateProcessingNote": "Apple ha preso il pagamento; lo stiamo registrando. Si completa da solo, anche se chiudi l'app.",
+  "onbSystemsTitle": "I tuoi otto sistemi",
+  "onbSystemsBody": "Tutti e otto sono calcolati dalla tua nascita, e il calcolo resta gratuito, sempre. Si pagano solo i capitoli scritti, e il primo capitolo del tuo tema natale è già aperto.",
+  "onbTodayTitle": "Una pagina per ogni giorno",
+  "onbTodayBody": "La nota del giorno è scritta dal tuo tema natale. Lo strato vivo — transiti, rivoluzione solare, affinità — viene ricalcolato insieme al cielo.",
+  "onbNext": "Avanti",
+  "onbDone": "Ho capito",
+  "onbClose": "Chiudi"
 }

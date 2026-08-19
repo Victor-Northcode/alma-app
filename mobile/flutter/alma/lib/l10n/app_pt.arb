@@ -725,6 +725,10 @@
   "paywallV3CancelNote": "Cancelar abre os ajustes do seu Apple ID · sua assinatura vai até {date}",
   "paywallV3CancelNoteNoDate": "Cancelar abre os ajustes do seu Apple ID",
   "paywallV3DoorWhatRestHolds": "o que o resto guarda",
+  "paywallV3DoorMoreCount": "{count, plural, one{+{count} outro} other{+{count} outros}}",
+  "paywallV3DoorOverline": "a sua leitura: {system}",
+  "paywallV3DoorChaptersLine": "Cada capítulo escrito a partir das suas próprias posições, não a partir de um modelo.",
+  "paywallV3DoorCtaNoPrice": "Abrir a leitura inteira",
   "paywallV3WhatNextOverline": "o que vem depois",
   "paywallV3WhatNextInviteLine": "O último capítulo está lido — veja aonde isso leva",
   "paywallV3WhatNextReadOpening": "Ler o primeiro capítulo",
@@ -770,5 +774,12 @@
   "liveDayNote": "A leitura longa, as áreas, o que vem aí",
   "paywallV3SubBadge": "assinatura ativa",
   "paywallV3SubCancelHonesty": "Se um dia você cancelar: os capítulos comprados para sempre continuam legíveis. Os capítulos abertos só pela assinatura se fecham com ela — o cálculo continua gratuito de qualquer forma.",
-  "paywallV3StateProcessingNote": "A Apple já recebeu o pagamento; estamos anotando. Isso se conclui sozinho, mesmo se você fechar o app."
+  "paywallV3StateProcessingNote": "A Apple já recebeu o pagamento; estamos anotando. Isso se conclui sozinho, mesmo se você fechar o app.",
+  "onbSystemsTitle": "Seus oito sistemas",
+  "onbSystemsBody": "Os oito são calculados a partir do seu nascimento, e o cálculo continua gratuito, sempre. Paga-se apenas pelos capítulos escritos, e o primeiro capítulo do seu mapa natal já está aberto.",
+  "onbTodayTitle": "Uma página para cada dia",
+  "onbTodayBody": "A nota do dia é escrita a partir do seu próprio mapa. A camada viva — trânsitos, revolução solar, compatibilidade — é recalculada junto com o céu.",
+  "onbNext": "Avançar",
+  "onbDone": "Entendi",
+  "onbClose": "Fechar"
 }

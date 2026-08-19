@@ -2538,6 +2538,29 @@ class LIt extends L {
   String get paywallV3DoorWhatRestHolds => 'cosa custodisce il resto';
 
   @override
+  String paywallV3DoorMoreCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '+$count altri',
+      one: '+$count altro',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String paywallV3DoorOverline(String system) {
+    return 'la tua lettura: $system';
+  }
+
+  @override
+  String get paywallV3DoorChaptersLine =>
+      'Ogni capitolo scritto dalle tue posizioni, non da un modello.';
+
+  @override
+  String get paywallV3DoorCtaNoPrice => 'Apri tutta la lettura';
+
+  @override
   String get paywallV3WhatNextOverline => 'cosa viene dopo';
 
   @override
@@ -2715,4 +2738,27 @@ class LIt extends L {
   @override
   String get paywallV3StateProcessingNote =>
       'Apple ha preso il pagamento; lo stiamo registrando. Si completa da solo, anche se chiudi l\'app.';
+
+  @override
+  String get onbSystemsTitle => 'I tuoi otto sistemi';
+
+  @override
+  String get onbSystemsBody =>
+      'Tutti e otto sono calcolati dalla tua nascita, e il calcolo resta gratuito, sempre. Si pagano solo i capitoli scritti, e il primo capitolo del tuo tema natale è già aperto.';
+
+  @override
+  String get onbTodayTitle => 'Una pagina per ogni giorno';
+
+  @override
+  String get onbTodayBody =>
+      'La nota del giorno è scritta dal tuo tema natale. Lo strato vivo — transiti, rivoluzione solare, affinità — viene ricalcolato insieme al cielo.';
+
+  @override
+  String get onbNext => 'Avanti';
+
+  @override
+  String get onbDone => 'Ho capito';
+
+  @override
+  String get onbClose => 'Chiudi';
 }

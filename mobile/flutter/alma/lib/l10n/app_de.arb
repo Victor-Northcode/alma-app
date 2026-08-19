@@ -725,6 +725,10 @@
   "paywallV3CancelNote": "Kündigen öffnet deine Apple-ID-Einstellungen · dein Abo läuft bis {date}",
   "paywallV3CancelNoteNoDate": "Kündigen öffnet deine Apple-ID-Einstellungen",
   "paywallV3DoorWhatRestHolds": "was der Rest bereithält",
+  "paywallV3DoorMoreCount": "{count, plural, one{+{count} weiteres} other{+{count} weitere}}",
+  "paywallV3DoorOverline": "deine Deutung: {system}",
+  "paywallV3DoorChaptersLine": "Jedes Kapitel aus deinen eigenen Positionen geschrieben, nicht aus einer Vorlage.",
+  "paywallV3DoorCtaNoPrice": "Die ganze Deutung öffnen",
   "paywallV3WhatNextOverline": "wie es weitergeht",
   "paywallV3WhatNextInviteLine": "Das letzte Kapitel ist gelesen — sieh, wohin es führt",
   "paywallV3WhatNextReadOpening": "Das erste Kapitel lesen",
@@ -770,5 +774,12 @@
   "liveDayNote": "Die lange Deutung, die Bereiche, was kommt",
   "paywallV3SubBadge": "abonniert",
   "paywallV3SubCancelHonesty": "Falls du je kündigst: Kapitel, die du für immer gekauft hast, bleiben lesbar. Kapitel, die nur das Abo öffnet, schließen sich mit ihm — die Berechnung bleibt so oder so kostenlos.",
-  "paywallV3StateProcessingNote": "Apple hat die Zahlung angenommen; wir schreiben sie gerade gut. Das schließt sich von selbst ab, auch wenn du die App schließt."
+  "paywallV3StateProcessingNote": "Apple hat die Zahlung angenommen; wir schreiben sie gerade gut. Das schließt sich von selbst ab, auch wenn du die App schließt.",
+  "onbSystemsTitle": "Deine acht Systeme",
+  "onbSystemsBody": "Alle acht werden aus deiner Geburt berechnet, und die Berechnung bleibt kostenlos — immer. Bezahlt werden nur die geschriebenen Kapitel, und das erste Kapitel deines Geburts­horoskops ist schon offen.",
+  "onbTodayTitle": "Für jeden Tag eine eigene Seite",
+  "onbTodayBody": "Die Notiz des Tages entsteht aus deinem eigenen Horoskop. Die lebendige Schicht — Transite, Solarhoroskop, Partnerschaft — wird gemeinsam mit dem Himmel neu berechnet.",
+  "onbNext": "Weiter",
+  "onbDone": "Verstanden",
+  "onbClose": "Schließen"
 }
