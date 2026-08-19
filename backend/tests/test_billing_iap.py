@@ -670,3 +670,55 @@ def test_a_price_that_is_not_on_the_shelf_takes_the_money_and_grants_nothing(
 
     held = store_api.get("/v1/billing/entitlements", headers=auth_headers).json()
     assert held["unlocked"] == [], held
+
+
+def test_a_refund_takes_back_a_purchase_the_store_told_us_about_first(
+    notified_api, auth_headers, apple
+):
+    """Возврат отзывает доступ, даже если владелец платежа неизвестен событию.
+
+    Самый дорогой путь продукта, и он же был сломан. Порядок такой: магазин
+    первым присылает нотификацию о покупке — в ней нет никакого «нашего»
+    аккаунта, и строка платежа ложится без владельца. Потом приложение шлёт
+    чек на `/iap/verify`, где аккаунт известен из токена сессии, и грант
+    выписывается. Наконец приходит возврат по той же транзакции — снова без
+    владельца.
+
+    До починки обработчик уходил на «платёж без владельца» **раньше** ветки
+    отзыва: деньги возвращались покупателю, а платные главы оставались
+    открытыми навсегда. Теперь грант закрывается по номеру транзакции, а сам
+    владелец дозаписывается на строку покупки, как только становится известен.
+    """
+    txn = _transaction(product="door.natal")
+    transaction_id = txn["transactionId"]
+
+    # 1. Магазин рассказал о покупке первым — владельца в событии нет.
+    notified_api.post(
+        "/v1/billing/webhook",
+        json=_notification(apple, kind="ONE_TIME_CHARGE", transaction=txn),
+    )
+
+    # 2. Приложение прислало чек: здесь аккаунт известен, грант выписан.
+    signed = _sign(txn, apple["key"], apple["chain"])
+    answer = _verify(notified_api, auth_headers, transaction=signed, product="door.natal")
+    assert answer.status_code == 200
+    assert "natal" in _held(notified_api, auth_headers)["unlocked"]
+
+    # 3. Возврат по той же транзакции — и он обязан закрыть доступ.
+    refund = notified_api.post(
+        "/v1/billing/webhook",
+        # Свой номер уведомления: у Apple каждое уведомление своё, а фикстура
+        # по умолчанию шлёт один и тот же — с ним дедупликация честно съела бы
+        # возврат как повтор покупки, и тест проверял бы не то.
+        json=_notification(
+            apple,
+            kind="REFUND",
+            transaction=txn,
+            uuid="8ad5a2f0-0000-4000-8000-0000000000ff",
+        ),
+    )
+    assert refund.status_code in (200, 202)
+
+    assert "natal" not in _held(notified_api, auth_headers)["unlocked"], (
+        f"деньги вернулись по транзакции {transaction_id}, доступ обязан закрыться"
+    )

@@ -372,3 +372,59 @@ def test_a_subscriber_never_meets_the_wall_on_the_pair_chapter(store_api, apple,
     body = response.json()
     assert body.get("locked") is not True
     assert body["reading"]["body"]
+
+
+def test_paid_pair_report_locks_the_partner_birth(api, auth_headers):
+    """Одна покупка — один человек: рождение под грантом не переписывается.
+
+    До этой правки грант пары назывался профилем, а не рождением, и профиль
+    можно было править. Значит одна проверка за $4.99 (или одна включённая в
+    подписку) превращалась в сколько угодно отчётов: подменил дату и место —
+    получил другого человека под тем же грантом, и каждый такой запрос стоил
+    полной генерации, самой дорогой в продукте.
+    """
+    from sqlalchemy import select
+
+    from alma.auth import entitlements
+    from alma.db import session as db_session
+    from alma.db.models import User
+    from conftest import run_async
+
+    partner = api.post("/v1/profiles", headers=auth_headers, json={
+        "name": "Партнёр", "birth_date": "1990-01-01",
+        "latitude": 55.75, "longitude": 37.62, "timezone": "Europe/Moscow",
+        "is_self": False,
+    }).json()
+
+    async def grant() -> None:
+        async with db_session.session_scope() as session:
+            user = (await session.execute(select(User).limit(1))).scalars().first()
+            await entitlements.grant(
+                session, user,
+                system=entitlements.pair_system(partner["id"]),
+                kind="consumable",
+                scope=entitlements.SCOPE_PAIR,
+                transaction_id="txn-lock-test",
+                amount_cents=499, currency="USD", source="appstore",
+            )
+
+    # run_async ждёт функцию, а не готовую корутину: она вызывает её внутри
+    # собственного цикла и закрывает движок вместе с ним.
+    run_async(grant)
+
+    moved = api.patch(f"/v1/profiles/{partner['id']}", headers=auth_headers, json={
+        "name": "Партнёр", "birth_date": "1985-07-07",
+        "latitude": 48.85, "longitude": 2.35, "timezone": "Europe/Paris",
+        "is_self": False,
+    })
+    assert moved.status_code == 409
+    assert moved.json()["detail"]["error"] == "birth_locked_by_purchase"
+
+    # Имя менять по-прежнему можно: расчёт его не видит.
+    renamed = api.patch(f"/v1/profiles/{partner['id']}", headers=auth_headers, json={
+        "name": "Новое имя", "birth_date": "1990-01-01",
+        "latitude": 55.75, "longitude": 37.62, "timezone": "Europe/Moscow",
+        "is_self": False,
+    })
+    assert renamed.status_code == 200
+    assert renamed.json()["name"] == "Новое имя"

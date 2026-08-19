@@ -7,7 +7,8 @@ import logging
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select
 
-from ...db.models import Profile
+from ...auth import entitlements
+from ...db.models import Profile, User
 from ...engine.sunsign import sun_sign_of_date
 from ...i18n import replies as i18n_replies
 from ..deps import CurrentUser, SessionDep, load_profile
@@ -163,6 +164,33 @@ async def read_profile(profile_id: str, user: CurrentUser, session: SessionDep) 
     return _out(await load_profile(session, user, profile_id))
 
 
+def _birth_moved(profile: Profile, payload: ProfileInput) -> bool:
+    """Сдвинулось ли то, из чего считается карта.
+
+    Имя, пол, родство и развилка часов сюда не входят: расчёт их не видит, и
+    запрещать их правку значило бы наказывать за опечатку в имени.
+    """
+    return (
+        profile.birth_date != payload.birth_date
+        or (profile.birth_time or "") != (payload.birth_time or "")
+        or abs((profile.latitude or 0) - payload.latitude) > 1e-6
+        or abs((profile.longitude or 0) - payload.longitude) > 1e-6
+        or (profile.timezone or "") != (payload.timezone or "")
+    )
+
+
+async def _paid_pair_report(session, profile: Profile) -> bool:
+    """Есть ли живой грант проверки пары про этого человека."""
+    held = await entitlements.for_user(session, await session.get(User, profile.user_id))
+    wanted = entitlements.pair_system(profile.id)
+    return any(
+        row.scope == entitlements.SCOPE_PAIR
+        and row.system == wanted
+        and row.revoked_at is None
+        for row in held
+    )
+
+
 @router.patch("/{profile_id}", response_model=ProfileOut)
 async def update_profile(
     profile_id: str, payload: ProfileInput, user: CurrentUser, session: SessionDep
@@ -177,6 +205,29 @@ async def update_profile(
     # чужой профиль с интересом был бы данными, которые никто не собирал.
     if payload.interest is not None and profile.is_self:
         profile.interest = payload.interest
+    # **Рождение, за которое заплатили, не переписывается.**
+    #
+    # Грант пары назван профилем (`pair:<id>`), а не рождением, — и пока
+    # рождение можно было править, одна покупка за $4.99 (или одна включённая
+    # в подписку проверка) превращалась в сколько угодно отчётов: подменил
+    # дату и место в профиле, попросил совместимость снова — id тот же, доступ
+    # разрешён, а кэш расчёта не срабатывает, потому что рождение другое.
+    # Каждый такой запрос — новая полная генерация, самая дорогая в продукте.
+    #
+    # Отказ, а не молчаливое игнорирование полей: человек, правящий дату
+    # рождения человека, за отчёт о котором заплачено, обязан узнать, что
+    # правка не прошла. Имя, пол и развилку часов менять по-прежнему можно —
+    # они в расчёт не входят.
+    if _birth_moved(profile, payload) and await _paid_pair_report(session, profile):
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "error": "birth_locked_by_purchase",
+                "message": i18n_replies.reply(
+                    "birth_locked_by_purchase", payload.locale or user.locale
+                ),
+            },
+        )
     profile.birth_date = payload.birth_date
     profile.birth_time = payload.birth_time
     profile.latitude = payload.latitude

@@ -133,6 +133,84 @@ LIMIT_MONTH: dict[str, str] = {
           "открытым — все восемь систем, рассчитанных полностью.",
 }
 
+#: The week's questions are spent. Same sentence again, a third clock.
+#:
+#: **Сегодня до неё не доходит ни один читатель, и написана она поэтому.**
+#: Недельная подписка снята с продажи, `entitlements.has_kind(..., "weekly")`
+#: всегда False, и порция по недельному сроку живёт в `_chat_gate` только
+#: потому, что ТЗ §8 оставляет неделю как возможный A/B. Ключ фразы там
+#: собирается из периода порции — `question_limit.{period}`, — а `reply()`
+#: индексирует таблицу, а не `.get`-ает её. То есть в первый же день
+#: эксперимента первый подписчик, упёршийся в свою десятку, получил бы
+#: `KeyError` и 500 вместо переведённого 429 — на том самом экране, который
+#: этот эксперимент и продаёт. Фраза дешевле, чем разбор такого дня.
+LIMIT_WEEK: dict[str, str] = {
+    "en": "That is your {limit} questions this week. They come back when the "
+          "week does. Everything your chart is made of stays open in the "
+          "meantime — all eight systems, calculated in full.",
+    "es": "Esas son tus {limit} preguntas de esta semana. Vuelven cuando vuelve "
+          "la semana. Mientras tanto, todo aquello de lo que está hecha tu "
+          "carta sigue abierto: los ocho sistemas, calculados por completo.",
+    "de": "Das waren deine {limit} Fragen in dieser Woche. Sie kommen wieder, "
+          "wenn die Woche wiederkommt. Alles, woraus dein Chart besteht, bleibt "
+          "derweil offen — alle acht Systeme, vollständig berechnet.",
+    "it": "Queste erano le tue {limit} domande di questa settimana. Tornano "
+          "quando torna la settimana. Nel frattempo resta aperto tutto ciò di "
+          "cui è fatto il tuo tema: tutti e otto i sistemi, calcolati per "
+          "intero.",
+    "fr": "Ce sont tes {limit} questions de cette semaine. Elles reviennent "
+          "quand la semaine revient. Entre-temps, tout ce dont ton thème est "
+          "fait reste ouvert — les huit systèmes, calculés en entier.",
+    "pt-BR": "Essas foram suas {limit} perguntas desta semana. Elas voltam "
+             "quando a semana volta. Enquanto isso, tudo de que seu mapa é "
+             "feito continua aberto — os oito sistemas, calculados por inteiro.",
+    "ru": "Это твои {limit} вопросов на этой неделе. Они вернутся вместе с "
+          "новой неделей. Всё, из чего состоит твоя карта, тем временем "
+          "остаётся открытым — все восемь систем, рассчитанных полностью.",
+}
+
+#: Бандл покупки кончился. Единственная из четырёх стен, за которой не «когда-
+#: нибудь», а «никогда»: дверь покупается один раз, и порция вопросов при ней
+#: конечна — иначе это подписка, отданная за один платёж (см. `_bundle`).
+#: Поэтому здесь нет ни завтра, ни первого числа; здесь есть план.
+#:
+#: **Тоже почти недостижима, и «почти» тут значащее.** Порция бандла
+#: выбирается в `_chat_gate` только пока `asked < limit`, так что обычный
+#: запрос до этой фразы не доходит. Но `asked` читается там дважды — до выбора
+#: порции и после, — и между двумя чтениями соседний запрос того же человека
+#: успевает списать последний вопрос. Вероятность мала, цена промаха ключа
+#: прежняя: 500 вместо 429, и именно у того, кто нам заплатил.
+LIMIT_ONCE: dict[str, str] = {
+    "en": "That is the {limit} questions your purchase included. They do not "
+          "come back — the plan is what carries a conversation on. Everything "
+          "your chart is made of stays open either way: all eight systems, "
+          "calculated in full.",
+    "es": "Esas son las {limit} preguntas que incluía tu compra. No vuelven: el "
+          "plan es lo que continúa la conversación. Todo aquello de lo que está "
+          "hecha tu carta sigue abierto igualmente: los ocho sistemas, "
+          "calculados por completo.",
+    "de": "Das waren die {limit} Fragen, die dein Kauf enthielt. Sie kommen "
+          "nicht wieder — der Plan ist es, der ein Gespräch weiterträgt. Alles, "
+          "woraus dein Chart besteht, bleibt so oder so offen: alle acht "
+          "Systeme, vollständig berechnet.",
+    "it": "Queste erano le {limit} domande incluse nel tuo acquisto. Non "
+          "tornano: è il piano a portare avanti una conversazione. Tutto ciò di "
+          "cui è fatto il tuo tema resta comunque aperto: tutti e otto i "
+          "sistemi, calcolati per intero.",
+    "fr": "Ce sont les {limit} questions que ton achat comprenait. Elles ne "
+          "reviennent pas — c'est l'abonnement qui porte une conversation. Tout "
+          "ce dont ton thème est fait reste ouvert de toute façon — les huit "
+          "systèmes, calculés en entier.",
+    "pt-BR": "Essas foram as {limit} perguntas que sua compra incluía. Elas não "
+             "voltam — é o plano que leva uma conversa adiante. Tudo de que seu "
+             "mapa é feito continua aberto de qualquer jeito: os oito sistemas, "
+             "calculados por inteiro.",
+    "ru": "Это те {limit} вопросов, что включала покупка. Они не вернутся: "
+          "дальше наш разговор — часть плана. Всё, из чего состоит твоя карта, "
+          "в любом случае остаётся открытым: все восемь систем, рассчитанных "
+          "полностью.",
+}
+
 #: A partner past the ladder's rung. Ends on what opens more, like the rest.
 PARTNER_LIMIT: dict[str, str] = {
     "en": "One saved comparison comes free. The compatibility door holds two, and the plan holds as many people as your life does.",
@@ -286,6 +364,37 @@ WITHHELD: dict[str, str] = {
           "эту часть я прочитаю.",
 }
 
+#: Рождение, за которое уже заплатили, не переписывается.
+#:
+#: Грант проверки пары назван человеком, а не его рождением, поэтому правка
+#: даты превращала бы одну покупку в бесконечные отчёты — и каждый стоил бы
+#: полной генерации. Отказ говорит именно то, что произошло, и предлагает
+#: единственный честный выход: другой человек — другая проверка.
+BIRTH_LOCKED: dict[str, str] = {
+    "en": "This person's birth is part of a report you have already paid for, "
+          "so it stays as it was. For someone else, add them as a new person — "
+          "their own check, their own report.",
+    "ru": "Рождение этого человека — часть разбора, за который уже заплачено, "
+          "и остаётся как есть. Если речь о другом человеке, добавь его "
+          "отдельно: своя проверка, свой разбор.",
+    "de": "Die Geburtsdaten dieser Person gehören zu einer Deutung, die du "
+          "bereits bezahlt hast, und bleiben, wie sie sind. Für jemand anderen "
+          "lege eine neue Person an — eigene Prüfung, eigene Deutung.",
+    "fr": "La naissance de cette personne fait partie d'une lecture que tu as "
+          "déjà payée : elle reste telle quelle. Pour quelqu'un d'autre, "
+          "ajoute une nouvelle personne — sa propre vérification, sa propre "
+          "lecture.",
+    "es": "El nacimiento de esta persona forma parte de una lectura que ya "
+          "pagaste, así que queda como está. Para otra persona, añádela como "
+          "alguien nuevo: su propia comprobación, su propia lectura.",
+    "it": "La nascita di questa persona fa parte di una lettura che hai già "
+          "pagato e resta com'è. Per qualcun altro, aggiungilo come persona "
+          "nuova: la sua verifica, la sua lettura.",
+    "pt-BR": "O nascimento desta pessoa faz parte de uma leitura que você já "
+             "pagou e fica como está. Para outra pessoa, adicione-a como "
+             "alguém novo: a verificação dela, a leitura dela.",
+}
+
 BY_ERROR: dict[str, dict[str, str]] = {
     "answer_refused": REFUSED,
     "answer_withheld": WITHHELD,
@@ -293,7 +402,10 @@ BY_ERROR: dict[str, dict[str, str]] = {
     "ai_unavailable": UNAVAILABLE,
     "question_limit.day": LIMIT_DAY,
     "question_limit.month": LIMIT_MONTH,
+    "question_limit.week": LIMIT_WEEK,
+    "question_limit.once": LIMIT_ONCE,
     "partner_limit": PARTNER_LIMIT,
+    "birth_locked_by_purchase": BIRTH_LOCKED,
     "partner_required": PARTNER_REQUIRED,
     "budget_exceeded": BUDGET,
 }

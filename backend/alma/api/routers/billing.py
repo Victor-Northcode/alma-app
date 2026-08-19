@@ -1088,6 +1088,22 @@ async def _apply(
         user = await _owner_of(session, event, purchase)
 
     if user is None:
+        # **Возврат отзывает купленное даже у платежа без владельца.**
+        #
+        # Ранний выход стоял здесь безусловно, и на нём терялся самый дорогой
+        # случай продукта: разовая покупка, о которой первой сообщила
+        # нотификация магазина (owner_id у неё пуст), получала грант позже —
+        # через `/billing/iap/verify`, где владелец известен. Возврат по той же
+        # транзакции приходил снова без владельца, `_owner_of` не находил его
+        # ни по покупке, ни по подписке, и обработчик уходил отсюда **до**
+        # ветки отзыва. Деньги вернулись, платные главы читались вечно.
+        #
+        # Грант знает свою транзакцию, и этого хватает: отзываем по ней, не
+        # спрашивая, кому она принадлежит.
+        if event.revokes and event.transaction_id:
+            closed = await _revoke_by_transaction(session, event)
+            if closed:
+                return f"revoked {closed} without an owner"
         # A payment we cannot attach to anyone is kept, not dropped: support
         # can attach it by hand, and losing the record would lose the money.
         return "recorded without an owner"
@@ -1103,6 +1119,18 @@ async def _apply(
     stored = await session.get(WebhookEvent, event.id)
     if stored is not None:
         stored.user_id = user.id
+
+    # **Владелец дозаписывается и на саму покупку.**
+    #
+    # `_record_money` ставит `user_id` только при вставке строки, а магазинные
+    # нотификации приходят без владельца вовсе — то есть у покупки, о которой
+    # первым рассказал магазин, колонка оставалась пустой навсегда, даже после
+    # того как приложение прислало чек и грант был выписан. Дальше по этой
+    # пустоте промахивались все, кто спрашивает «чья это покупка»: возврат не
+    # находил кого лишать доступа, а честно оплаченная непривязанная проверка
+    # пары получала на `/billing/pair/bind` ответ «нет такой покупки».
+    if purchase is not None and not purchase.user_id:
+        purchase.user_id = user.id
 
     # A payment, and only a payment. It sits above the grant rather than inside
     # it because on one of the two processors the money and the entitlement
@@ -1208,6 +1236,35 @@ async def _apply(
         return f"noted {await _note_the_plan(session, event, user)}"
 
     return "ignored"
+
+
+async def _revoke_by_transaction(session, event: NormalisedEvent) -> str | None:
+    """Отозвать грант по номеру транзакции, когда владелец не найден.
+
+    Узкая дорога и намеренно узкая: сюда попадают только события возврата, и
+    ищется ровно один грант — тот, что выписан этой самой транзакцией. Ни
+    подписки, ни соседних покупок этого человека она не трогает, потому что о
+    человеке здесь как раз ничего и не известно.
+    """
+    held = (
+        await session.execute(
+            select(Entitlement).where(
+                Entitlement.transaction_id == event.transaction_id,
+                Entitlement.revoked_at.is_(None),
+            )
+        )
+    ).scalars().first()
+    if held is None:
+        return None
+    held.revoked_at = utcnow()
+    held.status = "revoked"
+    await session.flush()
+    log.warning(
+        "возврат по транзакции %s отозвал грант %s у аккаунта %s: владелец "
+        "события не определился, отзыв сделан по номеру транзакции",
+        event.transaction_id, held.system, held.user_id,
+    )
+    return held.system
 
 
 #: The subscription-lifecycle events that change nothing about access and
