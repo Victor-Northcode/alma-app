@@ -4,9 +4,11 @@ import 'package:intl/intl.dart';
 import '../../design/buttons.dart';
 import '../../design/emblem.dart';
 import '../../design/metrics.dart';
+import '../../design/night_sheet.dart';
 import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
+import '../../design/wheel.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
@@ -21,8 +23,14 @@ import 'birth_form_parts.dart';
 /// вперёд, не должен выглядеть как кнопка, которой покупают»).
 ///
 /// **Цены на экране нет ни одной, и это инвариант шага** (`locked-chapter-spec`
-/// §1): расчёт бесплатен, платен только текст, и платить предлагают после
-/// первой главы, не до. Ни `$`, ни слова «подписка» сюда не завозить.
+/// §1): расчёт бесплатен, платен любой написанный текст, а цену называет
+/// следующий экран. Ни `$`, ни слова «подписка» сюда не завозить.
+///
+/// Оговорка «платить предлагают после первой главы, не до» отсюда снята
+/// владельцем 19.08.2026 («мы не даем бесплатно пару никакую все за деньги
+/// можно писать только имя»): бесплатной первой главы у пары нет, и сервер не
+/// пишет ей даже открывающий абзац. Инвариант это не ослабляет — он про то,
+/// что цены нет **здесь**, а не про то, что до неё дают почитать.
 ///
 /// **Экран кончается человеком.** Сохранил — вернул `Profile` тому, кто звал
 /// (`Navigator.pop(saved)`): маршрут в главу I знает вызывающий
@@ -48,6 +56,11 @@ class _PairAddScreenState extends State<PairAddScreen> {
   /// Дата не выбрана, пока человек её не назвал. Умолчания «1 января 1990»
   /// в пилюле нет намеренно: предзаполненная дата — это дата, которую никто
   /// не называл, готовая уехать на сервер (см. довод у колеса анкеты).
+  ///
+  /// С 19.08.2026 того же умолчания нет и внутри листа: барабаны открываются
+  /// серединой списка и молчат, пока их не повернули, а «Готово» до этого не
+  /// горит. Раньше пустота держалась только здесь, а лист подставлял «1 января
+  /// 1990» сам — и «Готово», нажатое без прокрутки, делало эту дату ответом.
   int? _day, _month, _year;
 
   /// Время — необязательное, и «не выбрано» здесь законное конечное
@@ -119,29 +132,54 @@ class _PairAddScreenState extends State<PairAddScreen> {
 
   /// Дата — один лист с тремя барабанами, а не три пилюли, как на экране
   /// людей: холст рисует **одно** поле «Date of birth», и разбивать его на
-  /// три значило бы перерисовать кадр. Барабаны — те же колёса платформы.
+  /// три значило бы перерисовать кадр.
+  ///
+  /// **Лист называет то, по чему постучали.** Заголовок — подпись самой
+  /// пилюли, а не новое слово: своих строк у листа нет и заводить их незачем.
   Future<void> _pickDate() async {
-    var day = _day ?? 1, month = _month ?? 1, year = _year ?? 1990;
-    final done = await _sheet<bool>(
+    // Год открывается не серединой диапазона, а «тридцатью годами назад»: тем
+    // же числом и по той же причине, что в анкете. Середина 1900–2026 — это
+    // 1963, а середина взрослой жизни тридцать лет назад.
+    final lastYear = DateTime.now().year;
+    final yearOpensAt = lastYear - 30;
+    int? day = _day, month = _month, year = _year;
+    final done = await showAlmaSheet<bool>(
+      context: context,
+      title: L.of(context).paywallV3PairInputDate,
       builder: (context, refresh) {
         // Дней в месяце — сколько есть на самом деле: 30 февраля, уехавшее
         // на сервер, вернулось бы отказом на языке валидатора, а не формы.
-        final days = DateUtils.getDaysInMonth(year, month);
-        if (day > days) day = days;
+        // Пока месяц и год не названы, счёт идёт по тому, на чём стоят их
+        // барабаны: в окне видно июль, и список дней обязан кончаться там же,
+        // где кончается видимый месяц.
+        final days = DateUtils.getDaysInMonth(
+            year ?? yearOpensAt, month ?? AlmaWheel.opensAt(1, 12));
+        final chosenDay = day;
+        if (chosenDay != null && chosenDay > days) day = days;
         return [
           Row(children: [
             _wheel(L.of(context).journeyCaptureDayShort, day, 1, days,
                 (v) => refresh(() => day = v)),
             _wheel(L.of(context).journeyCaptureMonthShort, month, 1, 12,
                 (v) => refresh(() => month = v)),
-            _wheel(L.of(context).journeyCaptureYearShort, year, 1900,
-                DateTime.now().year, (v) => refresh(() => year = v)),
+            _wheel(L.of(context).journeyCaptureYearShort, year, 1900, lastYear,
+                (v) => refresh(() => year = v), fallback: yearOpensAt),
           ]),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
+          // **Золотая, а не контурная.** На листе действие ровно одно, и
+          // золото продукта означает именно его. Двух золотых на экране не
+          // бывает — но лист и есть отдельная поверхность со своим единственным
+          // ключом, ровно как шит двери V2, где золотая кнопка стоит внутри
+          // шита. Радиус — пилюля 28 (половина высоты 56): анкетные 15
+          // принадлежат кнопке шага, а не двери, которая закрывается.
           AlmaButton(
-            kind: AlmaButtonKind.outline,
             label: L.of(context).scrDone,
-            onTap: () => Navigator.of(context).pop(true),
+            // Гаснет, пока все три колонки не названы. Нетронутый барабан —
+            // это не ответ, а положение, в котором он открылся: «Готово» над
+            // ним закрывало бы лист датой, которой никто не говорил.
+            onTap: day == null || month == null || year == null
+                ? null
+                : () => Navigator.of(context).pop(true),
           ),
         ];
       },
@@ -156,20 +194,28 @@ class _PairAddScreenState extends State<PairAddScreen> {
   }
 
   Future<void> _pickTime() async {
-    var hour = _hour ?? 12, minute = _minute ?? 0;
-    final answer = await _sheet<String>(
+    int? hour = _hour, minute = _minute;
+    final answer = await showAlmaSheet<String>(
+      context: context,
+      title: L.of(context).pairInputTime,
       builder: (context, refresh) => [
         Row(children: [
+          // Ноль впереди — у часов и минут, как в анкете: «09» рядом с «10»
+          // держит колонку ровной, «9» роняет её на пол-цифры.
           _wheel(L.of(context).journeyHourLabel, hour, 0, 23,
-              (v) => refresh(() => hour = v)),
+              (v) => refresh(() => hour = v), pad: true),
           _wheel(L.of(context).journeyMinuteLabel, minute, 0, 59,
-              (v) => refresh(() => minute = v)),
+              (v) => refresh(() => minute = v), pad: true),
         ]),
-        const SizedBox(height: 14),
+        const SizedBox(height: 18),
         AlmaButton(
-          kind: AlmaButtonKind.outline,
           label: L.of(context).scrDone,
-          onTap: () => Navigator.of(context).pop('set'),
+          // Время, названное наполовину, — опечатка, а не ответ (то же правило
+          // на шаге анкеты). Незнание говорят кнопкой ниже, и она горит всегда:
+          // выключить обе значило бы запереть лист.
+          onTap: hour == null || minute == null
+              ? null
+              : () => Navigator.of(context).pop('set'),
         ),
         const SizedBox(height: 8),
         // Обратная дорога: время выбрали, а потом вспомнили, что не знают.
@@ -194,42 +240,24 @@ class _PairAddScreenState extends State<PairAddScreen> {
     });
   }
 
-  /// Ночной лист с золотым кантом — та же плашка, что у находок города.
-  Future<T?> _sheet<T>(
-      {required List<Widget> Function(
-              BuildContext context, void Function(VoidCallback) refresh)
-          builder}) {
-    return showModalBottomSheet<T>(
-      context: context,
-      backgroundColor: AlmaPalette.night700,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-      ),
-      builder: (context) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(22, 18, 22, 14),
-          child: StatefulBuilder(
-            builder: (context, setSheet) => Column(
-              mainAxisSize: MainAxisSize.min,
-              children: builder(context, setSheet),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   /// Один барабан листа, обёрнутый распоркой колонки.
-  Widget _wheel(String label, int value, int min, int max,
-      ValueChanged<int> onChanged) {
+  ///
+  /// Сам барабан — общий `AlmaWheel` из `design/`: те же 148 точек окна, та же
+  /// полоса выбора золотом 0.16 и та же лестница яркости 1 → .55 → .4, что у
+  /// колеса анкеты. Здесь остаётся ровно то, что принадлежит этому экрану:
+  /// какие колонки и в каком порядке.
+  Widget _wheel(String label, int? value, int min, int max,
+      ValueChanged<int> onChanged,
+      {bool pad = false, int? fallback}) {
     return Expanded(
-      child: _SheetWheel(
+      child: AlmaWheel(
         label: label,
         min: min,
         max: max,
         value: value,
+        fallback: fallback,
         onChanged: onChanged,
+        caption: pad ? (v) => v.toString().padLeft(2, '0') : null,
       ),
     );
   }
@@ -385,10 +413,15 @@ class _PairAddScreenState extends State<PairAddScreen> {
                               }),
                             ),
                             const SizedBox(height: 18),
-                            // ✦-сноска кадра: расчёт бесплатен, первая глава
-                            // читается до любых решений. Фраза холста написана
-                            // про «его» карту, а род партнёра здесь не
-                            // спрашивают — в каталоге она родо-нейтральна.
+                            // ✦-сноска кадра: бесплатен **расчёт**, платны
+                            // главы. Обещание «первую главу читаешь до любых
+                            // решений» снято владельцем 19.08.2026 — «мы не
+                            // даем бесплатно пару никакую все за деньги можно
+                            // писать только имя», — и вместе с ним сервер
+                            // перестал писать паре открывающий абзац. Фраза
+                            // холста написана про «его» карту, а род партнёра
+                            // здесь не спрашивают — в каталоге она
+                            // родо-нейтральна.
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -447,8 +480,8 @@ class _PairAddScreenState extends State<PairAddScreen> {
                             // приложении она превращалась в текст о продукте от
                             // третьего лица, который читает человек, набирающий
                             // чужую дату рождения. Обещание этого экрана уже
-                            // сказано выше, у ✦: расчёт бесплатный, первую
-                            // главу читают до решения.
+                            // сказано выше, у ✦: расчёт бесплатный, главы
+                            // платные.
                             //
                             // Донная распорка кадра — 44 плюс кромка жеста.
                             SizedBox(
@@ -466,93 +499,5 @@ class _PairAddScreenState extends State<PairAddScreen> {
         ),
       ),
     );
-  }
-}
-
-/// Барабан листа выбора. Плоский, как колесо анкеты: перспектива на узкой
-/// колонке читается сбоем вёрстки, а не объёмом.
-///
-/// **Контроллер живёт в состоянии, а не в build.** Лист перестраивается на
-/// каждый поворот любого барабана (значение месяца меняет число дней), и
-/// контроллер, созданный в build, возвращал бы все три колонки на исходную
-/// строку при каждом движении пальца.
-class _SheetWheel extends StatefulWidget {
-  const _SheetWheel({
-    required this.label,
-    required this.min,
-    required this.max,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String label;
-  final int min;
-  final int max;
-  final int value;
-  final ValueChanged<int> onChanged;
-
-  @override
-  State<_SheetWheel> createState() => _SheetWheelState();
-}
-
-class _SheetWheelState extends State<_SheetWheel> {
-  late final FixedExtentScrollController _controller =
-      FixedExtentScrollController(initialItem: widget.value - widget.min);
-
-  @override
-  void didUpdateWidget(_SheetWheel old) {
-    super.didUpdateWidget(old);
-    // Февраль после января: выбранный 31-й день перестал существовать, и
-    // барабан обязан доехать до последнего настоящего, а не стоять за краем
-    // укоротившегося списка. Сверяется положение самого барабана — значение
-    // родитель уже подрезал, и по нему обрыв не виден.
-    if (widget.max < old.max) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_controller.hasClients) return;
-        final last = widget.max - widget.min;
-        if (_controller.selectedItem > last) _controller.jumpToItem(last);
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(mainAxisSize: MainAxisSize.min, children: [
-      Text(widget.label.toUpperCase(),
-          style: AlmaType.tag.copyWith(color: AlmaPalette.muted3)),
-      const SizedBox(height: 6),
-      SizedBox(
-        height: 170,
-        child: ListWheelScrollView.useDelegate(
-          controller: _controller,
-          itemExtent: 34,
-          diameterRatio: 2.4,
-          perspective: 0.002,
-          physics: const FixedExtentScrollPhysics(),
-          onSelectedItemChanged: (index) =>
-              widget.onChanged(widget.min + index),
-          childDelegate: ListWheelChildBuilderDelegate(
-            childCount: widget.max - widget.min + 1,
-            builder: (context, index) => Center(
-              child: Text(
-                '${widget.min + index}',
-                style: AlmaType.body.copyWith(
-                  fontSize: 16,
-                  color: widget.min + index == widget.value
-                      ? AlmaPalette.inkLight
-                      : AlmaPalette.body.withValues(alpha: 0.45),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    ]);
   }
 }
