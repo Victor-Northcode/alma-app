@@ -54,6 +54,15 @@ mobile/ios/build/
 *.cer
 *.certSigningRequest
 
+# Push credentials, added 21 Aug 2026 when the owner set up FCM + APNs. The repo
+# is now also mirrored to a PUBLIC remote, so a google-services.json or a Firebase
+# service-account key committed here would be a live credential leak the instant it
+# lands. `*.p8` above already covers the APNs key; these cover the ones it does not.
+**/google-services.json
+*-firebase-adminsdk-*.json
+*.apps.googleusercontent.com.json
+backend/secrets/
+
 # macOS + editors + local agent config
 .DS_Store
 .claude/
