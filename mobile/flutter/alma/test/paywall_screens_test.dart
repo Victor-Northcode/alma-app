@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:alma/billing/alma_store.dart';
 import 'package:alma/billing/ladder.dart';
+import 'package:alma/design/buttons.dart';
 import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/net/alma_client.dart';
 import 'package:alma/screens/paywall/plans_screen.dart';
@@ -82,7 +83,7 @@ void main() {
     final asked =
         tester.getBottomLeft(find.text('Will this year be easier than the last one?'));
     final held = tester.getBottomLeft(find.textContaining('held —'));
-    final title = tester.getTopLeft(find.textContaining('Three questions a month'));
+    final title = tester.getTopLeft(find.textContaining('Free stops at three questions'));
 
     expect(asked.dy, lessThan(held.dy),
         reason: 'сначала вопрос, потом обещание, что он не потерян');
@@ -123,6 +124,22 @@ void main() {
         find.text('What you bought forever does not disappear if you cancel.'),
         findsOneWidget);
     expect(find.textContaining('one-time purchases never renew'), findsOneWidget);
+  });
+
+  testWidgets('V8 · молчащий магазин: «Try again» той же обводкой, что и на продающей кнопке',
+      (tester) async {
+    // Полка пуста — магазин молчит. Это состояние продукт рисует в двух
+    // местах: здесь и в `PaywallCta` (`paywall_parts.dart`), и рисовать его
+    // двумя разными кнопками нельзя — один и тот же отказ сети выглядел бы
+    // на двух кадрах разной громкости.
+    AlmaStore.shared.seedPrices(const {});
+    await _open(tester, const PlansScreen());
+
+    expect(find.textContaining('The App Store is not answering'), findsOneWidget);
+    final retry = tester.widget<AlmaButton>(
+        find.ancestor(of: find.text('Try again'), matching: find.byType(AlmaButton)));
+    expect(retry.kind, AlmaButtonKind.outline,
+        reason: 'обводка, а не тихая ступень: на кадре это единственное действие');
   });
 }
 

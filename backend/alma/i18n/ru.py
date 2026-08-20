@@ -109,7 +109,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
         ),
         "mind": ChapterWords(
             title="Ум и речь",
-            question="Как я думаю и как звучу?",
+            question="Как я думаю и как говорю?",
         ),
         "shadow": ChapterWords(
             title="Тень и рана",
@@ -134,7 +134,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
         ),
         "transformation": ChapterWords(
             title="Кризисы и трансформация",
-            question="Как я ломаюсь и как собираюсь заново?",
+            question="Как я разваливаюсь и как собираю себя заново?",
         ),
         "freedom": ChapterWords(
             title="Свобода и непохожесть",
@@ -149,14 +149,14 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             # «Быть рядом с кем» is a construction; «по пути» is what a person
             # says — and it keeps the question about companionship rather
             # than geography.
-            question="С кем мне на самом деле по пути?",
+            question="С кем мне и правда по пути?",
         ),
         "worldview": ChapterWords(
             title="Взгляды и рост",
             question="Во что я верю, когда никто не видит?",
         ),
         "milestones": ChapterWords(
-            title="Рубежи по возрасту",
+            title="Возрастные рубежи",
             question="Когда моя жизнь меняет форму?",
         ),
     },
@@ -193,7 +193,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
         ),
         "soul": ChapterWords(
             title="Карта души",
-            question="А что движется под этим?",
+            question="А что под этим?",
         ),
         "year-card": ChapterWords(
             title="Карта года",
@@ -224,7 +224,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             question="Какой части моей жизни он касается?",
         ),
         "contacts": ChapterWords(
-            title="Где он встречает карту",
+            title="Где он встречает твою карту",
             # "Who I already am" would be «кто я» plus a gendered adjective in
             # any natural phrasing; «что во мне уже есть» asks the same
             # question of everybody.
@@ -241,12 +241,12 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             question="О чём мы будем спорить снова и снова?",
         ),
         "overlays": ChapterWords(
-            title="Где мы попадаем друг в друга",
+            title="Куда мы попадаем в жизни друг друга",
             question="Какую часть моей жизни занимает этот человек?",
         ),
         "together": ChapterWords(
             title="Двое как одно",
-            question="Какие они — сами эти отношения?",
+            question="А какие они сами, эти отношения?",
         ),
     },
     "astrocartography": {
@@ -260,7 +260,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
         ),
         "crossings": ChapterWords(
             title="Пересечения",
-            question="Где две вещи происходят одновременно?",
+            question="Где происходят сразу две вещи?",
         ),
     },
     "synthesis": {
@@ -273,7 +273,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             question="В каком противоречии я живу на самом деле?",
         ),
         "single": ChapterWords(
-            title="Что видит только одна",
+            title="Что видит только одна система",
             question="Что я упущу, читая только одну из них?",
         ),
         "whole": ChapterWords(
@@ -304,11 +304,11 @@ AXES: dict[str, AxisWords] = {
     ),
     "Resources": AxisWords(
         negative="строит своё",
-        positive="приходит через других людей",
+        positive="получает через других людей",
     ),
     "Work": AxisWords(
         negative="один большой рывок",
-        positive="маленькая повторяемая практика",
+        positive="понемногу, но каждый день",
     ),
     # «Незамеченным» would be the natural word and it is masculine; the fear
     # hangs on «поле зрения» instead, which is nobody's gender.

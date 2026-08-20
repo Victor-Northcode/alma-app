@@ -247,7 +247,7 @@ COMPATIBILITY: tuple[Chapter, ...] = (
 )
 
 ASTROCARTOGRAPHY: tuple[Chapter, ...] = (
-    _c(1, "I", "lines", "Your lines", "Which places amplify which part of me?",
+    _c(1, "I", "lines", "Your lines", "Which places bring out which part of me?",
        ("line",), time_dependent=True),
     _c(2, "II", "here", "Where you are now", "How does where I live affect me?",
        ("at the birthplace", "line"), time_dependent=True),

@@ -99,7 +99,7 @@ class LEs extends L {
   String get cabAreaWork => 'Trabajo';
 
   @override
-  String get cabAreaQuiet => 'Hoy aquí nada exacto.';
+  String get cabAreaQuiet => 'Hoy no hay nada exacto aquí.';
 
   @override
   String get cabBirthDataLabel => 'datos de nacimiento';
@@ -290,7 +290,7 @@ class LEs extends L {
   String get cabLocked => 'Desbloquear para leer';
 
   @override
-  String get cabManageInStore => 'Gestiona esta suscripción en la App Store';
+  String get cabManageInStore => 'Gestionar esta suscripción en la App Store';
 
   @override
   String get cabManageInStorePlay =>
@@ -302,7 +302,7 @@ class LEs extends L {
 
   @override
   String get cabManagedByGooglePlay =>
-      'Este plan se compró en Google Play: Google guarda el método de pago y la cancelación ocurre allí.';
+      'Este plan se compró en Google Play, así que Google guarda el método de pago y la cancelación se hace allí.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -393,7 +393,7 @@ class LEs extends L {
 
   @override
   String get cabPlanFreeNote =>
-      'Todos los cálculos son gratis, siempre. Pagas solo por las lecturas escritas, una cada vez.';
+      'Todos los cálculos son gratis, siempre — los ocho sistemas. Pagas solo por los capítulos escritos.';
 
   @override
   String get cabPlanFreePlan => 'Gratis';
@@ -434,7 +434,7 @@ class LEs extends L {
 
   @override
   String get cabPlansBody =>
-      'La suscripción mantiene al día tránsitos, revolución solar y compatibilidad, envía el aviso matinal e incluye 30 preguntas al mes. Las cinco lecturas inmóviles se compran una vez y quedan tuyas para siempre.';
+      'La suscripción mantiene al día tránsitos, revolución solar y compatibilidad, envía el aviso de la mañana e incluye 30 preguntas al mes. Las cinco lecturas inmóviles se compran una vez y quedan tuyas para siempre.';
 
   @override
   String get cabPlansCta => 'Ver los planes';
@@ -540,7 +540,7 @@ class LEs extends L {
   String get cabSignVirgo => 'Virgo';
 
   @override
-  String get cabSignIn => 'Entrar';
+  String get cabSignIn => 'Iniciar sesión';
 
   @override
   String get cabStatusAddPerson => 'añade a alguien';
@@ -653,7 +653,7 @@ class LEs extends L {
       'Unas pocas veces al año. Solo los lentos: los tránsitos que duran meses.';
 
   @override
-  String get dailySettingOnlyWhatMatters => 'Solo lo que importa';
+  String get dailySettingOnlyWhatMatters => 'Solo los tránsitos largos';
 
   @override
   String get dailySettingQuiet =>
@@ -981,11 +981,10 @@ class LEs extends L {
 
   @override
   String get paywallPitchPlan2 =>
-      'Los tránsitos, la revolución solar y la compatibilidad se reescriben con el cielo.';
+      'Los tránsitos y la revolución solar se actualizan con el cielo; la compatibilidad, cuando comparas a otra persona.';
 
   @override
-  String get paywallPitchPlan3 =>
-      'Treinta preguntas al mes a Alma, con la voz más profunda.';
+  String get paywallPitchPlan3 => 'Treinta preguntas a Alma cada mes.';
 
   @override
   String get paywallPrivacy => 'Política de privacidad';
@@ -1006,7 +1005,7 @@ class LEs extends L {
       'Google Play no tiene nada que restaurar para esta cuenta.';
 
   @override
-  String get paywallRestoring => 'Estoy preguntando a la App Store…';
+  String get paywallRestoring => 'Preguntando a la App Store…';
 
   @override
   String get paywallRestoringPlay => 'Preguntando a Google Play…';
@@ -1017,7 +1016,7 @@ class LEs extends L {
 
   @override
   String get paywallStoreUnavailablePlay =>
-      'Google Play no responde. Mientras calla, aquí no se puede comprar nada — y todo lo que ya es tuyo sigue igual.';
+      'Google Play no responde. Aquí no se puede comprar nada hasta que responda — y nada de lo que ya tienes ha cambiado.';
 
   @override
   String get paywallSubscriptionTerms => 'Condiciones de suscripción';
@@ -1064,11 +1063,11 @@ class LEs extends L {
 
   @override
   String get pillSheetFootnote =>
-      'También hay puertas de pago único · cancela cuando quieras en los ajustes de tu Apple ID';
+      'También hay compras únicas · cancela cuando quieras en los ajustes de tu Apple ID';
 
   @override
   String get pillSheetFootnotePlay =>
-      'También hay puertas de una sola vez · cancela cuando quieras en las suscripciones de Google Play';
+      'También hay compras únicas · cancela cuando quieras en las suscripciones de Google Play';
 
   @override
   String get pillSheetSub =>
@@ -1261,7 +1260,7 @@ class LEs extends L {
 
   @override
   String dstBody(String city, String date, String time) {
-    return 'El $date en $city se atrasaron los relojes. Alma no echará tu cielo a cara o cruz — ¿cuál de las $time es la tuya?';
+    return 'El $date en $city se atrasaron los relojes. Alma no se va a jugar tu cielo a cara o cruz — ¿cuál de las $time es la tuya?';
   }
 
   @override
@@ -1429,21 +1428,21 @@ class LEs extends L {
   }
 
   @override
-  String get paywallV3PairForever => 'Se queda tuya para siempre';
+  String get paywallV3PairForever => 'Se queda contigo para siempre';
 
   @override
-  String get paywallV3PairIncludedBadge => 'incluida en tu mes';
+  String get paywallV3PairIncludedBadge => 'incluida este mes';
 
   @override
   String get paywallV3PairBeyondCredit =>
-      'Más allá de tu análisis mensual · se queda tuya para siempre';
+      'Aparte de tu comparación del mes · se queda contigo para siempre';
 
   @override
-  String get paywallV3PairMyPairsTitle => 'Mis parejas';
+  String get paywallV3PairMyPairsTitle => 'Mis comparaciones';
 
   @override
   String paywallV3PairCheckAnother(String price) {
-    return 'Analizar a otra persona · $price';
+    return 'Comparar con otra persona · $price';
   }
 
   @override
@@ -1473,11 +1472,11 @@ class LEs extends L {
 
   @override
   String get paywallV3SubIncludesPair =>
-      'Un análisis completo de compatibilidad al mes';
+      'Una comparación completa de compatibilidad al mes';
 
   @override
   String get paywallV3SubIncludesQuestions =>
-      'Treinta preguntas para Alma · las cinco lecturas mientras esté activa';
+      'Treinta preguntas a Alma · las cinco lecturas mientras esté activa';
 
   @override
   String get paywallV3SubForeverStays =>
@@ -1490,7 +1489,7 @@ class LEs extends L {
 
   @override
   String get paywallV3QuotaTitle =>
-      'Tres preguntas al mes es donde termina lo gratis';
+      'Lo gratis termina en tres preguntas al mes';
 
   @override
   String paywallV3QuotaCta(String price) {
@@ -1538,15 +1537,15 @@ class LEs extends L {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count capítulos de tu lectura «$system»',
-      one: 'Un capítulo de tu lectura «$system»',
+      other: '$count capítulos de tu lectura de $system',
+      one: 'Un capítulo de tu lectura de $system',
     );
     return '$_temp0';
   }
 
   @override
   String paywallV3DoorTitleAll(String system) {
-    return 'Tu lectura «$system» entera';
+    return 'Tu lectura de $system, entera';
   }
 
   @override
@@ -1572,14 +1571,14 @@ class LEs extends L {
 
   @override
   String get paywallV3QuotaNote =>
-      'Con la suscripción Alma responde treinta al mes — desde tus propias posiciones, nunca desde una plantilla.';
+      'Con la suscripción, Alma responde treinta preguntas al mes — desde tus propias posiciones, nunca desde una plantilla.';
 
   @override
   String get paywallV3QuotaAlsoInside => 'también dentro';
 
   @override
   String get paywallV3QuotaAlsoInsideList =>
-      'Tránsitos y el horóscopo diario · tu revolución solar · una comprobación de compatibilidad al mes';
+      'Tránsitos y el horóscopo diario · tu revolución solar · una comparación de compatibilidad al mes';
 
   @override
   String get paywallV3SubRenewalDisclosureQuota =>
@@ -1610,7 +1609,7 @@ class LEs extends L {
 
   @override
   String get paywallV3SubIncludesLine =>
-      'Tránsitos y el horóscopo diario · revolución solar · una comprobación de compatibilidad al mes · 30 preguntas · las cinco lecturas mientras esté activa';
+      'Tránsitos y el horóscopo diario · revolución solar · una comparación de compatibilidad al mes · 30 preguntas · las cinco lecturas mientras esté activa';
 
   @override
   String get paywallV3PlansLegal =>
@@ -1669,7 +1668,7 @@ class LEs extends L {
 
   @override
   String paywallV3DoorOverline(String system) {
-    return 'tu lectura: $system';
+    return 'tu lectura de $system';
   }
 
   @override
@@ -1690,22 +1689,22 @@ class LEs extends L {
   String get paywallV3WhatNextReadOpening => 'Leer el primer capítulo';
 
   @override
-  String get paywallV3WhatNextPairTitle => 'Comprueba lo vuestro';
+  String get paywallV3WhatNextPairTitle => 'Mira qué hay entre los dos';
 
   @override
   String get paywallV3WhatNextPairNote =>
-      'Tu capítulo de Venus dice cómo te vinculas. Su fecha dice cómo aterriza.';
+      'Tu capítulo de Venus dice cómo te vinculas. Su fecha dice cómo encaja con eso.';
 
   @override
   String paywallV3WhatNextPairCta(String price) {
-    return 'Analizar a alguien · $price';
+    return 'Comparar con alguien · $price';
   }
 
   @override
   String get systemsTapToAdd => 'añade a alguien';
 
   @override
-  String get systemsReadOpening => 'lee el comienzo';
+  String get systemsReadOpening => 'lee el primer capítulo';
 
   @override
   String systemsChaptersOpen(int open, int total) {
@@ -1764,11 +1763,11 @@ class LEs extends L {
       'Su carta se calcula gratis, como la tuya. Pagas solo por los capítulos escritos sobre ustedes dos.';
 
   @override
-  String get pairInputCta => 'Leer qué los atrae';
+  String get pairInputCta => 'Leer qué atrae a los dos';
 
   @override
   String get pairMyPairsNote =>
-      'Cada lectura sigue siendo tuya, con o sin suscripción.';
+      'Cada informe sigue siendo tuyo, con o sin suscripción.';
 
   @override
   String get pairRowChapters => 'cuatro capítulos';
@@ -1786,12 +1785,18 @@ class LEs extends L {
 
   @override
   String pairCreditUsed(int used, int granted) {
-    return 'Has usado $used de $granted análisis';
+    String _temp0 = intl.Intl.pluralLogic(
+      granted,
+      locale: localeName,
+      other: '$granted comparaciones',
+      one: '$granted comparación',
+    );
+    return 'Has usado $used de $_temp0';
   }
 
   @override
   String pairCreditNext(String date) {
-    return 'Tu próximo análisis incluido llega el $date. Los análisis no se acumulan.';
+    return 'Tu próxima comparación incluida llega el $date. Las comparaciones no se acumulan.';
   }
 
   @override
@@ -1799,10 +1804,10 @@ class LEs extends L {
 
   @override
   String get pairHookNote =>
-      'Basta la fecha de nacimiento, y la comparación se calcula gratis. Pagas los capítulos.';
+      'Con la fecha de nacimiento basta, y la comparación se calcula gratis. Pagas los capítulos.';
 
   @override
-  String get pairCheckAnotherPlain => 'Analizar a otra persona';
+  String get pairCheckAnotherPlain => 'Comparar con otra persona';
 
   @override
   String pairReportHeader(String name) {
@@ -1810,7 +1815,7 @@ class LEs extends L {
   }
 
   @override
-  String get pairReportMeta => 'cuatro capítulos · tuyo para siempre';
+  String get pairReportMeta => 'cuatro capítulos · tuyos para siempre';
 
   @override
   String get pairChapterRead => 'leído';
@@ -1856,7 +1861,7 @@ class LEs extends L {
 
   @override
   String get paywallV3StateProcessingNote =>
-      'Apple ya tomó el pago; lo estamos anotando. Esto se completa solo, aunque cierres la app.';
+      'Apple ya cobró el pago; lo estamos anotando. Esto se completa solo, aunque cierres la app.';
 
   @override
   String get onbSystemsTitle => 'Tus ocho sistemas';

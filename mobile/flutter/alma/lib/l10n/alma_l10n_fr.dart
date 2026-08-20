@@ -169,7 +169,7 @@ class LFr extends L {
 
   @override
   String get cabCompatNeedsPerson =>
-      'Pour voir la compatibilité, ajoute les données de naissance d’une autre personne. Toute la comparaison est calculée gratuitement.';
+      'Pour voir la compatibilité, ajoute les données de naissance d\'une autre personne. Toute la comparaison est calculée gratuitement.';
 
   @override
   String get cabDataAndLegal => 'données et mentions légales';
@@ -192,7 +192,7 @@ class LFr extends L {
 
   @override
   String get cabExportNote =>
-      'Tout ce que nous détenons sur toi, en un seul fichier.';
+      'Tout ce que nous avons sur toi, en un seul fichier.';
 
   @override
   String get cabExportReady => 'Ton fichier est prêt.';
@@ -227,7 +227,7 @@ class LFr extends L {
 
   @override
   String get cabHoroscopeLocked =>
-      'Ton horoscope du jour est rédigé chaque matin à partir de ton thème natal et fait partie de l\'abonnement.';
+      'Ton horoscope du jour est écrit chaque matin à partir de ton thème natal et fait partie de l\'abonnement.';
 
   @override
   String get cabHoroscopeOpen => 'Ouvrir l\'horoscope';
@@ -287,7 +287,7 @@ class LFr extends L {
   String get cabLegalTerms => 'Conditions';
 
   @override
-  String get cabLocked => 'Débloquer pour lire';
+  String get cabLocked => 'Ouvrir pour lire';
 
   @override
   String get cabManageInStore => 'Gérer cet abonnement dans l\'App Store';
@@ -297,11 +297,11 @@ class LFr extends L {
 
   @override
   String get cabManagedByApple =>
-      'Cet abonnement a été acheté dans l\'App Store : Apple détient le moyen de paiement, et la résiliation se fait là-bas.';
+      'Cet abonnement a été acheté dans l\'App Store : Apple détient le moyen de paiement, et c\'est là que tu le résilies.';
 
   @override
   String get cabManagedByGooglePlay =>
-      'Cet abonnement a été acheté dans Google Play : Google détient le moyen de paiement, et l\'annulation se fait là-bas.';
+      'Cet abonnement a été acheté dans Google Play : Google détient le moyen de paiement, et c\'est là que tu l\'annules.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -314,7 +314,7 @@ class LFr extends L {
 
   @override
   String get cabNoneActive =>
-      'Aucun transit n’est actif aujourd’hui. C’est un vrai résultat, pas un écran vide.';
+      'Aucun transit n\'est actif aujourd\'hui. C\'est un vrai résultat, pas un écran vide.';
 
   @override
   String cabPairJoin(String p1, String p2) {
@@ -347,7 +347,7 @@ class LFr extends L {
 
   @override
   String get cabPlanCancelFailed =>
-      'Nous n’avons pas pu joindre le prestataire de paiement, rien n’a donc été modifié. Réessaie dans un instant.';
+      'Nous n\'avons pas pu joindre le prestataire de paiement, donc rien n\'a changé. Réessaie dans un instant.';
 
   @override
   String get cabPlanCancelSubscription => 'Résilier l\'abonnement';
@@ -358,7 +358,7 @@ class LFr extends L {
 
   @override
   String cabPlanCancelled(String p1) {
-    return 'Résilié. Ton abonnement reste ouvert jusqu’au $p1.';
+    return 'Résilié. Ton abonnement reste ouvert jusqu\'au $p1.';
   }
 
   @override
@@ -393,7 +393,7 @@ class LFr extends L {
 
   @override
   String get cabPlanFreeNote =>
-      'Chaque calcul reste gratuit, toujours — tous les systèmes, tous les chiffres. Tu paies seulement les chapitres écrits.';
+      'Chaque calcul reste gratuit — les huit systèmes. Tu ne paies que les chapitres écrits.';
 
   @override
   String get cabPlanFreePlan => 'Gratuit';
@@ -429,12 +429,12 @@ class LFr extends L {
 
   @override
   String cabPlanRunsUntil(String p1) {
-    return 'Actif jusqu’au $p1. Il ne se renouvellera pas.';
+    return 'Actif jusqu\'au $p1. Il ne se renouvellera pas.';
   }
 
   @override
   String get cabPlansBody =>
-      'L\'abonnement garde à jour les transits, la révolution solaire et la compatibilité, envoie la notification du matin et inclut 30 questions par mois. Les cinq lectures immobiles s\'achètent une fois et restent à toi pour toujours.';
+      'L\'abonnement garde à jour les transits, la révolution solaire et la compatibilité, envoie la notification du matin et inclut 30 questions par mois. Les cinq lectures qui ne bougent pas s\'achètent une fois et restent à toi pour toujours.';
 
   @override
   String get cabPlansCta => 'Voir les formules';
@@ -467,7 +467,7 @@ class LFr extends L {
 
   @override
   String get cabSettingsDeleteConfirm =>
-      'Écris ton adresse e-mail pour confirmer';
+      'Saisis ton adresse e-mail pour confirmer';
 
   @override
   String get cabSettingsDeleteConfirmGuest => 'Saisis ce code pour confirmer';
@@ -586,7 +586,7 @@ class LFr extends L {
 
   @override
   String get dailyAskBody =>
-      'Une notification à l\'heure choisie les jours où une influence devient exacte dans ton thème. Environ une fois par semaine, jamais la nuit. Tu peux la désactiver directement depuis la notification.';
+      'Une notification à l\'heure que tu choisis, les jours où une influence devient exacte dans ton thème. Environ une fois par semaine, jamais la nuit. Tu peux la désactiver directement depuis la notification.';
 
   @override
   String get dailyAskTitle => 'Préviens-moi le matin où cela arrive';
@@ -735,14 +735,14 @@ class LFr extends L {
 
   @override
   String get journeyCeremony3Line =>
-      'L\'un des vingt-deux arcanes, calculé à partir de la date seule.';
+      'L\'un des vingt-deux arcanes majeurs, calculé à partir de la date seule.';
 
   @override
   String get journeyCeremony4Label => 'lecture du système 4 sur 8 · transits';
 
   @override
   String get journeyCeremony4Line =>
-      'La position du ciel aujourd\'hui, comparée à ton thème de naissance.';
+      'La position du ciel aujourd\'hui, comparée à ton thème natal.';
 
   @override
   String get journeyCeremony5Label =>
@@ -774,7 +774,7 @@ class LFr extends L {
 
   @override
   String get journeyCeremony8Line =>
-      'Neuf axes. Là où trois systèmes s’accordent, cela révèle ce qui est au cœur de ta personnalité.';
+      'Neuf axes. Là où trois systèmes s\'accordent, cela révèle ce qui est au cœur de ta personnalité.';
 
   @override
   String get journeyClose => 'Fermer';
@@ -786,7 +786,7 @@ class LFr extends L {
   String get journeyDateSub => 'La date seule donne déjà trois systèmes.';
 
   @override
-  String get journeyDateTitle => 'Quelle est ta date de naissance ?';
+  String get journeyDateTitle => 'Quand es-tu né ?';
 
   @override
   String get journeyGenderFemale => 'Femme';
@@ -802,7 +802,7 @@ class LFr extends L {
 
   @override
   String get journeyLockedWithoutTime =>
-      'Maisons, révolution solaire et astrocartographie restent indisponibles';
+      'Maisons, révolution solaire et astrocartographie restent fermées';
 
   @override
   String get journeyMinuteLabel => 'Min';
@@ -840,10 +840,10 @@ class LFr extends L {
   String get journeyPlaceSub => 'La ville suffit.';
 
   @override
-  String get journeyPlaceTitle => 'Quel est ton lieu de naissance ?';
+  String get journeyPlaceTitle => 'Où es-tu né ?';
 
   @override
-  String get journeyTimeTitle => 'Quelle est ton heure de naissance ?';
+  String get journeyTimeTitle => 'À quelle heure es-tu né ?';
 
   @override
   String get cabinetBack => 'Retour';
@@ -855,27 +855,27 @@ class LFr extends L {
 
   @override
   String pushDailyEnteringConjunction(String p1, String p2) {
-    return '$p1 et $p2 : la conjonction devient active aujourd’hui.';
+    return '$p1 et $p2 : la conjonction devient active aujourd\'hui.';
   }
 
   @override
   String pushDailyEnteringOpposition(String p1, String p2) {
-    return '$p1 et $p2 — opposition, dans l\'orbe dès aujourd\'hui.';
+    return '$p1 et $p2 : l\'opposition devient active aujourd\'hui.';
   }
 
   @override
   String pushDailyEnteringSextile(String p1, String p2) {
-    return '$p1 et $p2 : le sextile devient actif aujourd’hui.';
+    return '$p1 et $p2 : le sextile devient actif aujourd\'hui.';
   }
 
   @override
   String pushDailyEnteringSquare(String p1, String p2) {
-    return '$p1 et $p2 : le carré devient actif aujourd’hui.';
+    return '$p1 et $p2 : le carré devient actif aujourd\'hui.';
   }
 
   @override
   String pushDailyEnteringTrine(String p1, String p2) {
-    return '$p1 et $p2 : le trigone devient actif aujourd’hui.';
+    return '$p1 et $p2 : le trigone devient actif aujourd\'hui.';
   }
 
   @override
@@ -910,7 +910,7 @@ class LFr extends L {
 
   @override
   String get stateOffline =>
-      'Alma ne répond pas pour le moment. Ici rien n\'est deviné, donc il n\'y a rien à montrer tant qu\'elle ne répond pas.';
+      'Alma ne répond pas pour le moment. Ici on ne devine rien, donc il n\'y a rien à montrer tant qu\'elle n\'a pas répondu.';
 
   @override
   String get stateRetry => 'Réessayer';
@@ -924,7 +924,7 @@ class LFr extends L {
 
   @override
   String get stateUnboundNote =>
-      'Le paiement est passé, mais il est arrivé sans nom. Choisissez la personne et la lecture s\'ouvre.';
+      'Le paiement est passé, mais il est arrivé sans nom. Choisis la personne et la lecture s\'ouvre.';
 
   @override
   String get stateWriting => 'J\'écris ce chapitre…';
@@ -980,14 +980,14 @@ class LFr extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'L\'abonnement garde écrits les trois systèmes vivants ; les cinq lectures immobiles s\'achètent une fois et restent à toi pour toujours.';
+      'L\'abonnement continue d\'écrire les trois systèmes vivants ; les cinq lectures qui ne bougent pas s\'achètent une fois et restent à toi pour toujours.';
 
   @override
   String get paywallPitchPlan2 =>
       'Les transits, la révolution solaire et la compatibilité se réécrivent avec le ciel.';
 
   @override
-  String get paywallPitchPlan3 => '30 questions par mois à Alma.';
+  String get paywallPitchPlan3 => '30 questions à Alma par mois.';
 
   @override
   String get paywallPrivacy => 'Politique de confidentialité';
@@ -1019,7 +1019,7 @@ class LFr extends L {
 
   @override
   String get paywallStoreUnavailablePlay =>
-      'Google Play ne répond pas. Tant qu\'il se tait, rien ne peut être acheté ici — et tout ce qui t\'appartient déjà n\'a pas bougé.';
+      'Google Play ne répond pas. Rien ne peut être acheté ici tant qu\'il ne répond pas — et rien de ce que tu possèdes déjà ne change.';
 
   @override
   String get paywallSubscriptionTerms => 'Conditions d\'abonnement';
@@ -1061,20 +1061,20 @@ class LFr extends L {
 
   @override
   String pillSheetCta(String price) {
-    return 'Voir les forfaits · dès $price';
+    return 'Voir les formules · dès $price';
   }
 
   @override
   String get pillSheetFootnote =>
-      'Il existe aussi des portes à l\'unité · annulable à tout moment dans les réglages de ton identifiant Apple';
+      'Il existe aussi des achats à l\'unité · résiliable à tout moment dans les réglages de ton identifiant Apple';
 
   @override
   String get pillSheetFootnotePlay =>
-      'Il existe aussi des portes à l\'unité · annulable à tout moment dans les abonnements Google Play';
+      'Il existe aussi des achats à l\'unité · annulable à tout moment dans les abonnements Google Play';
 
   @override
   String get pillSheetSub =>
-      'Ta carte est déjà calculée — et gratuite pour toujours. Le forfait ouvre l\'écrit.';
+      'Ton thème est déjà calculé — et gratuit pour toujours. La formule ouvre l\'écrit.';
 
   @override
   String get scrAddPersonSaving => 'Enregistrement…';
@@ -1096,7 +1096,7 @@ class LFr extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Tu as utilisé les questions disponibles pour le moment. Avec un abonnement actif, tu peux continuer ; il inclut 30 questions par mois.';
+      'Tu as utilisé toutes tes questions pour le moment. Avec un abonnement actif, tu peux continuer : il inclut 30 questions par mois.';
 
   @override
   String get scrChatPast => 'avant';
@@ -1105,15 +1105,14 @@ class LFr extends L {
   String get scrChatPlaceholder => 'Demande à Alma';
 
   @override
-  String get scrChatPrompt1 => 'Comment suis-je quand personne ne regarde ?';
+  String get scrChatPrompt1 => 'Je suis comment quand personne ne regarde ?';
 
   @override
   String get scrChatPrompt2 =>
-      'Qu\'est-ce qui influence mon thème cette semaine ?';
+      'Qu\'est-ce qui traverse mon thème cette semaine ?';
 
   @override
-  String get scrChatPrompt3 =>
-      'Sur quels points mes systèmes se contredisent-ils ?';
+  String get scrChatPrompt3 => 'Sur quoi mes systèmes se contredisent ?';
 
   @override
   String scrChatPromptMoon(String p1) {
@@ -1122,7 +1121,7 @@ class LFr extends L {
 
   @override
   String scrChatPromptRising(String p1) {
-    return 'Ascendant $p1. Est-ce la première impression que je donne aux autres ?';
+    return 'Ascendant $p1. C\'est ça, la première impression que je donne ?';
   }
 
   @override
@@ -1132,7 +1131,7 @@ class LFr extends L {
 
   @override
   String get scrChatReadFromAll =>
-      'Afficher toutes les positions dont ceci est tiré';
+      'Voir les positions qui ont servi à cette réponse';
 
   @override
   String get scrChatRefused =>
@@ -1176,7 +1175,7 @@ class LFr extends L {
 
   @override
   String get scrPeopleRemoveWhat =>
-      'Ses données de naissance sont supprimées — ainsi que toutes les interprétations de compatibilité créées à partir de ces données. Les interprétations payées ne peuvent pas être recréées mot pour mot.';
+      'Ses données de naissance sont supprimées — ainsi que toutes les lectures de compatibilité écrites à partir d\'elles. Les lectures que tu as payées ne peuvent pas être réécrites mot pour mot.';
 
   @override
   String get scrPeopleUnnamed => 'Sans nom';
@@ -1196,10 +1195,10 @@ class LFr extends L {
 
   @override
   String get scrSignInAlready =>
-      'Une session est déjà ouverte. Ton compte reste accessible sur n\'importe quel téléphone.';
+      'Tu es déjà connecté. Ton compte reste accessible sur n\'importe quel téléphone.';
 
   @override
-  String get scrSignInDone => 'Te voilà dans ton compte.';
+  String get scrSignInDone => 'Tu es connecté.';
 
   @override
   String get scrSignInEmailPlaceholder => 'Ton adresse e-mail';
@@ -1209,7 +1208,8 @@ class LFr extends L {
       'La connexion n\'a pas abouti. Rien n\'a changé sur ton compte.';
 
   @override
-  String get scrSignInLead => 'Ta carte te suit sur n\'importe quel téléphone.';
+  String get scrSignInLead =>
+      'Ton thème te suit sur n\'importe quel téléphone.';
 
   @override
   String get scrSignInLinkSent =>
@@ -1312,7 +1312,7 @@ class LFr extends L {
 
   @override
   String get chatNotTemplate =>
-      'Je réponds depuis ta carte, jamais d\'après un modèle.';
+      'Je réponds à partir de ton thème, jamais d\'après un modèle.';
 
   @override
   String get scrChatSwipeForTabs => 'Balaie vers le haut pour les onglets';
@@ -1322,7 +1322,7 @@ class LFr extends L {
 
   @override
   String get cabCompatBulletContacts =>
-      'Chaque contact entre les deux cartes, avec son orbe exact';
+      'Chaque contact entre les deux thèmes, avec son orbe exact';
 
   @override
   String get cabCompatBulletHouses =>
@@ -1330,7 +1330,7 @@ class LFr extends L {
 
   @override
   String get cabCompatBulletComposite =>
-      'La carte propre de la relation — le ciel de vous deux en un seul';
+      'Le thème propre de la relation — le ciel de vous deux en un seul';
 
   @override
   String get todayReadWholeSky => 'Lire tout le ciel';
@@ -1347,7 +1347,7 @@ class LFr extends L {
 
   @override
   String readerAskAboutIt(String aspect) {
-    return 'Demande à Alma à propos de $aspect';
+    return 'Demande à Alma : $aspect';
   }
 
   @override
@@ -1443,7 +1443,7 @@ class LFr extends L {
       'Au-delà de ton analyse mensuelle · reste à toi pour toujours';
 
   @override
-  String get paywallV3PairMyPairsTitle => 'Mes couples';
+  String get paywallV3PairMyPairsTitle => 'Mes comparaisons';
 
   @override
   String paywallV3PairCheckAnother(String price) {
@@ -1469,7 +1469,7 @@ class LFr extends L {
 
   @override
   String get paywallV3SubIncludesTransits =>
-      'Les transits et l\'horoscope du matin, écrits depuis ton thème';
+      'Les transits et l\'horoscope du matin, écrits à partir de ton thème';
 
   @override
   String get paywallV3SubIncludesSolar =>
@@ -1520,7 +1520,7 @@ class LFr extends L {
   }
 
   @override
-  String get paywallV3CancelJustCancel => 'Simplement résilier';
+  String get paywallV3CancelJustCancel => 'Résilier quand même';
 
   @override
   String get paywallV3StateProcessing => 'Ton achat est en cours';
@@ -1563,7 +1563,7 @@ class LFr extends L {
   }
 
   @override
-  String get paywallV3PlansLink => 'Tous les plans';
+  String get paywallV3PlansLink => 'Toutes les formules';
 
   @override
   String get paywallV3SubOverline => 'la couche vivante';
@@ -1576,7 +1576,7 @@ class LFr extends L {
 
   @override
   String get paywallV3QuotaNote =>
-      'Avec l\'abonnement, Alma répond à trente questions par mois — depuis tes propres positions, jamais d\'après un modèle.';
+      'Avec l\'abonnement, Alma répond à trente questions par mois — à partir de tes propres positions, jamais d\'après un modèle.';
 
   @override
   String get paywallV3QuotaAlsoInside => 'aussi à l\'intérieur';
@@ -1590,7 +1590,7 @@ class LFr extends L {
       'Se renouvelle chaque mois · résiliable à tout moment · ta question part dès que ça s\'ouvre';
 
   @override
-  String get paywallV3PlansOverline => 'tous les plans';
+  String get paywallV3PlansOverline => 'toutes les formules';
 
   @override
   String get paywallV3PlansTitle =>
@@ -1641,12 +1641,12 @@ class LFr extends L {
       other: '$times fois',
       one: 'une fois',
     );
-    return 'Tu as ouvert $_temp0 $_temp1. Pour $price elles restent lisibles après la fin de l\'abonnement — sans aucun renouvellement.';
+    return 'Tu as ouvert $_temp0 $_temp1. Pour $price, ça reste lisible après la fin de l\'abonnement — sans aucun renouvellement.';
   }
 
   @override
   String paywallV3CancelSaveFactPlain(String price) {
-    return 'Pour $price elles restent lisibles après la fin de l\'abonnement — sans aucun renouvellement.';
+    return 'Pour $price, ça reste lisible après la fin de l\'abonnement — sans aucun renouvellement.';
   }
 
   @override
@@ -1718,11 +1718,11 @@ class LFr extends L {
   }
 
   @override
-  String get chapterFreeBadge => 'offert';
+  String get chapterFreeBadge => 'gratuit';
 
   @override
   String chapterUnlockCta(String price) {
-    return 'Débloquer et lire · $price';
+    return 'Ouvrir et lire · $price';
   }
 
   @override
@@ -1740,8 +1740,10 @@ class LFr extends L {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n chapitres de ton $system, écrits à partir de ces positions',
-      one: '$n chapitre de ton $system, écrit à partir de ces positions',
+      other:
+          '$n chapitres de ta lecture « $system », écrits à partir de ces positions',
+      one:
+          '$n chapitre de ta lecture « $system », écrit à partir de ces positions',
     );
     return '$_temp0';
   }
@@ -1765,10 +1767,10 @@ class LFr extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Sa carte est calculée gratuitement, comme la tienne. Tu ne paies que les chapitres écrits sur vous deux.';
+      'Son thème est calculé gratuitement, comme le tien. Tu ne paies que les chapitres écrits sur vous deux.';
 
   @override
-  String get pairInputCta => 'Lire ce qui vous attire';
+  String get pairInputCta => 'Lire ce qui vous rapproche';
 
   @override
   String get pairMyPairsNote =>
@@ -1863,7 +1865,7 @@ class LFr extends L {
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'Si un jour tu annules : les chapitres achetés pour toujours restent lisibles. Les chapitres ouverts seulement par l\'abonnement se referment avec lui — le calcul reste gratuit dans tous les cas.';
+      'Si un jour tu résilies : les chapitres achetés pour toujours restent lisibles. Les chapitres ouverts seulement par l\'abonnement se referment avec lui — le calcul reste gratuit dans tous les cas.';
 
   @override
   String get paywallV3StateProcessingNote =>

@@ -216,7 +216,7 @@ void main() {
     // живой слой.
     expect(
       find.text(
-          'The horoscope is written from your own chart every morning, and it comes with the plan.'),
+          'Every morning the horoscope is written from your own chart. It comes with the plan.'),
       findsNothing,
     );
 
@@ -266,7 +266,7 @@ void main() {
     // живого слоя без единого написанного слова, ни филлера вместо заметки.
     expect(
       find.text(
-          'The horoscope is written from your own chart every morning, and it comes with the plan.'),
+          'Every morning the horoscope is written from your own chart. It comes with the plan.'),
       findsOneWidget,
     );
     expect(find.text('Open the horoscope'), findsOneWidget);

@@ -124,8 +124,16 @@ class PlansScreen extends StatelessWidget {
                     const SizedBox(height: 20),
                     Text(l.storeUnavailable, style: AlmaType.body),
                     const SizedBox(height: 14),
+                    // **Обводка, а не тихая ступень.** Это же состояние
+                    // молчащего магазина рисует `PaywallCta`
+                    // (`paywall_parts.dart`), и там «Try again» — `outline`:
+                    // холст просит обводку на месте снятой кнопки. Здесь
+                    // стоял `veil` — «тихое действие в списке», то есть
+                    // третий по громкости вид на экране, где эта кнопка
+                    // единственная. Два кадра одного состояния расходились на
+                    // четыре точки высоты и на кегль подписи.
                     AlmaButton(
-                      kind: AlmaButtonKind.veil,
+                      kind: AlmaButtonKind.outline,
                       fills: false,
                       label: l.stateRetry,
                       onTap: deal.busy ? null : () => deal.store.load(),

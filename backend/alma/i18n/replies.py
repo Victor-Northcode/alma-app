@@ -59,7 +59,7 @@ REFUSED: dict[str, str] = {
           "carta, así que prefiero no responder. Pregúntamelo con otras "
           "palabras y lo intentaré desde otro ángulo.",
     "de": "Ich konnte das nicht beantworten, ohne etwas zu sagen, das ich dir "
-          "in deinem Chart nicht zeigen kann — dann sage ich lieber nichts. "
+          "in deinem Horoskop nicht zeigen kann — dann sage ich lieber nichts. "
           "Frag mich noch einmal mit anderen Worten, ich versuche es anders.",
     "it": "Non sono riuscita a rispondere senza dire qualcosa che non posso "
           "mostrarti nel tuo tema, e allora preferisco non rispondere. "
@@ -82,15 +82,15 @@ REFUSED: dict[str, str] = {
 UNAVAILABLE: dict[str, str] = {
     "en": "I could not reach the part of me that writes, just now. Your question "
           "was not lost — ask it again in a moment.",
-    "es": "Ahora mismo no pude llegar a la parte de mí que escribe. Tu pregunta "
-          "no se perdió: vuelve a hacérmela en un momento.",
+    "es": "Ahora mismo no consigo llegar a la parte de mí que escribe. Tu "
+          "pregunta no se perdió: vuelve a hacérmela en un momento.",
     "de": "Ich komme gerade nicht an den Teil von mir heran, der schreibt. "
           "Deine Frage ist nicht verloren — stell sie gleich noch einmal.",
     "it": "In questo momento non riesco a raggiungere la parte di me che scrive. "
           "La tua domanda non è andata persa: rifammela tra un momento.",
-    "fr": "Je n'arrive pas à joindre, à l'instant, la partie de moi qui écrit. "
-          "Ta question n'est pas perdue — repose-la dans un moment.",
-    "pt-BR": "Agora não consegui alcançar a parte de mim que escreve. Sua "
+    "fr": "En ce moment, je n'arrive pas à joindre la partie de moi qui écrit. "
+          "Ta question n'est pas perdue — repose-la dans un instant.",
+    "pt-BR": "Não consegui chegar agora na parte de mim que escreve. Sua "
              "pergunta não se perdeu — me pergunte de novo daqui a pouco.",
     "ru": "Прямо сейчас я не дотянулась до той части себя, которая пишет. "
           "Твой вопрос не потерялся — задай его ещё раз через минуту.",
@@ -101,23 +101,23 @@ UNAVAILABLE: dict[str, str] = {
 LIMIT_DAY: dict[str, str] = {
     "en": 'That was the last of your questions for now — the plan is what carries our conversation on. Everything your chart is made of stays open either way: all eight systems, calculated in full.',
     "es": 'Esa era la última pregunta por ahora — el plan es lo que continúa nuestra conversación. Todo aquello de lo que está hecha tu carta sigue abierto igualmente: los ocho sistemas, calculados por completo.',
-    "de": 'Das war vorerst die letzte Frage — der Plan ist es, der unser Gespräch weiterträgt. Alles, woraus dein Chart besteht, bleibt so oder so offen: alle acht Systeme, vollständig berechnet.',
+    "de": 'Das war vorerst deine letzte Frage — weiter geht unser Gespräch im Abo. Alles, woraus dein Horoskop besteht, bleibt so oder so offen: alle acht Systeme, vollständig berechnet.',
     "it": "Quella era l'ultima domanda per ora — è il piano a portare avanti la nostra conversazione. Tutto ciò di cui è fatto il tuo tema resta comunque aperto: tutti e otto i sistemi, calcolati per intero.",
     "fr": "C'était la dernière question pour l'instant — c'est l'abonnement qui porte notre conversation. Tout ce dont ton thème est fait reste ouvert quoi qu'il arrive : les huit systèmes, calculés en entier.",
-    "pt-BR": 'Essa foi a última pergunta por enquanto — é o plano que leva nossa conversa adiante. Tudo de que seu mapa é feito continua aberto de qualquer jeito: os oito sistemas, calculados por inteiro.',
-    "ru": 'Это был последний вопрос. Дальше наш разговор — часть плана. Всё, из чего состоит твоя карта, в любом случае остаётся открытым: все восемь систем, рассчитанных полностью.',
+    "pt-BR": 'Essa foi a última pergunta por enquanto — é o plano que leva nossa conversa adiante. Tudo o que forma o seu mapa continua aberto de qualquer jeito: os oito sistemas, calculados por inteiro.',
+    "ru": 'Это был последний вопрос. Дальше наш разговор — часть плана. Всё, из чего состоит твоя карта, в любом случае остаётся открытым: все восемь систем, рассчитанные полностью.',
 }
 
 #: The month's questions are spent. Same sentence, a different clock.
 LIMIT_MONTH: dict[str, str] = {
-    "en": "That is your {limit} questions this month. They come back on the "
+    "en": "Those were your {limit} questions this month. They come back on the "
           "first. Everything your chart is made of stays open in the meantime — "
           "all eight systems, calculated in full.",
     "es": "Esas son tus {limit} preguntas de este mes. Vuelven el día uno. "
           "Mientras tanto, todo aquello de lo que está hecha tu carta sigue "
           "abierto: los ocho sistemas, calculados por completo.",
     "de": "Das waren deine {limit} Fragen in diesem Monat. Am Ersten sind sie "
-          "wieder da. Alles, woraus dein Chart besteht, bleibt derweil offen — "
+          "wieder da. Alles, woraus dein Horoskop besteht, bleibt derweil offen — "
           "alle acht Systeme, vollständig berechnet.",
     "it": "Queste erano le tue {limit} domande di questo mese. Tornano il primo. "
           "Nel frattempo resta aperto tutto ciò di cui è fatto il tuo tema: "
@@ -126,11 +126,11 @@ LIMIT_MONTH: dict[str, str] = {
           "premier. Entre-temps, tout ce dont ton thème est fait reste ouvert — "
           "les huit systèmes, calculés en entier.",
     "pt-BR": "Essas foram suas {limit} perguntas deste mês. Elas voltam no dia "
-             "primeiro. Enquanto isso, tudo de que seu mapa é feito continua "
+             "primeiro. Enquanto isso, tudo o que forma o seu mapa continua "
              "aberto — os oito sistemas, calculados por inteiro.",
-    "ru": "Это твои {limit} вопросов в этом месяце. Первого числа они "
-          "вернутся. Всё, из чего состоит твоя карта, тем временем остаётся "
-          "открытым — все восемь систем, рассчитанных полностью.",
+    "ru": "Это были все твои {limit} вопросов в этом месяце. Первого числа "
+          "они вернутся. Всё, из чего состоит твоя карта, тем временем "
+          "остаётся открытым — все восемь систем, рассчитанные полностью.",
 }
 
 #: The week's questions are spent. Same sentence again, a third clock.
@@ -145,14 +145,14 @@ LIMIT_MONTH: dict[str, str] = {
 #: `KeyError` и 500 вместо переведённого 429 — на том самом экране, который
 #: этот эксперимент и продаёт. Фраза дешевле, чем разбор такого дня.
 LIMIT_WEEK: dict[str, str] = {
-    "en": "That is your {limit} questions this week. They come back when the "
+    "en": "Those were your {limit} questions this week. They come back when the "
           "week does. Everything your chart is made of stays open in the "
           "meantime — all eight systems, calculated in full.",
     "es": "Esas son tus {limit} preguntas de esta semana. Vuelven cuando vuelve "
           "la semana. Mientras tanto, todo aquello de lo que está hecha tu "
           "carta sigue abierto: los ocho sistemas, calculados por completo.",
-    "de": "Das waren deine {limit} Fragen in dieser Woche. Sie kommen wieder, "
-          "wenn die Woche wiederkommt. Alles, woraus dein Chart besteht, bleibt "
+    "de": "Das waren deine {limit} Fragen in dieser Woche. Sie kommen mit der "
+          "neuen Woche zurück. Alles, woraus dein Horoskop besteht, bleibt "
           "derweil offen — alle acht Systeme, vollständig berechnet.",
     "it": "Queste erano le tue {limit} domande di questa settimana. Tornano "
           "quando torna la settimana. Nel frattempo resta aperto tutto ciò di "
@@ -162,11 +162,12 @@ LIMIT_WEEK: dict[str, str] = {
           "quand la semaine revient. Entre-temps, tout ce dont ton thème est "
           "fait reste ouvert — les huit systèmes, calculés en entier.",
     "pt-BR": "Essas foram suas {limit} perguntas desta semana. Elas voltam "
-             "quando a semana volta. Enquanto isso, tudo de que seu mapa é "
-             "feito continua aberto — os oito sistemas, calculados por inteiro.",
-    "ru": "Это твои {limit} вопросов на этой неделе. Они вернутся вместе с "
-          "новой неделей. Всё, из чего состоит твоя карта, тем временем "
-          "остаётся открытым — все восемь систем, рассчитанных полностью.",
+             "quando a semana volta. Enquanto isso, tudo o que forma o seu "
+             "mapa continua aberto — os oito sistemas, calculados por inteiro.",
+    "ru": "Это были все твои {limit} вопросов на этой неделе. Они вернутся "
+          "вместе с новой неделей. Всё, из чего состоит твоя карта, тем "
+          "временем остаётся открытым — все восемь систем, рассчитанные "
+          "полностью.",
 }
 
 #: Бандл покупки кончился. Единственная из четырёх стен, за которой не «когда-
@@ -181,7 +182,7 @@ LIMIT_WEEK: dict[str, str] = {
 #: успевает списать последний вопрос. Вероятность мала, цена промаха ключа
 #: прежняя: 500 вместо 429, и именно у того, кто нам заплатил.
 LIMIT_ONCE: dict[str, str] = {
-    "en": "That is the {limit} questions your purchase included. They do not "
+    "en": "Those were the {limit} questions your purchase included. They do not "
           "come back — the plan is what carries a conversation on. Everything "
           "your chart is made of stays open either way: all eight systems, "
           "calculated in full.",
@@ -190,8 +191,8 @@ LIMIT_ONCE: dict[str, str] = {
           "hecha tu carta sigue abierto igualmente: los ocho sistemas, "
           "calculados por completo.",
     "de": "Das waren die {limit} Fragen, die dein Kauf enthielt. Sie kommen "
-          "nicht wieder — der Plan ist es, der ein Gespräch weiterträgt. Alles, "
-          "woraus dein Chart besteht, bleibt so oder so offen: alle acht "
+          "nicht wieder — weiter geht ein Gespräch nur im Abo. Alles, woraus "
+          "dein Horoskop besteht, bleibt so oder so offen: alle acht "
           "Systeme, vollständig berechnet.",
     "it": "Queste erano le {limit} domande incluse nel tuo acquisto. Non "
           "tornano: è il piano a portare avanti una conversazione. Tutto ciò di "
@@ -202,12 +203,12 @@ LIMIT_ONCE: dict[str, str] = {
           "ce dont ton thème est fait reste ouvert de toute façon — les huit "
           "systèmes, calculés en entier.",
     "pt-BR": "Essas foram as {limit} perguntas que sua compra incluía. Elas não "
-             "voltam — é o plano que leva uma conversa adiante. Tudo de que seu "
-             "mapa é feito continua aberto de qualquer jeito: os oito sistemas, "
+             "voltam — é o plano que leva uma conversa adiante. Tudo o que forma "
+             "o seu mapa continua aberto de qualquer jeito: os oito sistemas, "
              "calculados por inteiro.",
     "ru": "Это те {limit} вопросов, что включала покупка. Они не вернутся: "
           "дальше наш разговор — часть плана. Всё, из чего состоит твоя карта, "
-          "в любом случае остаётся открытым: все восемь систем, рассчитанных "
+          "в любом случае остаётся открытым: все восемь систем, рассчитанные "
           "полностью.",
 }
 
@@ -220,13 +221,13 @@ LIMIT_ONCE: dict[str, str] = {
 #: Бесплатно ровно то, что здесь и считается, — место под человека, с которым
 #: сравнивают; написанные главы платны на любой ступени лестницы.
 PARTNER_LIMIT: dict[str, str] = {
-    "en": "A free account saves one person to compare with. The compatibility door holds two, and the plan holds as many people as your life does.",
-    "es": "Una cuenta gratuita guarda una persona para comparar. La puerta de compatibilidad guarda dos, y el plan, tantas personas como tu vida.",
-    "de": "Ein freies Konto speichert einen Menschen zum Vergleichen. Die Partnerschafts-Tür hält zwei, der Plan so viele Menschen wie dein Leben.",
-    "it": "Un account gratuito salva una persona da confrontare. La porta dell'affinità ne tiene due, il piano tante persone quante ne ha la tua vita.",
-    "fr": "Un compte gratuit enregistre une personne à comparer. La porte de compatibilité en garde deux, l'abonnement autant de personnes que ta vie.",
-    "pt-BR": "Uma conta gratuita salva uma pessoa para comparar. A porta da compatibilidade guarda duas, e o plano, quantas pessoas a sua vida tiver.",
-    "ru": "Свободный аккаунт хранит одного человека для сравнения. Дверь совместимости вмещает двоих, а подписка — столько людей, сколько их в твоей жизни.",
+    "en": "A free account saves one person to compare with. A one-time compatibility purchase saves two, and the plan saves as many as your life has.",
+    "es": "Una cuenta gratuita guarda una persona para comparar. La compra única de compatibilidad guarda dos, y el plan, tantas personas como haya en tu vida.",
+    "de": "Ein kostenloses Konto speichert eine Person zum Vergleichen. Ein einmaliger Partnerschafts-Kauf speichert zwei, das Abo so viele, wie in deinem Leben vorkommen.",
+    "it": "Un account gratuito conserva una persona con cui confrontarti. Un acquisto una tantum dell'affinità ne tiene due, il piano tutte quelle che ci sono nella tua vita.",
+    "fr": "Un compte gratuit enregistre une personne à comparer. Un achat unique de compatibilité en garde deux, et l'abonnement autant de personnes qu'il y en a dans ta vie.",
+    "pt-BR": "Uma conta grátis salva uma pessoa para comparar. A compra avulsa de compatibilidade guarda duas, e o plano guarda quantas pessoas a sua vida tiver.",
+    "ru": "Бесплатный аккаунт хранит одного человека для сравнения. Разовая покупка совместимости — двоих, а подписка — столько людей, сколько их в твоей жизни.",
 }
 
 #: Совместимость просят без второго человека.
@@ -239,8 +240,8 @@ PARTNER_LIMIT: dict[str, str] = {
 #: `partner_required`, а человеку говорится, чего не хватает и что сделать.
 PARTNER_REQUIRED: dict[str, str] = {
     "en": "A compatibility reading is about two people. Add someone, and I will read you together.",
-    "es": "La compatibilidad trata de dos personas. Añade a alguien y os leeré juntos.",
-    "de": "Partnerschaft handelt von zwei Menschen. Füge jemanden hinzu, und ich lese euch zusammen.",
+    "es": "La compatibilidad trata de dos personas. Añade a alguien y leeré a los dos juntos.",
+    "de": "Eine Partnerschafts-Deutung braucht zwei. Füge jemanden hinzu, und ich lese euch zusammen.",
     "it": "L'affinità riguarda due persone. Aggiungi qualcuno e vi leggerò insieme.",
     "fr": "La compatibilité parle de deux personnes. Ajoute quelqu'un, et je vous lirai ensemble.",
     "pt-BR": "A compatibilidade é sobre duas pessoas. Adicione alguém e vou ler vocês juntos.",
@@ -261,16 +262,16 @@ PARTNER_REQUIRED: dict[str, str] = {
 BUDGET: dict[str, str] = {
     "en": "Alma has written a lot for you today. The next piece opens tomorrow "
           "— or right away with a plan.",
-    "es": "Alma ha escrito mucho para ti hoy. Lo siguiente se abre mañana, o "
+    "es": "Alma escribió mucho para ti hoy. Lo siguiente se abre mañana, o "
           "ahora mismo con un plan.",
     "de": "Alma hat heute viel für dich geschrieben. Das Nächste öffnet sich "
-          "morgen — oder sofort mit einem Plan.",
+          "morgen — oder sofort mit einem Abo.",
     "it": "Alma ha scritto molto per te oggi. Il resto si apre domani, o "
           "subito con un piano.",
     "fr": "Alma a beaucoup écrit pour toi aujourd'hui. La suite s'ouvre "
           "demain — ou tout de suite avec un abonnement.",
-    "pt-BR": "Alma escreveu muito para você hoje. O próximo abre amanhã — ou "
-             "agora mesmo com um plano.",
+    "pt-BR": "A Alma escreveu muito para você hoje. A próxima parte abre "
+             "amanhã — ou agora mesmo com um plano.",
     "ru": "Alma сегодня много для тебя написала. Следующее откроется завтра — "
           "или прямо сейчас, с подпиской.",
 }
@@ -304,7 +305,7 @@ CRISIS: dict[str, str] = {
           "línea de crisis, o una persona en quien confíes. Yo seguiré aquí "
           "después.",
     "de": "Ich höre hier auf, denn das wiegt schwerer als alles, was ich in "
-          "einem Chart lesen könnte. Bitte sprich mit jemandem, der jetzt bei "
+          "einem Horoskop lesen könnte. Bitte sprich mit jemandem, der jetzt bei "
           "dir sein kann — dem Notruf in deinem Land, einer Krisenhotline oder "
           "einem Menschen, dem du vertraust. Ich bin danach noch da.",
     "it": "Mi fermo qui, perché questo conta più di qualsiasi cosa io possa "
@@ -312,7 +313,7 @@ CRISIS: dict[str, str] = {
           "vicino adesso: il numero di emergenza del tuo paese, una linea di "
           "ascolto, o una persona di cui ti fidi. Io resto qui per dopo.",
     "fr": "Je m'arrête ici, parce que cela compte plus que tout ce que je "
-          "pourrais lire dans un thème. Parle s'il te plaît à quelqu'un qui "
+          "pourrais lire dans un thème. S'il te plaît, parle à quelqu'un qui "
           "peut être auprès de toi maintenant : le numéro d'urgence de ton "
           "pays, une ligne d'écoute, ou une personne en qui tu as confiance. "
           "Je serai encore là ensuite.",
@@ -347,15 +348,15 @@ WITHHELD: dict[str, str] = {
           "looks like, and that part I will read you.",
     "es": "Empecé esa respuesta y la detuve. Iba hacia donde una carta no "
           "tiene nada que hacer: hacia una decisión que es tuya y de alguien "
-          "cualificado, no mía. Pregúntame cómo es el patrón y esa parte sí "
+          "calificado, no mía. Pregúntame cómo es el patrón y esa parte sí "
           "te la leo.",
     "de": "Ich habe diese Antwort begonnen und wieder abgebrochen. Sie ging "
-          "dorthin, wo ein Chart nichts zu suchen hat — zu einer Entscheidung, "
-          "die dir und einem Fachmenschen gehört, nicht mir. Frag mich nach "
+          "dorthin, wo ein Horoskop nichts zu suchen hat — zu einer Entscheidung, "
+          "die dir und einer Fachperson gehört, nicht mir. Frag mich nach "
           "dem Muster, diesen Teil lese ich dir vor.",
     "it": "Ho cominciato questa risposta e l'ho fermata. Andava dove un tema "
           "non deve andare: verso una decisione che è tua e di chi se ne "
-          "intende, non mia. Chiedimi com'è la trama e quella parte te la "
+          "intende, non mia. Chiedimi che schema c'è, e quella parte te la "
           "leggo.",
     "fr": "J'ai commencé cette réponse et je l'ai arrêtée. Elle allait là où "
           "un thème n'a rien à faire : vers une décision qui t'appartient, à "
@@ -363,11 +364,11 @@ WITHHELD: dict[str, str] = {
           "ressemble le motif, cette partie-là je te la lis.",
     "pt-BR": "Comecei essa resposta e a interrompi. Ela ia para onde um mapa "
              "não tem o que fazer: para uma decisão que é sua e de alguém "
-             "qualificado, não minha. Me pergunte como é o desenho e essa "
+             "qualificado, não minha. Me pergunte qual é o padrão, e essa "
              "parte eu leio para você.",
     "ru": "Я начала этот ответ и остановила его. Он уходил туда, куда карте "
           "ходить незачем, — к решению, которое принадлежит тебе и тому, кто в "
-          "нём разбирается, а не мне. Спроси меня, как выглядит сам рисунок, — "
+          "нём разбирается, а не мне. Спроси меня, как это выглядит в карте, — "
           "эту часть я прочитаю.",
 }
 
@@ -378,28 +379,28 @@ WITHHELD: dict[str, str] = {
 #: полной генерации. Отказ говорит именно то, что произошло, и предлагает
 #: единственный честный выход: другой человек — другая проверка.
 BIRTH_LOCKED: dict[str, str] = {
-    "en": "This person's birth is part of a report you have already paid for, "
-          "so it stays as it was. For someone else, add them as a new person — "
-          "their own check, their own report.",
-    "ru": "Рождение этого человека — часть разбора, за который уже заплачено, "
-          "и остаётся как есть. Если речь о другом человеке, добавь его "
-          "отдельно: своя проверка, свой разбор.",
+    "en": "This person's birth data is part of a report you have already paid "
+          "for, so it stays as it is. For someone else, add them as a new "
+          "person — their own check, their own report.",
+    "ru": "Данные рождения этого человека — часть разбора, за который уже "
+          "заплачено, и остаются как есть. Если речь о другом человеке, "
+          "добавь его отдельно: своя проверка, свой разбор.",
     "de": "Die Geburtsdaten dieser Person gehören zu einer Deutung, die du "
           "bereits bezahlt hast, und bleiben, wie sie sind. Für jemand anderen "
-          "lege eine neue Person an — eigene Prüfung, eigene Deutung.",
-    "fr": "La naissance de cette personne fait partie d'une lecture que tu as "
-          "déjà payée : elle reste telle quelle. Pour quelqu'un d'autre, "
-          "ajoute une nouvelle personne — sa propre vérification, sa propre "
+          "lege eine neue Person an — eigener Vergleich, eigene Deutung.",
+    "fr": "Les données de naissance de cette personne font partie d'une lecture "
+          "que tu as déjà payée : elles restent telles quelles. Pour quelqu'un "
+          "d'autre, ajoute une nouvelle personne — sa propre analyse, sa propre "
           "lecture.",
-    "es": "El nacimiento de esta persona forma parte de una lectura que ya "
-          "pagaste, así que queda como está. Para otra persona, añádela como "
-          "alguien nuevo: su propia comprobación, su propia lectura.",
-    "it": "La nascita di questa persona fa parte di una lettura che hai già "
-          "pagato e resta com'è. Per qualcun altro, aggiungilo come persona "
-          "nuova: la sua verifica, la sua lettura.",
-    "pt-BR": "O nascimento desta pessoa faz parte de uma leitura que você já "
-             "pagou e fica como está. Para outra pessoa, adicione-a como "
-             "alguém novo: a verificação dela, a leitura dela.",
+    "es": "Los datos de nacimiento de esta persona forman parte de una lectura "
+          "que ya pagaste, así que quedan como están. Para otra persona, añade "
+          "a alguien nuevo: su propia comparación, su propia lectura.",
+    "it": "I dati di nascita di questa persona fanno parte di una lettura che "
+          "hai già pagato e restano come sono. Per qualcun altro, aggiungi una "
+          "persona nuova: la sua analisi, la sua lettura.",
+    "pt-BR": "Os dados de nascimento desta pessoa fazem parte de uma leitura "
+             "que você já pagou e ficam como estão. Para outra pessoa, adicione "
+             "alguém novo: a análise dela, a leitura dela.",
 }
 
 BY_ERROR: dict[str, dict[str, str]] = {

@@ -169,7 +169,7 @@ class LEn extends L {
 
   @override
   String get cabCompatNeedsPerson =>
-      'Compatibility needs a second birth. Add someone and the whole comparison is calculated free.';
+      'Compatibility needs a second person. Add someone and the whole comparison is calculated for free.';
 
   @override
   String get cabDataAndLegal => 'data & legal';
@@ -191,7 +191,7 @@ class LEn extends L {
   String get cabElementWater => 'water';
 
   @override
-  String get cabExportNote => 'Everything we hold about you, as one file.';
+  String get cabExportNote => 'Everything we have about you, in one file.';
 
   @override
   String get cabExportReady => 'Your file is ready.';
@@ -226,7 +226,7 @@ class LEn extends L {
 
   @override
   String get cabHoroscopeLocked =>
-      'The horoscope is written from your own chart every morning, and it comes with the plan.';
+      'Every morning the horoscope is written from your own chart. It comes with the plan.';
 
   @override
   String get cabHoroscopeOpen => 'Open the horoscope';
@@ -296,11 +296,11 @@ class LEn extends L {
 
   @override
   String get cabManagedByApple =>
-      'This plan was bought in the App Store, so Apple holds the payment method and the cancellation happens there.';
+      'This plan was bought in the App Store, so Apple holds the payment method and you cancel it there.';
 
   @override
   String get cabManagedByGooglePlay =>
-      'This plan was bought in Google Play, so Google holds the payment method and the cancellation happens there.';
+      'This plan was bought in Google Play, so Google holds the payment method and you cancel it there.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -434,7 +434,7 @@ class LEn extends L {
 
   @override
   String get cabPlansBody =>
-      'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The five still readings can be bought once and kept for ever.';
+      'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The other five readings can be bought once and kept forever.';
 
   @override
   String get cabPlansCta => 'See the plans';
@@ -447,7 +447,7 @@ class LEn extends L {
 
   @override
   String cabQuestionsLeft(int p1) {
-    return 'Questions available: $p1';
+    return 'Questions left: $p1';
   }
 
   @override
@@ -585,7 +585,7 @@ class LEn extends L {
 
   @override
   String get dailyAskBody =>
-      'One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and it can be turned off from the notification itself.';
+      'One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from the notification itself.';
 
   @override
   String get dailyAskTitle => 'Tell me the morning it happens';
@@ -716,7 +716,7 @@ class LEn extends L {
 
   @override
   String get journeyCeremony1Line =>
-      'Your birth chart maps the planets and key points across twelve houses using astronomical ephemeris data.';
+      'Your birth chart places the planets and key points across the twelve houses, from real astronomical data.';
 
   @override
   String get journeyCeremony2Label => 'reading system 2 of 8 · numerology';
@@ -794,7 +794,7 @@ class LEn extends L {
 
   @override
   String get journeyLockedWithoutTime =>
-      'Houses, solar return and map stay locked';
+      'Houses, solar return and the world map stay locked';
 
   @override
   String get journeyMinuteLabel => 'Min';
@@ -901,7 +901,7 @@ class LEn extends L {
 
   @override
   String get stateOffline =>
-      'Alma is not answering right now. Nothing here is guessed, so there is nothing to show until she does.';
+      'Alma is not answering right now. Nothing here is guessed, so there is nothing to show until she answers.';
 
   @override
   String get stateRetry => 'Try again';
@@ -915,7 +915,7 @@ class LEn extends L {
 
   @override
   String get stateUnboundNote =>
-      'The payment went through but arrived without a name attached. Choose the person and it opens.';
+      'The payment went through, but it did not say who the reading is for. Choose the person and it opens.';
 
   @override
   String get stateWriting => 'Writing this chapter…';
@@ -945,7 +945,7 @@ class LEn extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Transits, Solar Return and compatibility while they move, plus 30 questions a month. Renews until you cancel.';
+      'Transits, Solar Return and compatibility, rewritten as they move, plus 30 questions a month. Renews until you cancel.';
 
   @override
   String get paywallMonthlyTitle => 'Everything live, monthly';
@@ -959,7 +959,7 @@ class LEn extends L {
 
   @override
   String get paywallOffline =>
-      'Alma is not answering right now, so the purchase could not be confirmed. It will open by itself once she does.';
+      'Alma is not answering right now, so the purchase could not be confirmed. It will open by itself once she answers.';
 
   @override
   String get paywallOwnedAll =>
@@ -971,7 +971,7 @@ class LEn extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'The subscription keeps the three living systems written; the five still readings can be bought once and stay yours for ever.';
+      'The subscription rewrites the three living systems as they change. The other five readings can be bought once and stay yours forever.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -1044,11 +1044,11 @@ class LEn extends L {
 
   @override
   String get paywallVerifyLater =>
-      'Apple has taken the payment. We could not confirm it this second — it will open by itself shortly, and nothing is lost.';
+      'Apple has taken the payment. We could not confirm it just now — it will open by itself shortly, and nothing is lost.';
 
   @override
   String get paywallWithdrawn =>
-      'Apple has taken that purchase back — refunded or revoked — so nothing is open under it.';
+      'Apple has taken that purchase back — refunded or revoked — so anything it opened is closed again.';
 
   @override
   String pillSheetCta(String price) {
@@ -1057,11 +1057,11 @@ class LEn extends L {
 
   @override
   String get pillSheetFootnote =>
-      'One-time doors exist too · cancel any time in your Apple ID settings';
+      'One-time purchases exist too · cancel any time in your Apple ID settings';
 
   @override
   String get pillSheetFootnotePlay =>
-      'One-time doors exist too · cancel any time in your Google Play subscriptions';
+      'One-time purchases exist too · cancel any time in your Google Play subscriptions';
 
   @override
   String get pillSheetSub =>
@@ -1087,7 +1087,7 @@ class LEn extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'You’ve used the questions available for now. With an active subscription, you can continue; it includes 30 questions each month.';
+      'You have used your questions for now. The subscription includes 30 questions a month, so you can keep asking.';
 
   @override
   String get scrChatPast => 'earlier';
@@ -1165,7 +1165,7 @@ class LEn extends L {
 
   @override
   String get scrPeopleRemoveWhat =>
-      'Their birth goes, and so does every compatibility reading written from it. Readings you paid for cannot be written again word for word.';
+      'Their birth data goes, and so does every compatibility reading written from it. Readings you paid for cannot be written again word for word.';
 
   @override
   String get scrPeopleUnnamed => 'Unnamed';
@@ -1236,7 +1236,8 @@ class LEn extends L {
   String get splashTagline => 'Written in the sky before you asked.';
 
   @override
-  String get journeyNameHint => 'Alma will greet you by it — nowhere else.';
+  String get journeyNameHint =>
+      'Alma will greet you by it, and use it nowhere else.';
 
   @override
   String get journeyAboutSkip =>
@@ -1479,8 +1480,7 @@ class LEn extends L {
   }
 
   @override
-  String get paywallV3QuotaTitle =>
-      'Three questions a month is where free ends';
+  String get paywallV3QuotaTitle => 'Free stops at three questions a month';
 
   @override
   String paywallV3QuotaCta(String price) {
@@ -1558,11 +1558,11 @@ class LEn extends L {
   String get paywallV3SubPlateCaption => 'Everything that changes daily';
 
   @override
-  String get paywallV3QuotaHeld => 'held — will send when you continue';
+  String get paywallV3QuotaHeld => 'held — it sends when you continue';
 
   @override
   String get paywallV3QuotaNote =>
-      'Alma answers thirty a month inside the subscription — from your own placements, never from a template.';
+      'Alma answers thirty questions a month inside the subscription — from your own placements, never from a template.';
 
   @override
   String get paywallV3QuotaAlsoInside => 'also inside';
@@ -1579,7 +1579,7 @@ class LEn extends L {
   String get paywallV3PlansOverline => 'all plans';
 
   @override
-  String get paywallV3PlansTitle => 'Yours forever, or everything alive';
+  String get paywallV3PlansTitle => 'Yours forever, or everything kept live';
 
   @override
   String get paywallV3PlansOneReading => 'One reading';
@@ -1593,7 +1593,7 @@ class LEn extends L {
 
   @override
   String get paywallV3PlansPairNote =>
-      'Four chapters, per person, as many as you like';
+      'Four chapters per person · as many people as you like';
 
   @override
   String get paywallV3SubTitleShort => 'All of Alma';
@@ -1684,7 +1684,7 @@ class LEn extends L {
 
   @override
   String get paywallV3WhatNextPairNote =>
-      'Your Venus chapter says how you attach. His date says how it lands.';
+      'Your Venus chapter says how you attach. Their date says how it lands.';
 
   @override
   String paywallV3WhatNextPairCta(String price) {
@@ -1718,7 +1718,7 @@ class LEn extends L {
 
   @override
   String get chapterLivingNote =>
-      'This one is rewritten every day — it lives in the subscription, not in a purchase';
+      'This one is rewritten every day — it comes with the subscription, not with a one-time purchase';
 
   @override
   String chapterWhatFollows(int n, String system) {
@@ -1794,7 +1794,7 @@ class LEn extends L {
 
   @override
   String get pairHookNote =>
-      'A date of birth is enough, and the comparison is calculated free. The chapters are what you pay for.';
+      'A date of birth is enough, and the comparison is calculated for free. The chapters are what you pay for.';
 
   @override
   String get pairCheckAnotherPlain => 'Check someone else';
@@ -1840,32 +1840,32 @@ class LEn extends L {
   String get liveDayTitle => 'The day in full';
 
   @override
-  String get liveDayNote => 'The long reading, areas, what is coming';
+  String get liveDayNote => 'The long reading, your life areas, what is coming';
 
   @override
   String get paywallV3SubBadge => 'subscribed';
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'If you ever cancel: chapters bought as a door stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.';
+      'If you ever cancel: chapters you bought once stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.';
 
   @override
   String get paywallV3StateProcessingNote =>
-      'Apple has taken it; we are writing it down. This finishes by itself, even if you close the app.';
+      'Apple has taken the payment and we are recording it. This finishes by itself, even if you close the app.';
 
   @override
   String get onbSystemsTitle => 'Your eight systems';
 
   @override
   String get onbSystemsBody =>
-      'All eight are calculated from your birth, and the calculation stays free — always. Only the written chapters are paid, and the first chapter of your natal chart is already open.';
+      'All eight are calculated from your birth data, and the calculation stays free — always. You pay only for the written chapters, and the first chapter of your natal chart is already open.';
 
   @override
   String get onbTodayTitle => 'A page for every day';
 
   @override
   String get onbTodayBody =>
-      'The note of the day is written from your own chart. The living layer — transits, solar return, compatibility — is recalculated together with the sky.';
+      'The note of the day is written from your own chart. The living layer — transits, solar return, compatibility — is recalculated as the sky moves.';
 
   @override
   String get onbNext => 'Next';

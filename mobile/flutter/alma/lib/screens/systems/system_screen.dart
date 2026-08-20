@@ -1051,6 +1051,16 @@ class _SystemScreenState extends State<SystemScreen> {
     );
   }
 
+  /// Колонка под римскую цифру — одна на оглавление и на его заготовку.
+  ///
+  /// **40, а не 44.** Холст W3/W5 просит сорок, и число здесь было записано
+  /// дважды числом 44 — в живой строке и в заготовке. Согласованность между
+  /// ними была настоящей и остаётся: обе берут эту константу, и заготовка
+  /// по-прежнему отпускает заголовок ровно туда, где он встанет. Разошлись они
+  /// только с холстом — на четыре точки, каждая из которых съедала ширину
+  /// колонки текста.
+  static const _numeralColumn = 40.0;
+
   /// Место одной главы, пока оглавление в пути.
   ///
   /// Геометрия и числа — из макета (s28): отбивка 16 сверху и снизу, та же
@@ -1059,9 +1069,9 @@ class _SystemScreenState extends State<SystemScreen> {
   /// 78/64/70 %) — ровный частокол одинаковых полос читается как таблица, а
   /// не как оглавление. Блик идёт сверху вниз со сдвигом 0.1 с.
   ///
-  /// Колонка под метку — 44 точки, как у настоящей строки: когда придут
-  /// заголовки, они встанут ровно туда, где стояли заготовки, и список не
-  /// дёрнется.
+  /// Колонка под метку — [_numeralColumn], как у настоящей строки: когда
+  /// придут заголовки, они встанут ровно туда, где стояли заготовки, и список
+  /// не дёрнется.
   Widget _waitingRow(int i) {
     const title = [0.56, 0.44, 0.60];
     const question = [0.78, 0.64, 0.70];
@@ -1074,7 +1084,7 @@ class _SystemScreenState extends State<SystemScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 44,
+            width: _numeralColumn,
             child: WaitingBar(
               height: 14,
               width: 22,
@@ -1145,7 +1155,7 @@ class _SystemScreenState extends State<SystemScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: 44,
+              width: _numeralColumn,
               child: Padding(
                 padding: const EdgeInsets.only(top: 3),
                 child: Text(entry.numeral, style: AlmaType.numeral),

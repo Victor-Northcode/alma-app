@@ -428,7 +428,7 @@ abstract class L {
   /// from Cabinet/cab.compatNeedsPerson
   ///
   /// In en, this message translates to:
-  /// **'Compatibility needs a second birth. Add someone and the whole comparison is calculated free.'**
+  /// **'Compatibility needs a second person. Add someone and the whole comparison is calculated for free.'**
   String get cabCompatNeedsPerson;
 
   /// from Cabinet/cab.dataAndLegal
@@ -470,7 +470,7 @@ abstract class L {
   /// from Cabinet/cab.exportNote
   ///
   /// In en, this message translates to:
-  /// **'Everything we hold about you, as one file.'**
+  /// **'Everything we have about you, in one file.'**
   String get cabExportNote;
 
   /// from Cabinet/cab.exportReady
@@ -536,7 +536,7 @@ abstract class L {
   /// from Cabinet/cab.horoscopeLocked
   ///
   /// In en, this message translates to:
-  /// **'The horoscope is written from your own chart every morning, and it comes with the plan.'**
+  /// **'Every morning the horoscope is written from your own chart. It comes with the plan.'**
   String get cabHoroscopeLocked;
 
   /// from Cabinet/cab.horoscopeOpen
@@ -674,13 +674,13 @@ abstract class L {
   /// from Cabinet/cab.managedByApple
   ///
   /// In en, this message translates to:
-  /// **'This plan was bought in the App Store, so Apple holds the payment method and the cancellation happens there.'**
+  /// **'This plan was bought in the App Store, so Apple holds the payment method and you cancel it there.'**
   String get cabManagedByApple;
 
   /// Play-вариант ключа cabManagedByApple: Android обязан называть свой магазин своими словами
   ///
   /// In en, this message translates to:
-  /// **'This plan was bought in Google Play, so Google holds the payment method and the cancellation happens there.'**
+  /// **'This plan was bought in Google Play, so Google holds the payment method and you cancel it there.'**
   String get cabManagedByGooglePlay;
 
   /// from Cabinet/cab.merchantLine
@@ -896,7 +896,7 @@ abstract class L {
   /// from Cabinet/cab.plans.body
   ///
   /// In en, this message translates to:
-  /// **'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The five still readings can be bought once and kept for ever.'**
+  /// **'The plan keeps transits, Solar Return and compatibility live, sends the morning update, and includes 30 questions a month. The other five readings can be bought once and kept forever.'**
   String get cabPlansBody;
 
   /// from Cabinet/cab.plans.cta
@@ -920,7 +920,7 @@ abstract class L {
   /// from Cabinet/cab.questionsLeft
   ///
   /// In en, this message translates to:
-  /// **'Questions available: {p1}'**
+  /// **'Questions left: {p1}'**
   String cabQuestionsLeft(int p1);
 
   /// from Cabinet/cab.readFrom
@@ -1190,7 +1190,7 @@ abstract class L {
   /// from Daily/daily.ask.body
   ///
   /// In en, this message translates to:
-  /// **'One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and it can be turned off from the notification itself.'**
+  /// **'One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from the notification itself.'**
   String get dailyAskBody;
 
   /// from Daily/daily.ask.title
@@ -1436,7 +1436,7 @@ abstract class L {
   /// from Journey/journey.ceremony.1.line
   ///
   /// In en, this message translates to:
-  /// **'Your birth chart maps the planets and key points across twelve houses using astronomical ephemeris data.'**
+  /// **'Your birth chart places the planets and key points across the twelve houses, from real astronomical data.'**
   String get journeyCeremony1Line;
 
   /// from Journey/journey.ceremony.2.label
@@ -1574,7 +1574,7 @@ abstract class L {
   /// from Journey/journey.lockedWithoutTime
   ///
   /// In en, this message translates to:
-  /// **'Houses, solar return and map stay locked'**
+  /// **'Houses, solar return and the world map stay locked'**
   String get journeyLockedWithoutTime;
 
   /// from Journey/journey.minuteLabel
@@ -1742,7 +1742,7 @@ abstract class L {
   /// from Localizable/state.offline
   ///
   /// In en, this message translates to:
-  /// **'Alma is not answering right now. Nothing here is guessed, so there is nothing to show until she does.'**
+  /// **'Alma is not answering right now. Nothing here is guessed, so there is nothing to show until she answers.'**
   String get stateOffline;
 
   /// from Localizable/state.retry
@@ -1766,7 +1766,7 @@ abstract class L {
   /// W6 карточка 2 · state.unbound_note — подпись: деньги на месте, выбери человека
   ///
   /// In en, this message translates to:
-  /// **'The payment went through but arrived without a name attached. Choose the person and it opens.'**
+  /// **'The payment went through, but it did not say who the reading is for. Choose the person and it opens.'**
   String get stateUnboundNote;
 
   /// from Localizable/state.writing
@@ -1820,7 +1820,7 @@ abstract class L {
   /// from Paywall/paywall.monthlyNote
   ///
   /// In en, this message translates to:
-  /// **'Transits, Solar Return and compatibility while they move, plus 30 questions a month. Renews until you cancel.'**
+  /// **'Transits, Solar Return and compatibility, rewritten as they move, plus 30 questions a month. Renews until you cancel.'**
   String get paywallMonthlyNote;
 
   /// from Paywall/paywall.monthlyTitle
@@ -1844,7 +1844,7 @@ abstract class L {
   /// from Paywall/paywall.offline
   ///
   /// In en, this message translates to:
-  /// **'Alma is not answering right now, so the purchase could not be confirmed. It will open by itself once she does.'**
+  /// **'Alma is not answering right now, so the purchase could not be confirmed. It will open by itself once she answers.'**
   String get paywallOffline;
 
   /// from Paywall/paywall.ownedAll
@@ -1862,7 +1862,7 @@ abstract class L {
   /// from Paywall/paywall.pitchPlan1
   ///
   /// In en, this message translates to:
-  /// **'The subscription keeps the three living systems written; the five still readings can be bought once and stay yours for ever.'**
+  /// **'The subscription rewrites the three living systems as they change. The other five readings can be bought once and stay yours forever.'**
   String get paywallPitchPlan1;
 
   /// from Paywall/paywall.pitchPlan2
@@ -1994,13 +1994,13 @@ abstract class L {
   /// from Paywall/paywall.verifyLater
   ///
   /// In en, this message translates to:
-  /// **'Apple has taken the payment. We could not confirm it this second — it will open by itself shortly, and nothing is lost.'**
+  /// **'Apple has taken the payment. We could not confirm it just now — it will open by itself shortly, and nothing is lost.'**
   String get paywallVerifyLater;
 
   /// from Paywall/paywall.withdrawn
   ///
   /// In en, this message translates to:
-  /// **'Apple has taken that purchase back — refunded or revoked — so nothing is open under it.'**
+  /// **'Apple has taken that purchase back — refunded or revoked — so anything it opened is closed again.'**
   String get paywallWithdrawn;
 
   /// from Pill/pill.sheetCta
@@ -2012,13 +2012,13 @@ abstract class L {
   /// from Pill/pill.sheetFootnote
   ///
   /// In en, this message translates to:
-  /// **'One-time doors exist too · cancel any time in your Apple ID settings'**
+  /// **'One-time purchases exist too · cancel any time in your Apple ID settings'**
   String get pillSheetFootnote;
 
   /// Play-вариант ключа pillSheetFootnote: Android обязан называть свой магазин своими словами
   ///
   /// In en, this message translates to:
-  /// **'One-time doors exist too · cancel any time in your Google Play subscriptions'**
+  /// **'One-time purchases exist too · cancel any time in your Google Play subscriptions'**
   String get pillSheetFootnotePlay;
 
   /// from Pill/pill.sheetSub
@@ -2060,7 +2060,7 @@ abstract class L {
   /// from Screens/scr.chat.outOfQuestions
   ///
   /// In en, this message translates to:
-  /// **'You’ve used the questions available for now. With an active subscription, you can continue; it includes 30 questions each month.'**
+  /// **'You have used your questions for now. The subscription includes 30 questions a month, so you can keep asking.'**
   String get scrChatOutOfQuestions;
 
   /// from Screens/scr.chat.past
@@ -2192,7 +2192,7 @@ abstract class L {
   /// from Screens/scr.people.removeWhat
   ///
   /// In en, this message translates to:
-  /// **'Their birth goes, and so does every compatibility reading written from it. Readings you paid for cannot be written again word for word.'**
+  /// **'Their birth data goes, and so does every compatibility reading written from it. Readings you paid for cannot be written again word for word.'**
   String get scrPeopleRemoveWhat;
 
   /// from Screens/scr.people.unnamed
@@ -2324,7 +2324,7 @@ abstract class L {
   /// Под полем имени: где имя будет видно, а где нет.
   ///
   /// In en, this message translates to:
-  /// **'Alma will greet you by it — nowhere else.'**
+  /// **'Alma will greet you by it, and use it nowhere else.'**
   String get journeyNameHint;
 
   /// Подзаголовок шага «о себе».
@@ -2666,7 +2666,7 @@ abstract class L {
   /// monetization v3 · А11 quota.title · V7
   ///
   /// In en, this message translates to:
-  /// **'Three questions a month is where free ends'**
+  /// **'Free stops at three questions a month'**
   String get paywallV3QuotaTitle;
 
   /// monetization v3 · А11 quota.cta · V7
@@ -2780,13 +2780,13 @@ abstract class L {
   /// monetization v3 · quota.held · V7
   ///
   /// In en, this message translates to:
-  /// **'held — will send when you continue'**
+  /// **'held — it sends when you continue'**
   String get paywallV3QuotaHeld;
 
   /// monetization v3 · quota.note · V7 — число вопросов словом, кириллица 25 (ТЗ §2)
   ///
   /// In en, this message translates to:
-  /// **'Alma answers thirty a month inside the subscription — from your own placements, never from a template.'**
+  /// **'Alma answers thirty questions a month inside the subscription — from your own placements, never from a template.'**
   String get paywallV3QuotaNote;
 
   /// monetization v3 · quota.also_inside · V7
@@ -2816,7 +2816,7 @@ abstract class L {
   /// monetization v3 · plans.title · V8
   ///
   /// In en, this message translates to:
-  /// **'Yours forever, or everything alive'**
+  /// **'Yours forever, or everything kept live'**
   String get paywallV3PlansTitle;
 
   /// monetization v3 · plans.one_reading · V8
@@ -2840,7 +2840,7 @@ abstract class L {
   /// monetization v3 · plans.pair_note · V8
   ///
   /// In en, this message translates to:
-  /// **'Four chapters, per person, as many as you like'**
+  /// **'Four chapters per person · as many people as you like'**
   String get paywallV3PlansPairNote;
 
   /// monetization v3 · sub.title_short · V8
@@ -2954,7 +2954,7 @@ abstract class L {
   /// monetization v3 · А11 next.pair_note · V3
   ///
   /// In en, this message translates to:
-  /// **'Your Venus chapter says how you attach. His date says how it lands.'**
+  /// **'Your Venus chapter says how you attach. Their date says how it lands.'**
   String get paywallV3WhatNextPairNote;
 
   /// monetization v3 · V3 карточка 2 — цена pair.check из магазина
@@ -3008,7 +3008,7 @@ abstract class L {
   /// locked-chapter-spec §6 · C4 · строка «что дальше» у живой системы. Слово «навсегда» здесь запрещено
   ///
   /// In en, this message translates to:
-  /// **'This one is rewritten every day — it lives in the subscription, not in a purchase'**
+  /// **'This one is rewritten every day — it comes with the subscription, not with a one-time purchase'**
   String get chapterLivingNote;
 
   /// locked-chapter-spec §6 · строка «что дальше» над кнопкой: сколько глав этой системы ещё не написано
@@ -3110,7 +3110,7 @@ abstract class L {
   /// monetization v3 · А11 pair.hook_note · V5
   ///
   /// In en, this message translates to:
-  /// **'A date of birth is enough, and the comparison is calculated free. The chapters are what you pay for.'**
+  /// **'A date of birth is enough, and the comparison is calculated for free. The chapters are what you pay for.'**
   String get pairHookNote;
 
   /// V5 · кнопка без цены: полка молчит или месячная проверка ещё не потрачена. Эталона на холсте нет (§V5, «кредит не потрачен»); это pair.check_another без цены
@@ -3182,7 +3182,7 @@ abstract class L {
   /// monetization v3 · live.day_note · W4
   ///
   /// In en, this message translates to:
-  /// **'The long reading, areas, what is coming'**
+  /// **'The long reading, your life areas, what is coming'**
   String get liveDayNote;
 
   /// monetization v3 · sub.badge · W5 — тихая метка в шапке панели гороскопа подписчика
@@ -3194,13 +3194,13 @@ abstract class L {
   /// monetization v3 · sub.cancel_honesty · W5 — зачин до двоеточия красится goldBright; сокращать и разбивать нельзя (§7 ТЗ)
   ///
   /// In en, this message translates to:
-  /// **'If you ever cancel: chapters bought as a door stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.'**
+  /// **'If you ever cancel: chapters you bought once stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.'**
   String get paywallV3SubCancelHonesty;
 
   /// monetization v3 · state.processing_note · W6
   ///
   /// In en, this message translates to:
-  /// **'Apple has taken it; we are writing it down. This finishes by itself, even if you close the app.'**
+  /// **'Apple has taken the payment and we are recording it. This finishes by itself, even if you close the app.'**
   String get paywallV3StateProcessingNote;
 
   /// onboarding · coach.systems.title — первый шаг обучалки, заголовок карточки
@@ -3212,7 +3212,7 @@ abstract class L {
   /// onboarding · coach.systems.body — восемь систем по рождению; расчёт бесплатен всегда, платны написанные главы, первая глава натала открыта
   ///
   /// In en, this message translates to:
-  /// **'All eight are calculated from your birth, and the calculation stays free — always. Only the written chapters are paid, and the first chapter of your natal chart is already open.'**
+  /// **'All eight are calculated from your birth data, and the calculation stays free — always. You pay only for the written chapters, and the first chapter of your natal chart is already open.'**
   String get onbSystemsBody;
 
   /// onboarding · coach.today.title — второй шаг обучалки, заголовок карточки
@@ -3224,7 +3224,7 @@ abstract class L {
   /// onboarding · coach.today.body — заметка дня из собственной карты, живой слой пересчитывается вместе с небом
   ///
   /// In en, this message translates to:
-  /// **'The note of the day is written from your own chart. The living layer — transits, solar return, compatibility — is recalculated together with the sky.'**
+  /// **'The note of the day is written from your own chart. The living layer — transits, solar return, compatibility — is recalculated as the sky moves.'**
   String get onbTodayBody;
 
   /// onboarding · coach.next — кнопка перехода к следующему шагу

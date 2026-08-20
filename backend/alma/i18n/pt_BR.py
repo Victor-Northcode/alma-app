@@ -194,7 +194,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
         ),
         "year-card": ChapterWords(
             title="Carta do ano",
-            question="Para que serve este ano em particular?",
+            question="Para que serve esse ano em particular?",
         ),
     },
     "transits": {
@@ -208,13 +208,13 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
         ),
         "long": ChapterWords(
             title="Os trânsitos longos",
-            question="Do que se trata este capítulo inteiro da minha vida?",
+            question="Do que se trata esse capítulo inteiro da minha vida?",
         ),
     },
     "solar-return": {
         "year-shape": ChapterWords(
             title="O formato do ano",
-            question="Para que serve este ano?",
+            question="Para que serve esse ano?",
         ),
         "emphasis": ChapterWords(
             title="Onde o ano cai",

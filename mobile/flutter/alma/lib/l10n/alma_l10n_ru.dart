@@ -169,7 +169,7 @@ class LRu extends L {
 
   @override
   String get cabCompatNeedsPerson =>
-      'Совместимости нужно второе рождение. Добавь человека — и всё сравнение рассчитается целиком и бесплатно.';
+      'Для совместимости нужна вторая дата рождения. Добавь человека — и всё сравнение рассчитается целиком и бесплатно.';
 
   @override
   String get cabDataAndLegal => 'данные и документы';
@@ -215,7 +215,7 @@ class LRu extends L {
   String get cabFactYearRuler => 'управитель года';
 
   @override
-  String get cabFromYourPositions => 'Написано из твоих собственных позиций';
+  String get cabFromYourPositions => 'Написано по твоим собственным положениям';
 
   @override
   String get cabGuest => 'Гость';
@@ -226,7 +226,7 @@ class LRu extends L {
 
   @override
   String get cabHoroscopeLocked =>
-      'Гороскоп пишется каждое утро из твоей собственной карты и входит в подписку.';
+      'Гороскоп пишется каждое утро по твоей собственной карте и входит в подписку.';
 
   @override
   String get cabHoroscopeOpen => 'Открыть гороскоп';
@@ -313,7 +313,7 @@ class LRu extends L {
 
   @override
   String get cabNoneActive =>
-      'Сегодня нет аспектов в расчётном диапазоне (орбисе). Это нормальный результат, а не пустой экран.';
+      'Сегодня ни один транзит не активен. Это нормальный результат, а не пустой экран.';
 
   @override
   String cabPairJoin(String p1, String p2) {
@@ -378,7 +378,7 @@ class LRu extends L {
 
   @override
   String get cabPlanDeleteWarning =>
-      'Это сотрёт твою карту, твои чтения и твои вопросы. Оплаченные чтения нельзя написать заново слово в слово.';
+      'Это сотрёт твою карту, твои разборы и твои вопросы. Оплаченные разборы нельзя написать заново слово в слово.';
 
   @override
   String get cabPlanDeleting => 'Удаляю…';
@@ -392,7 +392,7 @@ class LRu extends L {
 
   @override
   String get cabPlanFreeNote =>
-      'Каждый расчёт бесплатен целиком. Платишь только за слова — чтение за чтением.';
+      'Каждый расчёт бесплатен целиком. Платишь только за написанные главы.';
 
   @override
   String get cabPlanFreePlan => 'Бесплатно';
@@ -413,7 +413,7 @@ class LRu extends L {
 
   @override
   String cabPlanRenews(String p1) {
-    return 'Продлевается $p1 · напишем за 3 дня до';
+    return 'Продлевается $p1 · напишем на почту за 3 дня';
   }
 
   @override
@@ -423,7 +423,7 @@ class LRu extends L {
 
   @override
   String cabPlanRenewsNoEmail(String p1) {
-    return 'Продлевается $p1 · добавь почту, чтобы получить предупреждение';
+    return 'Продлевается $p1 · добавь почту — и предупредим заранее';
   }
 
   @override
@@ -653,14 +653,14 @@ class LRu extends L {
       'Несколько раз в год. Только медленные — транзиты, которые длятся месяцами.';
 
   @override
-  String get dailySettingOnlyWhatMatters => 'Только важное';
+  String get dailySettingOnlyWhatMatters => 'Только долгие транзиты';
 
   @override
   String get dailySettingQuiet =>
       'Никогда между 22:00 и 08:00 по твоему времени.';
 
   @override
-  String get dailySettingTimezone => 'Твоё время';
+  String get dailySettingTimezone => 'Часовой пояс';
 
   @override
   String get dailySettingTimezoneDevice => 'с твоего устройства';
@@ -727,11 +727,11 @@ class LRu extends L {
       'Число жизненного пути рассчитывается по дате рождения.';
 
   @override
-  String get journeyCeremony3Label => 'читаю систему 3 из 8 · аркан рождения';
+  String get journeyCeremony3Label => 'читаю систему 3 из 8 · карта рождения';
 
   @override
   String get journeyCeremony3Line =>
-      'Аркан рождения — один из 22 старших арканов Таро; он рассчитывается по дате рождения.';
+      'Карта рождения — один из 22 старших арканов Таро; она рассчитывается по дате рождения.';
 
   @override
   String get journeyCeremony4Label => 'читаю систему 4 из 8 · транзиты';
@@ -768,7 +768,7 @@ class LRu extends L {
 
   @override
   String get journeyCeremony8Line =>
-      'Девять осей. Где три традиции согласны — это идёт в твою основу.';
+      'Девять осей жизни — сверяю натальную карту, нумерологию и карту рождения.';
 
   @override
   String get journeyClose => 'Закрыть';
@@ -789,7 +789,7 @@ class LRu extends L {
   String get journeyGenderMale => 'Мужской';
 
   @override
-  String get journeyGenderSkip => 'Не скажу';
+  String get journeyGenderSkip => 'Не указывать';
 
   @override
   String get journeyHourLabel => 'Час';
@@ -903,7 +903,7 @@ class LRu extends L {
 
   @override
   String get stateOffline =>
-      'Alma сейчас не отвечает. Здесь ничего не выдумывают — пока она молчит, показать нечего.';
+      'Alma сейчас не отвечает. Гадать здесь никто не станет — пока она молчит, показать нечего.';
 
   @override
   String get stateRetry => 'Попробовать ещё раз';
@@ -972,7 +972,7 @@ class LRu extends L {
 
   @override
   String get paywallPitchPlan1 =>
-      'Подписка держит написанными три живые системы; пять неподвижных разборов покупаются один раз и остаются навсегда.';
+      'Пока идёт подписка, три живые системы продолжают переписываться; пять неподвижных разборов покупаются один раз и остаются навсегда.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -1057,11 +1057,11 @@ class LRu extends L {
 
   @override
   String get pillSheetFootnote =>
-      'Есть и разовые двери · отменить можно в любой момент в настройках Apple ID';
+      'Есть и разовые покупки · отменить можно в любой момент в настройках Apple ID';
 
   @override
   String get pillSheetFootnotePlay =>
-      'Есть и разовые двери · отмена в любой момент в подписках Google Play';
+      'Есть и разовые покупки · отмена в любой момент в подписках Google Play';
 
   @override
   String get pillSheetSub =>
@@ -1121,11 +1121,11 @@ class LRu extends L {
 
   @override
   String get scrChatReadFromAll =>
-      'Показать все позиции, из которых это прочитано';
+      'Показать, из каких положений карты это прочитано';
 
   @override
   String get scrChatRefused =>
-      'Я не смогла ответить, не выдумав позицию, — и не стала. Спроси иначе, и я попробую снова.';
+      'Я не смогла ответить, не выдумав положение в карте, — и не стала. Спроси иначе, и я попробую снова.';
 
   @override
   String get scrChatSilent =>
@@ -1165,7 +1165,7 @@ class LRu extends L {
 
   @override
   String get scrPeopleRemoveWhat =>
-      'Уйдут их данные рождения — и каждое чтение совместимости, написанное из них. Оплаченные чтения нельзя написать заново слово в слово.';
+      'Уйдут их данные рождения — и каждый разбор совместимости, написанный по ним. Оплаченные разборы нельзя написать заново слово в слово.';
 
   @override
   String get scrPeopleUnnamed => 'Без имени';
@@ -1202,7 +1202,7 @@ class LRu extends L {
 
   @override
   String get scrSignInLinkSent =>
-      'Проверь почту. Ссылка выполнит вход сама и скоро погаснет.';
+      'Проверь почту. Ссылка сама выполнит вход и скоро перестанет работать.';
 
   @override
   String get scrSignInOrWith => 'или войди через';
@@ -1314,11 +1314,11 @@ class LRu extends L {
 
   @override
   String get cabCompatBulletHouses =>
-      'Куда их планеты попадают в твои дома — и твои в их';
+      'Куда их планеты попадают в твои дома — и твои в их дома';
 
   @override
   String get cabCompatBulletComposite =>
-      'Собственная карта отношений — небо вас двоих как одно';
+      'Собственная карта отношений — небо вас двоих как одно целое';
 
   @override
   String get todayReadWholeSky => 'Прочитать всё небо';
@@ -1428,7 +1428,7 @@ class LRu extends L {
   String get paywallV3PairForever => 'Останется твоим навсегда';
 
   @override
-  String get paywallV3PairIncludedBadge => 'входит в твой месяц';
+  String get paywallV3PairIncludedBadge => 'входит в подписку';
 
   @override
   String get paywallV3PairBeyondCredit =>
@@ -1486,7 +1486,7 @@ class LRu extends L {
 
   @override
   String get paywallV3QuotaTitle =>
-      'Три вопроса в месяц — там, где заканчивается бесплатное';
+      'Три вопроса в месяц — на этом бесплатное заканчивается';
 
   @override
   String paywallV3QuotaCta(String price) {
@@ -1515,10 +1515,10 @@ class LRu extends L {
   String get paywallV3CancelJustCancel => 'Просто отменить';
 
   @override
-  String get paywallV3StateProcessing => 'Твоя покупка проходит';
+  String get paywallV3StateProcessing => 'Покупка обрабатывается';
 
   @override
-  String get paywallV3StateErrorRetry => 'Попробовать сейчас';
+  String get paywallV3StateErrorRetry => 'Попробовать ещё раз';
 
   @override
   String get paywallV3StateRestoreDone =>
@@ -1601,7 +1601,7 @@ class LRu extends L {
 
   @override
   String get paywallV3PlansPairNote =>
-      'Четыре главы, на каждого человека, сколько захочешь';
+      'Четыре главы за человека — людей сколько угодно';
 
   @override
   String get paywallV3SubTitleShort => 'Вся Alma';
@@ -1638,12 +1638,12 @@ class LRu extends L {
       few: '$times раза',
       one: '$times раз',
     );
-    return '$_temp0 $_temp1. За $price они останутся читаемыми и после конца подписки — без всякого продления.';
+    return '$_temp0 $_temp1. За $price их можно будет читать и после конца подписки — без всякого продления.';
   }
 
   @override
   String paywallV3CancelSaveFactPlain(String price) {
-    return 'За $price они останутся читаемыми и после конца подписки — без всякого продления.';
+    return 'За $price их можно будет читать и после конца подписки — без всякого продления.';
   }
 
   @override
@@ -1697,7 +1697,7 @@ class LRu extends L {
 
   @override
   String get paywallV3WhatNextPairNote =>
-      'Твоя глава про Венеру говорит, как ты привязываешься. Его дата рождения — как это отзовётся.';
+      'Твоя глава про Венеру говорит, как ты привязываешься. Дата рождения другого человека — как это отзовётся.';
 
   @override
   String paywallV3WhatNextPairCta(String price) {
@@ -1708,7 +1708,7 @@ class LRu extends L {
   String get systemsTapToAdd => 'добавь человека';
 
   @override
-  String get systemsReadOpening => 'прочитай начало';
+  String get systemsReadOpening => 'прочитай первую главу';
 
   @override
   String systemsChaptersOpen(int open, int total) {
@@ -1738,10 +1738,10 @@ class LRu extends L {
     String _temp0 = intl.Intl.pluralLogic(
       n,
       locale: localeName,
-      other: '$n главы твоего разбора «$system», написанные из этих позиций',
-      many: '$n глав твоего разбора «$system», написанных из этих позиций',
-      few: '$n главы твоего разбора «$system», написанные из этих позиций',
-      one: '$n глава твоего разбора «$system», написанная из этих позиций',
+      other: '$n главы твоего разбора «$system», написанные по этим положениям',
+      many: '$n глав твоего разбора «$system», написанных по этим положениям',
+      few: '$n главы твоего разбора «$system», написанные по этим положениям',
+      one: '$n глава твоего разбора «$system», написанная по этим положениям',
     );
     return '$_temp0';
   }
@@ -1765,7 +1765,7 @@ class LRu extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Эта карта считается бесплатно, как и твоя. Платишь только за главы, написанные про вас двоих.';
+      'Эта карта рассчитывается бесплатно, как и твоя. Платишь только за главы, написанные про вас двоих.';
 
   @override
   String get pairInputCta => 'Прочитать, что вас тянет друг к другу';
@@ -1811,7 +1811,7 @@ class LRu extends L {
 
   @override
   String get pairHookNote =>
-      'Достаточно даты рождения, и сравнение считается бесплатно. Платишь за главы.';
+      'Достаточно даты рождения, и сравнение рассчитывается бесплатно. Платишь за главы.';
 
   @override
   String get pairCheckAnotherPlain => 'Проверить кого-то ещё';
@@ -1854,13 +1854,13 @@ class LRu extends L {
 
   @override
   String get liveSolarNote =>
-      'Переписывается каждый день рождения — идёт прямо сейчас';
+      'Переписывается к каждому дню рождения — идёт прямо сейчас';
 
   @override
   String get liveDayTitle => 'День целиком';
 
   @override
-  String get liveDayNote => 'Длинное чтение, области, что впереди';
+  String get liveDayNote => 'Длинный разбор, области жизни, что впереди';
 
   @override
   String get paywallV3SubBadge => 'подписка активна';

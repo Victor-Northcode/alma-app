@@ -222,6 +222,23 @@ void main() {
       }
     }
 
+    testWidgets('каретка по входу стоит в имени, а не нигде', (tester) async {
+      await tester.pumpWidget(pairScreen());
+      await settle(tester);
+
+      TextField field(String hint) => tester.widget<TextField>(
+          find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText == hint));
+
+      // Кадр W2 открывается с курсором в первом поле: экран спрашивает одно —
+      // про кого, — и первое движение человека не должно уходить на поиск
+      // места для нажатия.
+      expect(field('Name').focusNode?.hasFocus, isTrue,
+          reason: 'первое поле кадра W2 держит каретку по входу');
+      // И ровно одно: город ищет по мере набора, и фокус в нём поднял бы
+      // подсказки мест раньше, чем человек назвал человека.
+      expect(field('Place of birth').focusNode?.hasFocus, isFalse);
+    });
+
     testWidgets('пилюля даты открывает общий лист с тремя барабанами',
         (tester) async {
       await tester.pumpWidget(pairScreen());
