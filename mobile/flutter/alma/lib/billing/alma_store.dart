@@ -147,6 +147,12 @@ class AlmaStore extends ChangeNotifier {
   /// магазин, мог позвать это у себя, ни с кем не сговариваясь.
   void attach(AlmaSession session) {
     _session = session;
+    // На вебе покупок нет: `in_app_purchase` не регистрирует веб-реализацию, и
+    // первое же обращение к `purchaseStream` бросает LateInitializationError —
+    // он валит весь `main()` в белый экран (найдено при web-превью для
+    // скриншотов, 20 авг 2026). В браузере магазина не бывает, так что просто
+    // не подписываемся; натив идёт прежним путём.
+    if (kIsWeb) return;
     _feed ??= _iap.purchaseStream.listen(
       _heard,
       onDone: () => _feed = null,
