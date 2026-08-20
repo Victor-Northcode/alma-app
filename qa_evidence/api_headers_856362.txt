@@ -1,0 +1,17 @@
+# API headers (backend :8100) — ID 856362 — Thu Aug 20 15:02:17 RTZ 2026
+## POST /v1/systems/natal
+HTTP/1.1 200 OK
+date: Thu, 20 Aug 2026 12:02:17 GMT
+server: uvicorn
+content-length: 14296
+content-type: application/json
+
+
+## GET /v1/auth/session
+HTTP/1.1 200 OK
+date: Thu, 20 Aug 2026 12:02:17 GMT
+server: uvicorn
+content-length: 297
+content-type: application/json
+x-alma-token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlZ0FrRW5RcW5oUFBMSWJaeFRmbXVBIiwiaWF0IjoxNzg3MjI3MzM4LCJleHAiOjE3OTUwMDMzMzgsImlzcyI6ImFsbWEifQ.-VXMnQL3GlRykFqZmDPzzid209bAFpkFUrS4PlcWNCM
+

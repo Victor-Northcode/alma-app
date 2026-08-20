@@ -1,0 +1,25 @@
+== backend catalogue ==
+HTTP/1.1 200 OK
+date: Thu, 20 Aug 2026 00:27:23 GMT
+server: uvicorn
+content-length: 1467
+content-type: application/json
+vary: cf-ipcountry
+vary: x-vercel-ip-country
+vary: cloudfront-viewer-country
+vary: fastly-client-country
+vary: x-appengine-country
+
+
+== web root ==
+HTTP/1.1 200 OK
+Vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, Next-Router-Segment-Prefetch, Accept-Encoding
+link: </_next/static/css/app/layout.css?v=1787185644320>; rel=preload; as="style"
+Cache-Control: no-store, must-revalidate
+X-Powered-By: Next.js
+Content-Type: text/html; charset=utf-8
+Date: Thu, 20 Aug 2026 00:27:24 GMT
+Connection: keep-alive
+Keep-Alive: timeout=5
+Transfer-Encoding: chunked
+

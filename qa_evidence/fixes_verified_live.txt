@@ -1,0 +1,21 @@
+Live verification against fresh server (PID from venv, ALMA_JWT_SECRET set), on-disk current code.
+IMPORTANT: initial results were against a STALE uvicorn (PID 17716, system python, started 03:14) still
+bound to :8100 — the CLAUDE.md "old process holds old code" trap. Killed it, restarted from venv.
+
+BUG-001 tzdata: POST /v1/profiles timezone=Europe/London -> 201 (tzdata dependency present)
+BUG-002 throttle_expensive_calc: 23 sequential POST /v1/systems/natal -> 200x20 then 429x3;
+        rate_window row systems_calc:...:count=20. Confirmed 20/min/account cap works.
+BUG-004 security headers on live web (:3000): CSP(frame-ancestors 'none'), X-Frame-Options DENY,
+        X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin,
+        Permissions-Policy, Strict-Transport-Security — all present.
+BUG-010/011 magic-link: POST /v1/auth/magic-link/consume {"token":"nonexistent"} ->
+        400 {"detail":{"error":"link_invalid","message":"this link is not valid"}} (typed code).
+BUG-014 MaxBodySize: 300KB body -> 413 {"error":"request_too_large"}; chunked oversize -> 422; small body -> 200.
+IDOR: user B GET/DELETE user A's profile -> 404; A's profile intact (200). PATCH -> 422 (body validation before ownership).
+CORS: Origin https://evil.example -> no ACAO. localhost:3000 preflight -> 200 with ACAO. (3001 -> 400, by design; app port is 3000.)
+SQLi /places/search q="' OR 1=1--" -> 200 [] (parameterized).
+magic-link brute (25 rapid) -> 202x10 then 429x15 (source rate limit).
+Path traversal /v1/../../../etc/passwd -> 404.
+Perf: natal 0.10s, numerology 0.009s, birth-card 0.007s, astrocartography 0.68s, synthesis 0.10s,
+      transits(365) 2.9s (heavy, now throttled), places 0.003s, catalogue 0.005s.
+Edge (all clean 422): days 0/-1/366/999999, profile_id []/int/missing, malformed json, no body, huge events.meta.

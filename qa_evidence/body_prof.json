@@ -1,0 +1,1 @@
+{"detail":[{"type":"value_error","loc":["body","timezone"],"msg":"Value error, unknown timezone 'Europe/London' — an unrecognised zone would produce a chart in UTC, which looks exactly like a correct one","input":"Europe/London","ctx":{"error":{}}}]}

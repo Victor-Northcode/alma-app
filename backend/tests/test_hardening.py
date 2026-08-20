@@ -466,6 +466,29 @@ def test_a_body_larger_than_the_ceiling_is_refused_before_it_is_buffered(api):
     assert ok.status_code == 200
 
 
+def test_every_api_response_carries_the_security_headers(api):
+    """Голый uvicorn за краем отдавал JSON вовсе без `nosniff` и родни.
+
+    Аудит 20.08.2026 (отчёт 856362, BUG-856-01) нащупал это на инстансе без
+    Caddy. Теперь их ставит само приложение (`SecurityHeaders`), а не только
+    край. Проверяем на обычном 200 **и** на 413 от `MaxBodySize` — обёртка
+    самая внешняя, поэтому накрывает и его.
+    """
+    from alma.api.app import MAX_REQUEST_BODY_BYTES
+
+    anon = {"X-Alma-Anon": "aaaaaaaa-1111"}
+    ok = api.post("/v1/events", json={"stage": "landing_view"}, headers=anon)
+    assert ok.status_code == 200
+    assert ok.headers["x-content-type-options"] == "nosniff"
+    assert ok.headers["x-frame-options"] == "DENY"
+    assert ok.headers["referrer-policy"] == "no-referrer"
+
+    huge = {"stage": "landing_view", "meta": {"x": "a" * (MAX_REQUEST_BODY_BYTES + 1)}}
+    refused = api.post("/v1/events", json=huge, headers=anon)
+    assert refused.status_code == 413
+    assert refused.headers["x-content-type-options"] == "nosniff"
+
+
 # ── 6. проверка Google и Apple не вешает сервис ────────────────────────────
 
 class _FakeJWKS:

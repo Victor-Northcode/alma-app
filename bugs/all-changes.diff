@@ -1,0 +1,385 @@
+diff --git a/backend/alma/ai/validator.py b/backend/alma/ai/validator.py
+index a4d6e3b..893e940 100644
+--- a/backend/alma/ai/validator.py
++++ b/backend/alma/ai/validator.py
+@@ -574,6 +574,22 @@ def russian_gendered(text: str) -> list[str]:
+ #: short: a banned-word list in a language nobody here has audited is a source
+ #: of refusals rather than of quality, and it costs a real generation each time
+ #: it is wrong. Widen them when somebody who reads that language has looked.
++#: Оба апострофа — один и тот же апостроф, когда мы ищем слово в тексте модели.
++#:
++#: **Дефект был тихий и жил до правки типографики.** Список запрещённых слов
++#: сверяется с текстом простым вхождением подстроки, а модель пишет апостроф
++#: тем знаком, каким захочет: `l'univers` и `l’univers` — для `in` это разные
++#: строки. То есть половина французских и итальянских записей списка не ловилась
++#: никогда, и заметить это было нельзя — проверка не падает, она молчит.
++#:
++#: Свелось наружу тем, что типографику французского привели к «’»: список,
++#: приведённый вместе с текстом, перестал бы ловить прямой апостроф вместо
++#: кудрявого — то же самое, только в другую сторону. Значит чинить надо не
++#: список, а сравнение.
++def _fold_apostrophes(value: str) -> str:
++    return value.replace("\u2019", "'").replace("\u02bc", "'")
++
++
+ _PURPLE: dict[str, tuple[str, ...]] = {
+     "ru": (
+         "ядро", "суть", "истинное я", "истинного я", "настоящий ты", "маска",
+@@ -586,7 +602,7 @@ _PURPLE: dict[str, tuple[str, ...]] = {
+     ),
+     "es": ("esencia", "verdadero yo", "energía", "el universo", "sagrado", "vibración"),
+     "de": ("essenz", "wesenskern", "wahres selbst", "energie", "das universum", "schwingung"),
+-    "fr": ("essence", "vrai soi", "énergie", "l'univers", "sacré", "vibration"),
++    "fr": ("essence", "vrai soi", "énergie", "l’univers", "sacré", "vibration"),
+     "it": ("essenza", "vero sé", "energia", "l'universo", "sacro", "vibrazione"),
+     "pt-BR": ("essência", "verdadeiro eu", "energia", "o universo", "sagrado", "vibração"),
+ }
+@@ -638,8 +654,11 @@ def purple_words(text: str, locale: str) -> list[str]:
+     on 9 August 2026, four waves after the rule was written.
+     """
+     base = locale if locale in _PURPLE else locale.split("-")[0]
+-    lowered = text.lower()
+-    return [word for word in _PURPLE.get(base, ()) if word in lowered]
++    lowered = _fold_apostrophes(text.lower())
++    return [
++        word for word in _PURPLE.get(base, ())
++        if _fold_apostrophes(word) in lowered
++    ]
+ 
+ 
+ def plain_language(text: str, locale: str) -> list[str]:
+diff --git a/backend/alma/ai/writer.py b/backend/alma/ai/writer.py
+index ce9601c..1fce757 100644
+--- a/backend/alma/ai/writer.py
++++ b/backend/alma/ai/writer.py
+@@ -465,11 +465,21 @@ _at_the_bottom = provider_module.at_the_bottom
+ #: экономил на том, за что человек заплатил.
+ DEFAULT_EFFORT = "medium"
+ 
+-#: С чего начинает открывающий абзац витрины. Сорок слов — там обдумывать
+-#: нечего, а вызовов этих больше всех остальных вместе взятых: до сорока на
+-#: каждого, кто просто листает продукт. Русский абзац на `medium` замерен в
+-#: 30 секунд и 4.92¢ **за сорок слов**; на `low` — 15 секунд и 1.90¢.
+-SHOWCASE_EFFORT = "low"
++#: С чего начинает открывающий абзац витрины — с того же, что и глава.
++#:
++#: **Здесь стояло `low`, и большой замер это опроверг.** Довод был складный:
++#: сорок слов обдумывать нечего, а вызовов витрины больше всех прочих вместе
++#: взятых. Замер 20.08.2026, по пять прогонов полным циклом:
++#:
++#:     низкое   2.60 попытки   26.5 с   4.17¢   223 слова
++#:     среднее  1.40 попытки   17.4 с   3.00¢    47 слов
++#:
++#: Двести двадцать три слова там, где заказано сорок (`OPENING_WORDS`). На
++#: низкой ступени модель перестаёт держать длину, абзац отвергают, пишут
++#: заново — и сэкономленное на обдумывании возвращается повторами с лихвой.
++#: Среднее лучше по всем трём осям сразу, поэтому отдельного значения у
++#: витрины больше нет.
++SHOWCASE_EFFORT = DEFAULT_EFFORT
+ 
+ 
+ async def write(
+diff --git a/backend/alma/i18n/replies.py b/backend/alma/i18n/replies.py
+index b9748c6..921bc6c 100644
+--- a/backend/alma/i18n/replies.py
++++ b/backend/alma/i18n/replies.py
+@@ -64,9 +64,9 @@ REFUSED: dict[str, str] = {
+     "it": "Non sono riuscita a rispondere senza dire qualcosa che non posso "
+           "mostrarti nel tuo tema, e allora preferisco non rispondere. "
+           "Chiedimelo con altre parole e ci proverò da un'altra angolazione.",
+-    "fr": "Je n'ai pas pu répondre sans dire quelque chose que je ne peux pas "
++    "fr": "Je n’ai pas pu répondre sans dire quelque chose que je ne peux pas "
+           "te montrer dans ton thème, alors je préfère ne rien dire. "
+-          "Redemande-le-moi autrement et j'essaierai sous un autre angle.",
++          "Redemande-le-moi autrement et j’essaierai sous un autre angle.",
+     "pt-BR": "Não consegui responder sem dizer algo que não posso te mostrar no "
+              "seu mapa, então prefiro não responder. Me pergunte de outro jeito "
+              "e eu tento por outro caminho.",
+@@ -88,8 +88,8 @@ UNAVAILABLE: dict[str, str] = {
+           "Deine Frage ist nicht verloren — stell sie gleich noch einmal.",
+     "it": "In questo momento non riesco a raggiungere la parte di me che scrive. "
+           "La tua domanda non è andata persa: rifammela tra un momento.",
+-    "fr": "En ce moment, je n'arrive pas à joindre la partie de moi qui écrit. "
+-          "Ta question n'est pas perdue — repose-la dans un instant.",
++    "fr": "En ce moment, je n’arrive pas à joindre la partie de moi qui écrit. "
++          "Ta question n’est pas perdue — repose-la dans un instant.",
+     "pt-BR": "Não consegui chegar agora na parte de mim que escreve. Sua "
+              "pergunta não se perdeu — me pergunte de novo daqui a pouco.",
+     "ru": "Прямо сейчас я не дотянулась до той части себя, которая пишет. "
+@@ -103,7 +103,7 @@ LIMIT_DAY: dict[str, str] = {
+     "es": 'Esa era la última pregunta por ahora — el plan es lo que continúa nuestra conversación. Todo aquello de lo que está hecha tu carta sigue abierto igualmente: los ocho sistemas, calculados por completo.',
+     "de": 'Das war vorerst deine letzte Frage — weiter geht unser Gespräch im Abo. Alles, woraus dein Horoskop besteht, bleibt so oder so offen: alle acht Systeme, vollständig berechnet.',
+     "it": "Quella era l'ultima domanda per ora — è il piano a portare avanti la nostra conversazione. Tutto ciò di cui è fatto il tuo tema resta comunque aperto: tutti e otto i sistemi, calcolati per intero.",
+-    "fr": "C'était la dernière question pour l'instant — c'est l'abonnement qui porte notre conversation. Tout ce dont ton thème est fait reste ouvert quoi qu'il arrive : les huit systèmes, calculés en entier.",
++    "fr": "C’était la dernière question pour l’instant — c’est l’abonnement qui porte notre conversation. Tout ce dont ton thème est fait reste ouvert quoi qu’il arrive : les huit systèmes, calculés en entier.",
+     "pt-BR": 'Essa foi a última pergunta por enquanto — é o plano que leva nossa conversa adiante. Tudo o que forma o seu mapa continua aberto de qualquer jeito: os oito sistemas, calculados por inteiro.',
+     "ru": 'Это был последний вопрос. Дальше наш разговор — часть плана. Всё, из чего состоит твоя карта, в любом случае остаётся открытым: все восемь систем, рассчитанные полностью.',
+ }
+@@ -199,7 +199,7 @@ LIMIT_ONCE: dict[str, str] = {
+           "cui è fatto il tuo tema resta comunque aperto: tutti e otto i "
+           "sistemi, calcolati per intero.",
+     "fr": "Ce sont les {limit} questions que ton achat comprenait. Elles ne "
+-          "reviennent pas — c'est l'abonnement qui porte une conversation. Tout "
++          "reviennent pas — c’est l’abonnement qui porte une conversation. Tout "
+           "ce dont ton thème est fait reste ouvert de toute façon — les huit "
+           "systèmes, calculés en entier.",
+     "pt-BR": "Essas foram as {limit} perguntas que sua compra incluía. Elas não "
+@@ -225,7 +225,7 @@ PARTNER_LIMIT: dict[str, str] = {
+     "es": "Una cuenta gratuita guarda una persona para comparar. La compra única de compatibilidad guarda dos, y el plan, tantas personas como haya en tu vida.",
+     "de": "Ein kostenloses Konto speichert eine Person zum Vergleichen. Ein einmaliger Partnerschafts-Kauf speichert zwei, das Abo so viele, wie in deinem Leben vorkommen.",
+     "it": "Un account gratuito conserva una persona con cui confrontarti. Un acquisto una tantum dell'affinità ne tiene due, il piano tutte quelle che ci sono nella tua vita.",
+-    "fr": "Un compte gratuit enregistre une personne à comparer. Un achat unique de compatibilité en garde deux, et l'abonnement autant de personnes qu'il y en a dans ta vie.",
++    "fr": "Un compte gratuit enregistre une personne à comparer. Un achat unique de compatibilité en garde deux, et l’abonnement autant de personnes qu’il y en a dans ta vie.",
+     "pt-BR": "Uma conta grátis salva uma pessoa para comparar. A compra avulsa de compatibilidade guarda duas, e o plano guarda quantas pessoas a sua vida tiver.",
+     "ru": "Бесплатный аккаунт хранит одного человека для сравнения. Разовая покупка совместимости — двоих, а подписка — столько людей, сколько их в твоей жизни.",
+ }
+@@ -243,7 +243,7 @@ PARTNER_REQUIRED: dict[str, str] = {
+     "es": "La compatibilidad trata de dos personas. Añade a alguien y leeré a los dos juntos.",
+     "de": "Eine Partnerschafts-Deutung braucht zwei. Füge jemanden hinzu, und ich lese euch zusammen.",
+     "it": "L'affinità riguarda due persone. Aggiungi qualcuno e vi leggerò insieme.",
+-    "fr": "La compatibilité parle de deux personnes. Ajoute quelqu'un, et je vous lirai ensemble.",
++    "fr": "La compatibilité parle de deux personnes. Ajoute quelqu’un, et je vous lirai ensemble.",
+     "pt-BR": "A compatibilidade é sobre duas pessoas. Adicione alguém e vou ler vocês juntos.",
+     "ru": "Совместимость — это про двоих. Добавь человека, и я прочту вас вместе.",
+ }
+@@ -268,7 +268,7 @@ BUDGET: dict[str, str] = {
+           "morgen — oder sofort mit einem Abo.",
+     "it": "Alma ha scritto molto per te oggi. Il resto si apre domani, o "
+           "subito con un piano.",
+-    "fr": "Alma a beaucoup écrit pour toi aujourd'hui. La suite s'ouvre "
++    "fr": "Alma a beaucoup écrit pour toi aujourd’hui. La suite s’ouvre "
+           "demain — ou tout de suite avec un abonnement.",
+     "pt-BR": "A Alma escreveu muito para você hoje. A próxima parte abre "
+              "amanhã — ou agora mesmo com um plano.",
+@@ -312,10 +312,10 @@ CRISIS: dict[str, str] = {
+           "leggere in un tema. Per favore parla con qualcuno che possa starti "
+           "vicino adesso: il numero di emergenza del tuo paese, una linea di "
+           "ascolto, o una persona di cui ti fidi. Io resto qui per dopo.",
+-    "fr": "Je m'arrête ici, parce que cela compte plus que tout ce que je "
+-          "pourrais lire dans un thème. S'il te plaît, parle à quelqu'un qui "
+-          "peut être auprès de toi maintenant : le numéro d'urgence de ton "
+-          "pays, une ligne d'écoute, ou une personne en qui tu as confiance. "
++    "fr": "Je m’arrête ici, parce que cela compte plus que tout ce que je "
++          "pourrais lire dans un thème. S’il te plaît, parle à quelqu’un qui "
++          "peut être auprès de toi maintenant : le numéro d’urgence de ton "
++          "pays, une ligne d’écoute, ou une personne en qui tu as confiance. "
+           "Je serai encore là ensuite.",
+     "pt-BR": "Eu paro por aqui, porque isso pesa mais do que qualquer coisa "
+              "que eu possa ler num mapa. Por favor, fale com alguém que possa "
+@@ -358,9 +358,9 @@ WITHHELD: dict[str, str] = {
+           "non deve andare: verso una decisione che è tua e di chi se ne "
+           "intende, non mia. Chiedimi che schema c'è, e quella parte te la "
+           "leggo.",
+-    "fr": "J'ai commencé cette réponse et je l'ai arrêtée. Elle allait là où "
+-          "un thème n'a rien à faire : vers une décision qui t'appartient, à "
+-          "toi et à quelqu'un de qualifié, pas à moi. Demande-moi à quoi "
++    "fr": "J’ai commencé cette réponse et je l’ai arrêtée. Elle allait là où "
++          "un thème n’a rien à faire : vers une décision qui t’appartient, à "
++          "toi et à quelqu’un de qualifié, pas à moi. Demande-moi à quoi "
+           "ressemble le motif, cette partie-là je te la lis.",
+     "pt-BR": "Comecei essa resposta e a interrompi. Ela ia para onde um mapa "
+              "não tem o que fazer: para uma decisão que é sua e de alguém "
+@@ -388,9 +388,9 @@ BIRTH_LOCKED: dict[str, str] = {
+     "de": "Die Geburtsdaten dieser Person gehören zu einer Deutung, die du "
+           "bereits bezahlt hast, und bleiben, wie sie sind. Für jemand anderen "
+           "lege eine neue Person an — eigener Vergleich, eigene Deutung.",
+-    "fr": "Les données de naissance de cette personne font partie d'une lecture "
+-          "que tu as déjà payée : elles restent telles quelles. Pour quelqu'un "
+-          "d'autre, ajoute une nouvelle personne — sa propre analyse, sa propre "
++    "fr": "Les données de naissance de cette personne font partie d’une lecture "
++          "que tu as déjà payée : elles restent telles quelles. Pour quelqu’un "
++          "d’autre, ajoute une nouvelle personne — sa propre analyse, sa propre "
+           "lecture.",
+     "es": "Los datos de nacimiento de esta persona forman parte de una lectura "
+           "que ya pagaste, así que quedan como están. Para otra persona, añade "
+diff --git a/backend/alma/mail.py b/backend/alma/mail.py
+index 9f9daff..983be08 100644
+--- a/backend/alma/mail.py
++++ b/backend/alma/mail.py
+@@ -63,7 +63,7 @@ BODIES = {
+     # when it started talking about sign-ins, money and rights — which reads as
+     # a lawyer taking the voice over.
+     "fr": ("Ouvrir Alma", "Ce lien fonctionne une fois et expire dans {minutes} minutes.",
+-           "Si ce n'est pas toi qui l'as demandé, rien ne se passe."),
++           "Si ce n’est pas toi qui l’as demandé, rien ne se passe."),
+     "pt-BR": ("Abrir o Alma", "Este link funciona uma vez e expira em {minutes} minutos.",
+               "Se não foi você, nada acontece — pode ignorar."),
+     # «ты», like the rest of the Russian product — and «Если это не ты» keeps
+@@ -193,7 +193,7 @@ RENEWAL_BODIES = {
+     "fr": (
+         "Ton abonnement Alma se renouvelle le {date} et {amount} seront débités.",
+         "Rien à faire si tu souhaites le garder. Sinon, résilie avant cette date : "
+-        "l'abonnement court jusqu'à la fin de la période déjà payée.",
++        "l’abonnement court jusqu’à la fin de la période déjà payée.",
+         "Gérer mon abonnement",
+     ),
+     "pt-BR": (
+@@ -222,8 +222,8 @@ RENEWAL_REASON = {
+           "von vergessenen Abos wollen wir nicht leben.",
+     "it": "Inviamo questo avviso prima di ogni rinnovo. Non c'è nulla da disdire: non "
+           "vogliamo vivere di abbonamenti dimenticati.",
+-    "fr": "Nous envoyons ce message avant chaque renouvellement. Il n'y a rien à "
+-          "désabonner : vivre d'abonnements oubliés ne nous intéresse pas.",
++    "fr": "Nous envoyons ce message avant chaque renouvellement. Il n’y a rien à "
++          "désabonner : vivre d’abonnements oubliés ne nous intéresse pas.",
+     "pt-BR": "Enviamos este aviso antes de cada renovação. Não há nada para cancelar "
+              "aqui — não queremos viver de assinaturas esquecidas.",
+ }
+diff --git a/backend/alma/notify/message.py b/backend/alma/notify/message.py
+index c556744..f1184f6 100644
+--- a/backend/alma/notify/message.py
++++ b/backend/alma/notify/message.py
+@@ -12,7 +12,7 @@ generation and is priced properly in `docs/THE-DAILY.md §2`.
+ `STRINGS` below is what a translator is given and what a reviewer reads. The
+ actual `Localizable.strings` and `strings.xml` entries are the clients', which
+ is the whole point of the `loc-key` design: the operating system resolves them
+-in the *device's* language, so a phone set to Italian gets Italian even if the
++in the *device’s* language, so a phone set to Italian gets Italian even if the
+ account was created in English.
+ 
+ **The aspect is in the key, the placements are in the arguments.** "Squares"
+@@ -65,7 +65,7 @@ TITLES: dict[str, str] = {
+     "es": "Aspecto exacto hoy",
+     "de": "Heute exakt",
+     "it": "Esatto oggi",
+-    "fr": "Exact aujourd'hui",
++    "fr": "Exact aujourd’hui",
+     "pt-BR": "Aspecto exato hoje",
+     "ru": "Точный аспект сегодня",
+ }
+@@ -123,7 +123,7 @@ def body_key(chosen: Chosen) -> str:
+ 
+ 
+ def clock(moment: datetime, locale: str | None) -> str:
+-    """The exact instant, in the shape the reader's language writes it.
++    """The exact instant, in the shape the reader’s language writes it.
+ 
+     Twelve-hour for English and twenty-four for the other five. Not a
+     preference: Spanish, German, Italian, French and Brazilian Portuguese all
+@@ -142,11 +142,11 @@ def clock(moment: datetime, locale: str | None) -> str:
+ def expires(local: datetime) -> datetime:
+     """When this notification stops being worth delivering.
+ 
+-    The start of the recipient's quiet hours on the same local day, not
++    The start of the recipient’s quiet hours on the same local day, not
+     midnight. A phone that was off all day and comes back at 23:40 should not
+     receive a cheerful line about a morning that has been and gone — and the
+     vendor holding it until then would be the delivery layer quietly
+-    overriding the product's own rule that a late daily is dropped rather than
++    overriding the product’s own rule that a late daily is dropped rather than
+     deferred.
+     """
+     day = local.replace(hour=0, minute=0, second=0, microsecond=0)
+@@ -163,17 +163,17 @@ def compose(
+ ) -> Push:
+     """One notification, ready for either vendor.
+ 
+-    `locale` is the **device's** language where the client reported one at
+-    registration, and the account's language otherwise. The device wins because
++    `locale` is the **device’s** language where the client reported one at
++    registration, and the account’s language otherwise. The device wins because
+     that is what the operating system will resolve the key in, and an argument
+-    translated into the account's language inside a sentence resolved into the
+-    phone's would be the exact bug the whole `loc-key` design exists to avoid —
++    translated into the account’s language inside a sentence resolved into the
++    phone’s would be the exact bug the whole `loc-key` design exists to avoid —
+     only harder to see, because five of the six words would be right.
+ 
+-    `teaser` is the written piece's own opening sentence, and when it is here
++    `teaser` is the written piece’s own opening sentence, and when it is here
+     it becomes the body. That is the merge of two designs that arrived at this
+-    from different sides: this module's payload shape — keys, resolved by the
+-    operating system in the device's language — with the daily package's body,
++    from different sides: this module’s payload shape — keys, resolved by the
++    operating system in the device’s language — with the daily package’s body,
+     which went through `validator.check` with the paragraph it belongs to.
+     Assembling a body from a key was never *false*, but it pointed at a reading
+     that was not being written; a teaser cannot exist without one.
+diff --git a/backend/alma/notify/pair.py b/backend/alma/notify/pair.py
+index 9d4b0cc..3197573 100644
+--- a/backend/alma/notify/pair.py
++++ b/backend/alma/notify/pair.py
+@@ -207,7 +207,7 @@ BODIES: dict[str, str] = {
+     "es": "El capítulo de la atracción entre los dos ya está listo para leer.",
+     "de": "Das Kapitel über die Anziehung zwischen euch ist bereit zum Lesen.",
+     "it": "Il capitolo sull'attrazione tra voi due è pronto da leggere.",
+-    "fr": "Le chapitre de l'attirance entre vous est prêt à lire.",
++    "fr": "Le chapitre de l’attirance entre vous est prêt à lire.",
+     "pt-BR": "O capítulo da atração entre vocês está pronto para ler.",
+     "ru": "Глава о притяжении для вас двоих готова к чтению.",
+ }
+diff --git a/backend/tests/test_ai.py b/backend/tests/test_ai.py
+index 2ad0a85..a396bef 100644
+--- a/backend/tests/test_ai.py
++++ b/backend/tests/test_ai.py
+@@ -2285,20 +2285,28 @@ async def test_no_generation_starts_with_unbounded_deliberation(natal):
+         )
+ 
+ 
+-def test_the_showcase_thinks_less_than_a_paid_chapter():
+-    """Сорок слов витрины — самое дешёвое место, где можно не обдумывать.
+-
+-    Вызовов этих больше всех прочих вместе взятых: до сорока на каждого, кто
+-    просто листает продукт и ничего не купил. Русский абзац на средней ступени
+-    замерен в 30 секунд и 4.92¢ **за сорок слов**; на низкой — 15 секунд и
+-    1.90¢. Платная глава остаётся на средней: там низкая давала текст короче
+-    заказанного, то есть экономила на том, за что заплачено.
++def test_the_showcase_thinks_no_less_than_a_paid_chapter():
++    """Витрина обдумывает столько же, сколько глава, — и это замер, а не вкус.
++
++    Здесь стояло обратное требование: «витрина обязана обдумывать меньше». Довод
++    был складный — сорок слов, а вызовов больше всех прочих вместе взятых, — и
++    большой замер 20.08.2026 его опроверг. По пять прогонов полным циклом:
++
++        низкое   2.60 попытки   26.5 с   4.17¢   223 слова
++        среднее  1.40 попытки   17.4 с   3.00¢    47 слов
++
++    Двести двадцать три слова там, где заказано сорок. На низкой ступени модель
++    перестаёт держать длину, абзац отвергают, пишут заново, и сэкономленное на
++    обдумывании возвращается повторами с лихвой.
++
++    Тест сторожит не «одинаково», а «не ниже»: опустить витрину ещё раз можно
++    будет только с замером в руках, а не с рассуждением.
+     """
+     ladder = writer.EFFORT_LADDER
+-    assert ladder.index(writer.SHOWCASE_EFFORT) > ladder.index(writer.DEFAULT_EFFORT), (
+-        "витрина обдумывает столько же, сколько платная глава, или больше"
++    assert ladder.index(writer.SHOWCASE_EFFORT) <= ladder.index(writer.DEFAULT_EFFORT), (
++        "витрина снова обдумывает меньше главы — на замере это стоило вдвое "
++        "больше попыток и дороже"
+     )
+-    assert writer.SHOWCASE_EFFORT == ladder[-1]
+ 
+ 
+ def test_the_effort_ladder_lives_in_one_place():
+@@ -2350,3 +2358,30 @@ async def test_a_chat_turn_does_not_start_with_unbounded_deliberation(natal):
+             f"ход беседы начат с усилия {call['effort']!r}: на этом значении "
+             "три вопроса из трёх не дали ни слова и были оплачены"
+         )
++
++
++def test_the_purple_list_catches_both_apostrophes():
++    """`l'univers` и `l’univers` — одно слово, и список обязан ловить оба.
++
++    **Дефект был тихий и старше правки типографики.** Список запрещённых слов
++    сверяется с текстом модели простым вхождением подстроки, а апостроф модель
++    ставит тот, какой захочет. Для `in` это разные строки, поэтому французские
++    и итальянские записи ловились ровно в половине случаев — и заметить это
++    было нельзя: проверка не падает, она молчит.
++
++    Наружу это вылезло, когда французский привели к «’»: список, приведённый
++    вместе с текстом, перестал бы ловить прямой апостроф. Чинить надо было не
++    список, а сравнение — что и сделано.
++    """
++    from alma.ai import validator
++
++    straight = "Le chemin vers l'univers commence ici."
++    curly = "Le chemin vers l’univers commence ici."
++
++    assert validator.purple_words(straight, "fr"), (
++        "прямой апостроф прошёл мимо списка"
++    )
++    assert validator.purple_words(curly, "fr"), (
++        "кудрявый апостроф прошёл мимо списка"
++    )
++    assert validator.purple_words(straight, "fr") == validator.purple_words(curly, "fr")

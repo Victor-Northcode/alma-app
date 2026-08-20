@@ -1,0 +1,345 @@
+- generic [ref=f2e1]:
+  - generic [ref=f2e2]:
+    - navigation [ref=f2e3]:
+      - generic [ref=f2e4]:
+        - link "Alma — home" [ref=f2e5] [cursor=pointer]:
+          - /url: "#top"
+          - generic [ref=f2e458]: ALMA
+        - button "Close menu" [expanded] [active] [ref=f2e464] [cursor=pointer]
+      - generic [ref=f2e468]:
+        - button "Read myself — free" [ref=f2e469] [cursor=pointer]
+        - link "What it is" [ref=f2e470] [cursor=pointer]:
+          - /url: "#what"
+          - text: What it is
+          - generic [ref=f2e471]: →
+        - link "The eight" [ref=f2e472] [cursor=pointer]:
+          - /url: "#eight"
+          - text: The eight
+          - generic [ref=f2e473]: →
+        - link "Pricing" [ref=f2e474] [cursor=pointer]:
+          - /url: "#pricing"
+          - text: Pricing
+          - generic [ref=f2e475]: →
+        - link "Questions" [ref=f2e476] [cursor=pointer]:
+          - /url: "#faq"
+          - text: Questions
+          - generic [ref=f2e477]: →
+        - link "Sign in" [ref=f2e478] [cursor=pointer]:
+          - /url: /sign-in
+          - text: Sign in
+          - generic [ref=f2e479]: →
+        - group "Language" [ref=f2e480]:
+          - button "English" [ref=f2e481] [cursor=pointer]
+          - button "Español" [ref=f2e482] [cursor=pointer]
+          - button "Deutsch" [ref=f2e483] [cursor=pointer]
+          - button "Italiano" [ref=f2e484] [cursor=pointer]
+          - button "Français" [ref=f2e485] [cursor=pointer]
+          - button "Português (Brasil)" [ref=f2e486] [cursor=pointer]
+          - status [ref=f2e30]: "Language: English"
+    - generic [ref=f2e32]:
+      - generic [ref=f2e33]:
+        - generic [ref=f2e34]: eight systems · one voice
+        - heading "Eight ways to read yourself. One Alma." [level=1] [ref=f2e35]
+        - paragraph [ref=f2e36]: Eight traditions read your birth data and show where they agree.
+        - generic [ref=f2e488]:
+          - generic [ref=f2e489]:
+            - button "Day of birth" [ref=f2e491] [cursor=pointer]:
+              - generic [ref=f2e492]: Day
+              - generic [ref=f2e493]: ▾
+            - button "Month of birth" [ref=f2e495] [cursor=pointer]:
+              - generic [ref=f2e496]: Month
+              - generic [ref=f2e497]: ▾
+            - button "Year of birth" [ref=f2e499] [cursor=pointer]:
+              - generic [ref=f2e500]: Year
+              - generic [ref=f2e501]: ▾
+          - button "Show my first insight — free" [ref=f2e502] [cursor=pointer]
+      - generic [ref=f2e54]:
+        - generic [ref=f2e55]:
+          - img [ref=f2e57]:
+            - generic [ref=f2e87]:
+              - generic [ref=f2e88]: ♈︎
+              - generic [ref=f2e89]: ♉︎
+              - generic [ref=f2e90]: ♊︎
+              - generic [ref=f2e91]: ♋︎
+              - generic [ref=f2e92]: ♌︎
+              - generic [ref=f2e93]: ♍︎
+              - generic [ref=f2e94]: ♎︎
+              - generic [ref=f2e95]: ♏︎
+              - generic [ref=f2e96]: ♐︎
+              - generic [ref=f2e97]: ♑︎
+          - generic [ref=f2e101]:
+            - generic [ref=f2e102]: ✦
+            - generic [ref=f2e103]: your sky · waiting for your date
+        - paragraph [ref=f2e104]: “I don't tell you what will happen. I tell you what you're made of.”
+        - generic [ref=f2e503]: Alma
+    - generic [ref=f2e106]:
+      - generic [ref=f2e107]:
+        - generic [ref=f2e108]:
+          - generic [ref=f2e109]: natal chart
+          - generic [ref=f2e110]: ✦
+        - generic [ref=f2e111]:
+          - generic [ref=f2e112]: numerology
+          - generic [ref=f2e113]: ✦
+        - generic [ref=f2e114]:
+          - generic [ref=f2e115]: birth card
+          - generic [ref=f2e116]: ✦
+        - generic [ref=f2e117]:
+          - generic [ref=f2e118]: transits
+          - generic [ref=f2e119]: ✦
+        - generic [ref=f2e120]:
+          - generic [ref=f2e121]: solar return
+          - generic [ref=f2e122]: ✦
+        - generic [ref=f2e123]:
+          - generic [ref=f2e124]: compatibility
+          - generic [ref=f2e125]: ✦
+        - generic [ref=f2e126]:
+          - generic [ref=f2e127]: astrocartography
+          - generic [ref=f2e128]: ✦
+        - generic [ref=f2e129]:
+          - generic [ref=f2e130]: cross-synthesis
+          - generic [ref=f2e131]: ✦
+      - generic [ref=f2e132]:
+        - generic [ref=f2e133]:
+          - generic [ref=f2e134]: natal chart
+          - generic [ref=f2e135]: ✦
+        - generic [ref=f2e136]:
+          - generic [ref=f2e137]: numerology
+          - generic [ref=f2e138]: ✦
+        - generic [ref=f2e139]:
+          - generic [ref=f2e140]: birth card
+          - generic [ref=f2e141]: ✦
+        - generic [ref=f2e142]:
+          - generic [ref=f2e143]: transits
+          - generic [ref=f2e144]: ✦
+        - generic [ref=f2e145]:
+          - generic [ref=f2e146]: solar return
+          - generic [ref=f2e147]: ✦
+        - generic [ref=f2e148]:
+          - generic [ref=f2e149]: compatibility
+          - generic [ref=f2e150]: ✦
+        - generic [ref=f2e151]:
+          - generic [ref=f2e152]: astrocartography
+          - generic [ref=f2e153]: ✦
+        - generic [ref=f2e154]:
+          - generic [ref=f2e155]: cross-synthesis
+          - generic [ref=f2e156]: ✦
+    - generic [ref=f2e158]:
+      - generic [ref=f2e159]:
+        - generic [ref=f2e160]: I
+        - generic [ref=f2e161]: what it is
+      - paragraph [ref=f2e162]: A deep inner look — without rush or noise
+      - generic [ref=f2e163]:
+        - generic [ref=f2e164]:
+          - generic [ref=f2e165]: "8"
+          - generic [ref=f2e166]:
+            - heading "different systems" [level=3] [ref=f2e167]
+            - paragraph [ref=f2e168]: Each with its own logic and blind spots.
+        - generic [ref=f2e169]:
+          - generic [ref=f2e170]: $0
+          - generic [ref=f2e171]:
+            - heading "for every calculation" [level=3] [ref=f2e172]
+            - paragraph [ref=f2e173]: Real ephemeris data, shown in full, forever free.
+    - generic [ref=f2e176]:
+      - generic [ref=f2e177]:
+        - generic [ref=f2e178]: II
+        - generic [ref=f2e179]: two seconds after your date
+      - generic [ref=f2e180]: ✦
+      - paragraph [ref=f2e182]: Nothing above is guessed, so nothing is here yet. Give me a date and this fills with your own.
+      - button "Read myself — free" [ref=f2e183] [cursor=pointer]
+    - generic [ref=f2e509]:
+      - generic [ref=f2e510]:
+        - generic [ref=f2e511]: III
+        - generic [ref=f2e512]: how to read yourself
+      - heading "Four small rules" [level=3] [ref=f2e513]
+      - generic [ref=f2e515]:
+        - generic [ref=f2e516]: I
+        - generic [ref=f2e517]:
+          - heading "The moment" [level=4] [ref=f2e518]
+          - paragraph [ref=f2e519]: One chapter at a time, not sixteen.
+      - generic [ref=f2e522]:
+        - generic [ref=f2e523]: II
+        - generic [ref=f2e524]:
+          - heading "The disagreement" [level=4] [ref=f2e525]
+          - paragraph [ref=f2e526]: When two systems argue, don't pick a winner.
+      - generic [ref=f2e529]:
+        - generic [ref=f2e530]: III
+        - generic [ref=f2e531]:
+          - heading "The question" [level=4] [ref=f2e532]
+          - paragraph [ref=f2e533]: Ask in your own words; she names the position.
+      - generic [ref=f2e536]:
+        - generic [ref=f2e537]: IV
+        - generic [ref=f2e538]:
+          - heading "The return" [level=4] [ref=f2e539]
+          - paragraph [ref=f2e540]: Come back in a month — the text is rebuilt.
+      - paragraph [ref=f2e541]: "*Nothing here replaces therapy or a doctor."
+    - generic [ref=f2e184]:
+      - generic [ref=f2e185]:
+        - generic [ref=f2e186]:
+          - generic [ref=f2e187]: IV
+          - generic [ref=f2e188]: the eight
+        - heading "Four questions, eight ways to answer" [level=2] [ref=f2e189]
+      - group "Four questions, eight ways to answer" [ref=f2e190]:
+        - article [ref=f2e191]:
+          - generic [ref=f2e205]:
+            - generic [ref=f2e206]: who am I
+            - heading "Natal chart" [level=3] [ref=f2e207]
+            - generic [ref=f2e208]: 16 chapters
+        - article [ref=f2e209]:
+          - generic [ref=f2e226]:
+            - generic [ref=f2e227]: who am I
+            - heading "Numerology" [level=3] [ref=f2e228]
+            - generic [ref=f2e229]: from your date alone
+        - article [ref=f2e230]:
+          - generic [ref=f2e237]:
+            - generic [ref=f2e238]: who am I
+            - heading "Birth Card" [level=3] [ref=f2e239]
+            - generic [ref=f2e240]: 22 arcana
+        - article [ref=f2e241]:
+          - generic [ref=f2e252]:
+            - generic [ref=f2e253]: right now
+            - heading "Transits" [level=3] [ref=f2e254]
+            - generic [ref=f2e255]: daily
+        - article [ref=f2e256]:
+          - generic [ref=f2e264]:
+            - generic [ref=f2e265]: this year
+            - heading "Solar return" [level=3] [ref=f2e266]
+            - generic [ref=f2e267]: needs birth time
+        - article [ref=f2e268]:
+          - generic [ref=f2e276]:
+            - generic [ref=f2e277]: how we match
+            - heading "Compatibility" [level=3] [ref=f2e278]
+            - generic [ref=f2e279]: add a person
+        - article [ref=f2e280]:
+          - generic [ref=f2e289]:
+            - generic [ref=f2e290]: where to be
+            - heading "Astrocartography" [level=3] [ref=f2e291]
+            - generic [ref=f2e292]: needs birth time
+        - article [ref=f2e293]:
+          - generic [ref=f2e309]:
+            - generic [ref=f2e310]: all of it
+            - heading "Cross-synthesis" [level=3] [ref=f2e311]
+            - generic [ref=f2e312]: 9 axes
+      - generic [ref=f2e543]:
+        - button "Go to 1 of 8" [ref=f2e544] [cursor=pointer]
+        - button "Go to 2 of 8" [ref=f2e545] [cursor=pointer]
+        - button "Go to 3 of 8" [ref=f2e546] [cursor=pointer]
+        - button "Go to 4 of 8" [ref=f2e547] [cursor=pointer]
+        - button "Go to 5 of 8" [ref=f2e548] [cursor=pointer]
+        - button "Go to 6 of 8" [ref=f2e549] [cursor=pointer]
+        - button "Go to 7 of 8" [ref=f2e550] [cursor=pointer]
+        - button "Go to 8 of 8" [ref=f2e551] [cursor=pointer]
+        - generic [ref=f2e552]: swipe · all 8
+    - generic [ref=f2e316]:
+      - generic [ref=f2e317]:
+        - generic [ref=f2e318]:
+          - generic [ref=f2e319]: V
+          - generic [ref=f2e320]: only here
+        - heading "Where three systems agree about you" [level=2] [ref=f2e321]
+        - paragraph [ref=f2e322]: Three agreeing is the closest thing to proof.
+      - generic [ref=f2e323]:
+        - generic [ref=f2e324]:
+          - generic [ref=f2e325]: Direction
+          - generic "waiting for your date" [ref=f2e326]
+        - generic [ref=f2e331]:
+          - generic [ref=f2e332]: Relationships
+          - generic "waiting for your date" [ref=f2e333]
+        - generic [ref=f2e345]:
+          - generic [ref=f2e346]: Mind · work · growth · rhythms
+          - generic [ref=f2e347]: "+6"
+    - generic [ref=f2e554]:
+      - generic [ref=f2e555]:
+        - generic [ref=f2e556]: VI
+        - generic [ref=f2e557]: Alma's voice
+      - heading "Every paragraph names a real position" [level=3] [ref=f2e558]
+      - paragraph [ref=f2e559]: Saturn sits on your Descendant at 19° Pisces. You learned early that closeness has a price — so you pay it in advance, before anyone asks. That is why your relationships start out so competent and end up so tired.
+      - paragraph [ref=f2e561]: Move your birth time by two hours and this text changes.
+    - generic [ref=f2e363]:
+      - generic [ref=f2e364]:
+        - generic [ref=f2e365]: VII
+        - generic [ref=f2e366]: what it costs
+      - heading "The numbers are free. The words have a price." [level=2] [ref=f2e367]
+      - generic [ref=f2e378]:
+        - generic [ref=f2e379]: Everything, for a year
+        - paragraph [ref=f2e381]: Every system, every chapter, and the transits as they move.
+        - paragraph [ref=f2e382]: Renews every year until you cancel. Two taps, from Settings.
+        - button "Read myself — free" [ref=f2e383] [cursor=pointer]
+        - generic [ref=f2e384]:
+          - generic [ref=f2e385]: · one-time is one-time
+          - generic [ref=f2e386]: · email before renewal
+          - generic [ref=f2e387]: · cancel in two taps
+          - generic [ref=f2e388]: · your store sets the final price
+    - generic [ref=f2e390]:
+      - generic [ref=f2e391]:
+        - generic [ref=f2e392]: VIII
+        - generic [ref=f2e393]: questions
+      - generic [ref=f2e562]:
+        - generic [ref=f2e563]:
+          - button "Is this real astrology? −" [expanded] [ref=f2e564] [cursor=pointer]:
+            - generic [ref=f2e565]: Is this real astrology?
+            - generic [ref=f2e566]: −
+          - paragraph [ref=f2e567]: NASA JPL ephemeris data, tested against reference charts to a hundredth of a degree.
+        - button "I don't know my birth time +" [ref=f2e569] [cursor=pointer]:
+          - generic [ref=f2e570]: I don't know my birth time
+          - generic [ref=f2e571]: +
+        - button "Will you charge me automatically? +" [ref=f2e573] [cursor=pointer]:
+          - generic [ref=f2e574]: Will you charge me automatically?
+          - generic [ref=f2e575]: +
+      - button "All six questions →" [ref=f2e409] [cursor=pointer]
+    - generic [ref=f2e411]:
+      - heading "Your sky has been there the whole time." [level=2] [ref=f2e415]
+      - paragraph [ref=f2e416]: Give it a date. Eight systems answer in under a minute.
+      - button "Read myself — free" [ref=f2e417] [cursor=pointer]
+    - contentinfo [ref=f2e418]:
+      - generic [ref=f2e419]:
+        - generic [ref=f2e576]:
+          - generic [ref=f2e577]:
+            - generic [ref=f2e581]: ALMA
+            - generic [ref=f2e583]: 16+
+          - generic [ref=f2e584]:
+            - generic [ref=f2e585]: Legal
+            - generic [ref=f2e586]:
+              - link "Terms" [ref=f2e587] [cursor=pointer]:
+                - /url: /terms
+              - link "Privacy" [ref=f2e588] [cursor=pointer]:
+                - /url: /privacy
+              - link "Delete your account" [ref=f2e589] [cursor=pointer]:
+                - /url: /delete-account
+          - generic [ref=f2e590]:
+            - generic [ref=f2e591]: Money
+            - generic [ref=f2e592]:
+              - link "Refunds" [ref=f2e593] [cursor=pointer]:
+                - /url: /refunds
+              - link "Subscription terms" [ref=f2e594] [cursor=pointer]:
+                - /url: /subscription-terms
+          - generic [ref=f2e595]:
+            - generic [ref=f2e596]: Company
+            - generic [ref=f2e597]:
+              - link "Imprint" [ref=f2e598] [cursor=pointer]:
+                - /url: /imprint
+              - link "Support" [ref=f2e599] [cursor=pointer]:
+                - /url: /support
+          - generic [ref=f2e600]:
+            - generic [ref=f2e601]: Contact
+            - link "hello@pazl.ai" [ref=f2e602] [cursor=pointer]:
+              - /url: mailto:hello@pazl.ai
+        - group "Language" [ref=f2e444]:
+          - button "English" [ref=f2e445] [cursor=pointer]
+          - button "Español" [ref=f2e446] [cursor=pointer]
+          - button "Deutsch" [ref=f2e447] [cursor=pointer]
+          - button "Italiano" [ref=f2e448] [cursor=pointer]
+          - button "Français" [ref=f2e449] [cursor=pointer]
+          - button "Português (Brasil)" [ref=f2e450] [cursor=pointer]
+          - status [ref=f2e451]: "Language: English"
+        - generic [ref=f2e452]:
+          - text: Pazl LLC · Wyoming, USA ·
+          - link "hello@pazl.ai" [ref=f2e453] [cursor=pointer]:
+            - /url: mailto:hello@pazl.ai
+          - text: For self-knowledge only. Not medical, psychological, legal or financial advice, and not a prediction of events. © 2026 Pazl LLC. All rights reserved.
+  - generic:
+    - generic:
+      - generic:
+        - generic: Your date of birth
+        - generic: 8 systems · waiting on one date
+      - button "Read myself — free"
+  - button "Open Next.js Dev Tools" [ref=f2e608] [cursor=pointer]
+  - alert [ref=f2e612]

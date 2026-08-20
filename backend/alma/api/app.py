@@ -292,6 +292,49 @@ class MaxBodySize:
         })
 
 
+# Базовые заголовки безопасности на каждый ответ API. В проде их и так ставит
+# край (`deploy/Caddyfile` §«Заголовки безопасности»: `-Server`, `nosniff`,
+# HSTS, Referrer-Policy), но голый uvicorn за краем — как его поднимают локально
+# и как его нащупал аудит 20.08.2026 (отчёт 856362, BUG-856-01) — отдавал JSON
+# вовсе без них. Ставим их у самого приложения: тогда защита есть и без Caddy, а
+# край её лишь дублирует. `Server`-заголовок здесь не трогаем — его дописывает
+# uvicorn **снаружи** ASGI, уже после этой обёртки, так что убрать его можно
+# только на крае (Caddy это и делает) или флагом запуска `--no-server-header`.
+_SECURITY_HEADERS: tuple[tuple[bytes, bytes], ...] = (
+    (b"x-content-type-options", b"nosniff"),
+    (b"x-frame-options", b"DENY"),
+    (b"referrer-policy", b"no-referrer"),
+)
+
+
+class SecurityHeaders:
+    """ASGI-обёртка: дописать заголовки безопасности, не затирая уже стоящие.
+
+    Определена здесь, рядом с `MaxBodySize` и сборкой CORS: это часть сборки
+    приложения, а не отдельная политика. Пропускает не-http (`lifespan`,
+    `websocket`) насквозь и добавляет заголовок только если его ещё нет — чтобы
+    маршрут, которому нужен свой `x-frame-options`, мог его поставить сам.
+    """
+
+    def __init__(self, app) -> None:
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        async def send_with_headers(message):
+            if message["type"] == "http.response.start":
+                headers = message.setdefault("headers", [])
+                present = {name.lower() for name, _ in headers}
+                for name, value in _SECURITY_HEADERS:
+                    if name not in present:
+                        headers.append((name, value))
+            await send(message)
+
+        return await self.app(scope, receive, send_with_headers)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = settings()
@@ -361,6 +404,11 @@ def create_app() -> FastAPI:
     # CORS-заголовках — его читает не браузерный fetch, а тот, кто пытается
     # занять память воркера.
     app.add_middleware(MaxBodySize, max_bytes=MAX_REQUEST_BODY_BYTES)
+
+    # Заголовки безопасности стоят **снаружи** всего: Starlette исполняет
+    # добавленное последним первым, поэтому эта обёртка — самая внешняя и
+    # накрывает каждый ответ, включая 413 от `MaxBodySize` и преполёт CORS.
+    app.add_middleware(SecurityHeaders)
 
     for router in (
         health.router,
