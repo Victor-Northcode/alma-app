@@ -662,3 +662,50 @@ def test_our_own_chapter_titles_pass_the_gate_we_hold_alma_to():
                                 f"«{getattr(words, field)}» contains «{word}»"
                             )
     assert not offences, "\n".join(offences)
+
+
+def test_french_uses_the_french_apostrophe():
+    """Во французском апостроф — «’», а не машинописный «'».
+
+    **Решение владельца от 20.08.2026: «сделай как лучше».** Продукт уже держит
+    тонкую французскую типографику на клиенте — узкий неразрывный пробел U+202F
+    перед `? ! ; :` под тестом, — и машинописный апостроф рядом с ним читается
+    как недоделка. `l'année` во французском тексте — то же, что `"кавычки"`
+    вместо «кавычек» в русском: понятно, но выдаёт, что текст не вычитан.
+
+    Проверяется только апостроф элизии — тот, что стоит **между буквами**
+    (`l’un`, `qu’il`, `d’une`). Разделители строк в питоне и апострофы внутри
+    английских комментариев этим правилом не задеваются, и это намеренно: файл
+    документирован по-английски.
+
+    Тонкий пробел отдельным вопросом не решён: сервер держит обычный
+    осознанно (довод в шапке `i18n/fr.py` — следовать вебу), клиент держит
+    узкий под тестом. Это развилка владельца, и трогать её здесь нечего.
+    """
+    import json
+    import pathlib
+    import re
+
+    elision = re.compile(r"(?<=[A-Za-zÀ-ÿ])'(?=[A-Za-zÀ-ÿ])")
+    root = pathlib.Path(__file__).resolve().parents[2]
+
+    arb = json.loads((root / "mobile/flutter/alma/lib/l10n/app_fr.arb").read_text())
+    bad = {
+        key: value for key, value in arb.items()
+        if not key.startswith("@") and isinstance(value, str) and elision.search(value)
+    }
+    assert not bad, (
+        "машинописный апостроф во французском интерфейсе: "
+        + ", ".join(sorted(bad)[:6])
+    )
+
+    source = (root / "backend/alma/i18n/fr.py").read_text()
+    head = source.index('"""')
+    body = source[source.index('"""', head + 3) + 3:]
+    lines = [
+        line for line in body.splitlines()
+        if not line.lstrip().startswith("#") and elision.search(line)
+    ]
+    assert not lines, (
+        "машинописный апостроф во французских главах: " + " | ".join(lines[:3])
+    )

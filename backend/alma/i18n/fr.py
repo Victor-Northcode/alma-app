@@ -94,42 +94,42 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             # "Avant d'ouvrir la bouche" would be the funnier line and the
             # wrong one — this chapter is the ascendant, which is working on
             # people who will never hear you speak at all.
-            question="De quoi j'ai l'air avant même de parler ?",
+            question="De quoi j’ai l’air avant même de parler ?",
         ),
         "love": ChapterWords(
             title="Amour et proximité",
-            question="Comment je m'attache et qu'est-ce qui casse ça ?",
+            question="Comment je m’attache et qu’est-ce qui casse ça ?",
         ),
         "money": ChapterWords(
             title="Argent et ressources",
             # "Par où" rather than "comment": the English "reach me" is about
             # the route money takes, not the technique for getting it, and the
             # chapter reads the second and eighth houses — where it comes from.
-            question="Par où l'argent m'arrive vraiment ?",
+            question="Par où l’argent m’arrive vraiment ?",
         ),
         "career": ChapterWords(
             title="Métier et vocation",
             # "User" and not "épuiser". Being worn out is a Tuesday; being
             # worn *down*, slowly, by work that fits badly, is the thing
             # somebody opens this chapter about.
-            question="Quel travail ne va pas m'user ?",
+            question="Quel travail ne va pas m’user ?",
         ),
         "mind": ChapterWords(
             title="Esprit et parole",
             # "How do I sound" has no French verb. "Comment ça s'entend" keeps
             # what the English means — the way the thinking comes out audible
             # to somebody else — without the anglicism of "comment je sonne".
-            question="Comment je pense et comment ça s'entend ?",
+            question="Comment je pense et comment ça s’entend ?",
         ),
         "shadow": ChapterWords(
             title="Ombre et blessure",
             # "Rejouer" is the theatre word in French too, which is the whole
             # point of "re-staging": the same scene, the same parts, a new cast.
-            question="Qu'est-ce que je rejoue sans arrêt ?",
+            question="Qu’est-ce que je rejoue sans arrêt ?",
         ),
         "roots": ChapterWords(
             title="Racines et famille",
-            question="De quoi j'ai hérité sans jamais avoir dit oui ?",
+            question="De quoi j’ai hérité sans jamais avoir dit oui ?",
         ),
         "karmic-axis": ChapterWords(
             title="Axe karmique",
@@ -145,7 +145,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
         ),
         "transformation": ChapterWords(
             title="Crises et transformation",
-            question="Comment je m'effondre et comment je me reconstruis ?",
+            question="Comment je m’effondre et comment je me reconstruis ?",
         ),
         "freedom": ChapterWords(
             title="Liberté et singularité",
@@ -167,7 +167,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             # "Vision du monde et croissance" is the faithful title and five
             # words long, which is a headline and not the name of a room.
             # "Croyances" is what the chapter's own question asks about.
-            question="Qu'est-ce que je crois quand personne ne regarde ?",
+            question="Qu’est-ce que je crois quand personne ne regarde ?",
         ),
         "milestones": ChapterWords(
             title="Étapes par âge",
@@ -187,7 +187,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             # "Discount" is an accounting word doing emotional work, and French
             # has no single verb for it. "Compter pour rien" is what a person
             # actually says about the thing they are good at and dismiss.
-            question="Qu'est-ce qui me vient tout seul et que je compte pour rien ?",
+            question="Qu’est-ce qui me vient tout seul et que je compte pour rien ?",
         ),
         "personal-year": ChapterWords(
             title="Année personnelle",
@@ -195,11 +195,11 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
         ),
         "pinnacles": ChapterWords(
             title="Sommets et défis",
-            question="Qu'est-ce qu'on me demande en ce moment ?",
+            question="Qu’est-ce qu’on me demande en ce moment ?",
         ),
         "name": ChapterWords(
             title="Nombres du nom",
-            question="Qu'est-ce que porte le nom auquel je réponds ?",
+            question="Qu’est-ce que porte le nom auquel je réponds ?",
         ),
     },
     "birth-card": {
@@ -208,14 +208,14 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             question="Comment les autres me lisent ?",
         ),
         "soul": ChapterWords(
-            title="Carte de l'âme",
+            title="Carte de l’âme",
             # The English opens on "that" — it is the second chapter and it is
             # leaning on the first. French keeps the lean with the "et", which
             # is what makes this a question and not a section heading.
-            question="Et qu'est-ce qui court en dessous ?",
+            question="Et qu’est-ce qui court en dessous ?",
         ),
         "year-card": ChapterWords(
-            title="Carte de l'année",
+            title="Carte de l’année",
             # "Précise" carries the English "particular", which is there to
             # separate this from the solar return's "À quoi sert cette année ?"
             # — two systems answering the same question, on purpose.
@@ -225,11 +225,11 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
     "transits": {
         "active": ChapterWords(
             title="Ce qui est actif maintenant",
-            question="Qu'est-ce qui est en train de m'arriver, vraiment ?",
+            question="Qu’est-ce qui est en train de m’arriver, vraiment ?",
         ),
         "ahead": ChapterWords(
             title="Les mois qui viennent",
-            question="Qu'est-ce qui arrive et quand ?",
+            question="Qu’est-ce qui arrive et quand ?",
         ),
         "long": ChapterWords(
             title="Les longs transits",
@@ -238,14 +238,14 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
     },
     "solar-return": {
         "year-shape": ChapterWords(
-            title="La forme de l'année",
+            title="La forme de l’année",
             question="À quoi sert cette année ?",
         ),
         "emphasis": ChapterWords(
             # "Là où", not "Où". French wants the demonstrative to turn a
             # clause into a name, and the shipped copy already does it:
             # "Là où trois systèmes s'accordent sur toi".
-            title="Là où l'année atterrit",
+            title="Là où l’année atterrit",
             question="Elle touche quelle partie de ma vie ?",
         ),
         "contacts": ChapterWords(
@@ -269,7 +269,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             # "Chez" is the house preposition, and this chapter is houses: one
             # person's planets falling into the other's. French gets the pun
             # the English title only gestures at.
-            title="Là où on tombe l'un chez l'autre",
+            title="Là où on tombe l’un chez l’autre",
             question="Cette personne occupe quelle partie de ma vie ?",
         ),
         "together": ChapterWords(
@@ -289,7 +289,7 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             title="Là où tu es maintenant",
             # Dislocated, because that is how the question actually arrives at
             # two in the morning: the place first, then what it is doing to you.
-            question="Il me fait quoi, l'endroit où je vis ?",
+            question="Il me fait quoi, l’endroit où je vis ?",
         ),
         "crossings": ChapterWords(
             title="Croisements",
@@ -301,16 +301,16 @@ CHAPTERS: dict[str, dict[str, ChapterWords]] = {
             # "S'accorder" is the verb the whole French product uses for this —
             # the hero, the FAQ, the synthesis section all say it. It is also
             # the better word: systems that agree are in tune, not in a vote.
-            title="Là où les systèmes s'accordent",
-            question="Qu'est-ce qui est vrai depuis plus d'une direction ?",
+            title="Là où les systèmes s’accordent",
+            question="Qu’est-ce qui est vrai depuis plus d’une direction ?",
         ),
         "disagreement": ChapterWords(
             title="Là où ils se contredisent",
             question="Dans quelle contradiction je vis vraiment ?",
         ),
         "single": ChapterWords(
-            title="Ce qu'un seul système voit",
-            question="Qu'est-ce que je raterais en n'en lisant qu'un seul ?",
+            title="Ce qu’un seul système voit",
+            question="Qu’est-ce que je raterais en n’en lisant qu’un seul ?",
         ),
         "whole": ChapterWords(
             title="Tout ça ensemble",
@@ -343,7 +343,7 @@ AXES: dict[str, AxisWords] = {
         positive="change de forme",
     ),
     "Mind": AxisWords(
-        negative="veut d'abord une preuve",
+        negative="veut d’abord une preuve",
         positive="se fie à la première impression",
     ),
     # Straight out of `src/lib/i18n/fr.ts`, which already prints this exact
@@ -373,7 +373,7 @@ AXES: dict[str, AxisWords] = {
     ),
     "Weak point": AxisWords(
         negative="craint de ne pas être vu",
-        positive="craint d'être vu",
+        positive="craint d’être vu",
     ),
     # CONSTRUCTION CHANGED, slightly. The English pole is "asked to be seen",
     # reusing "seen" from the axis above it; French would need "appelé à être
@@ -387,6 +387,6 @@ AXES: dict[str, AxisWords] = {
     ),
     "Rhythms": AxisWords(
         negative="une saison qui se referme",
-        positive="une saison qui s'ouvre",
+        positive="une saison qui s’ouvre",
     ),
 }
