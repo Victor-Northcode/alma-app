@@ -175,3 +175,42 @@ reached at all.
 - `docs/DEPLOYMENT.md` is worth writing the day there is a server to deploy to.
 - `mobile/store/APP-CHANGES-NEEDED.md` lists eighteen findings from 7 August. Several are
   closed and the document does not say which. It needs a pass.
+
+---
+
+## 7 · The security audit of 20 August
+
+An autonomous QA + security pass ran against the backend on `127.0.0.1:8100` and the web
+on `:3001`, both on this machine. The full report is `QA_AUDIT_REPORT.md` (Russian), the
+evidence is in `qa_evidence/`: fifteen findings plus four marked "worth a look, not shown
+exploitable". What matters:
+
+- **One critical, fixed.** `tzdata` was never declared a dependency, and the slim Docker
+  runtime has no system zone database — so in production every timezone, including `UTC`,
+  was rejected with 422 and nobody could save a birth date. It is in `dependencies` now,
+  with a test that fails without it.
+- **The DoS on `/v1/systems/*` is closed.** One guest token could keep the whole thread
+  pool busy with 2.7-second ephemeris scans. There is now a per-account ceiling of twenty
+  expensive calculations a minute; the twenty-first gets a 429 and nobody else slows down.
+- **Next.js went 15.4.6 → 15.5.23**, which clears the critical CVE. Three transitive highs
+  (`sharp`/`postcss`/`nanoid`) are only fixed by the breaking `next@16` major — left to the
+  owner, because a production build of that jump cannot be validated on this Windows box.
+- **Also fixed:** the web now sends a full set of security headers (CSP with
+  `frame-ancestors 'none'`, HSTS, nosniff, Referrer-Policy); the Google Play webhook fails
+  closed in production when the service-account pin is unset; a mistyped `partner_profile_id`
+  no longer spends the monthly compatibility credit before the 404; the magic-link token is
+  stripped from the URL after use and sign-in errors branch on typed codes, not English
+  substrings; the Google button initialises from `<Script onReady>`; there is an icon; and
+  request bodies over 256 KB are refused before they are buffered.
+- **Left as-is, with the reasoning written down:** the client-side hydration crash and
+  failing `next build` on this machine are a Windows case-insensitive-filesystem artifact
+  (React resolved under two casings of the same path), not a code defect — Linux CI does
+  not reproduce it. Sandbox Apple transactions keep granting entitlements because App
+  Review requires it. The chat's daily question limit is still not atomic across workers,
+  but the money is bounded by the atomic `_guard_month`, and making the gate atomic means
+  rewriting the streaming refund paths, which cannot be exercised here without
+  `ANTHROPIC_API_KEY`.
+
+No regressions. The ten backend and two vitest failures in the full run are pre-existing
+Windows-only issues (cp1251 decoding, a free-chapter counter, a missing iOS file) that pass
+on Linux; every suite the fixes touched is green.

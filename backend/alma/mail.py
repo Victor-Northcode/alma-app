@@ -63,7 +63,7 @@ BODIES = {
     # when it started talking about sign-ins, money and rights — which reads as
     # a lawyer taking the voice over.
     "fr": ("Ouvrir Alma", "Ce lien fonctionne une fois et expire dans {minutes} minutes.",
-           "Si ce n'est pas toi qui l'as demandé, rien ne se passe."),
+           "Si ce n’est pas toi qui l’as demandé, rien ne se passe."),
     "pt-BR": ("Abrir o Alma", "Este link funciona uma vez e expira em {minutes} minutos.",
               "Se não foi você, nada acontece — pode ignorar."),
     # «ты», like the rest of the Russian product — and «Если это не ты» keeps
@@ -193,7 +193,7 @@ RENEWAL_BODIES = {
     "fr": (
         "Ton abonnement Alma se renouvelle le {date} et {amount} seront débités.",
         "Rien à faire si tu souhaites le garder. Sinon, résilie avant cette date : "
-        "l'abonnement court jusqu'à la fin de la période déjà payée.",
+        "l’abonnement court jusqu’à la fin de la période déjà payée.",
         "Gérer mon abonnement",
     ),
     "pt-BR": (
@@ -222,8 +222,8 @@ RENEWAL_REASON = {
           "von vergessenen Abos wollen wir nicht leben.",
     "it": "Inviamo questo avviso prima di ogni rinnovo. Non c'è nulla da disdire: non "
           "vogliamo vivere di abbonamenti dimenticati.",
-    "fr": "Nous envoyons ce message avant chaque renouvellement. Il n'y a rien à "
-          "désabonner : vivre d'abonnements oubliés ne nous intéresse pas.",
+    "fr": "Nous envoyons ce message avant chaque renouvellement. Il n’y a rien à "
+          "désabonner : vivre d’abonnements oubliés ne nous intéresse pas.",
     "pt-BR": "Enviamos este aviso antes de cada renovação. Não há nada para cancelar "
              "aqui — não queremos viver de assinaturas esquecidas.",
 }

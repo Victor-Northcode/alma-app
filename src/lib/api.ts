@@ -52,6 +52,27 @@ export const ANON_HEADER = "x-alma-anon";
 
 /* ── the session token ─────────────────────────────────────────────────── */
 
+/**
+ * The bearer token lives in `localStorage`, and that is a **deliberate,
+ * accepted trade-off** rather than an oversight — written here so the decision
+ * is on the record where the code makes it (a QA note, 2026-08-20, flagged it
+ * as an undocumented risk).
+ *
+ * The risk it accepts: `localStorage` is readable by any script on the origin,
+ * so a future XSS would be able to steal the token. There are no XSS sinks
+ * today — the app renders no user HTML — but the mitigation is not "trust that
+ * forever", it is the CSP added in `next.config.ts` (BUG-004), which is the
+ * layer that keeps injected script from running in the first place.
+ *
+ * Why not an httpOnly cookie, the usual answer: the same token authenticates
+ * the iOS and Android clients, which have no cookie jar and read it from a
+ * native store, and the web client has to be able to *hand it back* to the
+ * request that minted it (`X-Alma-Token`) — a cookie the script cannot read
+ * breaks that handoff. Moving the web flow alone to an httpOnly cookie is a
+ * real project (a server-side session shim in front of a token API), and it is
+ * the owner's to schedule, not something to change under a QA pass. If it is
+ * ever done, this is the comment to delete.
+ */
 export function readToken(): string | null {
   if (typeof window === "undefined") return null;
   try {
@@ -208,7 +229,11 @@ export type Failure =
   | { ok: false; kind: "unavailable"; message: string }
   | { ok: false; kind: "offline"; message: string }
   | { ok: false; kind: "invalid"; message: string }
-  | { ok: false; kind: "error"; status: number; message: string };
+  // `code` carries the backend's typed `error` string when there is one, so a
+  // caller can branch on it instead of reading the English message. Added for
+  // the magic-link screen, which used to classify used/expired/invalid by
+  // substring and mislabelled an offline failure as an invalid link.
+  | { ok: false; kind: "error"; status: number; message: string; code?: string };
 
 export type Result<T> = Ok<T> | Failure;
 
@@ -327,7 +352,13 @@ function classify(status: number, payload: unknown): Failure {
   }
   if (status === 422) return { ok: false, kind: "invalid", message };
   if (status === 503) return { ok: false, kind: "unavailable", message };
-  return { ok: false, kind: "error", status, message };
+  return {
+    ok: false,
+    kind: "error",
+    status,
+    message,
+    code: typeof asObject?.error === "string" ? asObject.error : undefined,
+  };
 }
 
 /* ── shapes the interface reads ────────────────────────────────────────── */

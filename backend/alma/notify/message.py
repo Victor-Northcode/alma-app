@@ -12,7 +12,7 @@ generation and is priced properly in `docs/THE-DAILY.md §2`.
 `STRINGS` below is what a translator is given and what a reviewer reads. The
 actual `Localizable.strings` and `strings.xml` entries are the clients', which
 is the whole point of the `loc-key` design: the operating system resolves them
-in the *device's* language, so a phone set to Italian gets Italian even if the
+in the *device’s* language, so a phone set to Italian gets Italian even if the
 account was created in English.
 
 **The aspect is in the key, the placements are in the arguments.** "Squares"
@@ -65,7 +65,7 @@ TITLES: dict[str, str] = {
     "es": "Aspecto exacto hoy",
     "de": "Heute exakt",
     "it": "Esatto oggi",
-    "fr": "Exact aujourd'hui",
+    "fr": "Exact aujourd’hui",
     "pt-BR": "Aspecto exato hoje",
     "ru": "Точный аспект сегодня",
 }
@@ -123,7 +123,7 @@ def body_key(chosen: Chosen) -> str:
 
 
 def clock(moment: datetime, locale: str | None) -> str:
-    """The exact instant, in the shape the reader's language writes it.
+    """The exact instant, in the shape the reader’s language writes it.
 
     Twelve-hour for English and twenty-four for the other five. Not a
     preference: Spanish, German, Italian, French and Brazilian Portuguese all
@@ -134,19 +134,21 @@ def clock(moment: datetime, locale: str | None) -> str:
     """
     if (locale or "en").lower().startswith("en"):
         # "2:20 pm", not "02:20 PM" — a leading zero on a twelve-hour clock is
-        # something no English speaker writes.
-        return moment.strftime("%-I:%M %p").lower()
+        # something no English speaker writes. "%-I" would say that directly,
+        # but the minus flag is a glibc extension and does not exist in the
+        # Windows C runtime, so the zero is stripped by hand instead.
+        return moment.strftime("%I:%M %p").lstrip("0").lower()
     return moment.strftime("%H:%M")
 
 
 def expires(local: datetime) -> datetime:
     """When this notification stops being worth delivering.
 
-    The start of the recipient's quiet hours on the same local day, not
+    The start of the recipient’s quiet hours on the same local day, not
     midnight. A phone that was off all day and comes back at 23:40 should not
     receive a cheerful line about a morning that has been and gone — and the
     vendor holding it until then would be the delivery layer quietly
-    overriding the product's own rule that a late daily is dropped rather than
+    overriding the product’s own rule that a late daily is dropped rather than
     deferred.
     """
     day = local.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -163,17 +165,17 @@ def compose(
 ) -> Push:
     """One notification, ready for either vendor.
 
-    `locale` is the **device's** language where the client reported one at
-    registration, and the account's language otherwise. The device wins because
+    `locale` is the **device’s** language where the client reported one at
+    registration, and the account’s language otherwise. The device wins because
     that is what the operating system will resolve the key in, and an argument
-    translated into the account's language inside a sentence resolved into the
-    phone's would be the exact bug the whole `loc-key` design exists to avoid —
+    translated into the account’s language inside a sentence resolved into the
+    phone’s would be the exact bug the whole `loc-key` design exists to avoid —
     only harder to see, because five of the six words would be right.
 
-    `teaser` is the written piece's own opening sentence, and when it is here
+    `teaser` is the written piece’s own opening sentence, and when it is here
     it becomes the body. That is the merge of two designs that arrived at this
-    from different sides: this module's payload shape — keys, resolved by the
-    operating system in the device's language — with the daily package's body,
+    from different sides: this module’s payload shape — keys, resolved by the
+    operating system in the device’s language — with the daily package’s body,
     which went through `validator.check` with the paragraph it belongs to.
     Assembling a body from a key was never *false*, but it pointed at a reading
     that was not being written; a teaser cannot exist without one.

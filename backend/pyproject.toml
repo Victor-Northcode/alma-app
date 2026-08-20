@@ -30,6 +30,16 @@ dependencies = [
     "cryptography>=43",
     "anthropic>=0.60",
     "timezonefinder>=6.5",
+    # timezonefinder maps a point to a zone *name*; it does not ship the IANA
+    # zone database itself. Every zone check goes through
+    # `zoneinfo.available_timezones()` (geo._zone_names, schemas._known_timezone),
+    # which reads the system `/usr/share/zoneinfo`. The runtime image is
+    # `python:3.12-slim`, which has no such directory, so without this package
+    # the set is empty and *every* timezone — even "UTC" — is rejected 422,
+    # making it impossible to save a birth and taking the whole product down.
+    # tzdata (Apache-2.0/public-data, permitted by tools/license_gate.py) makes
+    # zoneinfo self-sufficient regardless of the OS image. Found 2026-08-20.
+    "tzdata>=2024.1",
     # Astronomy: permissive licences only (§9). Skyfield/jplephem are MIT,
     # pyerfa is BSD-3, and the JPL kernels are public data. Swiss Ephemeris,
     # pyswisseph, libephemeris and Kerykeion are banned — AGPL §13 would force

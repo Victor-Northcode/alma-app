@@ -30,7 +30,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 if TYPE_CHECKING:  # only for the annotation — importing it here would cycle
@@ -91,6 +91,22 @@ class Settings(BaseSettings):
     jwt_algorithm: str = Field(default="HS256", alias="ALMA_JWT_ALGORITHM")
     access_token_days: int = Field(default=90, alias="ALMA_ACCESS_TOKEN_DAYS")
     magic_link_minutes: int = Field(default=20, alias="ALMA_MAGIC_LINK_MINUTES")
+
+    @field_validator("jwt_secret", mode="before")
+    @classmethod
+    def _empty_secret_is_unset(cls, value):
+        # `.env.example` и `.env.local` держат `ALMA_JWT_SECRET=` пустым — это
+        # «ещё не задано», а не «задано пустым». Пустая строка перезаписывала
+        # непустой дефолт, приложение стартовало здоровым и падало 500
+        # (`HMAC key must not be empty`) на первом же запросе, минтящем токен, —
+        # перед клиентом, а не на старте. Найдено аудитом 20.08.2026.
+        #
+        # Свести пустое к дефолту: в разработке беструдно, а прод и так отвергает
+        # дефолт (`_production_failures`, `missing_for_production`) — теперь той
+        # же дорогой отвергается и пустое, громко и на старте.
+        if value is not None and not str(value).strip():
+            return "dev-only-not-a-secret"
+        return value
 
     google_client_id: str = Field(default="", alias="GOOGLE_CLIENT_ID")
     apple_client_id: str = Field(default="", alias="APPLE_CLIENT_ID")

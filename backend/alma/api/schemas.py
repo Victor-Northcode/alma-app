@@ -30,8 +30,12 @@ class BirthInput(BaseModel):
 
     birth_date: date
     birth_time: str | None = Field(default=None, description='"HH:MM" local, or null')
-    latitude: float = Field(ge=-90, le=90)
-    longitude: float = Field(ge=-180, le=180)
+    # `allow_inf_nan=False`: `NaN`/`Infinity` — валидный вход json-парсера, но не
+    # координата. Без этого отказ приходил как «должно быть ≤ 90» вместо честного
+    # «должно быть конечным числом», а сам ответ 422 не сериализовался (см.
+    # `app._fold_nonfinite`). Найдено аудитом 20.08.2026.
+    latitude: float = Field(ge=-90, le=90, allow_inf_nan=False)
+    longitude: float = Field(ge=-180, le=180, allow_inf_nan=False)
     timezone: str = Field(min_length=1, max_length=64)
     place_label: str | None = Field(default=None, max_length=200)
     place_id: int | None = None
@@ -251,8 +255,8 @@ class TransitsRequest(CalcRequest):
 
 class SolarReturnRequest(CalcRequest):
     year: int | None = Field(default=None, ge=1900, le=2100)
-    latitude: float | None = Field(default=None, ge=-90, le=90)
-    longitude: float | None = Field(default=None, ge=-180, le=180)
+    latitude: float | None = Field(default=None, ge=-90, le=90, allow_inf_nan=False)
+    longitude: float | None = Field(default=None, ge=-180, le=180, allow_inf_nan=False)
 
 
 class CompatibilityRequest(CalcRequest):

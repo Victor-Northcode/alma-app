@@ -249,14 +249,30 @@ async def consume_magic_link(
         select(MagicLink).where(MagicLink.token_hash == tokens.hash_magic_token(payload.token))
     )
     link = result.scalar_one_or_none()
+    # Каждый из трёх отказов несёт **типизированный код**, а не только фразу.
+    # Клиент (`sign-in/page.tsx`) прежде различал их по английской подстроке
+    # message (`includes("already"/"expired")`), и это ломалось дважды: сетевой
+    # сбой «no connection» проваливался в «ссылка недействительна», а любая
+    # локализация этих строк обнулила бы разбор целиком. Человеческий текст
+    # остаётся в `message` (его читают тесты и он уходит на экран как запасной),
+    # а ветвление теперь идёт по `error`. Найдено 20.08.2026.
     if link is None:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="this link is not valid")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"error": "link_invalid", "message": "this link is not valid"},
+        )
 
     expires = as_utc(link.expires_at)
     if link.used_at is not None:
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="this link has already been used")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"error": "link_used", "message": "this link has already been used"},
+        )
     if expires <= datetime.now(timezone.utc):
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="this link has expired")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"error": "link_expired", "message": "this link has expired"},
+        )
 
     # Single use, marked before the account work so a double submit cannot
     # produce two sign-ins from one email.

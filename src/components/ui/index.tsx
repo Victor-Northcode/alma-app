@@ -190,6 +190,7 @@ export function Accordion({
     <div style={{ padding: size === "l" ? "24px 0" : "20px 0", borderTop: "1px solid rgba(237,231,218,.12)" }}>
       <button
         type="button"
+        className="tap44"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls={id}
@@ -320,7 +321,7 @@ export function RailDots({
         <button
           key={i}
           type="button"
-          className="dot"
+          className="dot tap44"
           data-active={i === active}
           aria-label={label(i + 1, count)}
           aria-current={i === active}

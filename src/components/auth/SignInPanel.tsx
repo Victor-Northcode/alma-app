@@ -26,7 +26,7 @@
  */
 
 import Script from "next/script";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, isOk, writeToken, type Failure } from "@/lib/api";
 import { looksLikeEmail } from "@/lib/email";
 import { useLocale } from "@/lib/i18n/provider";
@@ -155,8 +155,23 @@ export function SignInPanel({
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [message, setMessage] = useState("");
+  // Whether the Google Identity script has finished loading. The init effect
+  // below used to depend only on `withGoogle` and bail if `window.google` was
+  // not there yet — but `<Script afterInteractive>` resolves *after* mount, so
+  // on the common ordering the effect ran once, found no `window.google`, and
+  // never ran again: the button simply never appeared. Flipping this from the
+  // script's own `onReady` re-runs the effect at the moment the API exists.
+  const [gsiReady, setGsiReady] = useState(false);
+  // Синхронный замок от двойной отправки. `disabled={state==="sending"}` на
+  // кнопке применяется только после ре-рендера React, а три клика в один тик
+  // успевают вызвать `submit` до него — замерено аудитом 20.08.2026: три
+  // синхронных клика дали три запроса magic-link. Проверять `state` в замыкании
+  // не помогло бы: для тех же синхронных вызовов оно ещё "idle". Ref ставится
+  // до первого `await` и потому виден следующему вызову в том же такте.
+  const sendingRef = useRef(false);
 
   const submit = useCallback(async () => {
+    if (sendingRef.current) return;
     const address = email.trim().toLowerCase();
     // One shared rule, in `lib/email.ts` — a second copy of "what looks like
     // an email address" is a copy that drifts, and it drifts towards being
@@ -167,28 +182,36 @@ export function SignInPanel({
       return;
     }
 
+    sendingRef.current = true;
     setState("sending");
-    const result = await api.requestMagicLink(address, locale);
-    if (!isOk(result)) {
-      setState("error");
-      setMessage(copy.failed);
-      return;
-    }
-
-    // In development there is no mail provider, so the backend hands the link
-    // back instead of pretending it sent one. Production never reaches this.
-    if (result.data.debug_token) {
-      const consumed = await api.consumeMagicLink(result.data.debug_token);
-      if (isOk(consumed)) {
-        writeToken(consumed.data.token);
-        onSignedIn?.();
+    try {
+      const result = await api.requestMagicLink(address, locale);
+      if (!isOk(result)) {
+        setState("error");
+        setMessage(copy.failed);
         return;
       }
-    }
 
-    setState("sent");
-    setMessage(copy.sent);
-    onLinkSent?.(address);
+      // In development there is no mail provider, so the backend hands the link
+      // back instead of pretending it sent one. Production never reaches this.
+      if (result.data.debug_token) {
+        const consumed = await api.consumeMagicLink(result.data.debug_token);
+        if (isOk(consumed)) {
+          writeToken(consumed.data.token);
+          onSignedIn?.();
+          return;
+        }
+      }
+
+      setState("sent");
+      setMessage(copy.sent);
+      onLinkSent?.(address);
+    } finally {
+      // Снять замок в любом исходе, кроме уже случившегося входа: ошибка и
+      // «письмо отправлено» — оба состояния, из которых человек вправе
+      // повторить, а вход размонтирует панель и повтор невозможен.
+      sendingRef.current = false;
+    }
   }, [copy, email, locale, onSignedIn, onLinkSent]);
 
   const withGoogle = useCallback(
@@ -206,7 +229,7 @@ export function SignInPanel({
   );
 
   useEffect(() => {
-    if (!GOOGLE_CLIENT_ID || !window.google) return;
+    if (!GOOGLE_CLIENT_ID || !gsiReady || !window.google) return;
     window.google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
       callback: (r) => void withGoogle(r.credential),
@@ -220,7 +243,7 @@ export function SignInPanel({
         text: "continue_with",
       });
     }
-  }, [withGoogle]);
+  }, [withGoogle, gsiReady]);
 
   if (state === "sent") {
     return (
@@ -234,7 +257,11 @@ export function SignInPanel({
     <div className="signin">
       {GOOGLE_CLIENT_ID && (
         <>
-          <Script src="https://accounts.google.com/gsi/client" strategy="afterInteractive" />
+          <Script
+            src="https://accounts.google.com/gsi/client"
+            strategy="afterInteractive"
+            onReady={() => setGsiReady(true)}
+          />
           <div id="alma-google-button" className="signin-provider" />
         </>
       )}

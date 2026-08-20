@@ -207,7 +207,7 @@ BODIES: dict[str, str] = {
     "es": "El capítulo de la atracción entre los dos ya está listo para leer.",
     "de": "Das Kapitel über die Anziehung zwischen euch ist bereit zum Lesen.",
     "it": "Il capitolo sull'attrazione tra voi due è pronto da leggere.",
-    "fr": "Le chapitre de l'attirance entre vous est prêt à lire.",
+    "fr": "Le chapitre de l’attirance entre vous est prêt à lire.",
     "pt-BR": "O capítulo da atração entre vocês está pronto para ler.",
     "ru": "Глава о притяжении для вас двоих готова к чтению.",
 }

@@ -326,6 +326,39 @@ def test_no_configured_audience_refuses_rather_than_accepting_everything(
         verify(body, _headers(google))
 
 
+def test_an_unpinned_service_account_fails_closed_in_production(monkeypatch, google):
+    """Without the service-account pin, in production a push must be refused.
+
+    The audience is not a secret — it is usually the push URL and leaks from a
+    log — so the pin is the only thing proving the token came from Google Play
+    rather than any other Google customer, who can mint a valid token for an
+    arbitrary audience. Before this, an unset pin only logged a warning and
+    accepted, which let a `voided_purchase` revoke a paying account's
+    entitlement. In production a delivery that cannot be pinned is refused.
+    """
+    from alma import config as config_module
+
+    monkeypatch.delenv("GOOGLE_PLAY_PUBSUB_SERVICE_ACCOUNT", raising=False)
+    monkeypatch.setenv("ALMA_ENV", "production")
+    config_module.settings.cache_clear()
+    body = json.dumps(_push(_subscription_notification(2))).encode()
+    with pytest.raises(InvalidSignature, match="GOOGLE_PLAY_PUBSUB_SERVICE_ACCOUNT"):
+        verify(body, _headers(google))
+
+
+def test_an_unpinned_service_account_is_only_a_warning_outside_production(
+    monkeypatch, google, caplog
+):
+    """A sandbox without the pin can still be exercised — it warns, not refuses."""
+    from alma import config as config_module
+
+    monkeypatch.delenv("GOOGLE_PLAY_PUBSUB_SERVICE_ACCOUNT", raising=False)
+    monkeypatch.setenv("ALMA_ENV", "test")
+    config_module.settings.cache_clear()
+    body = json.dumps(_push(_subscription_notification(2))).encode()
+    verify(body, _headers(google))  # accepted, no raise
+
+
 def test_a_notification_for_another_package_is_refused():
     """A Pub/Sub topic pointed at somebody else's Play account.
 

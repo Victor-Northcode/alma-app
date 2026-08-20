@@ -407,6 +407,26 @@ def verify(
             raise InvalidSignature(
                 f"Pub/Sub token is from {claims.get('email')!r}, not {expected!r}"
             )
+    elif config.is_production:
+        # **Fail-closed in production, not fail-open with a warning.** Found
+        # 2026-08-20: without the service-account pin the only thing separating
+        # Google Play from any other Google customer is the audience, and an
+        # audience is not a secret — it is usually the push URL and leaks from a
+        # log. Any Google customer can mint a valid, Google-signed OIDC token
+        # for an arbitrary audience (`gcloud auth print-identity-token
+        # --audiences=<x>`), so a `voided_purchase` — which skips the Play
+        # Developer API `enrich` — could then revoke a paying account's
+        # entitlement (a DoS on entitlements). The field is documented as
+        # "strongly worth setting"; in production it is required, and a delivery
+        # that cannot be pinned is refused rather than trusted. Pub/Sub retries,
+        # so a misconfiguration surfaces as undelivered pushes, not silent
+        # acceptance. Outside production the warning stands so a sandbox without
+        # the pin can still be exercised.
+        raise InvalidSignature(
+            "GOOGLE_PLAY_PUBSUB_SERVICE_ACCOUNT is unset in production — refusing "
+            "an unpinned notification: the audience alone does not prove the push "
+            "came from Google Play rather than another Google customer"
+        )
     else:
         log.warning(
             "GOOGLE_PLAY_PUBSUB_SERVICE_ACCOUNT is unset: the audience is the only "

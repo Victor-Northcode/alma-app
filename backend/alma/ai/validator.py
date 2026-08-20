@@ -574,6 +574,22 @@ def russian_gendered(text: str) -> list[str]:
 #: short: a banned-word list in a language nobody here has audited is a source
 #: of refusals rather than of quality, and it costs a real generation each time
 #: it is wrong. Widen them when somebody who reads that language has looked.
+#: Оба апострофа — один и тот же апостроф, когда мы ищем слово в тексте модели.
+#:
+#: **Дефект был тихий и жил до правки типографики.** Список запрещённых слов
+#: сверяется с текстом простым вхождением подстроки, а модель пишет апостроф
+#: тем знаком, каким захочет: `l'univers` и `l’univers` — для `in` это разные
+#: строки. То есть половина французских и итальянских записей списка не ловилась
+#: никогда, и заметить это было нельзя — проверка не падает, она молчит.
+#:
+#: Свелось наружу тем, что типографику французского привели к «’»: список,
+#: приведённый вместе с текстом, перестал бы ловить прямой апостроф вместо
+#: кудрявого — то же самое, только в другую сторону. Значит чинить надо не
+#: список, а сравнение.
+def _fold_apostrophes(value: str) -> str:
+    return value.replace("\u2019", "'").replace("\u02bc", "'")
+
+
 _PURPLE: dict[str, tuple[str, ...]] = {
     "ru": (
         "ядро", "суть", "истинное я", "истинного я", "настоящий ты", "маска",
@@ -586,7 +602,7 @@ _PURPLE: dict[str, tuple[str, ...]] = {
     ),
     "es": ("esencia", "verdadero yo", "energía", "el universo", "sagrado", "vibración"),
     "de": ("essenz", "wesenskern", "wahres selbst", "energie", "das universum", "schwingung"),
-    "fr": ("essence", "vrai soi", "énergie", "l'univers", "sacré", "vibration"),
+    "fr": ("essence", "vrai soi", "énergie", "l’univers", "sacré", "vibration"),
     "it": ("essenza", "vero sé", "energia", "l'universo", "sacro", "vibrazione"),
     "pt-BR": ("essência", "verdadeiro eu", "energia", "o universo", "sagrado", "vibração"),
 }
@@ -638,8 +654,11 @@ def purple_words(text: str, locale: str) -> list[str]:
     on 9 August 2026, four waves after the rule was written.
     """
     base = locale if locale in _PURPLE else locale.split("-")[0]
-    lowered = text.lower()
-    return [word for word in _PURPLE.get(base, ()) if word in lowered]
+    lowered = _fold_apostrophes(text.lower())
+    return [
+        word for word in _PURPLE.get(base, ())
+        if _fold_apostrophes(word) in lowered
+    ]
 
 
 def plain_language(text: str, locale: str) -> list[str]:

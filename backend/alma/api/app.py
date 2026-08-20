@@ -9,11 +9,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import math
 import os
 from contextlib import asynccontextmanager, suppress
 
 from anyio import to_thread
 from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -38,6 +41,18 @@ from .routers import (
 )
 
 log = logging.getLogger("alma")
+
+
+#: Самое большое тело запроса, которое сервис соглашается прочитать, в байтах.
+#:
+#: **До этого потолка не было вовсе.** Ни один маршрут его не просит — рождение
+#: это несколько чисел, сообщение чата ограничено 2000 символами схемой, а
+#: `events.meta`/`properties` были `dict` без границы, — но «никто не просит»
+#: и «никто не может» это разные вещи: тело буферизуется до того, как pydantic
+#: скажет «слишком большое», так что 12-мегабайтный JSON занимал память воркера
+#: целиком по пути к 422. 256 КБ — с запасом на порядок больше самого крупного
+#: честного тела и всё ещё несоизмеримо меньше того, чем можно занять память.
+MAX_REQUEST_BODY_BYTES = 256 * 1024
 
 
 #: Сколько синхронной работы воркеру разрешено вести одновременно.
@@ -214,6 +229,69 @@ async def close_http_clients() -> None:
             log.info("closing the %s http client: %s", name, exc)
 
 
+class MaxBodySize:
+    """ASGI-обёртка: отказать телу больше потолка, не забуферив его целиком.
+
+    Два края одной дыры, и закрыть надо оба. Клиент с честным `Content-Length`
+    отсекается **до** первого прочитанного байта — 413, приложение не
+    запускается. Клиент без длины (chunked) считается по мере чтения: как только
+    накоплено больше потолка, поток обрывается пустым `more_body=False`, тело
+    приходит усечённым, и разбор упирается в 422 — память при этом ограничена
+    потолком, а не размером того, что прислали. Определён здесь, а не в
+    отдельном модуле: это часть сборки приложения, как и CORS ниже.
+    """
+
+    def __init__(self, app, *, max_bytes: int) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+
+        for name, value in scope.get("headers", ()):
+            if name == b"content-length":
+                try:
+                    declared = int(value)
+                except ValueError:
+                    declared = None
+                if declared is not None and declared > self.max_bytes:
+                    return await self._too_large(send)
+                break
+
+        received = 0
+        over = False
+
+        async def limited_receive():
+            nonlocal received, over
+            message = await receive()
+            if message["type"] == "http.request" and not over:
+                received += len(message.get("body", b""))
+                if received > self.max_bytes:
+                    # Обрываем тело здесь: приложение получит усечённый JSON и
+                    # ответит 422, а память не вырастет за потолок.
+                    over = True
+                    return {"type": "http.request", "body": b"", "more_body": False}
+            return message
+
+        return await self.app(scope, limited_receive, send)
+
+    @staticmethod
+    async def _too_large(send) -> None:
+        await send({
+            # 413 by number: Starlette renamed the constant (…_REQUEST_ENTITY_…
+            # → …_CONTENT_…) and deprecated the old name, the same reason the
+            # routers spell 422 as a number rather than pin a version over it.
+            "type": "http.response.start",
+            "status": 413,
+            "headers": [(b"content-type", b"application/json")],
+        })
+        await send({
+            "type": "http.response.body",
+            "body": b'{"error":"request_too_large"}',
+        })
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = settings()
@@ -277,6 +355,13 @@ def create_app() -> FastAPI:
         expose_headers=["X-Alma-Token"],
     )
 
+    # Потолок размера тела стоит **снаружи** CORS. Starlette исполняет
+    # добавленное последним первым, поэтому он идёт после CORS: огромное тело
+    # надо отсечь до всякой другой работы, а отказ 413 не нуждается в
+    # CORS-заголовках — его читает не браузерный fetch, а тот, кто пытается
+    # занять память воркера.
+    app.add_middleware(MaxBodySize, max_bytes=MAX_REQUEST_BODY_BYTES)
+
     for router in (
         health.router,
         auth.router,
@@ -318,7 +403,37 @@ def create_app() -> FastAPI:
             content={"error": "place_index_missing", "message": str(exc)},
         )
 
+    @app.exception_handler(RequestValidationError)
+    async def _unprocessable(_request: Request, exc: RequestValidationError) -> JSONResponse:
+        # Тот же ответ, что и по умолчанию у FastAPI (`{"detail": [...]}`, 422),
+        # но с одной защитой. FastAPI кладёт отвергнутое значение обратно в тело
+        # ошибки полем `input`; для широты `NaN` или долготы `Infinity` — а это
+        # валидный вход питоновского json-парсера, но не JSON по спецификации —
+        # рендер ответа идёт через `json.dumps(allow_nan=False)` и падает, и
+        # чистый 422 оборачивался 500 на сериализации собственного отказа.
+        # Найдено аудитом 20.08.2026: `POST /v1/profiles` с `latitude: NaN`.
+        # Диапазон значение и так отвергает — лечим только его отголосок.
+        return JSONResponse(
+            status_code=422,
+            content={"detail": _fold_nonfinite(jsonable_encoder(exc.errors()))},
+        )
+
     return app
+
+
+def _fold_nonfinite(value):
+    """Свернуть не-конечные float к их тексту («nan»/«inf»/«-inf»).
+
+    Рекурсивно, потому что отвергнутое значение живёт в `input` внутри списка
+    словарей `exc.errors()`, а не на поверхности.
+    """
+    if isinstance(value, float):
+        return value if math.isfinite(value) else str(value)
+    if isinstance(value, dict):
+        return {key: _fold_nonfinite(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_fold_nonfinite(item) for item in value]
+    return value
 
 
 app = create_app()

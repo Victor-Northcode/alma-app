@@ -87,6 +87,31 @@ def test_production_with_the_development_secret_refuses_to_start(monkeypatch):
     assert "ALMA_JWT_SECRET" in str(refused.value)
 
 
+def test_an_empty_secret_is_refused_just_like_the_development_one(monkeypatch):
+    """`ALMA_JWT_SECRET=` (пусто) обходило проверку и падало 500 у клиента.
+
+    `.env.example` держит переменную пустой как «ещё не задано». Пустая строка
+    перезаписывала непустой дефолт, `check_production_ready` пропускал её
+    (пусто ≠ «dev-only-not-a-secret»), прод стартовал здоровым — и первый же
+    запрос, минтящий токен, падал `HMAC key must not be empty`, 500, перед
+    клиентом. Пустое теперь сведено к дефолту и отвергается той же дорогой, что
+    и дефолт: громко и на старте. Найдено аудитом 20.08.2026.
+
+    На старом коде прод с пустым секретом стартовал — тест был бы зелёным без
+    падения, поэтому `pytest.raises` здесь и сторожит правку.
+    """
+    config = settings_with(
+        monkeypatch,
+        ALMA_ENV="production",
+        ALMA_JWT_SECRET="",
+        ALMA_DATABASE_URL="postgresql+asyncpg://alma:pw@db/alma",
+        ANTHROPIC_API_KEY="sk-ant-not-a-real-key",
+    )
+    with pytest.raises(RuntimeError) as refused:
+        config.check_production_ready()
+    assert "ALMA_JWT_SECRET" in str(refused.value)
+
+
 def test_the_refusal_names_everything_missing_at_once(monkeypatch):
     """Иначе настройка прода — это очередь из трёх деплоев.
 

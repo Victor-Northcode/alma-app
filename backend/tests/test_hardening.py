@@ -305,6 +305,167 @@ def test_an_account_keeps_its_own_event_allowance(api, auth_headers, monkeypatch
     assert api.post("/v1/events", json=beacon, headers=auth_headers).status_code == 200
 
 
+# ── 5b. дорогой расчёт метрится по аккаунту ────────────────────────────────
+
+def test_one_token_cannot_saturate_the_calc_pool(api, auth_headers, monkeypatch):
+    """`/v1/systems/*` не имел никакого потолка.
+
+    Расчёт бесплатен по закону продукта, поэтому он не считался — а стоит он
+    процессорное время в конечном пуле потоков, и один токен, крутящий годовой
+    скан транзитов, занимал пул целиком, кладя вместе с ним главы, чат и
+    проверку живости. Теперь дорогой скан метрится по `user.id`.
+    """
+    from conftest import SOFIA
+
+    monkeypatch.setattr(deps, "SYSTEMS_CALCS_PER_MINUTE", 3)
+
+    for _ in range(3):
+        ok = api.post("/v1/systems/natal", json={"birth": SOFIA}, headers=auth_headers)
+        assert ok.status_code == 200
+
+    refused = api.post("/v1/systems/natal", json={"birth": SOFIA}, headers=auth_headers)
+    assert refused.status_code == 429
+    assert refused.json()["detail"]["error"] == "calc_rate_limit"
+    # Срок ожидания назван, как и у гостевого потолка.
+    assert refused.headers["Retry-After"]
+
+
+def test_the_calc_ceiling_is_per_account_not_the_whole_world(api, monkeypatch):
+    """Один залитый аккаунт не закрывает расчёт всем остальным.
+
+    Деньги висят на `user.id`, поэтому и потолок по нему: строку `user` от
+    ротации уже стережёт `guest_mint`, а этот потолок — вторая половина, один
+    токен против пула. Значит второй, свежий аккаунт считает с нуля.
+    """
+    from conftest import SOFIA
+
+    monkeypatch.setattr(deps, "SYSTEMS_CALCS_PER_MINUTE", 1)
+
+    busy = api.get("/v1/auth/session").json()["token"]
+    fresh = api.get("/v1/auth/session").json()["token"]
+
+    def natal(token: str):
+        return api.post(
+            "/v1/systems/natal",
+            json={"birth": SOFIA},
+            headers={"Authorization": f"Bearer {token}"},
+        )
+
+    assert natal(busy).status_code == 200
+    assert natal(busy).status_code == 429
+    # Другой аккаунт не задет чужим потолком.
+    assert natal(fresh).status_code == 200
+
+
+# ── 5b². не-конечное число в теле не превращает 422 в 500 ──────────────────
+
+def test_a_non_finite_coordinate_is_a_clean_422_not_a_500(api, auth_headers):
+    """`NaN`/`Infinity` в широте отвечали 500 вместо 422 на нескольких ручках.
+
+    `NaN` и `1e999` — валидный вход питоновского json-парсера, но не JSON по
+    спецификации. Диапазон `-90..90` их и так отвергает, но FastAPI кладёт
+    отвергнутое значение обратно в тело ошибки полем `input`, а Starlette
+    рендерит ответ через `json.dumps(allow_nan=False)` — и падает на самом
+    сообщении об отказе. Чистый 422 оборачивался 500. Найдено аудитом
+    20.08.2026: `POST /v1/profiles` с `latitude: NaN`.
+
+    На старом коде `TestClient` поднимает это исключение прямо здесь (500),
+    поэтому тест красный до правки. `1e999` парсится питоном в `inf`.
+    """
+    for literal in ("NaN", "Infinity", "-Infinity", "1e999"):
+        body = (
+            '{"birth_date":"1990-05-15","latitude":' + literal + ',"longitude":0,'
+            '"timezone":"UTC","is_self":false}'
+        )
+        response = api.post(
+            "/v1/profiles",
+            content=body,
+            headers={**auth_headers, "Content-Type": "application/json"},
+        )
+        assert response.status_code == 422, (
+            f"широта {literal!r} должна давать 422, а не {response.status_code}"
+        )
+        # И тело ответа действительно JSON — то, что раньше не сериализовалось.
+        assert response.json()["detail"], literal
+
+    # А честная координата за границей диапазона — тот же 422, не задета.
+    ok_range = api.post(
+        "/v1/profiles",
+        json={"birth_date": "1990-05-15", "latitude": 91, "longitude": 0,
+              "timezone": "UTC", "is_self": False},
+        headers=auth_headers,
+    )
+    assert ok_range.status_code == 422
+
+
+# ── 5c. кредит совместимости не тратится на несуществующего партнёра ───────
+
+def test_a_stated_partner_is_checked_before_anything_is_spent(schema):
+    """`partner_profile_id` доверяла названному id без проверки владения.
+
+    Подписчик, приславший `partner_profile_id` чужого или несуществующего
+    профиля, тратил включённый месячный кредит и писал грант `pair:{id}` в
+    первой транзакции `read`, а 404 прилетал из второй — уже после коммита
+    списания. Теперь существование и владение проверяются здесь, до списания:
+    «не найдено == не твоё» → 404.
+    """
+    async def go():
+        async with session_module.session_scope() as session:
+            owner = User(id="u-own-1", provider="guest")
+            stranger = User(id="u-str-1", provider="guest")
+            session.add_all([owner, stranger])
+            await session.flush()
+            mine = Profile(
+                id="p-mine-1", user_id=owner.id, is_self=False, name="Partner",
+                birth_date=date(1990, 1, 1), latitude=0.0, longitude=0.0,
+                timezone="UTC",
+            )
+            theirs = Profile(
+                id="p-theirs-1", user_id=stranger.id, is_self=False, name="Someone",
+                birth_date=date(1990, 1, 1), latitude=0.0, longitude=0.0,
+                timezone="UTC",
+            )
+            session.add_all([mine, theirs])
+            await session.flush()
+
+            # Свой партнёр — возвращается как есть.
+            assert await deps.partner_profile_id(session, owner, "p-mine-1") == "p-mine-1"
+
+            # Несуществующий — 404, и ни одной попытки списать кредит.
+            with pytest.raises(deps.HTTPException) as gone:
+                await deps.partner_profile_id(session, owner, "p-does-not-exist")
+            assert gone.value.status_code == 404
+
+            # Чужой — тот же 404, чтобы id нельзя было перебирать.
+            with pytest.raises(deps.HTTPException) as foreign:
+                await deps.partner_profile_id(session, owner, "p-theirs-1")
+            assert foreign.value.status_code == 404
+
+    run_async(go)
+
+
+# ── 5d. тело запроса ограничено сверху ─────────────────────────────────────
+
+def test_a_body_larger_than_the_ceiling_is_refused_before_it_is_buffered(api):
+    """Тела без потолка не было: 12-мегабайтный JSON занимал память по пути к 422.
+
+    Теперь `MaxBodySize` отсекает его 413 по `Content-Length`, до запуска
+    приложения. Маленькие честные тела (профиль, чат) не задеты — их проверяют
+    остальные тесты.
+    """
+    from alma.api.app import MAX_REQUEST_BODY_BYTES
+
+    anon = {"X-Alma-Anon": "aaaaaaaa-1111"}
+    huge = {"stage": "landing_view", "meta": {"x": "a" * (MAX_REQUEST_BODY_BYTES + 1)}}
+    refused = api.post("/v1/events", json=huge, headers=anon)
+    assert refused.status_code == 413
+    assert refused.json()["error"] == "request_too_large"
+
+    # А тело в пределах потолка проходит как обычно (здесь — 200).
+    ok = api.post("/v1/events", json={"stage": "landing_view"}, headers=anon)
+    assert ok.status_code == 200
+
+
 # ── 6. проверка Google и Apple не вешает сервис ────────────────────────────
 
 class _FakeJWKS:
@@ -448,7 +609,12 @@ def test_nothing_in_the_codebase_reads_the_user_collections():
     package = pathlib.Path(alma.__file__).parent  # не от текущего каталога:
     readers = []                                  # набор запускают и из корня
     for path in sorted(package.rglob("*.py")):
-        for node in ast.walk(ast.parse(path.read_text())):
+        # `encoding="utf-8"` explicitly: the codebase is UTF-8 (Cyrillic comments
+        # throughout), and on Windows `read_text()` defaults to the ANSI code
+        # page (cp1251 here), which raises UnicodeDecodeError on the first
+        # multi-byte source file and fails this check for a reason that has
+        # nothing to do with what it tests.
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Attribute) and node.attr in {"profiles", "entitlements"}:
                 readers.append(f"{path}:{node.lineno}: {ast.unparse(node)}")
 

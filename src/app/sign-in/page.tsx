@@ -111,16 +111,42 @@ function SignIn() {
     attempted.current = true;
 
     api.consumeMagicLink(token).then((result) => {
+      // The token is single-use and now spent (or was never ours): strip it
+      // from the address bar so it is not left in history or resent on a back
+      // navigation. `replaceState` rather than a navigation so nothing
+      // re-renders and the just-computed `result` still lands below.
+      if (typeof window !== "undefined") {
+        window.history.replaceState(null, "", "/sign-in");
+      }
+
       if (isOk(result)) {
         writeToken(result.data.token);
         setState("done");
         return;
       }
+
+      // A network failure is not the server's verdict on the link — the token
+      // was never consumed and may be perfectly valid. Calling it "invalid"
+      // (the old fall-through) sent people to ask for a fresh link they did
+      // not need. Show the sign-in form instead, where they can retry or
+      // request one. (No dedicated copy string is invented for this — see the
+      // owner's rule on strings.)
+      if (result.kind === "offline" || result.kind === "unavailable") {
+        setState("idle");
+        return;
+      }
+
+      // Branch on the backend's typed error code, not on the English text of
+      // the message: the three magic-link failures now arrive as
+      // `link_used` / `link_expired` / `link_invalid`. The substring check is
+      // kept only as a fallback for an older server that still sends a plain
+      // string.
       setState("failed");
+      const code = result.kind === "error" ? result.code : undefined;
       const said = result.message.toLowerCase();
-      setProblem(
-        said.includes("already") ? copy.used : said.includes("expired") ? copy.expired : copy.invalid,
-      );
+      const used = code === "link_used" || (!code && said.includes("already"));
+      const expired = code === "link_expired" || (!code && said.includes("expired"));
+      setProblem(used ? copy.used : expired ? copy.expired : copy.invalid);
     });
   }, [copy, token]);
 

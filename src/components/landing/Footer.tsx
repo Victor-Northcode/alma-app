@@ -107,7 +107,7 @@ export function Footer() {
               <span style={{ fontSize: 14.5, color: "rgba(237,231,218,.82)" }}>{group}</span>
               <span style={{ fontSize: 13, display: "flex", gap: 10 }}>
                 {links.map((l) => (
-                  <Link key={l.href} href={l.href} style={{ color: "var(--muted-3)" }}>
+                  <Link key={l.href} href={l.href} className="tap44" style={{ color: "var(--muted-3)" }}>
                     {l.label}
                   </Link>
                 ))}
@@ -118,7 +118,7 @@ export function Footer() {
             <span style={{ fontSize: 14.5, color: "rgba(237,231,218,.82)" }}>
               {t.footer.contact}
             </span>
-            <a href="mailto:hello@pazl.ai" style={{ fontSize: 13 }}>
+            <a href="mailto:hello@pazl.ai" className="tap44" style={{ fontSize: 13 }}>
               hello@pazl.ai
             </a>
           </div>
@@ -142,6 +142,11 @@ export function Footer() {
           </div>
           <div className="footer-links">
             {legalLinks.map((l) =>
+              // Настольная «стена» переносится в несколько строк с зазором 10px
+              // между ними — 44px область там наложилась бы на соседний ряд и
+              // сделала попадание неоднозначным. Находка аудита была замерена на
+              // 320px, где ссылки идут в один ряд (мобильный блок выше), поэтому
+              // тап-цель расширяется там, а здесь оставлена как есть.
               l.href.startsWith("mailto:") ? (
                 <a key={l.label} href={l.href}>
                   {labelFor(l.href, t, l.label)}

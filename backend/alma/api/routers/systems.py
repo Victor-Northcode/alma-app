@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ... import i18n
 from ...auth import entitlements
@@ -31,6 +31,7 @@ from ..deps import (
     birth_from_input,
     partner_profile_id,
     resolve_birth,
+    throttle_expensive_calc,
 )
 from ..schemas import (
     CalcRequest,
@@ -136,7 +137,7 @@ async def _respond(
     return payload
 
 
-@router.post("/natal")
+@router.post("/natal", dependencies=[Depends(throttle_expensive_calc)])
 async def natal(payload: CalcRequest, user: CurrentUser, session: SessionDep) -> dict:
     birth = await resolve_birth(
         session, user, profile_id=payload.profile_id, birth=payload.birth
@@ -163,7 +164,7 @@ async def birth_card(payload: CalcRequest, user: CurrentUser, session: SessionDe
     return await _respond(session, user, "birth-card", result)
 
 
-@router.post("/transits")
+@router.post("/transits", dependencies=[Depends(throttle_expensive_calc)])
 async def transits(payload: TransitsRequest, user: CurrentUser, session: SessionDep) -> dict:
     """Годовой скан — самый дорогой вызов в сервисе, и он обязан быть один на день.
 
@@ -210,7 +211,7 @@ async def transits(payload: TransitsRequest, user: CurrentUser, session: Session
     return await _respond(session, user, "transits", result)
 
 
-@router.post("/solar-return")
+@router.post("/solar-return", dependencies=[Depends(throttle_expensive_calc)])
 async def solar_return(
     payload: SolarReturnRequest, user: CurrentUser, session: SessionDep
 ) -> dict:
@@ -228,7 +229,7 @@ async def solar_return(
     return await _respond(session, user, "solar-return", result)
 
 
-@router.post("/compatibility")
+@router.post("/compatibility", dependencies=[Depends(throttle_expensive_calc)])
 async def compatibility(
     payload: CompatibilityRequest, user: CurrentUser, session: SessionDep
 ) -> dict:
@@ -262,7 +263,7 @@ async def compatibility(
     )
 
 
-@router.post("/astrocartography")
+@router.post("/astrocartography", dependencies=[Depends(throttle_expensive_calc)])
 async def astrocartography(payload: CalcRequest, user: CurrentUser, session: SessionDep) -> dict:
     birth = await resolve_birth(
         session, user, profile_id=payload.profile_id, birth=payload.birth
@@ -271,7 +272,7 @@ async def astrocartography(payload: CalcRequest, user: CurrentUser, session: Ses
     return await _respond(session, user, "astrocartography", result)
 
 
-@router.post("/synthesis")
+@router.post("/synthesis", dependencies=[Depends(throttle_expensive_calc)])
 async def synthesis(payload: CalcRequest, user: CurrentUser, session: SessionDep) -> dict:
     """The nine axes, with their poles in the reader's language.
 
