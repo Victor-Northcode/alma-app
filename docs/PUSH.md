@@ -82,15 +82,18 @@ team.** It is not a per-app secret and should not be stored as if it were.
 At `developer.apple.com/account/resources/keys/list`:
 
 1. **A key** with the **Apple Push Notifications service (APNs)** capability ticked.
-2. Apple asks for the key's **scope**. The current documentation offers two shapes, and the
-   numbers differ:
-   - **Team-scoped** — generates tokens for any topic on the team, restricted to **one
-     environment**, maximum **2 keys per environment**. Older keys that work in both
-     environments continue to function, but Apple now recommends environment-specific keys.
-   - **Topic-specific** — up to **200 keys per environment**, up to **400 topics per key**.
-   For one app, take **team-scoped**, and create **two**: one Sandbox, one Production. Two
-   keys makes the environment a property of the credential rather than of a boolean somebody
-   can get wrong, which is exactly the failure §1.7 is about.
+2. Apple asks for the key's **scope**. Take **team-scoped** — one key generates tokens for
+   every topic on the team, and **one key covers both environments**. A `.p8` is token-based,
+   and a token-based key has *no* environment: which of Apple's two hosts a push goes to
+   (`api.sandbox.push.apple.com` vs `api.push.apple.com`) is chosen **per device token** by the
+   backend (`DeviceToken.environment`, §1.8), never by the credential. The Sandbox/Production
+   split belongs to the old **certificate** flow, not to this key — so there is **one** key,
+   not two. "Sandbox & Production · Team Scoped (All Topics)", which is what the console
+   produces, is exactly what the backend sends against.
+
+   (Apple's console also offers newer *environment-specific* team-scoped keys, and
+   *topic-specific* keys — up to 200 per environment, 400 topics each. Neither is needed here;
+   an earlier version of this step wrongly told you to create two keys, one per environment.)
 3. **Download the `.p8`.** Apple serves it once. There is no second download, and a lost key
    means revoke-and-reissue.
 4. Record the **Key ID** — 10 characters, shown next to the key — and the **Team ID**, also 10
