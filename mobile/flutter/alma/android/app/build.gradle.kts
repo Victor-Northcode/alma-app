@@ -54,6 +54,10 @@ dependencies {
     // с https://firebase.google.com/docs/android/setup перед первой сборкой.
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
     implementation("com.google.firebase:firebase-messaging")
+    // NotificationCompat в AlmaMessagingService (форграунд-показ). firebase-messaging
+    // тянет androidx.core транзитивно, но объявляем явно, чтобы сборка не зависела
+    // от чужого графа зависимостей.
+    implementation("androidx.core:core-ktx:1.13.1")
 }
 
 flutter {

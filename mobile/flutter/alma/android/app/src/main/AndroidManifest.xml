@@ -46,6 +46,24 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- App Links: ссылки на alma.pazl.ai открывает приложение. Владение
+                 доменом Android проверяет по https://alma.pazl.ai/.well-known/assetlinks.json
+                 (уже отдаётся 200); `autoVerify` включает эту проверку при
+                 установке. Это зеркало iOS-Universal-Links (тот же домен, тот же
+                 assetlinks/AASA).
+
+                 ВНИМАНИЕ: без `pathPrefix` перехватывает ВСЕ ссылки на
+                 alma.pazl.ai, включая маркетинговые (/privacy, /terms). Если их
+                 надо оставлять в браузере — сузить <data> до пути приложения
+                 (напр. android:pathPrefix="/app") и так же сузить AASA. И само
+                 приложение должно маршрутизировать входящую ссылку; иначе она
+                 просто откроет домашний экран. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="alma.pazl.ai"/>
+            </intent-filter>
         </activity>
         <!-- FCM в форграунде и тап по уведомлению. Фоновые notification-пуши
              Android показывает сам, этому сервису не нужен; он ловит data-пуши и
