@@ -34,6 +34,7 @@ export const ptBR: Dictionary = {
   // literally *create an account*, offered by a website that mints no account at all.
   cta: {
     read: "Me ler — de graça",
+    getApp: "Baixar o app",
   },
 
   language: {

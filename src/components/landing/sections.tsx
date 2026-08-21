@@ -16,12 +16,16 @@ import {
 import { Star } from "@/components/brand/Star";
 import { Aura, Comet, Mote, Starfield } from "@/components/sky/Sky";
 import { Accordion, RailDots, useRail } from "@/components/ui";
-import { journeyCta } from "@/lib/cta";
 import { insightFor, systems } from "@/lib/data";
 import { useT } from "@/lib/i18n/provider";
 import { useJourney } from "@/lib/journey-store";
+import {
+  APP_STORE_BADGE,
+  APP_STORE_URL,
+  PLAY_STORE_BADGE,
+  PLAY_STORE_URL,
+} from "@/lib/stores";
 import { offers, priceOf, useCatalogue } from "@/lib/use-catalogue";
-import { DateCapture } from "./DateCapture";
 
 /** Roman numerals differ by breakpoint — mobile carries two extra sections. */
 function Numeral({ m, d }: { m: string; d: string }) {
@@ -46,7 +50,7 @@ function Label({ m, d, children, tone }: { m: string; d: string; children: React
 
 /* ══ HERO ═════════════════════════════════════════════════════════ */
 
-export function Hero({ onReveal }: { onReveal: () => void }) {
+export function Hero() {
   const { state } = useJourney();
   const t = useT();
   // Null until a date is entered. The wheel keeps turning either way — what
@@ -90,12 +94,14 @@ export function Hero({ onReveal }: { onReveal: () => void }) {
             <span className="from-tablet">{t.hero.subLong}</span>
           </p>
           <div className="hero-capture">
-            <span className="to-tablet">
-              <DateCapture layout="stacked" onSubmit={onReveal} />
-            </span>
-            <span className="only-desktop">
-              <DateCapture layout="inline" onSubmit={onReveal} />
-            </span>
+            {/* The one door out of the landing: the app. The web used to open a
+                free in-browser reading here; the product is sold and read in the
+                app now, so every call to action hands the visitor over to the
+                store instead of starting a session the site can no longer keep. */}
+            <a className="btn btn-gold hero-cta" href="#get-app">
+              {t.cta.getApp}
+            </a>
+            <p className="hero-cta-note">{t.app.appleSoon} · {t.app.googleSoon}</p>
           </div>
         </div>
 
@@ -216,7 +222,7 @@ export function WhatItIs() {
 /* ══ II · FIRST INSIGHT (in-page, mobile section II) ═════════════ */
 
 export function FirstInsight({ revealed }: { revealed: boolean }) {
-  const { state, start } = useJourney();
+  const { state } = useJourney();
   const t = useT();
   const insight = insightFor(state.date);
 
@@ -280,14 +286,9 @@ export function FirstInsight({ revealed }: { revealed: boolean }) {
             <p className="insight-line alma-voice">{t.insight.awaiting}</p>
           </>
         )}
-        {/* One label for all five doors — `lib/cta.ts`. This one said "Build my
-            full sky — free →", which described the same overlay the four others
-            described in four other ways. */}
-        <button type="button" className="btn btn-outline btn-block insight-cta" onClick={() => start("insight")}>
-          {journeyCta(t)}
-        </button>
-        {/* "Three systems already know you" — only once three of them do. */}
-        {insight && <p className="insight-hook">{t.insight.hook}</p>}
+        <a className="btn btn-outline btn-block insight-cta" href="#get-app">
+          {t.cta.getApp}
+        </a>
       </div>
     </section>
   );
@@ -631,7 +632,6 @@ export function Voice() {
 /* ══ VII/VI · PRICING ════════════════════════════════════════════ */
 
 export function Pricing() {
-  const { start } = useJourney();
   const t = useT();
   const catalogue = useCatalogue();
   return (
@@ -711,16 +711,12 @@ export function Pricing() {
                   who finds out a year later that this recurred is a person who
                   was not told. */}
               <p className="price-note">{t.pricing.renewsNote}</p>
-              {/* The riskiest of the five, and the reason they were unified.
-                  This button sits immediately under a year's price and the
-                  renewal notice, and it read "Start — the chart is free":
-                  "start" one line below "Renews every year until you cancel"
-                  is read as start the plan. It does not start a plan — nothing
-                  on this website can — it opens the same free reading as the
-                  nav pill, and now it says so. */}
-              <button type="button" className="btn btn-gold price-cta" onClick={() => start("pricing")}>
-                {journeyCta(t)}
-              </button>
+              {/* Every price on this page is charged in the app, through Apple
+                  and Google. The button hands the reader to the store rather
+                  than opening a checkout the website cannot complete. */}
+              <a className="btn btn-gold price-cta" href="#get-app">
+                {t.cta.getApp}
+              </a>
               {/* the honesty plate — full prices, no timers, nothing hidden */}
               <div className="honesty">
                 {t.pricing.honesty.map((line) => (
@@ -789,11 +785,38 @@ export function Faq() {
 
 /* ══ FINAL ════════════════════════════════════════════════════════ */
 
-export function FinalCta() {
-  const { start } = useJourney();
-  const t = useT();
+/**
+ * One row per store. A filled listing URL becomes the store's own badge
+ * artwork; an empty one — the truth today — becomes an honest "coming" plate
+ * rather than a dead badge that looks tappable and is not. Same rule as the
+ * app handoff (`lib/stores.ts`).
+ */
+function StoreBadge({
+  url,
+  artwork,
+  live,
+  soon,
+}: {
+  url: string;
+  artwork: string;
+  live: string;
+  soon: string;
+}) {
+  if (!url) {
+    return <span className="store-badge-soon">{soon}</span>;
+  }
   return (
-    <section className="sec-final">
+    <a className="store-badge" href={url} target="_blank" rel="noreferrer">
+      <img src={artwork} alt={live} />
+    </a>
+  );
+}
+
+export function FinalCta() {
+  const t = useT();
+  const published = Boolean(APP_STORE_URL || PLAY_STORE_URL);
+  return (
+    <section id="get-app" className="sec-final">
       <div
         style={{
           position: "absolute",
@@ -808,57 +831,26 @@ export function FinalCta() {
       <div className="final-inner">
         <Star size={52} style={{ marginBottom: 26 }} />
         <h2 className="final-title">{t.final.title}</h2>
-        <p className="final-sub">{t.final.sub}</p>
-        <button type="button" className="btn btn-gold final-cta" onClick={() => start("final")}>
-          {journeyCta(t)}
-        </button>
+        <p className="final-sub">{t.app.note}</p>
+        <div className="final-stores">
+          <StoreBadge
+            url={APP_STORE_URL}
+            artwork={APP_STORE_BADGE}
+            live={t.app.appStore}
+            soon={t.app.appleSoon}
+          />
+          <StoreBadge
+            url={PLAY_STORE_URL}
+            artwork={PLAY_STORE_BADGE}
+            live={t.app.googlePlay}
+            soon={t.app.googleSoon}
+          />
+        </div>
+        {!published && <p className="final-store-note">{t.app.notYet}</p>}
+        <a className="final-made" href="https://pazl.ai" target="_blank" rel="noreferrer">
+          made by pazl.ai
+        </a>
       </div>
     </section>
-  );
-}
-
-/* ══ CTA BAR — after 560 px of scroll, hides near the footer ══════ */
-
-export function CtaBar({ visible }: { visible: boolean }) {
-  const { state, start } = useJourney();
-  const t = useT();
-  const d = state.date;
-  const dateLabel = d ? `${d.day} ${t.months[d.month - 1]} ${d.year}` : t.ctaBar.placeholder;
-  return (
-    /*
-      `inert` while it is away, which is the same attribute and the same
-      argument as the landing under an open journey.
-
-      This was `aria-hidden={!visible}` with `tabIndex={visible ? 0 : -1}` on
-      the button, and the pair does not add up to one honest state. `tabIndex`
-      of −1 takes the control out of *sequential* navigation only: measured with
-      the journey open, `document.activeElement` still became the bar's button
-      when anything focused it, inside an element declaring `aria-hidden="true"`
-      — which is the one combination the ARIA spec names outright, because a
-      screen reader announces nothing while focus has demonstrably moved. The
-      bar is `opacity: 0` and `pointer-events: none` at the time, so what a
-      person would get is silence and a lost cursor.
-
-      `inert` removes the subtree from the tab order, from focus entirely and
-      from the accessibility tree in one attribute, so the three cannot drift
-      apart the way they just had. It also lets the `tabIndex` juggling go: a
-      hidden control needs no opinion about its tab position, and `aria-hidden`
-      is what `inert` already means.
-    */
-    <div className="cta-bar" data-visible={visible} inert={!visible}>
-      <div className="cta-bar-inner">
-        <div className="cta-bar-copy">
-          <span style={{ fontSize: 12.5, color: "var(--muted-3)" }}>{dateLabel}</span>
-          {/* "3 systems ready" is a claim about a person we know something
-              about. Before the date it is simply untrue. */}
-          <span style={{ fontSize: 13.5, color: "var(--gold-bright)" }}>
-            {d ? t.ctaBar.ready : t.ctaBar.waiting}
-          </span>
-        </div>
-        <button type="button" className="btn btn-gold cta-bar-btn" onClick={() => start("cta_bar")}>
-          {journeyCta(t)}
-        </button>
-      </div>
-    </div>
   );
 }

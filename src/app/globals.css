@@ -944,3 +944,61 @@ ul {
 .select-wrap {
   min-width: 0;
 }
+
+/* ══ download hand-off (replaces the in-browser journey) ═══════════ */
+
+/* The hero's one action: get the app. `.btn.btn-gold` already gives it the
+   pill; this only sizes it and quiets the line under it. */
+.hero-cta {
+  min-width: 224px;
+}
+.hero-cta-note {
+  margin-top: 13px;
+  font-size: 12.5px;
+  letter-spacing: 0.03em;
+  color: var(--muted-3);
+}
+
+/* The closing store hand-off. One column of plates on a phone, a row of two
+   on anything wider — the "coming" plates (`.store-badge-soon`) and the live
+   badges (`.store-badge`) both sit in here. */
+.final-stores {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+  max-width: 320px;
+  margin: 30px auto 0;
+}
+.final-store-note {
+  margin: 16px auto 0;
+  max-width: 380px;
+  font-size: 13px;
+  line-height: 1.62;
+  color: var(--muted-3);
+}
+.final-made {
+  display: inline-block;
+  margin-top: 34px;
+  font-family: var(--sans);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-3);
+  transition: color var(--d-tap) var(--e-tap);
+}
+.final-made:hover {
+  color: var(--gold-bright);
+}
+@media (min-width: 700px) {
+  .final-stores {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    max-width: none;
+  }
+  .final-stores > * {
+    flex: 0 1 260px;
+  }
+}

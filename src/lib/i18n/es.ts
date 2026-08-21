@@ -32,6 +32,7 @@ export const es: Dictionary = {
   // literally *create an account*, offered by a website that mints no account at all.
   cta: {
     read: "Leerme — gratis",
+    getApp: "Descargar la app",
   },
 
   language: {

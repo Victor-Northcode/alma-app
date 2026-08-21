@@ -36,6 +36,7 @@ export const fr: Dictionary = {
   // literally *sign yourself up*, offered by a website that mints no account at all.
   cta: {
     read: "Me lire — gratuitement",
+    getApp: "Obtenir l'app",
   },
 
   language: {

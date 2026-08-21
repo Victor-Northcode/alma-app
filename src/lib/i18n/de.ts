@@ -33,6 +33,7 @@ export const de: Dictionary = {
   // literally *register*, offered by a website that mints no account at all.
   cta: {
     read: "Mich lesen — kostenlos",
+    getApp: "App laden",
   },
 
   language: {

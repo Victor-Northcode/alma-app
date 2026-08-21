@@ -59,6 +59,7 @@ export const en = {
    */
   cta: {
     read: "Read myself — free",
+    getApp: "Get the app",
   },
 
   language: {

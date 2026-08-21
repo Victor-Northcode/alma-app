@@ -2,15 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { Star, Wordmark } from "@/components/brand/Star";
-import { journeyCta } from "@/lib/cta";
 import { useLocale } from "@/lib/i18n/provider";
-import { useJourney } from "@/lib/journey-store";
 import { languageName, languageOptions } from "@/lib/locale-choice";
 import { LanguagePicker } from "./LanguagePicker";
 
 /** Landing nav is opaque #090C1A — never translucent over content. */
 export function Nav() {
-  const { start } = useJourney();
   const { locale, t } = useLocale();
   const [menu, setMenu] = useState(false);
   // The tag for the toggle's own word, so a screen reader says "Deutsch" in
@@ -76,18 +73,14 @@ export function Nav() {
           <a href="/sign-in" className="nav-signin">
             {t.nav.signIn}
           </a>
-          {/* It said "Sign up" — "Crear cuenta", "Criar conta", literally
-              *create an account*, in two of the six — and no account is
-              created anywhere on this website: the cabinet is gone and the
-              journey's account step is optional and skippable. What the button
-              does is open the free reading, so that is what it says now, in the
-              same words as the other four controls that open the same thing.
-
-              Below 900px this one is not rendered and the sheet's copy is; the
-              note on `.nav-cta` in `screens.css` has the measurements. */}
-          <button type="button" className="nav-cta" onClick={() => start("nav")}>
-            {journeyCta(t)}
-          </button>
+          {/* The website's one action is the app. This used to open a free
+              in-browser reading; the product is read in the app now, so the
+              pill scrolls to the store hand-off at the foot of the page.
+              Below 900px it is not rendered and the sheet's copy is; the note
+              on `.nav-cta` in `screens.css` has the measurements. */}
+          <a className="nav-cta" href="#get-app">
+            {t.cta.getApp}
+          </a>
           <button
             type="button"
             className="nav-burger"
@@ -167,17 +160,14 @@ export function Nav() {
               is the primary action, and it is where a thumb already is after
               tapping the burger. The sheet closes behind it so the overlay
               does not rise over a menu left hanging open. */}
-          <button
-            type="button"
+          <a
             className="btn btn-gold nav-sheet-cta"
+            href="#get-app"
             tabIndex={menu ? 0 : -1}
-            onClick={() => {
-              setMenu(false);
-              start("nav");
-            }}
+            onClick={() => setMenu(false)}
           >
-            {journeyCta(t)}
-          </button>
+            {t.cta.getApp}
+          </a>
           {sheet.map(([href, label]) => (
             <a key={href} href={href} onClick={() => setMenu(false)} tabIndex={menu ? 0 : -1}>
               {label}
