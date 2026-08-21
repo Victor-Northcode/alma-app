@@ -1,90 +1,96 @@
 "use client";
 
 /**
- * Six words, each in its own language.
+ * The way out of a language you cannot read — a compact dropdown at the top of
+ * the page.
  *
- * The locale was negotiated from `Accept-Language` and there was nothing on
- * the page that could disagree with it — a Briton in Spain met a Spanish site
- * with no way out. This is the way out.
+ * It used to be a row of six words, which is honest but wide; the bar has room
+ * for one. So the closed control shows the language being read and a caret, and
+ * the open panel is the six endonyms, each in its own script. The hard parts a
+ * `<select>` would hide are handled in the open: it closes on an outside click
+ * or Escape, `aria-expanded` tracks the panel, `role="listbox"` names the
+ * options, `aria-selected` marks the current one, and every option carries its
+ * own `lang` so "Français" is pronounced in French rather than sounded out by
+ * an English voice. The live region still speaks the change, because the one
+ * person this exists for could not read the page they were on.
  *
- * ── why it is a row of words and not a dropdown ───────────────────────────
- * Six options is small enough to show whole, and showing them whole removes
- * every hard part: no popup to position, no outside-click to catch, no focus
- * to trap and return, no `aria-expanded` to keep honest, and nothing that can
- * open behind the sticky bar on a phone. It also fits the house rule — night,
- * one gold, no boxes — which a floating panel does not. A `<select>` would
- * have been fewer lines still and was rejected for a specific reason: the
- * native control renders in the platform's chrome and the closed state shows
- * one name, so the five languages a person is looking for are the five they
- * cannot see until they open it.
- *
- * ── the accessibility, which is most of the point ─────────────────────────
- * Real `<button>`s, so they are in the tab order without being told to be, and
- * they inherit the focus ring `globals.css` puts on everything interactive.
- * The group carries the translated word for "Language" as its accessible name,
- * which is the one string here that has to be in the reader's language —
- * everything else is deliberately in somebody else's. `aria-current` marks the
- * language being read, so a screen reader announces it as the current one
- * rather than leaving six identical-sounding choices. Each option carries its
- * own `lang`, so "Français" is pronounced in French rather than sounded out by
- * an English voice, which is the difference between a name and a noise.
- *
- * `focusable` exists for the mobile nav sheet, which is collapsed to zero
- * height rather than unmounted: focusable controls inside an `aria-hidden`
- * container are a keyboard trap into invisible content, and the sheet's links
- * already solve it the same way.
+ * `focusable` follows a collapsed container (the mobile sheet) so the options
+ * are never a keyboard trap into invisible content.
  */
 
+import { useEffect, useRef, useState } from "react";
 import { useLocale } from "@/lib/i18n/provider";
 import { languageName, languageOptions } from "@/lib/locale-choice";
 
 export function LanguagePicker({ focusable = true }: { focusable?: boolean }) {
   const { locale, setLocale, t } = useLocale();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
   const current = languageOptions().find((option) => option.locale === locale);
 
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    const onEsc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [open]);
+
   return (
-    <div className="lang" role="group" aria-label={t.language.label}>
-      {languageOptions().map((option) => (
-        <button
-          key={option.locale}
-          type="button"
-          className="lang-option"
-          lang={option.htmlLang}
-          aria-current={option.locale === locale ? "true" : undefined}
-          tabIndex={focusable ? 0 : -1}
-          onClick={() => setLocale(option.locale)}
-        >
-          {option.name}
-        </button>
-      ))}
-      {/*
-        Something says out loud that the language changed.
-
-        Everything visible about this control was already correct — `<html
-        lang>` moves, the group's name moves, `aria-current` moves, the page
-        title moves, and focus stays on the button that was pressed — and none
-        of it makes a sound. The one person this control exists for is somebody
-        who could not read the page they were on, and silence after activating
-        it leaves them with no way to know it worked except by re-reading the
-        page to find out. `aria-current` having moved is discoverable on the
-        *next* interaction, which is one interaction too late.
-
-        Rendered from the new locale's own dictionary and carrying the new
-        locale's `lang`, so the confirmation is spoken in the voice `<html lang>`
-        has just switched to — "Sprache: Deutsch" in a German voice, not sounded
-        out by an English one. That is the same rule each option in the row
-        follows.
-
-        No new dictionary key: this is the pair the nav's toggle already uses
-        for its accessible name, and two different confirmations of one event
-        are two things that come apart.
-
-        `polite` rather than `assertive`: nothing here is urgent, and the
-        announcement should queue behind whatever the reader was in the middle
-        of rather than cut it off. The region is always in the DOM so the change
-        is a change to live content rather than the arrival of a live region,
-        which is the difference between being announced and being ignored.
-      */}
+    <div ref={ref} className="lang-dd">
+      <button
+        type="button"
+        className="lang-dd-btn"
+        lang={current?.htmlLang}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`${t.language.label}: ${languageName(locale)}`}
+        tabIndex={focusable ? 0 : -1}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <svg className="lang-dd-globe" viewBox="0 0 24 24" width="15" height="15" aria-hidden>
+          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="1.3" />
+          <ellipse cx="12" cy="12" rx="4" ry="9" fill="none" stroke="currentColor" strokeWidth="1.3" />
+          <path d="M3.5 9h17M3.5 15h17" fill="none" stroke="currentColor" strokeWidth="1.3" />
+        </svg>
+        <span className="lang-dd-name">{languageName(locale)}</span>
+        <span className="lang-dd-caret" aria-hidden>
+          {open ? "▴" : "▾"}
+        </span>
+      </button>
+      {open && (
+        <ul className="lang-dd-menu" role="listbox" aria-label={t.language.label}>
+          {languageOptions().map((option) => (
+            <li key={option.locale}>
+              <button
+                type="button"
+                role="option"
+                className="lang-dd-opt"
+                lang={option.htmlLang}
+                data-current={option.locale === locale || undefined}
+                aria-selected={option.locale === locale}
+                onClick={() => {
+                  setLocale(option.locale);
+                  setOpen(false);
+                }}
+              >
+                {option.name}
+                {option.locale === locale && (
+                  <span className="lang-dd-check" aria-hidden>
+                    ✦
+                  </span>
+                )}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
       <span className="sr-only" role="status" aria-live="polite" lang={current?.htmlLang}>
         {t.language.label}: {languageName(locale)}
       </span>

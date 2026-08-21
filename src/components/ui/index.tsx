@@ -187,45 +187,32 @@ export function Accordion({
   const [open, setOpen] = useState(defaultOpen);
   const id = useId();
   return (
-    <div style={{ padding: size === "l" ? "24px 0" : "20px 0", borderTop: "1px solid rgba(237,231,218,.12)" }}>
+    <div className="faq-item" data-open={open} data-size={size}>
       <button
         type="button"
-        className="tap44"
+        className="faq-q tap44"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls={id}
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 16,
-          alignItems: "center",
-          background: "none",
-          border: 0,
-          padding: 0,
-          cursor: "pointer",
-          textAlign: "left",
-        }}
       >
-        <span style={{ fontSize: size === "l" ? 19 : 16.5, color: "var(--ink-light)" }}>{q}</span>
-        <span style={{ color: "var(--gold-bright)", fontSize: size === "l" ? 22 : 20, flex: "0 0 auto" }}>
-          {open ? "−" : "+"}
+        <span className="faq-q-text">{q}</span>
+        {/* One glyph, rotated. A plus that turns 45° into a cross reads as
+            open/close without swapping the character, so the icon animates on
+            the same curve as the panel rather than popping. */}
+        <span className="faq-q-icon" aria-hidden>
+          +
         </span>
       </button>
-      {open && (
-        <p
-          id={id}
-          style={{
-            margin: "12px 0 0",
-            fontSize: size === "l" ? 16.5 : 14.5,
-            lineHeight: 1.7,
-            color: "var(--muted-2)",
-            maxWidth: "66ch",
-          }}
-        >
-          {a}
-        </p>
-      )}
+      {/* The grid `0fr → 1fr` height transition: the answer stays in the DOM so
+          it can animate, the inner box clips it, and `aria-hidden` keeps a
+          closed answer out of the screen-reader flow. */}
+      <div className="faq-a-wrap" aria-hidden={!open}>
+        <div className="faq-a-clip">
+          <p className="faq-a" id={id}>
+            {a}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

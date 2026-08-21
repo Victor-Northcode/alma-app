@@ -25,7 +25,6 @@ import {
   PLAY_STORE_BADGE,
   PLAY_STORE_URL,
 } from "@/lib/stores";
-import { offers, priceOf, useCatalogue } from "@/lib/use-catalogue";
 
 /** Roman numerals differ by breakpoint — mobile carries two extra sections. */
 function Numeral({ m, d }: { m: string; d: string }) {
@@ -51,14 +50,7 @@ function Label({ m, d, children, tone }: { m: string; d: string; children: React
 /* ══ HERO ═════════════════════════════════════════════════════════ */
 
 export function Hero() {
-  const { state } = useJourney();
   const t = useT();
-  // Null until a date is entered. The wheel keeps turning either way — what
-  // it must not do is put a stranger's sign in the middle and call it yours.
-  const insight = insightFor(state.date);
-  const stamp = state.date
-    ? `${String(state.date.day).padStart(2, "0")}.${String(state.date.month).padStart(2, "0")}`
-    : t.insight.awaitingMeta;
   return (
     <section id="top" className="hero">
       <Aura tone="indigo" size="min(900px,64vw)" top="-24%" right="-8%" drift="a" />
@@ -85,14 +77,10 @@ export function Hero() {
               break collapses, a space after it survives when the break is
               hidden. */}
           <h1 className="hero-title">
-            {t.hero.titleA}{" "}
-            <br className="hero-break" />
-            {t.hero.titleB} <span style={{ color: "var(--gold-bright)" }}>{t.hero.titleAccent}</span>
+            {t.hero.titleA} {t.hero.titleB}{" "}
+            <span style={{ color: "var(--gold-bright)" }}>{t.hero.titleAccent}</span>
           </h1>
-          <p className="hero-sub">
-            <span className="only-mobile">{t.hero.subShort}</span>
-            <span className="from-tablet">{t.hero.subLong}</span>
-          </p>
+          <p className="hero-sub">{t.hero.subShort}</p>
           <div className="hero-capture">
             {/* The one door out of the landing: the app. The web used to open a
                 free in-browser reading here; the product is sold and read in the
@@ -131,8 +119,8 @@ export function Hero() {
             <div className="ripple-ring" aria-hidden />
             <div className="ripple-ring" style={{ animationDelay: "3.5s", borderColor: "rgba(228,211,162,.3)" }} aria-hidden />
             <div style={{ position: "relative", textAlign: "center" }}>
-              <div className="hero-glyph glyph">{insight ? insight.sign.glyph : "✦"}</div>
-              <div className="hero-glyph-meta">{t.hero.yourSky} · {stamp}</div>
+              <div className="hero-glyph glyph">✦</div>
+              <div className="hero-glyph-meta">{t.hero.yourSky}</div>
             </div>
           </div>
           <p className="hero-quote">
@@ -631,102 +619,62 @@ export function Voice() {
 
 /* ══ VII/VI · PRICING ════════════════════════════════════════════ */
 
+/**
+ * The value model, stated rather than priced.
+ *
+ * This used to draw live figures from the catalogue against keys the v3 shelf
+ * no longer has (`archive`, `annual`), so every row rendered blank — the
+ * "crooked" section. Prices also do not belong on a store listing's marketing
+ * (Apple 2.3.7), and the store sets the final amount by account region anyway.
+ * So the section says the one true, durable thing — the calculation is free,
+ * the writing is paid — in two quiet cards, and sends the reader to the app for
+ * the actual numbers.
+ */
 export function Pricing() {
   const t = useT();
-  const catalogue = useCatalogue();
   return (
     <section id="pricing" className="sec sec-pricing">
       <div className="sec-inner">
-        <Label m="VII" d="V">
+        <Label m="V" d="IV">
           {t.pricing.label}
         </Label>
-        <h2 className="sec-title" style={{ marginBottom: "clamp(24px,3.4vw,52px)" }}>
+        <h2 className="sec-title price-title">
           {t.pricing.titleA}
-          <br className="to-tablet" /> {t.pricing.titleB}
+          <br /> {t.pricing.titleB}
         </h2>
 
-        <div className="pricing-grid">
-          <div>
-            {/* Every figure on this page comes from the catalogue endpoint, and
-                an unloaded catalogue shows no figure at all. Five prices were
-                typed into the dictionaries and all five disagreed with what the
-                processor would charge — a $14.99 chart against an $8.99 door, a
-                $4.99 chapter that had been withdrawn, and a monthly plan with an
-                introductory band that exists nowhere in the price list. A price
-                in the interface is a quote. */}
-            {/* And a market that is not sold the door is not shown one. The
-                five purchasing-power markets carry the archive and the year and
-                nothing else, so now that a country actually reaches the
-                catalogue — it did not until this release, which is why every
-                visitor on earth was quoted dollars — a Brazilian's price list
-                has no `natal` row in it. Drawing the row anyway with an empty
-                figure would advertise something no store will sell them.
-                `offers` answers `true` while the catalogue is still loading, so
-                what a slow connection sees is the ordinary blank figure rather
-                than a section that assembles itself. */}
-            {offers(catalogue, "natal") && (
-              <>
-                <div className="price-row">
-                  <span className="price-name">{t.pricing.natal}</span>
-                  <span className="price-figure">{priceOf(catalogue, "natal")}</span>
-                </div>
-                <p className="price-note">
-                  <span className="only-mobile">{t.pricing.natalShort}</span>
-                  <span className="from-tablet">{t.pricing.natalLong}</span>
-                </p>
-                <div className="price-rule" />
-              </>
-            )}
-            {/* The rung above the door is the archive. It replaces the single
-                chapter, which was withdrawn with the $4.99 tier. */}
-            <div className="price-row from-tablet-flex">
-              <span className="price-name">{t.pricing.wholeArchive}</span>
-              <span className="price-figure">
-                {priceOf(catalogue, "archive") || priceOf(catalogue, "archive-upgrade")}
-              </span>
-            </div>
-            <p className="price-note from-tablet">{t.pricing.archiveNote}</p>
+        <div className="price-cards">
+          <div className="price-card">
+            <div className="price-card-figure">{t.what.freeFigure}</div>
+            <h3 className="price-card-title">{t.what.freeTitle}</h3>
+            <p className="price-card-body">{t.what.freeLong}</p>
           </div>
-
-          <div style={{ position: "relative" }}>
-            <Aura tone="gold" size="116%" top="-20px" left="-8%" style={{ height: 240, filter: "blur(26px)" }} />
-            <div style={{ position: "relative" }}>
-              {/* There was a gold "most chosen" overline here. Nothing has ever
-                  been sold through this code, so it was a popularity claim about
-                  a product no one has bought — on the most expensive option, for
-                  a brand whose whole argument is that it does not do this. */}
-              <div className="price-row">
-                <span className="price-name price-name-lg">{t.pricing.everythingYear}</span>
-                <span className="price-figure price-figure-lg">
-                  {priceOf(catalogue, "annual")}
-                </span>
-              </div>
-              <p className="price-note price-note-lg">
-                <span className="only-mobile">{t.pricing.everythingShort}</span>
-                <span className="from-tablet">{t.pricing.everythingLong}</span>
-              </p>
-              {/* Auto-renewal, said next to the price rather than in the terms.
-                  ROSCA and California AB 2863 both require the disclosure to be
-                  clear and adjacent to the payment; more to the point, a person
-                  who finds out a year later that this recurred is a person who
-                  was not told. */}
-              <p className="price-note">{t.pricing.renewsNote}</p>
-              {/* Every price on this page is charged in the app, through Apple
-                  and Google. The button hands the reader to the store rather
-                  than opening a checkout the website cannot complete. */}
-              <a className="btn btn-gold price-cta" href="#get-app">
+          <div className="price-card price-card-lead">
+            <Aura
+              tone="gold"
+              size="120%"
+              top="-16%"
+              left="-10%"
+              style={{ height: 220, filter: "blur(30px)" }}
+            />
+            <div className="price-card-in">
+              <div className="price-card-figure price-card-glyph glyph">✦</div>
+              <h3 className="price-card-title">{t.pricing.everythingYear}</h3>
+              <p className="price-card-body">{t.pricing.everythingLong}</p>
+              <a className="btn btn-gold price-card-cta" href="#get-app">
                 {t.cta.getApp}
               </a>
-              {/* the honesty plate — full prices, no timers, nothing hidden */}
-              <div className="honesty">
-                {t.pricing.honesty.map((line) => (
-                  <span key={line}>
-                    <b>·</b> {line}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
+        </div>
+
+        {/* the honesty plate — no timers, nothing hidden */}
+        <div className="honesty honesty-row">
+          {t.pricing.honesty.map((line) => (
+            <span key={line}>
+              <b>·</b> {line}
+            </span>
+          ))}
         </div>
       </div>
     </section>

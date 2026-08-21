@@ -273,7 +273,7 @@ export const en = {
 
   faq: {
     label: "questions",
-    showAll: "All six questions →",
+    showAll: "All questions →",
     /**
      * The six questions, and they were shipping in English on six landings.
      *
@@ -321,6 +321,18 @@ export const en = {
         a: "Yours to export, yours to delete, from Settings, at any time.",
         aLong:
           "Your birth data is used to calculate and to write, nothing else. Sign in and you can export everything or delete your account yourself, at any moment, without writing to support. GDPR, UK GDPR and CCPA apply.",
+      },
+      {
+        q: "Which systems does Alma read?",
+        a: "Eight: astrology, numerology, your birth card, astrocartography, transits, the solar return, compatibility, and a cross-synthesis of them all.",
+        aLong:
+          "Eight in all — Western astrology, numerology, your birth card, astrocartography, transits, the solar return and compatibility — plus a cross-synthesis that reads them against each other and shows where they agree and where they don't.",
+      },
+      {
+        q: "Do I need an account?",
+        a: "No. Everything calculates from your birth details. An account only carries your chart to a new phone.",
+        aLong:
+          "No account is needed to read yourself — every calculation runs from your birth details on your phone. Signing in only saves your chart and purchases so they follow you to a new device, and it is entirely optional.",
       },
     ] as ReadonlyArray<{ q: string; a: string; aLong: string }>,
   },

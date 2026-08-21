@@ -6,12 +6,10 @@ import { Nav } from "./Nav";
 import {
   Faq,
   FinalCta,
-  FirstInsight,
   Hero,
   HowToRead,
   Marquee,
   Pricing,
-  Synthesis,
   TheEight,
   Voice,
   WhatItIs,
@@ -39,10 +37,8 @@ export function LandingShell() {
         <Hero />
         <Marquee />
         <WhatItIs />
-        <FirstInsight revealed />
-        <HowToRead />
         <TheEight />
-        <Synthesis />
+        <HowToRead />
         <Voice />
         <Pricing />
         <Faq />
