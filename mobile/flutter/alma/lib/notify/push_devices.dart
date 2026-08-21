@@ -72,10 +72,12 @@ final ValueNotifier<Map<String, String>?> pushedOpen = ValueNotifier(null);
 /// **Токен получает не пакет, а сама iOS.** `PUSH.md §2.1` отказался гонять
 /// iOS через FCM: бэкенд ходит в APNs напрямую, и токен приходит из
 /// `application(_:didRegisterForRemoteNotificationsWithDeviceToken:)` в
-/// `ios/Runner/AppDelegate.swift` через канал [_channel]. На Android токена
-/// сегодня нет вовсе — его выдаёт FCM, а проекта Firebase ещё не завели
-/// (`PUSH.md §9` шаг 7); разрешение там спрашивается всё равно, потому что оно
-/// нужно любому транспорту и переживёт появление FCM.
+/// `ios/Runner/AppDelegate.swift` через канал [_channel]. На Android тем же
+/// каналом приходит токен FCM — из `MainActivity.kt`, нативно, а не пакетом
+/// `firebase_messaging`: `PUSH.md §7.1` защищает строку «iOS links no
+/// third-party framework at all», а кроссплатформенный плагин затащил бы
+/// Firebase и в iOS-сборку. `PUSH.md §2.1`: на Android у FCM альтернативы нет,
+/// на iOS — есть, и мы ей пользуемся.
 ///
 /// **Ничто не заперто за ответом.** Guideline 5.1.2(i): отказавшийся получает
 /// тот же продукт, а «Сегодня» показывает то же самое чтение внутри
@@ -309,17 +311,23 @@ class AlmaPush {
     }
   }
 
-  /// Кто мы для APNs. `null` — транспорта на этой платформе пока нет.
+  /// Кто мы для APNs или для FCM. `null` — транспорта на этой платформе нет.
   Future<PushDevice?> _identity() async {
-    if (kIsWeb || !Platform.isIOS) return null;
+    if (kIsWeb) return null;
+    final apple = Platform.isIOS;
+    if (!apple && !Platform.isAndroid) return null;
     Map<Object?, Object?>? answer;
     try {
-      answer = await _channel.invokeMethod<Map<Object?, Object?>>('apnsToken');
+      answer = await _channel.invokeMethod<Map<Object?, Object?>>(
+        apple ? 'apnsToken' : 'fcmToken',
+      );
     } on PlatformException {
-      // `didFailToRegisterForRemoteNotifications`: чаще всего — сборка без
+      // iOS — `didFailToRegisterForRemoteNotifications`: чаще всего сборка без
       // возможности Push Notifications в профиле, реже — симулятор, не
-      // связанный с учётной записью Apple. И то и другое чинит владелец, а не
-      // приложение, и падать здесь незачем.
+      // связанный с учётной записью Apple. Android — `fcm_unavailable`: чаще
+      // всего устройство без Google Play services, где токена не будет никогда.
+      // И то и другое чинит владелец или сама железка, а не приложение, и
+      // падать здесь незачем.
       return null;
     } on MissingPluginException {
       return null;
@@ -327,7 +335,7 @@ class AlmaPush {
     final token = answer?['token'] as String?;
     if (token == null || token.isEmpty) return null;
     return PushDevice(
-      platform: 'ios',
+      platform: apple ? 'ios' : 'android',
       token: token,
       // **Среда решается сборкой, а не настройкой сервера.** `PUSH.md §1.8`:
       // токен осмыслен только в той среде, что его выдала, а TestFlight — это
@@ -335,7 +343,12 @@ class AlmaPush {
       // профильная сборки несут `aps-environment: development`, релизная —
       // `production`, и `kReleaseMode` различает ровно это. Ошибиться здесь
       // значит получить `200` на каждую отправку и тишину на телефоне.
-      environment: kReleaseMode ? 'production' : 'sandbox',
+      // На Android поле бессмысленно, и сервер это знает: `tokens.clean`
+      // для платформы `android` возвращает `production`, что бы ни прислали.
+      // Шлём то же слово, а не `null`, чтобы колонка не стала трёхзначной —
+      // ровно то, что объясняет `ENVIRONMENTS` в `notify/tokens.py`.
+      environment:
+          apple ? (kReleaseMode ? 'production' : 'sandbox') : 'production',
       // `null` — законный ответ и он значит «не знаем»; см. [PushDevice.timezone].
       timezone: AlmaClient.deviceTimezone(),
       // Язык **телефона**, а не аккаунта: iOS подставляет `loc-args` в строку
