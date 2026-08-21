@@ -200,7 +200,7 @@ export const ptBR: Dictionary = {
 
   faq: {
     label: "perguntas",
-    showAll: "Todas as seis perguntas →",
+    showAll: "Todas as perguntas →",
     items: [
       {
         q: "Isso é astrologia de verdade?",
@@ -237,6 +237,18 @@ export const ptBR: Dictionary = {
         a: "Seus para exportar, seus para apagar, pelos Ajustes, quando quiser.",
         aLong:
           "Seus dados de nascimento servem para calcular e para escrever, mais nada. Com conta, você exporta tudo ou apaga a conta sozinho, a qualquer momento, sem escrever para o suporte. Valem o GDPR, o UK GDPR e a CCPA.",
+      },
+      {
+        q: "Quais sistemas o Alma lê?",
+        a: "Oito: astrologia, numerologia, sua carta de nascimento, astrocartografia, trânsitos, revolução solar, compatibilidade e uma síntese cruzada de todos.",
+        aLong:
+          "Oito no total — astrologia ocidental, numerologia, sua carta de nascimento, astrocartografia, trânsitos, revolução solar e compatibilidade — mais uma síntese cruzada que os lê entre si e mostra onde concordam e onde não.",
+      },
+      {
+        q: "Preciso de conta?",
+        a: "Não. Tudo é calculado a partir dos seus dados de nascimento. A conta só leva seu mapa para outro telefone.",
+        aLong:
+          "Não é preciso conta para se ler: cada cálculo parte dos seus dados de nascimento no aparelho. Entrar só salva seu mapa e suas compras para acompanharem você em um novo dispositivo, e é totalmente opcional.",
       },
     ] as ReadonlyArray<{ q: string; a: string; aLong: string }>,
   },

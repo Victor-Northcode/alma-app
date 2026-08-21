@@ -202,7 +202,7 @@ export const fr: Dictionary = {
 
   faq: {
     label: "questions",
-    showAll: "Les six questions →",
+    showAll: "Toutes les questions →",
     items: [
       {
         q: "C'est de la vraie astrologie ?",
@@ -239,6 +239,18 @@ export const fr: Dictionary = {
         a: "À toi de les exporter, à toi de les supprimer, depuis les Réglages, quand tu veux.",
         aLong:
           "Tes données de naissance servent à calculer et à écrire, rien d'autre. Connecté, tu peux tout exporter ou supprimer ton compte toi-même, à tout moment, sans écrire au support. Le RGPD, le RGPD britannique et la CCPA s'appliquent.",
+      },
+      {
+        q: "Quels systèmes Alma lit-elle ?",
+        a: "Huit : astrologie, numérologie, ta carte de naissance, astrocartographie, transits, révolution solaire, compatibilité et une synthèse croisée de tous.",
+        aLong:
+          "Huit en tout — astrologie occidentale, numérologie, ta carte de naissance, astrocartographie, transits, révolution solaire et compatibilité — plus une synthèse croisée qui les lit les uns par rapport aux autres et montre où ils s'accordent et où non.",
+      },
+      {
+        q: "Faut-il un compte ?",
+        a: "Non. Tout se calcule à partir de tes données de naissance. Le compte ne fait que porter ton thème sur un autre téléphone.",
+        aLong:
+          "Aucun compte n'est nécessaire pour te lire : chaque calcul part de tes données de naissance sur le téléphone. La connexion ne sert qu'à sauvegarder ton thème et tes achats pour qu'ils te suivent sur un nouvel appareil, et c'est entièrement facultatif.",
       },
     ] as ReadonlyArray<{ q: string; a: string; aLong: string }>,
   },

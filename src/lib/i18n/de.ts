@@ -199,7 +199,7 @@ export const de: Dictionary = {
 
   faq: {
     label: "Fragen",
-    showAll: "Alle sechs Fragen →",
+    showAll: "Alle Fragen →",
     items: [
       {
         q: "Ist das echte Astrologie?",
@@ -236,6 +236,18 @@ export const de: Dictionary = {
         a: "Deine zum Exportieren, deine zum Löschen, in den Einstellungen, jederzeit.",
         aLong:
           "Deine Geburtsdaten werden zum Rechnen und zum Schreiben verwendet, sonst nichts. Angemeldet kannst du jederzeit selbst alles exportieren oder dein Konto löschen, ohne den Support anzuschreiben. DSGVO, UK GDPR und CCPA gelten.",
+      },
+      {
+        q: "Welche Systeme liest Alma?",
+        a: "Acht: Astrologie, Numerologie, deine Geburtskarte, Astrokartografie, Transite, Solar, Kompatibilität und eine Quersynthese aus allen.",
+        aLong:
+          "Acht insgesamt — westliche Astrologie, Numerologie, deine Geburtskarte, Astrokartografie, Transite, das Solar und Kompatibilität — dazu eine Quersynthese, die sie gegeneinander liest und zeigt, wo sie übereinstimmen und wo nicht.",
+      },
+      {
+        q: "Brauche ich ein Konto?",
+        a: "Nein. Alles wird aus deinen Geburtsdaten berechnet. Ein Konto trägt dein Horoskop nur auf ein neues Telefon.",
+        aLong:
+          "Zum Lesen brauchst du kein Konto — jede Berechnung läuft aus deinen Geburtsdaten auf dem Gerät. Die Anmeldung sichert nur dein Horoskop und deine Käufe, damit sie auf ein neues Gerät mitkommen, und ist völlig optional.",
       },
     ] as ReadonlyArray<{ q: string; a: string; aLong: string }>,
   },

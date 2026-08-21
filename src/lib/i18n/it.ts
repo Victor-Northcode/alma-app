@@ -199,7 +199,7 @@ export const it: Dictionary = {
 
   faq: {
     label: "domande",
-    showAll: "Tutte e sei le domande →",
+    showAll: "Tutte le domande →",
     items: [
       {
         q: "È astrologia vera?",
@@ -236,6 +236,18 @@ export const it: Dictionary = {
         a: "Tuoi da esportare, tuoi da cancellare, dalle Impostazioni, quando vuoi.",
         aLong:
           "I tuoi dati di nascita servono a calcolare e a scrivere, nient'altro. Con un account puoi esportare tutto o cancellare l'account da solo, in qualsiasi momento, senza scrivere all'assistenza. Valgono GDPR, UK GDPR e CCPA.",
+      },
+      {
+        q: "Quali sistemi legge Alma?",
+        a: "Otto: astrologia, numerologia, la tua carta di nascita, astrocartografia, transiti, rivoluzione solare, compatibilità e una sintesi incrociata di tutti.",
+        aLong:
+          "Otto in tutto — astrologia occidentale, numerologia, la tua carta di nascita, astrocartografia, transiti, rivoluzione solare e compatibilità — più una sintesi incrociata che li legge l'uno con l'altro e mostra dove concordano e dove no.",
+      },
+      {
+        q: "Serve un account?",
+        a: "No. Tutto si calcola dai tuoi dati di nascita. L'account porta solo il tuo tema su un altro telefono.",
+        aLong:
+          "Non serve un account per leggerti: ogni calcolo parte dai tuoi dati di nascita sul telefono. L'accesso salva solo il tuo tema e i tuoi acquisti perché ti seguano su un nuovo dispositivo, ed è del tutto facoltativo.",
       },
     ] as ReadonlyArray<{ q: string; a: string; aLong: string }>,
   },
