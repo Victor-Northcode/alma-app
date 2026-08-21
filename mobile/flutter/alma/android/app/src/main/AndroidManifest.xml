@@ -47,6 +47,23 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- FCM в форграунде и тап по уведомлению. Фоновые notification-пуши
+             Android показывает сам, этому сервису не нужен; он ловит data-пуши и
+             форграунд, показывает их на канале alma.daily и ведёт тап в
+             MainActivity. `exported="false"` — вызывает только Play services. -->
+        <service
+            android:name=".AlmaMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <!-- Канал, на котором FCM показывает фоновые notification-пуши сам. То же
+             имя, что у серверного CHANNEL_DAILY и у сервиса выше. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="alma.daily" />
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
