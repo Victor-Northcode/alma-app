@@ -436,7 +436,12 @@
     display: inline;
   }
   .nav-cta {
-    display: inline-block;
+    /* inline-flex + centering, not inline-block: as an <a> the label sat at the
+       top of the fixed-height pill (baseline vertical-align), which read as a
+       crooked button. Flex centres it the way a <button> did by default. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     height: 40px;
     padding: 0 20px;
   }

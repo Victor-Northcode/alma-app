@@ -432,9 +432,6 @@ export function TheEight() {
           onSelect={goto}
         />
       </div>
-      <div className="sec-inner from-tablet">
-        <p className="eight-tail">{t.eight.tail}</p>
-      </div>
     </section>
   );
 }
@@ -686,12 +683,13 @@ export function Pricing() {
 export function Faq() {
   const t = useT();
   const [showAll, setShowAll] = useState(false);
-  // Out of the dictionary rather than out of `data.ts`. These six questions
-  // shipped in English on all six landings for as long as they were fixtures,
-  // because `check-locales.mjs` only reads `src/lib/i18n/` — and one of them is
-  // "Will you charge me automatically?", which is a subscription-terms question
-  // being answered in a language the reader was not sold in.
+  // One open at a time: opening a question closes the one that was open, so the
+  // column never grows into a wall of answers. `-1` is "all closed"; the first
+  // starts open. Both the phone and the wide layout read the same index, so the
+  // accordion keeps its place across a resize.
+  const [openIdx, setOpenIdx] = useState(0);
   const items = showAll ? t.faq.items : t.faq.items.slice(0, 3);
+  const toggle = (i: number) => setOpenIdx((cur) => (cur === i ? -1 : i));
   return (
     <section id="faq" className="sec sec-faq">
       <div className="faq-inner">
@@ -700,12 +698,12 @@ export function Faq() {
         </Label>
         <div className="only-mobile">
           {items.map((f, i) => (
-            <Accordion key={f.q} q={f.q} a={f.a} defaultOpen={i === 0} size="m" />
+            <Accordion key={f.q} q={f.q} a={f.a} open={openIdx === i} onToggle={() => toggle(i)} size="m" />
           ))}
         </div>
         <div className="from-tablet">
           {items.map((f, i) => (
-            <Accordion key={f.q} q={f.q} a={f.aLong} defaultOpen={i === 0} size="l" />
+            <Accordion key={f.q} q={f.q} a={f.aLong} open={openIdx === i} onToggle={() => toggle(i)} size="l" />
           ))}
         </div>
         <div style={{ borderTop: "1px solid rgba(237,231,218,.12)" }} />

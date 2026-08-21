@@ -176,22 +176,24 @@ export function Toggle({ on, onChange, label }: { on: boolean; onChange: (v: boo
 export function Accordion({
   q,
   a,
-  defaultOpen = false,
+  open,
+  onToggle,
   size = "m",
 }: {
   q: string;
   a: string;
-  defaultOpen?: boolean;
+  /** Controlled by the FAQ section so only one answer is open at a time. */
+  open: boolean;
+  onToggle: () => void;
   size?: "m" | "l";
 }) {
-  const [open, setOpen] = useState(defaultOpen);
   const id = useId();
   return (
     <div className="faq-item" data-open={open} data-size={size}>
       <button
         type="button"
         className="faq-q tap44"
-        onClick={() => setOpen((o) => !o)}
+        onClick={onToggle}
         aria-expanded={open}
         aria-controls={id}
       >

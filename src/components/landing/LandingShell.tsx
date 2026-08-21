@@ -3,6 +3,7 @@
 import { Grain } from "@/components/sky/Sky";
 import { Footer } from "./Footer";
 import { Nav } from "./Nav";
+import { RevealController } from "./RevealController";
 import {
   Faq,
   FinalCta,
@@ -32,6 +33,7 @@ export function LandingShell() {
   return (
     <>
       <Grain />
+      <RevealController />
       <div className="landing">
         <Nav />
         <Hero />

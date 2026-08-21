@@ -1302,3 +1302,49 @@ ul {
     gap: 64px;
   }
 }
+
+/* ══ scroll reveal + hover motion ═════════════════════════════════ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.72s var(--e-ui),
+    transform 0.72s var(--e-ui);
+  will-change: opacity, transform;
+}
+.reveal-in {
+  opacity: 1;
+  transform: none;
+}
+.eight-card {
+  transition:
+    transform 0.32s var(--e-ui),
+    border-color 0.32s var(--e-ui);
+}
+.eight-card:hover {
+  transform: translateY(-5px);
+}
+.price-card {
+  transition:
+    transform 0.32s var(--e-ui),
+    border-color 0.32s var(--e-ui);
+}
+.price-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--hairline-gold);
+}
+.store-badge-soon {
+  transition:
+    border-color 0.24s var(--e-ui),
+    color 0.24s var(--e-ui);
+}
+.store-badge-soon:hover {
+  border-color: rgba(201, 174, 107, 0.7);
+  color: var(--gold-bright);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
