@@ -196,9 +196,9 @@ class LegalText {
       ]),
       LegalSection('Who else sees it', [
         LegalBlock.points([
-          'Anthropic, who run the model that writes the readings. Your chart factors and the chapter\'s question are sent; your email address and your name are not.',
-          'Apple, for anything bought in this app. They see the purchase, not the chart.',
-          'Our mail provider, for the two letters Alma sends: a sign-in link, and — for a plan bought outside the App Store — a notice before a renewal.',
+          'Anthropic, who run the model that writes the readings. Your birth date, your birth time, the name of your birthplace and your name if you gave one are sent, as they are stored — they are what the reading is written from. So are the calculated chart, the question you asked, and the short facts Alma remembers. A question you ask carries the last twelve messages of that conversation so it makes sense in context. Your email address is not sent and is not needed. Your birthplace coordinates are not sent either: the chart is computed here and only the result travels.',
+          'Apple or Google, whichever store you got Alma from, for anything bought in this app. They see the purchase, not the chart.',
+          'Our mail provider, for the two letters Alma sends: a sign-in link, and — for a plan bought outside the app stores — a notice before a renewal.',
           'Our hosting provider, who runs the machine the database is on.',
         ]),
         LegalBlock.para('That is the whole list. If it ever gets longer, this page changes before the arrangement starts, not after.'),
