@@ -1,3 +1,0 @@
-# NaN/Infinity now 422 (BUG-501 fixed) — ID 856362
-NaN latitude: 422
-Infinity longitude: 422

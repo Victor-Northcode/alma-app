@@ -1,4 +1,0 @@
-BUG: NaN/Infinity in float fields → 500 instead of 422
-Root cause: RequestValidationError echoes raw NaN into error body; json.dumps raises 'Out of range float values are not JSON compliant: nan'
-Endpoints affected: POST /v1/profiles, POST /v1/systems/natal (and all float-bearing calc endpoints)
-Reproduce: curl -X POST /v1/profiles -d '{"birth_date":"1990-05-15","latitude":NaN,"longitude":0,"timezone":"UTC","is_self":false}' → 500

@@ -1,3 +1,0 @@
-DoS confirmed: 20 concurrent POST /v1/systems/transits (days=365) from ONE guest token.
-Single call alone: 2.67s. Under 20-way concurrency: each 54-61s (thread pool cpu*2 saturated).
-No per-account rate limit on /systems/*; only guest-mint (30/hr/IP) and anon-events are limited.
