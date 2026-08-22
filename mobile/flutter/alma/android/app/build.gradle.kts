@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -6,6 +9,18 @@ plugins {
     // `android/app/google-services.json` и кладёт project_id, app_id и api_key
     // в ресурсы; FirebaseApp поднимается из них автоматически.
     id("com.google.gms.google-services")
+}
+
+// **Подпись релиза из key.properties, которого нет в гите.** Файл кладёт владелец
+// или CI (Codemagic пишет его из своей группы перед сборкой); в нём путь к
+// upload-keystore и три пароля, а .gitignore держит и его, и сам .jks вне
+// репозитория. Есть файл — подписываем настоящим upload-ключом; нет — debug,
+// чтобы `flutter run --release` и первая заливка в Play (которая и регистрирует
+// подпись как upload-ключ) всё равно собирались.
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -29,11 +44,24 @@ android {
         versionName = flutter.versionName
     }
 
+    if (keystorePropertiesFile.exists()) {
+        signingConfigs {
+            create("upload") {
+                keyAlias = keystoreProperties["keyAlias"] as String
+                keyPassword = keystoreProperties["keyPassword"] as String
+                storeFile = file(keystoreProperties["storeFile"] as String)
+                storePassword = keystoreProperties["storePassword"] as String
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // upload-ключ, если владелец/CI дал key.properties; иначе debug —
+            // Play примет первый бандл на debug и зарегистрирует его как upload.
+            signingConfig = signingConfigs.getByName(
+                if (keystorePropertiesFile.exists()) "upload" else "debug"
+            )
         }
     }
 }

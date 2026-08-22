@@ -53,6 +53,9 @@ mobile/ios/build/
 *.mobileprovision
 *.cer
 *.certSigningRequest
+# key.properties несёт путь к keystore и три пароля — из него build.gradle.kts
+# собирает подпись релиза. В гит попадать не должен ни на одной платформе.
+**/key.properties
 
 # Push credentials, added 21 Aug 2026 when the owner set up FCM + APNs. The repo
 # is now also mirrored to a PUBLIC remote, so a google-services.json or a Firebase

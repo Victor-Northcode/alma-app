@@ -83,6 +83,11 @@ workflows:
         # содержимое android/app/google-services.json, закодированное base64, флаг Secure. Файл
         # секретный и в гит не коммитится — поэтому восстанавливаем его на лету ниже.
         - firebase
+        # Группа "keystore" для настоящей подписи (владелец заводит после генерации
+        # upload-keystore): CM_KEYSTORE = .jks в base64 (Secure), CM_KEYSTORE_PASSWORD,
+        # CM_KEY_ALIAS, CM_KEY_PASSWORD. Пока группы нет — шаг ниже пропускается и бандл
+        # подписывается debug-ключом, который Play примет первым и зарегистрирует как upload.
+        - keystore
       vars:
         ALMA_API_BASE: "https://api-alma.pazl.ai"
       flutter: stable
@@ -91,13 +96,24 @@ workflows:
         # Без файла плагин com.google.gms.google-services валит сборку ещё на configure.
         script: |
           echo "$GOOGLE_SERVICES_JSON" | base64 --decode > android/app/google-services.json
+      - name: Восстановить upload-keystore и key.properties
+        # build.gradle.kts подписывает релиз upload-ключом, если есть android/key.properties,
+        # иначе debug. Есть CM_KEYSTORE — раскладываем ключ и пишем key.properties; нет — тихо
+        # пропускаем, и сборка идёт на debug (годится для первой заливки в Play).
+        script: |
+          if [ -n "$CM_KEYSTORE" ]; then
+            echo "$CM_KEYSTORE" | base64 --decode > /tmp/upload.jks
+            {
+              echo "storeFile=/tmp/upload.jks"
+              echo "storePassword=$CM_KEYSTORE_PASSWORD"
+              echo "keyAlias=$CM_KEY_ALIAS"
+              echo "keyPassword=$CM_KEY_PASSWORD"
+            } > android/key.properties
+          fi
       - name: flutter pub get
         script: flutter pub get
       - name: flutter build appbundle
-        # AAB подписывается отладочным ключом — так же, как build.gradle.kts делает локально.
-        # Play принимает такой бандл ПЕРВЫМ и регистрирует эту подпись как upload-ключ. Когда
-        # владелец заведёт настоящий upload-keystore: добавить сюда environment.android_signing
-        # и научить build.gradle.kts читать его — иначе ключ Codemagic просто не применится.
+        # Подпись выбирает build.gradle.kts по наличию key.properties: upload-ключ или debug.
         script: |
           flutter build appbundle --release \
             --build-number=$BUILD_NUMBER \
