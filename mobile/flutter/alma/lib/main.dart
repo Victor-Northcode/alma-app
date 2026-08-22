@@ -14,6 +14,7 @@ import 'net/models.dart';
 import 'notify/push_devices.dart';
 import 'screens/alma/alma_screen.dart';
 import 'screens/journey/journey_screen.dart';
+import 'screens/journey/push_ask_screen.dart';
 import 'screens/launch_screen.dart';
 import 'screens/onboarding/coach_marks.dart';
 import 'screens/settings/settings_screen.dart';
@@ -24,6 +25,7 @@ import 'screens/systems/system_screen.dart';
 import 'screens/systems/systems_screen.dart';
 import 'screens/today/today_screen.dart' show TodayScreen, noteLaunch;
 import 'state/ask_alma.dart';
+import 'state/locale_override.dart';
 import 'state/onboarding_memory.dart';
 import 'state/paywall_guard.dart';
 import 'state/session.dart';
@@ -34,6 +36,9 @@ void main() {
   // и сторож, спрошенный раньше диска, разрешил бы то, что вчера отклонили.
   WidgetsFlutterBinding.ensureInitialized();
   PaywallGuard.restore();
+  // Выбранный человеком язык — тем же приёмом, что память сторожа: старт не
+  // ждёт диска, первый кадр может мигнуть языком телефона и перестроиться.
+  LocaleOverride.restore();
   runApp(AlmaApp(
       client: AlmaClient(
         // База берётся из окружения сборки, как ALMA_API_BASE на нативных
@@ -129,9 +134,14 @@ class _AlmaAppState extends State<AlmaApp> {
   Widget build(BuildContext context) {
     return SessionScope(
       session: _session,
-      child: MaterialApp(
+      // Язык, выбранный в настройках, перестраивает приложение на месте:
+      // `locale: null` — прежнее поведение, интерфейс следует за телефоном.
+      child: ValueListenableBuilder<Locale?>(
+        valueListenable: LocaleOverride.value,
+        builder: (context, chosen, _) => MaterialApp(
         title: 'Alma',
         debugShowCheckedModeBanner: false,
+        locale: chosen,
         localizationsDelegates: L.localizationsDelegates,
         supportedLocales: L.supportedLocales,
         theme: ThemeData(
@@ -145,6 +155,7 @@ class _AlmaAppState extends State<AlmaApp> {
           ),
         ),
         home: const CabinetShell(),
+        ),
       ),
     );
   }
@@ -517,10 +528,32 @@ class _CabinetShellState extends State<CabinetShell> {
   /// [partner] — про кого глава, когда она про пару. Дальше него это знание не
   /// идёт: у остальных систем второго человека нет вовсе.
   void _openChapter(SystemSlug system, String chapter, {Profile? partner}) {
-    _systemsNav.currentState?.push(CupertinoPageRoute(
-      builder: (context) =>
-          ChapterScreen(system: system, chapter: chapter, partner: partner),
-    ));
+    _systemsNav.currentState
+        ?.push(CupertinoPageRoute(
+          builder: (context) =>
+              ChapterScreen(system: system, chapter: chapter, partner: partner),
+        ))
+        // **Пред-вопрос про уведомления — после первой закрытой главы.** Хвост
+        // онбординга больше не спрашивает (владелец убрал его: «так неудобно
+        // максимально»), а спросить когда-то надо — иначе системное окно не
+        // покажется никогда. Момент выбран по его же словам: «потом чуть-чуть
+        // подвигались, куда-то зашли — и предложили включить уведомления».
+        // Закрытая глава — человек уже читал и вернулся, самое время.
+        .then((_) => _maybePreAskPush());
+  }
+
+  /// Показать пред-вопрос уведомлений, если пора: один раз за жизнь установки
+  /// и только когда разрешения ещё нет. Правила — в [AlmaPush.preAskDue].
+  Future<void> _maybePreAskPush() async {
+    if (!mounted || !_cabinetOpen) return;
+    if (!await AlmaPush.instance.preAskDue()) return;
+    // Пишется до показа, как OnboardingMemory: убитое на экране приложение не
+    // должно спрашивать второй раз.
+    await AlmaPush.instance.markPreAsked();
+    if (!mounted) return;
+    await Navigator.of(context, rootNavigator: true).push(
+      CupertinoPageRoute<void>(builder: (context) => const PushAskScreen()),
+    );
   }
 
   /// Заставка отыграла и сессия ответила. Живёт в оболочке, а не внутри
@@ -574,8 +607,10 @@ class _CabinetShellState extends State<CabinetShell> {
       await showCoachMarks(
         context,
         goTo: (stop) => _goTo(switch (stop) {
-          CoachStop.systems => CabinetTab.systems,
+          CoachStop.systems || CoachStop.firstChapter => CabinetTab.systems,
           CoachStop.today => CabinetTab.today,
+          CoachStop.alma => CabinetTab.alma,
+          CoachStop.morning => CabinetTab.settings,
         }),
       );
     });

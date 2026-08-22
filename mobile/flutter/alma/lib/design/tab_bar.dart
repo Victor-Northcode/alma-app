@@ -65,32 +65,42 @@ class CabinetTabBar extends StatelessWidget {
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-        child: DecoratedBox(
-          // **Бар не блок, а край страницы.**
-          //
-          // Плотная заливка с золотой чертой поверху делала из него отдельную
-          // панель, приклеенную к низу каждого экрана — «как будто отделён, а
-          // нужно лаконичнее». Заливка стала прозрачной к верху и уходит в
-          // страницу, черты нет вовсе: размытие держит подписи читаемыми над
-          // любым текстом, а край растворяется.
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: reading
-                  ? [
-                      AlmaPalette.parchmentB.withValues(alpha: 0),
-                      AlmaPalette.parchmentB.withValues(alpha: 0.90),
-                      AlmaPalette.parchmentB.withValues(alpha: 0.96),
-                    ]
-                  : [
-                      AlmaPalette.night850.withValues(alpha: 0),
-                      AlmaPalette.night850.withValues(alpha: 0.90),
-                      AlmaPalette.night850.withValues(alpha: 0.96),
-                    ],
-              stops: const [0, 0.30, 1],
-            ),
+        // **Ночь и пергамент сменяются плавно, а не скачком.** Заливка меняла
+        // цвет тем же кадром, что и флаг чтения: над открывшейся главой бар
+        // «мигал» из тёмного в светлый — владелец просил, чтобы светлые страницы
+        // переключались очень плавно (22 авг). Твин ведёт базовый цвет за 260 мс
+        // той же кривой, что остальные листы.
+        child: TweenAnimationBuilder<Color?>(
+          tween: ColorTween(
+            end: reading ? AlmaPalette.parchmentB : AlmaPalette.night850,
           ),
+          duration: AlmaMotion.sheet,
+          curve: AlmaMotion.sheetCurve,
+          builder: (context, base, child) {
+            final ground = base ?? AlmaPalette.night850;
+            return DecoratedBox(
+              // **Бар не блок, а край страницы.**
+              //
+              // Плотная заливка с золотой чертой поверху делала из него отдельную
+              // панель, приклеенную к низу каждого экрана — «как будто отделён, а
+              // нужно лаконичнее». Заливка стала прозрачной к верху и уходит в
+              // страницу, черты нет вовсе: размытие держит подписи читаемыми над
+              // любым текстом, а край растворяется.
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    ground.withValues(alpha: 0),
+                    ground.withValues(alpha: 0.90),
+                    ground.withValues(alpha: 0.96),
+                  ],
+                  stops: const [0, 0.30, 1],
+                ),
+              ),
+              child: child,
+            );
+          },
           // **Завеса выше самого бара, и это лечит «срезанную строку».**
           //
           // Градиент начинался прозрачным ровно по верхней кромке подписей и
@@ -103,7 +113,12 @@ class CabinetTabBar extends StatelessWidget {
           // мягкий переход, дальше подписи стоят на своей земле, и строка под
           // ними уходит в ночь целиком, а не пополам.
           child: Padding(
-            padding: EdgeInsets.only(bottom: bottomInset),
+            // Бар сидит на шесть точек ниже, чем диктует системный отступ:
+            // владелец просил опустить его ближе к кромке (22 авг). Шесть — не
+            // больше: глубже начинается зона домашнего индикатора, и подписи
+            // спорили бы с полосой жеста. На телефонах без выреза (inset 0)
+            // ничего не вычитается — ниже некуда.
+            padding: EdgeInsets.only(bottom: math.max(0, bottomInset - 6)),
             child: SizedBox(
               height: AlmaMetrics.tabBarHeight,
               child: Row(
@@ -384,10 +399,15 @@ class _TabGlyph extends CustomPainter {
       ..color = colour;
     final c = Offset(size.width / 2, size.height / 2);
 
+    // Глифы перерисованы 22 авг: владелец сказал, что по прежним «не понятно,
+    // о чём вообще». Прежние были слишком абстрактны (две окружности, точка с
+    // штрихами); эти читаются с одного взгляда, но остаются рисованными путями
+    // в той же линии — не системными иконками (см. шапку класса).
     switch (tab) {
       case CabinetTab.alma:
-        // Alma никогда не линия. Она — тёплая точка света, на том единственном
-        // размере, где кольцо снимается.
+        // Тёплый свет остаётся — но теперь с чётким четырёхлучевым бликом
+        // поверх: размытое пятно само по себе читалось «что-то светится», а
+        // блик говорит «звезда, к которой обращаются».
         final glow = Paint()
           ..shader = RadialGradient(
             colors: [
@@ -398,13 +418,32 @@ class _TabGlyph extends CustomPainter {
             stops: const [0.0, 0.45, 1.0],
           ).createShader(Rect.fromCircle(center: c, radius: size.width * 0.42));
         canvas.drawCircle(c, size.width * 0.42, glow);
+        // Четырёхлучевая искра: длинные лучи по вертикали/горизонтали.
+        final sparkle = Path();
+        final long = size.width * 0.40;
+        final waist = size.width * 0.055;
+        sparkle
+          ..moveTo(c.dx, c.dy - long)
+          ..quadraticBezierTo(c.dx + waist, c.dy - waist, c.dx + long, c.dy)
+          ..quadraticBezierTo(c.dx + waist, c.dy + waist, c.dx, c.dy + long)
+          ..quadraticBezierTo(c.dx - waist, c.dy + waist, c.dx - long, c.dy)
+          ..quadraticBezierTo(c.dx - waist, c.dy - waist, c.dx, c.dy - long)
+          ..close();
+        canvas.drawPath(
+          sparkle,
+          Paint()
+            ..color = AlmaPalette.starFill
+                .withValues(alpha: active ? 0.95 : 0.55),
+        );
 
       case CabinetTab.today:
+        // Солнце с восемью лучами: четыре читались крестиком-прицелом, восемь
+        // читаются солнцем — «сегодняшний день».
         final r = size.width * 0.1667;
         canvas.drawCircle(c, r, stroke);
-        for (var angle = 0.0; angle < 360; angle += 90) {
+        for (var angle = 0.0; angle < 360; angle += 45) {
           final rad = angle * math.pi / 180;
-          final inner = size.width * 0.34;
+          final inner = size.width * 0.32;
           final outer = size.width * 0.46;
           canvas.drawLine(
             c + Offset(math.cos(rad) * inner, math.sin(rad) * inner),
@@ -414,20 +453,42 @@ class _TabGlyph extends CustomPainter {
         }
 
       case CabinetTab.systems:
-        for (final r in [size.width * 0.375, size.width * 0.1333]) {
-          canvas.drawCircle(c, r, stroke);
+        // Колода: 2×2 маленьких круга — «набор карточек-систем». Две
+        // концентрические окружности читались мишенью, а не коллекцией.
+        final r = size.width * 0.145;
+        final d = size.width * 0.235;
+        for (final o in [
+          Offset(-d, -d),
+          Offset(d, -d),
+          Offset(-d, d),
+          Offset(d, d),
+        ]) {
+          canvas.drawCircle(c + o, r, stroke);
         }
 
       case CabinetTab.settings:
-        canvas.drawCircle(c, size.width * 0.125, stroke);
-        for (var angle = 30.0; angle < 360; angle += 60) {
-          final rad = angle * math.pi / 180;
-          final inner = size.width * 0.29;
-          final outer = size.width * 0.42;
+        // Три ползунка с бегунками в разных положениях — универсальный знак
+        // настроек. Точка с шестью штрихами читалась «непонятной снежинкой».
+        final half = size.width * 0.40;
+        final knob = size.width * 0.085;
+        final rows = [
+          (dy: -size.width * 0.27, kx: -size.width * 0.16),
+          (dy: 0.0, kx: size.width * 0.18),
+          (dy: size.width * 0.27, kx: -size.width * 0.02),
+        ];
+        for (final row in rows) {
+          final y = c.dy + row.dy;
           canvas.drawLine(
-            c + Offset(math.cos(rad) * inner, math.sin(rad) * inner),
-            c + Offset(math.cos(rad) * outer, math.sin(rad) * outer),
+            Offset(c.dx - half, y),
+            Offset(c.dx + half, y),
             stroke,
+          );
+          canvas.drawCircle(
+            Offset(c.dx + row.kx, y),
+            knob,
+            Paint()
+              ..style = PaintingStyle.fill
+              ..color = colour,
           );
         }
     }

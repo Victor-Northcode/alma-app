@@ -15,6 +15,7 @@ import '../../net/models.dart';
 import '../../state/ask_alma.dart';
 import '../../state/session.dart';
 import '../cabinet_words.dart';
+import '../onboarding/coach_anchors.dart';
 import '../../billing/ladder.dart';
 import '../paywall/paywall_router.dart';
 import '../systems/chapter_screen.dart';
@@ -183,6 +184,55 @@ class _AlmaScreenState extends State<AlmaScreen>
 
   @override
   void didChangeMetrics() => setState(() {});
+
+  /// **Ответ, потерянный в сворачивании, забирается с сервера при возврате.**
+  ///
+  /// Сервер пишет долго, а iOS замораживает сеть свёрнутого приложения: стрим
+  /// рвётся, и человек возвращался к вечному «думает», хотя ответ давно лежит в
+  /// треде на сервере (владелец: «уже заебался, закрыл, вернулся — не ответил»,
+  /// 22 авг). На resume, если отправка висит, тред перечитывается; появился
+  /// ответ Alma последней репликой — лента подменяется серверной правдой.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _sending) _recoverPending();
+  }
+
+  Future<void> _recoverPending() async {
+    final session = SessionScope.of(context);
+    try {
+      // Тред мог ещё не существовать локально: первый вопрос создаёт его на
+      // сервере, а id приезжает только с ответом, которого мы не дождались.
+      var id = _threadId;
+      if (id == null) {
+        final threads = await session.client.threads();
+        if (threads.isEmpty) return;
+        id = threads.first.id;
+      }
+      final turns = await session.client.thread(id);
+      if (!mounted || turns.isEmpty) return;
+      // Ответ считается доехавшим, только когда последняя реплика — не наша:
+      // сервер мог ещё писать, и тогда стрим, возможно, жив — не мешаем ему.
+      if (turns.last.mine) return;
+      setState(() {
+        _threadId = id;
+        _sending = false;
+        _turns
+          ..clear()
+          ..addAll(turns.map((t) => _Turn(
+                mine: t.mine,
+                body: t.body,
+                citedFactors: t.citedFactors,
+                kind: t.kind,
+                sourceChapter: t.sourceChapter,
+              )));
+      });
+      _tilt.reverse();
+      _scrollDown();
+    } on AlmaError {
+      // Сеть ещё не проснулась — просто оставляем как есть; следующий resume
+      // попробует снова.
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -584,7 +634,12 @@ class _AlmaScreenState extends State<AlmaScreen>
                 ]),
               ),
             ),
-            _limitWall(l, session) ?? _composer(l),
+            // Ключ — якорь четвёртого шага обучалки: подсвечивается само поле
+            // вопроса, а не абстрактная вкладка.
+            KeyedSubtree(
+              key: CoachAnchors.almaComposer,
+              child: _limitWall(l, session) ?? _composer(l),
+            ),
           ]),
         ),
       ),

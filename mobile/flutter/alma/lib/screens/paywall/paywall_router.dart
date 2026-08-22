@@ -21,11 +21,13 @@ library;
 
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../billing/ladder.dart';
 import '../../net/models.dart';
 import '../../state/paywall_guard.dart';
 import '../../state/session.dart';
+import '../settings/sign_in_screen.dart';
 import 'cancel_save_screen.dart';
 import 'plans_screen.dart';
 import 'quota_screen.dart';
@@ -104,10 +106,37 @@ Future<PaywallOutcome> showPaywall(
           meta: {'surface': intent.surfaceCode, 'method': 'back'});
       return PaywallOutcome.dismissed;
     }
+    // **Первая покупка гостя — момент предложить вход.** Порядок владельца
+    // (22 авг): «после первой покупки нам предлагают зарегистрироваться» —
+    // не в онбординге и не раньше. Купленное без аккаунта живёт ровно до
+    // переустановки, так что просьба здесь честно обоснована. Один раз за
+    // установку; context после await — тот же rootNavigator, что показывал
+    // пейволл.
+    if (outcome == PaywallOutcome.bought &&
+        session.account?.isGuest == true &&
+        context.mounted) {
+      await maybeOfferSignIn(context);
+    }
     return outcome;
   } finally {
     PaywallGuard.onScreen = false;
   }
+}
+
+/// Показать вход после первой покупки — один раз за жизнь установки.
+///
+/// Память своя, а не `OnboardingMemory`: та про обучалку, эта про регистрацию,
+/// и сбрасываются они по разным поводам. Пишется до показа — прибитое на
+/// экране приложение не должно просить дважды.
+Future<void> maybeOfferSignIn(BuildContext context) async {
+  final prefs = await SharedPreferences.getInstance();
+  const key = 'alma.signin.offered';
+  if (prefs.getBool(key) ?? false) return;
+  await prefs.setBool(key, true);
+  if (!context.mounted) return;
+  await Navigator.of(context, rootNavigator: true).push(
+    CupertinoPageRoute<void>(builder: (_) => const SignInScreen()),
+  );
 }
 
 /// Тихая ссылка «Все планы» — и единственное место, где пейволл встаёт поверх

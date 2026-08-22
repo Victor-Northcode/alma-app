@@ -1881,4 +1881,28 @@ class LIt extends L {
 
   @override
   String get onbClose => 'Chiudi';
+
+  @override
+  String get onbFirstChapterTitle => 'Il primo capitolo è già aperto';
+
+  @override
+  String get onbFirstChapterBody =>
+      'Il capitolo I del tuo tema natale è scritto e ti aspetta — comincia da lì. Gli altri capitoli si aprono uno alla volta, quando decidi tu.';
+
+  @override
+  String get onbAlmaTitle => 'Chiedi ad Alma quello che vuoi';
+
+  @override
+  String get onbAlmaBody =>
+      'Alma risponde con ciò che c\'è nel tuo tema, mai con un modello — e te lo dice quando il tema non ha una risposta. Ogni risposta cita le posizioni da cui è stata letta.';
+
+  @override
+  String get onbMorningTitle => 'Una lettera al mattino';
+
+  @override
+  String get onbMorningBody =>
+      'Alma può inviarti una breve nota al mattino, quando il cielo si muove davvero. Scegli qui la frequenza — oppure lasciala spenta.';
+
+  @override
+  String get cabSettingsDocuments => 'Documenti';
 }

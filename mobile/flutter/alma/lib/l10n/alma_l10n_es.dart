@@ -1885,4 +1885,28 @@ class LEs extends L {
 
   @override
   String get onbClose => 'Cerrar';
+
+  @override
+  String get onbFirstChapterTitle => 'El primer capítulo ya está abierto';
+
+  @override
+  String get onbFirstChapterBody =>
+      'El capítulo I de tu carta natal ya está escrito y te espera — empieza por ahí. Los demás capítulos se abren uno a uno, cuando tú decidas.';
+
+  @override
+  String get onbAlmaTitle => 'Pregúntale a Alma lo que quieras';
+
+  @override
+  String get onbAlmaBody =>
+      'Alma responde con lo que hay en tu carta, nunca con una plantilla — y te lo dice cuando la carta no tiene respuesta. Cada respuesta cita las posiciones de las que fue leída.';
+
+  @override
+  String get onbMorningTitle => 'Una carta por la mañana';
+
+  @override
+  String get onbMorningBody =>
+      'Alma puede enviarte una breve nota matinal cuando el cielo realmente se mueve. Elige aquí la frecuencia — o déjalo apagado.';
+
+  @override
+  String get cabSettingsDocuments => 'Documentos';
 }

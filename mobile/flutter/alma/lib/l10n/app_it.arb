@@ -522,5 +522,12 @@
   "onbTodayBody": "La nota del giorno è scritta dal tuo tema natale. Lo strato vivo — transiti, rivoluzione solare, affinità — viene ricalcolato insieme al cielo.",
   "onbNext": "Avanti",
   "onbDone": "Ho capito",
-  "onbClose": "Chiudi"
+  "onbClose": "Chiudi",
+  "onbFirstChapterTitle": "Il primo capitolo è già aperto",
+  "onbFirstChapterBody": "Il capitolo I del tuo tema natale è scritto e ti aspetta — comincia da lì. Gli altri capitoli si aprono uno alla volta, quando decidi tu.",
+  "onbAlmaTitle": "Chiedi ad Alma quello che vuoi",
+  "onbAlmaBody": "Alma risponde con ciò che c'è nel tuo tema, mai con un modello — e te lo dice quando il tema non ha una risposta. Ogni risposta cita le posizioni da cui è stata letta.",
+  "onbMorningTitle": "Una lettera al mattino",
+  "onbMorningBody": "Alma può inviarti una breve nota al mattino, quando il cielo si muove davvero. Scegli qui la frequenza — oppure lasciala spenta.",
+  "cabSettingsDocuments": "Documenti"
 }

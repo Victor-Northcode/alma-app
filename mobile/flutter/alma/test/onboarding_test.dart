@@ -71,6 +71,22 @@ AlmaClient cabinetClient() {
             {'slug': slug, 'unlocked': false, 'status': 'open'},
         ],
       };
+    } else if (path == '/v1/systems/natal') {
+      // Пятишаговая обучалка (22 авг) довозит и до вкладки Alma, а та на
+      // приходе считает натал ради вступительных вопросов. Пустого объекта
+      // мало: CalcResult.fromJson ждёт полную форму ответа.
+      body = {
+        'system': 'natal',
+        'engine_version': 'test',
+        'computed_at': '2026-08-10T00:00:00Z',
+        'subject': <String, dynamic>{},
+        'data': <String, dynamic>{},
+        'factors': <String>[],
+        'unavailable': <String>[],
+        'notes': <String>[],
+        'provenance': <String, dynamic>{},
+        'access': {'allowed': true, 'reason': ''},
+      };
     } else if (path == '/v1/systems/transits') {
       body = {
         'system': 'transits',
@@ -187,8 +203,12 @@ void main() {
     expect(find.text('A page for every day'), findsNothing);
   });
 
-  testWidgets('два шага: сперва системы, потом «Сегодня», потом тишина',
+  testWidgets(
+      'пять шагов: системы → глава → «Сегодня» → Alma → утро, потом тишина',
       (tester) async {
+    // Число пять — слово владельца от 22 августа: «2-3 пункта недостаточно,
+    // хотя бы 5-6 — что есть Сегодня, что есть Alma, что есть Мои системы».
+    // Прежний тест стерёг два шага и упал на этой правке ровно как положено.
     tester.view.physicalSize = const Size(402, 874);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -200,19 +220,27 @@ void main() {
 
     await tester.tap(find.text('Next'));
     await beats(tester);
+    expect(find.text('The first chapter is open'), findsOneWidget);
 
-    // Второй шаг стоит на «Сегодня» — и вкладку туда привезла та же оболочка.
-    expect(find.text('Your eight systems'), findsNothing);
+    await tester.tap(find.text('Next'));
+    await beats(tester);
+    // Третий шаг стоит на «Сегодня» — и вкладку туда привезла та же оболочка.
     expect(find.text('A page for every day'), findsOneWidget);
-    // Последний шаг не обещает третьего.
+
+    await tester.tap(find.text('Next'));
+    await beats(tester);
+    expect(find.text('Ask Alma anything'), findsOneWidget);
+
+    await tester.tap(find.text('Next'));
+    await beats(tester);
+    expect(find.text('A letter in the morning'), findsOneWidget);
+    // Последний шаг не обещает шестого.
     expect(find.text('Next'), findsNothing);
     expect(find.text('Got it'), findsOneWidget);
 
     await tester.tap(find.text('Got it'));
     await beats(tester);
-    expect(find.text('A page for every day'), findsNothing);
-    // Ушли — и остались на «Сегодня», а не на полпути между вкладками.
-    expect(find.text('Anna'), findsOneWidget);
+    expect(find.text('A letter in the morning'), findsNothing);
   });
 
   testWidgets('без пройденной анкеты обучалки нет вовсе', (tester) async {

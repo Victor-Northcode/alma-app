@@ -5,6 +5,7 @@ import '../design/plates.dart';
 
 import '../net/alma_client.dart';
 import '../net/models.dart';
+import 'locale_override.dart';
 
 /// Что приложение знает о том, кто его открыл.
 ///
@@ -126,6 +127,10 @@ class AlmaSession extends ChangeNotifier {
   /// запуске, который его заметил, и запись — предпочтение, не факт: не
   /// ушла сейчас — уйдёт при следующем запуске.
   void _adoptLocaleFromDevice() {
+    // Человек выбрал язык сам — телефон больше не побеждает: иначе каждый
+    // запуск затирал бы выбор из настроек языком устройства (ручка появилась
+    // 22 авг, см. LocaleOverride).
+    if (LocaleOverride.value.value != null) return;
     final device = _deviceLocale();
     final current = _account;
     if (current == null) return;

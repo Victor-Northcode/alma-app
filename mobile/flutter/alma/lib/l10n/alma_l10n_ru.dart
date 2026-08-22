@@ -1895,4 +1895,28 @@ class LRu extends L {
 
   @override
   String get onbClose => 'Закрыть';
+
+  @override
+  String get onbFirstChapterTitle => 'Первая глава уже открыта';
+
+  @override
+  String get onbFirstChapterBody =>
+      'Глава I твоей натальной карты написана и ждёт — начни с неё. Остальные главы открываются по одной, когда сам решишь.';
+
+  @override
+  String get onbAlmaTitle => 'Спроси Alma о чём угодно';
+
+  @override
+  String get onbAlmaBody =>
+      'Alma отвечает по тому, что есть в твоей карте, а не по шаблону — и честно говорит, когда ответа в карте нет. Под каждым ответом — позиции, из которых он прочитан.';
+
+  @override
+  String get onbMorningTitle => 'Письмо по утрам';
+
+  @override
+  String get onbMorningBody =>
+      'Alma может присылать короткую утреннюю заметку, когда небо действительно движется. Выбери здесь, как часто, — или оставь выключенным.';
+
+  @override
+  String get cabSettingsDocuments => 'Документы';
 }

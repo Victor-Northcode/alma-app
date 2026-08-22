@@ -9,9 +9,10 @@ import 'coach_anchors.dart';
 
 /// Куда обучалка ведёт человека на каждом шаге. Оболочка знает, что такое
 /// вкладка; обучалка — только то, о чём она сейчас рассказывает.
-enum CoachStop { systems, today }
+enum CoachStop { systems, firstChapter, today, alma, morning }
 
-/// Маленькая проводка по кабинету: два шага и ни одного лишнего.
+/// Проводка по кабинету: пять шагов — восемь систем, открытая глава, страница
+/// дня, беседа с Alma и утренняя рассылка.
 ///
 /// **Это накладка над живым продуктом, а не слайд-шоу о нём.** Затемнение с
 /// вырезом лежит поверх настоящих «Моих систем» и настоящего «Сегодня»: человек
@@ -20,8 +21,10 @@ enum CoachStop { systems, today }
 /// экран вместо него: вкладки под ним продолжают жить, их вёрстка не тронута ни
 /// строкой, и выключить проводку значит просто снять маршрут.
 ///
-/// **Два шага, и это потолок.** Владелец просил «маленькую» и оставил за собой
-/// право выключить; третий шаг превратил бы её в то, что выключают не глядя.
+/// **Пять шагов — по слову владельца от 22 августа.** Прежний потолок в два
+/// («третий превратил бы её в то, что выключают не глядя») он снял сам: «там
+/// сейчас 2-3 пункта, этого недостаточно — хотя бы 5-6, которые покажут, что
+/// есть Сегодня, что есть Alma, что есть Мои системы».
 ///
 /// **Закрывается с первого раза.** Тап по затемнению, крестик, «понятно» — три
 /// двери, ни одного переспрашивания. Обучалка, которая уточняет «точно
@@ -61,7 +64,13 @@ class CoachMarks extends StatefulWidget {
 }
 
 class _CoachMarksState extends State<CoachMarks> {
-  static const _stops = <CoachStop>[CoachStop.systems, CoachStop.today];
+  static const _stops = <CoachStop>[
+    CoachStop.systems,
+    CoachStop.firstChapter,
+    CoachStop.today,
+    CoachStop.alma,
+    CoachStop.morning,
+  ];
 
   /// Сколько ждать, пока страница вкладки доедет. Оболочка везёт её за 320 мс
   /// (`_CabinetShellState._goTo`), и мерить положение карты посреди этого
@@ -144,13 +153,14 @@ class _CoachMarksState extends State<CoachMarks> {
 
   Rect? _measure(CoachStop stop) {
     final found = switch (stop) {
-      // Счётчик и первый ряд вместе: рамка вокруг них накрывает и заголовок
-      // экрана, который стоит на той же строке, что счётчик. Получается один
-      // вырез на всю верхушку «Моих систем» — там, где сказано «восемь» и
-      // где эти восемь начинаются.
-      CoachStop.systems => CoachAnchors.union(
-          [CoachAnchors.systemsTally, CoachAnchors.systemsFirstRow]),
+      // Счётчик вместе с заголовком экрана: вырез на верхушку «Моих систем» —
+      // там, где сказано «восемь». Первый ряд теперь у собственного шага.
+      CoachStop.systems => CoachAnchors.rect(CoachAnchors.systemsTally),
+      CoachStop.firstChapter =>
+        CoachAnchors.rect(CoachAnchors.systemsFirstRow),
       CoachStop.today => CoachAnchors.rect(CoachAnchors.todayPanel),
+      CoachStop.alma => CoachAnchors.rect(CoachAnchors.almaComposer),
+      CoachStop.morning => CoachAnchors.rect(CoachAnchors.settingsMorning),
     };
     if (found == null) return null;
     // Ореол вокруг элемента и обрезка по экрану: вырез, уехавший за кромку,
@@ -283,12 +293,18 @@ class _CoachMarksState extends State<CoachMarks> {
 
   String _title(L l) => switch (_stops[_step]) {
         CoachStop.systems => l.onbSystemsTitle,
+        CoachStop.firstChapter => l.onbFirstChapterTitle,
         CoachStop.today => l.onbTodayTitle,
+        CoachStop.alma => l.onbAlmaTitle,
+        CoachStop.morning => l.onbMorningTitle,
       };
 
   String _body(L l) => switch (_stops[_step]) {
         CoachStop.systems => l.onbSystemsBody,
+        CoachStop.firstChapter => l.onbFirstChapterBody,
         CoachStop.today => l.onbTodayBody,
+        CoachStop.alma => l.onbAlmaBody,
+        CoachStop.morning => l.onbMorningBody,
       };
 }
 

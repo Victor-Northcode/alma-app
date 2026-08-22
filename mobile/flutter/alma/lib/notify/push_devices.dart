@@ -103,6 +103,30 @@ class AlmaPush {
   /// 410 и строка уйдёт сама (`notify/tokens.py`).
   static const String _memory = 'alma.push.device';
 
+  /// Показывали ли уже экран пред-вопроса (`PushAskScreen`).
+  ///
+  /// Хранится отдельно от разрешения, потому что `Permission.notification.status`
+  /// не отличает «человек отказал» от «ещё не спрашивали»: iOS отвечает `denied`
+  /// в обоих случаях, а системный вопрос — одноразовый (`PUSH.md §5.5`). Пишется
+  /// **до** показа экрана, как `OnboardingMemory.markSeen`, — прибитое на
+  /// полпути приложение не должно спросить дважды.
+  static const String _preAsked = 'alma.push.preasked';
+
+  /// Пора ли показать пред-вопрос: ещё не показывали и разрешения ещё нет.
+  Future<bool> preAskDue() async {
+    if (kIsWeb) return false;
+    if (await allowed) return false;
+    final prefs = await SharedPreferences.getInstance();
+    return !(prefs.getBool(_preAsked) ?? false);
+  }
+
+  /// Запомнить, что пред-вопрос показан. Один раз и навсегда: «не сейчас» —
+  /// ответ, а не пауза (тот же закон, что у пилюли).
+  Future<void> markPreAsked() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_preAsked, true);
+  }
+
   /// Кто слушает открытия по пушу. Ставит оболочка при старте; пока пусто —
   /// открытия копятся некуда, и это честно: считать их некому.
   void Function(Map<String, String> payload)? onOpened;

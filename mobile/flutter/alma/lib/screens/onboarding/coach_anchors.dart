@@ -27,6 +27,12 @@ class CoachAnchors {
   /// Стеклянная панель дня на «Сегодня» — заметка и живой слой под ней.
   static final todayPanel = GlobalKey(debugLabel: 'coach.today.panel');
 
+  /// Композер беседы с Alma — поле вопроса и кнопка отправки.
+  static final almaComposer = GlobalKey(debugLabel: 'coach.alma.composer');
+
+  /// Тумблер «каждое утро» в настройках — три положения рассылки.
+  static final settingsMorning = GlobalKey(debugLabel: 'coach.settings.morning');
+
   /// Где сейчас стоит помеченный виджет, в координатах экрана.
   ///
   /// `null` — законный ответ, и он значит «этого на экране сейчас нет»: хаб ещё

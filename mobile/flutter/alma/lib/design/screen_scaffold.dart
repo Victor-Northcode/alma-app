@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 
 import 'arrival.dart';
 import 'metrics.dart';
@@ -134,6 +135,12 @@ class ScreenScaffold extends StatelessWidget {
     }
 
     Widget list = ListView(
+      // **Запас пре-рендера в полтора экрана.** По умолчанию ListView строит
+      // детей едва за кромкой, и при быстром листании текст «догонял» палец —
+      // владелец: «бесит, если быстро листать, текст не успевает прогрузиться»
+      // (22 авг). Полтора вьюпорта — строки готовы раньше пальца, и дёшево:
+      // страницы кабинета конечны и невелики.
+      scrollCacheExtent: const ScrollCacheExtent.viewport(1.5),
       // **Страница не тянется в пустое небо.**
       //
       // С упругой физикой список уезжает за свой конец, и под ним открывается

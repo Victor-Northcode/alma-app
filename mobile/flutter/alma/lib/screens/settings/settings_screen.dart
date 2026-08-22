@@ -4,12 +4,14 @@ import 'dart:convert';
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../design/buttons.dart';
+import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
@@ -18,9 +20,11 @@ import '../../billing/store_words.dart';
 import '../../net/alma_client.dart';
 import '../../notify/push_devices.dart';
 import '../../net/models.dart' show FunnelStage, SystemSlug;
+import '../../state/locale_override.dart';
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
 import '../cabinet_words.dart';
+import '../onboarding/coach_anchors.dart';
 import '../today/today_screen.dart' show openSubscription;
 import '../paywall/cancel_save_screen.dart';
 import '../paywall/paywall_router.dart';
@@ -525,14 +529,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ]),
         ..._everyMorning(l),
         _Section(label: l.cabSettingsLanguage, children: [
-          // Строка-действие, а не переключатель: язык живёт в настройках
-          // телефона, и приложение отправляет туда, а не заводит вторую ручку.
+          // Выбор языка прямо здесь, попапом (владелец, 22 авг: «хочу поменять
+          // сам, в выпадающей фигне»). Раньше строка отправляла в настройки
+          // телефона; теперь выбранное переопределяет язык телефона
+          // (LocaleOverride) и сразу же уходит на сервер — контент и интерфейс
+          // переключаются вместе, без перезапуска.
           _Row(
             label: _endonym(session.locale),
-            value: l.cabSettingsInterfaceLanguageAction,
+            value: '',
             arrow: true,
-            onTap: () => launchUrl(Uri.parse('app-settings:'),
-                mode: LaunchMode.externalApplication),
+            onTap: () => _pickLanguage(session),
           ),
         ]),
         ..._planSection(l, session),
@@ -546,7 +552,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: l.cabSettingsExportData,
             value: '',
             arrow: true,
-            onTap: _export == _Export.working ? null : _exportEverything,
+            // Сначала попап с объяснением, потом работа (владелец, 22 авг):
+            // выгрузка стартовала молча по тапу, и человек не знал, на что
+            // согласился, пока не приехал файл.
+            onTap: _export == _Export.working ? null : () => _confirmExport(l),
           ),
           ..._exportState(l),
           _Row(
@@ -560,23 +569,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             }),
           ),
           ..._deleteState(l, session),
-          // **Документы открываются внутри приложения.**
+          // **Документы — одна строка с выбором, а не пять строк списка.**
           //
-          // Здесь стоял `launchUrl` на `$_site/…`, то есть на `alma.pazl.ai`,
-          // которого не существует: пять строк открывали браузер с ошибкой.
-          // Присутствующая и мёртвая ссылка хуже отсутствующей — она читается
-          // как попытка закрыть чек-лист. Текст лежит в бинарнике и не
-          // нуждается в сети совсем.
-          for (final document in LegalDocument.values)
-            _Row(
-              label: LegalScreen.title(l, document),
-              value: '',
-              arrow: true,
-              onTap: () => Navigator.of(context, rootNavigator: true).push(
-                CupertinoPageRoute(
-                    builder: (context) => LegalScreen(document: document)),
-              ),
-            ),
+          // Пять юридических строк подряд съедали пол-экрана настроек, и
+          // владелец просил сократить листание (22 авг). Сам текст по-прежнему
+          // в бинарнике и открывается внутри приложения — прежняя починка про
+          // мёртвые ссылки на сайт не тронута, изменился только вход.
+          _Row(
+            label: l.cabSettingsDocuments,
+            value: '',
+            arrow: true,
+            onTap: () => _pickDocument(l),
+          ),
           // **Мелкий шрифт — в конце и мелким.**
           //
           // Кто продавец, кто оператор и чем Alma не является: это обязано
@@ -626,33 +630,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return [
       _Section(label: l.dailySettingTitle, children: [
-        // Отказ системы — над выбором, а не под ним: он объясняет, почему
-        // выбранное ниже не работает, и объяснение, стоящее после того, что
-        // оно объясняет, читают вторым. Молчим, когда режим «выключено», —
-        // там нечему не приходить.
-        if (_pushDenied && mode != 'off') ...[
-          const SizedBox(height: 14),
-          Text(l.dailyStatusDenied, style: AlmaType.meta),
-          const SizedBox(height: 10),
-          AlmaButton(
-            kind: AlmaButtonKind.veil,
-            fills: false,
-            label: l.dailyStatusOpenSettings,
-            onTap: () => AlmaPush.instance.openSystemSettings(),
-          ),
-          const SizedBox(height: 4),
-        ],
-        for (final (value, label) in [
-          ('off', l.dailySettingOff),
-          ('occasional', l.dailySettingOccasionally),
-          ('important', l.dailySettingOnlyWhatMatters),
-        ])
-          _Row(
-            label: label,
-            value: '',
-            checked: mode == value,
-            onTap: () => _setDaily(daily: value),
-          ),
+        const SizedBox(height: 14),
+        // **Тумблер на три положения вместо трёх строк.** Владелец (22 авг):
+        // «не выбор из 3 строк, а тумблер, который можно двигать влево-вправо
+        // и по центру». Отказ системы больше не живёт баннером над выбором —
+        // он всплывает попапом ровно в момент, когда человек включает то, что
+        // система не пропустит: объяснение в момент действия, а не мебель.
+        _TriToggle(
+          // Якорь пятого шага обучалки — подсвечивается сам тумблер.
+          key: CoachAnchors.settingsMorning,
+          labels: [
+            l.dailySettingOff,
+            l.dailySettingOccasionally,
+            l.dailySettingOnlyWhatMatters,
+          ],
+          selected: switch (mode) {
+            'occasional' => 1,
+            'important' => 2,
+            _ => 0,
+          },
+          onChanged: (index) {
+            final value = const ['off', 'occasional', 'important'][index];
+            if (value != 'off' && _pushDenied) _explainDenied(l);
+            _setDaily(daily: value);
+          },
+        ),
         if (mode != 'off') ...[
           const SizedBox(height: 14),
           Text(
@@ -683,6 +685,154 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ]),
     ];
+  }
+
+  /// Ночной попап — один вид на все три случая (отказ системы, выгрузка,
+  /// документы): та же ночь, то же золото, радиус листа. Material-серый
+  /// `AlertDialog` в этом продукте читался бы чужим окном.
+  Future<T?> _nightDialog<T>({required WidgetBuilder builder}) =>
+      showDialog<T>(
+        context: context,
+        barrierColor: AlmaPalette.night.withValues(alpha: 0.72),
+        builder: (context) => Dialog(
+          backgroundColor: AlmaPalette.night700,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(18),
+            side: BorderSide(color: AlmaPalette.hairlineGold),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 22, 20, 16),
+            child: builder(context),
+          ),
+        ),
+      );
+
+  /// Система не пропускает уведомления — сказать попапом в момент включения,
+  /// а не баннером-мебелью над тумблером (владелец, 22 авг).
+  void _explainDenied(L l) {
+    _nightDialog<void>(
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.dailyStatusDenied, style: AlmaType.body),
+          const SizedBox(height: 18),
+          AlmaButton(
+            label: l.dailyStatusOpenSettings,
+            onTap: () {
+              Navigator.of(context).pop();
+              AlmaPush.instance.openSystemSettings();
+            },
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l.paywallNotNow,
+                  style: AlmaType.meta.copyWith(color: AlmaPalette.gold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Выгрузка данных — сначала попап с тем, что именно уедет в файл.
+  void _confirmExport(L l) {
+    _nightDialog<void>(
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.cabSettingsExportData, style: AlmaType.headingM),
+          const SizedBox(height: 10),
+          Text(l.cabExportNote, style: AlmaType.body),
+          const SizedBox(height: 18),
+          AlmaButton(
+            label: l.cabSettingsExportData,
+            onTap: () {
+              Navigator.of(context).pop();
+              _exportEverything();
+            },
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l.paywallNotNow,
+                  style: AlmaType.meta.copyWith(color: AlmaPalette.gold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Пять документов — одним попапом-списком; выбранный открывается прежней
+  /// внутренней читалкой.
+  void _pickDocument(L l) {
+    _nightDialog<void>(
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final document in LegalDocument.values)
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                Navigator.of(context).pop();
+                Navigator.of(this.context, rootNavigator: true).push(
+                  CupertinoPageRoute(
+                      builder: (context) => LegalScreen(document: document)),
+                );
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                child: Text(LegalScreen.title(l, document),
+                    style: AlmaType.body),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Выбор языка. Эндонимы — имена собственные, им перевод не нужен; галочка
+  /// стоит на текущем. Выбор пишется в LocaleOverride (интерфейс) и на сервер
+  /// (язык, на котором Alma пишет) — одним касанием.
+  void _pickLanguage(AlmaSession session) {
+    const codes = ['en', 'es', 'de', 'it', 'fr', 'pt-BR', 'ru'];
+    _nightDialog<void>(
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final code in codes)
+            InkWell(
+              borderRadius: BorderRadius.circular(10),
+              onTap: () {
+                Navigator.of(context).pop();
+                HapticFeedback.selectionClick();
+                // Код интерфейса: у сервера pt-BR, у ARB — просто pt.
+                LocaleOverride.set(code == 'pt-BR'
+                    ? const Locale('pt')
+                    : Locale(code));
+                session.setLocale(code);
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                child: Row(children: [
+                  Expanded(
+                      child: Text(_endonym(code), style: AlmaType.body)),
+                  if (code == session.locale)
+                    const Icon(Icons.check,
+                        size: 18, color: AlmaPalette.gold),
+                ]),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   /// Раздел «план» — и он стоит **всегда**.
@@ -1177,6 +1327,10 @@ class _Row extends StatelessWidget {
     required this.label,
     required this.value,
     this.caption,
+    // Вид «галочка выбора» осиротел 22 авг: три строки утренней рассылки стали
+    // тумблером. Умение оставлено — это один из четырёх нативных видов строки,
+    // и следующий выбор из списка в настройках возьмёт его готовым.
+    // ignore: unused_element_parameter
     this.checked = false,
     this.arrow = false,
     this.danger = false,
@@ -1266,6 +1420,89 @@ class _Row extends StatelessWidget {
 }
 
 /// «Приходит в 10:00 ⌃⌄» — час с шагом вверх и вниз, в границах тихих часов.
+/// Тумблер на три положения: трек с тремя ячейками и ползунок, который едет
+/// тапом и пальцем. Просьба владельца (22 авг) — вместо трёх строк с галочкой.
+class _TriToggle extends StatelessWidget {
+  const _TriToggle({
+    super.key,
+    required this.labels,
+    required this.selected,
+    required this.onChanged,
+  }) : assert(labels.length == 3);
+
+  final List<String> labels;
+  final int selected;
+  final ValueChanged<int> onChanged;
+
+  void _pick(int index) {
+    if (index == selected) return;
+    HapticFeedback.selectionClick();
+    onChanged(index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(builder: (context, constraints) {
+      final cell = constraints.maxWidth / 3;
+      return GestureDetector(
+        // Палец тянет ползунок: позиция считается от места касания, поэтому
+        // и перетаскивание, и тап попадают в одну и ту же арифметику.
+        onHorizontalDragUpdate: (details) =>
+            _pick((details.localPosition.dx / cell).floor().clamp(0, 2)),
+        onTapUp: (details) =>
+            _pick((details.localPosition.dx / cell).floor().clamp(0, 2)),
+        child: Container(
+          height: 44,
+          decoration: BoxDecoration(
+            color: AlmaPalette.veil,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AlmaPalette.hairline),
+          ),
+          child: Stack(children: [
+            AnimatedAlign(
+              // -1 / 0 / 1 — три положения «влево, по центру, вправо».
+              alignment: Alignment(selected - 1.0, 0),
+              duration: AlmaMotion.ui,
+              curve: AlmaMotion.uiCurve,
+              child: Container(
+                width: cell,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AlmaPalette.button,
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                      color: AlmaPalette.gold.withValues(alpha: 0.55)),
+                ),
+              ),
+            ),
+            Row(children: [
+              for (final (index, label) in labels.indexed)
+                Expanded(
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(
+                        label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: AlmaType.meta.copyWith(
+                          color: index == selected
+                              ? AlmaPalette.inkLight
+                              : AlmaPalette.muted2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ]),
+          ]),
+        ),
+      );
+    });
+  }
+}
+
 class _HourRow extends StatelessWidget {
   const _HourRow(
       {required this.label, required this.hour, required this.onChange});

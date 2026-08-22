@@ -1884,4 +1884,28 @@ class LPt extends L {
 
   @override
   String get onbClose => 'Fechar';
+
+  @override
+  String get onbFirstChapterTitle => 'O primeiro capítulo já está aberto';
+
+  @override
+  String get onbFirstChapterBody =>
+      'O capítulo I do seu mapa natal está escrito e à sua espera — comece por aí. Os outros capítulos abrem um a um, quando você decidir.';
+
+  @override
+  String get onbAlmaTitle => 'Pergunte à Alma o que quiser';
+
+  @override
+  String get onbAlmaBody =>
+      'Alma responde com o que há no seu mapa, nunca com um modelo — e diz quando o mapa não tem resposta. Cada resposta cita as posições de que foi lida.';
+
+  @override
+  String get onbMorningTitle => 'Uma carta pela manhã';
+
+  @override
+  String get onbMorningBody =>
+      'Alma pode enviar uma breve nota pela manhã, quando o céu realmente se move. Escolha aqui a frequência — ou deixe desligado.';
+
+  @override
+  String get cabSettingsDocuments => 'Documentos';
 }

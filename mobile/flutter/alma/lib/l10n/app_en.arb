@@ -4,15 +4,15 @@
   "@cabAccountLabel": {
     "description": "from Cabinet/cab.accountLabel"
   },
-      "cabActiveNow": "active now",
+  "cabActiveNow": "active now",
   "@cabActiveNow": {
     "description": "from Cabinet/cab.activeNow"
   },
-      "cabAddBirthData": "Enter my birth data",
+  "cabAddBirthData": "Enter my birth data",
   "@cabAddBirthData": {
     "description": "from Cabinet/cab.addBirthData"
   },
-          "cabAllAlmaPill": "All of Alma",
+  "cabAllAlmaPill": "All of Alma",
   "@cabAllAlmaPill": {
     "description": "from Cabinet/cab.allAlmaPill"
   },
@@ -104,7 +104,7 @@
   "@cabArcanaWheelOfFortune": {
     "description": "from Cabinet/cab.arcana.wheel_of_fortune"
   },
-      "cabAreaBody": "Body",
+  "cabAreaBody": "Body",
   "@cabAreaBody": {
     "description": "from Cabinet/cab.area.body"
   },
@@ -124,7 +124,7 @@
   "@cabAreaQuiet": {
     "description": "from Cabinet/cab.areaQuiet"
   },
-                                                                      "cabBirthDataLabel": "birth data",
+  "cabBirthDataLabel": "birth data",
   "@cabBirthDataLabel": {
     "description": "from Cabinet/cab.birthDataLabel"
   },
@@ -208,7 +208,7 @@
   "@cabCalculatedWord": {
     "description": "from Cabinet/cab.calculatedWord"
   },
-              "cabChapters": "chapters",
+  "cabChapters": "chapters",
   "@cabChapters": {
     "description": "from Cabinet/cab.chapters"
   },
@@ -248,7 +248,7 @@
   "@cabExportReady": {
     "description": "from Cabinet/cab.exportReady"
   },
-      "cabFactBirthplace": "birthplace",
+  "cabFactBirthplace": "birthplace",
   "@cabFactBirthplace": {
     "description": "from Cabinet/cab.fact.birthplace"
   },
@@ -256,27 +256,27 @@
   "@cabFactCrossings": {
     "description": "from Cabinet/cab.fact.crossings"
   },
-      "cabFactElement": "element",
+  "cabFactElement": "element",
   "@cabFactElement": {
     "description": "from Cabinet/cab.fact.element"
   },
-          "cabFactLines": "lines",
+  "cabFactLines": "lines",
   "@cabFactLines": {
     "description": "from Cabinet/cab.fact.lines"
   },
-      "cabFactReturn": "return",
+  "cabFactReturn": "return",
   "@cabFactReturn": {
     "description": "from Cabinet/cab.fact.return"
   },
-          "cabFactYearRuler": "year ruler",
+  "cabFactYearRuler": "year ruler",
   "@cabFactYearRuler": {
     "description": "from Cabinet/cab.fact.yearRuler"
   },
-                          "cabFromYourPositions": "Written from your own positions",
+  "cabFromYourPositions": "Written from your own positions",
   "@cabFromYourPositions": {
     "description": "from Cabinet/cab.fromYourPositions"
   },
-                              "cabGuest": "Guest",
+  "cabGuest": "Guest",
   "@cabGuest": {
     "description": "from Cabinet/cab.guest"
   },
@@ -284,7 +284,7 @@
   "@cabGuestNoteApp": {
     "description": "from Cabinet/cab.guestNoteApp"
   },
-      "cabHoroscopeLocked": "Every morning the horoscope is written from your own chart. It comes with the plan.",
+  "cabHoroscopeLocked": "Every morning the horoscope is written from your own chart. It comes with the plan.",
   "@cabHoroscopeLocked": {
     "description": "from Cabinet/cab.horoscopeLocked"
   },
@@ -344,7 +344,7 @@
   "@cabHouse9": {
     "description": "from Cabinet/cab.house.9"
   },
-      "cabLegalImprint": "Imprint",
+  "cabLegalImprint": "Imprint",
   "@cabLegalImprint": {
     "description": "from Cabinet/cab.legal.imprint"
   },
@@ -368,7 +368,7 @@
   "@cabLocked": {
     "description": "from Cabinet/cab.locked"
   },
-          "cabManageInStore": "Manage this subscription in the App Store",
+  "cabManageInStore": "Manage this subscription in the App Store",
   "@cabManageInStore": {
     "description": "from Cabinet/cab.manageInStore"
   },
@@ -393,7 +393,7 @@
       }
     }
   },
-          "cabNoBirthData": "Add your birth date and I can read you.",
+  "cabNoBirthData": "Add your birth date and I can read you.",
   "@cabNoBirthData": {
     "description": "from Cabinet/cab.noBirthData"
   },
@@ -401,7 +401,7 @@
   "@cabNoneActive": {
     "description": "from Cabinet/cab.noneActive"
   },
-                      "cabPairJoin": "{p1} and {p2}",
+  "cabPairJoin": "{p1} and {p2}",
   "@cabPairJoin": {
     "description": "from Cabinet/cab.pairJoin",
     "placeholders": {
@@ -445,7 +445,7 @@
   "@cabPhaseWaxingGibbous": {
     "description": "from Cabinet/cab.phase.waxing-gibbous"
   },
-      "cabPlanCancelFailed": "We could not reach the payment processor, so nothing has changed. Try again in a moment.",
+  "cabPlanCancelFailed": "We could not reach the payment processor, so nothing has changed. Try again in a moment.",
   "@cabPlanCancelFailed": {
     "description": "from Cabinet/cab.plan.cancelFailed"
   },
@@ -498,7 +498,7 @@
   "@cabPlanExportFailed": {
     "description": "from Cabinet/cab.plan.exportFailed"
   },
-      "cabPlanExporting": "Preparing your file…",
+  "cabPlanExporting": "Preparing your file…",
   "@cabPlanExporting": {
     "description": "from Cabinet/cab.plan.exporting"
   },
@@ -510,11 +510,11 @@
   "@cabPlanFreePlan": {
     "description": "from Cabinet/cab.plan.freePlan"
   },
-          "cabPlanKeepPlan": "Keep my plan",
+  "cabPlanKeepPlan": "Keep my plan",
   "@cabPlanKeepPlan": {
     "description": "from Cabinet/cab.plan.keepPlan"
   },
-      "cabPlanOneTimeNote": "Bought once.",
+  "cabPlanOneTimeNote": "Bought once.",
   "@cabPlanOneTimeNote": {
     "description": "from Cabinet/cab.plan.oneTimeNote"
   },
@@ -579,7 +579,7 @@
   "@cabPlansTitle": {
     "description": "from Cabinet/cab.plans.title"
   },
-      "cabPullToTurn": "Keep pulling to open it",
+  "cabPullToTurn": "Keep pulling to open it",
   "@cabPullToTurn": {
     "description": "from Cabinet/cab.pullToTurn"
   },
@@ -596,15 +596,15 @@
   "@cabReadFrom": {
     "description": "from Cabinet/cab.readFrom"
   },
-      "cabReadingChart": "Reading your chart",
+  "cabReadingChart": "Reading your chart",
   "@cabReadingChart": {
     "description": "from Cabinet/cab.readingChart"
   },
-          "cabSaveFile": "Save the file",
+  "cabSaveFile": "Save the file",
   "@cabSaveFile": {
     "description": "from Cabinet/cab.saveFile"
   },
-                  "cabSettingsDate": "Date",
+  "cabSettingsDate": "Date",
   "@cabSettingsDate": {
     "description": "from Cabinet/cab.settings.date"
   },
@@ -644,7 +644,7 @@
   "@cabSettingsLanguage": {
     "description": "from Cabinet/cab.settings.language"
   },
-              "cabSettingsPlace": "Place",
+  "cabSettingsPlace": "Place",
   "@cabSettingsPlace": {
     "description": "from Cabinet/cab.settings.place"
   },
@@ -652,7 +652,7 @@
   "@cabSettingsPlan": {
     "description": "from Cabinet/cab.settings.plan"
   },
-      "cabSettingsTime": "Time",
+  "cabSettingsTime": "Time",
   "@cabSettingsTime": {
     "description": "from Cabinet/cab.settings.time"
   },
@@ -712,7 +712,7 @@
   "@cabSignIn": {
     "description": "from Cabinet/cab.signIn"
   },
-              "cabStatusAddPerson": "add a person",
+  "cabStatusAddPerson": "add a person",
   "@cabStatusAddPerson": {
     "description": "from Cabinet/cab.status.addPerson"
   },
@@ -732,7 +732,7 @@
   "@cabStatusOpen": {
     "description": "from Cabinet/cab.status.open"
   },
-                      "cabSystemAstrocartography": "Astrocartography",
+  "cabSystemAstrocartography": "Astrocartography",
   "@cabSystemAstrocartography": {
     "description": "from Cabinet/cab.system.astrocartography"
   },
@@ -764,15 +764,15 @@
   "@cabSystemTransits": {
     "description": "from Cabinet/cab.system.transits"
   },
-      "cabUnknownTime": "birth time unknown",
+  "cabUnknownTime": "birth time unknown",
   "@cabUnknownTime": {
     "description": "from Cabinet/cab.unknownTime"
   },
-                          "dailyAskBody": "One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from the notification itself.",
+  "dailyAskBody": "One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from the notification itself.",
   "@dailyAskBody": {
     "description": "from Daily/daily.ask.body"
   },
-      "dailyAskTitle": "Tell me the morning it happens",
+  "dailyAskTitle": "Tell me the morning it happens",
   "@dailyAskTitle": {
     "description": "from Daily/daily.ask.title"
   },
@@ -839,11 +839,11 @@
       }
     }
   },
-          "dailyRetrograde": "retrograde",
+  "dailyRetrograde": "retrograde",
   "@dailyRetrograde": {
     "description": "from Daily/daily.retrograde"
   },
-              "dailySettingHour": "Arrives at",
+  "dailySettingHour": "Arrives at",
   "@dailySettingHour": {
     "description": "from Daily/daily.setting.hour"
   },
@@ -859,7 +859,7 @@
   "@dailySettingOff": {
     "description": "from Daily/daily.setting.off"
   },
-      "dailySettingOnlyMattersDetail": "A few times a year. The slow ones only — the transits that last months.",
+  "dailySettingOnlyMattersDetail": "A few times a year. The slow ones only — the transits that last months.",
   "@dailySettingOnlyMattersDetail": {
     "description": "from Daily/daily.setting.onlyMatters.detail"
   },
@@ -875,7 +875,7 @@
   "@dailySettingTimezone": {
     "description": "from Daily/daily.setting.timezone"
   },
-          "dailySettingTimezoneDevice": "from your device",
+  "dailySettingTimezoneDevice": "from your device",
   "@dailySettingTimezoneDevice": {
     "description": "from Daily/daily.setting.timezone.device"
   },
@@ -887,23 +887,23 @@
   "@dailyStatusDenied": {
     "description": "from Daily/daily.status.denied"
   },
-      "dailyStatusOpenSettings": "Open settings",
+  "dailyStatusOpenSettings": "Open settings",
   "@dailyStatusOpenSettings": {
     "description": "from Daily/daily.status.openSettings"
   },
-                                  "dailyVerifiedLabel": "Exact transit dates in the next 30 days",
+  "dailyVerifiedLabel": "Exact transit dates in the next 30 days",
   "@dailyVerifiedLabel": {
     "description": "from Daily/daily.verified.label"
   },
-              "journeyAboutTitle": "A little about you",
+  "journeyAboutTitle": "A little about you",
   "@journeyAboutTitle": {
     "description": "from Journey/journey.aboutTitle"
   },
-          "journeyBuildMySky": "Build my sky",
+  "journeyBuildMySky": "Build my sky",
   "@journeyBuildMySky": {
     "description": "from Journey/journey.buildMySky"
   },
-      "journeyCaptureDay": "Day of birth",
+  "journeyCaptureDay": "Day of birth",
   "@journeyCaptureDay": {
     "description": "from Journey/journey.capture.day"
   },
@@ -923,7 +923,7 @@
   "@journeyCaptureMonthShort": {
     "description": "from Journey/journey.capture.monthShort"
   },
-      "journeyCaptureSearchPlace": "Where were you born?",
+  "journeyCaptureSearchPlace": "Where were you born?",
   "@journeyCaptureSearchPlace": {
     "description": "from Journey/journey.capture.searchPlace"
   },
@@ -1003,7 +1003,7 @@
   "@journeyCeremony8Line": {
     "description": "from Journey/journey.ceremony.8.line"
   },
-      "journeyClose": "Close",
+  "journeyClose": "Close",
   "@journeyClose": {
     "description": "from Journey/journey.close"
   },
@@ -1019,7 +1019,7 @@
   "@journeyDateTitle": {
     "description": "from Journey/journey.dateTitle"
   },
-                  "journeyGenderFemale": "Female",
+  "journeyGenderFemale": "Female",
   "@journeyGenderFemale": {
     "description": "from Journey/journey.genderFemale"
   },
@@ -1031,19 +1031,19 @@
   "@journeyGenderSkip": {
     "description": "from Journey/journey.genderSkip"
   },
-          "journeyHourLabel": "Hour",
+  "journeyHourLabel": "Hour",
   "@journeyHourLabel": {
     "description": "from Journey/journey.hourLabel"
   },
-                                      "journeyLockedWithoutTime": "Houses, solar return and the world map stay locked",
+  "journeyLockedWithoutTime": "Houses, solar return and the world map stay locked",
   "@journeyLockedWithoutTime": {
     "description": "from Journey/journey.lockedWithoutTime"
   },
-      "journeyMinuteLabel": "Min",
+  "journeyMinuteLabel": "Min",
   "@journeyMinuteLabel": {
     "description": "from Journey/journey.minuteLabel"
   },
-                                                          "journeyNamePlaceholder": "Sofia",
+  "journeyNamePlaceholder": "Sofia",
   "@journeyNamePlaceholder": {
     "description": "from Journey/journey.namePlaceholder"
   },
@@ -1079,7 +1079,7 @@
   "@quizInterestFuture": {
     "description": "V0 · quiz.interest_future"
   },
-                                                                      "journeyPlaceSub": "City is enough.",
+  "journeyPlaceSub": "City is enough.",
   "@journeyPlaceSub": {
     "description": "from Journey/journey.placeSub"
   },
@@ -1087,7 +1087,7 @@
   "@journeyPlaceTitle": {
     "description": "from Journey/journey.placeTitle"
   },
-                                                                                                      "journeyTimeTitle": "What time were you born?",
+  "journeyTimeTitle": "What time were you born?",
   "@journeyTimeTitle": {
     "description": "from Journey/journey.timeTitle"
   },
@@ -1095,7 +1095,7 @@
   "@cabinetBack": {
     "description": "from Localizable/cabinet.back"
   },
-      "pushDailyConjunction": "{p1} meets your {p2} at {p3}.",
+  "pushDailyConjunction": "{p1} meets your {p2} at {p3}.",
   "@pushDailyConjunction": {
     "description": "from Localizable/push.daily.conjunction",
     "placeholders": {
@@ -1238,11 +1238,11 @@
   "@stateAccountDeleted": {
     "description": "from Localizable/state.accountDeleted"
   },
-      "stateLoadingShort": "One moment",
+  "stateLoadingShort": "One moment",
   "@stateLoadingShort": {
     "description": "from Localizable/state.loadingShort"
   },
-              "stateOffline": "Alma is not answering right now. Nothing here is guessed, so there is nothing to show until she answers.",
+  "stateOffline": "Alma is not answering right now. Nothing here is guessed, so there is nothing to show until she answers.",
   "@stateOffline": {
     "description": "from Localizable/state.offline"
   },
@@ -1250,7 +1250,7 @@
   "@stateRetry": {
     "description": "from Localizable/state.retry"
   },
-      "stateUnavailable": "Something on our side is not working. It is not you, and it is not your chart.",
+  "stateUnavailable": "Something on our side is not working. It is not you, and it is not your chart.",
   "@stateUnavailable": {
     "description": "from Localizable/state.unavailable"
   },
@@ -1286,7 +1286,7 @@
   "@paywallDoorNote": {
     "description": "from Paywall/paywall.doorNote"
   },
-                                  "paywallManageNote": "Plans bought in the app are cancelled in your Apple ID settings, not here.",
+  "paywallManageNote": "Plans bought in the app are cancelled in your Apple ID settings, not here.",
   "@paywallManageNote": {
     "description": "from Paywall/paywall.manageNote"
   },
@@ -1314,7 +1314,7 @@
   "@paywallOffline": {
     "description": "from Paywall/paywall.offline"
   },
-          "paywallOwnedAll": "Everything is open. All forty-one chapters are yours.",
+  "paywallOwnedAll": "Everything is open. All forty-one chapters are yours.",
   "@paywallOwnedAll": {
     "description": "from Paywall/paywall.ownedAll"
   },
@@ -1322,7 +1322,7 @@
   "@paywallPending": {
     "description": "from Paywall/paywall.pending"
   },
-                  "paywallPitchPlan1": "The subscription rewrites the three living systems as they change. The other five readings can be bought once and stay yours forever.",
+  "paywallPitchPlan1": "The subscription rewrites the three living systems as they change. The other five readings can be bought once and stay yours forever.",
   "@paywallPitchPlan1": {
     "description": "from Paywall/paywall.pitchPlan1"
   },
@@ -1338,7 +1338,7 @@
   "@paywallPrivacy": {
     "description": "from Paywall/paywall.privacy"
   },
-      "paywallRestore": "Restore purchases",
+  "paywallRestore": "Restore purchases",
   "@paywallRestore": {
     "description": "from Paywall/paywall.restore"
   },
@@ -1354,7 +1354,7 @@
   "@paywallRestoredNonePlay": {
     "description": "Play-вариант ключа paywallRestoredNone: Android обязан называть свой магазин своими словами"
   },
-      "paywallRestoring": "Asking the App Store…",
+  "paywallRestoring": "Asking the App Store…",
   "@paywallRestoring": {
     "description": "from Paywall/paywall.restoring"
   },
@@ -1362,7 +1362,7 @@
   "@paywallRestoringPlay": {
     "description": "Play-вариант ключа paywallRestoring: Android обязан называть свой магазин своими словами"
   },
-      "paywallStoreUnavailable": "The App Store is not answering. Nothing here can be bought until it does — and nothing you already own has changed.",
+  "paywallStoreUnavailable": "The App Store is not answering. Nothing here can be bought until it does — and nothing you already own has changed.",
   "@paywallStoreUnavailable": {
     "description": "from Paywall/paywall.storeUnavailable"
   },
@@ -1410,7 +1410,7 @@
   "@paywallTerms": {
     "description": "from Paywall/paywall.terms"
   },
-          "paywallVerifyLater": "Apple has taken the payment. We could not confirm it just now — it will open by itself shortly, and nothing is lost.",
+  "paywallVerifyLater": "Apple has taken the payment. We could not confirm it just now — it will open by itself shortly, and nothing is lost.",
   "@paywallVerifyLater": {
     "description": "from Paywall/paywall.verifyLater"
   },
@@ -1439,15 +1439,15 @@
   "@pillSheetSub": {
     "description": "from Pill/pill.sheetSub"
   },
-                                      "scrAddPersonSaving": "Saving…",
+  "scrAddPersonSaving": "Saving…",
   "@scrAddPersonSaving": {
     "description": "from Screens/scr.addPerson.saving"
   },
-          "scrChatCouldAsk": "you could ask",
+  "scrChatCouldAsk": "you could ask",
   "@scrChatCouldAsk": {
     "description": "from Screens/scr.chat.couldAsk"
   },
-      "scrChatNoChart": "I can talk without your chart, but I would only be guessing. Give me your birth data and I can read you instead.",
+  "scrChatNoChart": "I can talk without your chart, but I would only be guessing. Give me your birth data and I can read you instead.",
   "@scrChatNoChart": {
     "description": "from Screens/scr.chat.noChart"
   },
@@ -1518,7 +1518,7 @@
   "@scrChatRefused": {
     "description": "from Screens/scr.chat.refused"
   },
-          "scrChatSilent": "I answered that one from what I know, not from your chart.",
+  "scrChatSilent": "I answered that one from what I know, not from your chart.",
   "@scrChatSilent": {
     "description": "from Screens/scr.chat.silent"
   },
@@ -1526,7 +1526,7 @@
   "@scrChatThinking": {
     "description": "from Screens/scr.chat.thinking"
   },
-      "scrChatUnavailable": "Something on my side is not working. Your chart is untouched, and your question is still in the box.",
+  "scrChatUnavailable": "Something on my side is not working. Your chart is untouched, and your question is still in the box.",
   "@scrChatUnavailable": {
     "description": "from Screens/scr.chat.unavailable"
   },
@@ -1538,11 +1538,11 @@
   "@scrChatWentWrong": {
     "description": "from Screens/scr.chat.wentWrong"
   },
-          "scrDone": "Done",
+  "scrDone": "Done",
   "@scrDone": {
     "description": "from Screens/scr.done"
   },
-                              "scrKeep": "Keep",
+  "scrKeep": "Keep",
   "@scrKeep": {
     "description": "from Screens/scr.keep"
   },
@@ -1550,11 +1550,11 @@
   "@scrPeopleChange": {
     "description": "from Screens/scr.people.change"
   },
-      "scrPeopleEyebrow": "compatibility",
+  "scrPeopleEyebrow": "compatibility",
   "@scrPeopleEyebrow": {
     "description": "from Screens/scr.people.eyebrow"
   },
-      "scrPeopleRemove": "Remove",
+  "scrPeopleRemove": "Remove",
   "@scrPeopleRemove": {
     "description": "from Screens/scr.people.remove"
   },
@@ -1566,7 +1566,7 @@
   "@scrPeopleRemoveWhat": {
     "description": "from Screens/scr.people.removeWhat"
   },
-          "scrPeopleUnnamed": "Unnamed",
+  "scrPeopleUnnamed": "Unnamed",
   "@scrPeopleUnnamed": {
     "description": "from Screens/scr.people.unnamed"
   },
@@ -1598,11 +1598,11 @@
   "@scrSignInEmailPlaceholder": {
     "description": "from Screens/scr.signIn.emailPlaceholder"
   },
-      "scrSignInFailed": "That did not sign you in. Nothing has changed on your account.",
+  "scrSignInFailed": "That did not sign you in. Nothing has changed on your account.",
   "@scrSignInFailed": {
     "description": "from Screens/scr.signIn.failed"
   },
-      "scrSignInLead": "Your chart follows you to any phone.",
+  "scrSignInLead": "Your chart follows you to any phone.",
   "@scrSignInLead": {
     "description": "from Screens/scr.signIn.lead"
   },
@@ -1618,7 +1618,7 @@
   "@scrSignInPrivacy": {
     "description": "from Screens/scr.signIn.privacy"
   },
-              "scrSignInSendLink": "Email me a sign-in link",
+  "scrSignInSendLink": "Email me a sign-in link",
   "scrSignInSendLinkShort": "Email me a sign-in link",
   "@scrSignInSendLinkShort": {
     "description": "Короткий вариант подписи кнопки для узких экранов. Совпадает с полным везде, кроме немецкого: короче «Anmeldelink per E-Mail senden» в языке ничего нет, а в остальных сокращать нечего."
@@ -1637,7 +1637,7 @@
   "cabCompatNeedsSecond": "Compatibility needs a second person.",
   "cabPeopleTitle": "People",
   "cabPeopleAdd": "Add a person",
-    "splashTagline": "Written in the sky before you asked.",
+  "splashTagline": "Written in the sky before you asked.",
   "@splashTagline": {
     "description": "Подпись под знаком на заставке."
   },
@@ -1780,7 +1780,7 @@
   "@cabCompatBulletComposite": {
     "description": "S23, третий пункт. strings-batch2.md."
   },
-                  "todayReadWholeSky": "Read the whole sky",
+  "todayReadWholeSky": "Read the whole sky",
   "@todayReadWholeSky": {
     "description": "today-reading-spec §6 · todayReadWholeSky"
   },
@@ -1811,7 +1811,7 @@
       }
     }
   },
-                  "readerTextSize": "Text size",
+  "readerTextSize": "Text size",
   "@readerTextSize": {
     "description": "today-reading-spec §6 · readerTextSize"
   },
@@ -1850,7 +1850,9 @@
   "paywallV3DoorCtaShort": "Open it · {price}",
   "@paywallV3DoorCtaShort": {
     "description": "V1 · короткий вариант кнопки двери для узкой карточки: тот же смысл, цена обязана быть видна",
-    "placeholders": {"price": {}}
+    "placeholders": {
+      "price": {}
+    }
   },
   "@paywallV3DoorCta": {
     "description": "monetization v3 · А11 door.cta · V1/V2",
@@ -2327,102 +2329,102 @@
   },
   "pairInputNote": "A date of birth is enough. A time makes the houses exact, but it can wait.",
   "@pairInputNote": {
-      "description": "monetization v3 · W2 · подпись под заголовком анкеты пары"
+    "description": "monetization v3 · W2 · подпись под заголовком анкеты пары"
   },
   "pairInputTime": "Time of birth",
   "@pairInputTime": {
-      "description": "monetization v3 · А11 pair.input_time · W2"
+    "description": "monetization v3 · А11 pair.input_time · W2"
   },
   "pairInputOptional": "optional",
   "@pairInputOptional": {
-      "description": "monetization v3 · А11 pair.input_optional · W2 — помета на поле времени"
+    "description": "monetization v3 · А11 pair.input_optional · W2 — помета на поле времени"
   },
   "pairInputPlace": "Place of birth",
   "@pairInputPlace": {
-      "description": "W2 · четвёртое поле, которого нет на холсте: сервер требует координаты и пояс (дома). Расхождение записано в SCREENS-V3 §W2 как вопрос владельцу"
+    "description": "W2 · четвёртое поле, которого нет на холсте: сервер требует координаты и пояс (дома). Расхождение записано в SCREENS-V3 §W2 как вопрос владельцу"
   },
   "pairInputFreeNote": "Their chart is calculated for free, like yours. You pay only for the chapters written about the two of you.",
   "@pairInputFreeNote": {
-      "description": "monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают. «Free» здесь — про расчёт, и только: решение владельца 19.08.2026 («мы не даем бесплатно пару никакую все за деньги можно писать только имя») снимает у пары любой бесплатный текст, включая открывающий абзац"
+    "description": "monetization v3 · А11 pair.input_free_note · W2. Эталон холста написан про «его» карту; ключ родо-нейтрален — род партнёра здесь не спрашивают. «Free» здесь — про расчёт, и только: решение владельца 19.08.2026 («мы не даем бесплатно пару никакую все за деньги можно писать только имя») снимает у пары любой бесплатный текст, включая открывающий абзац"
   },
   "pairInputCta": "Read what pulls you together",
   "@pairInputCta": {
-      "description": "monetization v3 · А11 pair.input_cta · W2"
+    "description": "monetization v3 · А11 pair.input_cta · W2"
   },
   "pairMyPairsNote": "Every report stays yours, subscription or not.",
   "@pairMyPairsNote": {
-      "description": "monetization v3 · А11 pair.my_pairs_note · V5"
+    "description": "monetization v3 · А11 pair.my_pairs_note · V5"
   },
   "pairRowChapters": "four chapters",
   "@pairRowChapters": {
-      "description": "monetization v3 · А11 pair.row_chapters · V5"
+    "description": "monetization v3 · А11 pair.row_chapters · V5"
   },
   "pairRowBought": "bought {date}",
   "@pairRowBought": {
-      "description": "monetization v3 · А11 pair.row_bought · V5",
-      "placeholders": {
-          "date": {
-              "type": "String"
-          }
+    "description": "monetization v3 · А11 pair.row_bought · V5",
+    "placeholders": {
+      "date": {
+        "type": "String"
       }
+    }
   },
   "pairRowNotOpened": "not opened yet",
   "@pairRowNotOpened": {
-      "description": "V5 · хвост строки человека без купленного отчёта, рядом с pairRowChapters; кадра нет (SCREENS-V3 §V5). Был pairRowFreeChapter («how Attraction begins is free to read») — обещание снято владельцем 19.08.2026 вместе с открывающим абзацем пары, и имя ключа ушло вместе с обещанием"
+    "description": "V5 · хвост строки человека без купленного отчёта, рядом с pairRowChapters; кадра нет (SCREENS-V3 §V5). Был pairRowFreeChapter («how Attraction begins is free to read») — обещание снято владельцем 19.08.2026 вместе с открывающим абзацем пары, и имя ключа ушло вместе с обещанием"
   },
   "pairCreditOverline": "this month",
   "@pairCreditOverline": {
-      "description": "monetization v3 · А11 pair.credit_overline · V5"
+    "description": "monetization v3 · А11 pair.credit_overline · V5"
   },
   "pairCreditUsed": "{used} of {granted, plural, one{{granted} check used} other{{granted} checks used}}",
   "@pairCreditUsed": {
-      "description": "monetization v3 · А11 pair.credit_used · V5 — plural по обоим числам",
-      "placeholders": {
-          "used": {
-              "type": "int"
-          },
-          "granted": {
-              "type": "int"
-          }
+    "description": "monetization v3 · А11 pair.credit_used · V5 — plural по обоим числам",
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "granted": {
+        "type": "int"
       }
+    }
   },
   "pairCreditNext": "Your next included check arrives {date}. Checks do not carry over.",
   "@pairCreditNext": {
-      "description": "monetization v3 · А11 pair.credit_next · V5",
-      "placeholders": {
-          "date": {
-              "type": "String"
-          }
+    "description": "monetization v3 · А11 pair.credit_next · V5",
+    "placeholders": {
+      "date": {
+        "type": "String"
       }
+    }
   },
   "pairHookTitle": "Anyone else on your mind?",
   "@pairHookTitle": {
-      "description": "monetization v3 · А11 pair.hook_title · V5"
+    "description": "monetization v3 · А11 pair.hook_title · V5"
   },
   "pairHookNote": "A date of birth is enough, and the comparison is calculated for free. The chapters are what you pay for.",
   "@pairHookNote": {
-      "description": "monetization v3 · А11 pair.hook_note · V5"
+    "description": "monetization v3 · А11 pair.hook_note · V5"
   },
   "pairCheckAnotherPlain": "Check someone else",
   "@pairCheckAnotherPlain": {
-      "description": "V5 · кнопка без цены: полка молчит или месячная проверка ещё не потрачена. Эталона на холсте нет (§V5, «кредит не потрачен»); это pair.check_another без цены"
+    "description": "V5 · кнопка без цены: полка молчит или месячная проверка ещё не потрачена. Эталона на холсте нет (§V5, «кредит не потрачен»); это pair.check_another без цены"
   },
   "pairReportHeader": "you and {name}",
   "@pairReportHeader": {
-      "description": "monetization v3 · А11 pair.report_header · W3 (и V4 до слияния тизера с главой I)",
-      "placeholders": {
-          "name": {
-              "type": "String"
-          }
+    "description": "monetization v3 · А11 pair.report_header · W3 (и V4 до слияния тизера с главой I)",
+    "placeholders": {
+      "name": {
+        "type": "String"
       }
+    }
   },
   "pairReportMeta": "four chapters · yours forever",
   "@pairReportMeta": {
-      "description": "monetization v3 · А11 pair.report_meta · W3 — только у купленного отчёта: подтверждение, а не оффер"
+    "description": "monetization v3 · А11 pair.report_meta · W3 — только у купленного отчёта: подтверждение, а не оффер"
   },
   "pairChapterRead": "read",
   "@pairChapterRead": {
-      "description": "monetization v3 · А11 pair.chapter_read · W3 — метка прочитанной главы в оглавлении пары"
+    "description": "monetization v3 · А11 pair.chapter_read · W3 — метка прочитанной главы в оглавлении пары"
   },
   "homeLivingLayer": "the living layer",
   "@homeLivingLayer": {
@@ -2500,5 +2502,33 @@
   "onbClose": "Close",
   "@onbClose": {
     "description": "onboarding · coach.close — подпись крестика для озвучки экрана"
+  },
+  "onbFirstChapterTitle": "The first chapter is open",
+  "@onbFirstChapterTitle": {
+    "description": "onboarding · coach.first_chapter.title — второй шаг обучалки (22 авг, владелец просил 5 шагов); ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+  },
+  "onbFirstChapterBody": "Chapter I of your natal chart is written and waiting — start there. The other chapters open one by one, whenever you choose.",
+  "@onbFirstChapterBody": {
+    "description": "onboarding · coach.first_chapter.body — первая глава открыта, остальные по одной; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+  },
+  "onbAlmaTitle": "Ask Alma anything",
+  "@onbAlmaTitle": {
+    "description": "onboarding · coach.alma.title — четвёртый шаг обучалки; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+  },
+  "onbAlmaBody": "Alma answers from what is in your chart, never from a template — and says so when the chart has no answer. Every reply cites the positions it was read from.",
+  "@onbAlmaBody": {
+    "description": "onboarding · coach.alma.body — отвечает по карте, честна про отсутствие ответа, цитирует позиции; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+  },
+  "onbMorningTitle": "A letter in the morning",
+  "@onbMorningTitle": {
+    "description": "onboarding · coach.morning.title — пятый шаг обучалки; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+  },
+  "onbMorningBody": "Alma can send a short morning note when the sky actually moves. Pick how often right here — or leave it off.",
+  "@onbMorningBody": {
+    "description": "onboarding · coach.morning.body — утренняя заметка только когда небо движется, частота выбирается тумблером; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+  },
+  "cabSettingsDocuments": "Documents",
+  "@cabSettingsDocuments": {
+    "description": "настройки · строка, открывающая попап с пятью юридическими документами (22 авг: документы в одну кнопку)"
   }
 }

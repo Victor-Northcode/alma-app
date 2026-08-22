@@ -3,12 +3,14 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/arrival.dart';
 import '../settings/sign_in_screen.dart';
 import '../../design/art.dart';
+import '../../design/metrics.dart';
 import '../../design/buttons.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
@@ -160,6 +162,11 @@ class _TodayScreenState extends State<TodayScreen> {
         if (session.account?.isGuest == true && session.hasBirthData) ...[
           const SizedBox(height: _sectionGap),
           const _SaveAccountCard(),
+          // Кнопки «Sign in / Not now» стояли в зоне растворения бара и читались
+          // «за баром» (снято на устройстве 22 авг). Добор воздуха — только под
+          // этой карточкой: глобальный отступ каркаса трогать нельзя, он уже
+          // выверен против дёрганья коротких страниц (см. screen_scaffold).
+          const SizedBox(height: 12),
         ],
       ],
     );
@@ -497,12 +504,25 @@ class _PanelLabel extends StatelessWidget {
 /// Разовая покупка его тоже не открывает — ни блюра, ни пустой карточки. Одна
 /// фраза о том, что это такое и где живёт, и дверь. Панель при этом остаётся
 /// той же самой: подписка меняет то, что внутри, а не форму экрана.
-class _HoroscopePanel extends StatelessWidget {
+class _HoroscopePanel extends StatefulWidget {
   const _HoroscopePanel(
       {super.key, required this.model, required this.subscriber});
 
   final TodayModel model;
   final bool subscriber;
+
+  @override
+  State<_HoroscopePanel> createState() => _HoroscopePanelState();
+}
+
+class _HoroscopePanelState extends State<_HoroscopePanel> {
+  /// Развёрнут ли бесплатный абзац дня. По брендбуку гороскоп — вкладочка:
+  /// свёрнут в несколько строк, тап разворачивает (владелец, 22 авг). Живёт на
+  /// панели, а не глубже: состояние показа, не содержания.
+  bool _expanded = false;
+
+  TodayModel get model => widget.model;
+  bool get subscriber => widget.subscriber;
 
   @override
   Widget build(BuildContext context) {
@@ -562,10 +582,50 @@ class _HoroscopePanel extends StatelessWidget {
         if (paragraphs.isEmpty) return _locked(context, l);
         return [
           const SizedBox(height: 14),
-          // Ступень чтения, как у всего написанного: 16.5 холста — округление
-          // 17/1.65, довод в §1 SCREENS-V3.
-          Text(paragraphs.join('\n\n'), style: AlmaType.readingBody()),
-          const SizedBox(height: 16),
+          // **Вкладочка, а не простыня.** Абзац дня лежал развёрнутым целиком, и
+          // владелец сверил с брендбуком: гороскоп — карточка, «нажимаешь — и он
+          // разворачивается» (22 авг). Свёрнуто — четыре строки с растворением
+          // (той же гаснущей строкой, что у подписчика); тап по тексту или по
+          // шеврону раскрывает и сворачивает. AnimatedSize ведёт высоту плавно.
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              HapticFeedback.selectionClick();
+              setState(() => _expanded = !_expanded);
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AnimatedSize(
+                  duration: AlmaMotion.ui,
+                  curve: AlmaMotion.uiCurve,
+                  alignment: Alignment.topCenter,
+                  child: Text(
+                    paragraphs.join('\n\n'),
+                    style: AlmaType.readingBody(),
+                    maxLines: _expanded ? null : 4,
+                    overflow:
+                        _expanded ? TextOverflow.visible : TextOverflow.fade,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Align(
+                  alignment: Alignment.center,
+                  child: AnimatedRotation(
+                    turns: _expanded ? 0.5 : 0,
+                    duration: AlmaMotion.ui,
+                    curve: AlmaMotion.uiCurve,
+                    child: Icon(
+                      Icons.expand_more,
+                      size: 22,
+                      color: AlmaPalette.gold.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
           _LivingLayer(model: model),
         ];
       case LoadFailed<ReadingResponse>():

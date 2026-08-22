@@ -1891,4 +1891,28 @@ class LFr extends L {
 
   @override
   String get onbClose => 'Fermer';
+
+  @override
+  String get onbFirstChapterTitle => 'Le premier chapitre est déjà ouvert';
+
+  @override
+  String get onbFirstChapterBody =>
+      'Le chapitre I de ton thème natal est écrit et t\'attend — commence par là. Les autres chapitres s\'ouvrent un à un, quand tu le décides.';
+
+  @override
+  String get onbAlmaTitle => 'Demande à Alma ce que tu veux';
+
+  @override
+  String get onbAlmaBody =>
+      'Alma répond à partir de ce qui est dans ton thème, jamais d\'après un modèle — et te le dit quand le thème n\'a pas de réponse. Chaque réponse cite les positions dont elle a été lue.';
+
+  @override
+  String get onbMorningTitle => 'Une lettre le matin';
+
+  @override
+  String get onbMorningBody =>
+      'Alma peut t\'envoyer une courte note le matin, quand le ciel bouge vraiment. Choisis ici la fréquence — ou laisse-la éteinte.';
+
+  @override
+  String get cabSettingsDocuments => 'Documents';
 }

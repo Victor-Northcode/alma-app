@@ -1894,4 +1894,28 @@ class LDe extends L {
 
   @override
   String get onbClose => 'Schließen';
+
+  @override
+  String get onbFirstChapterTitle => 'Das erste Kapitel ist offen';
+
+  @override
+  String get onbFirstChapterBody =>
+      'Kapitel I deines Geburtshoroskops ist geschrieben und wartet — fang dort an. Die übrigen Kapitel öffnen sich eines nach dem anderen, wann immer du willst.';
+
+  @override
+  String get onbAlmaTitle => 'Frag Alma, was du willst';
+
+  @override
+  String get onbAlmaBody =>
+      'Alma antwortet aus dem, was in deinem Horoskop steht, nie nach Schablone — und sagt es dir, wenn das Horoskop keine Antwort hat. Jede Antwort nennt die Positionen, aus denen sie gelesen wurde.';
+
+  @override
+  String get onbMorningTitle => 'Ein Brief am Morgen';
+
+  @override
+  String get onbMorningBody =>
+      'Alma kann dir morgens eine kurze Notiz schicken, wenn sich am Himmel wirklich etwas bewegt. Wähle hier, wie oft — oder lass es aus.';
+
+  @override
+  String get cabSettingsDocuments => 'Dokumente';
 }

@@ -1875,4 +1875,28 @@ class LEn extends L {
 
   @override
   String get onbClose => 'Close';
+
+  @override
+  String get onbFirstChapterTitle => 'The first chapter is open';
+
+  @override
+  String get onbFirstChapterBody =>
+      'Chapter I of your natal chart is written and waiting — start there. The other chapters open one by one, whenever you choose.';
+
+  @override
+  String get onbAlmaTitle => 'Ask Alma anything';
+
+  @override
+  String get onbAlmaBody =>
+      'Alma answers from what is in your chart, never from a template — and says so when the chart has no answer. Every reply cites the positions it was read from.';
+
+  @override
+  String get onbMorningTitle => 'A letter in the morning';
+
+  @override
+  String get onbMorningBody =>
+      'Alma can send a short morning note when the sky actually moves. Pick how often right here — or leave it off.';
+
+  @override
+  String get cabSettingsDocuments => 'Documents';
 }
