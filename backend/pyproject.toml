@@ -28,7 +28,15 @@ dependencies = [
     # which would be a boot failure on the day of the first purchase.
     # BSD-3/Apache-2.0 dual licensed; tools/license_gate.py permits both.
     "cryptography>=43",
-    "anthropic>=0.60",
+    # **Верхний потолок обязателен, и его отсутствие уже стоило прода.** `>=0.60`
+    # без него затянул в образ anthropic 1.0.0 — мажор, сменивший транспорт на
+    # httpx2: SDK проверяет `isinstance(http_client, httpx2.AsyncClient)` и падал
+    # `TypeError` на нашем `httpx.AsyncClient`, роняя КАЖДУЮ генерацию 500-й, а
+    # читатель видел «что-то не работает на нашей стороне» (найдено в логах
+    # контейнера 22 авг 2026). Код теперь берёт httpx2 у самого SDK
+    # (`ai/provider.py`), а пин держит major, под который это проверено —
+    # следующий major так же тихо не въедет.
+    "anthropic>=1,<2",
     "timezonefinder>=6.5",
     # timezonefinder maps a point to a zone *name*; it does not ship the IANA
     # zone database itself. Every zone check goes through

@@ -178,7 +178,19 @@ class AnthropicProvider:
                 "ANTHROPIC_API_KEY is not set — put it in the environment; "
                 "it is never written to a file in this repository"
             )
-        import httpx
+        # **anthropic 1.0 перешёл на httpx2, и `http_client` обязан быть его
+        # типом.** До 1.0 SDK брал обычный httpx; с 1.0 он проверяет
+        # `isinstance(client, httpx2.AsyncClient)` и падает `TypeError` на нашем
+        # `httpx.AsyncClient` — а вместе с ним падала КАЖДАЯ генерация на проде
+        # 500-й, и читатель видел «что-то не работает на нашей стороне» (логи
+        # контейнера 22 авг 2026: `anthropic>=0.60` без потолка втянул 1.0.0).
+        # Берём тот httpx, что использует установленный SDK: httpx2 на 1.x,
+        # обычный httpx на 0.x. API `AsyncClient`/`Timeout`/`Limits` у них общий,
+        # поэтому ниже всё работает под именем `httpx` без разветвления.
+        try:
+            import httpx2 as httpx
+        except ImportError:  # anthropic < 1.0 ещё на обычном httpx
+            import httpx
         from anthropic import AsyncAnthropic
 
         # **Свой пул соединений, названный числами, а не умолчанием SDK.**
