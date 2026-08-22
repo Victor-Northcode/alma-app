@@ -17,9 +17,13 @@ workflows:
     max_build_duration: 90
     working_directory: mobile/flutter/alma
     integrations:
-      # Владелец: Team settings → Integrations → App Store Connect — добавить ключ
-      # (.p8 App Store Connect API) и назвать интеграцию ровно так же, как здесь.
-      app_store_connect: alma_app_store_connect
+      # Уже подключённый командный ключ App Store Connect (в ASC он активен как
+      # «Codemagic», Key ID UUM98VV283, роль «Менеджер приложений» — на Alma работает).
+      # Имя интеграции должно совпадать с тем, что в Team → Integrations, ровно посимвольно.
+      # Если позже захочется своё имя — добавить тот же .p8 вторым ключом под нужным именем
+      # и поменять эту строку; переименовывать существующий рискованно (на него может
+      # ссылаться конфиг соседнего проекта synapse).
+      app_store_connect: synapse_asc
     environment:
       ios_signing:
         # Автоподпись: Codemagic по интеграции выше сам вытянет/создаст сертификат и
