@@ -544,10 +544,15 @@ class _AlmaScreenState extends State<AlmaScreen>
       child: SafeArea(
         bottom: false,
         child: Padding(
-          // В покое — место домашнего индикатора, и оно **под грабером**:
-          // композер с ручкой садятся на индикатор, а не парят над ним.
-          // При открытой клавиатуре — только воздух над её кромкой.
-          padding: EdgeInsets.only(bottom: typing ? 8 : view.padding.bottom),
+          // В покое — место под баром вкладок: композер садится ровно на него
+          // (`tabBarHeight` + домашний индикатор), как это делает общий каркас
+          // экранов (`screen_scaffold.dart`). Бар теперь стоит и на этой вкладке,
+          // поэтому под него нужен отступ — иначе поле вопроса ушло бы под бар.
+          // При открытой клавиатуре бар уезжает вниз, и остаётся воздух над её
+          // кромкой.
+          padding: EdgeInsets.only(
+            bottom: typing ? 8 : view.padding.bottom + AlmaMetrics.tabBarHeight,
+          ),
           child: Column(children: [
             _header(l),
             Expanded(
@@ -569,14 +574,6 @@ class _AlmaScreenState extends State<AlmaScreen>
               ]),
             ),
             _limitWall(l, session) ?? _composer(l),
-            // **Грабер — под композером и только когда не пишут.**
-            //
-            // Клавиатура забирает низ экрана целиком: ручка над её кромкой
-            // предлагала бы уйти с вкладки ровно тому, кто набирает вопрос, и
-            // отнимала бы у него строку. Черновик при этом никуда не девается
-            // — он живёт в `_draft`, а не в разметке, — и приезд бара, уход
-            // бара и появление ручки его не касаются.
-            if (!typing) TabsGrabber(peek: widget.tabs),
           ]),
         ),
       ),

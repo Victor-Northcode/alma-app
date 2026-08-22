@@ -131,10 +131,12 @@ class AlmaType {
   );
 
   /// Второстепенные строки под заголовком.
+  // Размер поднят 13 → 14: мета-строки и подписи читались мелко на телефоне
+  // (22 авг). Ступень всё ещё ниже `body` (15.5), но уже не «петит».
   static final meta = TextStyle(
     fontFamily: _ui,
     fontFamilyFallback: _uiFallback,
-    fontSize: 13,
+    fontSize: 14,
     height: 1.45,
     color: AlmaPalette.muted,
   );

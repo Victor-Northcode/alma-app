@@ -261,6 +261,9 @@ class _JourneyScreenState extends State<JourneyScreen> {
     final l = L.of(context);
     return Scaffold(
       backgroundColor: AlmaPalette.night,
+      // Тело сжимается под клавиатуру (значение по умолчанию, но объявлено явно):
+      // прокрутка внутри `Expanded` выше держит кнопку над её кромкой.
+      resizeToAvoidBottomInset: true,
       body: NightSky(
         mood: SkyMood.ceremony,
         seed: 0x4A4F5552 + _step.index,
@@ -324,9 +327,32 @@ class _JourneyScreenState extends State<JourneyScreen> {
                     icon: const Icon(Icons.arrow_back, color: AlmaPalette.gold),
                   ),
               ]),
-              const Spacer(),
-              ..._stepBody(l),
-              const Spacer(),
+              // **Тело шага прокручивается, а кнопка держится над клавиатурой.**
+              //
+              // Здесь был жёсткий столбец с двумя `Spacer`, и на шаге города
+              // (VI/VII) клавиатура сжимала тело: заголовок + поле + пять подсказок
+              // + кнопка не влезали в остаток высоты, `Spacer` схлопывались в ноль,
+              // и «Build my sky» уезжала под клавиатуру — снято на устройстве 22 авг.
+              //
+              // Теперь тело живёт в `Expanded` с прокруткой: пока места хватает,
+              // `minHeight` + центрирование держат шаг ровно как прежде; когда
+              // клавиатура его сжимает, содержимое прокручивается, а не переполняется.
+              // Кнопка стоит ниже `Expanded` — то есть всегда над кромкой клавиатуры,
+              // а не за ней.
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) => SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: _stepBody(l),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
               if (_failure != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -591,6 +617,11 @@ class _JourneyScreenState extends State<JourneyScreen> {
                 best: index == 0,
                 selected: _place?.id == place.id,
                 onTap: () {
+                  // Город выбран — клавиатуру прячем сразу: экран возвращается к
+                  // спокойной раскладке, и «Build my sky» видна без прокрутки,
+                  // а не остаётся под клавиатурой ждать, пока человек догадается
+                  // её закрыть.
+                  FocusScope.of(context).unfocus();
                   setState(() {
                     _place = place;
                     _placeQuery.text = place.label;

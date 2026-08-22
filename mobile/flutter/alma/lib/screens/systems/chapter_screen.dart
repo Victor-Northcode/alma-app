@@ -1030,12 +1030,27 @@ class _ChapterScreenState extends State<ChapterScreen> {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(AlmaMetrics.pad),
-          child: Text(
-            failure is ServerRefused && failure.message.isNotEmpty
-                ? failure.message
-                : l.stateUnavailable,
-            style: AlmaType.meta,
-            textAlign: TextAlign.center,
+          // **Тупик стал предложением попробовать снова.** Здесь была одна серая
+          // строка 13pt на ночи без выхода: сеть моргнула — человек застрял на
+          // пустом экране и решил, что сломал что-то сам (снято на устройстве
+          // 22 авг). Сообщение теперь читаемого размера и цвета, а под ним —
+          // «Попробовать снова» через тот же `_load`, потому что всё, что сюда
+          // попадает (мёртвая сеть, отказ письма), чинится повтором, а не
+          // покупкой. Удалённая когда-то кнопка была пейволлом «См. планы» —
+          // это другое, retry её не воскрешает.
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                failure is ServerRefused && failure.message.isNotEmpty
+                    ? failure.message
+                    : l.stateUnavailable,
+                style: AlmaType.body.copyWith(color: AlmaPalette.body),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              AlmaButton(label: l.stateRetry, onTap: _load),
+            ],
           ),
         ),
       );

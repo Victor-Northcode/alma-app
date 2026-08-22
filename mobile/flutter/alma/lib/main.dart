@@ -170,10 +170,6 @@ class _CabinetShellState extends State<CabinetShell> {
   /// оболочка — см. [TabsPeek] о том, почему признак живёт отдельной вещью.
   late final TabsPeek _peek = TabsPeek();
 
-  /// Сколько уже протянули вниз по самому бару; порог — [TabsPeek.pull], там
-  /// же и о том, почему считается расстояние, а не скорость на отпускании.
-  double _pushed = 0;
-
   /// Читалась ли глава на вкладке «Мои системы», когда с неё ушли.
   ///
   /// **Признак чтения принадлежит странице, а не приходу на вкладку.** Приход
@@ -644,6 +640,10 @@ class _CabinetShellState extends State<CabinetShell> {
     // разбудивший процесс: до этой строки вкладок нет, и вести ему некуда.
     _cabinetOpen = true;
     _maybeOpenPushed();
+    // Клавиатура — здесь, выше Scaffold: он обнуляет `viewInsets` в теле, а этот
+    // контекст видит её настоящую высоту и перестраивается, когда она открывается
+    // и закрывается. По ней бар на вкладке Alma уходит вниз только на время письма.
+    final keyboardUp = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Scaffold(
       backgroundColor: AlmaPalette.night,
       extendBody: true,
@@ -729,54 +729,25 @@ class _CabinetShellState extends State<CabinetShell> {
           ],
         ),
       ),
-      // **На вкладке Alma бар не стоит, а приезжает.**
+      // **Бар стоит на всех четырёх вкладках, включая Alma, и прячется только
+      // пока пишут.**
       //
-      // Решение владельца, а не упущение вёрстки: беседа — комната письма, и
-      // внизу неё поле вопроса главнее переключения вкладок. Бар приходит по
-      // граберу под композером и уходит сам.
+      // Раньше на Alma бара не было вовсе: он уезжал вниз и вызывался грабером под
+      // композером. Владелец сказал, что это читается как «меню пропало» — снято
+      // на устройстве 22 авг. Теперь он ведёт себя как на остальных вкладках, а
+      // уходит вниз только на время открытой клавиатуры, чтобы не встать между
+      // ней и полем вопроса.
       //
-      // **Он уезжает вниз, а не снимается — и это не украшение.** Scaffold
-      // кладёт высоту `bottomNavigationBar` в `MediaQuery` тела, а тело здесь
-      // одно на все четыре страницы `PageView`. Сняв бар на Alma, мы поменяли
-      // бы отступ снизу разом всем четырём, и три остальные вкладки дёргались
-      // бы на 52 точки в такт чужому жесту. Место в разметке бар держит
-      // всегда; меняется только то, где он нарисован.
-      bottomNavigationBar: ValueListenableBuilder<bool>(
-        valueListenable: _peek,
-        builder: (context, peeking, _) {
-          final away = _tab == CabinetTab.alma && !peeking;
-          Widget bar = CabinetTabBar(
-            current: _tab,
-            // Нажатие идёт тем же путём, что смах: одно движение на оба способа.
-            onSelect: _goTo,
-          );
-          if (_tab == CabinetTab.alma) {
-            bar = Listener(
-              // Палец на баре продлевает жизнь: три секунды считаются от
-              // последнего касания, а не от приезда.
-              onPointerDown: (_) => _peek.keepAwake(),
-              child: GestureDetector(
-                // Смах вниз — «спасибо, не надо». Тапу по вкладке он не мешает:
-                // пока палец стоит на месте, арену выигрывает нажатие.
-                onVerticalDragStart: (_) => _pushed = 0,
-                onVerticalDragUpdate: (details) {
-                  _pushed += details.primaryDelta ?? 0;
-                  if (_pushed >= TabsPeek.pull) _peek.hide();
-                },
-                child: bar,
-              ),
-            );
-          }
-          // Смещение долей собственной высоты: единица уводит бар ровно на
-          // свой рост вместе с полосой домашнего индикатора, и за кромкой от
-          // него не остаётся ни точки.
-          return AnimatedSlide(
-            offset: Offset(0, away ? 1 : 0),
-            duration: AlmaMotion.sheet,
-            curve: AlmaMotion.sheetCurve,
-            child: bar,
-          );
-        },
+      // **Он уезжает вниз, а не снимается — и это не украшение.** Scaffold кладёт
+      // высоту `bottomNavigationBar` в `MediaQuery` тела, а тело здесь одно на все
+      // четыре страницы `PageView`. Сняв бар, мы поменяли бы отступ снизу разом
+      // всем четырём. Место в разметке бар держит всегда; меняется только то, где
+      // он нарисован.
+      bottomNavigationBar: AnimatedSlide(
+        offset: Offset(0, _tab == CabinetTab.alma && keyboardUp ? 1 : 0),
+        duration: AlmaMotion.sheet,
+        curve: AlmaMotion.sheetCurve,
+        child: CabinetTabBar(current: _tab, onSelect: _goTo),
       ),
     );
   }

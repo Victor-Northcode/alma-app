@@ -341,15 +341,15 @@ class _TabButton extends StatelessWidget {
               child: CustomPaint(painter: _TabGlyph(tab: tab, active: active)),
             ),
             const SizedBox(height: 3),
-            // Подпись тише, чем казалось по коду: на нативном баре она 10
-            // пунктов обычного веса, и активная не жирнеет — её выделяет
-            // золото. Сверено бок о бок; крупная жирная подпись делала бар
-            // тяжелее всего экрана.
+            // Подпись обычного веса — активную выделяет золото, а не жир: крупная
+            // жирная подпись делала бар тяжелее всего экрана. Размер поднят 10 → 11:
+            // прежние 10pt равнялись на нативный бар, который эталоном больше не
+            // считается (CLAUDE.md §2), и на телефоне читались мелко.
             Text(
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 10, letterSpacing: 0.2, color: colour),
+              style: TextStyle(fontSize: 11, letterSpacing: 0.2, color: colour),
             ),
           ],
         ),
@@ -376,7 +376,7 @@ class _TabGlyph extends CustomPainter {
     final reading = readingNow.value;
     final colour = active
         ? (reading ? AlmaPalette.goldDeep : AlmaPalette.gold)
-        : (reading ? AlmaPalette.inkMuted : AlmaPalette.body.withValues(alpha: 0.5));
+        : (reading ? AlmaPalette.inkMuted : AlmaPalette.body.withValues(alpha: 0.62));
     final stroke = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.25

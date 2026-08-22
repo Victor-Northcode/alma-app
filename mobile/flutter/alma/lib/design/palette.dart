@@ -64,11 +64,14 @@ class AlmaPalette {
   static final hairlineGold = gold.withValues(alpha: 0.16);
 
   // ── приглушённый текст ──────────────────────────────────────────────────
-  static final muted = body.withValues(alpha: 0.72);
-  static final muted2 = body.withValues(alpha: 0.68);
-  static final muted3 = body.withValues(alpha: 0.62);
-  static final inkMuted = ink.withValues(alpha: 0.72);
-  static final inkMuted2 = ink.withValues(alpha: 0.62);
+  // Прозрачности подняты на шаг (было .72/.68/.62): вторичный текст — подписи,
+  // подсказки, мета-строки — жаловались на слабый контраст с ночью на реальном
+  // экране (22 авг). Это всё ещё «тише основного», но уже читаемо, а не призрак.
+  static final muted = body.withValues(alpha: 0.80);
+  static final muted2 = body.withValues(alpha: 0.76);
+  static final muted3 = body.withValues(alpha: 0.72);
+  static final inkMuted = ink.withValues(alpha: 0.80);
+  static final inkMuted2 = ink.withValues(alpha: 0.72);
 
   // ── свечение кнопки ─────────────────────────────────────────────────────
   static const goldGlowRadius = 20.0;
