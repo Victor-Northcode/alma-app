@@ -2,6 +2,10 @@ plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    // **Обязан идти после Android-плагина.** Читает
+    // `android/app/google-services.json` и кладёт project_id, app_id и api_key
+    // в ресурсы; FirebaseApp поднимается из них автоматически.
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -38,6 +42,22 @@ kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
+}
+
+dependencies {
+    // **Только `firebase-messaging`, и это не экономия, а условие.**
+    // `docs/PUSH.md §7.1`: строка «No third-party analytics SDK» остаётся
+    // правдой ровно до тех пор, пока сюда не добавлен `firebase-analytics`.
+    // Добавить его — значит переписывать Data safety и §4 таблицы отсутствий.
+    //
+    // BoM держит версии транзитивных артефактов согласованными; номер сверить
+    // с https://firebase.google.com/docs/android/setup перед первой сборкой.
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
+    // NotificationCompat в AlmaMessagingService (форграунд-показ). firebase-messaging
+    // тянет androidx.core транзитивно, но объявляем явно, чтобы сборка не зависела
+    // от чужого графа зависимостей.
+    implementation("androidx.core:core-ktx:1.13.1")
 }
 
 flutter {
