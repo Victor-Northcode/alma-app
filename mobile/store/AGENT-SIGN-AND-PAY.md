@@ -1,125 +1,113 @@
-# Агенту: подпись Android, оплаты и что осталось до релиза
+# Агенту в сторах: всё, что осталось до релиза (единый чек-лист)
 
-Ты общаешься с агентом у консолей, не с владельцем. Секреты (keystore, пароли,
-сервис-аккаунты) заводит владелец сам — ты их не выдумываешь и в чат не тянешь.
-Идентификаторы, цены и тексты витрины бери из готовых доков рядом, не сочиняй:
+Ты — агент у консолей. Секреты (keystore, пароли, сервис-аккаунты) вводит владелец
+сам; ты их не выдумываешь и в чат не тянешь. Тексты, ID и цены НЕ сочиняешь — всё
+ниже и в файлах рядом:
 
 | За чем | Куда |
 |---|---|
-| Product ID и цены всех 8 IAP | `mobile/store/PRODUCTS.md` |
-| Поля листинга, что вписывать в консоли | `mobile/store/CONSOLE-FILL.md`, `LISTING.md` |
-| Play Data safety (анкета) | `mobile/store/DATA-SAFETY.md` |
-| Заметки для ревью | `mobile/store/REVIEW-NOTES.md` |
-| Скриншоты (готовы, точные размеры) | `apple-shots/` (iPhone 6.9" 1320×2868, iPad 13" 2064×2752) |
+| Product ID, типы и цены всех 8 IAP | `mobile/store/PRODUCTS.md` (истина — `backend/alma/billing/catalogue.py`) |
+| Тексты витрины | `mobile/store/LISTING.md`, `CONSOLE-FILL.md` |
+| Play Data safety | `mobile/store/DATA-SAFETY.md` |
+| Заметки ревьюеру | `mobile/store/REVIEW-NOTES.md` |
+| Скриншоты (готовые, точные размеры) | `apple-shots/` |
 
 Приложение: iOS bundle `ai.pazl.alma.flutter` (App ID `6803672050`), Android
-package `ai.pazl.alma`. Prod API: `https://api-alma.pazl.ai`.
+package `ai.pazl.alma`. Prod API `https://api-alma.pazl.ai` — жив и проверен.
 
 ---
 
-## A. Подпись Android (то, ради чего «идеально для гугла»)
+## 1 · App Store Connect
 
-Код уже готов: `android/app/build.gradle.kts` подписывает релиз upload-ключом,
-если есть `android/key.properties`, иначе debug. `.gitignore` держит `.jks` и
-`key.properties` вне репозитория. Осталось завести ключ — **один раз**.
+**1.1 Скриншоты.** Версия iOS → язык **English (U.S.)** → App Previews and
+Screenshots:
+- слот **iPhone 6.7"** ← `apple-shots/iphone-01…04.png` (1284×2778, размер уже
+  из принятого списка — ресайзить нельзя);
+- слот **iPad 13"** ← `apple-shots/ipad-01…03.png` (2064×2752).
+Порядок = порядок в сторе. Save. Попросит другой размер — не выдумывать, сказать владельцу.
 
-**1. Сгенерировать upload-keystore** (владелец запускает у себя, пароли — свои):
+**1.2 Соглашения.** Agreements, Tax, and Banking → **Paid Apps** подписано.
+Без этого IAP не активируются вовсе — проверить первым делом.
+
+**1.3 Создать 8 IAP** (Features → In-App Purchases / Subscriptions), ID и тип —
+строго по `PRODUCTS.md`:
+- 5 non-consumable «дверей» `ai.pazl.alma.door.*` — база **$4.99**;
+- consumable `ai.pazl.alma.pair.check` — **$4.99**;
+- non-consumable `ai.pazl.alma.bundle.static` — **$19.99**;
+- auto-renewable `ai.pazl.alma.sub.monthly` — **$9.99 / P1M** (создать
+  Subscription Group, если нет).
+
+**1.4 Валюты — автоценами Apple, и это решение, а не лень.** База — USD;
+галка **автоматических региональных цен** включена: Apple сам выставит €, £,
+CHF, CAD, AUD и т.д. по своим таблицам, и лист покупки печатает локальную
+валюту покупателя — приложение показывает ровно её (`AlmaStore.price`).
+Руками по странам ничего не перебивать: серверная таблица валют
+(`catalogue.py REGIONAL_CENTS`) — про карточный фолбэк, не про IAP, и ей
+консоль соответствовать не обязана.
+
+**1.5 Картинка у покупки.** Владелец видел лист покупки «без картинки»: у
+каждого IAP есть поле **Promotional Image / Review screenshot**. Review
+screenshot обязателен для ревью каждого IAP — использовать кадры из
+`apple-shots/` (для дверей — `iphone-01-reader.png`, для подписки —
+`iphone-03-today.png`); отдельный promo-арт, если владелец захочет красивее, —
+попросить у него, не рисовать самому.
+
+**1.6 Локализация IAP-названий** — из `PRODUCTS.md`/`LISTING.md`; языков там
+семь, не сочинять.
+
+---
+
+## 2 · Google Play Console
+
+**2.1 Подпись.** Play App Signing включён (боевой ключ у Play, его SHA-256
+`66:85:A7…` уже в assetlinks.json — не трогать). Для НАСТОЯЩЕЙ подписи бандла
+владелец заводит группу **`keystore`** в Codemagic: `CM_KEYSTORE` (.jks в
+base64, Secure), `CM_KEYSTORE_PASSWORD`, `CM_KEY_ALIAS`, `CM_KEY_PASSWORD`.
+Генерация ключа (владелец, у себя):
+`keytool -genkeypair -v -keystore alma-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias alma-upload`.
+Без группы CI подписывает debug-ключом — Play примет его ПЕРВЫМ бандлом и
+зарегистрирует как upload; если консоль ждёт другой ключ — прислать владельцу
+текст ошибки целиком, самому не подписывать.
+
+**2.2 Создать 8 товаров** (Monetize → Products): те же ID/типы/базовые цены,
+что в 1.3. Подписка — Base plan P1M.
+
+**2.3 Валюты** — тем же правилом: базовая цена USD, автоконвертация Play по
+странам. Руками не перебивать.
+
+**2.4 Обязательное перед публикацией:** Data safety (по `DATA-SAFETY.md`),
+Content rating (анкета), Target audience, Privacy policy
+`https://alma.pazl.ai/privacy`, страны распространения.
+
+**2.5 Релиз:** Testing → Internal testing → загрузить AAB из Codemagic
+(`android-release` собирает main).
+
+---
+
+## 3 · Codemagic (владелец, 10 минут)
+
+- Группа `firebase`: `GOOGLE_SERVICES_JSON` = base64 файла
+  `android/app/google-services.json`, Secure. (Только для Android-сборки.)
+- Группа `keystore` — см. 2.1.
+- iOS уже готов: интеграция `synapse_asc`, bundle id, build-number, экспортное
+  шифрование закрыты в codemagic.yaml/Info.plist.
+
+## 4 · Сервер (владелец): включить верификацию оплат
+
+В `/srv/alma/backend/.env.local` вписать и перезапустить
+(`docker compose up -d app`):
 
 ```
-keytool -genkeypair -v -keystore alma-upload.jks -keyalg RSA -keysize 2048 \
-  -validity 10000 -alias alma-upload
+APPLE_BUNDLE_ID=ai.pazl.alma.flutter
+GOOGLE_PLAY_PACKAGE_NAME=ai.pazl.alma
+GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=/run/alma-secrets/play-service-account.json
 ```
 
-**2а. Собирать в Codemagic (рекомендуется — CI уже настроен).** В приложении
-Codemagic → Environment variables → группа **`keystore`**, четыре переменные
-(флаг Secure на первой):
+Сервис-аккаунт Play (доступ к Android Developer API, права на покупки) владелец
+кладёт в `/srv/alma/backend/secrets/`. Без этих трёх строк сервер не подтвердит
+ни одну покупку — это ЕДИНСТВЕННЫЙ серверный блокер оплат; пуши уже работают.
 
-- `CM_KEYSTORE` = вывод `base64 -w0 alma-upload.jks`
-- `CM_KEYSTORE_PASSWORD` = store-пароль
-- `CM_KEY_ALIAS` = `alma-upload`
-- `CM_KEY_PASSWORD` = key-пароль
-
-Всё — `android-release` сам разложит ключ, напишет `key.properties` и подпишет
-бандл настоящим ключом. Без этой группы сборка идёт на debug.
-
-**2б. Или собрать локально** (владелец, на машине с Flutter): положить рядом с
-`android/` файл `android/key.properties`:
-
-```
-storeFile=/абсолютный/путь/alma-upload.jks
-storePassword=<store-пароль>
-keyAlias=alma-upload
-keyPassword=<key-пароль>
-```
-
-затем `flutter build appbundle --release --dart-define=ALMA_API_BASE=https://api-alma.pazl.ai`.
-AAB ляжет в `build/app/outputs/bundle/release/`.
-
-**Про Play App Signing.** При первой заливке включи Play App Signing: Play хранит
-боевой ключ (его SHA-256 `66:85:A7…` уже вписан в assetlinks.json — не трогать), а
-твой upload-keystore регистрируется как upload-ключ. Если раньше уже заливали
-debug-бандл и upload-ключ зарегистрирован на него — либо подписывай тем же, либо
-сбрось через «Request upload key reset» и залей подписанный новым.
-
----
-
-## B. Google Play — до заливки
-
-1. **App integrity → Play App Signing** включён (см. выше).
-2. **Monetize → Products → In-app products / Subscriptions**: создать 8 товаров
-   строго по `PRODUCTS.md` (ID, тип consumable/non-consumable/subscription, цена).
-   Подписка `ai.pazl.alma.sub.monthly` — период P1M.
-3. **Policy → App content**: Data safety (по `DATA-SAFETY.md`), Content rating
-   (анкета), Target audience, Privacy policy URL `https://alma.pazl.ai/privacy`.
-4. **Testing → Internal testing → Create release** → загрузить подписанный AAB.
-5. Заметки ревью — из `REVIEW-NOTES.md`.
-
-## C. App Store Connect — до отправки
-
-1. **Agreements, Tax, and Banking**: подписать Paid Apps соглашение — без него
-   IAP не активируются вовсе.
-2. **Features → In-App Purchases / Subscriptions**: создать те же 8 товаров по
-   `PRODUCTS.md` под bundle `ai.pazl.alma.flutter`.
-3. Скриншоты из `apple-shots/` в слоты iPhone 6.9" и iPad 13" (см.
-   `mobile/store/AGENT-STORES-TODO.md`).
-4. Листинг — из `LISTING.md`/`CONSOLE-FILL.md`. Экспортное шифрование уже закрыто
-   в коде (`ITSAppUsesNonExemptEncryption=false`), вопрос не появится.
-
----
-
-## D. Серверная верификация чеков — пусто, без неё оплаты не подтвердятся
-
-На проде (Docker `alma-app-1`, `.env`/`.env.local` в `/srv/alma/backend`) эти
-значения СЕЙЧАС пустые — проверено. Владелец вписывает и перезапускает
-`docker compose up -d app`:
-
-| Переменная | Значение | Секрет? |
-|---|---|---|
-| `APPLE_BUNDLE_ID` | `ai.pazl.alma.flutter` | нет |
-| `GOOGLE_PLAY_PACKAGE_NAME` | `ai.pazl.alma` | нет |
-| `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` | путь к сервис-аккаунту Play внутри контейнера, напр. `/run/alma-secrets/play-service-account.json` | **да** |
-
-Сервис-аккаунт Play (роль в Play Console: доступ к Google Play Android Developer
-API, права на просмотр покупок) владелец кладёт в `/srv/alma/backend/secrets/`
-(смонтирована в `/run/alma-secrets` только на чтение) и указывает путь. Apple
-серверная проверка в этой сборке принимает и sandbox (`apple_accept_sandbox=True`),
-так что для теста достаточно `APPLE_BUNDLE_ID`.
-
----
-
-## E. Пуши — уже готовы, проверять на устройстве
-
-Серверная сторона настроена и сверена вживую: APNs (topic `ai.pazl.alma.flutter`,
-production, ключ `NFR6V5NY25` минтит валидный JWT) и FCM (проект `alma-eaec8`,
-сервис-аккаунт читается). Ежедневная рассылка `alma-daily` отрабатывает. В
-консолях делать **ничего не нужно**. Остаётся один тест руками: на устройстве
-разрешить уведомления и убедиться, что утренний пуш приходит.
-
----
-
-## Итог: что мешает нажать «отправить»
-- Android: завести upload-keystore (A) → подписанный AAB.
-- Обе консоли: создать 8 IAP-товаров (B2, C2) и соглашения Apple (C1).
-- Сервер: вписать 3 переменные верификации + сервис-аккаунт Play (D).
-- Play: Data safety + Content rating (B3).
-Пуши и код — готовы.
+## 5 · Чего НЕ делать
+- Не коммитить и не пересылать ключи/keystore/сервис-аккаунты.
+- Не менять SHA в assetlinks.json.
+- Не сочинять тексты, цены и размеры — нет данных → вопрос владельцу.

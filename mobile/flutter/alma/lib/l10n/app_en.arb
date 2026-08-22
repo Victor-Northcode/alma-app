@@ -2505,27 +2505,27 @@
   },
   "onbFirstChapterTitle": "The first chapter is open",
   "@onbFirstChapterTitle": {
-    "description": "onboarding · coach.first_chapter.title — второй шаг обучалки (22 авг, владелец просил 5 шагов); ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+    "description": "onboarding · coach.first_chapter.title — второй шаг обучалки (22 авг, владелец просил 5 шагов)"
   },
   "onbFirstChapterBody": "Chapter I of your natal chart is written and waiting — start there. The other chapters open one by one, whenever you choose.",
   "@onbFirstChapterBody": {
-    "description": "onboarding · coach.first_chapter.body — первая глава открыта, остальные по одной; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+    "description": "onboarding · coach.first_chapter.body — первая глава открыта, остальные по одной"
   },
   "onbAlmaTitle": "Ask Alma anything",
   "@onbAlmaTitle": {
-    "description": "onboarding · coach.alma.title — четвёртый шаг обучалки; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+    "description": "onboarding · coach.alma.title — четвёртый шаг обучалки"
   },
   "onbAlmaBody": "Alma answers from what is in your chart, never from a template — and says so when the chart has no answer. Every reply cites the positions it was read from.",
   "@onbAlmaBody": {
-    "description": "onboarding · coach.alma.body — отвечает по карте, честна про отсутствие ответа, цитирует позиции; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+    "description": "onboarding · coach.alma.body — отвечает по карте, честна про отсутствие ответа, цитирует позиции"
   },
   "onbMorningTitle": "A letter in the morning",
   "@onbMorningTitle": {
-    "description": "onboarding · coach.morning.title — пятый шаг обучалки; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+    "description": "onboarding · coach.morning.title — пятый шаг обучалки"
   },
   "onbMorningBody": "Alma can send a short morning note when the sky actually moves. Pick how often right here — or leave it off.",
   "@onbMorningBody": {
-    "description": "onboarding · coach.morning.body — утренняя заметка только когда небо движется, частота выбирается тумблером; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ"
+    "description": "onboarding · coach.morning.body — утренняя заметка только когда небо движется, частота выбирается тумблером"
   },
   "cabSettingsDocuments": "Documents",
   "@cabSettingsDocuments": {
