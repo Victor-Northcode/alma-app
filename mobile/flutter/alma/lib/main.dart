@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'billing/alma_store.dart';
 import 'design/invitation_pill.dart';
@@ -450,7 +451,18 @@ class _CabinetShellState extends State<CabinetShell> {
     // Ушли, не сохранив, — и это нормальный исход: возвращаемся в колоду, а не
     // тащим человека в главу про пару, которой он не завёл.
     if (added == null) return;
-    await _openPairChapter(added);
+    // **Завёл человека — остаёшься на деке, а не проваливаешься в первую главу.**
+    // Раньше здесь был `_openPairChapter(added)`, и сразу после ввода человека
+    // открывалась первая карта «открыть». Владелец: должно остаться на экране, где
+    // выбираешь главу сам (22 авг). Открываем ту же систему, что и ветка с уже
+    // заведёнными людьми, — небо на двоих и оглавление.
+    navigator.push(CupertinoPageRoute(
+      builder: (context) => SystemScreen(
+        system: SystemSlug.compatibility,
+        partner: added,
+        onOpenChapter: _openChapter,
+      ),
+    ));
   }
 
   /// Первая глава пары — про того, кого только что назвали.
@@ -628,7 +640,16 @@ class _CabinetShellState extends State<CabinetShell> {
           // обновил приложение с уже построенной картой, кабинет знаком, и
           // накладка поверх знакомого экрана читалась бы поломкой.
           OnboardingMemory.arm();
+          // **После анкеты человек попадает на «Мои системы», а не в главу.**
+          // Раньше `_leave` вёл прямо в бесплатную главу натала; владелец назвал
+          // это «максимально неудобно» (22 авг) — хочу на восемь карт, где первая
+          // глава уже открыта, и оттуда сам. Кабинет строится этим же setState;
+          // прыгаем на вкладку после кадра, когда у PageController есть клиент.
+          _tab = CabinetTab.systems;
           setState(() => _journeyRunning = false);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (_pages.hasClients) _pages.jumpToPage(CabinetTab.systems.index);
+          });
         },
       );
     }
@@ -703,6 +724,13 @@ class _CabinetShellState extends State<CabinetShell> {
         child: PageView(
           controller: _pages,
           onPageChanged: (index) {
+            // Тактильный щелчок на смене вкладки — как на нативе просил владелец.
+            HapticFeedback.selectionClick();
+            // **Клавиатуру снимаем при каждом переходе.** Alma держит фокус живым
+            // (вкладка не размонтируется), и клавиатура уезжала с ней на «Сегодня»
+            // и «Настройки» — там её было не закрыть. Снятие фокуса на переходе
+            // закрывает её и не даёт таскаться за пальцем (найдено на устройстве).
+            FocusManager.instance.primaryFocus?.unfocus();
             final systems = CabinetTab.systems.index;
             _switching = true;
             if (_lastPage == systems) {

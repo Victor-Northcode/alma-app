@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -14,9 +13,7 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
 import '../../state/session.dart';
-import '../settings/sign_in_screen.dart';
 import '../systems/writing_art.dart';
-import '../systems/chapter_screen.dart';
 import 'push_ask_screen.dart';
 
 /// Путешествие: шесть шагов от имени до церемонии и трёхшаговый хвост за ней.
@@ -377,38 +374,19 @@ class _JourneyScreenState extends State<JourneyScreen> {
   /// ничего: три экрана, выложенные в стек дважды, человек проходил бы дважды.
   bool _leaving = false;
 
-  /// Хвост путешествия, а за ним — кабинет.
-  ///
-  /// Порядок точный и целиком: `s37` → `s39` → `s44` → «Сегодня». Почему
-  /// именно так и почему маршрутами — в шапке [JourneyScreen].
+  /// Конец путешествия — кабинет на «Мои системы». Хвост из трёх экранов (глава,
+  /// уведы, вход) убран; почему — в теле метода.
   Future<void> _leave() async {
     if (_leaving) return;
     _leaving = true;
-    // Навигатор берётся до первого `await`: после него `context` может уже не
-    // принадлежать дереву, и `Navigator.of` на нём падает.
-    final navigator = Navigator.of(context, rootNavigator: true);
-    // **Первым идёт бесплатный текст, а не витрина** — это инвариант P0 ТЗ
-    // монетизации v3: «до первого бесплатного контента пользователь не видит
-    // ни одной цены». Здесь стояла витрина (`OfferScreen`, s37), то есть
-    // человек проходил церемонию и первым делом видел ценник; VR приговорил
-    // этот шаг вместе со старой лестницей. Глава I натальной карты — то, ради
-    // чего числа только что посчитаны, и единственная бесплатная глава
-    // продукта. Оффер человек встретит в её конце (V1) — дочитав, а не до.
-    await navigator.push(CupertinoPageRoute<void>(
-      builder: (context) => const ChapterScreen(
-        system: SystemSlug.natal,
-        chapter: 'core',
-      ),
-    ));
-    if (!mounted) return;
-    await navigator.push(CupertinoPageRoute<void>(
-      builder: (context) => const PushAskScreen(),
-    ));
-    if (!mounted) return;
-    await navigator.push(CupertinoPageRoute<void>(
-      builder: (context) => const SignInScreen(),
-    ));
-    if (!mounted) return;
+    // **Сразу кабинет, вкладка «Мои системы» (посадку делает main.dart:onDone).**
+    // Раньше здесь в стек ложились три экрана: бесплатная глава натала, пред-вопрос
+    // про уведомления и вход. Человек падал прямо в чтение, оттуда «выйти», вопрос
+    // про уведы, потом регистрация — владелец назвал это «максимально неудобно»
+    // (22 авг). Теперь анкета ведёт на восемь карт, где первая глава уже открыта;
+    // уведомления — тумблером в настройках, вход — карточкой «Keep your chart» на
+    // «Сегодня». Предлагать их проактивно (после активности; после первой покупки)
+    // — отдельная волна.
     widget.onDone();
   }
 
@@ -657,11 +635,15 @@ class _JourneyScreenState extends State<JourneyScreen> {
       onTap: enabled
           ? () {
               if (isLast) {
+                // Небо строится — ощутимый толчок под пальцем, дальше церемония
+                // ведёт свой ритм битами (тактильные там уже есть).
+                HapticFeedback.mediumImpact();
                 // На церемонию уходят сразу, а сохранение стартует под ней:
                 // экран не ждёт сети, чтобы показать, что за человека взялись.
                 setState(() => _step = _Step.ceremony);
                 _build();
               } else {
+                HapticFeedback.selectionClick();
                 setState(() => _step = _Step.values[_step.index + 1]);
               }
             }

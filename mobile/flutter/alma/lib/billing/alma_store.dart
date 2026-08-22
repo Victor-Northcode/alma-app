@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 import '../net/alma_client.dart';
@@ -555,6 +556,9 @@ class AlmaStore extends ChangeNotifier {
         // одобрением, покупкой на другом устройстве, — а тишина после денег
         // положена в любом случае.
         PaywallGuard.notePurchase();
+        // «Оплатил — и она такая джжж»: ощутимый толчок ровно на факте, что
+        // сервер выдал доступ, а не на нажатии кнопки (владелец, 22 авг).
+        HapticFeedback.heavyImpact();
       }
       _notice = unlocked
           ? StoreNotice(

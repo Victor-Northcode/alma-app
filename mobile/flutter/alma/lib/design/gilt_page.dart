@@ -102,8 +102,12 @@ class GiltBack extends StatelessWidget {
           height: GiltPage.hit,
           child: Center(
             child: Container(
-              width: GiltPage.chip,
-              height: GiltPage.chip,
+              // Крупнее дефолтной фишки (34): на светлой теме «назад» была заметно
+              // мельче золотой стрелки тёмной темы, палец промахивался (владелец,
+              // 22 авг). Растёт сама кнопка; `GiltPage.chip` (разметка шапки) не
+              // трогаем — фишка (40) по-прежнему сидит по центру зоны нажатия (44).
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: AlmaPalette.inkLight.withValues(alpha: 0.85),
                 shape: BoxShape.circle,
@@ -120,7 +124,7 @@ class GiltBack extends StatelessWidget {
               ),
               child: Icon(
                 Icons.arrow_back,
-                size: 18,
+                size: 22,
                 color: AlmaPalette.ink.withValues(alpha: 0.78),
               ),
             ),

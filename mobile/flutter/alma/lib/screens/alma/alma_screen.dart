@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HapticFeedback;
 
 import '../../design/alma_presence.dart';
 import '../../design/buttons.dart';
@@ -294,6 +295,8 @@ class _AlmaScreenState extends State<AlmaScreen>
   Future<void> _send(String text) async {
     final message = text.trim();
     if (message.isEmpty || _sending) return;
+    // Вопрос ушёл — лёгкий толчок под пальцем.
+    HapticFeedback.lightImpact();
     final session = SessionScope.of(context);
     // Слова каталога берутся до первого await: стадии приходят посреди
     // стрима, и тянуться к контексту через асинхронный разрыв — это как раз
@@ -556,22 +559,30 @@ class _AlmaScreenState extends State<AlmaScreen>
           child: Column(children: [
             _header(l),
             Expanded(
-              // Свет лежит **поверх** состояния и не входит в его разметку:
-              // ниже он не сможет пережить смену приветствия лентой, а пережить
-              // обязан — см. [_presence].
-              child: Stack(children: [
-                Positioned.fill(
-                  child: _turns.isEmpty ? _opening(l, session) : _transcript(l),
-                ),
-                // **Оба ребёнка размещены — иначе стопка мерилась бы по
-                // свету.** `Stack` берёт размер у неразмещённого ребёнка, а
-                // колонка выше выдаёт ширину свободной (её выравнивание — по
-                // центру): беседа получала ровно 64 точки ширины — рост
-                // приветственного света — и ответ рассыпался в столбик из
-                // одного слова. Свету место здесь безразлично: он всё равно
-                // рисуется там, где нашлась его дырка.
-                Positioned(left: 0, top: 0, child: _presence()),
-              ]),
+              // **Тап по ленте закрывает клавиатуру.** Раньше её нельзя было
+              // убрать ничем, кроме отправки — тап по экрану её не снимал (снято
+              // на устройстве 22 авг). Кнопки подсказок и само поле перехватывают
+              // тап раньше, их это не трогает.
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).unfocus(),
+                // Свет лежит **поверх** состояния и не входит в его разметку:
+                // ниже он не сможет пережить смену приветствия лентой, а пережить
+                // обязан — см. [_presence].
+                child: Stack(children: [
+                  Positioned.fill(
+                    child: _turns.isEmpty ? _opening(l, session) : _transcript(l),
+                  ),
+                  // **Оба ребёнка размещены — иначе стопка мерилась бы по
+                  // свету.** `Stack` берёт размер у неразмещённого ребёнка, а
+                  // колонка выше выдаёт ширину свободной (её выравнивание — по
+                  // центру): беседа получала ровно 64 точки ширины — рост
+                  // приветственного света — и ответ рассыпался в столбик из
+                  // одного слова. Свету место здесь безразлично: он всё равно
+                  // рисуется там, где нашлась его дырка.
+                  Positioned(left: 0, top: 0, child: _presence()),
+                ]),
+              ),
             ),
             _limitWall(l, session) ?? _composer(l),
           ]),
