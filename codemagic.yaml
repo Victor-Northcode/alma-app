@@ -24,8 +24,13 @@ workflows:
       ios_signing:
         # Автоподпись: Codemagic по интеграции выше сам вытянет/создаст сертификат и
         # provisioning под этот bundle id. Отдельный keystore/сертификат в файл не кладём.
+        #
+        # ВНИМАНИЕ: iOS-бандл — ai.pazl.alma.flutter, а НЕ ai.pazl.alma (то Android-package).
+        # Значение сверено с ios/Runner.xcodeproj/project.pbxproj (PRODUCT_BUNDLE_IDENTIFIER)
+        # и со страницей приложения в App Store Connect. С неверным id автоподпись ищет
+        # профиль под несуществующий App ID и сборка падает на `xcode-project use-profiles`.
         distribution_type: app_store
-        bundle_identifier: ai.pazl.alma
+        bundle_identifier: ai.pazl.alma.flutter
       vars:
         # Публичный адрес прод-бэкенда — не секрет. Приложение читает его через --dart-define;
         # без него сборка уходит на дефолтный localhost и в сторе не отвечает.
@@ -43,8 +48,13 @@ workflows:
         # перехватит делегата APNs и тихо сломает пуши на iOS.
         script: xcode-project use-profiles
       - name: flutter build ipa
+        # --build-number=$BUILD_NUMBER: pubspec держит version 1.0.0+1, и без явного
+        # номера сборки каждая заливка уходит в TestFlight как build 1 — вторую Apple
+        # отклоняет («повторный build number для той же версии»). $BUILD_NUMBER Codemagic
+        # инкрементит от сборки к сборке сам.
         script: |
           flutter build ipa --release \
+            --build-number=$BUILD_NUMBER \
             --dart-define=ALMA_API_BASE=$ALMA_API_BASE \
             --export-options-plist=$HOME/export_options.plist
     artifacts:
@@ -86,6 +96,7 @@ workflows:
         # и научить build.gradle.kts читать его — иначе ключ Codemagic просто не применится.
         script: |
           flutter build appbundle --release \
+            --build-number=$BUILD_NUMBER \
             --dart-define=ALMA_API_BASE=$ALMA_API_BASE
     artifacts:
       - build/**/outputs/bundle/**/*.aab
