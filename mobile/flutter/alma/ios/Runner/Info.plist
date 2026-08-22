@@ -24,6 +24,14 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- Экспортное шифрование. Alma использует только HTTPS/TLS и Keychain —
+	     это exempt-шифрование, разрешение на экспорт не требуется. Без этого ключа
+	     App Store Connect задаёт вопрос об экспортном соответствии при КАЖДОЙ
+	     заливке в TestFlight и держит сборку в статусе «Missing Compliance», пока
+	     на него не ответишь вручную. false = «нестандартного шифрования нет», и
+	     вопрос больше не появляется ни для одной сборки. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
