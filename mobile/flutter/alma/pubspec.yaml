@@ -100,6 +100,23 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # Генерирует иконки приложения для iOS и Android из одного мастера
+  # (assets/icon/*). Только dev-инструмент — в рантайм-зависимости не входит.
+  flutter_launcher_icons: ^0.14.1
+
+# Иконка Alma — «тёплая точка света» на ночи (тот же образ, что глиф вкладки
+# Alma), золото и полночь из палитры приложения. Мастер 1024 раскатывается во все
+# размеры iOS/Android; для Android — адаптивная пара: свет на прозрачном поверх
+# ночного фона. Перегенерация: `dart run flutter_launcher_icons`.
+flutter_launcher_icons:
+  image_path: "assets/icon/icon_master.png"
+  android: "ic_launcher"
+  ios: true
+  remove_alpha_ios: true
+  background_color_ios: "#0B1024"
+  adaptive_icon_background: "assets/icon/icon_bg.png"
+  adaptive_icon_foreground: "assets/icon/icon_fg.png"
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
