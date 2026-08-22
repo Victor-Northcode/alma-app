@@ -1,0 +1,98 @@
+# Codemagic CI — облачная сборка Flutter-приложения Alma для App Store и Google Play.
+#
+# Секретов здесь нет и быть не может. Ключ App Store Connect, keystore, google-services.json
+# и сервис-аккаунт Play владелец заводит в самом Codemagic (Team → Integrations и приложение →
+# Environment variables), а этот файл только ссылается на них по имени. Правило то же, что в
+# репозитории: всё, что подписывает или пускает в стор, вводит владелец сам.
+#
+# ЛОВУШКА, стоившая бы первой же сборки: Flutter-проект лежит НЕ в корне репозитория, а в
+# mobile/flutter/alma. Поэтому у каждого воркфлоу задан working_directory — без него Codemagic
+# ищет pubspec.yaml в корне и падает ещё до `flutter pub get`.
+
+workflows:
+
+  ios-release:
+    name: iOS — App Store / TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 90
+    working_directory: mobile/flutter/alma
+    integrations:
+      # Владелец: Team settings → Integrations → App Store Connect — добавить ключ
+      # (.p8 App Store Connect API) и назвать интеграцию ровно так же, как здесь.
+      app_store_connect: alma_app_store_connect
+    environment:
+      ios_signing:
+        # Автоподпись: Codemagic по интеграции выше сам вытянет/создаст сертификат и
+        # provisioning под этот bundle id. Отдельный keystore/сертификат в файл не кладём.
+        distribution_type: app_store
+        bundle_identifier: ai.pazl.alma
+      vars:
+        # Публичный адрес прод-бэкенда — не секрет. Приложение читает его через --dart-define;
+        # без него сборка уходит на дефолтный localhost и в сторе не отвечает.
+        ALMA_API_BASE: "https://api-alma.pazl.ai"
+        APP_STORE_APP_ID: "6803672050"
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: flutter pub get
+        script: flutter pub get
+      - name: Подпись из профилей App Store Connect
+        # Кладёт export_options.plist в $HOME. iOS НАМЕРЕННО без Firebase — пуши идут через
+        # родной APNs (docs/PUSH.md §2.1). Не добавлять GoogleService-Info.plist: firebase_core
+        # перехватит делегата APNs и тихо сломает пуши на iOS.
+        script: xcode-project use-profiles
+      - name: flutter build ipa
+        script: |
+          flutter build ipa --release \
+            --dart-define=ALMA_API_BASE=$ALMA_API_BASE \
+            --export-options-plist=$HOME/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - flutter_drive.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Заливает в TestFlight, но НЕ на ревью автоматически — витрину и релиз владелец
+        # жмёт сам, когда скриншоты и метаданные на месте.
+        submit_to_testflight: true
+
+  android-release:
+    name: Android — Google Play (AAB)
+    instance_type: linux_x2
+    max_build_duration: 90
+    working_directory: mobile/flutter/alma
+    environment:
+      groups:
+        # Владелец: Environment variables → группа "firebase", переменная GOOGLE_SERVICES_JSON =
+        # содержимое android/app/google-services.json, закодированное base64, флаг Secure. Файл
+        # секретный и в гит не коммитится — поэтому восстанавливаем его на лету ниже.
+        - firebase
+      vars:
+        ALMA_API_BASE: "https://api-alma.pazl.ai"
+      flutter: stable
+    scripts:
+      - name: Восстановить google-services.json
+        # Без файла плагин com.google.gms.google-services валит сборку ещё на configure.
+        script: |
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > android/app/google-services.json
+      - name: flutter pub get
+        script: flutter pub get
+      - name: flutter build appbundle
+        # AAB подписывается отладочным ключом — так же, как build.gradle.kts делает локально.
+        # Play принимает такой бандл ПЕРВЫМ и регистрирует эту подпись как upload-ключ. Когда
+        # владелец заведёт настоящий upload-keystore: добавить сюда environment.android_signing
+        # и научить build.gradle.kts читать его — иначе ключ Codemagic просто не применится.
+        script: |
+          flutter build appbundle --release \
+            --dart-define=ALMA_API_BASE=$ALMA_API_BASE
+    artifacts:
+      - build/**/outputs/bundle/**/*.aab
+      - build/**/outputs/**/mapping.txt
+    # Публикацию в Play намеренно не включаю: нужен сервис-аккаунт Google Play, которого пока
+    # нет. Владелец добавит группу с GCLOUD_SERVICE_ACCOUNT_CREDENTIALS и раскомментирует:
+    # publishing:
+    #   google_play:
+    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+    #     track: internal
