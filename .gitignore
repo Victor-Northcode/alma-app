@@ -66,6 +66,7 @@ backend/secrets/
 # macOS + editors + local agent config
 .DS_Store
 .claude/
+.playwright-mcp/
 _reference/
 
 # runtime artefacts

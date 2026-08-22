@@ -26,7 +26,7 @@ aspects with their orbs and all seventy-eight factors. What is sold is the writi
 |---|---|
 | `backend/` | FastAPI, Python 3.13. The engine, the writing layer, billing, the API. **1479 tests.** |
 | `src/` | Next.js storefront: the free reading, six legal pages, six languages. Sells nothing. |
-| `mobile/ios/` | SwiftUI. Payment through StoreKit. **The reference the Flutter port is measured against.** |
+| `mobile/ios/` | SwiftUI. Payment through StoreKit. Still shippable, but **no longer the reference** — since 16 Aug 2026 the sole reference is the design canvas the Flutter port is built against 1-to-1. |
 | `mobile/android/` | Jetpack Compose. Payment through Play Billing. |
 | `mobile/flutter/alma/` | The port, in progress. One codebase for both phones — see [`docs/FLUTTER-PORT.md`](docs/FLUTTER-PORT.md). |
 | `mobile/store/` | The completed App Store and Play submissions — twelve listings, privacy answers, review notes. |
