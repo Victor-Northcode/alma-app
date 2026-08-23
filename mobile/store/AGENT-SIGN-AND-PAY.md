@@ -65,9 +65,11 @@ screenshot обязателен для ревью каждого IAP — исп�
 base64, Secure), `CM_KEYSTORE_PASSWORD`, `CM_KEY_ALIAS`, `CM_KEY_PASSWORD`.
 Генерация ключа (владелец, у себя):
 `keytool -genkeypair -v -keystore alma-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias alma-upload`.
-Без группы CI подписывает debug-ключом — Play примет его ПЕРВЫМ бандлом и
-зарегистрирует как upload; если консоль ждёт другой ключ — прислать владельцу
-текст ошибки целиком, самому не подписывать.
+Без группы CI подписывает debug-ключом, и такой бандл Play **не принимает
+никогда** (проверено 24 авг: «signed in debug mode. You need to sign in release
+mode») — группа keystore обязательна до первой заливки. Если консоль ждёт
+другой upload-ключ — прислать владельцу текст ошибки целиком, самому не
+подписывать.
 
 **2.2 Создать 8 товаров** (Monetize → Products): те же ID/типы/базовые цены,
 что в 1.3. Подписка — Base plan P1M.

@@ -58,7 +58,10 @@ android {
     buildTypes {
         release {
             // upload-ключ, если владелец/CI дал key.properties; иначе debug —
-            // Play примет первый бандл на debug и зарегистрирует его как upload.
+            // только чтобы `flutter run --release` собирался без ключа. В Play
+            // debug-подпись НЕ заливается (проверено 24 авг: «signed in debug
+            // mode»), прежняя надежда «первый бандл примет и зарегистрирует»
+            // была неправдой.
             signingConfig = signingConfigs.getByName(
                 if (keystorePropertiesFile.exists()) "upload" else "debug"
             )

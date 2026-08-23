@@ -373,8 +373,38 @@ async def lifespan(app: FastAPI):
     await dispose()
 
 
+class _PlacesQueryRedactor(logging.Filter):
+    """Стирает набранный текст из access-лога поиска места рождения.
+
+    `GET /v1/places/search?q=Mosc…` — это то, что человек печатает про место
+    своего рождения, и uvicorn писал его в лог целиком, вместе с адресом
+    клиента (найдено в логах контейнера 24 авг 2026). Анкета Data safety в
+    Play отвечает «поисковые запросы не собираются», и ответ держится ровно на
+    том, что их действительно нигде нет — включая логи. Фильтр оставляет сам
+    факт запроса (нужен для отладки), но подменяет строку пути до знака
+    вопроса: считать запросы можно, прочитать, что искали, — нельзя.
+
+    Формат записи uvicorn.access: пять аргументов, путь — третий. Чужой формат
+    (другая версия, другой сервер) фильтр молча пропускает: сломать логирование
+    хуже, чем один раз не заредактировать.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        args = record.args
+        if (
+            isinstance(args, tuple)
+            and len(args) == 5
+            and isinstance(args[2], str)
+            and args[2].startswith("/v1/places/search")
+            and "?" in args[2]
+        ):
+            record.args = (args[0], args[1], "/v1/places/search?…", args[3], args[4])
+        return True
+
+
 def create_app() -> FastAPI:
     config = settings()
+    logging.getLogger("uvicorn.access").addFilter(_PlacesQueryRedactor())
     app = FastAPI(
         title="Alma",
         version="1.0.0",
