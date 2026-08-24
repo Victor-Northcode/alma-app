@@ -191,10 +191,10 @@ class LRu extends L {
   String get cabElementWater => 'вода';
 
   @override
-  String get cabExportNote => 'Всё, что мы о тебе храним, одним файлом.';
+  String get cabExportNote => 'Все твои данные — одним файлом.';
 
   @override
-  String get cabExportReady => 'Твой файл готов.';
+  String get cabExportReady => 'Файл готов.';
 
   @override
   String get cabFactBirthplace => 'место рождения';
@@ -215,18 +215,18 @@ class LRu extends L {
   String get cabFactYearRuler => 'управитель года';
 
   @override
-  String get cabFromYourPositions => 'Написано по твоим собственным положениям';
+  String get cabFromYourPositions => 'Написано по твоей карте';
 
   @override
   String get cabGuest => 'Гость';
 
   @override
   String get cabGuestNoteApp =>
-      'Ты не в аккаунте. Твоя карта живёт только на этом телефоне.';
+      'Ты пока не вошёл — карта хранится только на этом телефоне.';
 
   @override
   String get cabHoroscopeLocked =>
-      'Гороскоп пишется каждое утро по твоей собственной карте и входит в подписку.';
+      'Личный гороскоп пишется каждое утро по твоей карте — он входит в подписку.';
 
   @override
   String get cabHoroscopeOpen => 'Открыть гороскоп';
@@ -296,7 +296,7 @@ class LRu extends L {
 
   @override
   String get cabManagedByApple =>
-      'Этот план куплен в App Store, поэтому способ оплаты у Apple, и отмена происходит там.';
+      'Этот план куплен в App Store: способ оплаты хранит Apple, и отменяется он там же.';
 
   @override
   String get cabManagedByGooglePlay =>
@@ -388,7 +388,7 @@ class LRu extends L {
       'Файл не собрался. Попробуй ещё раз через минуту.';
 
   @override
-  String get cabPlanExporting => 'Готовлю твой файл…';
+  String get cabPlanExporting => 'Собираю файл…';
 
   @override
   String get cabPlanFreeNote =>
@@ -433,7 +433,7 @@ class LRu extends L {
 
   @override
   String get cabPlansBody =>
-      'Подписка держит живыми транзиты, соляр и совместимость, присылает утреннее уведомление и включает 25 вопросов в месяц. Пять неподвижных разборов покупаются один раз и остаются навсегда.';
+      'Подписка держит транзиты, соляр и совместимость живыми, присылает утреннюю заметку и даёт 25 вопросов в месяц. Пять постоянных разборов покупаются один раз — и навсегда.';
 
   @override
   String get cabPlansCta => 'Посмотреть планы';
@@ -589,10 +589,10 @@ class LRu extends L {
       'Одно уведомление, в выбранный тобой час, в те дни, когда что-то в твоей карте точно. Примерно раз в неделю. Никогда ночью, и выключить можно прямо из самого уведомления.';
 
   @override
-  String get dailyAskTitle => 'Скажи мне в то утро, когда это случится';
+  String get dailyAskTitle => 'Сказать тебе утром, когда это случится?';
 
   @override
-  String get dailyAskYes => 'Да, говори';
+  String get dailyAskYes => 'Да, хочу';
 
   @override
   String get dailyAspectBiquintile => 'биквинтиль';
@@ -670,7 +670,7 @@ class LRu extends L {
 
   @override
   String get dailyStatusDenied =>
-      'Уведомления для Alma выключены. Включить их можно в настройках телефона.';
+      'Уведомления для Alma выключены в настройках телефона. Разреши их там — и утренние заметки начнут приходить.';
 
   @override
   String get dailyStatusOpenSettings => 'Открыть настройки';
@@ -777,7 +777,7 @@ class LRu extends L {
   String get journeyContinueCta => 'Дальше';
 
   @override
-  String get journeyDateSub => 'Одна только дата уже даёт три системы.';
+  String get journeyDateSub => 'Одной даты хватает уже для трёх систем.';
 
   @override
   String get journeyDateTitle => 'Когда всё началось?';
@@ -848,27 +848,27 @@ class LRu extends L {
 
   @override
   String pushDailyEnteringConjunction(String p1, String p2) {
-    return '$p1 и $p2: соединение входит в расчётный диапазон сегодня.';
+    return '$p1 и $p2: соединение входит в орбис сегодня.';
   }
 
   @override
   String pushDailyEnteringOpposition(String p1, String p2) {
-    return '$p1 и $p2: оппозиция входит в расчётный диапазон сегодня.';
+    return '$p1 и $p2: оппозиция входит в орбис сегодня.';
   }
 
   @override
   String pushDailyEnteringSextile(String p1, String p2) {
-    return '$p1 и $p2: секстиль входит в расчётный диапазон сегодня.';
+    return '$p1 и $p2: секстиль входит в орбис сегодня.';
   }
 
   @override
   String pushDailyEnteringSquare(String p1, String p2) {
-    return '$p1 и $p2: квадратура входит в расчётный диапазон сегодня.';
+    return '$p1 и $p2: квадратура входит в орбис сегодня.';
   }
 
   @override
   String pushDailyEnteringTrine(String p1, String p2) {
-    return '$p1 и $p2: трин входит в расчётный диапазон сегодня.';
+    return '$p1 и $p2: трин входит в орбис сегодня.';
   }
 
   @override
@@ -903,14 +903,14 @@ class LRu extends L {
 
   @override
   String get stateOffline =>
-      'Alma сейчас не отвечает. Гадать здесь никто не станет — пока она молчит, показать нечего.';
+      'Alma сейчас не отвечает — проверь связь и попробуй ещё раз.';
 
   @override
   String get stateRetry => 'Попробовать ещё раз';
 
   @override
   String get stateUnavailable =>
-      'Что-то не работает на нашей стороне. Дело не в тебе и не в твоей карте.';
+      'Что-то пошло не так на нашей стороне. С твоей картой всё в порядке.';
 
   @override
   String get stateUnboundTitle => 'Про кого этот разбор?';
@@ -1075,11 +1075,11 @@ class LRu extends L {
 
   @override
   String get scrChatNoChart =>
-      'Я могу разговаривать и без твоей карты, но это было бы гаданием. Дай мне данные рождения — и я смогу тебя читать.';
+      'Я могу говорить и без твоей карты, но это будет гадание. Введи данные рождения — и я буду читать по-настоящему.';
 
   @override
   String get scrChatOffline =>
-      'Прямо сейчас я не дотягиваюсь до твоей карты. Твой вопрос на месте — попробуй ещё раз через минуту.';
+      'Сейчас я не дотягиваюсь до твоей карты. Вопрос на месте — попробуй через минуту.';
 
   @override
   String get scrChatOpening =>
@@ -1087,7 +1087,7 @@ class LRu extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Доступные вопросы закончились. В подписке — 25 вопросов в месяц.';
+      'Вопросы на сегодня закончились. В подписке — 25 в месяц.';
 
   @override
   String get scrChatPast => 'раньше';
@@ -1136,14 +1136,14 @@ class LRu extends L {
 
   @override
   String get scrChatUnavailable =>
-      'Что-то не работает на моей стороне. Твоя карта не тронута, и твой вопрос на месте.';
+      'Что-то сломалось на моей стороне. Твой вопрос цел — попробуй ещё раз.';
 
   @override
   String get scrChatUntitled => 'Разговор без названия';
 
   @override
   String get scrChatWentWrong =>
-      'Это не отправилось. Ничего не потерялось — твой вопрос на месте.';
+      'Не отправилось. Вопрос цел — попробуй ещё раз.';
 
   @override
   String get scrDone => 'Готово';
@@ -1185,7 +1185,7 @@ class LRu extends L {
 
   @override
   String get scrSignInAlready =>
-      'Ты уже в аккаунте. Он следует за тобой на любой телефон.';
+      'Ты уже вошёл. Карта и покупки привязаны к аккаунту.';
 
   @override
   String get scrSignInDone => 'Вход выполнен.';
@@ -1194,28 +1194,27 @@ class LRu extends L {
   String get scrSignInEmailPlaceholder => 'Твой адрес почты';
 
   @override
-  String get scrSignInFailed =>
-      'Войти не получилось. В аккаунте ничего не изменилось.';
+  String get scrSignInFailed => 'Войти не получилось — попробуй ещё раз.';
 
   @override
-  String get scrSignInLead => 'Твоя карта следует за тобой на любой телефон.';
+  String get scrSignInLead =>
+      'Войди — и карта с покупками будут с тобой на любом телефоне.';
 
   @override
-  String get scrSignInLinkSent =>
-      'Проверь почту. Ссылка сама выполнит вход и скоро перестанет работать.';
+  String get scrSignInLinkSent => 'Письмо отправлено — проверь почту.';
 
   @override
   String get scrSignInOrWith => 'или войди через';
 
   @override
   String get scrSignInPrivacy =>
-      'Адрес нужен только для ссылки на вход — больше ни для чего. Рассылки нет.';
+      'Почта нужна только для входа. Никаких рассылок.';
 
   @override
-  String get scrSignInSendLink => 'Прислать ссылку для входа';
+  String get scrSignInSendLink => 'Отправить код на почту';
 
   @override
-  String get scrSignInSendLinkShort => 'Прислать ссылку для входа';
+  String get scrSignInSendLinkShort => 'Отправить код';
 
   @override
   String get scrSignInSending => 'Отправляю…';
@@ -1253,7 +1252,7 @@ class LRu extends L {
 
   @override
   String dstBody(String city, String date, String time) {
-    return '$date в $city переводили часы назад. Alma не станет подбрасывать монетку о твоём небе — какое из двух $time твоё?';
+    return '$date в $city переводили часы назад, и $time в ту ночь было дважды. Alma не будет угадывать — какое из них твоё?';
   }
 
   @override
@@ -1878,14 +1877,14 @@ class LRu extends L {
 
   @override
   String get onbSystemsBody =>
-      'Все восемь посчитаны по твоему рождению, и расчёт остаётся бесплатным — всегда. Платны только написанные главы, а первая глава твоей натальной карты уже открыта.';
+      'Все восемь рассчитаны по твоему рождению, и расчёт всегда бесплатный. Платишь только за написанные главы — первая глава натальной карты уже открыта.';
 
   @override
   String get onbTodayTitle => 'Своя страница у каждого дня';
 
   @override
   String get onbTodayBody =>
-      'Заметка дня написана по твоей собственной карте. Живой слой — транзиты, соляр, совместимость — пере­считывается вместе с небом.';
+      'Заметка дня написана по твоей карте. Живой слой — транзиты, соляр, совместимость — пересчитывается вместе с небом.';
 
   @override
   String get onbNext => 'Дальше';
@@ -1915,14 +1914,14 @@ class LRu extends L {
 
   @override
   String get onbMorningBody =>
-      'Alma может присылать короткую утреннюю заметку, когда небо действительно движется. Выбери здесь, как часто, — или оставь выключенным.';
+      'Alma может присылать короткую утреннюю заметку, когда небо действительно движется. Выбери частоту здесь — или оставь выключенными.';
 
   @override
   String get cabSettingsDocuments => 'Документы';
 
   @override
   String get scrSignInCodeSent =>
-      'Мы отправили шестизначный код на твою почту. Введи его здесь — или открой ссылку из того же письма в вебе.';
+      'Код уже в твоей почте. Введи его здесь — или открой ссылку из письма в браузере.';
 
   @override
   String get scrSignInCodeHint => 'Код из письма';

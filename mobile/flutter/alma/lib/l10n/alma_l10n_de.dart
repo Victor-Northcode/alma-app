@@ -1213,8 +1213,7 @@ class LDe extends L {
   String get scrSignInLead => 'Dein Horoskop folgt dir auf jedes Handy.';
 
   @override
-  String get scrSignInLinkSent =>
-      'Sieh in deinem Posteingang nach. Der Link meldet dich an und läuft bald ab.';
+  String get scrSignInLinkSent => 'Verschickt — sieh in dein Postfach.';
 
   @override
   String get scrSignInOrWith => 'oder anmelden mit';
@@ -1224,10 +1223,10 @@ class LDe extends L {
       'Wir nutzen deine Adresse für den Anmeldelink und für nichts anderes. Es gibt keinen Newsletter.';
 
   @override
-  String get scrSignInSendLink => 'Anmeldelink per E-Mail senden';
+  String get scrSignInSendLink => 'Code per E-Mail senden';
 
   @override
-  String get scrSignInSendLinkShort => 'Link senden';
+  String get scrSignInSendLinkShort => 'Code senden';
 
   @override
   String get scrSignInSending => 'Wird gesendet…';

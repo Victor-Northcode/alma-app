@@ -1606,7 +1606,7 @@
   "@scrSignInLead": {
     "description": "from Screens/scr.signIn.lead"
   },
-  "scrSignInLinkSent": "Check your inbox. The link signs you in and expires shortly.",
+  "scrSignInLinkSent": "Sent — check your email.",
   "@scrSignInLinkSent": {
     "description": "from Screens/scr.signIn.linkSent"
   },
@@ -1618,8 +1618,8 @@
   "@scrSignInPrivacy": {
     "description": "from Screens/scr.signIn.privacy"
   },
-  "scrSignInSendLink": "Email me a sign-in link",
-  "scrSignInSendLinkShort": "Email me a sign-in link",
+  "scrSignInSendLink": "Email me a sign-in code",
+  "scrSignInSendLinkShort": "Send the code",
   "@scrSignInSendLinkShort": {
     "description": "Короткий вариант подписи кнопки для узких экранов. Совпадает с полным везде, кроме немецкого: короче «Anmeldelink per E-Mail senden» в языке ничего нет, а в остальных сокращать нечего."
   },

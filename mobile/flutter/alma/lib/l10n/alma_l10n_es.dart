@@ -1207,8 +1207,7 @@ class LEs extends L {
   String get scrSignInLead => 'Tu carta te sigue a cualquier teléfono.';
 
   @override
-  String get scrSignInLinkSent =>
-      'Revisa tu bandeja de entrada. El enlace te identifica y caduca pronto.';
+  String get scrSignInLinkSent => 'Enviado — revisa tu correo.';
 
   @override
   String get scrSignInOrWith => 'o entra con';
@@ -1218,10 +1217,10 @@ class LEs extends L {
       'Usamos tu dirección para el enlace de acceso y nada más. No hay boletín.';
 
   @override
-  String get scrSignInSendLink => 'Enviarme un enlace de acceso';
+  String get scrSignInSendLink => 'Enviarme un código';
 
   @override
-  String get scrSignInSendLinkShort => 'Enviarme un enlace de acceso';
+  String get scrSignInSendLinkShort => 'Enviar código';
 
   @override
   String get scrSignInSending => 'Enviando…';

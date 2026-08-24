@@ -35,6 +35,11 @@ class AlmaClose extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: () {
           HapticFeedback.selectionClick();
+          // Клавиатура снимается ДО ухода с экрана: закрытый посреди набора
+          // экран оставлял её висеть над следующим — владелец: «клавиатура
+          // может зависнуть и остаться» (24 авг). Единая кнопка закрытия —
+          // единственное место, где это чинится один раз для всех экранов.
+          FocusManager.instance.primaryFocus?.unfocus();
           onTap();
         },
         child: SizedBox(

@@ -1201,8 +1201,7 @@ class LEn extends L {
   String get scrSignInLead => 'Your chart follows you to any phone.';
 
   @override
-  String get scrSignInLinkSent =>
-      'Check your inbox. The link signs you in and expires shortly.';
+  String get scrSignInLinkSent => 'Sent — check your email.';
 
   @override
   String get scrSignInOrWith => 'or sign in with';
@@ -1212,10 +1211,10 @@ class LEn extends L {
       'We use your address for the sign-in link and nothing else. There is no newsletter.';
 
   @override
-  String get scrSignInSendLink => 'Email me a sign-in link';
+  String get scrSignInSendLink => 'Email me a sign-in code';
 
   @override
-  String get scrSignInSendLinkShort => 'Email me a sign-in link';
+  String get scrSignInSendLinkShort => 'Send the code';
 
   @override
   String get scrSignInSending => 'Sending…';

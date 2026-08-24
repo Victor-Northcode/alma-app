@@ -1206,8 +1206,7 @@ class LPt extends L {
   String get scrSignInLead => 'Seu mapa te segue em qualquer telefone.';
 
   @override
-  String get scrSignInLinkSent =>
-      'Verifique sua caixa de entrada. O link faz você entrar e expira em breve.';
+  String get scrSignInLinkSent => 'Enviado — confira seu e-mail.';
 
   @override
   String get scrSignInOrWith => 'ou entre com';
@@ -1217,10 +1216,10 @@ class LPt extends L {
       'Usamos seu endereço para o link de acesso e nada mais. Não há newsletter.';
 
   @override
-  String get scrSignInSendLink => 'Enviar link de acesso';
+  String get scrSignInSendLink => 'Enviar código por e-mail';
 
   @override
-  String get scrSignInSendLinkShort => 'Enviar link de acesso';
+  String get scrSignInSendLinkShort => 'Enviar código';
 
   @override
   String get scrSignInSending => 'Enviando…';

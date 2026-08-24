@@ -1210,8 +1210,7 @@ class LFr extends L {
   String get scrSignInLead => 'Ton thème te suit sur n’importe quel téléphone.';
 
   @override
-  String get scrSignInLinkSent =>
-      'Regarde ta boîte de réception. Le lien te connecte et expire bientôt.';
+  String get scrSignInLinkSent => 'Envoyé — regarde ta boîte mail.';
 
   @override
   String get scrSignInOrWith => 'ou connecte-toi avec';
@@ -1221,10 +1220,10 @@ class LFr extends L {
       'Nous utilisons ton adresse pour le lien de connexion et rien d’autre. Il n’y a pas de newsletter.';
 
   @override
-  String get scrSignInSendLink => 'M’envoyer un lien de connexion';
+  String get scrSignInSendLink => 'M\'envoyer un code';
 
   @override
-  String get scrSignInSendLinkShort => 'M’envoyer un lien de connexion';
+  String get scrSignInSendLinkShort => 'Envoyer le code';
 
   @override
   String get scrSignInSending => 'Envoi…';

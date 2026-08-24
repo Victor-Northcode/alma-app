@@ -1209,8 +1209,7 @@ class LIt extends L {
   String get scrSignInLead => 'Il tuo tema ti segue su qualsiasi telefono.';
 
   @override
-  String get scrSignInLinkSent =>
-      'Controlla la posta. Il link ti fa accedere e scade a breve.';
+  String get scrSignInLinkSent => 'Inviato — controlla la tua email.';
 
   @override
   String get scrSignInOrWith => 'oppure entra con';
@@ -1220,10 +1219,10 @@ class LIt extends L {
       'Usiamo il tuo indirizzo per il link di accesso e nient\'altro. Non c\'è newsletter.';
 
   @override
-  String get scrSignInSendLink => 'Inviami un link di accesso';
+  String get scrSignInSendLink => 'Inviami un codice';
 
   @override
-  String get scrSignInSendLinkShort => 'Inviami un link di accesso';
+  String get scrSignInSendLinkShort => 'Invia codice';
 
   @override
   String get scrSignInSending => 'Invio…';
