@@ -1901,7 +1901,7 @@ class LEn extends L {
 
   @override
   String get scrSignInCodeSent =>
-      'We sent a six-digit code to your email. Enter it here — or open the link from the same letter on the web.';
+      'We sent a six-digit code to your email — enter it here.';
 
   @override
   String get scrSignInCodeHint => 'Code from the email';

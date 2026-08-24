@@ -1,9 +1,9 @@
 """Outbound email — three messages, sent well.
 
-Alma sends a sign-in link, a receipt for a purchase, and a warning three days
+Alma sends a sign-in code, a receipt for a purchase, and a warning three days
 before a subscription is charged. Nothing else, and that is deliberate. A
 product that emails people about their horoscope every morning is a product
-people mute, and a muted sender is a sign-in link that lands in spam when it
+people mute, and a muted sender is a sign-in code that lands in spam when it
 finally matters.
 
 None of the three is marketing and none of them carries an unsubscribe. Two of
@@ -21,7 +21,7 @@ message at a time.
 Delivery is best-effort and never blocks a request. If the provider is not
 configured or is having a bad day, the caller finds out via the return value
 and decides what to tell the user — which in development means showing the
-link on screen rather than pretending an email is in flight.
+code on screen rather than pretending an email is in flight.
 """
 
 from __future__ import annotations
@@ -39,70 +39,67 @@ log = logging.getLogger("alma.mail")
 
 RESEND_ENDPOINT = "https://api.resend.com/emails"
 
+# Код — в теме письма. Шесть цифр видны прямо в шторке уведомлений и в списке
+# писем: за кодом не нужно даже открывать письмо. Владелец, 25.08.2026: «убери
+# кнопку „Открыть Alma“, письмо с кодом» — кнопка со ссылкой ушла целиком,
+# ссылка в этом письме больше не ездит (см. `send_magic_link`).
 SUBJECTS = {
-    "en": "Your Alma sign-in link",
-    "es": "Tu enlace de acceso a Alma",
-    "de": "Dein Alma-Anmeldelink",
-    "it": "Il tuo link di accesso ad Alma",
-    "fr": "Votre lien de connexion Alma",
-    "pt-BR": "Seu link de acesso ao Alma",
-    "ru": "Твоя ссылка для входа в Alma",
+    "en": "{code} — your Alma sign-in code",
+    "es": "{code} — tu código de acceso a Alma",
+    "de": "{code} — dein Alma-Anmeldecode",
+    "it": "{code} — il tuo codice di accesso ad Alma",
+    "fr": "{code} — ton code de connexion Alma",
+    "pt-BR": "{code} — seu código de acesso ao Alma",
+    "ru": "{code} — твой код для входа в Alma",
 }
 
+#: (строка над кодом, строка под кодом, страховка внизу)
 BODIES = {
-    "en": ("Open Alma", "This link works once and expires in {minutes} minutes.",
+    "en": ("Your sign-in code",
+           "Enter it in the app. It works once and expires in {minutes} minutes.",
            "If you did not ask for this, nothing happens — ignore it."),
-    "es": ("Abrir Alma", "Este enlace funciona una vez y caduca en {minutes} minutos.",
-           "Si no lo has pedido, no ocurre nada — puedes ignorarlo."),
-    "de": ("Alma öffnen", "Dieser Link funktioniert einmal und läuft in {minutes} Minuten ab.",
+    "es": ("Tu código de acceso",
+           "Escríbelo en la app. Funciona una vez y caduca en {minutes} minutos.",
+           "Si no lo pediste, no pasa nada — puedes ignorarlo."),
+    "de": ("Dein Anmeldecode",
+           "Gib ihn in der App ein. Er funktioniert einmal und läuft in {minutes} Minuten ab.",
            "Falls du das nicht warst, passiert nichts — ignoriere die Nachricht."),
-    "it": ("Apri Alma", "Questo link funziona una volta e scade tra {minutes} minuti.",
+    "it": ("Il tuo codice di accesso",
+           "Inseriscilo nell'app. Funziona una volta e scade tra {minutes} minuti.",
            "Se non sei stato tu, non succede nulla — puoi ignorarlo."),
     # `tu`, like the rest of the French product. These three messages were the
     # only French Alma writes in `vous`, so the brand switched register exactly
     # when it started talking about sign-ins, money and rights — which reads as
     # a lawyer taking the voice over.
-    "fr": ("Ouvrir Alma", "Ce lien fonctionne une fois et expire dans {minutes} minutes.",
+    "fr": ("Ton code de connexion",
+           "Saisis-le dans l’application. Il fonctionne une fois et expire dans {minutes} minutes.",
            "Si ce n’est pas toi qui l’as demandé, rien ne se passe."),
-    "pt-BR": ("Abrir o Alma", "Este link funciona uma vez e expira em {minutes} minutos.",
+    "pt-BR": ("Seu código de acesso",
+              "Digite no app. Funciona uma vez e expira em {minutes} minutos.",
               "Se não foi você, nada acontece — pode ignorar."),
     # «ты», like the rest of the Russian product — and «Если это не ты» keeps
     # the reassurance impersonal rather than «если вы не запрашивали».
-    "ru": ("Открыть Alma", "Ссылка сработает один раз и истечёт через {minutes} минут.",
+    "ru": ("Твой код для входа",
+           "Введи его в приложении. Код сработает один раз и истечёт через {minutes} минут.",
            "Если это не ты — ничего не произойдёт, просто пропусти письмо."),
 }
 
 
-# Подводка к коду. В приложении deep-link нет, и вход там идёт кодом из этого
-# же письма (владелец, 24.08.2026); веб продолжает жить ссылкой. Во французской
-# строке перед двоеточием — узкий неразрывный пробел U+202F, как того требует
-# типографика продукта.
-CODE_LEADS = {
-    "en": "Or type this code in the app:",
-    "es": "O introduce este código en la app:",
-    "de": "Oder gib diesen Code in der App ein:",
-    "it": "Oppure inserisci questo codice nell'app:",
-    "fr": "Ou saisis ce code dans l’application :",
-    "pt-BR": "Ou digite este código no app:",
-    "ru": "Или введи этот код в приложении:",
-}
-
-
-def _html(url: str, locale: str, minutes: int, code: str | None = None) -> str:
-    action, note, ignore = BODIES.get(locale, BODIES["en"])
-    code_block = ""
-    if code:
-        lead = CODE_LEADS.get(locale, CODE_LEADS["en"])
-        code_block = f"""
-    <p style="font-size:14px;line-height:1.6;color:#8b8578;margin:36px 0 8px">{lead}</p>
-    <div style="font-size:34px;letter-spacing:.32em;color:#F6E7BC;font-family:Georgia,serif">{code}</div>"""
-    return f"""\
-<div style="background:#0A0D1C;color:#F1E9D6;font-family:Georgia,serif;padding:48px 24px">
+def _html(locale: str, minutes: int, code: str) -> str:
+    lead, note, ignore = BODIES.get(locale, BODIES["en"])
+    # Рамка кода — та же золотая обводка, что раньше носила кнопка: письмо
+    # осталось в семье трёх сообщений (баннер, лид, одно золотое действие),
+    # только действием теперь стал сам код. Правый отступ меньше левого на
+    # хвост letter-spacing после последней цифры — иначе код в рамке висит
+    # со сдвигом влево, и это видно.
+    return f"""<div style="background:#0A0D1C;color:#F1E9D6;font-family:Georgia,serif;padding:48px 24px">
   <div style="max-width:480px;margin:0 auto">
     <div style="font-size:22px;letter-spacing:.18em;color:#C9AE6B">ALMA</div>
-    <p style="font-size:17px;line-height:1.6;margin:28px 0 32px">{note.format(minutes=minutes)}</p>
-    <a href="{url}" style="display:inline-block;padding:14px 28px;border:1px solid #C9AE6B;
-       color:#E4D3A2;text-decoration:none;letter-spacing:.06em">{action}</a>{code_block}
+    <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8b8578;
+       margin:36px 0 14px">{lead}</p>
+    <div style="display:inline-block;border:1px solid #C9AE6B;padding:18px 18px 18px 30px;
+         font-size:40px;letter-spacing:.28em;color:#F6E7BC;font-family:Georgia,serif">{code}</div>
+    <p style="font-size:15px;line-height:1.6;color:#c8bfa8;margin:20px 0 0">{note.format(minutes=minutes)}</p>
     <p style="font-size:13px;line-height:1.6;color:#8b8578;margin-top:32px">{ignore}</p>
   </div>
 </div>"""
@@ -138,30 +135,33 @@ async def _post(payload: dict) -> bool:
     return True
 
 
-async def send_magic_link(
-    *, to: str, token: str, locale: str = "en", code: str | None = None
-) -> bool:
-    """Send the sign-in link (and, when given, the app code). Returns whether
-    it actually went out."""
+async def send_magic_link(*, to: str, code: str, locale: str = "en") -> bool:
+    """Send the sign-in code. Returns whether it actually went out.
+
+    Имя осталось от эпохи ссылки, и это намеренно: `MagicLink` — таблица, где
+    код живёт по сей день, и переименование функции разорвало бы нить между
+    письмом и его строкой в базе. Сама ссылка из письма ушла 25.08.2026 по
+    слову владельца: кнопка «Открыть Alma» вела в веб, где кабинета больше
+    нет, — а вход в приложении и так идёт кодом.
+    """
     config = settings()
-    url = f"{config.web_url}/sign-in?token={token}"
 
     if not config.resend_api_key:
-        # Not an error in development; the caller surfaces the link instead.
+        # Not an error in development; the caller surfaces the code instead.
         #
-        # **Ссылка в лог не пишется, и это не про аккуратность.** В ней живой
-        # одноразовый токен входа: строка лога становится входом в аккаунт, а
-        # логи ходят туда, куда почта не ходит, — в агрегатор, в тикет, в чат
+        # **Код в лог не пишется, и это не про аккуратность.** Это живой
+        # одноразовый вход в аккаунт: строка лога становится входом, а логи
+        # ходят туда, куда почта не ходит, — в агрегатор, в тикет, в чат
         # поддержки, в архив на полгода, — и переживают те двадцать минут, на
-        # которые ссылка выписана, целиком. Одна такая строка про адрес клиента
-        # — это чужой аккаунт у любого, кто читает логи.
+        # которые код выписан, целиком. Одна такая строка про адрес клиента —
+        # это чужой аккаунт у любого, кто читает логи.
         #
         # Для отладки оставлено ровно то, чем она полезна: что письмо не ушло,
-        # кому оно предназначалось и почему. Кому нужна сама ссылка — это
-        # локальная разработка, и там она приезжает в теле ответа
+        # кому оно предназначалось и почему. Кому нужен сам код — это
+        # локальная разработка, и там он приезжает в теле ответа
         # (`routers/auth.py`, `_may_show_debug_token`), а не через лог.
         log.info(
-            "mail not configured — no sign-in link sent to %s (it would have "
+            "mail not configured — no sign-in code sent to %s (it would have "
             "expired in %d minutes)",
             to,
             config.magic_link_minutes,
@@ -171,8 +171,8 @@ async def send_magic_link(
     return await _post({
         "from": config.mail_from,
         "to": [to],
-        "subject": SUBJECTS.get(locale, SUBJECTS["en"]),
-        "html": _html(url, locale, config.magic_link_minutes, code),
+        "subject": SUBJECTS.get(locale, SUBJECTS["en"]).format(code=code),
+        "html": _html(locale, config.magic_link_minutes, code),
     })
 
 

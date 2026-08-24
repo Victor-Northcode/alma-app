@@ -1909,7 +1909,7 @@ class LPt extends L {
 
   @override
   String get scrSignInCodeSent =>
-      'Enviamos um código de seis dígitos para o seu e-mail. Digite o código aqui — ou abra o link da mesma mensagem na web.';
+      'Enviamos um código de seis dígitos para o seu e-mail — digite aqui.';
 
   @override
   String get scrSignInCodeHint => 'Código do e-mail';

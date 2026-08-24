@@ -301,7 +301,7 @@ class LDe extends L {
 
   @override
   String get cabManagedByGooglePlay =>
-      'Dieses Abo wurde in Google Play gekauft — Google verwaltet die Zahlungsmethode, und dort wird auch gekündigt.';
+      'Dieses Abo wurde in Google Play gekauft — Google verwaltet die Zahlungs­methode, und dort wird auch gekündigt.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -1478,7 +1478,7 @@ class LDe extends L {
 
   @override
   String get paywallV3SubIncludesPair =>
-      'Ein voller Partnerschaftsvergleich im Monat';
+      'Ein voller Partner­schafts­vergleich im Monat';
 
   @override
   String get paywallV3SubIncludesQuestions =>
@@ -1584,7 +1584,7 @@ class LDe extends L {
 
   @override
   String get paywallV3QuotaAlsoInsideList =>
-      'Transite und das tägliche Horoskop · dein Solarhoroskop · ein Partnerschaftsvergleich im Monat';
+      'Transite und das tägliche Horoskop · dein Solarhoroskop · ein Partner­schafts­vergleich im Monat';
 
   @override
   String get paywallV3SubRenewalDisclosureQuota =>
@@ -1615,7 +1615,7 @@ class LDe extends L {
 
   @override
   String get paywallV3SubIncludesLine =>
-      'Transite und das tägliche Horoskop · Solarhoroskop · ein Partnerschaftsvergleich im Monat · 30 Fragen · alle fünf Deutungen, solange das Abo läuft';
+      'Transite und das tägliche Horoskop · Solarhoroskop · ein Partner­schafts­vergleich im Monat · 30 Fragen · alle fünf Deutungen, solange das Abo läuft';
 
   @override
   String get paywallV3PlansLegal =>
@@ -1899,7 +1899,7 @@ class LDe extends L {
 
   @override
   String get onbFirstChapterBody =>
-      'Kapitel I deines Geburtshoroskops ist geschrieben und wartet — fang dort an. Die übrigen Kapitel öffnen sich eines nach dem anderen, wann immer du willst.';
+      'Kapitel I deines Geburts­horoskops ist geschrieben und wartet — fang dort an. Die übrigen Kapitel öffnen sich eines nach dem anderen, wann immer du willst.';
 
   @override
   String get onbAlmaTitle => 'Frag Alma, was du willst';
@@ -1920,7 +1920,7 @@ class LDe extends L {
 
   @override
   String get scrSignInCodeSent =>
-      'Wir haben dir einen sechsstelligen Code per E-Mail geschickt. Gib ihn hier ein — oder öffne den Link aus derselben Mail im Web.';
+      'Wir haben dir einen sechsstelligen Code per E-Mail geschickt — gib ihn hier ein.';
 
   @override
   String get scrSignInCodeHint => 'Code aus der E-Mail';

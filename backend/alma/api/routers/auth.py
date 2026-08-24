@@ -211,11 +211,13 @@ async def request_magic_link(
             expires_at=tokens.magic_link_expiry(),
         )
     )
-    # Вторая строка того же письма — шестизначный код для приложения (владелец,
-    # 24.08.2026: «вход через письмо с кодом 6 цифр»). Deep-link у приложения
-    # нет, ссылка открывает веб; код живёт по тем же правилам, что и она, — в
-    # той же таблице, с тем же TTL, один раз. Адрес вшит в хэш кода: шесть цифр
-    # ищутся только против ЭТОГО письма, а не всех ожидающих строк сразу.
+    # Шестизначный код — то единственное, что письмо теперь несёт (владелец,
+    # 25.08.2026: «убери кнопку „Открыть Alma“» — ссылка вела в веб, где
+    # кабинета больше нет). Токен выше по-прежнему выписывается: на нём стоят
+    # `/magic-link/consume` и `debug_token` локальной разработки, а строка его —
+    # хэш с TTL в двадцать минут, который никому не отправлен. Код живёт по тем
+    # же правилам — та же таблица, тот же TTL, один раз. Адрес вшит в хэш кода:
+    # шесть цифр ищутся только против ЭТОГО письма, а не всех ожидающих строк.
     code, code_hash = tokens.new_email_code(payload.email)
     session.add(
         MagicLink(
@@ -228,7 +230,7 @@ async def request_magic_link(
     await session.flush()
 
     delivered = await send_magic_link(
-        to=payload.email, token=token, locale=payload.locale, code=code
+        to=payload.email, locale=payload.locale, code=code
     )
     response: dict = {
         "sent": True,

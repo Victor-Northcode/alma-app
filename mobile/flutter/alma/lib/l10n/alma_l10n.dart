@@ -3290,7 +3290,7 @@ abstract class L {
   /// вход · после отправки письма: код отправлен, введи здесь (24 авг, вход по коду вместо deep-link)
   ///
   /// In en, this message translates to:
-  /// **'We sent a six-digit code to your email. Enter it here — or open the link from the same letter on the web.'**
+  /// **'We sent a six-digit code to your email — enter it here.'**
   String get scrSignInCodeSent;
 
   /// вход · плейсхолдер поля шестизначного кода

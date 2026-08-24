@@ -1907,7 +1907,7 @@ class LIt extends L {
 
   @override
   String get scrSignInCodeSent =>
-      'Ti abbiamo inviato un codice di sei cifre via email. Inseriscilo qui — oppure apri sul web il link dello stesso messaggio.';
+      'Ti abbiamo inviato un codice di sei cifre via email — inseriscilo qui.';
 
   @override
   String get scrSignInCodeHint => 'Codice ricevuto via email';

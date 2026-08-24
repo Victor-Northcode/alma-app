@@ -530,7 +530,7 @@
   "onbMorningTitle": "Una lettera al mattino",
   "onbMorningBody": "Alma può inviarti una breve nota al mattino, quando il cielo si muove davvero. Scegli qui ogni quanto — oppure lascia tutto spento.",
   "cabSettingsDocuments": "Documenti",
-  "scrSignInCodeSent": "Ti abbiamo inviato un codice di sei cifre via email. Inseriscilo qui — oppure apri sul web il link dello stesso messaggio.",
+  "scrSignInCodeSent": "Ti abbiamo inviato un codice di sei cifre via email — inseriscilo qui.",
   "scrSignInCodeHint": "Codice ricevuto via email",
   "scrSignInCodeInvalid": "Il codice non corrisponde — controlla le cifre.",
   "scrSignInCodeUsed": "Questo codice è già stato usato — richiedine uno nuovo.",

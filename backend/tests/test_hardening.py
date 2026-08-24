@@ -206,22 +206,22 @@ def test_the_refusal_says_nothing_about_who_has_an_account(api, auth_headers, mo
     assert by_email.json() == by_source.json()
 
 
-# ── 3. ссылка входа не попадает в лог ──────────────────────────────────────
+# ── 3. код входа не попадает в лог ─────────────────────────────────────────
 
-def test_the_sign_in_link_never_reaches_the_log(caplog):
-    """Строка лога со ссылкой — это вход в аккаунт.
+def test_the_sign_in_code_never_reaches_the_log(caplog):
+    """Строка лога с кодом — это вход в аккаунт.
 
-    Логи живут дольше двадцати минут, на которые выписана ссылка, и ходят туда,
-    куда почта не ходит: в агрегатор, в тикет, в чат поддержки.
+    Логи живут дольше двадцати минут, на которые выписан код, и ходят туда,
+    куда почта не ходит: в агрегатор, в тикет, в чат поддержки. До 25.08.2026
+    тем же законом жила ссылка входа; письмо стало кодовым, закон остался.
     """
     caplog.set_level(logging.DEBUG, logger="alma.mail")
-    token = "TOKEN-THAT-OPENS-THE-ACCOUNT"
+    code = "804513"
 
-    delivered = asyncio.run(mail.send_magic_link(to="sofia@example.com", token=token))
+    delivered = asyncio.run(mail.send_magic_link(to="sofia@example.com", code=code))
 
     assert delivered is False, "почтовик в тестах не настроен — это та самая ветка"
-    assert token not in caplog.text
-    assert "/sign-in?token=" not in caplog.text
+    assert code not in caplog.text
     # А то, ради чего строку читают, осталось: письмо не ушло и кому.
     assert "sofia@example.com" in caplog.text
     assert "mail not configured" in caplog.text

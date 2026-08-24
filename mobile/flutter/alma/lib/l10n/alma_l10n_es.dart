@@ -1911,7 +1911,7 @@ class LEs extends L {
 
   @override
   String get scrSignInCodeSent =>
-      'Te enviamos un código de seis dígitos al correo. Escríbelo aquí — o abre el enlace de ese mismo correo en la web.';
+      'Te enviamos un código de seis dígitos al correo — escríbelo aquí.';
 
   @override
   String get scrSignInCodeHint => 'Código del correo';

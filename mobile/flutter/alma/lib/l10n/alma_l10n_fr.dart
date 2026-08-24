@@ -1916,7 +1916,7 @@ class LFr extends L {
 
   @override
   String get scrSignInCodeSent =>
-      'Nous t’avons envoyé un code à six chiffres par e-mail. Saisis-le ici — ou ouvre le lien du même e-mail sur le web.';
+      'Nous t’avons envoyé un code à six chiffres par e-mail — saisis-le ici.';
 
   @override
   String get scrSignInCodeHint => 'Code reçu par e-mail';

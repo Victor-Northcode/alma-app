@@ -717,7 +717,7 @@ class LRu extends L {
 
   @override
   String get journeyCeremony1Line =>
-      'Десять планет, двенадцать домов — твоя карта строится по реальным астрономическим данным.';
+      'Десять планет, двенадцать домов — твоя карта строится по реальным астро­номи­ческим данным.';
 
   @override
   String get journeyCeremony2Label => 'читаю систему 2 из 8 · нумерология';
@@ -1884,7 +1884,7 @@ class LRu extends L {
 
   @override
   String get onbTodayBody =>
-      'Заметка дня написана по твоей карте. Живой слой — транзиты, соляр, совместимость — пересчитывается вместе с небом.';
+      'Заметка дня написана по твоей карте. Живой слой — транзиты, соляр, совместимость — пере­считы­вается вместе с небом.';
 
   @override
   String get onbNext => 'Дальше';
@@ -1920,8 +1920,7 @@ class LRu extends L {
   String get cabSettingsDocuments => 'Документы';
 
   @override
-  String get scrSignInCodeSent =>
-      'Код уже в твоей почте. Введи его здесь — или открой ссылку из письма в браузере.';
+  String get scrSignInCodeSent => 'Код уже в твоей почте — введи его здесь.';
 
   @override
   String get scrSignInCodeHint => 'Код из письма';
