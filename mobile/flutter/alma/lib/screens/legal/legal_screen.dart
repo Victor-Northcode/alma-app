@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
+import '../../design/close_button.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
@@ -53,34 +54,13 @@ class LegalScreen extends StatelessWidget {
           // Надзаголовком стояло «ALMA · PAZL LLC» — имя оператора, которое
           // ниже и так напечатано дважды, вместо того единственного, что тут
           // нужно: откуда сюда пришли и как выйти.
+          // Единое закрытие поверх-экранов (правило 24 авг, см. AlmaClose):
+          // документ открыт поверх настроек — закрывается крестиком справа,
+          // как остальные такие страницы, а не текстовой стрелкой слева.
           Row(children: [
-            // Знак маленький, цель большая: 18 × 18 не нажимается. Здесь стояли
-            // отбивки 4 × 6 вокруг знака, то есть цель 26 × 40 — единственная в
-            // продукте ниже сорока четырёх, которые остальные шапки держат
-            // прямым числом (`system_screen`, `chapter_screen`, шапки витрин).
-            // Промах здесь стоит дороже обычного: это экран, где человеку
-            // показывают его же права, и единственный выход с него — эта
-            // стрелка (открыт `CupertinoPageRoute` без панели).
-            //
-            // Знак прижат к левому канту цели, а не поставлен в её середину:
-            // цель растёт вправо и вниз, а сам знак остаётся ровно на поле
-            // страницы, где и стоял, — иначе он уехал бы вправо от поля, то
-            // есть ровно тем дефектом, который в главах только что чинили.
-            GestureDetector(
-              onTap: () => Navigator.of(context).maybePop(),
-              behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                width: 44,
-                height: 44,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text('←',
-                      style: AlmaType.body
-                          .copyWith(fontSize: 18, color: AlmaPalette.gold)),
-                ),
-              ),
-            ),
             Text(l.cabDataAndLegal.toUpperCase(), style: AlmaType.overline),
+            const Spacer(),
+            AlmaClose(onTap: () => Navigator.of(context).maybePop()),
           ]),
           Padding(
             padding: const EdgeInsets.only(top: 10, bottom: 4),

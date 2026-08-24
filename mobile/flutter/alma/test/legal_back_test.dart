@@ -1,20 +1,22 @@
+import 'package:alma/design/close_button.dart';
 import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/screens/legal/legal_screen.dart';
 import 'package:alma/screens/legal/legal_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Цель нажатия у «←» правового экрана.
+/// Выход с правового экрана — единый крестик, и цель у него не меньше 44.
 ///
-/// **Единственная в продукте, которая была ниже сорока четырёх точек.**
-/// Остальные шапки держат 44 прямым числом (`system_screen`, `chapter_screen`,
-/// шапки витрин); здесь вокруг знака 18 стояли отбивки 4 × 6, то есть цель
-/// 26 × 40. Разница не косметическая: сорок четыре — это минимум, ниже которого
-/// палец промахивается, и промахивается он на экране, где человеку показывают
-/// его же права и единственный выход с которого — эта стрелка (экран открыт
-/// `CupertinoPageRoute` без панели).
+/// История в два слоя. Сначала здесь стерёгся размер цели у текстовой «←»:
+/// вокруг знака 18 стояли отбивки 4 × 6, цель выходила 26 × 40, и палец
+/// промахивался на экране, где человеку показывают его же права. 24 августа
+/// владелец снял сам зоопарк выходов («то крестик, то стрелочка, то слева, то
+/// справа — сделай идентичным»), и выходом стал общий [AlmaClose] — крестик
+/// справа, как у всех страниц, открытых поверх. Прежний тест упал на этой
+/// правке ровно как положено; теперь стережётся новое правило: выход есть,
+/// он единый и в него попадает палец.
 void main() {
-  testWidgets('цель «назад» на правовом экране не меньше сорока четырёх точек',
+  testWidgets('выход с правового экрана — единый крестик с целью не меньше 44',
       (tester) async {
     await tester.binding.setSurfaceSize(const Size(402, 874));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -32,25 +34,19 @@ void main() {
       await tester.pump(const Duration(milliseconds: 80));
     }
 
-    final arrow = find.text('←');
-    expect(arrow, findsOneWidget);
+    final close = find.byType(AlmaClose);
+    expect(close, findsOneWidget,
+        reason: 'выход обязан быть общим AlmaClose, а не своей стрелкой');
 
-    final target = find.ancestor(
-      of: arrow,
-      matching: find.byType(GestureDetector),
-    ).first;
-    final box = tester.getSize(target);
+    final box = tester.getSize(close);
     expect(box.width, greaterThanOrEqualTo(44),
-        reason: 'цель «назад» уже сорока четырёх точек — палец промахивается');
+        reason: 'цель выхода уже сорока четырёх точек — палец промахивается');
     expect(box.height, greaterThanOrEqualTo(44),
-        reason: 'цель «назад» ниже сорока четырёх точек');
+        reason: 'цель выхода ниже сорока четырёх точек');
 
-    // И знак при этом остался на поле страницы, а не уехал в середину цели:
-    // цель растёт наружу, рисунок стоит на месте.
-    expect(tester.getTopLeft(arrow).dx, lessThan(tester.getTopLeft(target).dx + 8),
-        reason: 'знак съехал вправо от поля страницы вместе с ростом цели');
-
-    // Кегль знака — тот же 18, что у «←» остальных шапок: цель выросла, знак нет.
-    expect(tester.widget<Text>(arrow).style?.fontSize, 18);
+    // Крестик стоит у правого канта — правило «закрыть — справа».
+    final centre = tester.getCenter(close);
+    expect(centre.dx, greaterThan(402 / 2),
+        reason: 'закрытие поверх-экрана обязано стоять справа');
   });
 }

@@ -3245,37 +3245,37 @@ abstract class L {
   /// **'Close'**
   String get onbClose;
 
-  /// onboarding · coach.first_chapter.title — второй шаг обучалки (22 авг, владелец просил 5 шагов); ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ
+  /// onboarding · coach.first_chapter.title — второй шаг обучалки (22 авг, владелец просил 5 шагов)
   ///
   /// In en, this message translates to:
   /// **'The first chapter is open'**
   String get onbFirstChapterTitle;
 
-  /// onboarding · coach.first_chapter.body — первая глава открыта, остальные по одной; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ
+  /// onboarding · coach.first_chapter.body — первая глава открыта, остальные по одной
   ///
   /// In en, this message translates to:
   /// **'Chapter I of your natal chart is written and waiting — start there. The other chapters open one by one, whenever you choose.'**
   String get onbFirstChapterBody;
 
-  /// onboarding · coach.alma.title — четвёртый шаг обучалки; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ
+  /// onboarding · coach.alma.title — четвёртый шаг обучалки
   ///
   /// In en, this message translates to:
   /// **'Ask Alma anything'**
   String get onbAlmaTitle;
 
-  /// onboarding · coach.alma.body — отвечает по карте, честна про отсутствие ответа, цитирует позиции; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ
+  /// onboarding · coach.alma.body — отвечает по карте, честна про отсутствие ответа, цитирует позиции
   ///
   /// In en, this message translates to:
   /// **'Alma answers from what is in your chart, never from a template — and says so when the chart has no answer. Every reply cites the positions it was read from.'**
   String get onbAlmaBody;
 
-  /// onboarding · coach.morning.title — пятый шаг обучалки; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ
+  /// onboarding · coach.morning.title — пятый шаг обучалки
   ///
   /// In en, this message translates to:
   /// **'A letter in the morning'**
   String get onbMorningTitle;
 
-  /// onboarding · coach.morning.body — утренняя заметка только когда небо движется, частота выбирается тумблером; ЧЕРНОВИК НА ВЫЧИТКУ ВЛАДЕЛЬЦУ
+  /// onboarding · coach.morning.body — утренняя заметка только когда небо движется, частота выбирается тумблером
   ///
   /// In en, this message translates to:
   /// **'Alma can send a short morning note when the sky actually moves. Pick how often right here — or leave it off.'**
@@ -3286,6 +3286,18 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Documents'**
   String get cabSettingsDocuments;
+
+  /// вход · после отправки письма: код отправлен, введи здесь (24 авг, вход по коду вместо deep-link)
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a six-digit code to your email. Enter it here — or open the link from the same letter on the web.'**
+  String get scrSignInCodeSent;
+
+  /// вход · плейсхолдер поля шестизначного кода
+  ///
+  /// In en, this message translates to:
+  /// **'Code from the email'**
+  String get scrSignInCodeHint;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

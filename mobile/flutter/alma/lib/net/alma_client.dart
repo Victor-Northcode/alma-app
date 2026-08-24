@@ -302,6 +302,13 @@ class AlmaClient {
   Future<AlmaSessionInfo> consumeMagicLink(String token) async =>
       _adopt(await _post('/v1/auth/magic-link/consume', {'token': token}));
 
+  /// Войти кодом из того же письма. Deep-link у приложения нет — ссылка
+  /// открывает веб, а телефон вводит шесть цифр (владелец, 24.08.2026).
+  /// Код одноразовый и живёт столько же, сколько ссылка.
+  Future<AlmaSessionInfo> consumeEmailCode(String email, String code) async =>
+      _adopt(await _post(
+          '/v1/auth/email-code/consume', {'email': email, 'code': code}));
+
   /// Какие двери этот сервер умеет открывать: `google`, `apple`, `email`.
   ///
   /// **Спрашиваем, а не угадываем.** Обе ручки провайдеров отвечают 401 без

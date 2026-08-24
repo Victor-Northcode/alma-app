@@ -170,6 +170,23 @@ class MagicLinkConsume(BaseModel):
     token: str = Field(min_length=16)
 
 
+class EmailCodeConsume(BaseModel):
+    """Вход по коду из письма — то же письмо, что несёт ссылку.
+
+    Адрес обязателен: код хэширован вместе с ним (`tokens.hash_email_code`),
+    и шесть цифр без адреса не находят ничего — это и есть защита от перебора
+    кодов против всех ожидающих строк сразу.
+    """
+
+    email: str = Field(min_length=3, max_length=320)
+    code: str = Field(pattern=r"^\d{6}$")
+
+    @field_validator("email")
+    @classmethod
+    def _fold(cls, value: str) -> str:
+        return value.strip().lower()
+
+
 class CalcRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

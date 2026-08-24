@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/metrics.dart';
+import '../../design/close_button.dart';
 import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
@@ -283,25 +284,9 @@ class _Panel extends StatelessWidget {
             padding: EdgeInsets.only(top: safeTop, left: 8, right: 8),
             child: Row(
               children: [
-                IconButton(
-                  onPressed: onBack,
-                  icon: const Icon(Icons.arrow_back, color: AlmaPalette.gold),
-                  // Читалка — комната, и выход из неё обязан быть нащупываемым
-                  // без взгляда: 44 — пол касания, ниже него палец промахивается.
-                  constraints: const BoxConstraints.tightFor(
-                    width: 44,
-                    height: 44,
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    title,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AlmaType.readerHead,
-                  ),
-                ),
+                // «Aa» переехал влево, закрытие — вправо: единое правило 24 авг
+                // (см. AlmaClose) — всё, что открыто поверх, закрывается
+                // крестиком справа, и крестик крупный, а не мелкая стрелка.
                 Semantics(
                   label: sizeLabel,
                   button: true,
@@ -317,6 +302,16 @@ class _Panel extends StatelessWidget {
                     ),
                   ),
                 ),
+                Expanded(
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AlmaType.readerHead,
+                  ),
+                ),
+                AlmaClose(onTap: onBack),
               ],
             ),
           ),

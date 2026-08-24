@@ -1909,4 +1909,11 @@ class LEs extends L {
 
   @override
   String get cabSettingsDocuments => 'Documentos';
+
+  @override
+  String get scrSignInCodeSent =>
+      'Te hemos enviado un código de seis dígitos al correo. Introdúcelo aquí — o abre el enlace de la misma carta en la web.';
+
+  @override
+  String get scrSignInCodeHint => 'Código del correo';
 }

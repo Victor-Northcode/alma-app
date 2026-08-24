@@ -1919,4 +1919,11 @@ class LRu extends L {
 
   @override
   String get cabSettingsDocuments => 'Документы';
+
+  @override
+  String get scrSignInCodeSent =>
+      'Мы отправили шестизначный код на твою почту. Введи его здесь — или открой ссылку из того же письма в вебе.';
+
+  @override
+  String get scrSignInCodeHint => 'Код из письма';
 }

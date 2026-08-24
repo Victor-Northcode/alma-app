@@ -529,5 +529,7 @@
   "onbAlmaBody": "Alma responde con lo que hay en tu carta, nunca con una plantilla — y te lo dice cuando la carta no tiene respuesta. Cada respuesta cita las posiciones de las que fue leída.",
   "onbMorningTitle": "Una carta por la mañana",
   "onbMorningBody": "Alma puede enviarte una breve nota matinal cuando el cielo realmente se mueve. Elige aquí la frecuencia — o déjalo apagado.",
-  "cabSettingsDocuments": "Documentos"
+  "cabSettingsDocuments": "Documentos",
+  "scrSignInCodeSent": "Te hemos enviado un código de seis dígitos al correo. Introdúcelo aquí — o abre el enlace de la misma carta en la web.",
+  "scrSignInCodeHint": "Código del correo"
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../design/close_button.dart';
 import '../../design/buttons.dart';
 import '../../design/emblem.dart';
 import '../../design/metrics.dart';
@@ -332,24 +333,11 @@ class _PairAddScreenState extends State<PairAddScreen> {
             padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
             child: Column(children: [
               const SizedBox(height: 12),
-              // Шапка кадра: «←», оверлайн по центру, распорка той же ширины —
-              // центр обязан быть настоящим центром строки.
+              // Шапка кадра: распорка, оверлайн по центру, единый крестик
+              // справа (правило 24 авг, см. AlmaClose) — центр обязан быть
+              // настоящим центром строки.
               Row(children: [
-                GestureDetector(
-                  onTap: () => Navigator.of(context).maybePop(),
-                  behavior: HitTestBehavior.opaque,
-                  child: SizedBox(
-                    width: 44,
-                    height: 44,
-                    child: Center(
-                      child: Text('←',
-                          style: AlmaType.body.copyWith(
-                              fontSize: 18,
-                              color:
-                                  AlmaPalette.body.withValues(alpha: 0.7))),
-                    ),
-                  ),
-                ),
+                const SizedBox(width: 44),
                 Expanded(
                   child: Text(
                     l.scrPeopleEyebrow.toUpperCase(),
@@ -358,7 +346,7 @@ class _PairAddScreenState extends State<PairAddScreen> {
                         AlmaType.readerHead.copyWith(color: AlmaPalette.gold),
                   ),
                 ),
-                const SizedBox(width: 44),
+                AlmaClose(onTap: () => Navigator.of(context).maybePop()),
               ]),
               Expanded(
                 // Колонка с двумя распорками, но готовая к клавиатуре: без

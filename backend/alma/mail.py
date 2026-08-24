@@ -73,15 +73,36 @@ BODIES = {
 }
 
 
-def _html(url: str, locale: str, minutes: int) -> str:
+# Подводка к коду. В приложении deep-link нет, и вход там идёт кодом из этого
+# же письма (владелец, 24.08.2026); веб продолжает жить ссылкой. Во французской
+# строке перед двоеточием — узкий неразрывный пробел U+202F, как того требует
+# типографика продукта.
+CODE_LEADS = {
+    "en": "Or type this code in the app:",
+    "es": "O introduce este código en la app:",
+    "de": "Oder gib diesen Code in der App ein:",
+    "it": "Oppure inserisci questo codice nell'app:",
+    "fr": "Ou saisis ce code dans l’application :",
+    "pt-BR": "Ou digite este código no app:",
+    "ru": "Или введи этот код в приложении:",
+}
+
+
+def _html(url: str, locale: str, minutes: int, code: str | None = None) -> str:
     action, note, ignore = BODIES.get(locale, BODIES["en"])
+    code_block = ""
+    if code:
+        lead = CODE_LEADS.get(locale, CODE_LEADS["en"])
+        code_block = f"""
+    <p style="font-size:14px;line-height:1.6;color:#8b8578;margin:36px 0 8px">{lead}</p>
+    <div style="font-size:34px;letter-spacing:.32em;color:#F6E7BC;font-family:Georgia,serif">{code}</div>"""
     return f"""\
 <div style="background:#0A0D1C;color:#F1E9D6;font-family:Georgia,serif;padding:48px 24px">
   <div style="max-width:480px;margin:0 auto">
     <div style="font-size:22px;letter-spacing:.18em;color:#C9AE6B">ALMA</div>
     <p style="font-size:17px;line-height:1.6;margin:28px 0 32px">{note.format(minutes=minutes)}</p>
     <a href="{url}" style="display:inline-block;padding:14px 28px;border:1px solid #C9AE6B;
-       color:#E4D3A2;text-decoration:none;letter-spacing:.06em">{action}</a>
+       color:#E4D3A2;text-decoration:none;letter-spacing:.06em">{action}</a>{code_block}
     <p style="font-size:13px;line-height:1.6;color:#8b8578;margin-top:32px">{ignore}</p>
   </div>
 </div>"""
@@ -117,8 +138,11 @@ async def _post(payload: dict) -> bool:
     return True
 
 
-async def send_magic_link(*, to: str, token: str, locale: str = "en") -> bool:
-    """Send the sign-in link. Returns whether it actually went out."""
+async def send_magic_link(
+    *, to: str, token: str, locale: str = "en", code: str | None = None
+) -> bool:
+    """Send the sign-in link (and, when given, the app code). Returns whether
+    it actually went out."""
     config = settings()
     url = f"{config.web_url}/sign-in?token={token}"
 
@@ -148,7 +172,7 @@ async def send_magic_link(*, to: str, token: str, locale: str = "en") -> bool:
         "from": config.mail_from,
         "to": [to],
         "subject": SUBJECTS.get(locale, SUBJECTS["en"]),
-        "html": _html(url, locale, config.magic_link_minutes),
+        "html": _html(url, locale, config.magic_link_minutes, code),
     })
 
 

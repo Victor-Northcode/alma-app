@@ -1899,4 +1899,11 @@ class LEn extends L {
 
   @override
   String get cabSettingsDocuments => 'Documents';
+
+  @override
+  String get scrSignInCodeSent =>
+      'We sent a six-digit code to your email. Enter it here — or open the link from the same letter on the web.';
+
+  @override
+  String get scrSignInCodeHint => 'Code from the email';
 }

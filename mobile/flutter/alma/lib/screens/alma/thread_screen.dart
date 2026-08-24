@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
 import '../../design/palette.dart';
+import '../../design/close_button.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
@@ -64,7 +65,8 @@ class _ThreadScreenState extends State<ThreadScreen> {
     final turns = _turns;
     return Scaffold(
       backgroundColor: AlmaPalette.night,
-      body: ScreenScaffold(
+      body: Stack(children: [
+        ScreenScaffold(
         eyebrow: l.tabAlma,
         mood: SkyMood.reading,
         seed: 0x54485244,
@@ -108,7 +110,16 @@ class _ThreadScreenState extends State<ThreadScreen> {
                 onOpenSource: _open,
               ),
         ],
-      ),
+        ),
+        // У экрана прошлой беседы выхода не было ВОВСЕ — только системный
+        // свайп. Единый крестик справа (правило 24 авг, см. AlmaClose), поверх
+        // прокрутки и в безопасной зоне.
+        Positioned(
+          right: 8,
+          top: MediaQuery.paddingOf(context).top + 4,
+          child: AlmaClose(onTap: () => Navigator.of(context).maybePop()),
+        ),
+      ]),
     );
   }
 

@@ -1918,4 +1918,11 @@ class LDe extends L {
 
   @override
   String get cabSettingsDocuments => 'Dokumente';
+
+  @override
+  String get scrSignInCodeSent =>
+      'Wir haben dir einen sechsstelligen Code per E-Mail geschickt. Gib ihn hier ein — oder öffne den Link aus derselben Mail im Web.';
+
+  @override
+  String get scrSignInCodeHint => 'Code aus der E-Mail';
 }

@@ -2530,5 +2530,13 @@
   "cabSettingsDocuments": "Documents",
   "@cabSettingsDocuments": {
     "description": "настройки · строка, открывающая попап с пятью юридическими документами (22 авг: документы в одну кнопку)"
+  },
+  "scrSignInCodeSent": "We sent a six-digit code to your email. Enter it here — or open the link from the same letter on the web.",
+  "scrSignInCodeHint": "Code from the email",
+  "@scrSignInCodeSent": {
+    "description": "вход · после отправки письма: код отправлен, введи здесь (24 авг, вход по коду вместо deep-link)"
+  },
+  "@scrSignInCodeHint": {
+    "description": "вход · плейсхолдер поля шестизначного кода"
   }
 }

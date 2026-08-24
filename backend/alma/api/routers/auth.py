@@ -26,6 +26,7 @@ from ...mail import send_magic_link
 from ..deps import CurrentUser, SessionDep, local_sandbox, request_source, window
 from ..schemas import (
     AppleSignIn,
+    EmailCodeConsume,
     GoogleSignIn,
     MagicLinkConsume,
     MagicLinkRequest,
@@ -210,10 +211,24 @@ async def request_magic_link(
             expires_at=tokens.magic_link_expiry(),
         )
     )
+    # Вторая строка того же письма — шестизначный код для приложения (владелец,
+    # 24.08.2026: «вход через письмо с кодом 6 цифр»). Deep-link у приложения
+    # нет, ссылка открывает веб; код живёт по тем же правилам, что и она, — в
+    # той же таблице, с тем же TTL, один раз. Адрес вшит в хэш кода: шесть цифр
+    # ищутся только против ЭТОГО письма, а не всех ожидающих строк сразу.
+    code, code_hash = tokens.new_email_code(payload.email)
+    session.add(
+        MagicLink(
+            token_hash=code_hash,
+            email=payload.email,
+            guest_user_id=user.id if user.is_guest else None,
+            expires_at=tokens.magic_link_expiry(),
+        )
+    )
     await session.flush()
 
     delivered = await send_magic_link(
-        to=payload.email, token=token, locale=payload.locale
+        to=payload.email, token=token, locale=payload.locale, code=code
     )
     response: dict = {
         "sent": True,
@@ -227,6 +242,10 @@ async def request_magic_link(
         # с ALMA_ENV=staging и без ключа почты раздавал бы вход в любой аккаунт
         # тому, кто знает адрес.
         response["debug_token"] = token
+        # Той же веткой и по тем же правилам — код для приложения: без него
+        # локальная разработка входа по коду невозможна, а в проде ветка
+        # недостижима (см. довод выше).
+        response["debug_code"] = code
     return response
 
 
@@ -311,6 +330,82 @@ async def consume_magic_link(
         provider=AuthProvider.email.value,
         subject=None,
         guest=guest,
+    )
+    return _session_out(signed_in)
+
+
+#: Сколько попыток ввести код с одного источника в час. Кода — миллион
+#: вариантов, TTL — двадцать минут; десять попыток в час делают перебор
+#: арифметически бессмысленным, а человеку с опечаткой их хватает с запасом.
+EMAIL_CODE_TRIES_PER_SOURCE_PER_HOUR = 10
+
+
+@router.post("/email-code/consume", response_model=SessionOut)
+async def consume_email_code(
+    payload: EmailCodeConsume,
+    request: Request,
+    user: CurrentUser,
+    session: SessionDep,
+) -> SessionOut:
+    """Вход по коду из письма — приложенческая половина magic-link.
+
+    Строка кода лежит в той же таблице и живёт по тем же правилам, что ссылка
+    (один раз, тот же TTL, гость — только предъявитель; разбор атаки с
+    подменой гостя — в [consume_magic_link], здесь он действует дословно).
+    Единственное отличие — потолок попыток: ссылку не перебирают (256 бит),
+    шесть цифр — перебирают, поэтому источник получает десять попыток в час.
+    """
+    if not await window(
+        request,
+        "email_code_tries",
+        limit=EMAIL_CODE_TRIES_PER_SOURCE_PER_HOUR,
+        seconds=MAGIC_LINK_WINDOW_SECONDS,
+    ).hit(session, request_source(request)):
+        raise _too_many_links()
+    # **Попытка оплачивается до проверки и не возвращается.** Отказ маршрута
+    # (неверный код → 400) откатывает транзакцию, а счётчик выше живёт в ней
+    # же — то есть неудачные попытки стирались бы вместе с отказом, и перебор
+    # шести цифр был бесплатным. У ссылки это свойство нужное (там считаются
+    # пропущенные письма), у кода — дыра; поймано тестом
+    # `test_code_guessing_hits_a_ceiling` до того, как уехало в прод. Ранний
+    # commit делает цену попытки необратимой; дальше сессия открывает новую
+    # транзакцию сама.
+    await session.commit()
+
+    result = await session.execute(
+        select(MagicLink).where(
+            MagicLink.token_hash
+            == tokens.hash_email_code(payload.email, payload.code)
+        )
+    )
+    link = result.scalar_one_or_none()
+    # Те же типизированные коды, что у ссылки: клиент уже умеет их различать,
+    # и «код» для него — та же дверь, открытая другим ключом.
+    if link is None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"error": "link_invalid", "message": "this code is not valid"},
+        )
+    if link.used_at is not None:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"error": "link_used", "message": "this code has already been used"},
+        )
+    if as_utc(link.expires_at) <= datetime.now(timezone.utc):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={"error": "link_expired", "message": "this code has expired"},
+        )
+
+    link.used_at = utcnow()
+    await session.flush()
+
+    signed_in = await accounts.sign_in(
+        session,
+        email=link.email,
+        provider=AuthProvider.email.value,
+        subject=None,
+        guest=user if user.is_guest else None,
     )
     return _session_out(signed_in)
 

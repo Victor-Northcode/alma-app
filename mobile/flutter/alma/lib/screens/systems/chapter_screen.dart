@@ -143,6 +143,13 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// на первом значило обещать текст ещё до того, как выяснилось, положен ли
   /// он вообще.
   bool _writing = false;
+
+  /// Один тихий повтор после обрыва сети во время письма — см. catch в [_load].
+  bool _autoRetried = false;
+
+  /// Повтор назначен и ждёт своей секунды: страница показывает то же письмо,
+  /// а не мигает пустотой между отказом и вторым заходом.
+  bool _retryWait = false;
   ChapterList? _list;
   AlmaError? _failure;
   bool _loading = true;
@@ -382,6 +389,21 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // которую действительно читают.
       if (response.reading != null) ReadingTally.noteOpen(widget.system);
     } on AlmaError catch (error) {
+      // **Обрыв сети во время письма получает один тихий повтор, а не экран
+      // ошибки.** Письмо идёт до трёх минут, и мигнувшая сеть (или таймаут на
+      // медленной) роняла человека в «что-то не работает», хотя ИИ ещё пишет —
+      // владелец: «вместо ошибки лоадер, пока ИИ грузит» (24 авг). Повтор один:
+      // второй отказ подряд — уже правда о сети, и её честнее показать.
+      // `ServerRefused` не повторяется — отказ сервера повтором не лечится.
+      if (error is NetworkDown && !_autoRetried && mounted) {
+        _autoRetried = true;
+        _retryWait = true;
+        Future<void>.delayed(const Duration(seconds: 2), () {
+          _retryWait = false;
+          if (mounted && _reading == null) _load();
+        });
+        return;
+      }
       if (mounted) setState(() => _failure = error);
     } finally {
       if (mounted) {
@@ -948,7 +970,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
         onAdded: _load,
       );
     }
-    if (_writing && _reading == null) {
+    if ((_writing || _retryWait) && _reading == null) {
       // **Самое долгое ожидание в продукте — сорок-девяносто секунд.**
       //
       // На нативе здесь надпись о том, откуда берётся текст, и рисунок,

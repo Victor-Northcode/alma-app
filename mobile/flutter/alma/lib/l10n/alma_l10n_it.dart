@@ -1905,4 +1905,11 @@ class LIt extends L {
 
   @override
   String get cabSettingsDocuments => 'Documenti';
+
+  @override
+  String get scrSignInCodeSent =>
+      'Ti abbiamo inviato un codice di sei cifre via email. Inseriscilo qui — oppure apri il link della stessa lettera sul web.';
+
+  @override
+  String get scrSignInCodeHint => 'Codice dall\'email';
 }

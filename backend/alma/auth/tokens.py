@@ -92,3 +92,24 @@ def hash_magic_token(token: str) -> str:
 
 def magic_link_expiry() -> datetime:
     return datetime.now(timezone.utc) + timedelta(minutes=settings().magic_link_minutes)
+
+
+# ── email sign-in codes ────────────────────────────────────────────────────
+#
+# Шесть цифр в том же письме, что и ссылка: ссылка открывает веб, код вводится
+# в приложении — deep-link у приложения нет, и владелец 24.08.2026 попросил
+# «вход через письмо с кодом 6 цифр». Хранится в той же таблице `magic_link`
+# и живёт по тем же правилам (один раз, тот же TTL); адрес вшит в хэш, чтобы
+# код был кодом ИМЕННО этого письма — иначе шесть цифр перебирались бы против
+# всех ожидающих строк сразу.
+
+def new_email_code(email: str) -> tuple[str, str]:
+    """Код и его хэш. Хранится только хэш — как у ссылки, и по той же причине."""
+    code = f"{secrets.randbelow(1_000_000):06d}"
+    return code, hash_email_code(email, code)
+
+
+def hash_email_code(email: str, code: str) -> str:
+    return hashlib.sha256(
+        f"otp:{email.strip().lower()}:{code}".encode()
+    ).hexdigest()

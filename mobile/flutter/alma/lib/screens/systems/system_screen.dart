@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../design/close_button.dart';
 import '../../design/layout.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
@@ -494,21 +495,9 @@ class _SystemScreenState extends State<SystemScreen> {
   /// ширины — центр обязан быть настоящим центром строки.
   Widget _plainHeader(String title) {
     return Row(children: [
-      GestureDetector(
-        onTap: () => Navigator.of(context).maybePop(),
-        behavior: HitTestBehavior.opaque,
-        // Знак маленький, цель большая: 18 × 18 не нажимается.
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Center(
-            child: Text('←',
-                style: AlmaType.body.copyWith(
-                    fontSize: 18,
-                    color: AlmaPalette.body.withValues(alpha: 0.7))),
-          ),
-        ),
-      ),
+      // «Назад» внутри стека систем — единый кружок со стрелкой слева
+      // (правило 24 авг, см. AlmaClose): текстовая «←» 18pt была мелкой.
+      AlmaClose(back: true, onTap: () => Navigator.of(context).maybePop()),
       Expanded(
         child: Text(
           title,

@@ -529,5 +529,7 @@
   "onbAlmaBody": "Alma antwortet aus dem, was in deinem Horoskop steht, nie nach Schablone — und sagt es dir, wenn das Horoskop keine Antwort hat. Jede Antwort nennt die Positionen, aus denen sie gelesen wurde.",
   "onbMorningTitle": "Ein Brief am Morgen",
   "onbMorningBody": "Alma kann dir morgens eine kurze Notiz schicken, wenn sich am Himmel wirklich etwas bewegt. Wähle hier, wie oft — oder lass es aus.",
-  "cabSettingsDocuments": "Dokumente"
+  "cabSettingsDocuments": "Dokumente",
+  "scrSignInCodeSent": "Wir haben dir einen sechsstelligen Code per E-Mail geschickt. Gib ihn hier ein — oder öffne den Link aus derselben Mail im Web.",
+  "scrSignInCodeHint": "Code aus der E-Mail"
 }

@@ -252,9 +252,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // поверх отозванного разрешения, и человек ждал бы писем, которых система
     // не пропустит. Спрашиваем при каждом открытии раздела — ответ локальный и
     // мгновенный, сети не стоит.
-    unawaited(AlmaPush.instance.allowed.then((yes) {
-      if (mounted) setState(() => _pushDenied = !yes);
-    }));
     try {
       final daily = await SessionScope.of(context).client.dailySettings();
       if (mounted) setState(() => _daily = daily);
@@ -264,7 +261,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Система уведомления не пропускает, хотя в аккаунте они включены.
-  bool _pushDenied = false;
 
   Future<void> _loadPlan() async {
     setState(() => _planFailed = false);
@@ -301,28 +297,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       (((_plan?['entitlements'] as List?) ?? const []).whereType<Map>()).any(
           (row) => row['active'] == true && row['kind'] != 'one_time');
 
-
-  /// Что стоит под строкой выгрузки.
-  List<Widget> _exportState(L l) => switch (_export) {
-        _ExportIdle() => [_note(l.cabExportNote)],
-        _ExportWorking() => [_note(l.cabPlanExporting)],
-        _ExportFailed() => [_note(l.cabPlanExportFailed)],
-        final _ExportReady ready => [
-            _note(l.cabExportReady),
-            Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 6),
-              child: AlmaButton(
-                kind: AlmaButtonKind.outline,
-                fills: false,
-                label: l.cabSaveFile,
-                // Файл уже существует к этому моменту — поэтому лист
-                // «поделиться» открывается мгновенно, а не ждёт сети. Лист,
-                // которому надо дождаться запроса, открывается пустым.
-                onTap: () => Share.shareXFiles([XFile(ready.path)]),
-              ),
-            ),
-          ],
-      };
 
   /// Что стоит под строкой удаления. Подтверждение набором — не «вы уверены?»:
   /// одно нажатие мимо не должно уничтожать оплаченные чтения.
@@ -557,7 +531,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // согласился, пока не приехал файл.
             onTap: _export == _Export.working ? null : () => _confirmExport(l),
           ),
-          ..._exportState(l),
           _Row(
             label: l.cabSettingsDeleteAccount,
             value: '',
@@ -651,7 +624,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
           onChanged: (index) {
             final value = const ['off', 'occasional', 'important'][index];
-            if (value != 'off' && _pushDenied) _explainDenied(l);
+            // Статус спрашивается У СИСТЕМЫ в момент включения, а не берётся из
+            // кэша загрузки экрана: человек давал разрешение секунду назад, а
+            // попап всё равно говорил «выключены» — владелец поймал 24 авг.
+            if (value != 'off') {
+              unawaited(AlmaPush.instance.allowed.then((yes) {
+                if (!mounted) return;
+                if (!yes) _explainDenied(l);
+              }));
+            }
             _setDaily(daily: value);
           },
         ),
@@ -738,32 +719,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Выгрузка данных — сначала попап с тем, что именно уедет в файл.
+  /// Выгрузка живёт в попапе ЦЕЛИКОМ: объяснение → прогресс → «Сохранить файл»
+  /// — всё в одном окне. Владелец (24 авг): «не должно быть „твой файл готов“
+  /// и „сохранить“ вот тут [в списке настроек], а в попапе». Инлайновых строк
+  /// под настройками больше нет.
   void _confirmExport(L l) {
     _nightDialog<void>(
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.cabSettingsExportData, style: AlmaType.headingM),
-          const SizedBox(height: 10),
-          Text(l.cabExportNote, style: AlmaType.body),
-          const SizedBox(height: 18),
-          AlmaButton(
-            label: l.cabSettingsExportData,
-            onTap: () {
-              Navigator.of(context).pop();
-              _exportEverything();
-            },
-          ),
-          const SizedBox(height: 8),
-          Center(
-            child: TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(l.paywallNotNow,
-                  style: AlmaType.meta.copyWith(color: AlmaPalette.gold)),
-            ),
-          ),
-        ],
+      builder: (context) => StatefulBuilder(
+        builder: (context, refresh) {
+          final export = _export;
+          Future<void> run() async {
+            refresh(() {});
+            await _exportEverything();
+            if (context.mounted) refresh(() {});
+          }
+
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.cabSettingsExportData, style: AlmaType.headingM),
+              const SizedBox(height: 10),
+              Text(
+                switch (export) {
+                  _ExportWorking() => l.cabPlanExporting,
+                  _ExportReady() => l.cabExportReady,
+                  _ExportFailed() => l.cabPlanExportFailed,
+                  _ => l.cabExportNote,
+                },
+                style: AlmaType.body,
+              ),
+              const SizedBox(height: 18),
+              if (export is _ExportReady)
+                AlmaButton(
+                  label: l.cabSaveFile,
+                  onTap: () => Share.shareXFiles([XFile(export.path)]),
+                )
+              else
+                AlmaButton(
+                  label: export is _ExportFailed
+                      ? l.stateRetry
+                      : l.cabSettingsExportData,
+                  onTap: export is _ExportWorking ? null : run,
+                ),
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                      export is _ExportReady ? l.journeyClose : l.paywallNotNow,
+                      style: AlmaType.meta.copyWith(color: AlmaPalette.gold)),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1452,10 +1462,13 @@ class _TriToggle extends StatelessWidget {
         onTapUp: (details) =>
             _pick((details.localPosition.dx / cell).floor().clamp(0, 2)),
         child: Container(
-          height: 44,
+          // 52, а не 44: третья подпись («Только долгие транзиты», 22 знака)
+          // в треть ширины не влезала одной строкой и обрезалась многоточием —
+          // владелец: «не видно, что написано» (24 авг). Теперь две строки.
+          height: 52,
           decoration: BoxDecoration(
             color: AlmaPalette.veil,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(26),
             border: Border.all(color: AlmaPalette.hairline),
           ),
           child: Stack(children: [
@@ -1466,10 +1479,10 @@ class _TriToggle extends StatelessWidget {
               curve: AlmaMotion.uiCurve,
               child: Container(
                 width: cell,
-                height: 44,
+                height: 52,
                 decoration: BoxDecoration(
                   color: AlmaPalette.button,
-                  borderRadius: BorderRadius.circular(22),
+                  borderRadius: BorderRadius.circular(26),
                   border: Border.all(
                       color: AlmaPalette.gold.withValues(alpha: 0.55)),
                 ),
@@ -1483,10 +1496,11 @@ class _TriToggle extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: Text(
                         label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        maxLines: 2,
                         textAlign: TextAlign.center,
                         style: AlmaType.meta.copyWith(
+                          fontSize: 12,
+                          height: 1.15,
                           color: index == selected
                               ? AlmaPalette.inkLight
                               : AlmaPalette.muted2,

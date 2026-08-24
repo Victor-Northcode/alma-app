@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../design/brand_marks.dart';
 import '../../design/buttons.dart';
+import '../../design/close_button.dart';
 import '../../design/emblem.dart';
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
@@ -39,6 +40,10 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _email = TextEditingController();
   final _token = TextEditingController();
+  final _code = TextEditingController();
+
+  /// Письмо отправлено — на экране поле шестизначного кода.
+  bool _codeSent = false;
 
   bool _working = false;
   String? _notice;
@@ -139,6 +144,7 @@ class _SignInScreenState extends State<SignInScreen> {
     _email.removeListener(_refresh);
     _email.dispose();
     _token.dispose();
+    _code.dispose();
     super.dispose();
   }
 
@@ -197,9 +203,34 @@ class _SignInScreenState extends State<SignInScreen> {
       () async {
         final sent = await session.client
             .requestMagicLink(_email.text.trim(), locale: session.locale);
-        if (mounted) setState(() => _debugToken = sent.debugToken);
+        if (mounted) {
+          setState(() {
+            _debugToken = sent.debugToken;
+            // Письмо ушло — открываем ввод кода: у приложения нет deep-link,
+            // ссылка из письма открывает веб, телефон входит шестью цифрами
+            // (владелец, 24 авг).
+            _codeSent = true;
+          });
+        }
       },
-      done: l.scrSignInLinkSent,
+      done: l.scrSignInCodeSent,
+    );
+  }
+
+  /// Вход по коду из письма. Успех закрывает экран, как вход провайдером:
+  /// человек пришёл войти, вошёл — и стоит там, откуда пришёл.
+  Future<void> _signInWithCode() async {
+    final l = L.of(context);
+    final session = SessionScope.of(context);
+    final navigator = Navigator.of(context);
+    await _run(
+      () async {
+        await session.client
+            .consumeEmailCode(_email.text.trim(), _code.text.trim());
+        await session.start(force: true);
+        if (mounted) navigator.maybePop();
+      },
+      done: l.scrSignInDone,
     );
   }
 
@@ -226,14 +257,22 @@ class _SignInScreenState extends State<SignInScreen> {
 
     return Scaffold(
       backgroundColor: AlmaPalette.night,
+      // **Тело не сжимается под клавиатуру.** Иначе подпись про адрес,
+      // прижатая к низу, ехала вверх вместе с клавиатурой и вставала над
+      // полем — владелец: «пусть остаётся внизу, за клавой» (24 авг). Список
+      // получает отступ в высоту клавиатуры сам, ниже.
+      resizeToAvoidBottomInset: false,
       body: NightSky(
         mood: SkyMood.ceremony,
         seed: 0x5349474E,
         child: SafeArea(
           child: Stack(children: [
             ListView(
-              padding: const EdgeInsets.fromLTRB(
-                  AlmaMetrics.pad, 8, AlmaMetrics.pad, 32),
+              padding: EdgeInsets.fromLTRB(
+                  AlmaMetrics.pad,
+                  8,
+                  AlmaMetrics.pad,
+                  32 + MediaQuery.viewInsetsOf(context).bottom),
               children: [
                 const SizedBox(height: 44),
                 const Center(child: AlmaEmblem(size: 126)),
@@ -255,12 +294,43 @@ class _SignInScreenState extends State<SignInScreen> {
                   keyboardType: TextInputType.emailAddress,
                   onSubmitted: (_) => _emailLooksReal ? _sendLink() : null,
                 ),
+                if (_codeSent) ...[
+                  // Письмо ушло — вводим шесть цифр из него. Кнопка ниже
+                  // остаётся живой: «отправить ещё раз» для тех, у кого письмо
+                  // не дошло.
+                  const SizedBox(height: 12),
+                  CeremonialField(
+                    controller: _code,
+                    hint: l.scrSignInCodeHint,
+                    keyboardType: TextInputType.number,
+                    onChanged: (_) => setState(() {}),
+                    onSubmitted: (_) =>
+                        _code.text.trim().length == 6 ? _signInWithCode() : null,
+                  ),
+                  const SizedBox(height: 12),
+                  AlmaButton(
+                    label: _working ? l.scrSignInSending : l.cabSignIn,
+                    onTap: _code.text.trim().length == 6 && !_working
+                        ? _signInWithCode
+                        : null,
+                  ),
+                ],
                 const SizedBox(height: 12),
-                AlmaButton(
-                  label: _working ? l.scrSignInSending : l.scrSignInSendLink,
-                  shortLabel: l.scrSignInSendLinkShort,
-                  onTap: _emailLooksReal && !_working ? _sendLink : null,
-                ),
+                if (_codeSent)
+                  Center(
+                    child: TextButton(
+                      onPressed: _emailLooksReal && !_working ? _sendLink : null,
+                      child: Text(l.scrSignInSendLinkShort,
+                          style: AlmaType.meta
+                              .copyWith(color: AlmaPalette.gold)),
+                    ),
+                  )
+                else
+                  AlmaButton(
+                    label: _working ? l.scrSignInSending : l.scrSignInSendLink,
+                    shortLabel: l.scrSignInSendLinkShort,
+                    onTap: _emailLooksReal && !_working ? _sendLink : null,
+                  ),
                 if (_apple || _google) ...[
                   const SizedBox(height: 26),
                   Text(l.scrSignInOrWith,
@@ -313,15 +383,11 @@ class _SignInScreenState extends State<SignInScreen> {
                 ),
               ),
             ),
+            // Единое закрытие поверх-экранов: крестик справа (см. AlmaClose).
             Positioned(
-              left: 0,
-              top: 0,
-              child: IconButton(
-                onPressed: () => Navigator.of(context).maybePop(),
-                icon: Text('←',
-                    style: AlmaType.body
-                        .copyWith(fontSize: 18, color: AlmaPalette.gold)),
-              ),
+              right: 8,
+              top: 4,
+              child: AlmaClose(onTap: () => Navigator.of(context).maybePop()),
             ),
           ]),
         ),

@@ -1908,4 +1908,11 @@ class LPt extends L {
 
   @override
   String get cabSettingsDocuments => 'Documentos';
+
+  @override
+  String get scrSignInCodeSent =>
+      'Enviamos um código de seis dígitos para o seu e-mail. Digite-o aqui — ou abra o link da mesma carta na web.';
+
+  @override
+  String get scrSignInCodeHint => 'Código do e-mail';
 }

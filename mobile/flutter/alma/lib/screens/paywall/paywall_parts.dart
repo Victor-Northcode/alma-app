@@ -23,6 +23,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../billing/alma_store.dart';
+import '../../design/close_button.dart';
 import '../../design/arrival.dart';
 import '../../design/buttons.dart';
 import '../../design/gold_texture.dart';
@@ -110,23 +111,9 @@ class _Close extends StatelessWidget {
   Widget build(BuildContext context) => Semantics(
         button: true,
         label: semantics,
-        child: GestureDetector(
-          onTap: onTap,
-          behavior: HitTestBehavior.opaque,
-          child: SizedBox(
-            width: PaywallHeader._touch,
-            height: PaywallHeader._touch,
-            child: Center(
-              child: Text(
-                '×',
-                style: AlmaType.button.copyWith(
-                  fontSize: 18,
-                  color: AlmaPalette.body.withValues(alpha: 0.6),
-                ),
-              ),
-            ),
-          ),
-        ),
+        // Единый вид закрытия (24 авг, см. AlmaClose): владелец назвал мелкий
+        // текстовый «×» неудобным, и он был единственным непохожим на общий.
+        child: AlmaClose(onTap: onTap),
       );
 }
 

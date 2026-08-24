@@ -1915,4 +1915,11 @@ class LFr extends L {
 
   @override
   String get cabSettingsDocuments => 'Documents';
+
+  @override
+  String get scrSignInCodeSent =>
+      'Nous t\'avons envoyé un code à six chiffres par e-mail. Saisis-le ici — ou ouvre le lien de la même lettre sur le web.';
+
+  @override
+  String get scrSignInCodeHint => 'Code du courriel';
 }

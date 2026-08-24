@@ -532,5 +532,7 @@
   "onbAlmaBody": "Alma répond à partir de ce qui est dans ton thème, jamais d'après un modèle — et te le dit quand le thème n'a pas de réponse. Chaque réponse cite les positions dont elle a été lue.",
   "onbMorningTitle": "Une lettre le matin",
   "onbMorningBody": "Alma peut t'envoyer une courte note le matin, quand le ciel bouge vraiment. Choisis ici la fréquence — ou laisse-la éteinte.",
-  "cabSettingsDocuments": "Documents"
+  "cabSettingsDocuments": "Documents",
+  "scrSignInCodeSent": "Nous t'avons envoyé un code à six chiffres par e-mail. Saisis-le ici — ou ouvre le lien de la même lettre sur le web.",
+  "scrSignInCodeHint": "Code du courriel"
 }

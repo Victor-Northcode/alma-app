@@ -529,5 +529,7 @@
   "onbAlmaBody": "Alma responde com o que há no seu mapa, nunca com um modelo — e diz quando o mapa não tem resposta. Cada resposta cita as posições de que foi lida.",
   "onbMorningTitle": "Uma carta pela manhã",
   "onbMorningBody": "Alma pode enviar uma breve nota pela manhã, quando o céu realmente se move. Escolha aqui a frequência — ou deixe desligado.",
-  "cabSettingsDocuments": "Documentos"
+  "cabSettingsDocuments": "Documentos",
+  "scrSignInCodeSent": "Enviamos um código de seis dígitos para o seu e-mail. Digite-o aqui — ou abra o link da mesma carta na web.",
+  "scrSignInCodeHint": "Código do e-mail"
 }
