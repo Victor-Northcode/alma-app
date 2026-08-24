@@ -521,6 +521,12 @@ abstract class L {
   /// **'Written from your own positions'**
   String get cabFromYourPositions;
 
+  /// Account title in settings when signed in but the person never gave a name — truthful state instead of the Guest label
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get cabSignedInNoName;
+
   /// from Cabinet/cab.guest
   ///
   /// In en, this message translates to:

@@ -218,6 +218,9 @@ class LEn extends L {
   String get cabFromYourPositions => 'Written from your own positions';
 
   @override
+  String get cabSignedInNoName => 'Signed in';
+
+  @override
   String get cabGuest => 'Guest';
 
   @override

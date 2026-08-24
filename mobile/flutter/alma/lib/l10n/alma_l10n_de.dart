@@ -219,6 +219,9 @@ class LDe extends L {
       'Aus deinen eigenen Positionen geschrieben';
 
   @override
+  String get cabSignedInNoName => 'Angemeldet';
+
+  @override
   String get cabGuest => 'Gast';
 
   @override

@@ -457,7 +457,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             // восемь экранов, открывал настройки и читал, что он Гость. Ровно
             // эту ошибку нативный экран уже нашёл и исправил, а порт внёс её
             // обратно.
-            _displayName(session) ?? l.cabGuest,
+            //
+            // Вторая половина той же ошибки — вошедший без имени. Тот, кто
+            // пропустил имя в путешествии и вошёл кодом, читал «Гость» над
+            // собственной почтой (поймано на эмуляторе 25.08.2026): заголовок
+            // врал ровно то состояние, которое строкой ниже опровергала почта.
+            _displayName(session) ??
+                ((account?.isGuest ?? true) ? l.cabGuest : l.cabSignedInNoName),
             style: AlmaType.headingM.copyWith(fontSize: 22),
           ),
           if (account?.email != null) ...[

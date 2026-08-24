@@ -218,6 +218,9 @@ class LRu extends L {
   String get cabFromYourPositions => 'Написано по твоей карте';
 
   @override
+  String get cabSignedInNoName => 'Ты в аккаунте';
+
+  @override
   String get cabGuest => 'Гость';
 
   @override

@@ -219,6 +219,9 @@ class LPt extends L {
   String get cabFromYourPositions => 'Escrito a partir das suas posições';
 
   @override
+  String get cabSignedInNoName => 'Você entrou';
+
+  @override
   String get cabGuest => 'Convidado';
 
   @override

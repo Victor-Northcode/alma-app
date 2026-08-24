@@ -219,6 +219,9 @@ class LIt extends L {
   String get cabFromYourPositions => 'Scritto dalle tue posizioni';
 
   @override
+  String get cabSignedInNoName => 'Account collegato';
+
+  @override
   String get cabGuest => 'Ospite';
 
   @override

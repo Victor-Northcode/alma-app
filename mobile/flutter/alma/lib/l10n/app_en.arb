@@ -276,6 +276,10 @@
   "@cabFromYourPositions": {
     "description": "from Cabinet/cab.fromYourPositions"
   },
+  "cabSignedInNoName": "Signed in",
+  "@cabSignedInNoName": {
+    "description": "Account title in settings when signed in but the person never gave a name — truthful state instead of the Guest label"
+  },
   "cabGuest": "Guest",
   "@cabGuest": {
     "description": "from Cabinet/cab.guest"

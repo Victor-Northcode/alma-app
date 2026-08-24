@@ -219,6 +219,9 @@ class LFr extends L {
   String get cabFromYourPositions => 'Écrit à partir de tes propres positions';
 
   @override
+  String get cabSignedInNoName => 'Compte connecté';
+
+  @override
   String get cabGuest => 'Mode invité';
 
   @override

@@ -220,6 +220,9 @@ class LEs extends L {
       'Escrito a partir de tus propias posiciones';
 
   @override
+  String get cabSignedInNoName => 'Sesión iniciada';
+
+  @override
   String get cabGuest => 'Invitado';
 
   @override
