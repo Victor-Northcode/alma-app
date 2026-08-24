@@ -81,7 +81,14 @@ dependencies:
   # `flutter_local_notifications` не взят: локальных уведомлений продукт не
   # показывает вовсе — всё рисует система по пушу с сервера. Он понадобится
   # ровно тогда, когда появится канал `alma.daily` для Android (§6.2.5).
-  permission_handler: ^13.0.1
+  # **Пин ^12, а не ^13, и это условие сборки, не осторожность.** v13 требует
+  # compileSdk 37, а стабильной платформы android-37 не существует: sdkmanager
+  # ставит превью «android-37.0», и Gradle не находит цель «android-37» — на
+  # этом упала сборка №2 в Codemagic (24 авг) и до того локальная. v12
+  # довольствуется SDK 35, а используется из пакета один Permission.notification
+  # (status/request/openAppSettings) — он одинаков в обеих. Поднять обратно,
+  # когда выйдет стабильный android-37.
+  permission_handler: ^12.0.1
   share_plus: ^10.1.4
   shared_preferences: ^2.5.5
   url_launcher: ^6.3.2
