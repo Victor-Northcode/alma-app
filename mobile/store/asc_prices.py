@@ -51,6 +51,10 @@ APP_ID = "6803672050"
 # Цены — mobile/store/PRODUCTS.md §4 / backend catalogue.py REGIONAL_CENTS.
 # валюта -> (дверь/пара, бандл, подписка)
 PRICES = {
+    # USA обязана быть в списке ручных цен: расписание с baseTerritory USA без
+    # ручной цены для неё Apple отклоняет 409 BASE_TERRITORY_INTERVAL_REQUIRED
+    # (поймано на живом API 24.08). Суммы — базовые из PRODUCTS.md §1.
+    "USD": ("4.99", "19.99", "9.99"),
     "EUR": ("5.49", "20.99", "10.49"),
     "GBP": ("4.99", "19.99", "9.99"),
     "CHF": ("5.90", "23.90", "11.90"),
@@ -69,8 +73,12 @@ PRICES = {
 # еврозоны — Болгария, Босния, Косово, Сербия и Черногория тоже торгуют в EUR
 # (каталог бэкенда приведён к этому тем же коммитом).
 TERRITORIES = {
+    "USD": ["USA"],
+    # XKX (Косово) убран после сухого прогона 24.08: в консоли оно стоит в
+    # списке EUR-витрин, а в API у него нет НИ ОДНОЙ точки цены ни у одного
+    # товара — витрины как таковой не существует, прайсить нечего.
     "EUR": ["AUT", "BEL", "BGR", "BIH", "DEU", "GRC", "IRL", "ESP", "ITA",
-            "CYP", "XKX", "LVA", "LTU", "LUX", "MLT", "NLD", "PRT", "SRB",
+            "CYP", "LVA", "LTU", "LUX", "MLT", "NLD", "PRT", "SRB",
             "SVK", "SVN", "FIN", "FRA", "HRV", "MNE", "EST"],
     "GBP": ["GBR"], "CHF": ["CHE"], "AUD": ["AUS"], "CAD": ["CAN"],
     "NOK": ["NOR"], "DKK": ["DNK"], "BRL": ["BRA"], "MXN": ["MEX"],
@@ -112,7 +120,13 @@ class Client:
     def get_all(self, path: str, **params):
         out, url, first = [], API + path, True
         while url:
-            r = self.s.get(url, params=params if first else None, timeout=60)
+            # Apple изредка отвечает 500 на ровном месте (поймано на NLD после
+            # ~150 запросов подряд, 24.08) — три попытки с паузой.
+            for attempt in range(3):
+                r = self.s.get(url, params=params if first else None, timeout=60)
+                if r.status_code < 500:
+                    break
+                time.sleep(3 * (attempt + 1))
             first = False
             r.raise_for_status()
             body = r.json()
