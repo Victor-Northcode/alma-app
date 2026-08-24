@@ -95,6 +95,9 @@ workflows:
         # принимает никогда, независимо от режима сборки. Фолбэк на debug оставлен
         # только чтобы сборка без ключа не падала (артефакт для локальной проверки).
         - keystore
+        # Сервис-аккаунт публикации в Play (GCLOUD_SERVICE_ACCOUNT_CREDENTIALS) —
+        # см. комментарий у publishing ниже.
+        - playstore
       vars:
         ALMA_API_BASE: "https://api-alma.pazl.ai"
       flutter: stable
@@ -130,9 +133,13 @@ workflows:
     artifacts:
       - build/**/outputs/bundle/**/*.aab
       - build/**/outputs/**/mapping.txt
-    # Публикацию в Play намеренно не включаю: нужен сервис-аккаунт Google Play, которого пока
-    # нет. Владелец добавит группу с GCLOUD_SERVICE_ACCOUNT_CREDENTIALS и раскомментирует:
-    # publishing:
-    #   google_play:
-    #     credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
-    #     track: internal
+    # AAB уезжает в Internal testing сам: стор-агент не может протащить файл через
+    # нативный диалог загрузки Play (24 авг), а CI может — и заодно это снимает
+    # гейт «BILLING permission» на создание товаров без единой ручной загрузки.
+    # GCLOUD_SERVICE_ACCOUNT_CREDENTIALS — JSON сервис-аккаунта с ролью Release
+    # manager в Play Console (группа "playstore" в Codemagic); пока переменной
+    # нет, шаг публикации упадёт — бандл при этом собран и лежит в артефактах.
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
