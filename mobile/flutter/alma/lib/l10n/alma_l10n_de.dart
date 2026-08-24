@@ -301,11 +301,11 @@ class LDe extends L {
 
   @override
   String get cabManagedByGooglePlay =>
-      'Dieses Abo wurde in Google Play gekauft: Google hält die Zahlungsart, und gekündigt wird dort.';
+      'Dieses Abo wurde in Google Play gekauft — Google verwaltet die Zahlungsmethode, und dort wird auch gekündigt.';
 
   @override
   String cabMerchantLine(String p1) {
-    return 'Zahlungen abgewickelt von $p1 als rechtlichem Verkäufer · USt. enthalten, wo zutreffend';
+    return 'Zahlungen abgewickelt von $p1 als rechtlichem Verkäufer · USt. enthalten, sofern zutreffend';
   }
 
   @override
@@ -436,7 +436,7 @@ class LDe extends L {
 
   @override
   String get cabPlansBody =>
-      'Das Abo hält Transite, Solarhoroskop und Partnerschaft aktuell, schickt die Morgen­mitteilung und enthält 30 Fragen im Monat. Die fünf stillen Deutungen kauft man einmal und behält sie für immer.';
+      'Das Abo hält Transite, Solarhoroskop und Partnerschaft aktuell, schickt die Morgen­mitteilung und enthält 30 Fragen im Monat. Die fünf stillen Deutungen kaufst du einmal und behältst sie für immer.';
 
   @override
   String get cabPlansCta => 'Pläne ansehen';
@@ -449,7 +449,7 @@ class LDe extends L {
 
   @override
   String cabQuestionsLeft(int p1) {
-    return 'Verfügbare Fragen: $p1';
+    return 'Fragen übrig: $p1';
   }
 
   @override
@@ -799,7 +799,7 @@ class LDe extends L {
   String get journeyGenderMale => 'Männlich';
 
   @override
-  String get journeyGenderSkip => 'Sage ich nicht';
+  String get journeyGenderSkip => 'Sag ich lieber nicht';
 
   @override
   String get journeyHourLabel => 'Stunde';
@@ -913,7 +913,7 @@ class LDe extends L {
 
   @override
   String get stateOffline =>
-      'Alma antwortet gerade nicht. Hier wird nichts geraten, also gibt es nichts zu zeigen, bis sie es tut.';
+      'Alma antwortet gerade nicht. Hier wird nichts geraten, also gibt es nichts zu zeigen, bis sie wieder antwortet.';
 
   @override
   String get stateRetry => 'Erneut versuchen';
@@ -945,7 +945,7 @@ class LDe extends L {
   String get tabToday => 'Heute';
 
   @override
-  String get paywallDoorNote => 'Eine Zahlung.';
+  String get paywallDoorNote => 'Einmal zahlen.';
 
   @override
   String get paywallManageNote =>
@@ -953,11 +953,11 @@ class LDe extends L {
 
   @override
   String get paywallManageNotePlay =>
-      'In der App gekaufte Abos werden in den Google-Play-Abos gekündigt, nicht hier.';
+      'In der App gekaufte Abos kündigst du in deinen Google-Play-Abos, nicht hier.';
 
   @override
   String get paywallMonthlyNote =>
-      'Transite, Solarhoroskop und Partnerschaft, solange sie ziehen, dazu 30 Fragen im Monat. Verlängert sich, bis du kündigst.';
+      'Transite, Solarhoroskop und Partnerschaft, neu geschrieben, während der Himmel sich bewegt, dazu 30 Fragen im Monat. Verlängert sich, bis du kündigst.';
 
   @override
   String get paywallMonthlyTitle => 'Alles Lebendige, monatlich';
@@ -971,7 +971,7 @@ class LDe extends L {
 
   @override
   String get paywallOffline =>
-      'Alma antwortet gerade nicht, deshalb konnte der Kauf nicht bestätigt werden. Er öffnet sich von selbst, sobald sie es tut.';
+      'Alma antwortet gerade nicht, deshalb konnte der Kauf nicht bestätigt werden. Er öffnet sich von selbst, sobald sie wieder antwortet.';
 
   @override
   String get paywallOwnedAll =>
@@ -979,11 +979,11 @@ class LDe extends L {
 
   @override
   String get paywallPending =>
-      'Warte auf Freigabe. Es wurde nichts abgebucht, und sobald sie erteilt ist, öffnet sich das hier von selbst.';
+      'Wartet auf Freigabe. Es wurde nichts abgebucht, und sobald sie erteilt ist, öffnet sich das hier von selbst.';
 
   @override
   String get paywallPitchPlan1 =>
-      'Das Abo hält die drei lebendigen Systeme geschrieben; die fünf stillen Deutungen kauft man einmal, und sie bleiben für immer.';
+      'Das Abo schreibt die drei lebendigen Systeme immer wieder neu; die fünf stillen Deutungen kaufst du einmal, und sie bleiben für immer.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -1056,7 +1056,7 @@ class LDe extends L {
 
   @override
   String get paywallVerifyLater =>
-      'Apple hat die Zahlung eingezogen. Wir konnten sie gerade nicht bestätigen — sie öffnet sich gleich von selbst, und nichts geht verloren.';
+      'Apple hat die Zahlung eingezogen. Wir konnten sie gerade nicht bestätigen — der Kauf öffnet sich gleich von selbst, und nichts geht verloren.';
 
   @override
   String get paywallWithdrawn =>
@@ -1069,11 +1069,11 @@ class LDe extends L {
 
   @override
   String get pillSheetFootnote =>
-      'Es gibt auch Einmal-Käufe · jederzeit in den Apple-ID-Einstellungen kündbar';
+      'Es gibt auch Einmalkäufe · jederzeit in den Apple-ID-Einstellungen kündbar';
 
   @override
   String get pillSheetFootnotePlay =>
-      'Es gibt auch Einmal-Käufe · jederzeit kündbar in den Google-Play-Abos';
+      'Es gibt auch Einmalkäufe · jederzeit kündbar in den Google-Play-Abos';
 
   @override
   String get pillSheetSub =>
@@ -1099,7 +1099,7 @@ class LDe extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Deine verfügbaren Fragen sind vorerst aufgebraucht. Mit einem aktiven Abo kannst du weitermachen; es enthält 30 Fragen pro Monat.';
+      'Deine Fragen sind für den Moment aufgebraucht. Im Abo kannst du weiterfragen — es enthält 30 Fragen pro Monat.';
 
   @override
   String get scrChatPast => 'früher';
@@ -1207,13 +1207,13 @@ class LDe extends L {
 
   @override
   String get scrSignInFailed =>
-      'Damit wurdest du nicht angemeldet. An deinem Konto hat sich nichts geändert.';
+      'Die Anmeldung hat nicht geklappt. An deinem Konto hat sich nichts geändert.';
 
   @override
   String get scrSignInLead => 'Dein Horoskop folgt dir auf jedes Handy.';
 
   @override
-  String get scrSignInLinkSent => 'Verschickt — sieh in dein Postfach.';
+  String get scrSignInLinkSent => 'Verschickt — schau in dein Postfach.';
 
   @override
   String get scrSignInOrWith => 'oder anmelden mit';
@@ -1249,11 +1249,12 @@ class LDe extends L {
       'In den Himmel geschrieben, bevor du gefragt hast.';
 
   @override
-  String get journeyNameHint => 'Alma begrüßt dich damit — sonst nirgends.';
+  String get journeyNameHint =>
+      'Alma begrüßt dich damit — und nutzt ihn sonst nirgends.';
 
   @override
   String get journeyAboutSkip =>
-      'Du kannst das überspringen. Es stimmt nur ab, wie Alma dir schreibt.';
+      'Du kannst das überspringen. Es beeinflusst nur, wie Alma dir schreibt.';
 
   @override
   String get dstOverline => 'über deine Geburtszeit';
@@ -1330,7 +1331,7 @@ class LDe extends L {
 
   @override
   String get cabCompatBulletComposite =>
-      'Das eigene Horoskop der Beziehung — der Himmel von euch beiden als einer';
+      'Das eigene Horoskop der Beziehung — der gemeinsame Himmel von euch beiden';
 
   @override
   String get todayReadWholeSky => 'Den ganzen Himmel lesen';
@@ -1477,7 +1478,7 @@ class LDe extends L {
 
   @override
   String get paywallV3SubIncludesPair =>
-      'Ein voller Partnerschafts-Vergleich im Monat';
+      'Ein voller Partnerschaftsvergleich im Monat';
 
   @override
   String get paywallV3SubIncludesQuestions =>
@@ -1572,23 +1573,22 @@ class LDe extends L {
   String get paywallV3SubPlateCaption => 'Alles, was sich täglich ändert';
 
   @override
-  String get paywallV3QuotaHeld =>
-      'gehalten — geht raus, sobald du weitermachst';
+  String get paywallV3QuotaHeld => 'wartet — geht raus, sobald du weitermachst';
 
   @override
   String get paywallV3QuotaNote =>
-      'Im Abo beantwortet Alma dreißig im Monat — aus deinen eigenen Positionen, nie aus einer Vorlage.';
+      'Im Abo beantwortet Alma dreißig Fragen im Monat — aus deinen eigenen Positionen, nie aus einer Vorlage.';
 
   @override
   String get paywallV3QuotaAlsoInside => 'außerdem drin';
 
   @override
   String get paywallV3QuotaAlsoInsideList =>
-      'Transite und das tägliche Horoskop · dein Solarhoroskop · ein Partnerschafts-Vergleich im Monat';
+      'Transite und das tägliche Horoskop · dein Solarhoroskop · ein Partnerschaftsvergleich im Monat';
 
   @override
   String get paywallV3SubRenewalDisclosureQuota =>
-      'Verlängert sich monatlich · jederzeit kündbar · deine Frage geht raus, sobald es offen ist';
+      'Verlängert sich monatlich · jederzeit kündbar · deine Frage geht raus, sobald das Abo aktiv ist';
 
   @override
   String get paywallV3PlansOverline => 'alle Pläne';
@@ -1608,18 +1608,18 @@ class LDe extends L {
 
   @override
   String get paywallV3PlansPairNote =>
-      'Vier Kapitel, pro Person, so viele du willst';
+      'Vier Kapitel pro Person · so viele Menschen, wie du willst';
 
   @override
   String get paywallV3SubTitleShort => 'Ganz Alma';
 
   @override
   String get paywallV3SubIncludesLine =>
-      'Transite und das tägliche Horoskop · Solarhoroskop · ein Partnerschafts-Vergleich im Monat · 30 Fragen · alle fünf Deutungen, solange das Abo läuft';
+      'Transite und das tägliche Horoskop · Solarhoroskop · ein Partnerschaftsvergleich im Monat · 30 Fragen · alle fünf Deutungen, solange das Abo läuft';
 
   @override
   String get paywallV3PlansLegal =>
-      'Wird bei der Bestätigung über deine Apple ID belastet · das Abo verlängert sich monatlich, wenn es nicht 24 h vor Periodenende gekündigt wird · Einmalkäufe verlängern sich nie';
+      'Bei der Bestätigung wird deine Apple ID belastet · das Abo verlängert sich monatlich, wenn es nicht 24 h vor Ende des Zeitraums gekündigt wird · Einmalkäufe verlängern sich nie';
 
   @override
   String get paywallV3CancelHeader => 'Abo verwalten';
@@ -1699,7 +1699,7 @@ class LDe extends L {
 
   @override
   String get paywallV3WhatNextPairNote =>
-      'Dein Venus-Kapitel sagt, wie du dich bindest. Sein Geburtsdatum sagt, wie es ankommt.';
+      'Dein Venus-Kapitel sagt, wie du dich bindest. Das Geburtsdatum der anderen Person sagt, wie es ankommt.';
 
   @override
   String paywallV3WhatNextPairCta(String price) {
@@ -1803,7 +1803,7 @@ class LDe extends L {
 
   @override
   String pairCreditNext(String date) {
-    return 'Dein nächster enthaltener Vergleich kommt am $date. Vergleiche werden nicht übertragen.';
+    return 'Dein nächster enthaltener Vergleich kommt am $date. Ungenutzte Vergleiche verfallen.';
   }
 
   @override
@@ -1869,7 +1869,7 @@ class LDe extends L {
 
   @override
   String get paywallV3StateProcessingNote =>
-      'Apple hat die Zahlung angenommen; wir schreiben sie gerade gut. Das schließt sich von selbst ab, auch wenn du die App schließt.';
+      'Apple hat die Zahlung angenommen; wir verbuchen sie gerade. Das schließt sich von selbst ab, auch wenn du die App schließt.';
 
   @override
   String get onbSystemsTitle => 'Deine acht Systeme';
@@ -1938,5 +1938,5 @@ class LDe extends L {
 
   @override
   String get scrSignInTooMany =>
-      'Zu viele Versuche — warte kurz und probier es erneut.';
+      'Zu viele Versuche — warte kurz und versuch es dann noch einmal.';
 }

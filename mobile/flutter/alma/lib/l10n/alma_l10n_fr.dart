@@ -223,7 +223,7 @@ class LFr extends L {
 
   @override
   String get cabGuestNoteApp =>
-      'Aucun compte connecté. Ton thème ne vit que sur ce téléphone.';
+      'Tu n’es pas connecté. Ton thème ne vit que sur ce téléphone.';
 
   @override
   String get cabHoroscopeLocked =>
@@ -365,7 +365,7 @@ class LFr extends L {
   String get cabPlanCancelledNoDate => 'Résilié. Plus rien ne sera prélevé.';
 
   @override
-  String get cabPlanCancelling => 'Arrêt du prochain prélèvement…';
+  String get cabPlanCancelling => 'On arrête le prochain prélèvement…';
 
   @override
   String get cabPlanDeleteFailed =>
@@ -389,7 +389,7 @@ class LFr extends L {
       'Le fichier n’a pas pu être créé. Réessaie dans un instant.';
 
   @override
-  String get cabPlanExporting => 'Préparation de ton fichier…';
+  String get cabPlanExporting => 'Je prépare ton fichier…';
 
   @override
   String get cabPlanFreeNote =>
@@ -486,7 +486,7 @@ class LFr extends L {
   String get cabSettingsFullName => 'Nom complet de naissance';
 
   @override
-  String get cabSettingsInterfaceLanguageAction => 'Modifier dans Réglages';
+  String get cabSettingsInterfaceLanguageAction => 'Modifier dans les Réglages';
 
   @override
   String get cabSettingsLanguage => 'Langue';
@@ -774,7 +774,7 @@ class LFr extends L {
 
   @override
   String get journeyCeremony8Line =>
-      'Neuf axes. Là où trois systèmes s’accordent, cela révèle ce qui est au cœur de ta personnalité.';
+      'Neuf axes. Là où trois systèmes s’accordent, le cœur de ta personnalité se révèle.';
 
   @override
   String get journeyClose => 'Fermer';
@@ -795,7 +795,7 @@ class LFr extends L {
   String get journeyGenderMale => 'Homme';
 
   @override
-  String get journeyGenderSkip => 'Je préfère ne pas dire';
+  String get journeyGenderSkip => 'Je préfère ne pas le dire';
 
   @override
   String get journeyHourLabel => 'Heure';
@@ -821,7 +821,7 @@ class LFr extends L {
 
   @override
   String get quizInterestNote =>
-      'Alma commence là où tu regardes. Tu pourras changer plus tard.';
+      'Alma commence là où tu regardes. Tu pourras en changer plus tard.';
 
   @override
   String get quizInterestLove => 'L’amour et les relations';
@@ -975,7 +975,7 @@ class LFr extends L {
 
   @override
   String get paywallPending =>
-      'En attente d’autorisation. Rien n’a été débité, et ceci s’ouvrira tout seul dès l’accord.';
+      'En attente d’autorisation. Rien n’a été débité — ça s’ouvrira tout seul dès que c’est approuvé.';
 
   @override
   String get paywallPitchPlan1 =>
@@ -983,7 +983,7 @@ class LFr extends L {
 
   @override
   String get paywallPitchPlan2 =>
-      'Les transits, la révolution solaire et la compatibilité se réécrivent avec le ciel.';
+      'Transits et révolution solaire se réécrivent avec le ciel — la compatibilité, dès que tu compares quelqu’un d’autre.';
 
   @override
   String get paywallPitchPlan3 => '30 questions à Alma par mois.';
@@ -1056,7 +1056,7 @@ class LFr extends L {
 
   @override
   String get paywallWithdrawn =>
-      'Apple a repris cet achat — remboursé ou révoqué — donc rien n’est ouvert avec lui.';
+      'Apple a repris cet achat — remboursé ou révoqué — et ce qu’il ouvrait s’est refermé.';
 
   @override
   String pillSheetCta(String price) {
@@ -1079,7 +1079,7 @@ class LFr extends L {
   String get scrAddPersonSaving => 'Enregistrement…';
 
   @override
-  String get scrChatCouldAsk => 'tu peux demander';
+  String get scrChatCouldAsk => 'tu pourrais demander';
 
   @override
   String get scrChatNoChart =>
@@ -1087,7 +1087,7 @@ class LFr extends L {
 
   @override
   String get scrChatOffline =>
-      'Je n’arrive pas à atteindre ton thème pour l’instant. Ta question est toujours là — réessaie dans un moment.';
+      'Je n’arrive pas à accéder à ton thème pour l’instant. Ta question est toujours là — réessaie dans un moment.';
 
   @override
   String get scrChatOpening =>
@@ -1111,7 +1111,7 @@ class LFr extends L {
       'Qu’est-ce qui traverse mon thème cette semaine ?';
 
   @override
-  String get scrChatPrompt3 => 'Sur quoi mes systèmes se contredisent ?';
+  String get scrChatPrompt3 => 'Mes systèmes se contredisent sur quoi ?';
 
   @override
   String scrChatPromptMoon(String p1) {
@@ -1138,7 +1138,7 @@ class LFr extends L {
 
   @override
   String get scrChatSilent =>
-      'J’ai répondu à celle-ci à partir de ce que je sais, pas de ton thème.';
+      'J’ai répondu à celle-ci d’après ce que je sais, pas d’après ton thème.';
 
   @override
   String get scrChatThinking => 'Je lis ton thème';
@@ -1152,7 +1152,7 @@ class LFr extends L {
 
   @override
   String get scrChatWentWrong =>
-      'Cela n’est pas passé. Rien n’est perdu — ta question est toujours là.';
+      'Ça n’est pas passé. Rien n’est perdu — ta question est toujours là.';
 
   @override
   String get scrDone => 'Terminé';
@@ -1220,7 +1220,7 @@ class LFr extends L {
       'Nous utilisons ton adresse pour le lien de connexion et rien d’autre. Il n’y a pas de newsletter.';
 
   @override
-  String get scrSignInSendLink => 'M\'envoyer un code';
+  String get scrSignInSendLink => 'M’envoyer un code';
 
   @override
   String get scrSignInSendLinkShort => 'Envoyer le code';
@@ -1246,7 +1246,7 @@ class LFr extends L {
 
   @override
   String get journeyNameHint =>
-      'Alma t’accueillera par ce prénom — nulle part ailleurs.';
+      'Alma t’appellera par ce prénom — et nulle part ailleurs.';
 
   @override
   String get journeyAboutSkip =>
@@ -1569,7 +1569,7 @@ class LFr extends L {
   String get paywallV3SubPlateCaption => 'Tout ce qui change chaque jour';
 
   @override
-  String get paywallV3QuotaHeld => 'gardée — elle partira quand tu continueras';
+  String get paywallV3QuotaHeld => 'gardée — elle part dès que tu continues';
 
   @override
   String get paywallV3QuotaNote =>
@@ -1696,7 +1696,7 @@ class LFr extends L {
 
   @override
   String get paywallV3WhatNextPairNote =>
-      'Ton chapitre Vénus dit comment tu t’attaches. Sa date dit comment cela se pose.';
+      'Ton chapitre Vénus dit comment tu t’attaches. Sa date dit comment ça atterrit.';
 
   @override
   String paywallV3WhatNextPairCta(String price) {
@@ -1848,8 +1848,7 @@ class LFr extends L {
   String get liveSolarTitle => 'Ton année solaire';
 
   @override
-  String get liveSolarNote =>
-      'Réécrite à chaque anniversaire — en cours en ce moment';
+  String get liveSolarNote => 'Réécrite à chaque anniversaire — en cours';
 
   @override
   String get liveDayTitle => 'La journée en entier';
@@ -1896,31 +1895,31 @@ class LFr extends L {
 
   @override
   String get onbFirstChapterBody =>
-      'Le chapitre I de ton thème natal est écrit et t\'attend — commence par là. Les autres chapitres s\'ouvrent un à un, quand tu le décides.';
+      'Le chapitre I de ton thème natal est écrit et t’attend — commence par là. Les autres chapitres s’ouvrent un à un, quand tu le décides.';
 
   @override
   String get onbAlmaTitle => 'Demande à Alma ce que tu veux';
 
   @override
   String get onbAlmaBody =>
-      'Alma répond à partir de ce qui est dans ton thème, jamais d\'après un modèle — et te le dit quand le thème n\'a pas de réponse. Chaque réponse cite les positions dont elle a été lue.';
+      'Alma répond à partir de ce qui est dans ton thème, jamais d’après un modèle — et te le dit quand le thème n’a pas de réponse. Chaque réponse cite les positions dont elle est tirée.';
 
   @override
   String get onbMorningTitle => 'Une lettre le matin';
 
   @override
   String get onbMorningBody =>
-      'Alma peut t\'envoyer une courte note le matin, quand le ciel bouge vraiment. Choisis ici la fréquence — ou laisse-la éteinte.';
+      'Alma peut t’envoyer une courte note le matin, quand le ciel bouge vraiment. Choisis la fréquence ici — ou laisse tout éteint.';
 
   @override
   String get cabSettingsDocuments => 'Documents';
 
   @override
   String get scrSignInCodeSent =>
-      'Nous t\'avons envoyé un code à six chiffres par e-mail. Saisis-le ici — ou ouvre le lien de la même lettre sur le web.';
+      'Nous t’avons envoyé un code à six chiffres par e-mail. Saisis-le ici — ou ouvre le lien du même e-mail sur le web.';
 
   @override
-  String get scrSignInCodeHint => 'Code du courriel';
+  String get scrSignInCodeHint => 'Code reçu par e-mail';
 
   @override
   String get scrSignInCodeInvalid =>
@@ -1935,5 +1934,5 @@ class LFr extends L {
       'Le code a expiré — demande-en un nouveau.';
 
   @override
-  String get scrSignInTooMany => 'Trop d\'essais — attends un peu et réessaie.';
+  String get scrSignInTooMany => 'Trop d’essais — attends un peu et réessaie.';
 }

@@ -15,7 +15,7 @@ class LPt extends L {
   String get cabActiveNow => 'ativo agora';
 
   @override
-  String get cabAddBirthData => 'Inserir meus dados';
+  String get cabAddBirthData => 'Adicionar meus dados';
 
   @override
   String get cabAllAlmaPill => 'Toda a Alma';
@@ -223,7 +223,7 @@ class LPt extends L {
 
   @override
   String get cabGuestNoteApp =>
-      'Você não entrou. Seu mapa vive só neste telefone.';
+      'Você ainda não entrou. Seu mapa vive só neste celular.';
 
   @override
   String get cabHoroscopeLocked =>
@@ -347,7 +347,7 @@ class LPt extends L {
 
   @override
   String get cabPlanCancelFailed =>
-      'Não conseguimos falar com o meio de pagamento, então nada foi alterado. Tente de novo daqui a pouco.';
+      'Não conseguimos falar com o sistema de pagamento, então nada mudou. Tente de novo daqui a pouco.';
 
   @override
   String get cabPlanCancelSubscription => 'Cancelar a assinatura';
@@ -393,7 +393,7 @@ class LPt extends L {
 
   @override
   String get cabPlanFreeNote =>
-      'Todo cálculo é grátis, sempre. Você paga só pelas leituras escritas, uma por vez.';
+      'Todo cálculo é grátis, sempre — os oito sistemas. Você paga só pelos capítulos escritos.';
 
   @override
   String get cabPlanFreePlan => 'Grátis';
@@ -402,7 +402,7 @@ class LPt extends L {
   String get cabPlanKeepPlan => 'Manter meu plano';
 
   @override
-  String get cabPlanOneTimeNote => 'Comprado uma vez.';
+  String get cabPlanOneTimeNote => 'Compra única.';
 
   @override
   String get cabPlanOwnedPlan => 'O que já é seu';
@@ -434,7 +434,7 @@ class LPt extends L {
 
   @override
   String get cabPlansBody =>
-      'A assinatura mantém atualizados trânsitos, revolução solar e compatibilidade, envia o aviso da manhã e inclui 30 perguntas por mês. As cinco leituras fixas você compra uma vez, e elas ficam suas para sempre.';
+      'A assinatura mantém trânsitos, revolução solar e compatibilidade sempre atualizados, envia o aviso da manhã e inclui 30 perguntas por mês. As cinco leituras fixas você compra uma vez, e elas ficam suas para sempre.';
 
   @override
   String get cabPlansCta => 'Ver os planos';
@@ -486,7 +486,7 @@ class LPt extends L {
   String get cabSettingsFullName => 'Nome completo de nascimento';
 
   @override
-  String get cabSettingsInterfaceLanguageAction => 'Altere em Ajustes';
+  String get cabSettingsInterfaceLanguageAction => 'Mude nos Ajustes';
 
   @override
   String get cabSettingsLanguage => 'Idioma';
@@ -656,8 +656,7 @@ class LPt extends L {
   String get dailySettingOnlyWhatMatters => 'Só os trânsitos longos';
 
   @override
-  String get dailySettingQuiet =>
-      'Nunca entre 22:00 e 08:00 no seu fuso horário.';
+  String get dailySettingQuiet => 'Nunca entre 22h e 8h no seu fuso horário.';
 
   @override
   String get dailySettingTimezone => 'Seu fuso horário';
@@ -670,7 +669,7 @@ class LPt extends L {
 
   @override
   String get dailyStatusDenied =>
-      'As notificações da Alma estão desligadas. Você pode ligá-las nos ajustes do seu telefone.';
+      'As notificações da Alma estão desligadas. Dá para ligar de novo nos ajustes do celular.';
 
   @override
   String get dailyStatusOpenSettings => 'Abrir ajustes';
@@ -809,7 +808,7 @@ class LPt extends L {
   String get journeyNamePlaceholder => 'Ana';
 
   @override
-  String get journeyNameSub => 'Nada é salvo ainda.';
+  String get journeyNameSub => 'Nada foi salvo ainda.';
 
   @override
   String get journeyNameTitle => 'Como eu te chamo?';
@@ -822,7 +821,7 @@ class LPt extends L {
       'A Alma começa por onde você está olhando. Dá para mudar depois.';
 
   @override
-  String get quizInterestLove => 'O amor e as relações';
+  String get quizInterestLove => 'O amor e os relacionamentos';
 
   @override
   String get quizInterestMoney => 'O dinheiro e o meu caminho';
@@ -834,7 +833,7 @@ class LPt extends L {
   String get quizInterestFuture => 'O que vem aí';
 
   @override
-  String get journeyPlaceSub => 'A cidade basta.';
+  String get journeyPlaceSub => 'A cidade já basta.';
 
   @override
   String get journeyPlaceTitle => 'Onde você nasceu?';
@@ -939,7 +938,7 @@ class LPt extends L {
   String get tabToday => 'Hoje';
 
   @override
-  String get paywallDoorNote => 'Um único pagamento.';
+  String get paywallDoorNote => 'Pagamento único.';
 
   @override
   String get paywallManageNote =>
@@ -951,7 +950,7 @@ class LPt extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Trânsitos, revolução solar e compatibilidade enquanto se movem, mais 30 perguntas por mês. Renova até você cancelar.';
+      'Trânsitos, revolução solar e compatibilidade reescritos conforme o céu se move, mais 30 perguntas por mês. Renova até você cancelar.';
 
   @override
   String get paywallMonthlyTitle => 'Tudo o que se move, mês a mês';
@@ -973,11 +972,11 @@ class LPt extends L {
 
   @override
   String get paywallPending =>
-      'Esperando aprovação. Nada foi cobrado, e isto abre sozinho assim que for aprovado.';
+      'Esperando aprovação. Nada foi cobrado, e isso abre sozinho assim que for aprovado.';
 
   @override
   String get paywallPitchPlan1 =>
-      'A assinatura mantém escritos os três sistemas vivos; as cinco leituras fixas você compra uma vez, e elas ficam suas para sempre.';
+      'A assinatura reescreve os três sistemas vivos conforme eles mudam; as cinco leituras fixas você compra uma vez, e elas ficam suas para sempre.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -1054,7 +1053,7 @@ class LPt extends L {
 
   @override
   String get paywallWithdrawn =>
-      'A Apple retirou essa compra — reembolsada ou revogada — então nada está aberto com ela.';
+      'A Apple retirou essa compra — reembolsada ou revogada — e o que ela tinha aberto fechou de novo.';
 
   @override
   String pillSheetCta(String price) {
@@ -1085,7 +1084,7 @@ class LPt extends L {
 
   @override
   String get scrChatOffline =>
-      'Não consigo chegar ao seu mapa agora. Sua pergunta continua aí — tente de novo em um instante.';
+      'Não consigo acessar seu mapa agora. Sua pergunta continua aí — tente de novo daqui a pouco.';
 
   @override
   String get scrChatOpening =>
@@ -1093,7 +1092,7 @@ class LPt extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Você usou as perguntas disponíveis por enquanto. Com uma assinatura ativa, pode continuar; ela inclui 30 perguntas por mês.';
+      'Suas perguntas acabaram por enquanto. A assinatura inclui 30 por mês, para você continuar perguntando.';
 
   @override
   String get scrChatPast => 'anteriores';
@@ -1117,7 +1116,7 @@ class LPt extends L {
 
   @override
   String scrChatPromptRising(String p1) {
-    return 'Ascendente em $p1. É isso que as pessoas encontram primeiro?';
+    return 'Ascendente em $p1. É essa a primeira impressão que eu passo?';
   }
 
   @override
@@ -1158,7 +1157,7 @@ class LPt extends L {
   String get scrKeep => 'Manter';
 
   @override
-  String get scrPeopleChange => 'Alterar';
+  String get scrPeopleChange => 'Trocar';
 
   @override
   String get scrPeopleEyebrow => 'compatibilidade';
@@ -1171,14 +1170,14 @@ class LPt extends L {
 
   @override
   String get scrPeopleRemoveWhat =>
-      'O nascimento dessa pessoa some, e com ele toda leitura de compatibilidade escrita a partir dele. Leituras pagas não podem ser reescritas palavra por palavra.';
+      'Os dados de nascimento dessa pessoa somem, e com eles toda leitura de compatibilidade escrita a partir deles. Leituras pagas não podem ser reescritas palavra por palavra.';
 
   @override
   String get scrPeopleUnnamed => 'Sem nome';
 
   @override
   String get scrSaveAccountBody =>
-      'Entre uma vez: seu mapa e suas compras vão com você para um telefone novo.';
+      'Entre uma vez: seu mapa e suas compras vão com você para um celular novo.';
 
   @override
   String get scrSaveAccountCta => 'Entrar';
@@ -1191,7 +1190,7 @@ class LPt extends L {
 
   @override
   String get scrSignInAlready =>
-      'Você já entrou. Esta conta acompanha você em qualquer telefone.';
+      'Você já entrou. Esta conta acompanha você em qualquer celular.';
 
   @override
   String get scrSignInDone => 'Você entrou.';
@@ -1203,7 +1202,7 @@ class LPt extends L {
   String get scrSignInFailed => 'Não deu para entrar. Nada mudou na sua conta.';
 
   @override
-  String get scrSignInLead => 'Seu mapa te segue em qualquer telefone.';
+  String get scrSignInLead => 'Seu mapa te acompanha em qualquer celular.';
 
   @override
   String get scrSignInLinkSent => 'Enviado — confira seu e-mail.';
@@ -1213,7 +1212,7 @@ class LPt extends L {
 
   @override
   String get scrSignInPrivacy =>
-      'Usamos seu endereço para o link de acesso e nada mais. Não há newsletter.';
+      'Usamos seu endereço só para o link de acesso, nada mais. Nada de newsletter.';
 
   @override
   String get scrSignInSendLink => 'Enviar código por e-mail';
@@ -1242,7 +1241,7 @@ class LPt extends L {
 
   @override
   String get journeyNameHint =>
-      'A Alma vai te cumprimentar por ele — e em mais nenhum lugar.';
+      'A Alma vai te chamar por ele — e não vai usar em mais nenhum lugar.';
 
   @override
   String get journeyAboutSkip =>
@@ -1258,7 +1257,7 @@ class LPt extends L {
 
   @override
   String dstBody(String city, String date, String time) {
-    return 'Em $date, em $city, os relógios foram atrasados. A Alma não vai tirar seu céu na moeda — qual $time é o seu?';
+    return 'Em $date, em $city, os relógios foram atrasados. A Alma não vai decidir seu céu no cara ou coroa — qual $time é o seu?';
   }
 
   @override
@@ -1326,7 +1325,7 @@ class LPt extends L {
       'O mapa próprio da relação — o céu de vocês dois como um só';
 
   @override
-  String get todayReadWholeSky => 'Ler todo o céu';
+  String get todayReadWholeSky => 'Ler o céu inteiro';
 
   @override
   String todayReadMinutes(String n) {
@@ -1400,7 +1399,7 @@ class LPt extends L {
   }
 
   @override
-  String get paywallV3BundleSaving => 'Vinte por cento a menos';
+  String get paywallV3BundleSaving => 'Vinte por cento de desconto';
 
   @override
   String get paywallV3BundleIncludes =>
@@ -1412,7 +1411,7 @@ class LPt extends L {
   }
 
   @override
-  String get paywallV3PairInputTitle => 'Quem vamos ler junto?';
+  String get paywallV3PairInputTitle => 'Quem vamos ler com você?';
 
   @override
   String get paywallV3PairInputName => 'Nome';
@@ -1569,10 +1568,10 @@ class LPt extends L {
 
   @override
   String get paywallV3QuotaNote =>
-      'Na assinatura a Alma responde trinta por mês — a partir das suas próprias posições, nunca de um modelo.';
+      'Na assinatura, a Alma responde trinta perguntas por mês — a partir das suas posições, nunca de um modelo.';
 
   @override
-  String get paywallV3QuotaAlsoInside => 'também dentro';
+  String get paywallV3QuotaAlsoInside => 'também incluso';
 
   @override
   String get paywallV3QuotaAlsoInsideList =>
@@ -1580,7 +1579,7 @@ class LPt extends L {
 
   @override
   String get paywallV3SubRenewalDisclosureQuota =>
-      'Renova todo mês · cancele quando quiser · sua pergunta vai assim que abrir';
+      'Renova todo mês · cancele quando quiser · sua pergunta é enviada assim que abrir';
 
   @override
   String get paywallV3PlansOverline => 'todos os planos';
@@ -1593,14 +1592,14 @@ class LPt extends L {
 
   @override
   String get paywallV3PlansAllFiveNote =>
-      'Trinta e um capítulos, vinte por cento a menos';
+      'Trinta e um capítulos, vinte por cento de desconto';
 
   @override
   String get paywallV3PlansPair => 'Uma análise de compatibilidade';
 
   @override
   String get paywallV3PlansPairNote =>
-      'Quatro capítulos, por pessoa, quantas você quiser';
+      'Quatro capítulos por pessoa · quantas pessoas você quiser';
 
   @override
   String get paywallV3SubTitleShort => 'Toda a Alma';
@@ -1681,7 +1680,7 @@ class LPt extends L {
 
   @override
   String get paywallV3WhatNextInviteLine =>
-      'O último capítulo está lido — veja aonde isso leva';
+      'Você leu o último capítulo — veja aonde isso leva';
 
   @override
   String get paywallV3WhatNextReadOpening => 'Ler o primeiro capítulo';
@@ -1691,7 +1690,7 @@ class LPt extends L {
 
   @override
   String get paywallV3WhatNextPairNote =>
-      'Seu capítulo de Vênus diz como você se apega. A data dele diz como isso chega.';
+      'Seu capítulo de Vênus diz como você se apega. A data da outra pessoa diz como isso chega.';
 
   @override
   String paywallV3WhatNextPairCta(String price) {
@@ -1859,7 +1858,7 @@ class LPt extends L {
 
   @override
   String get paywallV3StateProcessingNote =>
-      'A Apple já recebeu o pagamento; estamos anotando. Isso termina sozinho, mesmo se você fechar o app.';
+      'A Apple já recebeu o pagamento; estamos registrando. Isso termina sozinho, mesmo se você fechar o app.';
 
   @override
   String get onbSystemsTitle => 'Seus oito sistemas';
@@ -1889,35 +1888,34 @@ class LPt extends L {
 
   @override
   String get onbFirstChapterBody =>
-      'O capítulo I do seu mapa natal está escrito e à sua espera — comece por aí. Os outros capítulos abrem um a um, quando você decidir.';
+      'O capítulo I do seu mapa natal já está escrito, esperando por você — comece por aí. Os outros capítulos abrem um a um, quando você decidir.';
 
   @override
   String get onbAlmaTitle => 'Pergunte à Alma o que quiser';
 
   @override
   String get onbAlmaBody =>
-      'Alma responde com o que há no seu mapa, nunca com um modelo — e diz quando o mapa não tem resposta. Cada resposta cita as posições de que foi lida.';
+      'A Alma responde com o que há no seu mapa, nunca com um modelo — e avisa quando o mapa não tem resposta. Cada resposta cita as posições de onde foi lida.';
 
   @override
   String get onbMorningTitle => 'Uma carta pela manhã';
 
   @override
   String get onbMorningBody =>
-      'Alma pode enviar uma breve nota pela manhã, quando o céu realmente se move. Escolha aqui a frequência — ou deixe desligado.';
+      'A Alma pode enviar uma nota curta pela manhã, quando o céu realmente se move. Escolha a frequência aqui — ou deixe desligado.';
 
   @override
   String get cabSettingsDocuments => 'Documentos';
 
   @override
   String get scrSignInCodeSent =>
-      'Enviamos um código de seis dígitos para o seu e-mail. Digite-o aqui — ou abra o link da mesma carta na web.';
+      'Enviamos um código de seis dígitos para o seu e-mail. Digite o código aqui — ou abra o link da mesma mensagem na web.';
 
   @override
   String get scrSignInCodeHint => 'Código do e-mail';
 
   @override
-  String get scrSignInCodeInvalid =>
-      'O código não confere — confira os dígitos.';
+  String get scrSignInCodeInvalid => 'O código não bate — confira os dígitos.';
 
   @override
   String get scrSignInCodeUsed => 'Esse código já foi usado — peça um novo.';

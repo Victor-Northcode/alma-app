@@ -15,7 +15,7 @@ class LIt extends L {
   String get cabActiveNow => 'attivo ora';
 
   @override
-  String get cabAddBirthData => 'Inserisci i miei dati di nascita';
+  String get cabAddBirthData => 'Inserisco i miei dati di nascita';
 
   @override
   String get cabAllAlmaPill => 'Tutta Alma';
@@ -169,7 +169,7 @@ class LIt extends L {
 
   @override
   String get cabCompatNeedsPerson =>
-      'Per vedere la compatibilità, aggiungi i dati di nascita di un\'altra persona. Tutto il confronto è calcolato gratis.';
+      'Per vedere la compatibilità, aggiungi i dati di nascita di un\'altra persona. Tutto il confronto si calcola gratis.';
 
   @override
   String get cabDataAndLegal => 'dati e note legali';
@@ -298,15 +298,15 @@ class LIt extends L {
 
   @override
   String get cabManagedByApple =>
-      'Questo piano è stato comprato nell\'App Store: Apple tiene il metodo di pagamento e la disdetta si fa lì.';
+      'Questo piano è stato comprato nell\'App Store: il pagamento lo gestisce Apple e la disdetta si fa lì.';
 
   @override
   String get cabManagedByGooglePlay =>
-      'Questo piano è stato comprato in Google Play: Google tiene il metodo di pagamento e la disdetta si fa lì.';
+      'Questo piano è stato comprato in Google Play: il pagamento lo gestisce Google e la disdetta si fa lì.';
 
   @override
   String cabMerchantLine(String p1) {
-    return 'Pagamenti gestiti da $p1 come venditore legale · IVA inclusa dove applicabile';
+    return 'Pagamenti gestiti da $p1 come venditore ufficiale · IVA inclusa dove prevista';
   }
 
   @override
@@ -348,7 +348,7 @@ class LIt extends L {
 
   @override
   String get cabPlanCancelFailed =>
-      'Non siamo riusciti a contattare il sistema di pagamento, quindi non è cambiato nulla. Riprova fra un momento.';
+      'Non siamo riusciti a contattare il sistema di pagamento, quindi non è cambiato nulla. Riprova tra poco.';
 
   @override
   String get cabPlanCancelSubscription => 'Disdici l\'abbonamento';
@@ -370,7 +370,7 @@ class LIt extends L {
 
   @override
   String get cabPlanDeleteFailed =>
-      'Non è stato possibile eliminare l\'account. Riprova fra un momento.';
+      'Non è stato possibile eliminare l\'account. Riprova tra poco.';
 
   @override
   String get cabPlanDeleteForever => 'Elimina tutto, per sempre';
@@ -387,14 +387,14 @@ class LIt extends L {
 
   @override
   String get cabPlanExportFailed =>
-      'Non è stato possibile creare il file. Riprova fra un momento.';
+      'Non è stato possibile creare il file. Riprova tra poco.';
 
   @override
   String get cabPlanExporting => 'Sto preparando il tuo file…';
 
   @override
   String get cabPlanFreeNote =>
-      'Ogni calcolo resta gratuito, sempre. Paghi solo la lettura scritta.';
+      'Ogni calcolo resta gratuito — tutti e otto i sistemi. Paghi solo i capitoli scritti.';
 
   @override
   String get cabPlanFreePlan => 'Gratuito';
@@ -557,7 +557,7 @@ class LIt extends L {
   String get cabStatusNotYet => 'non ancora';
 
   @override
-  String get cabStatusOpen => 'da aprire';
+  String get cabStatusOpen => 'aperto';
 
   @override
   String get cabSystemAstrocartography => 'Astrocartografia';
@@ -813,14 +813,14 @@ class LIt extends L {
   String get journeyNameSub => 'Non viene ancora salvato nulla.';
 
   @override
-  String get journeyNameTitle => 'Come ti chiamo?';
+  String get journeyNameTitle => 'Come posso chiamarti?';
 
   @override
   String get quizInterestTitle => 'Cosa conta di più adesso?';
 
   @override
   String get quizInterestNote =>
-      'Alma parte da dove stai guardando. Potrai cambiarlo dopo.';
+      'Alma parte da ciò che guardi adesso. Potrai cambiarlo più avanti.';
 
   @override
   String get quizInterestLove => 'L\'amore e le relazioni';
@@ -829,7 +829,7 @@ class LIt extends L {
   String get quizInterestMoney => 'I soldi e la mia strada';
 
   @override
-  String get quizInterestSelf => 'Capire me stesso';
+  String get quizInterestSelf => 'Capire chi sono';
 
   @override
   String get quizInterestFuture => 'Cosa mi aspetta';
@@ -853,7 +853,7 @@ class LIt extends L {
 
   @override
   String pushDailyEnteringConjunction(String p1, String p2) {
-    return '$p1 e $p2: la congiunzione diventa attiva oggi.';
+    return '$p1 e $p2 — congiunzione, in orbe da oggi.';
   }
 
   @override
@@ -868,7 +868,7 @@ class LIt extends L {
 
   @override
   String pushDailyEnteringSquare(String p1, String p2) {
-    return '$p1 e $p2: la quadratura diventa attiva oggi.';
+    return '$p1 e $p2 — quadratura, in orbe da oggi.';
   }
 
   @override
@@ -962,7 +962,7 @@ class LIt extends L {
 
   @override
   String get paywallNotVerified =>
-      'Non è stato possibile verificare quell\'acquisto, quindi non è stato aperto nulla. Se Apple ha addebitato, scrivici e sistemiamo.';
+      'Non è stato possibile verificare quell\'acquisto, quindi non è stato aperto nulla. Se Apple ti ha addebitato qualcosa, scrivici e lo sistemiamo.';
 
   @override
   String get paywallOffline =>
@@ -974,11 +974,11 @@ class LIt extends L {
 
   @override
   String get paywallPending =>
-      'In attesa di approvazione. Non è stato addebitato nulla, e questo si aprirà da solo appena arriva.';
+      'In attesa di approvazione. Nessun addebito per ora — si aprirà da solo appena approvato.';
 
   @override
   String get paywallPitchPlan1 =>
-      'Il piano tiene scritti i tre sistemi vivi; le cinque letture che non cambiano si comprano una volta e restano tue per sempre.';
+      'L\'abbonamento riscrive i tre sistemi vivi man mano che cambiano; le cinque letture che non cambiano si comprano una volta e restano tue per sempre.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -1055,7 +1055,7 @@ class LIt extends L {
 
   @override
   String get paywallWithdrawn =>
-      'Apple ha ritirato quell\'acquisto — rimborsato o revocato — quindi non c\'è nulla di aperto con esso.';
+      'Apple ha ritirato quell\'acquisto — rimborsato o revocato — quindi ciò che aveva aperto è di nuovo chiuso.';
 
   @override
   String pillSheetCta(String price) {
@@ -1064,11 +1064,11 @@ class LIt extends L {
 
   @override
   String get pillSheetFootnote =>
-      'Esistono anche acquisti una tantum · disdici quando vuoi nelle impostazioni dell\'ID Apple';
+      'Ci sono anche acquisti una tantum · disdici quando vuoi nelle impostazioni dell\'ID Apple';
 
   @override
   String get pillSheetFootnotePlay =>
-      'Esistono anche acquisti una tantum · disdici quando vuoi negli abbonamenti Google Play';
+      'Ci sono anche acquisti una tantum · disdici quando vuoi negli abbonamenti Google Play';
 
   @override
   String get pillSheetSub =>
@@ -1094,7 +1094,7 @@ class LIt extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Per ora hai usato tutte le domande disponibili. Con un abbonamento attivo puoi continuare; include 30 domande al mese.';
+      'Per ora hai usato tutte le tue domande. L\'abbonamento ne include 30 al mese, così puoi continuare a chiedere.';
 
   @override
   String get scrChatPast => 'precedenti';
@@ -1110,7 +1110,7 @@ class LIt extends L {
       'Che cosa attraversa il mio tema questa settimana?';
 
   @override
-  String get scrChatPrompt3 => 'Dove i miei sistemi non concordano su di me?';
+  String get scrChatPrompt3 => 'Dove i miei sistemi si contraddicono su di me?';
 
   @override
   String scrChatPromptMoon(String p1) {
@@ -1203,7 +1203,7 @@ class LIt extends L {
 
   @override
   String get scrSignInFailed =>
-      'L\'accesso non è riuscito. Nulla è cambiato nel tuo account.';
+      'L\'accesso non è riuscito. Non è cambiato nulla nel tuo account.';
 
   @override
   String get scrSignInLead => 'Il tuo tema ti segue su qualsiasi telefono.';
@@ -1216,7 +1216,7 @@ class LIt extends L {
 
   @override
   String get scrSignInPrivacy =>
-      'Usiamo il tuo indirizzo per il link di accesso e nient\'altro. Non c\'è newsletter.';
+      'Usiamo il tuo indirizzo per il link di accesso e nient\'altro. Niente newsletter.';
 
   @override
   String get scrSignInSendLink => 'Inviami un codice';
@@ -1245,7 +1245,7 @@ class LIt extends L {
 
   @override
   String get journeyNameHint =>
-      'Alma ti saluterà così — e in nessun altro posto.';
+      'Alma ti saluterà con questo nome — e non lo userà da nessun\'altra parte.';
 
   @override
   String get journeyAboutSkip =>
@@ -1256,12 +1256,12 @@ class LIt extends L {
 
   @override
   String dstTitle(String time) {
-    return 'Quella notte le $time sono esistite due volte';
+    return 'Quella notte le $time ci sono state due volte';
   }
 
   @override
   String dstBody(String city, String date, String time) {
-    return 'Il $date a $city gli orologi sono stati portati indietro. Alma non tira una moneta sul tuo cielo — quale $time è la tua?';
+    return 'Il $date a $city gli orologi sono stati portati indietro. Alma non gioca a testa o croce con il tuo cielo — quali $time sono le tue?';
   }
 
   @override
@@ -1325,7 +1325,7 @@ class LIt extends L {
 
   @override
   String get cabCompatBulletComposite =>
-      'Il tema della relazione in sé — il cielo di voi due come uno';
+      'Il tema della relazione in sé — il cielo di voi due come uno solo';
 
   @override
   String get todayReadWholeSky => 'Leggi tutto il cielo';
@@ -1402,7 +1402,7 @@ class LIt extends L {
   }
 
   @override
-  String get paywallV3BundleSaving => 'Venti per cento in meno';
+  String get paywallV3BundleSaving => 'Il venti per cento in meno';
 
   @override
   String get paywallV3BundleIncludes =>
@@ -1489,7 +1489,7 @@ class LIt extends L {
 
   @override
   String get paywallV3QuotaTitle =>
-      'Tre domande al mese: il gratuito finisce qui';
+      'Il piano gratuito si ferma a tre domande al mese';
 
   @override
   String paywallV3QuotaCta(String price) {
@@ -1567,7 +1567,7 @@ class LIt extends L {
   String get paywallV3SubPlateCaption => 'Tutto ciò che cambia ogni giorno';
 
   @override
-  String get paywallV3QuotaHeld => 'tenuta — partirà quando continui';
+  String get paywallV3QuotaHeld => 'in attesa — parte appena continui';
 
   @override
   String get paywallV3QuotaNote =>
@@ -1595,14 +1595,14 @@ class LIt extends L {
 
   @override
   String get paywallV3PlansAllFiveNote =>
-      'Trentun capitoli, venti per cento in meno';
+      'Trentun capitoli, il venti per cento in meno';
 
   @override
   String get paywallV3PlansPair => 'Un\'analisi di coppia';
 
   @override
   String get paywallV3PlansPairNote =>
-      'Quattro capitoli, a persona, quante ne vuoi';
+      'Quattro capitoli a persona · tutte le persone che vuoi';
 
   @override
   String get paywallV3SubTitleShort => 'Tutta Alma';
@@ -1708,7 +1708,7 @@ class LIt extends L {
 
   @override
   String systemsChaptersOpen(int open, int total) {
-    return '$open di $total aperti';
+    return '$open su $total aperti';
   }
 
   @override
@@ -1727,7 +1727,7 @@ class LIt extends L {
 
   @override
   String get chapterLivingNote =>
-      'Questo capitolo si riscrive ogni giorno — vive nell\'abbonamento, non in un acquisto';
+      'Questo capitolo si riscrive ogni giorno — fa parte dell\'abbonamento, non di un acquisto una tantum';
 
   @override
   String chapterWhatFollows(int n, String system) {
@@ -1744,7 +1744,7 @@ class LIt extends L {
 
   @override
   String get pairPerPersonNote =>
-      'A persona · tuo per sempre · aggiungine quante vuoi';
+      'A persona · tua per sempre · aggiungine quante vuoi';
 
   @override
   String get pairInputNote =>
@@ -1764,7 +1764,7 @@ class LIt extends L {
       'Il suo tema si calcola gratis, come il tuo. Paghi solo i capitoli scritti su voi due.';
 
   @override
-  String get pairInputCta => 'Leggi cosa vi attira';
+  String get pairInputCta => 'Leggi cosa vi avvicina';
 
   @override
   String get pairMyPairsNote =>
@@ -1795,11 +1795,11 @@ class LIt extends L {
   }
 
   @override
-  String get pairHookTitle => 'Qualcun altro in mente?';
+  String get pairHookTitle => 'Hai in mente qualcun altro?';
 
   @override
   String get pairHookNote =>
-      'Basta la data di nascita, e il confronto si calcola gratis. Paghi i capitoli.';
+      'Basta la data di nascita, e il confronto si calcola gratis. Paghi solo i capitoli.';
 
   @override
   String get pairCheckAnotherPlain => 'Analizza un\'altra persona';
@@ -1810,7 +1810,7 @@ class LIt extends L {
   }
 
   @override
-  String get pairReportMeta => 'quattro capitoli · tuo per sempre';
+  String get pairReportMeta => 'quattro capitoli · tua per sempre';
 
   @override
   String get pairChapterRead => 'letto';
@@ -1852,11 +1852,11 @@ class LIt extends L {
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'Se un giorno disdici: i capitoli comprati per sempre restano leggibili. I capitoli aperti solo dall\'abbonamento si chiudono con esso — il calcolo resta gratuito in ogni caso.';
+      'Se un giorno disdici: i capitoli comprati per sempre restano leggibili. I capitoli aperti solo dall\'abbonamento si chiudono quando finisce — il calcolo resta gratuito in ogni caso.';
 
   @override
   String get paywallV3StateProcessingNote =>
-      'Apple ha preso il pagamento; lo stiamo registrando. Si completa da solo, anche se chiudi l\'app.';
+      'Apple ha incassato il pagamento e lo stiamo registrando. Finisce da solo, anche se chiudi l\'app.';
 
   @override
   String get onbSystemsTitle => 'I tuoi otto sistemi';
@@ -1900,17 +1900,17 @@ class LIt extends L {
 
   @override
   String get onbMorningBody =>
-      'Alma può inviarti una breve nota al mattino, quando il cielo si muove davvero. Scegli qui la frequenza — oppure lasciala spenta.';
+      'Alma può inviarti una breve nota al mattino, quando il cielo si muove davvero. Scegli qui ogni quanto — oppure lascia tutto spento.';
 
   @override
   String get cabSettingsDocuments => 'Documenti';
 
   @override
   String get scrSignInCodeSent =>
-      'Ti abbiamo inviato un codice di sei cifre via email. Inseriscilo qui — oppure apri il link della stessa lettera sul web.';
+      'Ti abbiamo inviato un codice di sei cifre via email. Inseriscilo qui — oppure apri sul web il link dello stesso messaggio.';
 
   @override
-  String get scrSignInCodeHint => 'Codice dall\'email';
+  String get scrSignInCodeHint => 'Codice ricevuto via email';
 
   @override
   String get scrSignInCodeInvalid =>

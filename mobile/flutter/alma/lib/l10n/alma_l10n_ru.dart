@@ -191,7 +191,7 @@ class LRu extends L {
   String get cabElementWater => 'вода';
 
   @override
-  String get cabExportNote => 'Все твои данные — одним файлом.';
+  String get cabExportNote => 'Всё, что мы о тебе знаем, — одним файлом.';
 
   @override
   String get cabExportReady => 'Файл готов.';
@@ -296,11 +296,11 @@ class LRu extends L {
 
   @override
   String get cabManagedByApple =>
-      'Этот план куплен в App Store: способ оплаты хранит Apple, и отменяется он там же.';
+      'Этот план куплен в App Store: способ оплаты хранится у Apple, там же он и отменяется.';
 
   @override
   String get cabManagedByGooglePlay =>
-      'Этот план куплен в Google Play: способ оплаты хранит Google, и отмена происходит там же.';
+      'Этот план куплен в Google Play: способ оплаты хранится у Google, там же он и отменяется.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -313,7 +313,7 @@ class LRu extends L {
 
   @override
   String get cabNoneActive =>
-      'Сегодня ни один транзит не активен. Это нормальный результат, а не пустой экран.';
+      'Сегодня ни один транзит не активен. Это настоящий результат, а не пустой экран.';
 
   @override
   String cabPairJoin(String p1, String p2) {
@@ -418,7 +418,7 @@ class LRu extends L {
 
   @override
   String cabPlanRenewsAtStore(String p1) {
-    return 'Продлевается $p1 · Apple списывает и предупреждает заранее';
+    return 'Продлевается $p1 · Apple предупредит перед списанием';
   }
 
   @override
@@ -466,15 +466,15 @@ class LRu extends L {
 
   @override
   String get cabSettingsDeleteConfirm =>
-      'Введи свой адрес почты для подтверждения';
+      'Введи адрес своей почты, чтобы подтвердить';
 
   @override
   String get cabSettingsDeleteConfirmGuest =>
-      'Введи этот код для подтверждения';
+      'Введи этот код, чтобы подтвердить';
 
   @override
   String get cabSettingsDeleteGuestNote =>
-      'К этому аккаунту не привязана почта. Его код ниже — введи его для подтверждения.';
+      'У этого аккаунта нет почты. Вместо неё — код ниже: введи его, чтобы подтвердить.';
 
   @override
   String get cabSettingsEverythingMonthly => 'Вся Alma — на месяц';
@@ -586,7 +586,7 @@ class LRu extends L {
 
   @override
   String get dailyAskBody =>
-      'Одно уведомление, в выбранный тобой час, в те дни, когда что-то в твоей карте точно. Примерно раз в неделю. Никогда ночью, и выключить можно прямо из самого уведомления.';
+      'Одно уведомление, в выбранный тобой час, в те дни, когда что-то в твоей карте становится точным. Примерно раз в неделю. Никогда ночью, а выключить можно прямо из самого уведомления.';
 
   @override
   String get dailyAskTitle => 'Сказать тебе утром, когда это случится?';
@@ -717,7 +717,7 @@ class LRu extends L {
 
   @override
   String get journeyCeremony1Line =>
-      'Десять планет, двенадцать домов — твоя карта строится по настоящей эфемериде.';
+      'Десять планет, двенадцать домов — твоя карта строится по реальным астрономическим данным.';
 
   @override
   String get journeyCeremony2Label => 'читаю систему 2 из 8 · нумерология';
@@ -731,7 +731,7 @@ class LRu extends L {
 
   @override
   String get journeyCeremony3Line =>
-      'Карта рождения — один из 22 старших арканов Таро; она рассчитывается по дате рождения.';
+      'Дата рождения указывает на один из 22 старших арканов Таро — это твоя карта рождения.';
 
   @override
   String get journeyCeremony4Label => 'читаю систему 4 из 8 · транзиты';
@@ -752,7 +752,7 @@ class LRu extends L {
 
   @override
   String get journeyCeremony6Line =>
-      'Соляр строится на момент ежегодного возвращения Солнца в положение при рождении.';
+      'Соляр строится на момент, когда Солнце возвращается в ту же точку, что при твоём рождении.';
 
   @override
   String get journeyCeremony7Label =>
@@ -777,7 +777,7 @@ class LRu extends L {
   String get journeyContinueCta => 'Дальше';
 
   @override
-  String get journeyDateSub => 'Одной даты хватает уже для трёх систем.';
+  String get journeyDateSub => 'Одной даты уже хватает на три системы.';
 
   @override
   String get journeyDateTitle => 'Когда всё началось?';
@@ -947,7 +947,7 @@ class LRu extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Транзиты, соляр и совместимость, пока они движутся, плюс 25 вопросов в месяц. Продлевается, пока не отменишь.';
+      'Транзиты, соляр и совместимость переписываются, пока небо движется, плюс 25 вопросов в месяц. Продлевается, пока не отменишь.';
 
   @override
   String get paywallMonthlyTitle => 'Всё живое — на месяц';
@@ -968,11 +968,11 @@ class LRu extends L {
 
   @override
   String get paywallPending =>
-      'Ждёт одобрения. Ничего не списано, и это откроется само в момент одобрения.';
+      'Ждёт одобрения. Ничего не списано — как только покупку одобрят, всё откроется само.';
 
   @override
   String get paywallPitchPlan1 =>
-      'Пока идёт подписка, три живые системы продолжают переписываться; пять неподвижных разборов покупаются один раз и остаются навсегда.';
+      'Пока идёт подписка, три живые системы продолжают переписываться; остальные пять разборов покупаются один раз и остаются твоими навсегда.';
 
   @override
   String get paywallPitchPlan2 =>
@@ -1048,7 +1048,7 @@ class LRu extends L {
 
   @override
   String get paywallWithdrawn =>
-      'Apple отозвал эту покупку — возврат или отмена, — поэтому под ней ничего не открыто.';
+      'Apple отозвал эту покупку — возврат или отмена, — поэтому всё, что она открывала, снова закрыто.';
 
   @override
   String pillSheetCta(String price) {
@@ -1087,7 +1087,7 @@ class LRu extends L {
 
   @override
   String get scrChatOutOfQuestions =>
-      'Вопросы на сегодня закончились. В подписке — 25 в месяц.';
+      'Вопросы закончились. В подписке — 25 в месяц, можно спрашивать дальше.';
 
   @override
   String get scrChatPast => 'раньше';
@@ -1165,7 +1165,7 @@ class LRu extends L {
 
   @override
   String get scrPeopleRemoveWhat =>
-      'Уйдут их данные рождения — и каждый разбор совместимости, написанный по ним. Оплаченные разборы нельзя написать заново слово в слово.';
+      'Уйдут данные рождения этого человека — и каждый разбор совместимости, написанный по ним. Оплаченные разборы нельзя написать заново слово в слово.';
 
   @override
   String get scrPeopleUnnamed => 'Без имени';
@@ -1313,7 +1313,7 @@ class LRu extends L {
 
   @override
   String get cabCompatBulletHouses =>
-      'Куда их планеты попадают в твои дома — и твои в их дома';
+      'В какие твои дома попадают их планеты — и твои в их дома';
 
   @override
   String get cabCompatBulletComposite =>
@@ -1580,7 +1580,7 @@ class LRu extends L {
 
   @override
   String get paywallV3SubRenewalDisclosureQuota =>
-      'Продлевается ежемесячно · отменить можно в любой момент · твой вопрос уйдёт, как только откроется';
+      'Продлевается ежемесячно · отменить можно в любой момент · твой вопрос уйдёт, как только подписка откроется';
 
   @override
   String get paywallV3PlansOverline => 'все планы';
@@ -1624,10 +1624,10 @@ class LRu extends L {
     String _temp0 = intl.Intl.pluralLogic(
       chapters,
       locale: localeName,
-      other: 'Эти $chapters главы открыты',
-      many: 'Эти $chapters глав открыты',
-      few: 'Эти $chapters главы открыты',
-      one: 'Эта глава открыта',
+      other: 'Эти $chapters главы открывались',
+      many: 'Эти $chapters глав открывались',
+      few: 'Эти $chapters главы открывались',
+      one: 'Эта глава открывалась',
     );
     String _temp1 = intl.Intl.pluralLogic(
       times,
@@ -1637,17 +1637,17 @@ class LRu extends L {
       few: '$times раза',
       one: '$times раз',
     );
-    return '$_temp0 $_temp1. За $price их можно будет читать и после конца подписки — без всякого продления.';
+    return '$_temp0 $_temp1. За $price читать можно будет и после конца подписки — без всякого продления.';
   }
 
   @override
   String paywallV3CancelSaveFactPlain(String price) {
-    return 'За $price их можно будет читать и после конца подписки — без всякого продления.';
+    return 'За $price читать можно будет и после конца подписки — без всякого продления.';
   }
 
   @override
   String paywallV3CancelNote(String date) {
-    return 'Отмена откроет настройки Apple ID · подписка работает до $date';
+    return 'Отмена откроет настройки Apple ID · подписка действует до $date';
   }
 
   @override
@@ -1802,7 +1802,7 @@ class LRu extends L {
 
   @override
   String pairCreditNext(String date) {
-    return 'Следующая включённая проверка придёт $date. Проверки не переносятся.';
+    return 'Следующая проверка по подписке придёт $date. Проверки не переносятся.';
   }
 
   @override
@@ -1866,18 +1866,18 @@ class LRu extends L {
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'Если однажды отменишь: главы, купленные навсегда, остаются читаемыми. Главы, открытые только подпиской, закрываются вместе с ней — расчёт бесплатен в любом случае.';
+      'Если однажды отменишь: главы, купленные навсегда, никуда не денутся. Главы, открытые только подпиской, закроются вместе с ней — расчёт бесплатен в любом случае.';
 
   @override
   String get paywallV3StateProcessingNote =>
-      'Apple платёж принял; мы его записываем. Это завершится само, даже если ты закроешь приложение.';
+      'Apple принял платёж, мы его записываем. Всё завершится само, даже если закрыть приложение.';
 
   @override
   String get onbSystemsTitle => 'Твои восемь систем';
 
   @override
   String get onbSystemsBody =>
-      'Все восемь рассчитаны по твоему рождению, и расчёт всегда бесплатный. Платишь только за написанные главы — первая глава натальной карты уже открыта.';
+      'Все восемь рассчитаны по твоим данным рождения, и расчёт всегда бесплатен. Платишь только за написанные главы — первая глава натальной карты уже открыта.';
 
   @override
   String get onbTodayTitle => 'Своя страница у каждого дня';
@@ -1914,7 +1914,7 @@ class LRu extends L {
 
   @override
   String get onbMorningBody =>
-      'Alma может присылать короткую утреннюю заметку, когда небо действительно движется. Выбери частоту здесь — или оставь выключенными.';
+      'Alma может присылать короткую утреннюю заметку, когда небо действительно движется. Выбери здесь, как часто, — или не включай вовсе.';
 
   @override
   String get cabSettingsDocuments => 'Документы';
