@@ -418,16 +418,20 @@ class _TabGlyph extends CustomPainter {
             stops: const [0.0, 0.45, 1.0],
           ).createShader(Rect.fromCircle(center: c, radius: size.width * 0.42));
         canvas.drawCircle(c, size.width * 0.42, glow);
-        // Четырёхлучевая искра: длинные лучи по вертикали/горизонтали.
+        // Четырёхлучевая искра — тот же силуэт, что у иконки приложения
+        // (play-icon-512): вертикаль длиннее горизонтали (W/H = 0.81), бока
+        // вогнутые. Владелец 24 авг: «лого везде и в прилке самой везде».
         final sparkle = Path();
-        final long = size.width * 0.40;
-        final waist = size.width * 0.055;
+        final tall = size.width * 0.44;
+        final wide = tall * 0.81;
+        final wx = size.width * 0.050;
+        final wy = size.width * 0.062;
         sparkle
-          ..moveTo(c.dx, c.dy - long)
-          ..quadraticBezierTo(c.dx + waist, c.dy - waist, c.dx + long, c.dy)
-          ..quadraticBezierTo(c.dx + waist, c.dy + waist, c.dx, c.dy + long)
-          ..quadraticBezierTo(c.dx - waist, c.dy + waist, c.dx - long, c.dy)
-          ..quadraticBezierTo(c.dx - waist, c.dy - waist, c.dx, c.dy - long)
+          ..moveTo(c.dx, c.dy - tall)
+          ..quadraticBezierTo(c.dx + wx, c.dy - wy, c.dx + wide, c.dy)
+          ..quadraticBezierTo(c.dx + wx, c.dy + wy, c.dx, c.dy + tall)
+          ..quadraticBezierTo(c.dx - wx, c.dy + wy, c.dx - wide, c.dy)
+          ..quadraticBezierTo(c.dx - wx, c.dy - wy, c.dx, c.dy - tall)
           ..close();
         canvas.drawPath(
           sparkle,

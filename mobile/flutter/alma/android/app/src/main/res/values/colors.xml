@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Фон сплэша — полночь референс-иконки (play-icon-512, угол #0F1126). -->
+    <color name="launch_night">#FF0F1126</color>
+</resources>
