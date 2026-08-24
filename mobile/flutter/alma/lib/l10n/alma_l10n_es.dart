@@ -1915,4 +1915,18 @@ class LEs extends L {
 
   @override
   String get scrSignInCodeHint => 'Código del correo';
+
+  @override
+  String get scrSignInCodeInvalid =>
+      'El código no coincide — revisa los dígitos.';
+
+  @override
+  String get scrSignInCodeUsed => 'Ese código ya se usó — pide uno nuevo.';
+
+  @override
+  String get scrSignInCodeExpired => 'El código caducó — pide uno nuevo.';
+
+  @override
+  String get scrSignInTooMany =>
+      'Demasiados intentos — espera un poco y vuelve a probar.';
 }

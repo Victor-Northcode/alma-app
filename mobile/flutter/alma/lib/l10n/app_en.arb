@@ -2538,5 +2538,21 @@
   },
   "@scrSignInCodeHint": {
     "description": "вход · плейсхолдер поля шестизначного кода"
+  },
+  "scrSignInCodeInvalid": "That code didn't match — check the digits.",
+  "scrSignInCodeUsed": "That code was already used — request a new one.",
+  "scrSignInCodeExpired": "That code has expired — request a new one.",
+  "scrSignInTooMany": "Too many attempts — wait a little and try again.",
+  "@scrSignInCodeInvalid": {
+    "description": "вход · локализация типизированных отказов сервера (link_invalid/used/expired, rate limit): сервер говорит по-английски, экран обязан по-своему (24 авг)"
+  },
+  "@scrSignInCodeUsed": {
+    "description": "вход · локализация типизированных отказов сервера (link_invalid/used/expired, rate limit): сервер говорит по-английски, экран обязан по-своему (24 авг)"
+  },
+  "@scrSignInCodeExpired": {
+    "description": "вход · локализация типизированных отказов сервера (link_invalid/used/expired, rate limit): сервер говорит по-английски, экран обязан по-своему (24 авг)"
+  },
+  "@scrSignInTooMany": {
+    "description": "вход · локализация типизированных отказов сервера (link_invalid/used/expired, rate limit): сервер говорит по-английски, экран обязан по-своему (24 авг)"
   }
 }

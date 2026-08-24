@@ -1914,4 +1914,18 @@ class LPt extends L {
 
   @override
   String get scrSignInCodeHint => 'Código do e-mail';
+
+  @override
+  String get scrSignInCodeInvalid =>
+      'O código não confere — confira os dígitos.';
+
+  @override
+  String get scrSignInCodeUsed => 'Esse código já foi usado — peça um novo.';
+
+  @override
+  String get scrSignInCodeExpired => 'O código expirou — peça um novo.';
+
+  @override
+  String get scrSignInTooMany =>
+      'Muitas tentativas — espere um pouco e tente de novo.';
 }

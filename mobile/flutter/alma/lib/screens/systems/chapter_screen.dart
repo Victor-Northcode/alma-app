@@ -2052,7 +2052,18 @@ class _LockedChapterState extends State<_LockedChapter> {
           ),
           const SizedBox(height: 13),
         ],
-        if (price == null)
+        if (price == null &&
+            (_store.state == StoreState.loading ||
+                _store.state == StoreState.idle))
+          // Цены ещё в пути — тихая заглушка, а не «магазин не отвечает»:
+          // страшилка на секунду загрузки читалась поломкой оплаты
+          // (владелец, 24 авг).
+          AlmaButton(
+            radius: AlmaPalette.buttonRadius,
+            label: l.stateLoadingShort,
+            onTap: null,
+          )
+        else if (price == null)
           // **Цену выдумать нельзя ни при каких обстоятельствах.** Молчащий
           // магазин — это не «бесплатно» и не «$4.99»: число на кнопке обязано
           // совпасть со списанным. Вместо цены — правда и попытка спросить ещё

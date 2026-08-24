@@ -1911,4 +1911,20 @@ class LIt extends L {
 
   @override
   String get scrSignInCodeHint => 'Codice dall\'email';
+
+  @override
+  String get scrSignInCodeInvalid =>
+      'Il codice non corrisponde — controlla le cifre.';
+
+  @override
+  String get scrSignInCodeUsed =>
+      'Questo codice è già stato usato — richiedine uno nuovo.';
+
+  @override
+  String get scrSignInCodeExpired =>
+      'Il codice è scaduto — richiedine uno nuovo.';
+
+  @override
+  String get scrSignInTooMany =>
+      'Troppi tentativi — aspetta un momento e riprova.';
 }

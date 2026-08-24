@@ -184,11 +184,18 @@ class _SignInScreenState extends State<SignInScreen> {
     } on AlmaError catch (error) {
       if (!mounted) return;
       setState(() {
-        // Сервер объясняет отказ на языке аккаунта — эту фразу и показываем.
-        // Своя общая строка только там, где у него объяснения не нашлось.
-        _notice = error is ServerRefused && error.message.isNotEmpty
-            ? error.message
-            : l.scrSignInFailed;
+        // **Типизированные отказы — своими словами, на языке экрана.** Сервер
+        // говорит по-английски («this code is not valid»), и на русском экране
+        // это читалось протечкой (владелец, 24 авг). Код отказа known — берём
+        // локализованную фразу; незнакомый — серверная как запасная.
+        _notice = switch (error) {
+          ServerRefused(code: 'link_invalid') => l.scrSignInCodeInvalid,
+          ServerRefused(code: 'link_used') => l.scrSignInCodeUsed,
+          ServerRefused(code: 'link_expired') => l.scrSignInCodeExpired,
+          ServerRefused(code: 'magic_link_rate_limit') => l.scrSignInTooMany,
+          ServerRefused(:final message) when message.isNotEmpty => message,
+          _ => l.scrSignInFailed,
+        };
         _noticeBad = true;
       });
     } finally {

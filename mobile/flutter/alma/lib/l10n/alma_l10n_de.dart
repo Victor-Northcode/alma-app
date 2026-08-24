@@ -1924,4 +1924,19 @@ class LDe extends L {
 
   @override
   String get scrSignInCodeHint => 'Code aus der E-Mail';
+
+  @override
+  String get scrSignInCodeInvalid => 'Der Code passt nicht — prüf die Ziffern.';
+
+  @override
+  String get scrSignInCodeUsed =>
+      'Dieser Code wurde schon benutzt — fordere einen neuen an.';
+
+  @override
+  String get scrSignInCodeExpired =>
+      'Der Code ist abgelaufen — fordere einen neuen an.';
+
+  @override
+  String get scrSignInTooMany =>
+      'Zu viele Versuche — warte kurz und probier es erneut.';
 }

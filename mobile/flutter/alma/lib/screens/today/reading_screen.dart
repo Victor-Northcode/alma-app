@@ -293,8 +293,8 @@ class _Panel extends StatelessWidget {
                   child: IconButton(
                     onPressed: onSize,
                     constraints: const BoxConstraints.tightFor(
-                      width: 44,
-                      height: 44,
+                      width: AlmaClose.hit,
+                      height: AlmaClose.hit,
                     ),
                     icon: Text(
                       'Aa',

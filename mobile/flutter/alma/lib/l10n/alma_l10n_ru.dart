@@ -1925,4 +1925,17 @@ class LRu extends L {
 
   @override
   String get scrSignInCodeHint => 'Код из письма';
+
+  @override
+  String get scrSignInCodeInvalid => 'Код не подошёл — проверь цифры.';
+
+  @override
+  String get scrSignInCodeUsed => 'Этот код уже использован — запроси новый.';
+
+  @override
+  String get scrSignInCodeExpired => 'Код истёк — запроси новый.';
+
+  @override
+  String get scrSignInTooMany =>
+      'Слишком много попыток — подожди немного и попробуй снова.';
 }

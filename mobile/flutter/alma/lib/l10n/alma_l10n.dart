@@ -3298,6 +3298,30 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Code from the email'**
   String get scrSignInCodeHint;
+
+  /// вход · локализация типизированных отказов сервера (link_invalid/used/expired, rate limit): сервер говорит по-английски, экран обязан по-своему (24 авг)
+  ///
+  /// In en, this message translates to:
+  /// **'That code didn\'t match — check the digits.'**
+  String get scrSignInCodeInvalid;
+
+  /// вход · локализация типизированных отказов сервера (link_invalid/used/expired, rate limit): сервер говорит по-английски, экран обязан по-своему (24 авг)
+  ///
+  /// In en, this message translates to:
+  /// **'That code was already used — request a new one.'**
+  String get scrSignInCodeUsed;
+
+  /// вход · локализация типизированных отказов сервера (link_invalid/used/expired, rate limit): сервер говорит по-английски, экран обязан по-своему (24 авг)
+  ///
+  /// In en, this message translates to:
+  /// **'That code has expired — request a new one.'**
+  String get scrSignInCodeExpired;
+
+  /// вход · локализация типизированных отказов сервера (link_invalid/used/expired, rate limit): сервер говорит по-английски, экран обязан по-своему (24 авг)
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts — wait a little and try again.'**
+  String get scrSignInTooMany;
 }
 
 class _LDelegate extends LocalizationsDelegate<L> {

@@ -1905,4 +1905,20 @@ class LEn extends L {
 
   @override
   String get scrSignInCodeHint => 'Code from the email';
+
+  @override
+  String get scrSignInCodeInvalid =>
+      'That code didn\'t match — check the digits.';
+
+  @override
+  String get scrSignInCodeUsed =>
+      'That code was already used — request a new one.';
+
+  @override
+  String get scrSignInCodeExpired =>
+      'That code has expired — request a new one.';
+
+  @override
+  String get scrSignInTooMany =>
+      'Too many attempts — wait a little and try again.';
 }

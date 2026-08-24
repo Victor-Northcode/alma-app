@@ -1921,4 +1921,19 @@ class LFr extends L {
 
   @override
   String get scrSignInCodeHint => 'Code du courriel';
+
+  @override
+  String get scrSignInCodeInvalid =>
+      'Le code ne correspond pas — vérifie les chiffres.';
+
+  @override
+  String get scrSignInCodeUsed =>
+      'Ce code a déjà servi — demande-en un nouveau.';
+
+  @override
+  String get scrSignInCodeExpired =>
+      'Le code a expiré — demande-en un nouveau.';
+
+  @override
+  String get scrSignInTooMany => 'Trop d\'essais — attends un peu et réessaie.';
 }

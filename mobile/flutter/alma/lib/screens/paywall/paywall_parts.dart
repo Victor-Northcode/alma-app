@@ -77,7 +77,9 @@ class PaywallHeader extends StatelessWidget {
           );
     if (!centred) {
       return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        // По центру, а не по верху: крестик обязан стоять на одной высоте с
+        // надзаголовком (владелец, 24 авг).
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(child: label),
           _Close(onTap: onClose, semantics: l.journeyClose),
@@ -481,6 +483,14 @@ class PaywallCta extends StatelessWidget {
     final l = L.of(context);
     final busy = store.busy != null;
     if (label == null) {
+      // **Пока магазин ещё спрашивают — тихое ожидание, а не страшилка.**
+      // Цены приезжают за секунду-две, и «App Store не отвечает», мигавшее в
+      // это окно, читалось как поломка оплаты (владелец, 24 авг: «сначала нет
+      // подключения к оплате, а через секунду всё чётко»). Отказ показывается
+      // только когда магазин действительно отказал — ответил пустым.
+      if (store.state == StoreState.loading || store.state == StoreState.idle) {
+        return AlmaButton(label: l.stateLoadingShort, onTap: null);
+      }
       return Column(children: [
         Text(l.storeUnavailable,
             textAlign: TextAlign.center, style: AlmaType.meta),

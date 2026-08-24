@@ -265,10 +265,12 @@ class AlmaType {
 
   /// Шапка читалки: «16 АВГУСТА · ТВОЁ НЕБО». Golos 600, 10.5, ls 2.2.
   // `final`, а не `const`: `muted2` — вычисленная прозрачность, а не литерал.
+  // 10.5 → 12: владелец 24 авг — «заголовок тоже каплю больше». Разрядка
+  // остаётся той же, ступень всё ещё надзаголовочная, не текстовая.
   static final readerHead = TextStyle(
     fontFamily: _ui,
     fontFamilyFallback: _uiFallback,
-    fontSize: 10.5,
+    fontSize: 12,
     fontWeight: FontWeight.w600,
     fontVariations: const [FontVariation('wght', 600)],
     letterSpacing: 2.2,

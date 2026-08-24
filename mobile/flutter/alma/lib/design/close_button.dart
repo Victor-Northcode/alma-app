@@ -21,6 +21,10 @@ import 'palette.dart';
 class AlmaClose extends StatelessWidget {
   const AlmaClose({super.key, required this.onTap, this.back = false});
 
+  /// Сторона зоны нажатия — для распорок в шапках, где центр строки обязан
+  /// быть настоящим центром.
+  static const hit = 48.0;
+
   final VoidCallback onTap;
 
   /// `true` — стрелка «назад» вместо крестика, тем же кружком: для мест, где
@@ -42,13 +46,16 @@ class AlmaClose extends StatelessWidget {
           FocusManager.instance.primaryFocus?.unfocus();
           onTap();
         },
+        // 48/44/24, а не 44/40/22: владелец попросил «каплю больше» после
+        // прогона на устройстве (24 авг). Зона нажатия — константой [hit]:
+        // распорки в шапках обязаны считать ту же ширину, что занимает кнопка.
         child: SizedBox(
-          width: 44,
-          height: 44,
+          width: hit,
+          height: hit,
           child: Center(
             child: Container(
-              width: 40,
-              height: 40,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: AlmaPalette.veilStrong,
                 shape: BoxShape.circle,
@@ -56,7 +63,7 @@ class AlmaClose extends StatelessWidget {
               ),
               child: Icon(
                 back ? Icons.arrow_back : Icons.close,
-                size: 22,
+                size: 24,
                 color: AlmaPalette.inkLight.withValues(alpha: 0.9),
               ),
             ),

@@ -337,7 +337,7 @@ class _PairAddScreenState extends State<PairAddScreen> {
               // справа (правило 24 авг, см. AlmaClose) — центр обязан быть
               // настоящим центром строки.
               Row(children: [
-                const SizedBox(width: 44),
+                const SizedBox(width: AlmaClose.hit),
                 Expanded(
                   child: Text(
                     l.scrPeopleEyebrow.toUpperCase(),

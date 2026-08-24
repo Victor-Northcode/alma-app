@@ -531,5 +531,9 @@
   "onbMorningBody": "Alma kann dir morgens eine kurze Notiz schicken, wenn sich am Himmel wirklich etwas bewegt. Wähle hier, wie oft — oder lass es aus.",
   "cabSettingsDocuments": "Dokumente",
   "scrSignInCodeSent": "Wir haben dir einen sechsstelligen Code per E-Mail geschickt. Gib ihn hier ein — oder öffne den Link aus derselben Mail im Web.",
-  "scrSignInCodeHint": "Code aus der E-Mail"
+  "scrSignInCodeHint": "Code aus der E-Mail",
+  "scrSignInCodeInvalid": "Der Code passt nicht — prüf die Ziffern.",
+  "scrSignInCodeUsed": "Dieser Code wurde schon benutzt — fordere einen neuen an.",
+  "scrSignInCodeExpired": "Der Code ist abgelaufen — fordere einen neuen an.",
+  "scrSignInTooMany": "Zu viele Versuche — warte kurz und probier es erneut."
 }

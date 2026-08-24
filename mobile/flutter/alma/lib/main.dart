@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -94,6 +96,12 @@ class _AlmaAppState extends State<AlmaApp> {
     // откроет витрину; на нативе строчка стоит там же — в `RootView`, под
     // `.tint`, по той же причине.
     AlmaStore.shared.attach(_session);
+    // Цены спрашиваются сразу при старте, а не при первом пейволле: пока
+    // человек долистает до покупки, полка уже горячая — окно, в котором кнопка
+    // мигала «магазин не отвечает» и через секунду становилась ценой, исчезает
+    // (владелец поймал это мигание 24 авг). Отказ здесь молчалив: экраны сами
+    // покажут состояние магазина, когда до них дойдёт.
+    unawaited(AlmaStore.shared.load().catchError((Object _) {}));
     // **Уведомления здороваются на каждом запуске, а не однажды.**
     //
     // Строка устройства на сервере хранит `last_seen_at`, и та, которую никто
