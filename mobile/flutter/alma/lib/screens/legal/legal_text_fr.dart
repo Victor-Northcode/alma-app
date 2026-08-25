@@ -305,9 +305,9 @@ class LegalTextFr {
         LegalBlock.fact('Société', 'Pazl LLC'),
         LegalBlock.fact('Forme', 'Limited liability company'),
         LegalBlock.fact('Juridiction', 'Wyoming, United States'),
-        LegalBlock.factBlank('Adresse du siège', 'registered address'),
-        LegalBlock.factBlank('Numéro d’immatriculation', 'filing ID'),
-        LegalBlock.factBlank('Représentée par', 'managing member'),
+        LegalBlock.fact('Adresse du siège', '30 N Gould St Ste R, Sheridan, Wyoming 82801'),
+        LegalBlock.fact('Numéro d’immatriculation', '2026-002034771'),
+        LegalBlock.fact('Représentée par', 'Anatolii Mikhailov'),
       ]),
       LegalSection('Contact', [
         LegalBlock.fact('E-mail', 'hello@pazl.ai'),
@@ -329,7 +329,7 @@ class LegalTextFr {
             'La plateforme de RLL de la Commission européenne a fermé en juillet 2025 et n’est pas liée ici, parce qu’un lien vers une plateforme qui n’existe plus est pire que pas de lien. Nous ne sommes pas tenus de recourir à un organisme de règlement extrajudiciaire des litiges, et nous ne nous y engageons pas. Écris à hello@pazl.ai et une personne répondra.'),
       ]),
       LegalSection('Responsable du contenu', [
-        LegalBlock.factBlank('Au titre du §18 (2) MStV', 'name and address'),
+        LegalBlock.fact('Au titre du §18 (2) MStV', 'Anatolii Mikhailov · 30 N Gould St Ste R, Sheridan, Wyoming 82801'),
       ]),
     ],
   );

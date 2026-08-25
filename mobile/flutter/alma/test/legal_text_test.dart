@@ -60,9 +60,13 @@ void main() {
       expect(points, 25);
     });
 
-    test('фактов 5, незаполненных фактов 5, пропусков 0', () {
-      expect(all.fold<int>(0, (n, d) => n + countOf<LegalFact>(d)), 5);
-      expect(all.fold<int>(0, (n, d) => n + countOf<LegalFactBlank>(d)), 5);
+    test('фактов 9, незаполненных фактов 1, пропусков 0', () {
+      // 25.08.2026, вечер: владелец дал адрес регистрации, номер файлинга и
+      // управляющего — четыре пропуска стали фактами (адрес, номер,
+      // представитель, §18 MStV). Пустым остался один VAT ID: налог считает
+      // Apple, своя регистрация — в процессе, и это сказано в самом документе.
+      expect(all.fold<int>(0, (n, d) => n + countOf<LegalFact>(d)), 9);
+      expect(all.fold<int>(0, (n, d) => n + countOf<LegalFactBlank>(d)), 1);
       expect(all.fold<int>(0, (n, d) => n + countOf<LegalBlank>(d)), 0);
     });
 
@@ -140,13 +144,9 @@ void main() {
           .whereType<LegalFactBlank>()
           .map((b) => b.label)
           .toList();
-      expect(factBlanks, [
-        'Registered address',
-        'Registration number',
-        'Represented by',
-        'VAT identification',
-        'Under §18 (2) MStV',
-      ]);
+      // Четыре из пяти заполнены фактами владельца 25.08.2026; последний —
+      // VAT, и он единственный, кому пустота ещё положена.
+      expect(factBlanks, ['VAT identification']);
     });
   });
 }

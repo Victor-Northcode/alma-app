@@ -30,10 +30,11 @@
 /// `test/legal_catalog_test.dart`. Проверку переводов юристом по юрисдикциям
 /// это не заменяет — она остаётся в открытых и сказана владельцу вслух.
 ///
-/// **Пропуски видны, а не выдуманы.** Адрес регистрации и представитель по
-/// ст. 27 GDPR печатаются как `[registered address]` — правдоподобный
-/// выдуманный адрес в выходных данных хуже очевидной дыры: дыру заполняют до
-/// релиза, правдоподобный адрес не заполняют никогда.
+/// **Пропуски были видны, а не выдуманы, — и потому заполнились.** Пока
+/// фактов не было, они печатались помеченными дырами; 25.08.2026 владелец дал
+/// адрес регистрации, номер файлинга и управляющего, и дыры стали фактами.
+/// Незаполненным остался один VAT ID — налог считает Apple, своя регистрация
+/// идёт, и документ так и говорит.
 library;
 
 /// Что стоит в документе: абзац, список, факт, ненайденный факт, пропуск.
@@ -322,9 +323,9 @@ class LegalText {
         LegalBlock.fact('Company', 'Pazl LLC'),
         LegalBlock.fact('Form', 'Limited liability company'),
         LegalBlock.fact('Jurisdiction', 'Wyoming, United States'),
-        LegalBlock.factBlank('Registered address', 'registered address'),
-        LegalBlock.factBlank('Registration number', 'filing ID'),
-        LegalBlock.factBlank('Represented by', 'managing member'),
+        LegalBlock.fact('Registered address', '30 N Gould St Ste R, Sheridan, Wyoming 82801'),
+        LegalBlock.fact('Registration number', '2026-002034771'),
+        LegalBlock.fact('Represented by', 'Anatolii Mikhailov'),
       ]),
       LegalSection('Contact', [
         LegalBlock.fact('Email', 'hello@pazl.ai'),
@@ -342,7 +343,7 @@ class LegalText {
         LegalBlock.para('The European Commission\'s ODR platform closed in July 2025 and is not linked here, because a link to a platform that no longer exists is worse than no link. We are not obliged to use, and do not commit to, an alternative dispute-resolution body. Write to hello@pazl.ai and a person will answer.'),
       ]),
       LegalSection('Responsible for content', [
-        LegalBlock.factBlank('Under §18 (2) MStV', 'name and address'),
+        LegalBlock.fact('Under §18 (2) MStV', 'Anatolii Mikhailov · 30 N Gould St Ste R, Sheridan, Wyoming 82801'),
       ]),
     ],
   );

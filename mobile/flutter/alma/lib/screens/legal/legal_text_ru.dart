@@ -220,9 +220,9 @@ class LegalTextRu {
         LegalBlock.fact('Компания', 'Pazl LLC'),
         LegalBlock.fact('Форма', 'Limited liability company'),
         LegalBlock.fact('Юрисдикция', 'Wyoming, United States'),
-        LegalBlock.factBlank('Юридический адрес', 'registered address'),
-        LegalBlock.factBlank('Регистрационный номер', 'filing ID'),
-        LegalBlock.factBlank('В лице', 'managing member'),
+        LegalBlock.fact('Юридический адрес', '30 N Gould St Ste R, Sheridan, Wyoming 82801'),
+        LegalBlock.fact('Регистрационный номер', '2026-002034771'),
+        LegalBlock.fact('В лице', 'Anatolii Mikhailov'),
       ]),
       LegalSection('Контакт', [
         LegalBlock.fact('Почта', 'hello@pazl.ai'),
@@ -240,7 +240,7 @@ class LegalTextRu {
         LegalBlock.para('Платформа ODR Европейской комиссии закрылась в июле 2025 года, и ссылки на неё здесь нет: ссылка на платформу, которой больше не существует, хуже, чем отсутствие ссылки. Мы не обязаны обращаться к альтернативному органу урегулирования споров и не берём на себя такого обязательства. Напиши на hello@pazl.ai — ответит человек.'),
       ]),
       LegalSection('Ответственный за содержание', [
-        LegalBlock.factBlank('По §18 (2) MStV', 'name and address'),
+        LegalBlock.fact('По §18 (2) MStV', 'Anatolii Mikhailov · 30 N Gould St Ste R, Sheridan, Wyoming 82801'),
       ]),
     ],
   );
