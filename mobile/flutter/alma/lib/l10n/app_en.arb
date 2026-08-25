@@ -304,6 +304,82 @@
   "@cabDeleteCodeHint": {
     "description": "settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup"
   },
+  "cabModalityCardinal": "cardinal",
+  "@cabModalityCardinal": {
+    "description": "balance/dominant factor vocabulary, 25.08.2026"
+  },
+  "cabModalityFixed": "fixed",
+  "@cabModalityFixed": {
+    "description": "balance/dominant factor vocabulary, 25.08.2026"
+  },
+  "cabModalityMutable": "mutable",
+  "@cabModalityMutable": {
+    "description": "balance/dominant factor vocabulary, 25.08.2026"
+  },
+  "cabFactorDominantElement": "dominant element — {element}",
+  "@cabFactorDominantElement": {
+    "description": "balance/dominant factor in the read-from meta line, 25.08.2026",
+    "placeholders": {
+      "element": {}
+    }
+  },
+  "cabFactorDominantModality": "dominant mode — {modality}",
+  "@cabFactorDominantModality": {
+    "description": "balance/dominant factor in the read-from meta line, 25.08.2026",
+    "placeholders": {
+      "modality": {}
+    }
+  },
+  "cabFactorNoElement": "missing element — {element}",
+  "@cabFactorNoElement": {
+    "description": "balance/dominant factor in the read-from meta line, 25.08.2026",
+    "placeholders": {
+      "element": {}
+    }
+  },
+  "cabFactorDominantPlanet": "dominant planet — {planet}",
+  "@cabFactorDominantPlanet": {
+    "description": "balance/dominant factor in the read-from meta line, 25.08.2026",
+    "placeholders": {
+      "planet": {}
+    }
+  },
+  "cabFactorDominantSign": "dominant sign — {sign}",
+  "@cabFactorDominantSign": {
+    "description": "balance/dominant factor in the read-from meta line, 25.08.2026",
+    "placeholders": {
+      "sign": {}
+    }
+  },
+  "cabFactorMoonPhase": "moon phase — {phase}",
+  "@cabFactorMoonPhase": {
+    "description": "balance/dominant factor in the read-from meta line, 25.08.2026",
+    "placeholders": {
+      "phase": {}
+    }
+  },
+  "cabFactorLunarDay": "lunar day {n}",
+  "@cabFactorLunarDay": {
+    "description": "balance/dominant factor in the read-from meta line, 25.08.2026",
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "cabFactorDayBirth": "day birth",
+  "@cabFactorDayBirth": {
+    "description": "balance/dominant factor vocabulary, 25.08.2026"
+  },
+  "cabFactorNightBirth": "night birth",
+  "@cabFactorNightBirth": {
+    "description": "balance/dominant factor vocabulary, 25.08.2026"
+  },
+  "legalLastUpdated": "Last updated {date}",
+  "@legalLastUpdated": {
+    "description": "header line of a legal document",
+    "placeholders": {
+      "date": {}
+    }
+  },
   "cabGuest": "Guest",
   "@cabGuest": {
     "description": "from Cabinet/cab.guest"

@@ -240,6 +240,61 @@ class LRu extends L {
   String get cabDeleteCodeHint => 'Код';
 
   @override
+  String get cabModalityCardinal => 'кардинальный';
+
+  @override
+  String get cabModalityFixed => 'фиксированный';
+
+  @override
+  String get cabModalityMutable => 'мутабельный';
+
+  @override
+  String cabFactorDominantElement(Object element) {
+    return 'стихия-доминанта — $element';
+  }
+
+  @override
+  String cabFactorDominantModality(Object modality) {
+    return 'ведущий крест — $modality';
+  }
+
+  @override
+  String cabFactorNoElement(Object element) {
+    return '$element в карте отсутствует';
+  }
+
+  @override
+  String cabFactorDominantPlanet(Object planet) {
+    return 'планета-доминанта — $planet';
+  }
+
+  @override
+  String cabFactorDominantSign(Object sign) {
+    return 'знак-доминанта — $sign';
+  }
+
+  @override
+  String cabFactorMoonPhase(Object phase) {
+    return 'фаза Луны — $phase';
+  }
+
+  @override
+  String cabFactorLunarDay(Object n) {
+    return 'лунный день $n';
+  }
+
+  @override
+  String get cabFactorDayBirth => 'дневное рождение';
+
+  @override
+  String get cabFactorNightBirth => 'ночное рождение';
+
+  @override
+  String legalLastUpdated(Object date) {
+    return 'Обновлено $date';
+  }
+
+  @override
   String get cabGuest => 'Гость';
 
   @override

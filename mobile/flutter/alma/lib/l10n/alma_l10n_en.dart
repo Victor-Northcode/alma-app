@@ -240,6 +240,61 @@ class LEn extends L {
   String get cabDeleteCodeHint => 'Code';
 
   @override
+  String get cabModalityCardinal => 'cardinal';
+
+  @override
+  String get cabModalityFixed => 'fixed';
+
+  @override
+  String get cabModalityMutable => 'mutable';
+
+  @override
+  String cabFactorDominantElement(Object element) {
+    return 'dominant element — $element';
+  }
+
+  @override
+  String cabFactorDominantModality(Object modality) {
+    return 'dominant mode — $modality';
+  }
+
+  @override
+  String cabFactorNoElement(Object element) {
+    return 'missing element — $element';
+  }
+
+  @override
+  String cabFactorDominantPlanet(Object planet) {
+    return 'dominant planet — $planet';
+  }
+
+  @override
+  String cabFactorDominantSign(Object sign) {
+    return 'dominant sign — $sign';
+  }
+
+  @override
+  String cabFactorMoonPhase(Object phase) {
+    return 'moon phase — $phase';
+  }
+
+  @override
+  String cabFactorLunarDay(Object n) {
+    return 'lunar day $n';
+  }
+
+  @override
+  String get cabFactorDayBirth => 'day birth';
+
+  @override
+  String get cabFactorNightBirth => 'night birth';
+
+  @override
+  String legalLastUpdated(Object date) {
+    return 'Last updated $date';
+  }
+
+  @override
   String get cabGuest => 'Guest';
 
   @override

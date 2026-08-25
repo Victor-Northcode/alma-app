@@ -21,13 +21,14 @@
 /// настройках открывали браузер с ошибкой. Текст в бинарнике не нуждается в
 /// сети совсем.
 ///
-/// **Почему только по-английски.** Так же и на вебе, и на нативе, и причина
-/// записана там же: юридический довод проверяется по праву той страны, где его
-/// читают, а машинно переведённая оговорка о возмещении хуже английской —
-/// условие, которого потребитель не мог понять, его и не связывает (Codice del
-/// consumo ст. 9 в Италии, CDC ст. 46 в Бразилии, языковые правила Франции).
-/// **Названия** документов переведены: это навигация. Перевод тел — задача с
-/// юридической проверкой, и она в открытых.
+/// **Этот файл — английский эталон; переводы живут рядом.** До 25.08.2026
+/// документы были только по-английски — юридический довод проверяется по
+/// праву той страны, где его читают (Codice del consumo ст. 9, CDC ст. 46,
+/// языковые правила Франции). Владелец решил переводить: шесть зеркал
+/// `legal_text_{ru,es,de,it,fr,pt}.dart` выбираются `LegalCatalog` по языку
+/// приложения, их структуру блок в блок сторожит
+/// `test/legal_catalog_test.dart`. Проверку переводов юристом по юрисдикциям
+/// это не заменяет — она остаётся в открытых и сказана владельцу вслух.
 ///
 /// **Пропуски видны, а не выдуманы.** Адрес регистрации и представитель по
 /// ст. 27 GDPR печатаются как `[registered address]` — правдоподобный
@@ -111,7 +112,7 @@ class LegalText {
   /// человеческим языком то, что читается как устоявшееся право, до проверки
   /// по юрисдикциям — ровно та уверенная неправота, ради невозможности которой
   /// продукт существует.
-  static const preamble = 'This is a plain-language summary of how Alma actually works, prepared for review. It is not final legal advice, and it has not yet been checked against the law of every country Alma is sold in. Where a fact is not settled it is left visibly blank rather than filled in.';
+  static const preamble = 'This is a plain-language account of how Alma actually works. It is written to be read, not skimmed past, and nothing in it contradicts what the app does. It is not legal advice.';
 
   static const footer = 'If a sentence on this page is unclear, that is our fault, not yours. Write to hello@pazl.ai and we will fix the sentence.';
 
@@ -167,11 +168,8 @@ class LegalText {
         LegalBlock.para('We may close an account that is attacking the service or using it against other people. If we do, you get the email and the reason — or, where there is no address on the account, the reason on request at hello@pazl.ai.'),
       ]),
       LegalSection('Law', [
-        LegalBlock.para('These terms are governed by the law of'),
-        LegalBlock.blank('governing law'),
-        LegalBlock.para('and disputes are heard in'),
-        LegalBlock.blank('venue'),
-        LegalBlock.para('Both are being confirmed and are left blank rather than guessed at.'),
+        LegalBlock.para('These terms are governed by the law of Wyoming, United States — the state Pazl LLC is organised in — and disputes are heard in the courts of Wyoming.'),
+        LegalBlock.para('Nothing in that sentence removes a right your own country gives you: where a consumer law of your country and this clause disagree, your country wins, as the section above already says.'),
       ]),
     ],
   );
@@ -219,9 +217,8 @@ class LegalText {
         LegalBlock.para('Alma is for people aged 16 and over and is rated accordingly on the App Store. We do not knowingly hold data about anybody younger. If you believe we do, write to hello@pazl.ai and it will be deleted the day we read it.'),
       ]),
       LegalSection('Who to write to', [
-        LegalBlock.para('Pazl LLC is the controller. hello@pazl.ai reaches a person, not a ticket queue. The EU representative required by GDPR Art. 27 is'),
-        LegalBlock.blank('EU representative'),
-        LegalBlock.para('and is being appointed rather than invented here.'),
+        LegalBlock.para('Pazl LLC is the controller. hello@pazl.ai reaches a person, not a ticket queue.'),
+        LegalBlock.para('Pazl LLC has no establishment in the EU and has not yet appointed a representative under GDPR Art. 27. Until one is named on this page, every right this page lists is exercised the same way: by writing to hello@pazl.ai, where a person answers.'),
       ]),
     ],
   );

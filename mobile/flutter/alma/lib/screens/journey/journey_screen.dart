@@ -587,7 +587,23 @@ class _JourneyScreenState extends State<JourneyScreen> {
             CeremonialField(
               controller: _placeQuery,
               hint: l.journeyCaptureSearchPlace,
+              // Клавиатура поднимается сама: шаг существует ради этого поля,
+              // и тап по нему перед началом набора был лишним движением
+              // (владелец, 25.08.2026: «само сразу не выпрыгивает»).
+              autofocus: true,
               onChanged: _searchPlaces,
+              // Enter — та самая «кнопка продолжить»: берётся верхняя
+              // подсказка, у неё и так золотая звезда «лучшее совпадение».
+              onSubmitted: (_) {
+                if (_places.isEmpty) return;
+                final best = _places.first;
+                FocusScope.of(context).unfocus();
+                setState(() {
+                  _place = best;
+                  _placeQuery.text = best.label;
+                  _places = const [];
+                });
+              },
             ),
             const SizedBox(height: 8),
             for (final (index, place) in _places.indexed)

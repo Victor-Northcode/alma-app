@@ -297,10 +297,65 @@ extension CabinetWordsMore on CabinetWords {
     return lower && l.localeName.startsWith('en') ? name.toLowerCase() : name;
   }
 
+
+  /// Стихия, крест и фаза — словами каталога; незнакомый токен остаётся собой.
+  static String _element(L l, String key) => switch (key) {
+        'fire' => l.cabElementFire,
+        'earth' => l.cabElementEarth,
+        'air' => l.cabElementAir,
+        'water' => l.cabElementWater,
+        _ => key,
+      };
+
+  static String _modality(L l, String key) => switch (key) {
+        'cardinal' => l.cabModalityCardinal,
+        'fixed' => l.cabModalityFixed,
+        'mutable' => l.cabModalityMutable,
+        _ => key,
+      };
+
+  static String _phase(L l, String key) => switch (key) {
+        'new moon' => l.cabPhaseNewMoon,
+        'waxing crescent' => l.cabPhaseWaxingCrescent,
+        'first quarter' => l.cabPhaseFirstQuarter,
+        'waxing gibbous' => l.cabPhaseWaxingGibbous,
+        'full moon' => l.cabPhaseFullMoon,
+        'waning gibbous' => l.cabPhaseWaningGibbous,
+        'last quarter' => l.cabPhaseLastQuarter,
+        'waning crescent' => l.cabPhaseWaningCrescent,
+        _ => key,
+      };
+
   /// Общая половина обеих форм: тела, аспекты и дома — словами каталога,
   /// знаки — как их напечатал движок.
   static String _translated(L l, String raw, {bool lower = false}) {
     var out = raw;
+
+    // **Балансовые факты — фразами каталога.** Движок цитирует не только
+    // позиции: «dominant element fire», «moon phase full moon», «day birth».
+    // Через словарь тел они проходили нетронутыми, и русская глава носила
+    // подпись «Прочитано из dominant element…» (владелец, 25.08.2026).
+    // Фразы разбираются целиком и до пословных замен — иначе «sun» внутри
+    // «dominant planet sun» успел бы уехать в замену тела и сломать шаблон.
+    out = out.replaceAllMapped(
+        RegExp(r'\bdominant element (fire|earth|air|water)\b'),
+        (m) => l.cabFactorDominantElement(_element(l, m.group(1)!)));
+    out = out.replaceAllMapped(
+        RegExp(r'\bdominant modality (cardinal|fixed|mutable)\b'),
+        (m) => l.cabFactorDominantModality(_modality(l, m.group(1)!)));
+    out = out.replaceAllMapped(
+        RegExp(r'\bno (fire|earth|air|water) in the chart\b'),
+        (m) => l.cabFactorNoElement(_element(l, m.group(1)!)));
+    out = out.replaceAllMapped(RegExp(r'\bdominant planet ([a-z_]+)\b'),
+        (m) => l.cabFactorDominantPlanet(CabinetWords.body(l, m.group(1)!)));
+    out = out.replaceAllMapped(RegExp(r'\bdominant sign ([A-Za-z]+)\b'),
+        (m) => l.cabFactorDominantSign(sign(l, m.group(1)!)));
+    out = out.replaceAllMapped(RegExp(r'\bmoon phase ([a-z ]+?)\s*$'),
+        (m) => l.cabFactorMoonPhase(_phase(l, m.group(1)!)));
+    out = out.replaceAllMapped(RegExp(r'\blunar day (\d+)\b'),
+        (m) => l.cabFactorLunarDay(m.group(1)!));
+    out = out.replaceAll(RegExp(r'\bday birth\b'), l.cabFactorDayBirth);
+    out = out.replaceAll(RegExp(r'\bnight birth\b'), l.cabFactorNightBirth);
 
     // Дом: «house 9» → «9-й дом». Регистр числа — до имени тела, иначе
     // «house» успевает уехать в другую замену.

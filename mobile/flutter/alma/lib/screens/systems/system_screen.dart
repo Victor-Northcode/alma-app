@@ -288,6 +288,13 @@ class _SystemScreenState extends State<SystemScreen> {
       // Титул кадра W3 живёт на вклейке («Pisces and Leo»), а не над списком:
       // второй заголовок сверху делал бы экран пары непохожим на кадр.
       title: pair ? null : CabinetWordsMore.system(l, widget.system),
+      // Единый крестик — и на экране системы: отсюда не было ни стрелки, ни
+      // крестика, и человек внутри натальной карты не имел явного «назад»
+      // (владелец, 25.08.2026). У пары своя шапка со стрелкой — ей второй
+      // выход не нужен.
+      trailing: pair
+          ? null
+          : AlmaClose(onTap: () => Navigator.of(context).maybePop()),
       onRefresh: _load,
       children: [
         if (pair) ...[

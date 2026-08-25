@@ -241,6 +241,61 @@ class LIt extends L {
   String get cabDeleteCodeHint => 'Codice';
 
   @override
+  String get cabModalityCardinal => 'cardinale';
+
+  @override
+  String get cabModalityFixed => 'fisso';
+
+  @override
+  String get cabModalityMutable => 'mutevole';
+
+  @override
+  String cabFactorDominantElement(Object element) {
+    return 'elemento dominante — $element';
+  }
+
+  @override
+  String cabFactorDominantModality(Object modality) {
+    return 'modalità dominante — $modality';
+  }
+
+  @override
+  String cabFactorNoElement(Object element) {
+    return 'niente $element nel tema';
+  }
+
+  @override
+  String cabFactorDominantPlanet(Object planet) {
+    return 'pianeta dominante — $planet';
+  }
+
+  @override
+  String cabFactorDominantSign(Object sign) {
+    return 'segno dominante — $sign';
+  }
+
+  @override
+  String cabFactorMoonPhase(Object phase) {
+    return 'fase lunare — $phase';
+  }
+
+  @override
+  String cabFactorLunarDay(Object n) {
+    return 'giorno lunare $n';
+  }
+
+  @override
+  String get cabFactorDayBirth => 'nascita diurna';
+
+  @override
+  String get cabFactorNightBirth => 'nascita notturna';
+
+  @override
+  String legalLastUpdated(Object date) {
+    return 'Ultimo aggiornamento: $date';
+  }
+
+  @override
   String get cabGuest => 'Ospite';
 
   @override

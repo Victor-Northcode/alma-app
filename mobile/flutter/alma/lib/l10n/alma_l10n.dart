@@ -563,6 +563,84 @@ abstract class L {
   /// **'Code'**
   String get cabDeleteCodeHint;
 
+  /// balance/dominant factor vocabulary, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'cardinal'**
+  String get cabModalityCardinal;
+
+  /// balance/dominant factor vocabulary, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'fixed'**
+  String get cabModalityFixed;
+
+  /// balance/dominant factor vocabulary, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'mutable'**
+  String get cabModalityMutable;
+
+  /// balance/dominant factor in the read-from meta line, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'dominant element — {element}'**
+  String cabFactorDominantElement(Object element);
+
+  /// balance/dominant factor in the read-from meta line, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'dominant mode — {modality}'**
+  String cabFactorDominantModality(Object modality);
+
+  /// balance/dominant factor in the read-from meta line, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'missing element — {element}'**
+  String cabFactorNoElement(Object element);
+
+  /// balance/dominant factor in the read-from meta line, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'dominant planet — {planet}'**
+  String cabFactorDominantPlanet(Object planet);
+
+  /// balance/dominant factor in the read-from meta line, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'dominant sign — {sign}'**
+  String cabFactorDominantSign(Object sign);
+
+  /// balance/dominant factor in the read-from meta line, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'moon phase — {phase}'**
+  String cabFactorMoonPhase(Object phase);
+
+  /// balance/dominant factor in the read-from meta line, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'lunar day {n}'**
+  String cabFactorLunarDay(Object n);
+
+  /// balance/dominant factor vocabulary, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'day birth'**
+  String get cabFactorDayBirth;
+
+  /// balance/dominant factor vocabulary, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'night birth'**
+  String get cabFactorNightBirth;
+
+  /// header line of a legal document
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated {date}'**
+  String legalLastUpdated(Object date);
+
   /// from Cabinet/cab.guest
   ///
   /// In en, this message translates to:

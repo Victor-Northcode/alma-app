@@ -241,6 +241,61 @@ class LFr extends L {
   String get cabDeleteCodeHint => 'Code';
 
   @override
+  String get cabModalityCardinal => 'cardinal';
+
+  @override
+  String get cabModalityFixed => 'fixe';
+
+  @override
+  String get cabModalityMutable => 'mutable';
+
+  @override
+  String cabFactorDominantElement(Object element) {
+    return 'élément dominant — $element';
+  }
+
+  @override
+  String cabFactorDominantModality(Object modality) {
+    return 'mode dominant — $modality';
+  }
+
+  @override
+  String cabFactorNoElement(Object element) {
+    return 'élément manquant — $element';
+  }
+
+  @override
+  String cabFactorDominantPlanet(Object planet) {
+    return 'planète dominante — $planet';
+  }
+
+  @override
+  String cabFactorDominantSign(Object sign) {
+    return 'signe dominant — $sign';
+  }
+
+  @override
+  String cabFactorMoonPhase(Object phase) {
+    return 'phase de la lune — $phase';
+  }
+
+  @override
+  String cabFactorLunarDay(Object n) {
+    return 'jour lunaire $n';
+  }
+
+  @override
+  String get cabFactorDayBirth => 'naissance de jour';
+
+  @override
+  String get cabFactorNightBirth => 'naissance de nuit';
+
+  @override
+  String legalLastUpdated(Object date) {
+    return 'Dernière mise à jour : $date';
+  }
+
+  @override
   String get cabGuest => 'Mode invité';
 
   @override

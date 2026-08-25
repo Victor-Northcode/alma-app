@@ -242,6 +242,61 @@ class LEs extends L {
   String get cabDeleteCodeHint => 'Código';
 
   @override
+  String get cabModalityCardinal => 'cardinal';
+
+  @override
+  String get cabModalityFixed => 'fijo';
+
+  @override
+  String get cabModalityMutable => 'mutable';
+
+  @override
+  String cabFactorDominantElement(Object element) {
+    return 'elemento dominante — $element';
+  }
+
+  @override
+  String cabFactorDominantModality(Object modality) {
+    return 'modo dominante — $modality';
+  }
+
+  @override
+  String cabFactorNoElement(Object element) {
+    return 'sin $element en la carta';
+  }
+
+  @override
+  String cabFactorDominantPlanet(Object planet) {
+    return 'planeta dominante — $planet';
+  }
+
+  @override
+  String cabFactorDominantSign(Object sign) {
+    return 'signo dominante — $sign';
+  }
+
+  @override
+  String cabFactorMoonPhase(Object phase) {
+    return 'fase lunar — $phase';
+  }
+
+  @override
+  String cabFactorLunarDay(Object n) {
+    return 'día lunar $n';
+  }
+
+  @override
+  String get cabFactorDayBirth => 'nacimiento diurno';
+
+  @override
+  String get cabFactorNightBirth => 'nacimiento nocturno';
+
+  @override
+  String legalLastUpdated(Object date) {
+    return 'Última actualización: $date';
+  }
+
+  @override
   String get cabGuest => 'Invitado';
 
   @override

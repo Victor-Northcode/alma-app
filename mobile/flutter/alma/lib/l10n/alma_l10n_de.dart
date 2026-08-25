@@ -241,6 +241,61 @@ class LDe extends L {
   String get cabDeleteCodeHint => 'Code';
 
   @override
+  String get cabModalityCardinal => 'kardinal';
+
+  @override
+  String get cabModalityFixed => 'fix';
+
+  @override
+  String get cabModalityMutable => 'veränderlich';
+
+  @override
+  String cabFactorDominantElement(Object element) {
+    return 'dominantes Element — $element';
+  }
+
+  @override
+  String cabFactorDominantModality(Object modality) {
+    return 'dominanter Modus — $modality';
+  }
+
+  @override
+  String cabFactorNoElement(Object element) {
+    return 'fehlendes Element — $element';
+  }
+
+  @override
+  String cabFactorDominantPlanet(Object planet) {
+    return 'dominanter Planet — $planet';
+  }
+
+  @override
+  String cabFactorDominantSign(Object sign) {
+    return 'dominantes Zeichen — $sign';
+  }
+
+  @override
+  String cabFactorMoonPhase(Object phase) {
+    return 'Mondphase — $phase';
+  }
+
+  @override
+  String cabFactorLunarDay(Object n) {
+    return 'Mondtag $n';
+  }
+
+  @override
+  String get cabFactorDayBirth => 'Tagesgeburt';
+
+  @override
+  String get cabFactorNightBirth => 'Nachtgeburt';
+
+  @override
+  String legalLastUpdated(Object date) {
+    return 'Zuletzt aktualisiert am $date';
+  }
+
+  @override
   String get cabGuest => 'Gast';
 
   @override

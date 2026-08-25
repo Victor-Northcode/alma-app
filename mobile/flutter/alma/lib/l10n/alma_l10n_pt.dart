@@ -241,6 +241,61 @@ class LPt extends L {
   String get cabDeleteCodeHint => 'Código';
 
   @override
+  String get cabModalityCardinal => 'cardinal';
+
+  @override
+  String get cabModalityFixed => 'fixo';
+
+  @override
+  String get cabModalityMutable => 'mutável';
+
+  @override
+  String cabFactorDominantElement(Object element) {
+    return 'elemento dominante — $element';
+  }
+
+  @override
+  String cabFactorDominantModality(Object modality) {
+    return 'modo dominante — $modality';
+  }
+
+  @override
+  String cabFactorNoElement(Object element) {
+    return 'sem $element no mapa';
+  }
+
+  @override
+  String cabFactorDominantPlanet(Object planet) {
+    return 'planeta dominante — $planet';
+  }
+
+  @override
+  String cabFactorDominantSign(Object sign) {
+    return 'signo dominante — $sign';
+  }
+
+  @override
+  String cabFactorMoonPhase(Object phase) {
+    return 'fase da lua — $phase';
+  }
+
+  @override
+  String cabFactorLunarDay(Object n) {
+    return 'dia lunar $n';
+  }
+
+  @override
+  String get cabFactorDayBirth => 'nascimento diurno';
+
+  @override
+  String get cabFactorNightBirth => 'nascimento noturno';
+
+  @override
+  String legalLastUpdated(Object date) {
+    return 'Última atualização: $date';
+  }
+
+  @override
   String get cabGuest => 'Convidado';
 
   @override

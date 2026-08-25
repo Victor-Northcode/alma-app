@@ -145,7 +145,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
   bool _writing = false;
 
   /// Один тихий повтор после обрыва сети во время письма — см. catch в [_load].
-  bool _autoRetried = false;
+  int _autoRetries = 0;
 
   /// Повтор назначен и ждёт своей секунды: страница показывает то же письмо,
   /// а не мигает пустотой между отказом и вторым заходом.
@@ -389,16 +389,17 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // которую действительно читают.
       if (response.reading != null) ReadingTally.noteOpen(widget.system);
     } on AlmaError catch (error) {
-      // **Обрыв сети во время письма получает один тихий повтор, а не экран
-      // ошибки.** Письмо идёт до трёх минут, и мигнувшая сеть (или таймаут на
-      // медленной) роняла человека в «что-то не работает», хотя ИИ ещё пишет —
-      // владелец: «вместо ошибки лоадер, пока ИИ грузит» (24 авг). Повтор один:
-      // второй отказ подряд — уже правда о сети, и её честнее показать.
-      // `ServerRefused` не повторяется — отказ сервера повтором не лечится.
-      if (error is NetworkDown && !_autoRetried && mounted) {
-        _autoRetried = true;
+      // **Сбой на открытии получает тихие повторы под лоадером, а не экран
+      // ошибки.** Письмо идёт до трёх минут; мигнувшая сеть, перезапуск
+      // сервера или таймаут роняли человека в «что-то пошло не так», хотя ИИ
+      // ещё пишет — владелец приносил это дважды (24 и 25 авг). Повторов два,
+      // с нарастающей паузой: три отказа подряд — уже правда, и её честнее
+      // показать. `ServerRefused` не повторяется никогда: типизированный отказ
+      // сервера (нет права, нет времени рождения) повтором не лечится.
+      if (error is! ServerRefused && _autoRetries < 2 && mounted) {
+        _autoRetries += 1;
         _retryWait = true;
-        Future<void>.delayed(const Duration(seconds: 2), () {
+        Future<void>.delayed(Duration(seconds: 2 * _autoRetries), () {
           _retryWait = false;
           if (mounted && _reading == null) _load();
         });
@@ -2149,8 +2150,27 @@ class _BlurredTail extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = L.of(context);
     final style = _chapterProse();
+    // **Маска-альфа вместо накладки цветом.** Прежний вариант тонировал хвост
+    // цветом страницы и резал колонку низом экрана: последняя видимая строка
+    // обрубалась на половине высоты букв (владелец, 25.08.2026: «полстроки
+    // обрубает»). Маска гасит сам текст: мягкий вход наверху, ровная середина
+    // и полное растворение к 88 % высоты — ниже уже чистая страница, и никакой
+    // обрыв в принципе не виден, на какой бы строке ни кончилось место.
     return ClipRect(
-      child: Stack(
+      child: ShaderMask(
+        blendMode: BlendMode.dstIn,
+        shaderCallback: (rect) => const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0x99FFFFFF),
+            Color(0xFFFFFFFF),
+            Color(0xFFFFFFFF),
+            Color(0x00FFFFFF),
+          ],
+          stops: [0, 0.14, 0.52, 0.88],
+        ).createShader(rect),
+        child: Stack(
         fit: StackFit.expand,
         children: [
           // Без `bottom`: колонка кладётся своей естественной высотой и режется
@@ -2195,27 +2215,8 @@ class _BlurredTail extends StatelessWidget {
               ),
             ),
           ),
-          // Затухание: сверху текст чист, к низу гаснет до половины — но не до
-          // нуля. Числа эталона: 0 → .22 на 40 % → .5 к низу.
-          Positioned.fill(
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AlmaPalette.parchmentA.withValues(alpha: 0),
-                      AlmaPalette.parchmentA.withValues(alpha: 0.22),
-                      AlmaPalette.parchmentA.withValues(alpha: 0.5),
-                    ],
-                    stops: const [0, 0.4, 1],
-                  ),
-                ),
-              ),
-            ),
-          ),
         ],
+        ),
       ),
     );
   }

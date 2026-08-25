@@ -297,14 +297,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   /// Выбор уходит на сервер, экран верит себе сразу — та же оптимистика, что у
   /// языка на iOS.
-  Future<void> _setDaily({String? daily, int? hour}) async {
+  Future<void> _setDaily({String? daily}) async {
     final updated = Map<String, dynamic>.from(_daily ?? {});
     if (daily != null) updated['daily'] = daily;
-    if (hour != null) updated['hour'] = hour;
     setState(() => _daily = updated);
     try {
       final server =
-          await SessionScope.of(context).client.setDaily(daily: daily, hour: hour);
+          await SessionScope.of(context).client.setDaily(daily: daily);
       if (mounted) setState(() => _daily = server);
     } on AlmaError {
       // Экран уже показывает выбор; сервер догонит при следующем открытии.
@@ -503,7 +502,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ];
     }
     final mode = daily['daily'] as String? ?? 'off';
-    final hour = (daily['hour'] as num?)?.toInt() ?? 10;
     final zone = daily['timezone'] as String?;
     final verified = (daily['verified_days'] as num?)?.toInt();
 
@@ -556,17 +554,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 : l.dailySettingOnlyMattersDetail,
             style: AlmaType.meta,
           ),
-          const SizedBox(height: 14),
-          // Час — строка со значением, выбор попапом из всех 24 (владелец,
-          // 25.08.2026: «можно выбрать любое время, выбор удобный, в попап»).
-          // Строка про тихие часы 22–8 умерла вместе с самими тихими часами.
-          _Row(
-            label: l.dailySettingHour,
-            value: '${hour.toString().padLeft(2, '0')}:00',
-            arrow: true,
-            onTap: () => _pickHour(l, hour),
-          ),
           const SizedBox(height: 6),
+          // Часа здесь больше нет. Утром 25.08 владелец просил «любое время,
+          // сеткой в попапе» — вечером того же дня отменил: «чтоб нельзя было
+          // выбрать, работало само». Письмо приходит в свой час (10:00 по
+          // местному) без единой ручки; сетка прожила восемь часов.
+
           if (zone != null)
             _Row(
               label: l.dailySettingTimezone,
@@ -873,58 +866,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  /// Час письма — все двадцать четыре, сеткой в попапе. Тихих часов больше
-  /// нет: ночь защищалась от нас, а не от человека, который сам выбрал 23:00.
-  void _pickHour(L l, int current) {
-    _nightDialog<void>(
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.dailySettingHour, style: AlmaType.headingM),
-          const SizedBox(height: 14),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (var hour = 0; hour < 24; hour++)
-                InkWell(
-                  borderRadius: BorderRadius.circular(15),
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    Navigator.of(context).pop();
-                    _setDaily(hour: hour);
-                  },
-                  child: Container(
-                    width: 62,
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      border: Border.all(
-                        color: hour == current
-                            ? AlmaPalette.gold
-                            : AlmaPalette.hairline,
-                      ),
-                    ),
-                    child: Text(
-                      '${hour.toString().padLeft(2, '0')}:00',
-                      style: AlmaType.numeral.copyWith(
-                        fontSize: 14,
-                        color: hour == current
-                            ? AlmaPalette.goldBright
-                            : AlmaPalette.body,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   /// Пересохранить своё рождение с правкой одного поля. Сервер на `is_self`
   /// замещает старую запись и пересчитывает системы; экран перечитывает
   /// сессию, чтобы строки показали новое сразу.
@@ -1145,6 +1086,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             CeremonialField(
               controller: query,
               hint: l.journeyCaptureSearchPlace,
+              autofocus: true,
               onChanged: (text) {
                 debounce?.cancel();
                 debounce = Timer(const Duration(milliseconds: 250), () async {

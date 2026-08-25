@@ -112,6 +112,12 @@ class _AlmaScreenState extends State<AlmaScreen>
   /// Держим отдельно, как `ChatModel.refusal` на нативе.
   AlmaError? _refusal;
 
+  /// Когда отказ случился. Вкладка живёт вечно (IndexedStack), и отказ
+  /// вчерашней отправки встречал человека при следующем открытии как
+  /// свежий — «открываешь чат и сразу что-то пошло не так» (владелец,
+  /// 25.08.2026). Старше минуты — не показывается.
+  DateTime? _refusedAt;
+
   /// Фраза сервера про исчерпанный лимит. Она уже переведена и — в отличие от
   /// нашей — называет, **когда** вопросы вернутся; поэтому стена печатает её, а
   /// свою общую строку оставляет на случай, когда сервер промолчал.
@@ -445,9 +451,13 @@ class _AlmaScreenState extends State<AlmaScreen>
           // показать, что мы не знаем, кто перед нами. Его месячные тридцать
           // тоже кончаются, и тогда фраза сервера (в ней сказано, когда они
           // вернутся) остаётся единственным, что объясняет молчание.
-          if (session.isSubscriber) _refusal = error;
+          if (session.isSubscriber) {
+            _refusal = error;
+            _refusedAt = DateTime.now();
+          }
         } else {
           _refusal = error;
+          _refusedAt = DateTime.now();
         }
       });
       quotaHit = limit && !session.isSubscriber;
@@ -524,6 +534,18 @@ class _AlmaScreenState extends State<AlmaScreen>
   /// здесь действительно встречает, имеют по своей фразе в каталоге; фраза
   /// сервера остаётся только там, где она заведомо переведена и говорит
   /// больше нашей.
+  /// Отказ, который ещё имеет право быть на экране. Протухший (старше
+  /// минуты) — след прошлого визита, не встреча.
+  AlmaError? get _freshRefusal {
+    final refusal = _refusal;
+    final at = _refusedAt;
+    if (refusal == null) return null;
+    if (at != null && DateTime.now().difference(at) > const Duration(minutes: 1)) {
+      return null;
+    }
+    return refusal;
+  }
+
   String _refusalSentence(L l, AlmaError error) {
     switch (error) {
       case NetworkDown():
@@ -787,7 +809,7 @@ class _AlmaScreenState extends State<AlmaScreen>
         // снова пуста, и экран возвращается к вступлению. Без этой строки
         // единственное объяснение молчания исчезало вместе с ней: человек
         // видел свой вопрос обратно в поле и ни слова о том, почему.
-        if (_refusal != null) _refusalView(l, _refusal!),
+        if (_freshRefusal case final refusal?) _refusalView(l, refusal),
       ],
     );
   }
@@ -797,7 +819,7 @@ class _AlmaScreenState extends State<AlmaScreen>
   Widget _transcript(L l) {
     // Хвост ленты: пока идёт ответ — строка ожидания, после неудачи — отказ.
     // Одновременно их не бывает, поэтому это одна лишняя позиция, а не две.
-    final tail = _sending || _refusal != null ? 1 : 0;
+    final tail = _sending || _freshRefusal != null ? 1 : 0;
     return ListView.builder(
       controller: _scroll,
       // Лента начинается сразу под линейкой шапки: на макете (s7) у неё
@@ -811,7 +833,7 @@ class _AlmaScreenState extends State<AlmaScreen>
       itemBuilder: (context, i) {
         if (i == _turns.length) {
           if (_sending) return ThinkingView(stage: _stage, slot: _thinkingSlot);
-          return _refusalView(l, _refusal!);
+          return _refusalView(l, _freshRefusal ?? _refusal!);
         }
         final turn = _turns[i];
         return ChatTurnView(

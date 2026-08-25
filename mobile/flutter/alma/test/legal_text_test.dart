@@ -45,8 +45,11 @@ void main() {
       expect(all.fold<int>(0, (n, d) => n + d.sections.length), 37);
     });
 
-    test('абзацев 72, списков 6 на 25 пунктов', () {
-      expect(all.fold<int>(0, (n, d) => n + countOf<LegalPara>(d)), 72);
+    test('абзацев 71, списков 6 на 25 пунктов', () {
+      // 25.08.2026: право и суд заполнены Вайомингом, представитель по ст. 27
+      // назван честным состоянием — три «пропуска» стали двумя абзацами
+      // текста, и счёт абзацев сместился с 72 на 71.
+      expect(all.fold<int>(0, (n, d) => n + countOf<LegalPara>(d)), 71);
       expect(all.fold<int>(0, (n, d) => n + countOf<LegalPoints>(d)), 6);
       // Пункты, а не списки: ровно тут и утекал текст.
       final points = all
@@ -57,10 +60,10 @@ void main() {
       expect(points, 25);
     });
 
-    test('фактов 5, незаполненных фактов 5, пропусков 3', () {
+    test('фактов 5, незаполненных фактов 5, пропусков 0', () {
       expect(all.fold<int>(0, (n, d) => n + countOf<LegalFact>(d)), 5);
       expect(all.fold<int>(0, (n, d) => n + countOf<LegalFactBlank>(d)), 5);
-      expect(all.fold<int>(0, (n, d) => n + countOf<LegalBlank>(d)), 3);
+      expect(all.fold<int>(0, (n, d) => n + countOf<LegalBlank>(d)), 0);
     });
 
     test('ни одной пустой строки — блок без текста читается как пропажа', () {
@@ -127,7 +130,9 @@ void main() {
           .whereType<LegalBlank>()
           .map((b) => b.what)
           .toList();
-      expect(blanks, ['governing law', 'venue', 'EU representative']);
+      // Текстовых пропусков не осталось (25.08.2026) — но сама проверка
+      // живёт: новый LegalBlank обязан быть замечен, а не просочиться.
+      expect(blanks, isEmpty);
 
       final factBlanks = all
           .expand((d) => d.sections)

@@ -7,6 +7,7 @@ import '../../design/screen_scaffold.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
+import 'legal_catalog.dart';
 import 'legal_text.dart';
 
 /// Один из пяти юридических документов.
@@ -35,7 +36,9 @@ class LegalScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    final doc = LegalText.of(document);
+    // Документ — на языке приложения (владелец, 25.08.2026); незнакомая
+    // локаль честно получает английский эталон.
+    final doc = LegalCatalog.of(l.localeName, document);
     return Scaffold(
       backgroundColor: AlmaPalette.night,
       body: ScreenScaffold(
@@ -66,11 +69,13 @@ class LegalScreen extends StatelessWidget {
             padding: const EdgeInsets.only(top: 10, bottom: 4),
             child: Text(title(l, document), style: AlmaType.displayL),
           ),
-          Text('Last updated ${LegalText.updated}', style: AlmaType.meta),
+          Text(l.legalLastUpdated(LegalCatalog.updated(l.localeName)),
+              style: AlmaType.meta),
           // Признание — перед документом, а не под ним.
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text(LegalText.preamble, style: AlmaType.meta),
+            child: Text(LegalCatalog.preamble(l.localeName),
+                style: AlmaType.meta),
           ),
           const _Rule(),
           Text(doc.lead, style: AlmaType.voice),
@@ -94,7 +99,8 @@ class LegalScreen extends StatelessWidget {
           const _Rule(),
           Padding(
             padding: const EdgeInsets.only(top: 10),
-            child: Text(LegalText.footer, style: AlmaType.meta),
+            child: Text(LegalCatalog.footer(l.localeName),
+                style: AlmaType.meta),
           ),
           Padding(
             padding: const EdgeInsets.only(top: 6),
