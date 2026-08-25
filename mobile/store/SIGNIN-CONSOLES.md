@@ -1,4 +1,8 @@
-# Вход через Google и Apple — что осталось сделать в консолях
+# Вход через Google и Apple — консоли
+
+**Статус 25.08.2026: всё выполнено.** Консоли настроил браузерный Клод, прод
+обновлён, `/v1/auth/providers` отвечает `{"google":true,"apple":true,"email":true}`.
+Ниже — как это устроено, и одна переменная, которую надо не забыть в Codemagic.
 
 Код готов целиком: сервер проверяет id_token (`backend/alma/auth/providers.py`),
 приложение рисует кнопки и ходит в нативные SDK (`lib/net/providers_sign_in.dart`,
@@ -40,17 +44,27 @@
 
 ## 2 · Apple (iOS)
 
-1. **developer.apple.com** → Certificates, Identifiers & Profiles →
-   Identifiers → App ID `ai.pazl.alma` → включить capability
-   **Sign In with Apple** → Save. (Профили после этого перевыпускаются;
-   Codemagic с automatic signing подхватит сам.)
+1. **developer.apple.com** → Identifiers → App ID → включена capability
+   **Sign In with Apple**. ⚠️ App ID приложения — **`ai.pazl.alma.flutter`**,
+   не `ai.pazl.alma` (первая версия этой записки ошибалась; Android-package
+   при этом ai.pazl.alma — у платформ разные идентификаторы, и это нормально).
+   Профили после включения перевыпускаются; Codemagic с automatic signing
+   подхватывает сам на следующей сборке.
 2. Никакого Service ID и ключа `.p8` для нативного входа не нужно: сервер
    проверяет identity token по открытым ключам Apple, aud — bundle id.
-3. На проде добавить в `.env`: `APPLE_CLIENT_ID=ai.pazl.alma` — и перезапустить
-   контейнер. Кнопка Apple появится на iOS сама (на Android она не показывается
-   по решению владельца).
-4. **Порядок важен:** env ставить только ПОСЛЕ включения capability — кнопка,
+3. На проде в `.env`: `APPLE_CLIENT_ID=ai.pazl.alma.flutter`. Кнопка Apple
+   появляется на iOS сама (на Android не показывается по решению владельца).
+4. **Порядок важен:** env только ПОСЛЕ включения capability — кнопка,
    за которой системный лист падает с ошибкой, хуже отсутствия кнопки.
+
+## 2½ · Codemagic — не забыть одну переменную
+
+Релизная сборка Android восстанавливает `google-services.json` из переменной
+**`GOOGLE_SERVICES_JSON`** (группа `firebase`, base64, Secure). Пока там лежит
+старый файл без `oauth_client` — релиз уедет с мёртвым Google-входом, хотя
+локально всё работает. Обновить: содержимое свежего
+`mobile/flutter/alma/android/app/google-services.json` → base64 одной строкой →
+вставить в Codemagic UI вместо старого значения.
 
 Проверка: `curl https://api-alma.pazl.ai/v1/auth/providers` → `"apple": true`;
 на TestFlight-сборке — нажать кнопку, пройти системный лист, увидеть свою
