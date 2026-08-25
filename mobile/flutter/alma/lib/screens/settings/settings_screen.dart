@@ -1,25 +1,30 @@
 import 'dart:async';
+import 'dart:math' show Random;
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
+import 'package:flutter/services.dart'
+    show HapticFeedback, MethodChannel, PlatformException;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../design/buttons.dart';
+import '../../design/emblem.dart' show CeremonialField;
 import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
 import '../../design/typography.dart';
+import '../../design/wheel.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../billing/store_words.dart';
 import '../../net/alma_client.dart';
 import '../../notify/push_devices.dart';
-import '../../net/models.dart' show FunnelStage, SystemSlug;
+import '../../net/models.dart'
+    show BirthInput, FunnelStage, Place, Profile, SystemSlug;
 import '../../state/locale_override.dart';
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
@@ -104,17 +109,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _confirmationOf(AlmaSession session) =>
       session.account?.email ?? session.account?.id;
 
-  bool _typedMatches(String? confirmation) {
-    if (confirmation == null || confirmation.isEmpty) return false;
-    final typed = _confirm.text.trim();
-    // Адрес — без учёта регистра; идентификатор аккаунта — точно, потому что
-    // он сгенерирован, а не набран по памяти, и сложенный регистр принял бы
-    // почти-совпадение.
-    return confirmation.contains('@')
-        ? typed.toLowerCase() == confirmation.toLowerCase()
-        : typed == confirmation;
-  }
-
   Future<void> _exportEverything() async {
     setState(() => _export = _Export.working);
     try {
@@ -131,10 +125,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
-  Future<void> _confirmDelete(AlmaSession session) async {
+  /// Сам снос — сервером, с настоящим подтверждением (почта или id счёта):
+  /// серверный контракт не менялся, поменялся только жест человека — четыре
+  /// цифры с экрана вместо адреса по памяти (владелец, 25.08.2026).
+  Future<void> _performDelete(AlmaSession session) async {
     final confirmation = _confirmationOf(session);
-    if (!_typedMatches(confirmation)) {
-      setState(() => _delete = _Delete.mismatch);
+    if (confirmation == null || confirmation.isEmpty) {
+      setState(() => _delete = _Delete.failed);
       return;
     }
     setState(() => _delete = _Delete.working);
@@ -148,7 +145,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       try {
         await AlmaPush.instance.forget(session.client);
       } catch (_) {}
-      await session.client.deleteAccount(confirmation!);
+      await session.client.deleteAccount(confirmation);
       if (!mounted) return;
       setState(() => _delete = _Delete.done);
       // **Дважды.** После удаления сохранённый токен указывает на строку,
@@ -298,127 +295,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           (row) => row['active'] == true && row['kind'] != 'one_time');
 
 
-  /// Что стоит под строкой удаления. Подтверждение набором — не «вы уверены?»:
-  /// одно нажатие мимо не должно уничтожать оплаченные чтения.
-  List<Widget> _deleteState(L l, AlmaSession session) {
-    final confirmation = _confirmationOf(session);
-    final guest = confirmation != null && !confirmation.contains('@');
-    switch (_delete) {
-      case _Delete.idle:
-        return const [];
-      case _Delete.done:
-        return [_note(l.stateAccountDeleted)];
-      // **Отказ не уносит форму.** Раньше `failed` возвращал одну строку, а с
-      // ней исчезали и набранное подтверждение, и обе кнопки: человек, у
-      // которого запрос не прошёл, читал «не удалось» и не имел, чем повторить,
-      // — оставалось закрыть и начать сначала. Ошибка стоит **под** кнопками,
-      // как на нативе, и форма остаётся на месте.
-      case _Delete.working:
-      case _Delete.failed:
-      case _Delete.confirming:
-      case _Delete.mismatch:
-        return [
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l.cabPlanDeleteWarning, style: AlmaType.meta),
-                // Гостю — как в макете: почему у него нет адреса, и сам код
-                // под этим. Вошедшему объяснять нечего, у него подсказка стоит
-                // в самом поле: «Type your email address to confirm».
-                if (guest) ...[
-                  const SizedBox(height: 14),
-                  Text(l.cabSettingsDeleteGuestNote, style: AlmaType.meta),
-                  const SizedBox(height: 6),
-                  SelectableText(confirmation,
-                      style: AlmaType.numeral.copyWith(
-                          color: AlmaPalette.gold, fontSize: 15)),
-                ],
-                const SizedBox(height: 10),
-                Container(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  alignment: Alignment.centerLeft,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AlmaPalette.hairline),
-                    borderRadius: BorderRadius.circular(26),
-                  ),
-                  child: TextField(
-                    controller: _confirm,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    // Поле стояло пустым и без единого слова о том, что в него
-                    // набирать. Подсказка — та же, что на нативе, и она разная
-                    // у гостя и у вошедшего, потому что и набирают они разное.
-                    keyboardType:
-                        guest ? TextInputType.text : TextInputType.emailAddress,
-                    style: AlmaType.body.copyWith(fontSize: 16),
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: guest
-                          ? l.cabSettingsDeleteConfirmGuest
-                          : l.cabSettingsDeleteConfirm,
-                      hintStyle: AlmaType.body
-                          .copyWith(fontSize: 16, color: AlmaPalette.muted3),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Row(children: [
-                  AlmaButton(
-                    kind: AlmaButtonKind.danger,
-                    fills: false,
-                    label: _delete == _Delete.working
-                        ? l.cabPlanDeleting
-                        : l.cabPlanDeleteForever,
-                    // Кнопка гаснет, пока набранное не совпало: отказ после
-                    // нажатия — это отказ, которого можно было не допускать.
-                    // И на время запроса — тоже, чтобы второе нажатие не ушло
-                    // вторым удалением.
-                    onTap: _typedMatches(confirmation) &&
-                            _delete != _Delete.working
-                        ? () => _confirmDelete(session)
-                        : null,
-                  ),
-                  const SizedBox(width: 12),
-                  AlmaButton(
-                    kind: AlmaButtonKind.veil,
-                    fills: false,
-                    label: l.cabinetBack,
-                    onTap: _delete == _Delete.working
-                        ? null
-                        : () => setState(() {
-                              _confirm.clear();
-                              _delete = _Delete.idle;
-                            }),
-                  ),
-                ]),
-                if (_delete == _Delete.mismatch ||
-                    _delete == _Delete.failed) ...[
-                  const SizedBox(height: 10),
-                  Text(
-                    _delete == _Delete.mismatch
-                        ? l.cabPlanDeleteMismatch
-                        : l.cabPlanDeleteFailed,
-                    style:
-                        AlmaType.meta.copyWith(color: AlmaPalette.disagree),
-                  ),
-                ],
-                const SizedBox(height: 6),
-              ],
-            ),
-          ),
-        ];
-    }
-  }
-
-  Widget _note(String text) => Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Text(text, style: AlmaType.meta),
-      );
-
   /// Выбор уходит на сервер, экран верит себе сразу — та же оптимистика, что у
   /// языка на iOS.
   Future<void> _setDaily({String? daily, int? hour}) async {
@@ -470,6 +346,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 4),
             Text(account!.email!, style: AlmaType.meta),
           ],
+          if (!(account?.isGuest ?? true)) ...[
+            const SizedBox(height: 16),
+            // Выход — на этом устройстве, не с сервера: карта и покупки
+            // остаются в аккаунте, вернуться можно любой из трёх дверей.
+            // Кнопка появилась 25.08.2026 по слову владельца — до неё выйти
+            // было попросту нечем.
+            Align(
+              alignment: Alignment.centerLeft,
+              child: _OutlineButton(
+                label: l.cabSignOut,
+                onTap: () => _confirmSignOut(l, session),
+              ),
+            ),
+          ],
           if (account?.isGuest ?? true) ...[
             const SizedBox(height: 14),
             // Честное состояние, а не упрёк: карта живёт на этом телефоне, вход
@@ -494,18 +384,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ]),
         if (profile != null)
+          // Каждая строка рождения — дверь в правку (владелец, 25.08.2026:
+          // «при нажатии можно поменять любое данное, красиво и удобно, в
+          // попап»). Правка любого поля пересохраняет свой профиль целиком —
+          // сервер на `is_self` замещает старую запись и пересчитывает карту.
           _Section(label: l.cabBirthDataLabel, children: [
-            _Row(label: l.cabSettingsDate, value: _civilDate(l.localeName, profile.birthDate)),
+            _Row(
+              label: l.cabSettingsDate,
+              value: _civilDate(l.localeName, profile.birthDate),
+              arrow: true,
+              onTap: () => _editBirthDate(l, profile),
+            ),
             _Row(
               label: l.cabSettingsTime,
               value: profile.birthTime == null
                   ? l.cabUnknownTime
                   : '${profile.birthTime} · ${profile.timezone}',
+              arrow: true,
+              onTap: () => _editBirthTime(l, profile),
             ),
-            if (profile.placeLabel != null)
-              _Row(label: l.cabSettingsPlace, value: profile.placeLabel!),
-            if (profile.name != null)
-              _Row(label: l.cabSettingsFullName, value: profile.name!),
+            _Row(
+              label: l.cabSettingsPlace,
+              value: profile.placeLabel ?? '—',
+              arrow: true,
+              onTap: () => _editBirthPlace(l, profile),
+            ),
+            _Row(
+              label: l.cabSettingsFullName,
+              value: profile.name ?? '—',
+              arrow: true,
+              onTap: () => _editName(l, profile),
+            ),
           ]),
         ..._everyMorning(l),
         _Section(label: l.cabSettingsLanguage, children: [
@@ -523,11 +432,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ]),
         ..._planSection(l, session),
         _Section(label: l.cabDataAndLegal, children: [
-          // **Выгрузка и удаление — то, чего в порте не было вовсе.**
-          //
-          // Оба магазина требуют способ забрать свои данные и удалить аккаунт
-          // изнутри приложения; у Play это ещё и поле формы, которое
-          // проверяется. На нативе они здесь же и в этом же порядке.
+          // **Порядок владельца (25.08.2026): документы → выгрузка →
+          // удаление.** Опасное — последним, чтобы палец, идущий к частым
+          // строкам, не проходил над ним.
+          _Row(
+            label: l.cabSettingsDocuments,
+            value: '',
+            arrow: true,
+            onTap: () => _pickDocument(l),
+          ),
           _Row(
             label: l.cabSettingsExportData,
             value: '',
@@ -542,23 +455,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: '',
             arrow: true,
             danger: true,
-            onTap: () => setState(() {
-              _confirm.clear();
-              _delete = _Delete.confirming;
-            }),
-          ),
-          ..._deleteState(l, session),
-          // **Документы — одна строка с выбором, а не пять строк списка.**
-          //
-          // Пять юридических строк подряд съедали пол-экрана настроек, и
-          // владелец просил сократить листание (22 авг). Сам текст по-прежнему
-          // в бинарнике и открывается внутри приложения — прежняя починка про
-          // мёртвые ссылки на сайт не тронута, изменился только вход.
-          _Row(
-            label: l.cabSettingsDocuments,
-            value: '',
-            arrow: true,
-            onTap: () => _pickDocument(l),
+            // Удаление целиком живёт в попапе (владелец, 25.08.2026), и
+            // подтверждение — четыре цифры с экрана, а не почта по памяти:
+            // защита нужна от промаха пальцем, а не от самого человека.
+            onTap: () => _confirmDeletePopup(l, session),
           ),
           // **Мелкий шрифт — в конце и мелким.**
           //
@@ -623,13 +523,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             l.dailySettingOccasionally,
             l.dailySettingOnlyWhatMatters,
           ],
+          // Слова — серверные: 'occasionally' / 'only_what_matters'. Экран
+          // отправлял 'occasional'/'important', сервер молча отвечал 422, и
+          // тумблер никогда не сохранялся — оптимистичный выбор жил до первого
+          // ответа сервера и откатывался в «Выключено» (поймано на эмуляторе
+          // 25.08.2026 при проверке выбора часа).
           selected: switch (mode) {
-            'occasional' => 1,
-            'important' => 2,
+            'occasionally' => 1,
+            'only_what_matters' => 2,
             _ => 0,
           },
           onChanged: (index) {
-            final value = const ['off', 'occasional', 'important'][index];
+            final value =
+                const ['off', 'occasionally', 'only_what_matters'][index];
             // Статус спрашивается У СИСТЕМЫ в момент включения, а не берётся из
             // кэша загрузки экрана: человек давал разрешение секунду назад, а
             // попап всё равно говорил «выключены» — владелец поймал 24 авг.
@@ -645,21 +551,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
         if (mode != 'off') ...[
           const SizedBox(height: 14),
           Text(
-            mode == 'occasional'
+            mode == 'occasionally'
                 ? l.dailySettingOccasionallyDetail
                 : l.dailySettingOnlyMattersDetail,
             style: AlmaType.meta,
           ),
           const SizedBox(height: 14),
-          // Час — одна строка со значением и шагом вверх-вниз, как на нативе.
-          // Четырнадцать пилюль занимали пол-экрана ради одного числа.
-          _HourRow(
+          // Час — строка со значением, выбор попапом из всех 24 (владелец,
+          // 25.08.2026: «можно выбрать любое время, выбор удобный, в попап»).
+          // Строка про тихие часы 22–8 умерла вместе с самими тихими часами.
+          _Row(
             label: l.dailySettingHour,
-            hour: hour,
-            onChange: (value) => _setDaily(hour: value),
+            value: '${hour.toString().padLeft(2, '0')}:00',
+            arrow: true,
+            onTap: () => _pickHour(l, hour),
           ),
-          const SizedBox(height: 12),
-          Text(l.dailySettingQuiet, style: AlmaType.meta),
           const SizedBox(height: 6),
           if (zone != null)
             _Row(
@@ -730,6 +636,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   /// и „сохранить“ вот тут [в списке настроек], а в попапе». Инлайновых строк
   /// под настройками больше нет.
   void _confirmExport(L l) {
+    // «Файл лёг в Загрузки» живёт за пределами builder: StatefulBuilder
+    // перестраивается, а состояние сохранённости — нет.
+    String? savedNote;
     _nightDialog<void>(
       builder: (context) => StatefulBuilder(
         builder: (context, refresh) {
@@ -738,6 +647,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
             refresh(() {});
             await _exportEverything();
             if (context.mounted) refresh(() {});
+          }
+
+          // **Две платформы — два жеста владельца (25.08.2026).** Android
+          // скачивает файл в системные «Загрузки» — кнопка и значит «скачать»;
+          // iOS открывает лист «поделиться», где человек сам выбирает, куда
+          // сохранить или кому отправить. Отказ канала (старый API) на
+          // Android откатывается в тот же лист.
+          Future<void> take(String path) async {
+            if (!kIsWeb && Platform.isAndroid) {
+              try {
+                await const MethodChannel('ai.pazl.alma/downloads')
+                    .invokeMethod('save', {
+                  'path': path,
+                  'name': 'alma-export.json',
+                  'mime': 'application/json',
+                });
+                HapticFeedback.selectionClick();
+                refresh(() => savedNote = l.cabFileSaved);
+                return;
+              } on PlatformException {
+                // Падаем в лист «поделиться» ниже.
+              }
+            }
+            await Share.shareXFiles([XFile(path)]);
           }
 
           return Column(
@@ -749,7 +682,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 switch (export) {
                   _ExportWorking() => l.cabPlanExporting,
-                  _ExportReady() => l.cabExportReady,
+                  _ExportReady() => savedNote ?? l.cabExportReady,
                   _ExportFailed() => l.cabPlanExportFailed,
                   _ => l.cabExportNote,
                 },
@@ -759,7 +692,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (export is _ExportReady)
                 AlmaButton(
                   label: l.cabSaveFile,
-                  onTap: () => Share.shareXFiles([XFile(export.path)]),
+                  onTap: () => take(export.path),
                 )
               else
                 AlmaButton(
@@ -809,6 +742,493 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  /// Выход — попап с одним честным обещанием: аккаунт остаётся, уходит
+  /// только этот телефон (владелец, 25.08.2026).
+  void _confirmSignOut(L l, AlmaSession session) {
+    _nightDialog<void>(
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.cabSignOut, style: AlmaType.headingM),
+          const SizedBox(height: 10),
+          Text(l.cabSignOutNote, style: AlmaType.body),
+          const SizedBox(height: 18),
+          AlmaButton(
+            label: l.cabSignOut,
+            onTap: () async {
+              final navigator = Navigator.of(context);
+              // Пуш-устройство отвязывается до выхода: токен телефона не
+              // должен продолжать получать письма чужого теперь аккаунта.
+              try {
+                await AlmaPush.instance.forget(session.client);
+              } catch (_) {}
+              await session.client.signOut();
+              await session.start(force: true);
+              navigator.pop();
+            },
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(l.paywallNotNow,
+                  style: AlmaType.meta.copyWith(color: AlmaPalette.gold)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Удаление — целиком в попапе. Подтверждение — четыре цифры с этого же
+  /// экрана: защита от промаха пальцем, а не экзамен по собственной почте
+  /// (владелец, 25.08.2026: «в попап, и код попроще»).
+  void _confirmDeletePopup(L l, AlmaSession session) {
+    final code = (1000 + Random().nextInt(9000)).toString();
+    _confirm.clear();
+    setState(() => _delete = _Delete.idle);
+    _nightDialog<void>(
+      builder: (context) => StatefulBuilder(
+        builder: (context, refresh) {
+          final delete = _delete;
+          if (delete == _Delete.done) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(l.stateAccountDeleted, style: AlmaType.body),
+                const SizedBox(height: 16),
+                AlmaButton(
+                  label: l.journeyClose,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+              ],
+            );
+          }
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.cabSettingsDeleteAccount, style: AlmaType.headingM),
+              const SizedBox(height: 10),
+              Text(l.cabPlanDeleteWarning, style: AlmaType.body),
+              const SizedBox(height: 14),
+              Text(l.cabDeleteCodeLead, style: AlmaType.meta),
+              const SizedBox(height: 8),
+              Center(
+                child: Text(
+                  code,
+                  style: AlmaType.numeral.copyWith(
+                      fontSize: 30,
+                      letterSpacing: 8,
+                      color: AlmaPalette.goldBright),
+                ),
+              ),
+              const SizedBox(height: 12),
+              CeremonialField(
+                controller: _confirm,
+                hint: l.cabDeleteCodeHint,
+                keyboardType: TextInputType.number,
+                onChanged: (_) => refresh(() {}),
+              ),
+              const SizedBox(height: 14),
+              AlmaButton(
+                kind: AlmaButtonKind.danger,
+                label: delete == _Delete.working
+                    ? l.cabPlanDeleting
+                    : l.cabPlanDeleteForever,
+                onTap: _confirm.text.trim() == code &&
+                        delete != _Delete.working
+                    ? () async {
+                        await _performDelete(session);
+                        if (context.mounted) refresh(() {});
+                      }
+                    : null,
+              ),
+              if (delete == _Delete.failed) ...[
+                const SizedBox(height: 10),
+                Text(l.cabPlanDeleteFailed,
+                    style:
+                        AlmaType.meta.copyWith(color: AlmaPalette.disagree)),
+              ],
+              const SizedBox(height: 8),
+              Center(
+                child: TextButton(
+                  onPressed: delete == _Delete.working
+                      ? null
+                      : () => Navigator.of(context).pop(),
+                  child: Text(l.paywallNotNow,
+                      style: AlmaType.meta.copyWith(color: AlmaPalette.gold)),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Час письма — все двадцать четыре, сеткой в попапе. Тихих часов больше
+  /// нет: ночь защищалась от нас, а не от человека, который сам выбрал 23:00.
+  void _pickHour(L l, int current) {
+    _nightDialog<void>(
+      builder: (context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.dailySettingHour, style: AlmaType.headingM),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (var hour = 0; hour < 24; hour++)
+                InkWell(
+                  borderRadius: BorderRadius.circular(15),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.of(context).pop();
+                    _setDaily(hour: hour);
+                  },
+                  child: Container(
+                    width: 62,
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15),
+                      border: Border.all(
+                        color: hour == current
+                            ? AlmaPalette.gold
+                            : AlmaPalette.hairline,
+                      ),
+                    ),
+                    child: Text(
+                      '${hour.toString().padLeft(2, '0')}:00',
+                      style: AlmaType.numeral.copyWith(
+                        fontSize: 14,
+                        color: hour == current
+                            ? AlmaPalette.goldBright
+                            : AlmaPalette.body,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Пересохранить своё рождение с правкой одного поля. Сервер на `is_self`
+  /// замещает старую запись и пересчитывает системы; экран перечитывает
+  /// сессию, чтобы строки показали новое сразу.
+  Future<bool> _saveBirth(
+    AlmaSession session,
+    Profile base, {
+    String? birthDate,
+    String? birthTime,
+    bool clearTime = false,
+    Place? place,
+    String? name,
+  }) async {
+    try {
+      await session.client.saveProfile(
+        BirthInput(
+          birthDate: birthDate ?? base.birthDate,
+          birthTime: clearTime ? null : (birthTime ?? base.birthTime),
+          latitude: place?.latitude ?? base.latitude,
+          longitude: place?.longitude ?? base.longitude,
+          timezone: place?.timezone ?? base.timezone,
+          placeLabel: place?.label ?? base.placeLabel,
+          name: name ?? base.name,
+        ),
+        locale: session.locale,
+        isSelf: true,
+      );
+      await session.start(force: true);
+      HapticFeedback.selectionClick();
+      return true;
+    } on AlmaError {
+      return false;
+    }
+  }
+
+  /// Дата рождения — три барабана онбординга, в ночном попапе.
+  void _editBirthDate(L l, Profile profile) {
+    final session = SessionScope.of(context);
+    final parts = profile.birthDate.split('-').map(int.parse).toList();
+    var year = parts[0], month = parts[1], day = parts[2];
+    var saving = false;
+    _nightDialog<void>(
+      builder: (context) => StatefulBuilder(
+        builder: (context, refresh) {
+          final lastDay = DateTime(year, month + 1, 0).day;
+          if (day > lastDay) day = lastDay;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.cabSettingsDate, style: AlmaType.headingM),
+              const SizedBox(height: 12),
+              SizedBox(
+                height: 180,
+                child: Row(children: [
+                  Expanded(
+                    child: AlmaWheel(
+                      label: '',
+                      showLabel: false,
+                      min: 1,
+                      max: lastDay,
+                      value: day,
+                      onChanged: (v) => refresh(() => day = v),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: AlmaWheel(
+                      label: '',
+                      showLabel: false,
+                      min: 1,
+                      max: 12,
+                      value: month,
+                      caption: (m) => DateFormat('LLLL', l.localeName)
+                          .format(DateTime(2000, m)),
+                      onChanged: (v) => refresh(() => month = v),
+                    ),
+                  ),
+                  Expanded(
+                    child: AlmaWheel(
+                      label: '',
+                      showLabel: false,
+                      min: 1900,
+                      max: 2026,
+                      value: year,
+                      onChanged: (v) => refresh(() => year = v),
+                    ),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 14),
+              AlmaButton(
+                label: saving ? l.stateLoadingShort : l.cabSave,
+                onTap: saving
+                    ? null
+                    : () async {
+                        refresh(() => saving = true);
+                        String two(int v) => v.toString().padLeft(2, '0');
+                        final date = '$year-${two(month)}-${two(day)}';
+                        final ok = await _saveBirth(session, profile,
+                            birthDate: date);
+                        if (!context.mounted) return;
+                        if (ok) {
+                          Navigator.of(context).pop();
+                        } else {
+                          refresh(() => saving = false);
+                        }
+                      },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// Время рождения — два барабана и честное «не знаю».
+  void _editBirthTime(L l, Profile profile) {
+    final session = SessionScope.of(context);
+    final known = profile.birthTime?.split(':').map(int.parse).toList();
+    var hour = known == null ? 12 : known[0];
+    var minute = known == null ? 0 : known[1];
+    var saving = false;
+    _nightDialog<void>(
+      builder: (context) => StatefulBuilder(
+        builder: (context, refresh) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.cabSettingsTime, style: AlmaType.headingM),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 180,
+              child: Row(children: [
+                Expanded(
+                  child: AlmaWheel(
+                    label: '',
+                    showLabel: false,
+                    min: 0,
+                    max: 23,
+                    value: hour,
+                    caption: (v) => v.toString().padLeft(2, '0'),
+                    onChanged: (v) => refresh(() => hour = v),
+                  ),
+                ),
+                Expanded(
+                  child: AlmaWheel(
+                    label: '',
+                    showLabel: false,
+                    min: 0,
+                    max: 59,
+                    value: minute,
+                    caption: (v) => v.toString().padLeft(2, '0'),
+                    onChanged: (v) => refresh(() => minute = v),
+                  ),
+                ),
+              ]),
+            ),
+            const SizedBox(height: 14),
+            AlmaButton(
+              label: saving ? l.stateLoadingShort : l.cabSave,
+              onTap: saving
+                  ? null
+                  : () async {
+                      refresh(() => saving = true);
+                      String two(int v) => v.toString().padLeft(2, '0');
+                      final ok = await _saveBirth(session, profile,
+                          birthTime: '${two(hour)}:${two(minute)}');
+                      if (!context.mounted) return;
+                      if (ok) {
+                        Navigator.of(context).pop();
+                      } else {
+                        refresh(() => saving = false);
+                      }
+                    },
+            ),
+            const SizedBox(height: 8),
+            Center(
+              child: TextButton(
+                onPressed: saving
+                    ? null
+                    : () async {
+                        refresh(() => saving = true);
+                        final ok = await _saveBirth(session, profile,
+                            clearTime: true);
+                        if (!context.mounted) return;
+                        if (ok) {
+                          Navigator.of(context).pop();
+                        } else {
+                          refresh(() => saving = false);
+                        }
+                      },
+                child: Text(l.journeyCaptureUnknownTime,
+                    style: AlmaType.meta.copyWith(color: AlmaPalette.gold)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Место рождения — тот же поиск, что в онбординге, в попапе. Подсказки
+  /// приезжают со страной на языке приложения.
+  void _editBirthPlace(L l, Profile profile) {
+    final session = SessionScope.of(context);
+    final query = TextEditingController();
+    var found = <Place>[];
+    var saving = false;
+    Timer? debounce;
+    _nightDialog<void>(
+      builder: (context) => StatefulBuilder(
+        builder: (context, refresh) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l.cabSettingsPlace, style: AlmaType.headingM),
+            const SizedBox(height: 12),
+            CeremonialField(
+              controller: query,
+              hint: l.journeyCaptureSearchPlace,
+              onChanged: (text) {
+                debounce?.cancel();
+                debounce = Timer(const Duration(milliseconds: 250), () async {
+                  if (text.trim().length < 2) return;
+                  try {
+                    final places = await session.client
+                        .searchPlaces(text.trim(), locale: session.locale);
+                    if (context.mounted) refresh(() => found = places);
+                  } catch (_) {}
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 260),
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final place in found)
+                    InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: saving
+                          ? null
+                          : () async {
+                              refresh(() => saving = true);
+                              final ok = await _saveBirth(session, profile,
+                                  place: place);
+                              if (!context.mounted) return;
+                              if (ok) {
+                                Navigator.of(context).pop();
+                              } else {
+                                refresh(() => saving = false);
+                              }
+                            },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        child: Text(place.label, style: AlmaType.body),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Имя — как Alma здоровается. Пустое поле — законный способ убрать его.
+  void _editName(L l, Profile profile) {
+    final session = SessionScope.of(context);
+    final name = TextEditingController(text: profile.name ?? '');
+    var saving = false;
+    _nightDialog<void>(
+      builder: (context) => StatefulBuilder(
+        builder: (context, refresh) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l.cabSettingsFullName, style: AlmaType.headingM),
+            const SizedBox(height: 12),
+            CeremonialField(
+              controller: name,
+              hint: l.journeyNamePlaceholder,
+            ),
+            const SizedBox(height: 14),
+            AlmaButton(
+              label: saving ? l.stateLoadingShort : l.cabSave,
+              onTap: saving
+                  ? null
+                  : () async {
+                      refresh(() => saving = true);
+                      final ok = await _saveBirth(session, profile,
+                          name: name.text.trim());
+                      if (!context.mounted) return;
+                      if (ok) {
+                        Navigator.of(context).pop();
+                      } else {
+                        refresh(() => saving = false);
+                      }
+                    },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1523,62 +1943,6 @@ class _TriToggle extends StatelessWidget {
   }
 }
 
-class _HourRow extends StatelessWidget {
-  const _HourRow(
-      {required this.label, required this.hour, required this.onChange});
-
-  final String label;
-  final int hour;
-  final ValueChanged<int> onChange;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 15),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
-      ),
-      child: Row(children: [
-        Expanded(child: Text(label, style: AlmaType.meta)),
-        Text('${hour.toString().padLeft(2, '0')}:00',
-            style: AlmaType.numeral.copyWith(fontSize: 18)),
-        const SizedBox(width: 8),
-        Column(mainAxisSize: MainAxisSize.min, children: [
-          // Никогда ночью: восемь утра и девять вечера — границы, за которые
-          // шаг не выпускает. Тот же договор, что печатает строка тихих часов.
-          _Step(glyph: '⌃', onTap: hour < 21 ? () => onChange(hour + 1) : null),
-          _Step(glyph: '⌄', onTap: hour > 8 ? () => onChange(hour - 1) : null),
-        ]),
-      ]),
-    );
-  }
-}
-
-class _Step extends StatelessWidget {
-  const _Step({required this.glyph, this.onTap});
-
-  final String glyph;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkResponse(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-        child: Text(
-          glyph,
-          style: TextStyle(
-            fontSize: 13,
-            color: onTap == null
-                ? AlmaPalette.muted3.withValues(alpha: 0.4)
-                : AlmaPalette.gold,
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 /// Обведённая кнопка — «Войти». Тот же вид, что на нативном экране: золотой
 /// контур на ночи, без заливки.
@@ -1644,7 +2008,7 @@ class _ExportReady extends _Export {
 }
 
 /// Где удаление аккаунта.
-enum _Delete { idle, confirming, mismatch, working, failed, done }
+enum _Delete { idle, working, failed, done }
 
 /// Где отмена подписки.
 ///

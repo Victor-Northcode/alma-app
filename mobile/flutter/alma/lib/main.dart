@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
+import 'package:flutter/gestures.dart' show DeviceGestureSettings;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
@@ -764,7 +765,22 @@ class _CabinetShellState extends State<CabinetShell> {
             ),
           );
         },
-        child: PageView(
+        child: Builder(builder: (context) {
+          // **Смах вкладок стал втрое неохотнее.** PageView выигрывал жест у
+          // вертикальной прокрутки при 18 точках увода пальца вбок: листаешь
+          // «Сегодня» вниз — и уезжаешь на «Мои системы» (владелец,
+          // 25.08.2026: «не реагировало на случайные мелкие движения»).
+          // Порог задаётся через gestureSettings ровно ЕМУ: PageView читает
+          // slop из своего MediaQuery, а каждой вкладке ниже возвращается
+          // системный — вертикальная прокрутка внутри осталась чуткой.
+          final media = MediaQuery.of(context);
+          Widget deliberate(Widget page) =>
+              MediaQuery(data: media, child: page);
+          return MediaQuery(
+            data: media.copyWith(
+              gestureSettings: const DeviceGestureSettings(touchSlop: 54),
+            ),
+            child: PageView(
           controller: _pages,
           onPageChanged: (index) {
             // Тактильный щелчок на смене вкладки — как на нативе просил владелец.
@@ -793,12 +809,14 @@ class _CabinetShellState extends State<CabinetShell> {
             setState(() => _tab = CabinetTab.values[index]);
           },
           children: [
-            const _Alive(child: TodayScreen()),
-            const _Alive(child: _SystemsTab()),
-            _Alive(child: AlmaScreen(tabs: _peek)),
-            const _Alive(child: SettingsScreen()),
+            deliberate(const _Alive(child: TodayScreen())),
+            deliberate(const _Alive(child: _SystemsTab())),
+            deliberate(_Alive(child: AlmaScreen(tabs: _peek))),
+            deliberate(const _Alive(child: SettingsScreen())),
           ],
-        ),
+            ),
+          );
+        }),
       ),
       // **Бар стоит на всех четырёх вкладках, включая Alma, и прячется только
       // пока пишут.**
@@ -964,3 +982,4 @@ class _AliveState extends State<_Alive> with AutomaticKeepAliveClientMixin {
     return widget.child;
   }
 }
+

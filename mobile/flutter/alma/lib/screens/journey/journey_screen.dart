@@ -159,7 +159,8 @@ class _JourneyScreenState extends State<JourneyScreen> {
     if (query.trim().length < 2) return;
     final session = SessionScope.of(context);
     try {
-      final places = await session.client.searchPlaces(query.trim());
+      final places = await session.client
+          .searchPlaces(query.trim(), locale: session.locale);
       if (mounted) setState(() => _places = places.take(5).toList());
     } on AlmaError {
       // Пустой список честнее сломанного экрана; строка «ничего не нашлось»

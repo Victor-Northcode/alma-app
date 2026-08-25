@@ -1,11 +1,14 @@
 package ai.pazl.alma
 
+import android.content.ContentValues
 import android.content.Intent
 import android.os.Build
+import android.provider.MediaStore
 import com.google.firebase.messaging.FirebaseMessaging
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 
 /**
  * Канал `ai.pazl.alma/push` — та же труба, что на iOS отдаёт `apnsToken`, плюс
@@ -47,6 +50,46 @@ class MainActivity : FlutterActivity() {
         pushChannel = channel
         // Холодный старт по тапу: payload ждёт launchPush.
         openedFrom(intent)?.let { pendingOpen = it }
+
+        // Канал загрузок: «Сохранить файл» на Android кладёт файл в системные
+        // «Загрузки» через MediaStore (владелец, 25.08.2026: «кнопка должна
+        // его скачивать»). Разрешений не нужно: с API 29 MediaStore.Downloads
+        // принимает записи от приложения без WRITE_EXTERNAL_STORAGE. Старее
+        // API 29 коллекции нет — канал честно отказывает, и Dart открывает
+        // системный лист «поделиться» вместо тихой ямы.
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DOWNLOADS)
+            .setMethodCallHandler { call, result ->
+                if (call.method != "save") {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                    // До API 29 у MediaStore нет коллекции Downloads, а прямой
+                    // путь требует опасного разрешения. Dart на этот отказ
+                    // откатывается в системный лист «поделиться».
+                    result.error("save_unsupported", "needs API 29", null)
+                    return@setMethodCallHandler
+                }
+                try {
+                    val path = call.argument<String>("path")!!
+                    val name = call.argument<String>("name")!!
+                    val mime = call.argument<String>("mime") ?: "application/octet-stream"
+                    val values = ContentValues().apply {
+                        put(MediaStore.Downloads.DISPLAY_NAME, name)
+                        put(MediaStore.Downloads.MIME_TYPE, mime)
+                    }
+                    val resolver = contentResolver
+                    val target = resolver.insert(
+                        MediaStore.Downloads.EXTERNAL_CONTENT_URI, values,
+                    ) ?: throw IllegalStateException("MediaStore refused the row")
+                    resolver.openOutputStream(target)!!.use { out ->
+                        File(path).inputStream().use { it.copyTo(out) }
+                    }
+                    result.success(null)
+                } catch (error: Exception) {
+                    result.error("save_failed", error.message, null)
+                }
+            }
     }
 
     /**
@@ -114,5 +157,6 @@ class MainActivity : FlutterActivity() {
 
     private companion object {
         const val CHANNEL = "ai.pazl.alma/push"
+        const val DOWNLOADS = "ai.pazl.alma/downloads"
     }
 }

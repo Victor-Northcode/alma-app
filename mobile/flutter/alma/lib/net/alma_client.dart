@@ -269,6 +269,12 @@ class AlmaClient {
 
   Future<bool> get hasAccount async => (await _tokens.read()) != null;
 
+  /// Выйти на этом устройстве: забыть токен. Аккаунт с картой и покупками
+  /// остаётся на сервере — вернуться можно любой из трёх дверей; следующий
+  /// `session.start` заводит свежего гостя (владелец, 25.08.2026: «сделай
+  /// чтоб можно было выйти с аккаунта»).
+  Future<void> signOut() => _tokens.clear();
+
   /* ── кто это ─────────────────────────────────────────────────────────── */
 
   Future<AlmaSessionInfo> session() async =>
@@ -365,11 +371,14 @@ class AlmaClient {
 
   /* ── места ───────────────────────────────────────────────────────────── */
 
-  Future<List<Place>> searchPlaces(String query) async {
+  Future<List<Place>> searchPlaces(String query, {String locale = 'en'}) async {
     // /v1/places/search, как в AlmaClient.swift — третий выдуманный путь,
     // пойманный живым сервером (после хаба и формы профилей).
-    final body =
-        await _get('/v1/places/search?q=${Uri.encodeQueryComponent(query)}&limit=8');
+    // `lang` локализует страну в подписи: «Москва, Россия», а не «, Russia»
+    // (владелец, 25.08.2026). Подпись сохраняется в профиль как есть.
+    final body = await _get(
+        '/v1/places/search?q=${Uri.encodeQueryComponent(query)}&limit=8'
+        '&lang=${Uri.encodeQueryComponent(locale)}');
     return _list(body, 'places')
         .map((e) => Place.fromJson((e as Map).cast<String, dynamic>()))
         .toList();

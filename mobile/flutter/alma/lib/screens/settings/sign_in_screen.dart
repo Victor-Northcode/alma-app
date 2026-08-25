@@ -14,6 +14,7 @@ import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/providers_sign_in.dart';
 import '../../state/session.dart';
+import 'sign_in_code_screen.dart';
 
 /// Вход в аккаунт.
 ///
@@ -40,10 +41,6 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   final _email = TextEditingController();
   final _token = TextEditingController();
-  final _code = TextEditingController();
-
-  /// Письмо отправлено — на экране поле шестизначного кода.
-  bool _codeSent = false;
 
   bool _working = false;
   String? _notice;
@@ -132,9 +129,11 @@ class _SignInScreenState extends State<SignInScreen> {
       setState(() {
         _provider = null;
         _noticeBad = true;
-        _notice = error is ServerRefused && error.message.isNotEmpty
-            ? error.message
-            : l.scrSignInFailed;
+        _notice = error is ServerRefused && error.code == 'apple_private_email'
+            ? l.scrSignInApplePrivate
+            : error is ServerRefused && error.message.isNotEmpty
+                ? error.message
+                : l.scrSignInFailed;
       });
     }
   }
@@ -144,7 +143,6 @@ class _SignInScreenState extends State<SignInScreen> {
     _email.removeListener(_refresh);
     _email.dispose();
     _token.dispose();
-    _code.dispose();
     super.dispose();
   }
 
@@ -206,38 +204,24 @@ class _SignInScreenState extends State<SignInScreen> {
   Future<void> _sendLink() async {
     final l = L.of(context);
     final session = SessionScope.of(context);
+    final navigator = Navigator.of(context);
     await _run(
       () async {
         final sent = await session.client
             .requestMagicLink(_email.text.trim(), locale: session.locale);
-        if (mounted) {
-          setState(() {
-            _debugToken = sent.debugToken;
-            // Письмо ушло — открываем ввод кода: у приложения нет deep-link,
-            // ссылка из письма открывает веб, телефон входит шестью цифрами
-            // (владелец, 24 авг).
-            _codeSent = true;
-          });
-        }
+        if (!mounted) return;
+        setState(() => _debugToken = sent.debugToken);
+        // Письмо ушло — человека красиво уводит на экран шести ячеек
+        // (владелец, 25.08.2026). Вернулся с «true» — вход случился, и этот
+        // экран закрывает себя сам.
+        final entered = await navigator.push<bool>(
+          MaterialPageRoute(
+            builder: (_) => SignInCodeScreen(email: _email.text.trim()),
+          ),
+        );
+        if (entered == true && mounted) navigator.maybePop();
       },
       done: l.scrSignInCodeSent,
-    );
-  }
-
-  /// Вход по коду из письма. Успех закрывает экран, как вход провайдером:
-  /// человек пришёл войти, вошёл — и стоит там, откуда пришёл.
-  Future<void> _signInWithCode() async {
-    final l = L.of(context);
-    final session = SessionScope.of(context);
-    final navigator = Navigator.of(context);
-    await _run(
-      () async {
-        await session.client
-            .consumeEmailCode(_email.text.trim(), _code.text.trim());
-        await session.start(force: true);
-        if (mounted) navigator.maybePop();
-      },
-      done: l.scrSignInDone,
     );
   }
 
@@ -301,43 +285,12 @@ class _SignInScreenState extends State<SignInScreen> {
                   keyboardType: TextInputType.emailAddress,
                   onSubmitted: (_) => _emailLooksReal ? _sendLink() : null,
                 ),
-                if (_codeSent) ...[
-                  // Письмо ушло — вводим шесть цифр из него. Кнопка ниже
-                  // остаётся живой: «отправить ещё раз» для тех, у кого письмо
-                  // не дошло.
-                  const SizedBox(height: 12),
-                  CeremonialField(
-                    controller: _code,
-                    hint: l.scrSignInCodeHint,
-                    keyboardType: TextInputType.number,
-                    onChanged: (_) => setState(() {}),
-                    onSubmitted: (_) =>
-                        _code.text.trim().length == 6 ? _signInWithCode() : null,
-                  ),
-                  const SizedBox(height: 12),
-                  AlmaButton(
-                    label: _working ? l.scrSignInSending : l.cabSignIn,
-                    onTap: _code.text.trim().length == 6 && !_working
-                        ? _signInWithCode
-                        : null,
-                  ),
-                ],
                 const SizedBox(height: 12),
-                if (_codeSent)
-                  Center(
-                    child: TextButton(
-                      onPressed: _emailLooksReal && !_working ? _sendLink : null,
-                      child: Text(l.scrSignInSendLinkShort,
-                          style: AlmaType.meta
-                              .copyWith(color: AlmaPalette.gold)),
-                    ),
-                  )
-                else
-                  AlmaButton(
-                    label: _working ? l.scrSignInSending : l.scrSignInSendLink,
-                    shortLabel: l.scrSignInSendLinkShort,
-                    onTap: _emailLooksReal && !_working ? _sendLink : null,
-                  ),
+                AlmaButton(
+                  label: _working ? l.scrSignInSending : l.scrSignInSendLink,
+                  shortLabel: l.scrSignInSendLinkShort,
+                  onTap: _emailLooksReal && !_working ? _sendLink : null,
+                ),
                 if (_apple || _google) ...[
                   const SizedBox(height: 26),
                   Text(l.scrSignInOrWith,

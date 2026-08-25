@@ -111,6 +111,24 @@ async def apple(payload: AppleSignIn, user: CurrentUser, session: SessionDep) ->
     except InvalidIdentityToken as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
+    # **Анонимный адрес Apple отвергается — типизированно и с объяснением.**
+    # Аккаунт в Alma держится на почте: один и тот же человек входит через
+    # Apple, Google и код из письма и обязан попадать в один аккаунт. Релейный
+    # адрес `…@privaterelay.appleid.com` существует только у Apple — вход им
+    # раскалывает человека на два аккаунта ровно в момент, когда он попробует
+    # вторую дверь, и покупки останутся в первой (владелец, 25.08.2026:
+    # «нельзя указать анонимный адрес»). Клиент по коду отказа просит выбрать
+    # «Показать почту» в системном листе и повторить.
+    if identity.email.endswith("@privaterelay.appleid.com"):
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            detail={
+                "error": "apple_private_email",
+                "message": "choose “Share My Email” in the Apple sheet — a "
+                           "hidden address cannot carry your purchases",
+            },
+        )
+
     signed_in = await accounts.sign_in(
         session,
         email=identity.email,

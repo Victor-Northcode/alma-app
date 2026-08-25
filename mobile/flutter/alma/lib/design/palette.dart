@@ -45,13 +45,18 @@ class AlmaPalette {
   static const body = Color(0xFFEDE7DA);
   static const inkOnGold = Color(0xFF141019);
 
-  // ── пергамент: единственная светлая поверхность ─────────────────────────
-  static const parchment = Color(0xFFF1E9D6);
-  // Приглушён на шаг: «не все хотят читать на белом ярком экране». Это всё
-  // ещё бумага, а не серый лист — тон уходит в тёплую тень, не в цвет.
-  static const parchmentA = Color(0xFFEDE3CC);
-  static const parchmentB = Color(0xFFDFD0AF);
-  static const ink = Color(0xFF1C1A17);
+  // ── страница чтения: тёмная с 25.08.2026 ────────────────────────────────
+  // Светлый пергамент прожил два дня после «не все хотят читать на белом
+  // ярком экране» и кончился словами владельца «сделай чтоб главы были
+  // тёмные, а не светлые». Имена оставлены: их знают четыре файла
+  // (gilt_page, chapter, what_next, tab_bar), и переименование стоило бы
+  // дороже этих строк. `parchment*` теперь ночные тона страницы — чуть
+  // теплее и светлее общей ночи, чтобы страница читалась листом, а не
+  // дырой; `ink` — светлые чернила на ней, тон общего body.
+  static const parchment = Color(0xFF10141F);
+  static const parchmentA = Color(0xFF131826);
+  static const parchmentB = Color(0xFF0B0E1D);
+  static const ink = Color(0xFFEDE7DA);
 
   // ── согласие и спор между системами ─────────────────────────────────────
   static const agree = Color(0xFF8FBF9A);
@@ -108,11 +113,11 @@ class AlmaGradient {
     end: Alignment.bottomRight,
   );
 
-  /// Единственная светлая поверхность.
+  /// Поверхность чтения — с 25.08.2026 ночная (см. `AlmaPalette.parchment*`).
   static const parchment = LinearGradient(
     colors: [
       AlmaPalette.parchmentA,
-      Color(0xFFEFE3C9),
+      Color(0xFF0F1322),
       AlmaPalette.parchmentB,
     ],
     stops: [0.0, 0.6, 1.0],

@@ -221,11 +221,30 @@ class LRu extends L {
   String get cabSignedInNoName => 'Ты в аккаунте';
 
   @override
+  String get cabSignOut => 'Выйти';
+
+  @override
+  String get cabSignOutNote =>
+      'Карта и покупки останутся в аккаунте — вернёшься в любой момент по той же почте.';
+
+  @override
+  String get cabSave => 'Сохранить';
+
+  @override
+  String get cabFileSaved => 'Файл лежит в «Загрузках».';
+
+  @override
+  String get cabDeleteCodeLead => 'Чтобы подтвердить, введи этот код:';
+
+  @override
+  String get cabDeleteCodeHint => 'Код';
+
+  @override
   String get cabGuest => 'Гость';
 
   @override
   String get cabGuestNoteApp =>
-      'Ты пока не вошёл — карта хранится только на этом телефоне.';
+      'Ты пока не в аккаунте — карта хранится только на этом телефоне.';
 
   @override
   String get cabHoroscopeLocked =>
@@ -299,11 +318,11 @@ class LRu extends L {
 
   @override
   String get cabManagedByApple =>
-      'Этот план куплен в App Store: способ оплаты хранится у Apple, там же он и отменяется.';
+      'Этот план куплен в App Store: способ оплаты хранится у Apple, там же отменяется и сам план.';
 
   @override
   String get cabManagedByGooglePlay =>
-      'Этот план куплен в Google Play: способ оплаты хранится у Google, там же он и отменяется.';
+      'Этот план куплен в Google Play: способ оплаты хранится у Google, там же отменяется и сам план.';
 
   @override
   String cabMerchantLine(String p1) {
@@ -356,7 +375,7 @@ class LRu extends L {
 
   @override
   String get cabPlanCancelWhat =>
-      'Следующее списание оста­навливается. Всё уже оплаченное остаётся открытым до конца периода — отмена не возврат, и мы ничего не забираем.';
+      'Следующее списание оста­навливается. Всё уже оплаченное остаётся открытым до конца периода: отмена — не возврат, и мы ничего не забираем.';
 
   @override
   String cabPlanCancelled(String p1) {
@@ -416,7 +435,7 @@ class LRu extends L {
 
   @override
   String cabPlanRenews(String p1) {
-    return 'Продлевается $p1 · напишем на почту за 3 дня';
+    return 'Продлевается $p1 · предупредим на почту за 3 дня';
   }
 
   @override
@@ -436,7 +455,7 @@ class LRu extends L {
 
   @override
   String get cabPlansBody =>
-      'Подписка держит транзиты, соляр и совместимость живыми, присылает утреннюю заметку и даёт 25 вопросов в месяц. Пять постоянных разборов покупаются один раз — и навсегда.';
+      'Подписка держит транзиты, соляр и совместимость живыми, присылает утреннюю заметку и даёт 25 вопросов в месяц. Остальные пять разборов покупаются один раз — и навсегда.';
 
   @override
   String get cabPlansCta => 'Посмотреть планы';
@@ -589,7 +608,7 @@ class LRu extends L {
 
   @override
   String get dailyAskBody =>
-      'Одно уведомление, в выбранный тобой час, в те дни, когда что-то в твоей карте становится точным. Примерно раз в неделю. Никогда ночью, а выключить можно прямо из самого уведомления.';
+      'Одно уведомление, в выбранный тобой час, в те дни, когда что-то в твоей карте становится точным. Примерно раз в неделю — а выключить можно прямо из самого уведомления.';
 
   @override
   String get dailyAskTitle => 'Сказать тебе утром, когда это случится?';
@@ -646,21 +665,17 @@ class LRu extends L {
 
   @override
   String get dailySettingOccasionallyDetail =>
-      'Примерно раз в неделю, когда что-то в твоей карте действительно становится точным.';
+      'Примерно раз в неделю — когда небо напрямую касается твоей карты.';
 
   @override
   String get dailySettingOff => 'Выключено';
 
   @override
   String get dailySettingOnlyMattersDetail =>
-      'Несколько раз в год. Только медленные — транзиты, которые длятся месяцами.';
+      'Несколько раз в год — только большие перемены, которые разворачиваются месяцами.';
 
   @override
-  String get dailySettingOnlyWhatMatters => 'Только долгие транзиты';
-
-  @override
-  String get dailySettingQuiet =>
-      'Никогда между 22:00 и 08:00 по твоему времени.';
+  String get dailySettingOnlyWhatMatters => 'Только важное';
 
   @override
   String get dailySettingTimezone => 'Часовой пояс';
@@ -799,7 +814,7 @@ class LRu extends L {
 
   @override
   String get journeyLockedWithoutTime =>
-      'Без времени рождения недоступны дома, соляр и астро­картография.';
+      'Без времени рождения дома, соляр и астро­картография останутся закрытыми.';
 
   @override
   String get journeyMinuteLabel => 'Мин';
@@ -1013,7 +1028,7 @@ class LRu extends L {
 
   @override
   String get paywallStoreUnavailablePlay =>
-      'Google Play не отвечает. Пока он молчит, здесь ничего не купить — и всё, чем ты уже владеешь, на месте.';
+      'Google Play не отвечает. Пока он молчит, здесь ничего нельзя купить — и ничего из уже купленного не изменилось.';
 
   @override
   String get paywallSubscriptionTerms => 'Условия подписки';
@@ -1086,7 +1101,7 @@ class LRu extends L {
 
   @override
   String get scrChatOpening =>
-      'Спроси меня о чём угодно в твоей карте. Я отвечаю из того, что в ней есть, и говорю, когда ответа там нет.';
+      'Спроси меня о чём угодно в своей карте. Я отвечаю из того, что в ней есть, и говорю, когда ответа там нет.';
 
   @override
   String get scrChatOutOfQuestions =>
@@ -1114,7 +1129,7 @@ class LRu extends L {
 
   @override
   String scrChatPromptRising(String p1) {
-    return 'Восходящий знак — $p1. Это то, что люди встречают первым?';
+    return 'Восходящий знак — $p1. Это первое, что видят во мне люди?';
   }
 
   @override
@@ -1188,10 +1203,10 @@ class LRu extends L {
 
   @override
   String get scrSignInAlready =>
-      'Ты уже вошёл. Карта и покупки привязаны к аккаунту.';
+      'Ты уже в аккаунте. Карта и покупки с тобой на любом телефоне.';
 
   @override
-  String get scrSignInDone => 'Вход выполнен.';
+  String get scrSignInDone => 'Ты в аккаунте.';
 
   @override
   String get scrSignInEmailPlaceholder => 'Твой адрес почты';
@@ -1316,7 +1331,7 @@ class LRu extends L {
 
   @override
   String get cabCompatBulletHouses =>
-      'В какие твои дома попадают их планеты — и твои в их дома';
+      'В какие твои дома попадают планеты второго человека — и твои в его дома';
 
   @override
   String get cabCompatBulletComposite =>
@@ -1583,7 +1598,7 @@ class LRu extends L {
 
   @override
   String get paywallV3SubRenewalDisclosureQuota =>
-      'Продлевается ежемесячно · отменить можно в любой момент · твой вопрос уйдёт, как только подписка откроется';
+      'Продлевается ежемесячно · отменить можно в любой момент · твой вопрос уйдёт, как только подписка включится';
 
   @override
   String get paywallV3PlansOverline => 'все планы';
@@ -1699,7 +1714,7 @@ class LRu extends L {
 
   @override
   String get paywallV3WhatNextPairNote =>
-      'Твоя глава про Венеру говорит, как ты привязываешься. Дата рождения другого человека — как это отзовётся.';
+      'Твоя глава про Венеру говорит, как ты привязываешься. Дата рождения другого человека скажет, как это отзовётся.';
 
   @override
   String paywallV3WhatNextPairCta(String price) {
@@ -1903,14 +1918,14 @@ class LRu extends L {
 
   @override
   String get onbFirstChapterBody =>
-      'Глава I твоей натальной карты написана и ждёт — начни с неё. Остальные главы открываются по одной, когда сам решишь.';
+      'Глава I твоей натальной карты написана и ждёт — начни с неё. Остальные главы открываются по одной, когда захочешь.';
 
   @override
   String get onbAlmaTitle => 'Спроси Alma о чём угодно';
 
   @override
   String get onbAlmaBody =>
-      'Alma отвечает по тому, что есть в твоей карте, а не по шаблону — и честно говорит, когда ответа в карте нет. Под каждым ответом — позиции, из которых он прочитан.';
+      'Alma отвечает из того, что есть в твоей карте, а не по шаблону — и честно говорит, когда ответа в карте нет. Под каждым ответом — позиции, из которых он прочитан.';
 
   @override
   String get onbMorningTitle => 'Письмо по утрам';
@@ -1921,6 +1936,21 @@ class LRu extends L {
 
   @override
   String get cabSettingsDocuments => 'Документы';
+
+  @override
+  String get scrSignInCodeTitle => 'Введи код';
+
+  @override
+  String scrSignInCodeSentTo(Object email) {
+    return 'Шесть цифр улетели на $email.';
+  }
+
+  @override
+  String get scrSignInCodeSentAgain => 'Новый код уже в пути.';
+
+  @override
+  String get scrSignInApplePrivate =>
+      'Выбери «Показать почту» в окне Apple — скрытый адрес не удержит твои покупки.';
 
   @override
   String get scrSignInCodeSent => 'Код уже в твоей почте — введи его здесь.';

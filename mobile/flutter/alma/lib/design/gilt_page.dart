@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'palette.dart';
 import 'typography.dart';
 
-/// Светлая страница, на которой читают главу.
+/// Страница, на которой читают главу. Тёмная — с 25.08.2026, слово владельца:
+/// «сделай чтоб главы были тёмные, а не светлые». Цвета живут в
+/// `AlmaPalette.parchment*`/`ink` — имена пережили обе смены поверхности.
 ///
-/// **Снимка золочёной бумаги здесь больше нет — так решил владелец.** Кадры
+/// **Снимка золочёной бумаги здесь тоже нет — и это отдельное решение.** Кадры
 /// `s51`/`s52` застилали главу фотографией рваного листа в барочной раме, она
 /// была построена и проверена на симуляторе, и владелец, посмотрев, попросил
-/// вернуть простой светлый фон: «верни главы просто белым цветом, убери фон».
+/// вернуть простой чистый фон: «верни главы просто белым цветом, убери фон».
 /// Отменена именно поверхность — всё, что на ней стоит, осталось: поля, кружок
 /// возврата, нить чтения со счётчиком, знак конца главы.
 ///
@@ -108,24 +110,21 @@ class GiltBack extends StatelessWidget {
               // трогаем — фишка (40) по-прежнему сидит по центру зоны нажатия (44).
               width: 40,
               height: 40,
+              // Страница тёмная с 25.08.2026 — кружок слоновой кости на ней
+              // светил фонарём. Теперь это ночная фишка с золотым кантом, той
+              // же семьи, что единый крестик (AlmaClose): одна логика закрытия
+              // — один вид ручки.
               decoration: BoxDecoration(
-                color: AlmaPalette.inkLight.withValues(alpha: 0.85),
+                color: AlmaPalette.night700.withValues(alpha: 0.85),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: AlmaPalette.goldDeep.withValues(alpha: 0.45),
+                  color: AlmaPalette.goldDeep.withValues(alpha: 0.5),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: AlmaPalette.ink.withValues(alpha: 0.2),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
               ),
               child: Icon(
                 Icons.arrow_back,
                 size: 22,
-                color: AlmaPalette.ink.withValues(alpha: 0.78),
+                color: AlmaPalette.inkLight.withValues(alpha: 0.9),
               ),
             ),
           ),

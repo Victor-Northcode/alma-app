@@ -221,6 +221,25 @@ class LEn extends L {
   String get cabSignedInNoName => 'Signed in';
 
   @override
+  String get cabSignOut => 'Sign out';
+
+  @override
+  String get cabSignOutNote =>
+      'Your chart and purchases stay in the account — sign back in any time with the same email.';
+
+  @override
+  String get cabSave => 'Save';
+
+  @override
+  String get cabFileSaved => 'Saved to your Downloads.';
+
+  @override
+  String get cabDeleteCodeLead => 'To confirm, enter this code:';
+
+  @override
+  String get cabDeleteCodeHint => 'Code';
+
+  @override
   String get cabGuest => 'Guest';
 
   @override
@@ -588,7 +607,7 @@ class LEn extends L {
 
   @override
   String get dailyAskBody =>
-      'One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from the notification itself.';
+      'One notification, at the hour you choose, on the days something in your chart is exact. About once a week — and you can turn it off from the notification itself.';
 
   @override
   String get dailyAskTitle => 'Tell me the morning it happens';
@@ -645,21 +664,17 @@ class LEn extends L {
 
   @override
   String get dailySettingOccasionallyDetail =>
-      'About once a week, when something in your chart is actually exact.';
+      'About once a week — when the sky touches your chart directly.';
 
   @override
   String get dailySettingOff => 'Off';
 
   @override
   String get dailySettingOnlyMattersDetail =>
-      'A few times a year. The slow ones only — the transits that last months.';
+      'A few times a year — only the big shifts that unfold over months.';
 
   @override
-  String get dailySettingOnlyWhatMatters => 'Long-term transits only';
-
-  @override
-  String get dailySettingQuiet =>
-      'Never between 22:00 and 08:00 in your local time zone.';
+  String get dailySettingOnlyWhatMatters => 'Only the big things';
 
   @override
   String get dailySettingTimezone => 'Time zone';
@@ -1901,6 +1916,21 @@ class LEn extends L {
 
   @override
   String get cabSettingsDocuments => 'Documents';
+
+  @override
+  String get scrSignInCodeTitle => 'Enter the code';
+
+  @override
+  String scrSignInCodeSentTo(Object email) {
+    return 'We sent six digits to $email.';
+  }
+
+  @override
+  String get scrSignInCodeSentAgain => 'A new code is on its way.';
+
+  @override
+  String get scrSignInApplePrivate =>
+      'Choose “Share My Email” in the Apple window — a hidden address can’t carry your purchases.';
 
   @override
   String get scrSignInCodeSent =>

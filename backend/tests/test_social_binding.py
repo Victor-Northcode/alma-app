@@ -126,3 +126,18 @@ def test_a_bad_token_is_refused_without_a_session(api, social):
     assert "token" not in refused.json().get("detail", {}) if isinstance(
         refused.json().get("detail"), dict
     ) else True
+
+
+def test_an_apple_relay_address_is_refused_with_a_typed_code(api, social):
+    """Релейный адрес Apple — раскол аккаунта на два, и он отвергается.
+
+    Скрытая почта существует только у Apple: человек, вошедший ею, при первом
+    же входе через Google или код из письма окажется в ДРУГОМ аккаунте без
+    своих покупок. Отказ типизирован — клиент просит выбрать «Показать почту».
+    """
+    refused = api.post(
+        "/v1/auth/apple",
+        json={"identity_token": "apple:abc123@privaterelay.appleid.com"},
+    )
+    assert refused.status_code == 400
+    assert refused.json()["detail"]["error"] == "apple_private_email"

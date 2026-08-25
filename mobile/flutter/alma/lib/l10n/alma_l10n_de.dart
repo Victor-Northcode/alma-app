@@ -222,6 +222,25 @@ class LDe extends L {
   String get cabSignedInNoName => 'Angemeldet';
 
   @override
+  String get cabSignOut => 'Abmelden';
+
+  @override
+  String get cabSignOutNote =>
+      'Dein Horoskop und deine Käufe bleiben im Konto — melde dich jederzeit mit derselben E-Mail wieder an.';
+
+  @override
+  String get cabSave => 'Speichern';
+
+  @override
+  String get cabFileSaved => 'Die Datei liegt in deinen Downloads.';
+
+  @override
+  String get cabDeleteCodeLead => 'Zur Bestätigung gib diesen Code ein:';
+
+  @override
+  String get cabDeleteCodeHint => 'Code';
+
+  @override
   String get cabGuest => 'Gast';
 
   @override
@@ -593,7 +612,7 @@ class LDe extends L {
 
   @override
   String get dailyAskBody =>
-      'Eine Mitteilung zu deiner gewählten Uhrzeit an Tagen, an denen ein Einfluss in deinem Horoskop exakt wird. Etwa einmal pro Woche, nie nachts. Du kannst sie direkt über die Mitteilung abschalten.';
+      'Eine Mitteilung, zu deiner Stunde, an den Tagen, an denen etwas in deiner Karte exakt wird. Etwa einmal pro Woche — und abschalten kannst du sie direkt aus der Mitteilung.';
 
   @override
   String get dailyAskTitle =>
@@ -651,21 +670,17 @@ class LDe extends L {
 
   @override
   String get dailySettingOccasionallyDetail =>
-      'Etwa einmal pro Woche, wenn in deinem Horoskop wirklich etwas exakt wird.';
+      'Etwa einmal pro Woche — wenn der Himmel deine Karte direkt berührt.';
 
   @override
   String get dailySettingOff => 'Aus';
 
   @override
   String get dailySettingOnlyMattersDetail =>
-      'Ein paar Mal im Jahr. Nur die langsamen — die Transite, die Monate dauern.';
+      'Ein paar Mal im Jahr — nur die großen Wenden, die sich über Monate entfalten.';
 
   @override
-  String get dailySettingOnlyWhatMatters => 'Nur lange Transite';
-
-  @override
-  String get dailySettingQuiet =>
-      'Nie zwischen 22:00 und 08:00 in deiner Zeitzone.';
+  String get dailySettingOnlyWhatMatters => 'Nur das Große';
 
   @override
   String get dailySettingTimezone => 'Deine Zeitzone';
@@ -1920,6 +1935,21 @@ class LDe extends L {
 
   @override
   String get cabSettingsDocuments => 'Dokumente';
+
+  @override
+  String get scrSignInCodeTitle => 'Code eingeben';
+
+  @override
+  String scrSignInCodeSentTo(Object email) {
+    return 'Wir haben sechs Ziffern an $email geschickt.';
+  }
+
+  @override
+  String get scrSignInCodeSentAgain => 'Ein neuer Code ist unterwegs.';
+
+  @override
+  String get scrSignInApplePrivate =>
+      'Wähle im Apple-Fenster „E-Mail teilen“ — eine verborgene Adresse kann deine Käufe nicht tragen.';
 
   @override
   String get scrSignInCodeSent =>

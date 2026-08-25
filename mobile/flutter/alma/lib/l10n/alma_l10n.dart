@@ -527,6 +527,42 @@ abstract class L {
   /// **'Signed in'**
   String get cabSignedInNoName;
 
+  /// settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get cabSignOut;
+
+  /// settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup
+  ///
+  /// In en, this message translates to:
+  /// **'Your chart and purchases stay in the account — sign back in any time with the same email.'**
+  String get cabSignOutNote;
+
+  /// settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get cabSave;
+
+  /// settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup
+  ///
+  /// In en, this message translates to:
+  /// **'Saved to your Downloads.'**
+  String get cabFileSaved;
+
+  /// settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup
+  ///
+  /// In en, this message translates to:
+  /// **'To confirm, enter this code:'**
+  String get cabDeleteCodeLead;
+
+  /// settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get cabDeleteCodeHint;
+
   /// from Cabinet/cab.guest
   ///
   /// In en, this message translates to:
@@ -1196,7 +1232,7 @@ abstract class L {
   /// from Daily/daily.ask.body
   ///
   /// In en, this message translates to:
-  /// **'One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from the notification itself.'**
+  /// **'One notification, at the hour you choose, on the days something in your chart is exact. About once a week — and you can turn it off from the notification itself.'**
   String get dailyAskBody;
 
   /// from Daily/daily.ask.title
@@ -1304,7 +1340,7 @@ abstract class L {
   /// from Daily/daily.setting.occasionally.detail
   ///
   /// In en, this message translates to:
-  /// **'About once a week, when something in your chart is actually exact.'**
+  /// **'About once a week — when the sky touches your chart directly.'**
   String get dailySettingOccasionallyDetail;
 
   /// from Daily/daily.setting.off
@@ -1316,20 +1352,14 @@ abstract class L {
   /// from Daily/daily.setting.onlyMatters.detail
   ///
   /// In en, this message translates to:
-  /// **'A few times a year. The slow ones only — the transits that last months.'**
+  /// **'A few times a year — only the big shifts that unfold over months.'**
   String get dailySettingOnlyMattersDetail;
 
   /// from Daily/daily.setting.onlyWhatMatters
   ///
   /// In en, this message translates to:
-  /// **'Long-term transits only'**
+  /// **'Only the big things'**
   String get dailySettingOnlyWhatMatters;
-
-  /// from Daily/daily.setting.quiet
-  ///
-  /// In en, this message translates to:
-  /// **'Never between 22:00 and 08:00 in your local time zone.'**
-  String get dailySettingQuiet;
 
   /// from Daily/daily.setting.timezone
   ///
@@ -3292,6 +3322,30 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Documents'**
   String get cabSettingsDocuments;
+
+  /// six-cell code screen / apple relay refusal, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code'**
+  String get scrSignInCodeTitle;
+
+  /// subtitle of the six-cell code screen
+  ///
+  /// In en, this message translates to:
+  /// **'We sent six digits to {email}.'**
+  String scrSignInCodeSentTo(Object email);
+
+  /// six-cell code screen / apple relay refusal, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'A new code is on its way.'**
+  String get scrSignInCodeSentAgain;
+
+  /// six-cell code screen / apple relay refusal, 25.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'Choose “Share My Email” in the Apple window — a hidden address can’t carry your purchases.'**
+  String get scrSignInApplePrivate;
 
   /// вход · после отправки письма: код отправлен, введи здесь (24 авг, вход по коду вместо deep-link)
   ///

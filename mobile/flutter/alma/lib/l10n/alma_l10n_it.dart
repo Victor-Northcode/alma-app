@@ -222,6 +222,25 @@ class LIt extends L {
   String get cabSignedInNoName => 'Account collegato';
 
   @override
+  String get cabSignOut => 'Esci';
+
+  @override
+  String get cabSignOutNote =>
+      'Il tuo tema e i tuoi acquisti restano nell\'account — rientra quando vuoi con la stessa email.';
+
+  @override
+  String get cabSave => 'Salva';
+
+  @override
+  String get cabFileSaved => 'Il file è nei tuoi Download.';
+
+  @override
+  String get cabDeleteCodeLead => 'Per confermare, inserisci questo codice:';
+
+  @override
+  String get cabDeleteCodeHint => 'Codice';
+
+  @override
   String get cabGuest => 'Ospite';
 
   @override
@@ -591,7 +610,7 @@ class LIt extends L {
 
   @override
   String get dailyAskBody =>
-      'Una notifica, all\'ora che scegli, nei giorni in cui qualcosa nel tuo tema è esatto. Circa una volta a settimana. Mai di notte, e si disattiva dalla notifica stessa.';
+      'Una notifica, all\'ora che scegli tu, nei giorni in cui qualcosa nel tuo tema diventa esatto. Circa una volta a settimana — e puoi spegnerla direttamente dalla notifica.';
 
   @override
   String get dailyAskTitle => 'Dimmelo la mattina in cui accade';
@@ -648,21 +667,17 @@ class LIt extends L {
 
   @override
   String get dailySettingOccasionallyDetail =>
-      'Circa una volta a settimana, quando qualcosa nel tuo tema diventa davvero esatto.';
+      'Circa una volta a settimana — quando il cielo tocca direttamente il tuo tema.';
 
   @override
   String get dailySettingOff => 'Disattivato';
 
   @override
   String get dailySettingOnlyMattersDetail =>
-      'Poche volte all\'anno. Solo i lenti: i transiti che durano mesi.';
+      'Poche volte all\'anno — solo le grandi svolte che si dispiegano in mesi.';
 
   @override
-  String get dailySettingOnlyWhatMatters => 'Solo transiti a lungo termine';
-
-  @override
-  String get dailySettingQuiet =>
-      'Mai tra le 22:00 e le 08:00 nel tuo fuso orario.';
+  String get dailySettingOnlyWhatMatters => 'Solo l\'essenziale';
 
   @override
   String get dailySettingTimezone => 'Fuso orario';
@@ -1907,6 +1922,21 @@ class LIt extends L {
 
   @override
   String get cabSettingsDocuments => 'Documenti';
+
+  @override
+  String get scrSignInCodeTitle => 'Inserisci il codice';
+
+  @override
+  String scrSignInCodeSentTo(Object email) {
+    return 'Abbiamo inviato sei cifre a $email.';
+  }
+
+  @override
+  String get scrSignInCodeSentAgain => 'Un nuovo codice è in arrivo.';
+
+  @override
+  String get scrSignInApplePrivate =>
+      'Scegli «Condividi la mia email» nella finestra Apple — un indirizzo nascosto non può custodire i tuoi acquisti.';
 
   @override
   String get scrSignInCodeSent =>

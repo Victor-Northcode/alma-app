@@ -222,6 +222,25 @@ class LPt extends L {
   String get cabSignedInNoName => 'Você entrou';
 
   @override
+  String get cabSignOut => 'Sair';
+
+  @override
+  String get cabSignOutNote =>
+      'Seu mapa e suas compras ficam na conta — volte quando quiser com o mesmo e-mail.';
+
+  @override
+  String get cabSave => 'Salvar';
+
+  @override
+  String get cabFileSaved => 'O arquivo está em Downloads.';
+
+  @override
+  String get cabDeleteCodeLead => 'Para confirmar, digite este código:';
+
+  @override
+  String get cabDeleteCodeHint => 'Código';
+
+  @override
   String get cabGuest => 'Convidado';
 
   @override
@@ -589,7 +608,7 @@ class LPt extends L {
 
   @override
   String get dailyAskBody =>
-      'Uma notificação, na hora que você escolher, nos dias em que um aspecto fica exato no seu mapa. Cerca de uma vez por semana. Nunca à noite, e dá para desligar pela própria notificação.';
+      'Uma notificação, na hora que você escolher, nos dias em que algo no seu mapa fica exato. Mais ou menos uma vez por semana — e dá para desligar na própria notificação.';
 
   @override
   String get dailyAskTitle => 'Me avise na manhã em que acontecer';
@@ -646,20 +665,17 @@ class LPt extends L {
 
   @override
   String get dailySettingOccasionallyDetail =>
-      'Cerca de uma vez por semana, quando algo no seu mapa fica realmente exato.';
+      'Mais ou menos uma vez por semana — quando o céu toca seu mapa diretamente.';
 
   @override
   String get dailySettingOff => 'Desligado';
 
   @override
   String get dailySettingOnlyMattersDetail =>
-      'Poucas vezes por ano. Só os lentos — os trânsitos que duram meses.';
+      'Poucas vezes por ano — só as grandes viradas que se desenrolam ao longo de meses.';
 
   @override
-  String get dailySettingOnlyWhatMatters => 'Só os trânsitos longos';
-
-  @override
-  String get dailySettingQuiet => 'Nunca entre 22h e 8h no seu fuso horário.';
+  String get dailySettingOnlyWhatMatters => 'Só o essencial';
 
   @override
   String get dailySettingTimezone => 'Seu fuso horário';
@@ -1909,6 +1925,21 @@ class LPt extends L {
 
   @override
   String get cabSettingsDocuments => 'Documentos';
+
+  @override
+  String get scrSignInCodeTitle => 'Digite o código';
+
+  @override
+  String scrSignInCodeSentTo(Object email) {
+    return 'Enviamos seis dígitos para $email.';
+  }
+
+  @override
+  String get scrSignInCodeSentAgain => 'Um novo código está a caminho.';
+
+  @override
+  String get scrSignInApplePrivate =>
+      'Escolha “Compartilhar meu e-mail” na janela da Apple — um endereço oculto não carrega suas compras.';
 
   @override
   String get scrSignInCodeSent =>

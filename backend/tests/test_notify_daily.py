@@ -474,7 +474,10 @@ def test_the_payload_carries_a_key_and_words_rather_than_a_sentence(db):
     # for — so every tap on a daily was counted with a null type while the pair
     # push, written against the client, was counted correctly.
     assert push.data == {"type": "daily", "date": "2026-08-07"}
-    assert push.expires_at is not None and push.expires_at.hour == 22
+    # Срок жизни — конец местных суток, не 22:00: с 25.08.2026 час выбирается
+    # любой, и письмо человека с 23:00 не должно умирать за час до доставки.
+    assert push.expires_at is not None
+    assert push.expires_at.hour == 0 and push.expires_at.day == 8
 
 
 def test_the_arguments_arrive_in_the_language_of_the_phone(db):

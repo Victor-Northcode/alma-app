@@ -181,7 +181,9 @@ async def read(user: CurrentUser, session: SessionDep) -> dict:
         "daily": rules.preference_of(user.daily_push, tier).value,
         "chosen": user.daily_push is not None,
         "hour": rules.delivery_hour(user.daily_hour),
-        "quiet_hours": [rules.QUIET_START, rules.QUIET_END],
+        # `quiet_hours` больше не отдаётся: тихих часов для выбранного руками
+        # времени не существует (владелец, 25.08.2026 — «любое время»), а поле,
+        # которое ничего не ограничивает, читалось бы клиентом как ограничение.
         "timezone": zone,
         "timezone_source": source,
         "entitled": rules.entitled(tier),

@@ -222,6 +222,25 @@ class LFr extends L {
   String get cabSignedInNoName => 'Compte connecté';
 
   @override
+  String get cabSignOut => 'Se déconnecter';
+
+  @override
+  String get cabSignOutNote =>
+      'Ton thème et tes achats restent dans le compte — reviens quand tu veux avec le même e-mail.';
+
+  @override
+  String get cabSave => 'Enregistrer';
+
+  @override
+  String get cabFileSaved => 'Le fichier est dans tes Téléchargements.';
+
+  @override
+  String get cabDeleteCodeLead => 'Pour confirmer, saisis ce code :';
+
+  @override
+  String get cabDeleteCodeHint => 'Code';
+
+  @override
   String get cabGuest => 'Mode invité';
 
   @override
@@ -589,7 +608,7 @@ class LFr extends L {
 
   @override
   String get dailyAskBody =>
-      'Une notification à l’heure que tu choisis, les jours où une influence devient exacte dans ton thème. Environ une fois par semaine, jamais la nuit. Tu peux la désactiver directement depuis la notification.';
+      'Une notification, à l’heure que tu choisis, les jours où quelque chose devient exact dans ton thème. Environ une fois par semaine — et tu peux la couper depuis la notification elle-même.';
 
   @override
   String get dailyAskTitle => 'Préviens-moi le matin où cela arrive';
@@ -646,20 +665,17 @@ class LFr extends L {
 
   @override
   String get dailySettingOccasionallyDetail =>
-      'Environ une fois par semaine, quand quelque chose dans ton thème devient vraiment exact.';
+      'Environ une fois par semaine — quand le ciel touche directement ton thème.';
 
   @override
   String get dailySettingOff => 'Désactivé';
 
   @override
   String get dailySettingOnlyMattersDetail =>
-      'Quelques fois par an. Seulement les lents — les transits qui durent des mois.';
+      'Quelques fois par an — seulement les grands tournants qui se déploient sur des mois.';
 
   @override
   String get dailySettingOnlyWhatMatters => 'Seulement l’essentiel';
-
-  @override
-  String get dailySettingQuiet => 'Jamais entre 22h00 et 08h00, à ton heure.';
 
   @override
   String get dailySettingTimezone => 'Ton fuseau horaire';
@@ -1916,6 +1932,21 @@ class LFr extends L {
 
   @override
   String get cabSettingsDocuments => 'Documents';
+
+  @override
+  String get scrSignInCodeTitle => 'Saisis le code';
+
+  @override
+  String scrSignInCodeSentTo(Object email) {
+    return 'Nous avons envoyé six chiffres à $email.';
+  }
+
+  @override
+  String get scrSignInCodeSentAgain => 'Un nouveau code arrive.';
+
+  @override
+  String get scrSignInApplePrivate =>
+      'Choisis « Partager mon adresse » dans la fenêtre Apple — une adresse masquée ne peut pas porter tes achats.';
 
   @override
   String get scrSignInCodeSent =>

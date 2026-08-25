@@ -68,7 +68,9 @@ class _PeopleScreenState extends State<PeopleScreen> {
   Future<void> _search(String query) async {
     if (query.trim().length < 2) return;
     try {
-      final found = await SessionScope.of(context).client.searchPlaces(query);
+      final session = SessionScope.of(context);
+      final found =
+          await session.client.searchPlaces(query, locale: session.locale);
       if (mounted) setState(() => _found = found.take(5).toList());
     } on AlmaError {
       // Молча: место можно поискать ещё раз.

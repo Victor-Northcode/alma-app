@@ -137,19 +137,24 @@ def test_turning_it_off_survives_a_later_subscription(api, auth_headers):
     assert api.get("/v1/notifications", headers=auth_headers).json()["daily"] == "off"
 
 
-def test_the_delivery_hour_is_clamped_out_of_the_night_on_the_way_back(api, auth_headers):
-    api.patch("/v1/notifications", json={"hour": 3}, headers=auth_headers)
-    assert api.get("/v1/notifications", headers=auth_headers).json()["hour"] == 8
-    api.patch("/v1/notifications", json={"hour": 6}, headers=auth_headers)
-    assert api.get("/v1/notifications", headers=auth_headers).json()["hour"] == 8
-    api.patch("/v1/notifications", json={"hour": 9}, headers=auth_headers)
-    assert api.get("/v1/notifications", headers=auth_headers).json()["hour"] == 9
+def test_the_chosen_hour_is_honoured_exactly_any_of_the_24(api, auth_headers):
+    """Выбранный час отдаётся как есть — владелец, 25.08.2026: «любое время».
+
+    До этого дня 3 и 6 тихо превращались в 8, и человек читал это как
+    «настройка не работает». Теперь зажат только диапазон типа (0–23).
+    """
+    for hour in (3, 6, 9, 0, 23):
+        api.patch("/v1/notifications", json={"hour": hour}, headers=auth_headers)
+        assert api.get("/v1/notifications", headers=auth_headers).json()["hour"] == hour
+    assert api.patch(
+        "/v1/notifications", json={"hour": 24}, headers=auth_headers
+    ).status_code == 422
 
 
-def test_quiet_hours_are_shown_and_not_editable(api, auth_headers):
-    """Displaying them is the point; making them editable invites a 03:00 complaint."""
+def test_quiet_hours_are_gone_from_the_payload(api, auth_headers):
+    """Поле, которое ничего не ограничивает, читалось бы как ограничение."""
     body = api.get("/v1/notifications", headers=auth_headers).json()
-    assert body["quiet_hours"] == [22, 8]
+    assert "quiet_hours" not in body
     assert api.patch(
         "/v1/notifications", json={"quiet_hours": [1, 2]}, headers=auth_headers
     ).status_code == 422

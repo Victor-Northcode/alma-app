@@ -48,6 +48,7 @@ router = APIRouter(prefix="/places", tags=["places"])
 async def search(
     q: str = Query(min_length=1, max_length=120),
     limit: int = Query(default=8, ge=1, le=25),
+    lang: str = Query(default="en", max_length=8),
 ) -> list[PlaceOut]:
     if not geo.index_available():
         raise HTTPException(
@@ -55,7 +56,20 @@ async def search(
             detail="the place index is not installed on this server",
         )
     found = await to_thread.run_sync(partial(geo.search, q, limit=limit))
-    return [PlaceOut(**place.as_dict()) for place in found]
+    # Страна — на языке приложения (владелец, 25.08.2026): «Москва, Россия»,
+    # а не «Москва, Russia». Локализуется здесь, а не в geo.search, чтобы
+    # поисковый скоринг не знал о языках вовсе; подпись собирается заново уже
+    # с переведённой страной и уезжает в сохранённый профиль как есть.
+    from dataclasses import replace as _replace
+
+    localized = [
+        _replace(
+            place,
+            country=geo.localized_country(place.country_code, place.country, lang),
+        )
+        for place in found
+    ]
+    return [PlaceOut(**place.as_dict()) for place in localized]
 
 
 def _timezone_payload(latitude: float, longitude: float, when: datetime) -> dict | None:

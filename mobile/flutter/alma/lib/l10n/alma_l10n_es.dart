@@ -223,6 +223,25 @@ class LEs extends L {
   String get cabSignedInNoName => 'Sesión iniciada';
 
   @override
+  String get cabSignOut => 'Cerrar sesión';
+
+  @override
+  String get cabSignOutNote =>
+      'Tu carta y tus compras se quedan en la cuenta — vuelve cuando quieras con el mismo correo.';
+
+  @override
+  String get cabSave => 'Guardar';
+
+  @override
+  String get cabFileSaved => 'El archivo está en tus Descargas.';
+
+  @override
+  String get cabDeleteCodeLead => 'Para confirmar, escribe este código:';
+
+  @override
+  String get cabDeleteCodeHint => 'Código';
+
+  @override
   String get cabGuest => 'Invitado';
 
   @override
@@ -590,7 +609,7 @@ class LEs extends L {
 
   @override
   String get dailyAskBody =>
-      'Una notificación, a la hora que elijas, los días en que se forma un aspecto exacto en tu carta. Más o menos una vez por semana. Nunca de noche, y se puede desactivar desde la propia notificación.';
+      'Una notificación, a la hora que elijas, los días en que algo en tu carta se vuelve exacto. Más o menos una vez por semana — y puedes apagarla desde la propia notificación.';
 
   @override
   String get dailyAskTitle => 'Avísame la mañana en que ocurra';
@@ -647,21 +666,17 @@ class LEs extends L {
 
   @override
   String get dailySettingOccasionallyDetail =>
-      'Más o menos una vez por semana, cuando algo en tu carta es exacto de verdad.';
+      'Más o menos una vez por semana — cuando el cielo toca tu carta directamente.';
 
   @override
   String get dailySettingOff => 'Desactivado';
 
   @override
   String get dailySettingOnlyMattersDetail =>
-      'Unas pocas veces al año. Solo los lentos: los tránsitos que duran meses.';
+      'Unas pocas veces al año — solo los grandes cambios que se despliegan durante meses.';
 
   @override
-  String get dailySettingOnlyWhatMatters => 'Solo los tránsitos largos';
-
-  @override
-  String get dailySettingQuiet =>
-      'Nunca entre las 22:00 y las 08:00 de tu zona horaria.';
+  String get dailySettingOnlyWhatMatters => 'Solo lo importante';
 
   @override
   String get dailySettingTimezone => 'Tu zona horaria';
@@ -1911,6 +1926,21 @@ class LEs extends L {
 
   @override
   String get cabSettingsDocuments => 'Documentos';
+
+  @override
+  String get scrSignInCodeTitle => 'Escribe el código';
+
+  @override
+  String scrSignInCodeSentTo(Object email) {
+    return 'Enviamos seis dígitos a $email.';
+  }
+
+  @override
+  String get scrSignInCodeSentAgain => 'Un código nuevo va en camino.';
+
+  @override
+  String get scrSignInApplePrivate =>
+      'Elige «Compartir mi correo» en la ventana de Apple — una dirección oculta no puede llevar tus compras.';
 
   @override
   String get scrSignInCodeSent =>

@@ -18,6 +18,11 @@ dependencies = [
     # the day to find out.
     "httpx[http2]>=0.27",
     "pyjwt>=2.9",
+    # Названия стран на семи языках для подсказки места рождения — данные
+    # CLDR внутри Babel. Babel — BSD-3, данные CLDR — Unicode License; оба
+    # проходят tools/license_gate.py. pycountry сюда не годится: он LGPL, а
+    # LGPL стоит в запретном списке шлюза наравне с GPL.
+    "babel>=2.14",
     # Store purchases are verified against Apple's and Google's own keys rather
     # than against a shared secret, and neither check can be done with hmac:
     # Apple's StoreKit transaction is an ES256 JWS behind an X.509 chain that

@@ -316,17 +316,19 @@ def is_quiet(local: datetime) -> bool:
 
 
 def delivery_hour(raw: int | None) -> int:
-    """The hour somebody asked for, clamped outside quiet hours.
+    """The hour somebody asked for — any of the twenty-four, honoured exactly.
 
-    Clamped rather than refused at the settings screen, because the clamp has
-    to hold here regardless: the value is in a database column that a future
-    admin tool, a migration or a bug can write, and the guarantee "we never
-    send between 22:00 and 08:00" cannot depend on every writer having been
-    careful.
+    До 25.08.2026 здесь стоял зажим в 08–21: «мы никогда не шлём ночью».
+    Владелец отменил его словами «я хочу, чтобы можно было выбрать любое
+    время»: ночь защищается от НАС, а не от самого человека. Тот, кто сам
+    поставил 23:00, жалобу на 23:00 не подаст — а вот уведомление, тихо
+    переехавшее с выбранных 23 на 21, читается как «настройка не работает»
+    (эту жалобу владелец и принёс). Зажим остался только у значения, которого
+    никто не выбирал: DEFAULT_HOUR лежит днём.
     """
     if raw is None:
         return DEFAULT_HOUR
-    return max(QUIET_END, min(QUIET_START - 1, int(raw)))
+    return max(0, min(23, int(raw)))
 
 
 def due_now(local: datetime, hour: int) -> bool:
@@ -556,13 +558,10 @@ def may_send(
         return Decision(False, "dormant")
     if not due_now(local, hour):
         return Decision(False, "not their hour")
-    if is_quiet(local):
-        # Reachable despite `delivery_hour`'s clamp, and this is the case it
-        # exists for: somebody flies east, their device reports the new zone,
-        # and the hour that was 08:00 this morning is 23:00 tonight. Dropped
-        # rather than deferred — a daily that arrives at 02:00 to tell you
-        # about yesterday is worse than one that never arrives.
-        return Decision(False, "quiet hours")
+    # Ночного гейта здесь больше нет (владелец, 25.08.2026: любой час из 24
+    # выбирается и уважается). От дрейфа в чужое время суток защищает сам
+    # `due_now`: письмо уходит только в выбранный час и его короткое окно
+    # догона, а не «когда-нибудь потом».
 
     blocked = too_soon(local.date(), history)
     if blocked:

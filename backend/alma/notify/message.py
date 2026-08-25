@@ -29,7 +29,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from ..i18n.placements import _base, placement
-from .rules import QUIET_START, Chosen
+from .rules import Chosen
 from .transport import CHANNEL_DAILY, Push
 
 TITLE_KEY = "push.daily.title"
@@ -144,15 +144,15 @@ def clock(moment: datetime, locale: str | None) -> str:
 def expires(local: datetime) -> datetime:
     """When this notification stops being worth delivering.
 
-    The start of the recipient’s quiet hours on the same local day, not
-    midnight. A phone that was off all day and comes back at 23:40 should not
-    receive a cheerful line about a morning that has been and gone — and the
-    vendor holding it until then would be the delivery layer quietly
-    overriding the product’s own rule that a late daily is dropped rather than
-    deferred.
+    Конец местных суток получателя. Раньше здесь стояло начало тихих часов
+    (22:00) — и это убивало бы письмо человека, который сам выбрал 23:00
+    (владелец, 25.08.2026: выбранный час — любой из 24). Полночь оставляет
+    прежний смысл: строка про сегодня не доезжает до завтра — телефон,
+    вернувшийся из самолёта в 00:40, не получит бодрую фразу про день,
+    который уже кончился.
     """
     day = local.replace(hour=0, minute=0, second=0, microsecond=0)
-    return day + timedelta(hours=QUIET_START)
+    return day + timedelta(hours=24)
 
 
 def compose(

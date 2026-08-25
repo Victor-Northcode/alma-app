@@ -614,20 +614,18 @@ def test_the_cadence_lands_inside_the_measured_band(sky):
     assert max(by_month.values()) <= selection.MONTHLY_CAP
 
 
-def test_quiet_hours_drop_rather_than_defer(sky, a_day_with):
-    """22:00–08:00, hard, no override (§3.5).
+def test_any_chosen_hour_is_allowed_to_send(sky, a_day_with):
+    """§3.5 отменён владельцем 25.08.2026: «хочу выбрать любое время».
 
-    A daily is about a day. One that arrives at 02:00 to describe yesterday is
-    worse than one that never arrives, and silence is already supported — so
-    the notification is dropped, and nothing is queued for the morning.
+    Ночь защищалась от нас, а не от человека; час, выбранный руками, уважается
+    ровно как выбран — 23 не превращается в отказ и не переезжает на утро.
     """
     for hour in (22, 23, 0, 3, 7):
         decision = selection.decide(sky, on=a_day_with, zone=ZONE, hour=hour)
-        assert decision.push is False
-        assert "quiet" in decision.reason
-        # The occasion survives: Off and quiet hours are delivery preferences,
-        # not feature gates. The page still has something to show.
-        assert decision.occasion is not None
+        assert "quiet" not in decision.reason, (
+            f"выбранные {hour:02d}:00 отвергнуты как ночь — тихая замена "
+            "выбранного часа и есть жалоба, с которой пришёл владелец"
+        )
 
 
 def test_off_silences_the_push_and_withholds_nothing(sky, a_day_with):

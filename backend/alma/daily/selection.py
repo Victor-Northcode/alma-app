@@ -440,11 +440,8 @@ def decide(
             )
         return Decision(None, False, "nothing in this chart clears the floor today")
 
-    if is_quiet(hour):
-        # Dropped, not deferred (§3.5). A daily is about a day; one that
-        # arrives at 02:00 to describe yesterday is worse than one that never
-        # arrives, and silence is already a supported state of this feature.
-        return Decision(occasion, False, f"{hour:02d}:00 is inside quiet hours")
+    # Ночного гейта больше нет: час сюда приходит уже выбранным человеком
+    # (владелец, 25.08.2026 — «любое время»), и уважается ровно тот час.
 
     # The gap and both caps, from `rules.py` rather than from a second copy
     # here. This is also what absorbs the travel double-send for free: somebody

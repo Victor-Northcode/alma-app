@@ -280,6 +280,30 @@
   "@cabSignedInNoName": {
     "description": "Account title in settings when signed in but the person never gave a name — truthful state instead of the Guest label"
   },
+  "cabSignOut": "Sign out",
+  "@cabSignOut": {
+    "description": "settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup"
+  },
+  "cabSignOutNote": "Your chart and purchases stay in the account — sign back in any time with the same email.",
+  "@cabSignOutNote": {
+    "description": "settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup"
+  },
+  "cabSave": "Save",
+  "@cabSave": {
+    "description": "settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup"
+  },
+  "cabFileSaved": "Saved to your Downloads.",
+  "@cabFileSaved": {
+    "description": "settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup"
+  },
+  "cabDeleteCodeLead": "To confirm, enter this code:",
+  "@cabDeleteCodeLead": {
+    "description": "settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup"
+  },
+  "cabDeleteCodeHint": "Code",
+  "@cabDeleteCodeHint": {
+    "description": "settings additions 25.08.2026: sign-out, save, downloads note, delete-code popup"
+  },
   "cabGuest": "Guest",
   "@cabGuest": {
     "description": "from Cabinet/cab.guest"
@@ -772,7 +796,7 @@
   "@cabUnknownTime": {
     "description": "from Cabinet/cab.unknownTime"
   },
-  "dailyAskBody": "One notification, at the hour you choose, on the days something in your chart is exact. About once a week. Never at night, and you can turn it off from the notification itself.",
+  "dailyAskBody": "One notification, at the hour you choose, on the days something in your chart is exact. About once a week — and you can turn it off from the notification itself.",
   "@dailyAskBody": {
     "description": "from Daily/daily.ask.body"
   },
@@ -855,7 +879,7 @@
   "@dailySettingOccasionally": {
     "description": "from Daily/daily.setting.occasionally"
   },
-  "dailySettingOccasionallyDetail": "About once a week, when something in your chart is actually exact.",
+  "dailySettingOccasionallyDetail": "About once a week — when the sky touches your chart directly.",
   "@dailySettingOccasionallyDetail": {
     "description": "from Daily/daily.setting.occasionally.detail"
   },
@@ -863,17 +887,13 @@
   "@dailySettingOff": {
     "description": "from Daily/daily.setting.off"
   },
-  "dailySettingOnlyMattersDetail": "A few times a year. The slow ones only — the transits that last months.",
+  "dailySettingOnlyMattersDetail": "A few times a year — only the big shifts that unfold over months.",
   "@dailySettingOnlyMattersDetail": {
     "description": "from Daily/daily.setting.onlyMatters.detail"
   },
-  "dailySettingOnlyWhatMatters": "Long-term transits only",
+  "dailySettingOnlyWhatMatters": "Only the big things",
   "@dailySettingOnlyWhatMatters": {
     "description": "from Daily/daily.setting.onlyWhatMatters"
-  },
-  "dailySettingQuiet": "Never between 22:00 and 08:00 in your local time zone.",
-  "@dailySettingQuiet": {
-    "description": "from Daily/daily.setting.quiet"
   },
   "dailySettingTimezone": "Time zone",
   "@dailySettingTimezone": {
@@ -2534,6 +2554,25 @@
   "cabSettingsDocuments": "Documents",
   "@cabSettingsDocuments": {
     "description": "настройки · строка, открывающая попап с пятью юридическими документами (22 авг: документы в одну кнопку)"
+  },
+  "scrSignInCodeTitle": "Enter the code",
+  "@scrSignInCodeTitle": {
+    "description": "six-cell code screen / apple relay refusal, 25.08.2026"
+  },
+  "scrSignInCodeSentTo": "We sent six digits to {email}.",
+  "@scrSignInCodeSentTo": {
+    "description": "subtitle of the six-cell code screen",
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "scrSignInCodeSentAgain": "A new code is on its way.",
+  "@scrSignInCodeSentAgain": {
+    "description": "six-cell code screen / apple relay refusal, 25.08.2026"
+  },
+  "scrSignInApplePrivate": "Choose “Share My Email” in the Apple window — a hidden address can’t carry your purchases.",
+  "@scrSignInApplePrivate": {
+    "description": "six-cell code screen / apple relay refusal, 25.08.2026"
   },
   "scrSignInCodeSent": "We sent a six-digit code to your email — enter it here.",
   "scrSignInCodeHint": "Code from the email",
