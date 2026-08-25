@@ -26,8 +26,7 @@ from ..db import dispose
 from ..db.session import verify_schema
 from ..geo import PlaceIndexMissing
 from . import plates
-from .routers import (
-    account,
+from .routers import (admin, account,
     auth,
     billing,
     events,
@@ -37,8 +36,7 @@ from .routers import (
     places,
     profiles,
     readings,
-    systems,
-)
+    systems,)
 
 log = logging.getLogger("alma")
 
@@ -459,6 +457,10 @@ def create_app() -> FastAPI:
     # чему — содержимое под именем неизменно, новая картинка приезжает новым
     # `?v=` в ссылке.
     app.include_router(plates.router)
+
+    # Админка владельца — тоже вне /v1: это страница и её ручки, а не API
+    # приложения, и версия ей ни к чему.
+    app.include_router(admin.router)
 
     @app.exception_handler(AmbiguousBirthTime)
     async def _ambiguous(_request: Request, exc: AmbiguousBirthTime) -> JSONResponse:

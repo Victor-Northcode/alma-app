@@ -108,6 +108,11 @@ class Settings(BaseSettings):
             return "dev-only-not-a-secret"
         return value
 
+    #: SHA-256 пароля админки (`/admin`). Пароль в .env не живёт — хэш
+    #: пускает внутрь ровно так же, а его утечка паролем не является.
+    #: Пусто — админки нет: вход отвечает 503, никакого дефолта.
+    admin_password_hash: str = Field(default="", alias="ALMA_ADMIN_PASSWORD_HASH")
+
     google_client_id: str = Field(default="", alias="GOOGLE_CLIENT_ID")
     apple_client_id: str = Field(default="", alias="APPLE_CLIENT_ID")
 
