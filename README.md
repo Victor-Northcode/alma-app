@@ -1,118 +1,96 @@
 # Alma
 
-Eight ways of reading a birth chart, and one voice that will not make anything up.
+Приложение-астролог: восемь систем (натальная карта, карта рождения, соляр,
+астрокартография, нумерология, транзиты, совместимость, перекрёстный синтез),
+расчёт всех восьми бесплатен навсегда, продаются написанные главы и подписка.
+Семь языков: en, es, de, it, fr, pt-BR, ru.
 
-Alma computes eight independent systems — a natal chart of sixteen chapters, numerology,
-the tarot birth card, transits, the solar return, compatibility, astrocartography, and a
-cross-synthesis that shows where three of them agree about a person and where they do not.
-Positions come from NASA's **JPL DE440s** ephemeris through Skyfield: a real integration of
-the solar system, not a table of sun signs. Forty-one chapters in all, in **seven languages** — en, es, de, it, fr, pt-BR, ru.
+Прод: API `https://api-alma.pazl.ai` · админка владельца `/admin` · сборки —
+Codemagic → TestFlight (`codemagic.yaml`).
 
-What makes it different from the category is a rule the code enforces rather than a promise
-the marketing makes. Every paragraph names the placement it was read from, and
-`backend/alma/ai/validator.py` **refuses to publish** one that cites a placement absent from
-the chart — the reading is regenerated, and after three attempts it is refused rather than
-degraded. Asked whether to take a job abroad, Alma answers *"nothing in the chart tells you
-to go or to stay — that choice is yours to make."* It describes; it does not predict.
+## Устройство репозитория
 
-**Every calculation is free, forever.** A locked natal chart still returns its houses, its
-aspects with their orbs and all seventy-eight factors. What is sold is the writing.
-
----
-
-## What is here
-
-| | |
+| Где | Что |
 |---|---|
-| `backend/` | FastAPI, Python 3.13. The engine, the writing layer, billing, the API. **1479 tests.** |
-| `src/` | Next.js storefront: the free reading, six legal pages, six languages. Sells nothing. |
-| `mobile/ios/` | SwiftUI. Payment through StoreKit. Still shippable, but **no longer the reference** — since 16 Aug 2026 the sole reference is the design canvas the Flutter port is built against 1-to-1. |
-| `mobile/android/` | Jetpack Compose. Payment through Play Billing. |
-| `mobile/flutter/alma/` | The port, in progress. One codebase for both phones — see [`docs/FLUTTER-PORT.md`](docs/FLUTTER-PORT.md). |
-| `mobile/store/` | The completed App Store and Play submissions — twelve listings, privacy answers, review notes. |
-| `docs/` | How to deploy it, how to release it, and what is not finished. |
+| `backend/` | FastAPI + Postgres (локально SQLite). Расчёты, генерация глав (Claude), письма, пуши, касса, админка |
+| `mobile/flutter/alma/` | Приложение (iOS + Android, один код). **Единственное отгружаемое** |
+| `mobile/ios/`, `mobile/android/` | Прежние нативные приложения — заморожены, не развиваются |
+| `mobile/store/` | Данные сторов: `PRODUCTS.md` (товары и цены), `LISTING.md` (витрина), `DATA-INVENTORY.md` (что храним) — их читают тесты и гейт `check-listing.py` |
+| `src/` | Сайт (Next.js) |
+| `docs/DEPLOY.md` | Выкатка и эксплуатация сервера — инструкция владельца, её проверяют тесты |
+| `CLAUDE.md` | Законы владельца и правила работы для Claude-сессий |
 
-Payment is Apple and Google in-app purchase. Two card processors sit behind a provider seam
-as a fallback and sell nothing today — the seam exists because Paddle's acceptable-use policy
-prohibits this category outright, which is the fact that decided the whole payment
-architecture.
+## Запуск локально
 
-## Prove it works
+Бэкенд (порт 8018; для веб-клиента нужен CORS):
 
 ```bash
-cd backend && .venv/bin/python -m pytest -q          # 1584 tests
-cd backend && .venv/bin/python tools/license_gate.py # no GPL/AGPL/LGPL, direct or transitive
-npx tsc --noEmit && node scripts/check-locales.mjs && npx vitest run
-rm -rf .next-verify && npm run verify
-cd mobile/android && ./gradlew :app:assembleDebug    # read mobile/TOOLCHAIN.md first
+cd backend && ALMA_CORS_ORIGINS="http://127.0.0.1:8080,http://localhost:8080" \
+  .venv/Scripts/python -m uvicorn alma.api.app:app --port 8018
 ```
 
-The licence gate is not ceremony. Swiss Ephemeris, pyswisseph, libephemeris and Kerykeion are
-banned from this repository because AGPL §13 would compel publishing the whole service, and
-that single constraint shaped the entire astronomy stack.
+Приложение — веб-сборкой (на Windows нет симулятора iOS):
 
-## Where to go next
+```bash
+cd mobile/flutter/alma
+flutter build web --dart-define=ALMA_API_BASE=http://127.0.0.1:8018
+cd build/web && python -m http.server 8080     # смотреть на 430×932
+```
 
-- **Running it locally** → [`docs/RUN-LOCAL.md`](docs/RUN-LOCAL.md) — storefront and backend
-  directly on the machine, no Docker and no venv, and the one Windows path-casing trap that
-  breaks the dev server in a way nothing on screen explains.
-- **Working here at all** → [`docs/WORKING.md`](docs/WORKING.md) — the owner's rules, the
-  simulator UDID, how to give a test guest a chart in two minutes, and the traps that cost
-  hours. Read it first.
-- **The Flutter port** → [`docs/FLUTTER-PORT.md`](docs/FLUTTER-PORT.md) — where it stands, every
-  decision taken along the way, and what is honestly missing. The two native apps still work
-  and are still the only thing shippable until the port catches up.
-- **Releasing the apps** → [`mobile/RELEASE.md`](mobile/RELEASE.md), then
-  [`mobile/store/README.md`](mobile/store/README.md)
-- **Building them** → [`mobile/TOOLCHAIN.md`](mobile/TOOLCHAIN.md) — every line in it was run
-  on the machine it describes, and two of that machine's defaults are wrong for Android.
-- **Taking it over** → [`docs/HANDOVER.md`](docs/HANDOVER.md) — read this first if somebody
-  has just handed you this repository. It lists what only the owner can supply, every stub
-  waiting to be filled, and what is honestly not finished.
-- **The daily and its notifications** → [`docs/THE-DAILY.md`](docs/THE-DAILY.md) and
-  [`docs/PUSH.md`](docs/PUSH.md)
+На маке — симулятор iPhone 17 Pro:
 
-**`docs/DEPLOYMENT.md` and `docs/ARCHITECTURE.md` were linked here and have never existed.**
-A link to a document nobody wrote is worse than no link: it costs the next reader the time
-it takes to discover the absence, and it makes the rest of this list less believable. The
-deployment half is genuinely missing and is worth writing the day there is a server to
-deploy to; the architecture half is, for now, the module docstrings, which are unusually
-long on purpose.
+```bash
+flutter build ios --simulator --debug --dart-define=ALMA_API_BASE=http://127.0.0.1:8018
+```
 
-## The house rules
+После правки бэкенда **перезапускать процесс**: старый uvicorn держит старый
+код и «чинит» уже починенное.
 
-Four, and they are the reason the code reads the way it does.
+## Проверка перед коммитом
 
-**Nothing is shown that was not calculated.** Invented reviews, fabricated counts, a
-pre-filled birth date, a claim that eight systems agree where three do — every one of those
-was found in this repository and removed. Apple's Guideline 4.3(b) turns on exactly this
-distinction, and so does whether anybody believes the product.
+```bash
+cd mobile/flutter/alma && flutter analyze && flutter test
+cd backend && .venv/Scripts/python -m pytest -q      # ~10 минут
+python mobile/store/check-listing.py
+```
 
-**Correctness is asserted against definitions.** There is no oracle to compare against, so
-Placidus is checked by trisecting the semi-arc, the lunar node by finding where the Moon's
-latitude crosses zero, and astrocartography against Skyfield's own independent topocentric
-machinery. Two real reference-frame bugs were caught that way.
+После правки любого `lib/l10n/app_*.arb` гонять **обе** стороны: серверные
+тесты читают ARB напрямую (мягкие переносы, французские пробелы, паритет
+ключей). «Готов» значит «видел на устройстве», не «тест зелёный».
 
-**A comment explains why, and what was rejected.** The code is unusually commented on
-purpose: most of what looks like a small choice here was argued over, and several were bug
-fixes whose reasoning is the only thing stopping the bug from coming back.
+## Выкатка бэкенда
 
-**Seven languages or none.** Every user-facing string exists in en, es, de, it, fr, pt-BR
-and ru. The web dictionaries are typed against English so a missing key is a build error;
-`check-locales.mjs` and `tests/test_locales.py` fail the build rather than shipping an
-English sentence to a Brazilian — and the Russian prose is additionally gated at generation
-time: no glyph notation, no Latin words, no grammatical gender pinned on the reader.
+Сервер: `ssh -i ~/.ssh/alma_deploy root@45.88.174.63` (хост `alma.pazl.ai`).
+`/srv/alma` — **не** git-чекаут; код доставляется архивом, секреты (`.env`,
+`secrets/`) живут только на сервере и архивом не задеваются:
 
-## Who writes what
+```bash
+git archive HEAD backend -o /tmp/b.tar
+scp -i ~/.ssh/alma_deploy /tmp/b.tar root@45.88.174.63:/root/
+ssh -i ~/.ssh/alma_deploy root@45.88.174.63 '
+  cd /srv/alma && tar -xf /root/b.tar && rm /root/b.tar && cd backend &&
+  docker compose exec -T db pg_dump -U alma alma | gzip > /srv/backups/before-deploy-$(date +%F).sql.gz &&
+  docker compose build &&
+  docker compose run --rm --no-deps app python -m tools.migrate &&
+  docker compose up -d --force-recreate app'
+curl -s https://api-alma.pazl.ai/health
+```
 
-| Surface | Model | Cadence |
-|---|---|---|
-| Paid chapters (41) | Opus 5 (`ALMA_MODEL_STRONG`) | written once, kept forever |
-| Free sample chapters, natal spheres, the day text, the daily | Sonnet 5 (`ALMA_MODEL_MID`) | once per chart / per day |
-| Chat: the 1 welcome question | Sonnet 5 | the shop window |
-| Chat: 5 questions with a one-time door | Opus 5 | the deeper voice |
-| Chat: 40/month on the plan | Sonnet 5 | subscription economics |
+Подробности эксплуатации (таймеры, копии, логи, откат) — `docs/DEPLOY.md`.
+Клиент выкатывается сборкой в Codemagic; владелец запускает workflow сам.
 
-The cheap tier is deliberately absent — it undersold the product and was removed. Models are
-set in `backend/.env`; ceilings scale with the writing system (Cyrillic costs roughly double
-per word and the budgets know it).
+## Законы продукта — коротко
+
+Полный список с историей — `CLAUDE.md`. Несущие:
+
+* **Бесплатное остаётся бесплатным.** Расчёты всех систем свободны навсегда;
+  продаются слова. Никакого триала.
+* **Цены не выдумываются** — только из каталога магазина (`AlmaStore.price`).
+  Число на кнопке обязано совпасть со списанным.
+* **Строки не выдумываются** ни на одном из семи языков; русский целиком на
+  «ты»; французский несёт узкий неразрывный пробел перед `?!;:` и в «ёлочках».
+* **Закрытая глава не пишется до оплаты** — стена прав стоит до вызова модели.
+* **Никаких GPL-зависимостей и Swiss Ephemeris**; атрибуция данных —
+  `backend/data/ATTRIBUTION.md`.
+* **Секреты не коммитятся** (`backend/.env`, keystore, `.p8`); креды вводит
+  владелец сам. Проверка: `git status --porcelain | grep -iE "\.env$|keystore|local\.properties|\.jks|\.p8"`.
