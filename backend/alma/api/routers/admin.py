@@ -306,6 +306,12 @@ async def overview(session: SessionDep, _: None = Depends(_admin)) -> dict:
         "users_total": users_total,
         "users_today": users_today,
         "with_email": with_email,
+        # Гость — отдельным числом, а не вычитанием в голове. Сервер заводит
+        # аккаунт на каждый первый визит, включая краулеров сайта, и «156
+        # аккаунтов» без этой строки читалось выдумкой рядом с четырьмя
+        # настоящими почтами (владелец, 27.08.2026: «чтоб были настоящие
+        # данные»). Настоящие — это когда видно, из чего число состоит.
+        "guests": users_total - with_email,
         "active_subscriptions": active_subs,
         "owner_grants": grants,
         "revenue": [
@@ -313,6 +319,52 @@ async def overview(session: SessionDep, _: None = Depends(_admin)) -> dict:
             for currency, cents in paid_rows
         ],
         "devices": devices,
+    }
+
+
+#: Сколько строк несут живые ленты. Двадцать — экран телефона с запасом;
+#: история глубже — вопрос к базе напрямую, а не к странице.
+RECENT = 20
+
+
+@router.get("/api/recent")
+async def recent(session: SessionDep, _: None = Depends(_admin)) -> dict:
+    """Последние аккаунты и последние права — как они лежат в базе.
+
+    Лента, а не отчёт: владелец открывает админку посмотреть «что происходит»,
+    и до этой ручки ответ состоял из семи чисел. Числа складываются из строк —
+    вот строки. Гости показываются наравне с почтами: это тоже настоящие
+    визиты, и прятать их значило бы рисовать продукт популярнее, чем он есть.
+    """
+    _configured()
+    people = (
+        await session.execute(
+            select(User).order_by(User.created_at.desc()).limit(RECENT)
+        )
+    ).scalars().all()
+    rows = (
+        await session.execute(
+            select(Entitlement, User.email)
+            .join(User, User.id == Entitlement.user_id)
+            .order_by(Entitlement.granted_at.desc())
+            .limit(RECENT)
+        )
+    ).all()
+    return {
+        "users": [
+            {
+                "email": u.email,
+                "provider": u.provider,
+                "display_name": u.display_name,
+                "locale": u.locale,
+                "created_at": as_utc(u.created_at).isoformat(),
+                "last_seen_at": as_utc(u.last_seen_at).isoformat(),
+            }
+            for u in people
+        ],
+        "entitlements": [
+            {**_entitlement_row(e), "email": email} for e, email in rows
+        ],
     }
 
 
@@ -465,6 +517,12 @@ PAGE = """<!doctype html>
     </div>
     <div id="person"></div>
     <div class="note" id="note"></div>
+
+    <h2>Последние права</h2><div class="rule"></div>
+    <div id="recentEnts"></div>
+
+    <h2>Последние аккаунты</h2><div class="rule"></div>
+    <div id="recentUsers"></div>
   </div>
 </div>
 
@@ -517,15 +575,57 @@ async function refreshStats() {
       ? s.revenue.map(r => (r.cents / 100).toFixed(2) + ' ' + r.currency).join(' · ')
       : '0';
     document.getElementById('stats').innerHTML = [
-      card(s.users_total, 'аккаунтов всего'),
+      card(s.with_email, 'людей с почтой'),
+      card(s.guests, 'гостей без входа'),
       card(s.users_today, 'новых за сутки'),
-      card(s.with_email, 'с почтой'),
       card(s.active_subscriptions, 'платных подписок'),
       card(s.owner_grants, 'подарков активно'),
       card(s.devices, 'устройств с пушами'),
       card(money, 'выручка, всего'),
     ].join('');
   } catch (e) {}
+  refreshRecent();
+}
+
+// Живые ленты: последние аккаунты и последние права, как они лежат в базе.
+async function refreshRecent() {
+  try {
+    const r = await api('recent');
+    const when = iso => iso.slice(0, 10) + ' ' + iso.slice(11, 16);
+    document.getElementById('recentUsers').innerHTML = r.users.map(u => `
+      <div class="ent">
+        <div class="what">
+          ${u.email
+            ? `<b><a href="#" style="color:var(--goldhi);text-decoration:none"
+                 onclick="pick('${u.email}');return false">${u.email}</a></b>`
+            : '<b style="color:var(--muted);font-weight:400">гость</b>'}
+          <span>${u.provider} · ${u.locale}${u.display_name ? ' · ' + u.display_name : ''}</span>
+        </div>
+        <span class="pill off">${when(u.created_at)}</span>
+      </div>`).join('') || '<p style="color:var(--muted);margin-top:12px">Пока пусто.</p>';
+    document.getElementById('recentEnts').innerHTML = r.entitlements.map(e => `
+      <div class="ent">
+        <div class="what">
+          <b>${e.system === '*' ? 'Вся Alma' : e.system}</b>
+          <span>${e.email
+              ? `<a href="#" style="color:inherit" onclick="pick('${e.email}');return false">${e.email}</a> · `
+              : ''}${e.source} · ${e.amount_cents
+              ? (e.amount_cents / 100).toFixed(2) + ' ' + e.currency : 'подарок'}</span>
+        </div>
+        <div class="row" style="gap:8px">
+          ${e.revoked_at ? '<span class="pill rev">отозвано</span>'
+            : e.active ? '<span class="pill on">до ' + (e.expires_at || '∞').slice(0, 10) + '</span>'
+            : '<span class="pill off">истекло</span>'}
+          <span class="pill off">${when(e.granted_at)}</span>
+        </div>
+      </div>`).join('') || '<p style="color:var(--muted);margin-top:12px">Пока не выдано ни одного права.</p>';
+  } catch (e) {}
+}
+
+function pick(email) {
+  document.getElementById('email').value = email;
+  lookup();
+  document.getElementById('email').scrollIntoView({ behavior: 'smooth' });
 }
 const card = (v, label) => `<div class="card"><b>${v}</b><span>${label}</span></div>`;
 

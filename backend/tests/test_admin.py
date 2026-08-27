@@ -124,6 +124,30 @@ def test_overview_answers_and_counts_the_grant(api, admin_on):
     assert stats.json()["owner_grants"] >= 1
 
 
+def test_recent_is_real_rows_and_needs_the_admin_token(api, admin_on):
+    """Ленты — настоящие строки базы, и дверь у них та же, что у остального."""
+    token = _token(api)
+    api.post(
+        "/admin/api/grant",
+        headers=_auth(token),
+        json={"email": "feed@example.com", "months": None},
+    )
+
+    assert api.get("/admin/api/recent").status_code in (401, 403)
+
+    out = api.get("/admin/api/recent", headers=_auth(token))
+    assert out.status_code == 200
+    feed = out.json()
+    emails = [u["email"] for u in feed["users"]]
+    assert "feed@example.com" in emails
+    row = next(e for e in feed["entitlements"] if e["email"] == "feed@example.com")
+    assert row["system"] == "*" and row["source"] == "owner_grant" and row["active"]
+    assert row["expires_at"].startswith("2099")
+
+    stats = api.get("/admin/api/overview", headers=_auth(token)).json()
+    assert stats["guests"] == stats["users_total"] - stats["with_email"]
+
+
 def test_the_page_itself_is_served(api):
     page = api.get("/admin")
     assert page.status_code == 200
