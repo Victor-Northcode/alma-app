@@ -139,10 +139,23 @@ class Provider(Protocol):
 #: первое понижение и потому прожило долго.
 #:
 #: Здесь же и словарь того, что вообще бывает: `output_config.effort` — та
-#: единственная ручка, которой это семейство моделей управляет размышлением,
-#: и знать про неё должен тот, кто разговаривает с API, а не тот, кто пишет
-#: главы.
-EFFORT_LADDER: tuple[str, ...] = ("medium", "low")
+#: единственная ручка, которой это семейство моделей управляет **глубиной**
+#: размышления, и знать про неё должен тот, кто разговаривает с API, а не
+#: тот, кто пишет главы.
+#:
+#: **Нижняя ступень — размышление выключено вовсе.** Даже на `low` модель
+#: думает из того же `max_tokens`, и лестница, кончавшаяся на `low`,
+#: упиралась в отказ: русская глава свободного уровня добирала денежный
+#: потолок ($0.05 × 2 ≈ 5670 токенов Sonnet), обрезалась и на `low` — и
+#: читатель в России получал «claude-sonnet-5 reached max_tokens…» на
+#: экране (владелец, 27.08.2026, «Клауд не обрабатывает»). Семейство Claude
+#: 5 принимает `thinking: {"type": "disabled"}` (Sonnet 5 — всегда, Opus 5 —
+#: при усилии не выше high, которое мы при выключении и не шлём), и тогда
+#: весь потолок достаётся прозе: ~5670 токенов на главу в 320 слов хватает
+#: с запасом. Проза без размышления беднее — потому это последняя ступень
+#: перед отказом, а не первая.
+THINKING_OFF = "none"
+EFFORT_LADDER: tuple[str, ...] = ("medium", "low", THINKING_OFF)
 
 
 def at_the_bottom(effort: str | None) -> bool:
@@ -285,7 +298,13 @@ class AnthropicProvider:
         # which is the right default for prose that has to be good; the writer
         # turns it down only on the retry after a call has already proven it
         # over-deliberates on this chart.
-        if effort is not None:
+        #
+        # [THINKING_OFF] — не ступень усилия, а выключатель: размышление
+        # запрещено целиком, и `effort` при нём не шлётся (Opus 5 принимает
+        # выключение только при усилии не выше high — умолчание подходит).
+        if effort == THINKING_OFF:
+            request["thinking"] = {"type": "disabled"}
+        elif effort is not None:
             request.setdefault("output_config", {})["effort"] = effort
 
         try:

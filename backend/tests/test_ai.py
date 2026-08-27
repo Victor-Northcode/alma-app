@@ -2326,9 +2326,16 @@ def test_the_effort_ladder_lives_in_one_place():
 
     assert writer.EFFORT_LADDER is provider.EFFORT_LADDER
     assert writer._turn_down is provider.turn_down
-    assert provider.turn_down("low") == "low", "лестница снова поднимается вверх"
     assert provider.turn_down("medium") == "low"
-    assert provider.at_the_bottom("low") is True
+    # Нижняя ступень — размышление выключено целиком (27.08.2026): русская
+    # глава свободного уровня добирала денежный потолок и на `low`, и
+    # лестница, кончавшаяся на нём, упиралась в отказ вместо главы.
+    assert provider.turn_down("low") == provider.THINKING_OFF
+    assert provider.turn_down(provider.THINKING_OFF) == provider.THINKING_OFF, (
+        "лестница снова поднимается вверх"
+    )
+    assert provider.at_the_bottom("low") is False
+    assert provider.at_the_bottom(provider.THINKING_OFF) is True
     # И у беседы своего стартового значения-сюрприза нет: оно с той же лестницы.
     assert conversation.DEFAULT_EFFORT in provider.EFFORT_LADDER
 

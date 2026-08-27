@@ -275,15 +275,31 @@ void main() {
     expect(find.textContaining('Something on our side'), findsNothing,
         reason: 'сервер ещё не ответил — ошибки нет');
     expect(find.text('Try again'), findsNothing);
-    expect(find.byType(CircularProgressIndicator), findsOneWidget,
-        reason: 'на месте абзаца — ожидание');
     expect(find.text(r'Unlock and read · $4.99'), findsOneWidget,
         reason: 'кнопка с ценой ждать не обязана');
+    // Размытый хвост приходит вместе с настоящим абзацем, а не раньше:
+    // размытие под лоадером читалось «текст уже есть, его прячут»
+    // (владелец, 27.08.2026). Лоадер — посреди свободного места страницы.
+    expect(find.byType(ImageFiltered), findsNothing,
+        reason: 'размытия нет, пока нет текста');
+    final spinner = find.byType(CircularProgressIndicator);
+    expect(spinner, findsOneWidget, reason: 'на месте абзаца — ожидание');
+    final page = tester.getSize(find.byType(ChapterScreen));
+    final middle = tester.getCenter(spinner);
+    expect(middle.dy, greaterThan(page.height * 0.3),
+        reason: 'лоадер посреди экрана, а не строкой у линейки');
+    expect(middle.dy, lessThan(page.height * 0.8));
+    // Правое поле страницы на 4 точки шире левого (GiltPage.sideRight),
+    // поэтому центр колонки стоит на 2 точки левее центра экрана.
+    expect((middle.dx - page.width / 2).abs(), lessThan(4),
+        reason: 'лоадер по центру, а не у левого поля');
 
     hold.complete();
     await settle(tester);
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text(_opening), findsOneWidget);
+    expect(find.byType(ImageFiltered), findsOneWidget,
+        reason: 'размытие пришло вместе с текстом');
   });
 
   testWidgets('«Секунду» — та же кнопка, что и цена: меняется только надпись',

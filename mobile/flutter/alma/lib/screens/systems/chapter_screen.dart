@@ -1998,26 +1998,32 @@ class _LockedChapterState extends State<_LockedChapter> {
                     },
                   )
                 else if (widget.openingPending)
-                  // **Абзац пишется — это ожидание, а не отказ.** Тихо и в
-                  // тоне страницы: маленький золотой круг и «Секунду», а не
-                  // «Пишу эту главу…» — обещать целую главу тому, кому она не
-                  // положена, нельзя (см. `_load`). Кнопка с ценой стоит
-                  // ниже и ничего не ждёт.
-                  Padding(
-                    padding: const EdgeInsets.only(top: 18),
-                    child: Row(
-                      children: [
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2, color: AlmaPalette.goldDeep),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(l.stateLoadingShort,
-                            style: _chapterProse()
-                                .copyWith(color: AlmaPalette.inkMuted)),
-                      ],
+                  // **Абзац пишется — это ожидание, а не отказ.** Лоадер
+                  // стоит посреди свободного места страницы, а не строкой у
+                  // линейки, и размытого хвоста под ним нет: владелец —
+                  // «почему во время генерации уже показан заблюренный текст
+                  // сзади; лоадер посреди экрана, а заблюренный текст пусть
+                  // появляется вместе с обычным» (27.08.2026). «Секунду», а
+                  // не «Пишу эту главу…» — обещать целую главу тому, кому
+                  // она не положена, нельзя (см. `_load`). Кнопка с ценой
+                  // стоит ниже и ничего не ждёт.
+                  Expanded(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 22,
+                            height: 22,
+                            child: CircularProgressIndicator(
+                                strokeWidth: 2, color: AlmaPalette.goldDeep),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(l.stateLoadingShort,
+                              style: _chapterProse()
+                                  .copyWith(color: AlmaPalette.inkMuted)),
+                        ],
+                      ),
                     ),
                   )
                 else
@@ -2054,10 +2060,15 @@ class _LockedChapterState extends State<_LockedChapter> {
                       ],
                     ),
                   ),
-                Expanded(
-                  child: _BlurredTail(
-                      gap: widget.opening?.body.isEmpty ?? true ? 18 : 14),
-                ),
+                // Размытый хвост появляется вместе с настоящим абзацем, а не
+                // раньше него: размытие под лоадером читалось «текст уже есть,
+                // от меня его прячут» (владелец, 27.08.2026). Ожидание
+                // занимает его место своим `Expanded` выше.
+                if (!widget.openingPending)
+                  Expanded(
+                    child: _BlurredTail(
+                        gap: widget.opening?.body.isEmpty ?? true ? 18 : 14),
+                  ),
               ],
             ),
           ),
