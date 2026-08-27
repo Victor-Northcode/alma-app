@@ -415,7 +415,8 @@ class CitationState extends State<Citation> {
               builder: (context, box) => Text(
                 AlmaShrink.fitMetaLine(
                   line: CabinetWordsMore.factor(l, widget.factors.first),
-                  style: style,
+                  // Стилем, которым рисуется, — см. `AlmaShrink.drawn`.
+                  style: AlmaShrink.drawn(context, style),
                   maxWidth: box.maxWidth,
                   scaler: MediaQuery.textScalerOf(context),
                 ),

@@ -175,6 +175,14 @@ Future<void> settle(WidgetTester tester) async {
   }
 }
 
+void _seedPrices() => AlmaStore.shared.seedPrices({
+      for (final key in LadderKey.values)
+        key: _product(
+            key.storeProductId,
+            key == LadderKey.subMonthly ? r'$9.99' : r'$4.99',
+            key == LadderKey.subMonthly ? 9.99 : 4.99),
+    });
+
 ProductDetails _product(String id, String price, double raw) => ProductDetails(
       id: id,
       title: id,
@@ -216,13 +224,7 @@ void main() {
     FlutterSecureStorage.setMockInitialValues({});
     // Без цен нет кнопки: число на ней обязано совпасть со списанным, и
     // молчащий App Store рисует вместо неё честное «купить сейчас нельзя».
-    AlmaStore.shared.seedPrices({
-      for (final key in LadderKey.values)
-        key: _product(
-            key.storeProductId,
-            key == LadderKey.subMonthly ? r'$9.99' : r'$4.99',
-            key == LadderKey.subMonthly ? 9.99 : 4.99),
-    });
+    _seedPrices();
   });
 
   testWidgets('закрытая глава просит абзац, а не главу', (tester) async {
@@ -282,6 +284,41 @@ void main() {
     await settle(tester);
     expect(find.byType(CircularProgressIndicator), findsNothing);
     expect(find.text(_opening), findsOneWidget);
+  });
+
+  testWidgets('«Секунду» — та же кнопка, что и цена: меняется только надпись',
+      (tester) async {
+    // Владелец (27.08.2026): «кнопка с надписью „Секунду“ — это кнопка
+    // всегда, и меняется в ней только надпись». Пока полка не ответила, на
+    // месте цены стоит тот же золотой `AlmaButton` тех же размеров с
+    // «Секунду»; цена дописывается в него, а не заменяет его другим виджетом.
+    AlmaStore.shared.seedPrices({});
+    final gate = AlmaStore.loadGate = Completer<void>();
+    addTearDown(() {
+      if (!gate.isCompleted) gate.complete();
+      AlmaStore.loadGate = null;
+    });
+    final session = AlmaSession(lockedClient());
+    await session.start();
+    await open(tester, session, SystemSlug.natal, 'career');
+    await settle(tester);
+
+    final waiting = find.widgetWithText(AlmaButton, 'One moment');
+    expect(waiting, findsOneWidget, reason: 'ожидание цены — кнопка');
+    expect(tester.widget<AlmaButton>(waiting).kind, AlmaButtonKind.gold);
+    final before = tester.getRect(waiting);
+
+    // Полка ответила. Настоящего магазина в пробирке нет, и его ответ —
+    // те же цены, что сеет `setUp`.
+    gate.complete();
+    _seedPrices();
+    await settle(tester);
+    final priced = find.widgetWithText(AlmaButton, r'Unlock and read · $4.99');
+    expect(priced, findsOneWidget);
+    expect(find.widgetWithText(AlmaButton, 'One moment'), findsNothing);
+    expect(tester.widget<AlmaButton>(priced).kind, AlmaButtonKind.gold);
+    expect(tester.getRect(priced), before,
+        reason: 'кнопка не меняет ни места, ни размера — только надпись');
   });
 
   testWidgets('движок промолчал — вот тогда предложение повторить',

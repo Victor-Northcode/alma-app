@@ -1474,12 +1474,14 @@ class _CitedLineState extends State<_CitedLine> {
           const SizedBox(width: 12),
           Expanded(
             // Режется только хвост дома — см. `AlmaShrink.fitMetaLine`.
-            // Многоточие здесь съедало знак, то есть саму позицию.
+            // Многоточие здесь съедало знак, то есть саму позицию. Меряется
+            // стилем, которым рисуется (`AlmaShrink.drawn`), — голый замер
+            // не знал разрядки темы и отдавал многоточию хвост дома.
             child: LayoutBuilder(
               builder: (context, box) => Text(
                 AlmaShrink.fitMetaLine(
                   line: CabinetWordsMore.factor(l, widget.factors.first),
-                  style: style,
+                  style: AlmaShrink.drawn(context, style),
                   maxWidth: box.maxWidth,
                   scaler: MediaQuery.textScalerOf(context),
                 ),

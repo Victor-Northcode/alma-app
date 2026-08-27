@@ -620,7 +620,8 @@ class _SystemScreenState extends State<SystemScreen> {
           builder: (context, box) => Text(
             AlmaShrink.fitMetaLine(
               line: CabinetWordsMore.factor(l, factors.first),
-              style: style,
+              // Стилем, которым рисуется, — см. `AlmaShrink.drawn`.
+              style: AlmaShrink.drawn(context, style),
               maxWidth: box.maxWidth,
               scaler: MediaQuery.textScalerOf(context),
             ),

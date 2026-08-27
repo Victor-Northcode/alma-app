@@ -163,10 +163,19 @@ class AlmaStore extends ChangeNotifier {
   }
 
   /// Спросить магазин, что почём.
+  /// Задвижка для тестов: полка не отвечает, пока её не отпустят.
+  ///
+  /// В отладке магазин отвечает витринными ценами в те же микрозадачи, что и
+  /// первый кадр, и состояние «цена в пути» на экране не поймать вовсе — а
+  /// именно оно и проверяется: что на месте цены стоит та же кнопка.
+  @visibleForTesting
+  static Completer<void>? loadGate;
+
   Future<void> load() async {
     if (_state == StoreState.loading) return;
     _state = StoreState.loading;
     notifyListeners();
+    if (loadGate case final gate?) await gate.future;
 
     if (!await _iap.isAvailable()) {
       // Магазина нет вовсе — и в отладке это тот же случай, что «есть, но
