@@ -568,9 +568,11 @@ async function signIn() {
   } catch (e) { note.className = 'note bad'; note.textContent = e.message; }
 }
 
+let statsTries = 0;
 async function refreshStats() {
   try {
     const s = await api('overview');
+    statsTries = 0;
     const money = s.revenue.length
       ? s.revenue.map(r => (r.cents / 100).toFixed(2) + ' ' + r.currency).join(' · ')
       : '0';
@@ -583,7 +585,12 @@ async function refreshStats() {
       card(s.devices, 'устройств с пушами'),
       card(money, 'выручка, всего'),
     ].join('');
-  } catch (e) {}
+  } catch (e) {
+    // Не молчать навсегда: сразу после рестарта контейнера первый запрос
+    // может не дойти, и владелец видел пустые карточки до перелогина.
+    if (++statsTries <= 3) setTimeout(refreshStats, 1200 * statsTries);
+    return;
+  }
   refreshRecent();
 }
 
