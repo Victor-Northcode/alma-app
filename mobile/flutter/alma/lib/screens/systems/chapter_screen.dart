@@ -531,6 +531,8 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // подставляющийся через десять секунд, читался бы подменой страницы.
       title: entry?.title ?? opening?.title ?? '',
       opening: opening,
+      // Запрос в полёте или тихий повтор перед ним — абзац ещё придёт.
+      openingPending: opening == null && (_loading || _retryWait),
       onRetryOpening: () => _load(),
       systemName: _systemName(l),
       // Обещание над кнопкой считает **платные** главы: бесплатная за деньги не
@@ -1675,6 +1677,7 @@ class _LockedChapter extends StatefulWidget {
     required this.overline,
     required this.title,
     required this.opening,
+    required this.openingPending,
     required this.onRetryOpening,
     required this.systemName,
     required this.paidChapters,
@@ -1700,6 +1703,14 @@ class _LockedChapter extends StatefulWidget {
   /// написанное, — это ровно то враньё, ради снятия которого отменяли
   /// `preview`.
   final Reading? opening;
+
+  /// Абзац ещё в пути: сервер пишет его моделью — секунды, а бывает и
+  /// полминуты. На месте абзаца стоит ожидание, а не отказ. **Без этого
+  /// признака каждая закрытая глава открывалась с «что-то пошло не так» и
+  /// «попробовать ещё раз», которые через десять секунд сами сменялись
+  /// текстом** — владелец: «чтоб на страницах глав не было ошибки на нашей
+  /// стороне, пока не будет реальной ошибки» (27.08.2026).
+  final bool openingPending;
 
   /// Написать начало ещё раз. Зовётся только из состояния «начала нет»:
   /// отказ движка бывает случайным, и повтор — единственное честное действие,
@@ -1966,6 +1977,29 @@ class _LockedChapterState extends State<_LockedChapter> {
                         ),
                       );
                     },
+                  )
+                else if (widget.openingPending)
+                  // **Абзац пишется — это ожидание, а не отказ.** Тихо и в
+                  // тоне страницы: маленький золотой круг и «Секунду», а не
+                  // «Пишу эту главу…» — обещать целую главу тому, кому она не
+                  // положена, нельзя (см. `_load`). Кнопка с ценой стоит
+                  // ниже и ничего не ждёт.
+                  Padding(
+                    padding: const EdgeInsets.only(top: 18),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                              strokeWidth: 2, color: AlmaPalette.goldDeep),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(l.stateLoadingShort,
+                            style: _chapterProse()
+                                .copyWith(color: AlmaPalette.inkMuted)),
+                      ],
+                    ),
                   )
                 else
                   // **Начала нет — и это надо сказать, а не показать пустоту.**

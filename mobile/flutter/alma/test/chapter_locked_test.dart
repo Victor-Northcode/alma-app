@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:alma/billing/alma_store.dart';
@@ -90,11 +91,14 @@ Map<String, Object?> _locked(String system, String chapter, String product) => {
       'cached': true,
     };
 
-AlmaClient lockedClient() {
+/// [hold] — сервер пишет абзац закрытой главы, пока тест не отпустит;
+/// [silentOpening] — движок промолчал: `opening: null` при честном 200.
+AlmaClient lockedClient({Completer<void>? hold, bool silentOpening = false}) {
   calls = [];
   final transport = MockClient((request) async {
     final path = request.url.path;
     calls.add('${request.method} $path');
+    if (path == '/v1/readings' && hold != null) await hold.future;
     Object body;
     if (path == '/v1/auth/refresh') {
       body = {'token': 't', 'user_id': 'u', 'is_guest': true, 'locale': 'en'};
@@ -131,7 +135,9 @@ AlmaClient lockedClient() {
       final system = payload['system'] as String;
       final chapter = payload['chapter'] as String;
       body = switch (chapter) {
-        'career' => _locked(system, chapter, 'door.natal'),
+        'career' => silentOpening
+            ? (_locked(system, chapter, 'door.natal')..['opening'] = null)
+            : _locked(system, chapter, 'door.natal'),
         'active' => _locked(system, chapter, 'sub.monthly'),
         _ => {
             'reading': {
@@ -249,6 +255,46 @@ void main() {
     expect(find.text('Дело'), findsOneWidget, reason: 'титул из оглавления');
     // «Пишу эту главу…» — экран того, кому текст положен.
     expect(find.text('Writing this chapter…'), findsNothing);
+  });
+
+  testWidgets('пока абзац пишется — ожидание, а не ошибка', (tester) async {
+    // Владелец (27.08.2026): «проверь, чтоб на страницах глав не было ошибки
+    // на нашей стороне, пока не будет реальной ошибки — лоадер, пока ждём,
+    // что ИИ ответит». Абзац закрытой главы — вызов модели на секунды и
+    // десятки секунд, и всё это время на месте абзаца стояла ветка отказа с
+    // «попробовать ещё раз»: у экрана не было состояния «в пути».
+    final hold = Completer<void>();
+    final session = AlmaSession(lockedClient(hold: hold));
+    await session.start();
+    await open(tester, session, SystemSlug.natal, 'career');
+    await settle(tester);
+
+    expect(calls.where((c) => c == 'POST /v1/readings'), hasLength(1));
+    expect(find.textContaining('Something on our side'), findsNothing,
+        reason: 'сервер ещё не ответил — ошибки нет');
+    expect(find.text('Try again'), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget,
+        reason: 'на месте абзаца — ожидание');
+    expect(find.text(r'Unlock and read · $4.99'), findsOneWidget,
+        reason: 'кнопка с ценой ждать не обязана');
+
+    hold.complete();
+    await settle(tester);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text(_opening), findsOneWidget);
+  });
+
+  testWidgets('движок промолчал — вот тогда предложение повторить',
+      (tester) async {
+    final session = AlmaSession(lockedClient(silentOpening: true));
+    await session.start();
+    await open(tester, session, SystemSlug.natal, 'career');
+    await settle(tester);
+
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.textContaining('Something on our side'), findsOneWidget,
+        reason: 'сервер ответил без абзаца — это настоящая правда');
+    expect(find.text('Try again'), findsOneWidget);
   });
 
   testWidgets('под ценой сказана природа покупки, удалённых экранов нет',
