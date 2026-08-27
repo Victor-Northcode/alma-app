@@ -125,7 +125,7 @@ def test_overview_answers_and_counts_the_grant(api, admin_on):
 
 
 def test_recent_is_real_rows_and_needs_the_admin_token(api, admin_on):
-    """Ленты — настоящие строки базы, и дверь у них та же, что у остального."""
+    """Лента прав — настоящие строки базы, и дверь у неё та же, что у остального."""
     token = _token(api)
     api.post(
         "/admin/api/grant",
@@ -135,17 +135,59 @@ def test_recent_is_real_rows_and_needs_the_admin_token(api, admin_on):
 
     assert api.get("/admin/api/recent").status_code in (401, 403)
 
-    out = api.get("/admin/api/recent", headers=_auth(token))
-    assert out.status_code == 200
-    feed = out.json()
-    emails = [u["email"] for u in feed["users"]]
-    assert "feed@example.com" in emails
+    feed = api.get("/admin/api/recent", headers=_auth(token)).json()
     row = next(e for e in feed["entitlements"] if e["email"] == "feed@example.com")
     assert row["system"] == "*" and row["source"] == "owner_grant" and row["active"]
     assert row["expires_at"].startswith("2099")
 
     stats = api.get("/admin/api/overview", headers=_auth(token)).json()
     assert stats["guests"] == stats["users_total"] - stats["with_email"]
+
+
+def test_users_are_paged_people_and_guests_stay_out(api, admin_on):
+    """«Люди» — страницы живых аккаунтов; гость в них не попадает без просьбы.
+
+    Владелец, 27.08.2026: «нахера мне гостей смотреть» — лента, где на одного
+    человека приходилось двадцать безымянных визитов, была нечитаема.
+    """
+    token = _token(api)
+    for email in ("first@example.com", "second@example.com"):
+        api.post(
+            "/admin/api/grant", headers=_auth(token), json={"email": email, "months": 1}
+        )
+    # Гость: тот же путь, каким его заводит приложение.
+    api.post("/v1/auth/refresh", json={})
+
+    assert api.get("/admin/api/users").status_code in (401, 403)
+
+    out = api.get("/admin/api/users", headers=_auth(token)).json()
+    assert out["page"] == 1 and out["pages"] >= 1
+    emails = [r["email"] for r in out["rows"]]
+    assert "first@example.com" in emails and "second@example.com" in emails
+    assert None not in emails, "гость пролез в список людей"
+    assert out["total"] == len([e for e in emails if e])
+
+    everyone = api.get(
+        "/admin/api/users?guests=true", headers=_auth(token)
+    ).json()
+    assert everyone["total"] > out["total"], "гости не показались и по просьбе"
+
+    narrowed = api.get(
+        "/admin/api/users?q=first", headers=_auth(token)
+    ).json()
+    assert [r["email"] for r in narrowed["rows"]] == ["first@example.com"]
+
+
+def test_revenue_shape_and_gate(api, admin_on):
+    """Прибыль отвечает итогами, месяцами и страницей покупок — за той же дверью."""
+    token = _token(api)
+    assert api.get("/admin/api/revenue").status_code in (401, 403)
+
+    out = api.get("/admin/api/revenue", headers=_auth(token)).json()
+    assert set(out) == {"totals", "months", "purchases"}
+    assert set(out["purchases"]) == {"page", "pages", "total", "rows"}
+    # Подарки — не выручка: грант из соседних тестов сюда попасть не должен.
+    assert out["purchases"]["total"] == 0 and out["totals"] == []
 
 
 def test_the_page_itself_is_served(api):

@@ -329,19 +329,14 @@ RECENT = 20
 
 @router.get("/api/recent")
 async def recent(session: SessionDep, _: None = Depends(_admin)) -> dict:
-    """Последние аккаунты и последние права — как они лежат в базе.
+    """Последние права — как они лежат в базе.
 
     Лента, а не отчёт: владелец открывает админку посмотреть «что происходит»,
-    и до этой ручки ответ состоял из семи чисел. Числа складываются из строк —
-    вот строки. Гости показываются наравне с почтами: это тоже настоящие
-    визиты, и прятать их значило бы рисовать продукт популярнее, чем он есть.
+    и до этой ручки ответ состоял из семи чисел. Ленты аккаунтов здесь больше
+    нет: она была из одних гостей («нахера мне гостей смотреть» — владелец,
+    27.08.2026), люди живут во вкладке с пагинацией (`/api/users`).
     """
     _configured()
-    people = (
-        await session.execute(
-            select(User).order_by(User.created_at.desc()).limit(RECENT)
-        )
-    ).scalars().all()
     rows = (
         await session.execute(
             select(Entitlement, User.email)
@@ -351,7 +346,83 @@ async def recent(session: SessionDep, _: None = Depends(_admin)) -> dict:
         )
     ).all()
     return {
-        "users": [
+        "entitlements": [
+            {**_entitlement_row(e), "email": email} for e, email in rows
+        ],
+    }
+
+
+@router.get("/api/users")
+async def users(
+    session: SessionDep,
+    _: None = Depends(_admin),
+    page: int = 1,
+    q: str = "",
+    guests: bool = False,
+) -> dict:
+    """Люди — страницами, живые первыми, гости выключены по умолчанию.
+
+    Гость — это визит, а не человек: почты нет, покупок нет, смотреть не на
+    что, а в ленте их было двадцать на одного живого. Кто хочет полную
+    картину — `guests=true`. Порядок по последнему визиту: владелец смотрит
+    «кто пользуется», а не архив регистраций. `q` ищет по почте и имени.
+    """
+    _configured()
+    page = max(1, page)
+    where = []
+    if not guests:
+        where.append(User.email.is_not(None))
+    needle = q.strip().lower()
+    if needle:
+        like = f"%{needle}%"
+        where.append(
+            func.lower(func.coalesce(User.email, "")).like(like)
+            | func.lower(func.coalesce(User.display_name, "")).like(like)
+        )
+    total = (
+        await session.execute(select(func.count()).select_from(User).where(*where))
+    ).scalar_one()
+    pages = max(1, -(-total // RECENT))
+    page = min(page, pages)
+    devices = (
+        select(func.count())
+        .select_from(DeviceToken)
+        .where(DeviceToken.user_id == User.id)
+        .scalar_subquery()
+    )
+    now = datetime.now(timezone.utc)
+    rights = (
+        select(func.count())
+        .select_from(Entitlement)
+        .where(
+            Entitlement.user_id == User.id,
+            Entitlement.revoked_at.is_(None),
+            Entitlement.expires_at > now,
+        )
+        .scalar_subquery()
+    )
+    # Счёт покупок, а не сумма: суммы в разных валютах не складываются в одно
+    # честное число, а «покупок: 2» честно всегда.
+    paid = (
+        select(func.count())
+        .select_from(Entitlement)
+        .where(Entitlement.user_id == User.id, Entitlement.amount_cents > 0)
+        .scalar_subquery()
+    )
+    rows = (
+        await session.execute(
+            select(User, devices, rights, paid)
+            .where(*where)
+            .order_by(User.last_seen_at.desc())
+            .offset((page - 1) * RECENT)
+            .limit(RECENT)
+        )
+    ).all()
+    return {
+        "page": page,
+        "pages": pages,
+        "total": total,
+        "rows": [
             {
                 "email": u.email,
                 "provider": u.provider,
@@ -359,12 +430,87 @@ async def recent(session: SessionDep, _: None = Depends(_admin)) -> dict:
                 "locale": u.locale,
                 "created_at": as_utc(u.created_at).isoformat(),
                 "last_seen_at": as_utc(u.last_seen_at).isoformat(),
+                "devices": int(d),
+                "active_rights": int(r),
+                "paid_count": int(p),
             }
-            for u in people
+            for u, d, r, p in rows
         ],
-        "entitlements": [
-            {**_entitlement_row(e), "email": email} for e, email in rows
+    }
+
+
+@router.get("/api/revenue")
+async def revenue(
+    session: SessionDep, _: None = Depends(_admin), page: int = 1
+) -> dict:
+    """Прибыль: итоги по валютам, последние двенадцать месяцев, покупки страницами.
+
+    Помесячная свёртка считается в Python по строкам года, а не SQL-функцией
+    даты: `date_trunc` есть у Postgres и нет у SQLite, на котором идут тесты,
+    а покупок за год меньше, чем строк на одной странице этой же ленты.
+    """
+    _configured()
+    page = max(1, page)
+    paid = Entitlement.amount_cents > 0
+    totals = (
+        await session.execute(
+            select(
+                Entitlement.currency,
+                func.sum(Entitlement.amount_cents),
+                func.count(),
+            )
+            .where(paid)
+            .group_by(Entitlement.currency)
+        )
+    ).all()
+
+    year_ago = datetime.now(timezone.utc) - timedelta(days=366)
+    year_rows = (
+        await session.execute(
+            select(Entitlement.granted_at, Entitlement.currency, Entitlement.amount_cents)
+            .where(paid, Entitlement.granted_at >= year_ago)
+        )
+    ).all()
+    months: dict[tuple[str, str], dict] = {}
+    for granted_at, currency, cents in year_rows:
+        key = (as_utc(granted_at).strftime("%Y-%m"), currency)
+        bucket = months.setdefault(
+            key, {"month": key[0], "currency": currency, "cents": 0, "count": 0}
+        )
+        bucket["cents"] += cents
+        bucket["count"] += 1
+
+    total = (
+        await session.execute(select(func.count()).select_from(Entitlement).where(paid))
+    ).scalar_one()
+    pages = max(1, -(-total // RECENT))
+    page = min(page, pages)
+    purchases = (
+        await session.execute(
+            select(Entitlement, User.email)
+            .join(User, User.id == Entitlement.user_id)
+            .where(paid)
+            .order_by(Entitlement.granted_at.desc())
+            .offset((page - 1) * RECENT)
+            .limit(RECENT)
+        )
+    ).all()
+    return {
+        "totals": [
+            {"currency": currency, "cents": int(cents or 0), "count": int(count)}
+            for currency, cents, count in totals
         ],
+        "months": sorted(
+            months.values(), key=lambda m: (m["month"], m["currency"]), reverse=True
+        ),
+        "purchases": {
+            "page": page,
+            "pages": pages,
+            "total": total,
+            "rows": [
+                {**_entitlement_row(e), "email": email} for e, email in purchases
+            ],
+        },
     }
 
 
@@ -400,7 +546,7 @@ PAGE = """<!doctype html>
            radial-gradient(120% 60% at 50% -8%, rgba(58,52,132,.55), rgba(30,58,150,.12) 45%, transparent 65%),
            linear-gradient(180deg, #0A0D1C 0%, #090C1A 55%, #0d1430 130%);
          background-attachment:fixed; }
-  .wrap { max-width:820px; margin:0 auto; padding:34px 20px 90px; }
+  .wrap { max-width:860px; margin:0 auto; padding:34px 20px 90px; }
 
   .mark { display:flex; align-items:center; gap:12px; justify-content:space-between; }
   .mark .word { font:26px 'Playfair Display', Georgia, serif; letter-spacing:.34em;
@@ -410,22 +556,22 @@ PAGE = """<!doctype html>
          margin-top:4px; }
 
   h2 { font-size:11.5px; letter-spacing:.22em; text-transform:uppercase;
-       color:var(--golddeep); margin:34px 0 0; font-weight:600; }
+       color:var(--golddeep); margin:30px 0 0; font-weight:600; }
   .rule { height:1px; margin:8px 0 0;
           background:linear-gradient(90deg, transparent, rgba(201,174,107,.34), transparent); }
 
-  input, button { font:inherit; }
+  input, button, select { font:inherit; }
   input { width:100%; background:rgba(13,16,28,.85); border:1px solid var(--line);
-          border-radius:24px; color:var(--ink); padding:13px 20px; outline:none;
+          border-radius:24px; color:var(--ink); padding:12px 20px; outline:none;
           transition:border-color .18s, background .18s; }
   input::placeholder { color:rgba(237,231,218,.4); }
   input:focus { border-color:rgba(201,174,107,.8); background:rgba(13,16,28,.4); }
 
   button { background:none; border:1px solid rgba(201,174,107,.55); color:var(--goldhi);
-           border-radius:24px; padding:12px 24px; cursor:pointer; letter-spacing:.05em;
+           border-radius:24px; padding:11px 22px; cursor:pointer; letter-spacing:.05em;
            transition:background .18s, border-color .18s, opacity .18s; }
   button:hover { background:rgba(201,174,107,.13); border-color:var(--gold); }
-  button:disabled { opacity:.4; cursor:default; }
+  button:disabled { opacity:.35; cursor:default; background:none; }
   button.primary { background:linear-gradient(180deg, #1A1626, #0C0A14);
                    border-color:var(--golddeep);
                    box-shadow:0 0 20px rgba(201,174,107,.16); }
@@ -436,11 +582,15 @@ PAGE = """<!doctype html>
 
   .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 
+  .tabs { display:flex; gap:8px; margin-top:26px; }
+  .tabs button { border-color:var(--line); color:var(--muted); padding:9px 20px; }
+  .tabs button.on { border-color:var(--golddeep); color:var(--goldhi);
+                    background:rgba(201,174,107,.1); }
+
   .panel { border:1px solid var(--linegold); border-radius:18px; padding:22px 24px;
            background:linear-gradient(180deg, rgba(10,13,28,.88), rgba(7,10,22,.97));
            box-shadow:0 18px 50px rgba(4,6,14,.5); }
 
-  /* Вход — церемония по центру экрана. */
   #login { min-height:86vh; display:flex; align-items:center; justify-content:center; }
   #login .panel { width:min(400px, 92vw); text-align:center; padding:40px 32px 30px; }
   #login .star { font-size:30px; color:var(--gold);
@@ -466,13 +616,28 @@ PAGE = """<!doctype html>
 
   .ent { display:flex; gap:14px; align-items:center; justify-content:space-between;
          flex-wrap:wrap; border:1px solid var(--line); border-radius:16px;
-         padding:13px 17px; margin-top:10px; background:var(--card); }
+         padding:12px 17px; margin-top:10px; background:var(--card); }
+  .ent.click { cursor:pointer; transition:border-color .15s; }
+  .ent.click:hover { border-color:var(--linegold); }
   .ent .what b { font-weight:600; color:var(--ink); }
   .ent .what span { display:block; font-size:12.5px; color:var(--muted); }
   .pill { border-radius:12px; padding:3px 12px; font-size:12.5px; white-space:nowrap; }
   .pill.on  { color:var(--ok);   border:1px solid rgba(143,191,154,.4); }
   .pill.off { color:var(--muted); border:1px solid var(--line); }
   .pill.rev { color:var(--bad);  border:1px solid rgba(224,145,127,.4); }
+  .pill.gold { color:var(--goldhi); border:1px solid var(--linegold); }
+
+  table { width:100%; border-collapse:collapse; margin-top:12px; font-size:14px; }
+  th { text-align:left; font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+       color:var(--muted); font-weight:500; padding:6px; }
+  td { padding:9px 6px; border-top:1px solid var(--line); }
+
+  .pager { display:flex; gap:10px; align-items:center; justify-content:center;
+           margin-top:16px; color:var(--muted); font-size:13.5px; }
+
+  label.toggle { display:inline-flex; gap:8px; align-items:center; color:var(--muted);
+                 font-size:13.5px; cursor:pointer; user-select:none; }
+  label.toggle input { width:auto; accent-color:var(--golddeep); }
 
   .note { margin-top:14px; min-height:22px; font-size:14.5px; }
   .note.bad { color:var(--bad); }
@@ -480,6 +645,7 @@ PAGE = """<!doctype html>
   @keyframes breath { 50% { opacity:.25; } }
   #app { display:none; animation:rise .35s ease; }
   @keyframes rise { from { opacity:0; transform:translateY(6px); } }
+  .tab { display:none; } .tab.on { display:block; }
 </style>
 </head>
 <body>
@@ -506,23 +672,46 @@ PAGE = """<!doctype html>
       <button class="ghost small" onclick="signOut()">Выйти</button>
     </div>
 
-    <h2>Сегодня</h2><div class="rule"></div>
-    <div class="cards" id="stats"></div>
-
-    <h2>Человек</h2><div class="rule"></div>
-    <div class="row" style="margin-top:12px">
-      <input id="email" type="email" placeholder="почта@пример.com" style="max-width:340px"
-             onkeydown="if(event.key==='Enter')lookup()">
-      <button class="primary" onclick="lookup()">Найти</button>
+    <div class="tabs">
+      <button id="tab-over" class="on" onclick="showTab('over')">Обзор</button>
+      <button id="tab-people" onclick="showTab('people')">Люди</button>
+      <button id="tab-money" onclick="showTab('money')">Прибыль</button>
     </div>
-    <div id="person"></div>
-    <div class="note" id="note"></div>
 
-    <h2>Последние права</h2><div class="rule"></div>
-    <div id="recentEnts"></div>
+    <!-- ── Обзор ─────────────────────────────────────────────────────── -->
+    <div id="view-over" class="tab on">
+      <h2>Сегодня</h2><div class="rule"></div>
+      <div class="cards" id="stats"></div>
+      <h2>Последние права</h2><div class="rule"></div>
+      <div id="recentEnts"></div>
+    </div>
 
-    <h2>Последние аккаунты</h2><div class="rule"></div>
-    <div id="recentUsers"></div>
+    <!-- ── Люди ──────────────────────────────────────────────────────── -->
+    <div id="view-people" class="tab">
+      <h2>Люди</h2><div class="rule"></div>
+      <div class="row" style="margin-top:12px">
+        <input id="q" placeholder="почта или имя" style="max-width:300px"
+               onkeydown="if(event.key==='Enter'){usersPage=1;loadUsers()}">
+        <button class="primary" onclick="usersPage=1;loadUsers()">Найти</button>
+        <label class="toggle"><input type="checkbox" id="withGuests"
+               onchange="usersPage=1;loadUsers()"> показывать гостей</label>
+      </div>
+      <div id="person"></div>
+      <div class="note" id="note"></div>
+      <div id="usersList"></div>
+      <div class="pager" id="usersPager"></div>
+    </div>
+
+    <!-- ── Прибыль ───────────────────────────────────────────────────── -->
+    <div id="view-money" class="tab">
+      <h2>Итого</h2><div class="rule"></div>
+      <div class="cards" id="revTotals"></div>
+      <h2>По месяцам</h2><div class="rule"></div>
+      <div id="revMonths"></div>
+      <h2>Покупки</h2><div class="rule"></div>
+      <div id="revRows"></div>
+      <div class="pager" id="revPager"></div>
+    </div>
   </div>
 </div>
 
@@ -541,6 +730,8 @@ const api = (path, options = {}) => fetch('/admin/api/' + path, {
 });
 
 const wait = '<span class="breath">✦</span>';
+const money = c => (c / 100).toFixed(2);
+const when = iso => iso.slice(0, 10) + ' ' + iso.slice(11, 16);
 
 const show = inside => {
   document.getElementById('login').style.display = inside ? 'none' : 'flex';
@@ -551,8 +742,16 @@ const show = inside => {
 function signOut() {
   sessionStorage.removeItem('almaAdmin');
   document.getElementById('person').innerHTML = '';
-  document.getElementById('email').value = '';
   show(false);
+}
+
+function showTab(name) {
+  for (const t of ['over', 'people', 'money']) {
+    document.getElementById('tab-' + t).classList.toggle('on', t === name);
+    document.getElementById('view-' + t).classList.toggle('on', t === name);
+  }
+  if (name === 'people' && !document.getElementById('usersList').innerHTML) loadUsers();
+  if (name === 'money') loadRevenue();
 }
 
 async function signIn() {
@@ -573,8 +772,8 @@ async function refreshStats() {
   try {
     const s = await api('overview');
     statsTries = 0;
-    const money = s.revenue.length
-      ? s.revenue.map(r => (r.cents / 100).toFixed(2) + ' ' + r.currency).join(' · ')
+    const cash = s.revenue.length
+      ? s.revenue.map(r => money(r.cents) + ' ' + r.currency).join(' · ')
       : '0';
     document.getElementById('stats').innerHTML = [
       card(s.with_email, 'людей с почтой'),
@@ -583,7 +782,7 @@ async function refreshStats() {
       card(s.active_subscriptions, 'платных подписок'),
       card(s.owner_grants, 'подарков активно'),
       card(s.devices, 'устройств с пушами'),
-      card(money, 'выручка, всего'),
+      card(cash, 'выручка, всего'),
     ].join('');
   } catch (e) {
     // Не молчать навсегда: сразу после рестарта контейнера первый запрос
@@ -593,54 +792,94 @@ async function refreshStats() {
   }
   refreshRecent();
 }
+const card = (v, label) => `<div class="card"><b>${v}</b><span>${label}</span></div>`;
 
-// Живые ленты: последние аккаунты и последние права, как они лежат в базе.
+const entRow = (e, extra) => `
+  <div class="ent">
+    <div class="what">
+      <b>${e.system === '*' ? 'Вся Alma' : e.system}</b>
+      <span>${e.email
+          ? `<a href="#" style="color:inherit" onclick="openPerson('${e.email}');return false">${e.email}</a> · `
+          : ''}${e.source} · ${e.amount_cents
+          ? money(e.amount_cents) + ' ' + e.currency : 'подарок'}</span>
+    </div>
+    <div class="row" style="gap:8px">
+      ${e.revoked_at ? '<span class="pill rev">отозвано</span>'
+        : e.active ? '<span class="pill on">до ' + (e.expires_at || '∞').slice(0, 10) + '</span>'
+        : '<span class="pill off">истекло</span>'}
+      <span class="pill off">${when(e.granted_at)}</span>
+      ${extra || ''}
+    </div>
+  </div>`;
+
 async function refreshRecent() {
   try {
     const r = await api('recent');
-    const when = iso => iso.slice(0, 10) + ' ' + iso.slice(11, 16);
-    document.getElementById('recentUsers').innerHTML = r.users.map(u => `
-      <div class="ent">
-        <div class="what">
-          ${u.email
-            ? `<b><a href="#" style="color:var(--goldhi);text-decoration:none"
-                 onclick="pick('${u.email}');return false">${u.email}</a></b>`
-            : '<b style="color:var(--muted);font-weight:400">гость</b>'}
-          <span>${u.provider} · ${u.locale}${u.display_name ? ' · ' + u.display_name : ''}</span>
-        </div>
-        <span class="pill off">${when(u.created_at)}</span>
-      </div>`).join('') || '<p style="color:var(--muted);margin-top:12px">Пока пусто.</p>';
-    document.getElementById('recentEnts').innerHTML = r.entitlements.map(e => `
-      <div class="ent">
-        <div class="what">
-          <b>${e.system === '*' ? 'Вся Alma' : e.system}</b>
-          <span>${e.email
-              ? `<a href="#" style="color:inherit" onclick="pick('${e.email}');return false">${e.email}</a> · `
-              : ''}${e.source} · ${e.amount_cents
-              ? (e.amount_cents / 100).toFixed(2) + ' ' + e.currency : 'подарок'}</span>
-        </div>
-        <div class="row" style="gap:8px">
-          ${e.revoked_at ? '<span class="pill rev">отозвано</span>'
-            : e.active ? '<span class="pill on">до ' + (e.expires_at || '∞').slice(0, 10) + '</span>'
-            : '<span class="pill off">истекло</span>'}
-          <span class="pill off">${when(e.granted_at)}</span>
-        </div>
-      </div>`).join('') || '<p style="color:var(--muted);margin-top:12px">Пока не выдано ни одного права.</p>';
+    document.getElementById('recentEnts').innerHTML =
+      r.entitlements.map(e => entRow(e)).join('')
+      || '<p style="color:var(--muted);margin-top:12px">Пока не выдано ни одного права.</p>';
   } catch (e) {}
 }
 
-function pick(email) {
-  document.getElementById('email').value = email;
-  lookup();
-  document.getElementById('email').scrollIntoView({ behavior: 'smooth' });
+// ── Люди ────────────────────────────────────────────────────────────────
+let usersPage = 1;
+
+function pager(el, page, pages, go) {
+  el.innerHTML = pages > 1 ? `
+    <button class="ghost small" ${page <= 1 ? 'disabled' : ''}
+            onclick="${go}(${page - 1})">‹</button>
+    <span>стр. ${page} из ${pages}</span>
+    <button class="ghost small" ${page >= pages ? 'disabled' : ''}
+            onclick="${go}(${page + 1})">›</button>` : '';
 }
-const card = (v, label) => `<div class="card"><b>${v}</b><span>${label}</span></div>`;
+
+function goUsers(p) { usersPage = p; loadUsers(); }
+function goRev(p) { revPage = p; loadRevenue(); }
+
+async function loadUsers() {
+  const box = document.getElementById('usersList');
+  box.innerHTML = '<p style="margin-top:14px">' + wait + '</p>';
+  const q = document.getElementById('q').value.trim();
+  const guests = document.getElementById('withGuests').checked;
+  try {
+    const r = await api('users?page=' + usersPage + '&q=' + encodeURIComponent(q)
+      + (guests ? '&guests=true' : ''));
+    if (!r.rows.length) {
+      box.innerHTML = q.includes('@')
+        ? '' : '<p style="color:var(--muted);margin-top:14px">Никого не нашлось.</p>';
+      // Почты нет в базе — но подарить ей всё равно можно: карточкой ниже.
+      if (q.includes('@')) lookup(q);
+    } else {
+      box.innerHTML = r.rows.map(u => `
+        <div class="ent click" onclick="openPerson('${u.email || ''}')">
+          <div class="what">
+            ${u.email ? `<b>${u.email}</b>`
+                      : '<b style="color:var(--muted);font-weight:400">гость</b>'}
+            <span>${u.provider} · ${u.locale}${u.display_name ? ' · ' + u.display_name : ''}
+              · пришёл ${u.created_at.slice(0, 10)}</span>
+          </div>
+          <div class="row" style="gap:8px">
+            ${u.paid_count ? `<span class="pill gold">покупок · ${u.paid_count}</span>` : ''}
+            ${u.active_rights ? `<span class="pill on">прав · ${u.active_rights}</span>` : ''}
+            ${u.devices ? `<span class="pill off">📱 ${u.devices}</span>` : ''}
+            <span class="pill off">был ${when(u.last_seen_at)}</span>
+          </div>
+        </div>`).join('');
+    }
+    pager(document.getElementById('usersPager'), r.page, r.pages, 'goUsers');
+  } catch (e) { box.innerHTML = ''; say(e.message, true); }
+}
+
+function openPerson(email) {
+  if (!email) return;
+  showTab('people');
+  lookup(email);
+  document.getElementById('person').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 let current = null;
 
-async function lookup() {
-  const email = document.getElementById('email').value.trim();
-  if (!email) return;
+async function lookup(email) {
   say(wait);
   try {
     const u = await api('user?email=' + encodeURIComponent(email));
@@ -653,47 +892,42 @@ function render(u) {
   const box = document.getElementById('person');
   if (!u.found) {
     box.innerHTML = `
-      <p style="margin-top:16px">Аккаунта с почтой <b style="color:var(--goldhi)">${u.email}</b>
-      ещё нет. Подарок создаст его — подписка будет ждать первого входа этой почтой.</p>
-      ${grantButtons()}`;
+      <div class="panel" style="margin-top:16px">
+      <p>Аккаунта с почтой <b style="color:var(--goldhi)">${u.email}</b>
+      ещё нет. Подарок создаст его — подписка будет ждать первого входа этой почтой.
+      ${grantButtons()}</p></div>`;
     return;
   }
-  const ents = u.entitlements.map(e => `
-    <div class="ent">
-      <div class="what">
-        <b>${e.system === '*' ? 'Вся Alma' : e.system}</b>
-        <span>${e.kind} · ${e.source} · ${e.amount_cents
-          ? (e.amount_cents / 100).toFixed(2) + ' ' + e.currency : 'подарок'}</span>
-      </div>
-      <div class="row" style="gap:8px">
-        ${e.revoked_at ? '<span class="pill rev">отозвано</span>'
-          : e.active ? '<span class="pill on">до ' + (e.expires_at || '∞').slice(0, 10) + '</span>'
-          : '<span class="pill off">истекло ' + (e.expires_at || '').slice(0, 10) + '</span>'}
-        ${e.revocable ? `<button class="bad small" onclick="revoke('${e.id}', this)">Отозвать</button>` : ''}
-      </div>
-    </div>`).join('');
+  const ents = u.entitlements.map(e => entRow({ ...e, email: null },
+    e.revocable ? `<button class="bad small" onclick="revoke('${e.id}', this)">Отозвать</button>` : ''))
+    .join('');
   box.innerHTML = `
     <div class="panel" style="margin-top:16px">
-      <div class="facts">
-        <span class="k">Почта</span><span>${u.email ?? '—'}</span>
-        <span class="k">Аккаунт</span><span>${u.user_id}</span>
-        <span class="k">Появился</span><span>${u.created_at.slice(0, 10)}
-          · был ${u.last_seen_at.slice(0, 10)}</span>
+      <div class="row" style="justify-content:space-between">
+        <div class="facts">
+          <span class="k">Почта</span><span>${u.email ?? '—'}</span>
+          <span class="k">Аккаунт</span><span>${u.user_id}</span>
+          <span class="k">Появился</span><span>${u.created_at.slice(0, 10)}
+            · был ${when(u.last_seen_at)}</span>
+        </div>
+        <button class="ghost small" onclick="closePerson()">✕</button>
       </div>
       <div style="margin-top:12px">
         <span class="chip">${u.provider}</span><span class="chip">язык · ${u.locale}</span
         ><span class="chip">устройств · ${u.devices}</span>${u.display_name
           ? '<span class="chip">' + u.display_name + '</span>' : ''}
       </div>
-    </div>
-    <h2>Права</h2><div class="rule"></div>
-    ${u.entitlements.length ? ents
-      : '<p style="color:var(--muted);margin-top:12px">Пока ничего не открыто.</p>'}
-    ${grantButtons()}`;
+      <h2 style="margin-top:20px">Права</h2><div class="rule"></div>
+      ${u.entitlements.length ? ents
+        : '<p style="color:var(--muted);margin-top:12px">Пока ничего не открыто.</p>'}
+      ${grantButtons()}
+    </div>`;
 }
 
+function closePerson() { document.getElementById('person').innerHTML = ''; say(''); }
+
 const grantButtons = () => `
-  <h2>Подарить подписку</h2><div class="rule"></div>
+  <h2 style="margin-top:20px">Подарить подписку</h2><div class="rule"></div>
   <div class="row" style="margin-top:12px">
     <button onclick="grant(1)">Месяц</button>
     <button onclick="grant(3)">3 месяца</button>
@@ -702,7 +936,8 @@ const grantButtons = () => `
   </div>`;
 
 async function grant(months) {
-  const email = (current && current.email) || document.getElementById('email').value.trim();
+  const email = current && current.email;
+  if (!email) return;
   say(wait);
   try {
     const u = await api('grant', { method: 'POST',
@@ -711,7 +946,7 @@ async function grant(months) {
     say(u.created_account
       ? 'Подписка подарена. Аккаунт создан — подарок ждёт первого входа.'
       : 'Подписка подарена — уже открыта.');
-    refreshStats();
+    refreshStats(); loadUsers();
   } catch (e) { say(e.message, true); }
 }
 
@@ -738,6 +973,32 @@ const say = (text, bad) => {
   note.className = bad ? 'note bad' : 'note';
   note.innerHTML = text;
 };
+
+// ── Прибыль ─────────────────────────────────────────────────────────────
+let revPage = 1;
+
+async function loadRevenue() {
+  const totals = document.getElementById('revTotals');
+  if (!totals.innerHTML) totals.innerHTML = '<div class="card"><b>' + wait + '</b></div>';
+  try {
+    const r = await api('revenue?page=' + revPage);
+    totals.innerHTML = (r.totals.length
+      ? r.totals.map(t => card(money(t.cents) + ' ' + t.currency,
+          'выручка · покупок ' + t.count)).join('')
+      : card('0', 'выручки пока нет'));
+    document.getElementById('revMonths').innerHTML = r.months.length ? `
+      <table>
+        <tr><th>Месяц</th><th>Сумма</th><th>Покупок</th></tr>
+        ${r.months.map(m => `<tr><td>${m.month}</td>
+          <td style="color:var(--goldhi)">${money(m.cents)} ${m.currency}</td>
+          <td>${m.count}</td></tr>`).join('')}
+      </table>` : '<p style="color:var(--muted);margin-top:12px">За последний год покупок не было.</p>';
+    document.getElementById('revRows').innerHTML =
+      r.purchases.rows.map(e => entRow(e)).join('')
+      || '<p style="color:var(--muted);margin-top:12px">Покупок пока нет — как появятся, лягут сюда.</p>';
+    pager(document.getElementById('revPager'), r.purchases.page, r.purchases.pages, 'goRev');
+  } catch (e) { totals.innerHTML = ''; }
+}
 
 show(Boolean(sessionStorage.almaAdmin));
 </script>
