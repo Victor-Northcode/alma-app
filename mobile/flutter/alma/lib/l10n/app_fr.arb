@@ -555,7 +555,6 @@
   "scrSignInCodeTitle": "Saisis le code",
   "scrSignInCodeSentTo": "Nous avons envoyé six chiffres à {email}.",
   "scrSignInCodeSentAgain": "Un nouveau code arrive.",
-  "scrSignInApplePrivate": "Choisis « Partager mon adresse e-mail » dans la fenêtre Apple — une adresse masquée ne peut pas porter tes achats.",
   "scrSignInCodeSent": "Nous t’avons envoyé un code à six chiffres par e-mail — saisis-le ici.",
   "scrSignInCodeHint": "Code reçu par e-mail",
   "scrSignInCodeInvalid": "Le code ne correspond pas — vérifie les chiffres.",

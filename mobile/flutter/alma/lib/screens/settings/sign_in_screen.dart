@@ -129,11 +129,11 @@ class _SignInScreenState extends State<SignInScreen> {
       setState(() {
         _provider = null;
         _noticeBad = true;
-        _notice = error is ServerRefused && error.code == 'apple_private_email'
-            ? l.scrSignInApplePrivate
-            : error is ServerRefused && error.message.isNotEmpty
-                ? error.message
-                : l.scrSignInFailed;
+        // Особой ветки про скрытую почту Apple больше нет: с 27.08.2026
+        // релейный адрес принят, сервер ключует вход стабильным `sub`.
+        _notice = error is ServerRefused && error.message.isNotEmpty
+            ? error.message
+            : l.scrSignInFailed;
       });
     }
   }

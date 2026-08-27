@@ -1993,10 +1993,6 @@ class LPt extends L {
   String get scrSignInCodeSentAgain => 'Um novo código está a caminho.';
 
   @override
-  String get scrSignInApplePrivate =>
-      'Escolha “Compartilhar meu e-mail” na janela da Apple — um endereço oculto não carrega suas compras.';
-
-  @override
   String get scrSignInCodeSent =>
       'Enviamos um código de seis dígitos para o seu e-mail — digite aqui.';
 

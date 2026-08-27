@@ -552,7 +552,6 @@
   "scrSignInCodeTitle": "Введи код",
   "scrSignInCodeSentTo": "Шесть цифр улетели на {email}.",
   "scrSignInCodeSentAgain": "Новый код уже в пути.",
-  "scrSignInApplePrivate": "Выбери «Поделиться адресом эл. почты» в окне Apple — скрытый адрес не удержит твои покупки.",
   "scrSignInCodeSent": "Код уже в твоей почте — введи его здесь.",
   "scrSignInCodeHint": "Код из письма",
   "scrSignInCodeInvalid": "Код не подошёл — проверь цифры.",

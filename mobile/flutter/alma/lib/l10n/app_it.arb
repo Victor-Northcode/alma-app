@@ -552,7 +552,6 @@
   "scrSignInCodeTitle": "Inserisci il codice",
   "scrSignInCodeSentTo": "Abbiamo inviato sei cifre a {email}.",
   "scrSignInCodeSentAgain": "Un nuovo codice è in arrivo.",
-  "scrSignInApplePrivate": "Scegli «Condividi la mia email» nella finestra Apple — un indirizzo nascosto non può custodire i tuoi acquisti.",
   "scrSignInCodeSent": "Ti abbiamo inviato un codice di sei cifre via email — inseriscilo qui.",
   "scrSignInCodeHint": "Codice ricevuto via email",
   "scrSignInCodeInvalid": "Il codice non corrisponde — controlla le cifre.",

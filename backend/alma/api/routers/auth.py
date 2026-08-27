@@ -111,25 +111,15 @@ async def apple(payload: AppleSignIn, user: CurrentUser, session: SessionDep) ->
     except InvalidIdentityToken as exc:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
-    # **Анонимный адрес Apple отвергается — типизированно и с объяснением.**
-    # Аккаунт в Alma держится на почте: один и тот же человек входит через
-    # Apple, Google и код из письма и обязан попадать в один аккаунт. Релейный
-    # адрес `…@privaterelay.appleid.com` существует только у Apple — вход им
-    # раскалывает человека на два аккаунта ровно в момент, когда он попробует
-    # вторую дверь, и покупки останутся в первой (владелец, 25.08.2026:
-    # «нельзя указать анонимный адрес»). Клиент по коду отказа просит выбрать
-    # «Поделиться адресом эл. почты» в системном листе и повторить (та же
-    # формулировка, что в scrSignInApplePrivate клиента).
-    if identity.email.endswith("@privaterelay.appleid.com"):
-        raise HTTPException(
-            status.HTTP_400_BAD_REQUEST,
-            detail={
-                "error": "apple_private_email",
-                "message": "choose “Share My Email” in the Apple sheet — a "
-                           "hidden address cannot carry your purchases",
-            },
-        )
-
+    # **Релейный адрес Apple принят** (владелец, 27.08.2026 — отменяет свой же
+    # запрет от 25.08). Запрет вёл в тупик: лист «Поделиться/Скрыть» Apple
+    # показывает один раз за жизнь связки, и человек, однажды выбравший
+    # «Скрыть», получал от нас просьбу нажать кнопку, которой ему больше не
+    # покажут. Ключ входа через провайдера — стабильный `sub`, а не почта
+    # (`accounts.sign_in` ищет по нему первым), поэтому релей не раскалывает
+    # аккаунт при повторных входах Apple. Чтобы письма доходили и на релей,
+    # домен отправителя регистрируется у Apple (Services → Sign in with Apple
+    # for Email Communication) — действие владельца в консоли разработчика.
     signed_in = await accounts.sign_in(
         session,
         email=identity.email,

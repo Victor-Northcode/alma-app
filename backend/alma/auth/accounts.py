@@ -87,11 +87,14 @@ async def by_email(session: AsyncSession, email: str) -> User | None:
 
 
 async def by_provider(session: AsyncSession, provider: str, subject: str) -> User | None:
+    # Слитые строки пропускаются: их identity уже переехала в выжившую, и
+    # найденный источник означал бы вход в пустой аккаунт-указатель.
     result = await session.execute(
         select(User).where(
             User.provider == provider,
             User.provider_subject == subject,
             User.deleted_at.is_(None),
+            User.merged_into_id.is_(None),
         )
     )
     return result.scalar_one_or_none()
@@ -116,7 +119,21 @@ async def sign_in(
     3. Somebody already has this identity — the guest is merged into them.
     """
     normalised = email.strip().lower()
-    existing = await by_email(session, normalised)
+    # **Сначала — по стабильному идентификатору провайдера, потом по почте.**
+    #
+    # `sub` Apple и Google не меняется никогда, а почта в токене — меняется:
+    # релейный адрес Apple (`…@privaterelay.appleid.com`) существует только у
+    # Apple, и пока ключом была почта, вход им запрещался как раскол аккаунта.
+    # С 27.08.2026 релей принят (решение владельца, отменяет запрет от 25.08):
+    # человек, вошедший через Apple, находится по `sub` при любом адресе в
+    # токене, и его почта в аккаунте не перезатирается — а запрет вёл в тупик,
+    # потому что лист выбора Apple показывает один раз, и «выбери „Поделиться“»
+    # было просьбой о кнопке, которой больше не покажут.
+    existing = None
+    if subject is not None:
+        existing = await by_provider(session, provider, subject)
+    if existing is None:
+        existing = await by_email(session, normalised)
 
     if existing is None and guest is not None and guest.is_guest:
         guest.email = normalised
@@ -238,6 +255,7 @@ async def merge(session: AsyncSession, *, source: User, target: User) -> None:
 
     source.merged_into_id = target.id
     source.email = None            # free the address for the surviving row
+    source.provider_subject = None  # and the provider identity, same reason
     await session.flush()
 
 

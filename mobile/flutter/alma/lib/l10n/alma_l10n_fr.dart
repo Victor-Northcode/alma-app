@@ -2000,10 +2000,6 @@ class LFr extends L {
   String get scrSignInCodeSentAgain => 'Un nouveau code arrive.';
 
   @override
-  String get scrSignInApplePrivate =>
-      'Choisis « Partager mon adresse e-mail » dans la fenêtre Apple — une adresse masquée ne peut pas porter tes achats.';
-
-  @override
   String get scrSignInCodeSent =>
       'Nous t’avons envoyé un code à six chiffres par e-mail — saisis-le ici.';
 

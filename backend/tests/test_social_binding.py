@@ -37,8 +37,11 @@ def social(monkeypatch):
         provider, _, email = token.partition(":")
         if provider != "apple" or not email:
             raise InvalidIdentityToken("not an apple token")
+        # «почта|sub» — для проверок стабильного идентификатора: настоящий
+        # Apple шлёт один и тот же `sub` при любом адресе в токене.
+        email, _, subject = email.partition("|")
         return Identity(
-            provider="apple", subject=f"a-{email}", email=email,
+            provider="apple", subject=subject or f"a-{email}", email=email,
             email_verified=True, display_name=full_name,
         )
 
@@ -128,16 +131,46 @@ def test_a_bad_token_is_refused_without_a_session(api, social):
     ) else True
 
 
-def test_an_apple_relay_address_is_refused_with_a_typed_code(api, social):
-    """Релейный адрес Apple — раскол аккаунта на два, и он отвергается.
+def test_an_apple_relay_address_signs_in_keyed_by_sub(api, social):
+    """Релейная почта Apple входит, и ключом служит стабильный `sub`.
 
-    Скрытая почта существует только у Apple: человек, вошедший ею, при первом
-    же входе через Google или код из письма окажется в ДРУГОМ аккаунте без
-    своих покупок. Отказ типизирован — клиент просит поделиться адресом.
+    Запрет релея (25.08) вёл в тупик: лист «Поделиться/Скрыть» Apple
+    показывается один раз, и просьба «выбери „Поделиться“» была просьбой о
+    кнопке, которой больше не покажут. С 27.08 релей принят; чтобы повторные
+    входы не раскалывали человека на два аккаунта, вход через провайдера
+    ищет аккаунт по `sub` раньше, чем по почте.
     """
-    refused = api.post(
-        "/v1/auth/apple",
-        json={"identity_token": "apple:abc123@privaterelay.appleid.com"},
+    relay = "abc123@privaterelay.appleid.com"
+    first = api.post(
+        "/v1/auth/apple", json={"identity_token": f"apple:{relay}|SUB-1"}
     )
-    assert refused.status_code == 400
-    assert refused.json()["detail"]["error"] == "apple_private_email"
+    assert first.status_code == 200, first.text
+    body = first.json()
+    assert body["locale"] is not None
+    uid = _me(api, body["token"])["user_id"]
+
+    # Тот же `sub`, другой адрес в токене — тот же аккаунт, почта не тронута.
+    again = api.post(
+        "/v1/auth/apple", json={"identity_token": "apple:real@example.com|SUB-1"}
+    )
+    assert again.status_code == 200
+    assert _me(api, again.json()["token"])["user_id"] == uid
+
+
+def test_a_relay_account_from_before_the_ban_gains_its_sub(api, social):
+    """Аккаунт с релейной почтой, заведённый до запрета, дособирает `sub`.
+
+    Виктор вошёл релеем 25.08, до запрета: строка есть, `sub` не записан.
+    Первый же вход Apple находит его по почте и дописывает идентификатор;
+    следующий — уже по идентификатору.
+    """
+    relay = "victor@privaterelay.appleid.com"
+    first = api.post(
+        "/v1/auth/apple", json={"identity_token": f"apple:{relay}|V-SUB"}
+    )
+    uid = _me(api, first.json()["token"])["user_id"]
+
+    by_sub = api.post(
+        "/v1/auth/apple", json={"identity_token": f"apple:{relay}|V-SUB"}
+    )
+    assert _me(api, by_sub.json()["token"])["user_id"] == uid

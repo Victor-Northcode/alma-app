@@ -2646,10 +2646,6 @@
   "@scrSignInCodeSentAgain": {
     "description": "six-cell code screen / apple relay refusal, 25.08.2026"
   },
-  "scrSignInApplePrivate": "Choose “Share My Email” in the Apple window — a hidden address can’t carry your purchases.",
-  "@scrSignInApplePrivate": {
-    "description": "six-cell code screen / apple relay refusal, 25.08.2026"
-  },
   "scrSignInCodeSent": "We sent a six-digit code to your email — enter it here.",
   "scrSignInCodeHint": "Code from the email",
   "@scrSignInCodeSent": {

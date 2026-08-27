@@ -1984,10 +1984,6 @@ class LEn extends L {
   String get scrSignInCodeSentAgain => 'A new code is on its way.';
 
   @override
-  String get scrSignInApplePrivate =>
-      'Choose “Share My Email” in the Apple window — a hidden address can’t carry your purchases.';
-
-  @override
   String get scrSignInCodeSent =>
       'We sent a six-digit code to your email — enter it here.';
 

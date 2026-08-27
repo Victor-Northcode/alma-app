@@ -3419,12 +3419,6 @@ abstract class L {
   /// **'A new code is on its way.'**
   String get scrSignInCodeSentAgain;
 
-  /// six-cell code screen / apple relay refusal, 25.08.2026
-  ///
-  /// In en, this message translates to:
-  /// **'Choose “Share My Email” in the Apple window — a hidden address can’t carry your purchases.'**
-  String get scrSignInApplePrivate;
-
   /// вход · после отправки письма: код отправлен, введи здесь (24 авг, вход по коду вместо deep-link)
   ///
   /// In en, this message translates to:

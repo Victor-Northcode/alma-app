@@ -1990,10 +1990,6 @@ class LIt extends L {
   String get scrSignInCodeSentAgain => 'Un nuovo codice è in arrivo.';
 
   @override
-  String get scrSignInApplePrivate =>
-      'Scegli «Condividi la mia email» nella finestra Apple — un indirizzo nascosto non può custodire i tuoi acquisti.';
-
-  @override
   String get scrSignInCodeSent =>
       'Ti abbiamo inviato un codice di sei cifre via email — inseriscilo qui.';
 

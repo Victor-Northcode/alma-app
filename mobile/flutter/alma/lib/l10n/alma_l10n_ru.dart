@@ -2004,10 +2004,6 @@ class LRu extends L {
   String get scrSignInCodeSentAgain => 'Новый код уже в пути.';
 
   @override
-  String get scrSignInApplePrivate =>
-      'Выбери «Поделиться адресом эл. почты» в окне Apple — скрытый адрес не удержит твои покупки.';
-
-  @override
   String get scrSignInCodeSent => 'Код уже в твоей почте — введи его здесь.';
 
   @override

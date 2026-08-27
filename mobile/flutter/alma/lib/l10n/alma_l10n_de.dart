@@ -2003,10 +2003,6 @@ class LDe extends L {
   String get scrSignInCodeSentAgain => 'Ein neuer Code ist unterwegs.';
 
   @override
-  String get scrSignInApplePrivate =>
-      'Wähle im Apple-Fenster „Meine E-Mail teilen“ — eine verborgene Adresse kann deine Käufe nicht tragen.';
-
-  @override
   String get scrSignInCodeSent =>
       'Wir haben dir einen sechsstelligen Code per E-Mail geschickt — gib ihn hier ein.';
 
