@@ -49,7 +49,7 @@ SUBJECTS = {
     "de": "{code} — dein Alma-Anmeldecode",
     "it": "{code} — il tuo codice di accesso ad Alma",
     "fr": "{code} — ton code de connexion Alma",
-    "pt-BR": "{code} — seu código de acesso ao Alma",
+    "pt-BR": "{code} — seu código de acesso à Alma",
     "ru": "{code} — твой код для входа в Alma",
 }
 
@@ -184,7 +184,7 @@ RENEWAL_SUBJECTS = {
     "de": "Alma verlängert sich am {date}",
     "it": "Alma si rinnova il {date}",
     "fr": "Alma se renouvelle le {date}",
-    "pt-BR": "O Alma renova em {date}",
+    "pt-BR": "A Alma renova em {date}",
     "ru": "Alma продлевается {date}",
 }
 
@@ -215,7 +215,7 @@ RENEWAL_BODIES = {
         "Gestisci il piano",
     ),
     "fr": (
-        "Ton abonnement Alma se renouvelle le {date} et {amount} seront débités.",
+        "Ton abonnement Alma se renouvelle le {date} et {amount} seront débités sur la carte que tu as utilisée.",
         "Rien à faire si tu souhaites le garder. Sinon, résilie avant cette date : "
         "l’abonnement court jusqu’à la fin de la période déjà payée.",
         "Gérer mon abonnement",
@@ -246,10 +246,12 @@ RENEWAL_REASON = {
           "von vergessenen Abos wollen wir nicht leben.",
     "it": "Inviamo questo avviso prima di ogni rinnovo. Non c'è nulla da disdire: non "
           "vogliamo vivere di abbonamenti dimenticati.",
-    "fr": "Nous envoyons ce message avant chaque renouvellement. Il n’y a rien à "
-          "désabonner : vivre d’abonnements oubliés ne nous intéresse pas.",
+    "fr": "Nous envoyons ce message avant chaque renouvellement. Il n’y a rien "
+          "dont te désabonner — vivre d’abonnements oubliés ne nous intéresse pas.",
     "pt-BR": "Enviamos este aviso antes de cada renovação. Não há nada para cancelar "
              "aqui — não queremos viver de assinaturas esquecidas.",
+    "ru": "Мы присылаем это письмо перед каждым продлением. Отписываться здесь "
+          "не от чего: жить на забытых подписках мы не хотим.",
 }
 
 
@@ -489,7 +491,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "door.astrocartography": "Astrocartografía",
         "door.synthesis": "Síntesis cruzada",
         "pair.check": "Informe de compatibilidad",
-        "bundle.static": "Los cinco análisis",
+        "bundle.static": "Las cinco lecturas",
         "sub.monthly": "Todo, cada mes",
     },
     "de": {
@@ -515,7 +517,7 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "door.birth-card": "Carte de naissance",
         "door.astrocartography": "Astrocartographie",
         "door.synthesis": "Synthèse croisée",
-        "pair.check": "Analyse de couple",
+        "pair.check": "Analyse de compatibilité",
         "bundle.static": "Les cinq lectures",
         "sub.monthly": "Tout, chaque mois",
     },
@@ -674,7 +676,7 @@ RECEIPT_COPY: dict[str, ReceiptCopy] = {
         action_plan="Gestionar mi plan",
         reason="Esto sale una vez por cada pago. No es marketing y no hay nada de lo "
                "que darse de baja: tener por escrito lo que aceptaste y lo que pagaste "
-               "es algo que se te debe, y esto es eso.",
+               "es algo que se te debe, y aquí lo tienes.",
     ),
     "de": ReceiptCopy(
         subject="Dein Alma-Beleg — {product}",
@@ -708,18 +710,18 @@ RECEIPT_COPY: dict[str, ReceiptCopy] = {
                           "hat dich niemand gebeten, darauf zu verzichten — es bleibt "
                           "also bestehen. Melde dich innerhalb von vierzehn Tagen, und "
                           "das Geld kommt zurück.",
-        cancel="Kündigen sind zwei Taps in den Einstellungen, in derselben App, in der "
-               "du gekauft hast, und es stoppt die nächste Abbuchung. Was schon bezahlt "
-               "ist, läuft bis zum Ende seines Zeitraums.",
+        cancel="Kündigen heißt: zwei Fingertipps in den Einstellungen, in derselben App, "
+               "in der du gekauft hast — das stoppt die nächste Abbuchung. Was schon "
+               "bezahlt ist, läuft bis zum Ende seines Zeitraums.",
         refund="Eine Erstattung wird bei {merchant} beantragt — dort liegt das Geld, "
-               "und in deren eigener Rechnung steht der Link. Oder schreib uns, dann "
+               "und in deren eigenem Beleg steht der Link. Oder schreib uns, dann "
                "fragen wir für dich; wie das läuft, steht vollständig auf der "
                "Erstattungsseite.",
         refunds_page="Rückerstattung",
         action="Alma öffnen",
         action_plan="Abo verwalten",
         reason="Das kommt einmal zu jeder Zahlung. Es ist keine Werbung und es gibt "
-               "nichts abzubestellen — was du zugestimmt und was du bezahlt hast, steht "
+               "nichts abzubestellen — wozu du zugestimmt und was du bezahlt hast, steht "
                "dir schriftlich zu, und das hier ist es.",
     ),
     "it": ReceiptCopy(
@@ -813,11 +815,11 @@ RECEIPT_COPY: dict[str, ReceiptCopy] = {
         action="Ouvrir Alma",
         action_plan="Gérer mon abonnement",
         reason="Ce message part une fois pour chaque paiement. Ce n'est pas du "
-               "marketing et il n'y a rien à désabonner : ce que tu as accepté et ce "
-               "que tu as payé t'est dû par écrit, et le voici.",
+               "marketing et il n'y a rien dont te désabonner — ce que tu as accepté "
+               "et ce que tu as payé t'est dû par écrit, et le voici.",
     ),
     "pt-BR": ReceiptCopy(
-        subject="Seu recibo do Alma — {product}",
+        subject="Seu recibo da Alma — {product}",
         lede="Você pagou por {product} em {date}. Esta é a sua via escrita do que foi "
              "e do que você aceitou — vale guardar.",
         what="O que você comprou",
@@ -834,7 +836,7 @@ RECEIPT_COPY: dict[str, ReceiptCopy] = {
                 "pagamento passou foi o acesso; cada capítulo é escrito na primeira vez "
                 "que você abre, a partir das suas próprias posições. A nossa política é "
                 "mais generosa do que essa renúncia, e é ela que a gente cumpre: peça "
-                "dentro de catorze dias e o preço inteiro volta.",
+                "dentro de quatorze dias e o preço inteiro volta.",
         consent_plan="Esse é o prazo de arrependimento de 14 dias que uma compra pela "
                      "internet tem na UE e no Reino Unido. O plano é outra coisa: só "
                      "está cumprido por inteiro quando termina o período que você "
@@ -844,14 +846,14 @@ RECEIPT_COPY: dict[str, ReceiptCopy] = {
         withdrawal_stands="Uma compra pela internet tem prazo de arrependimento de 14 "
                           "dias na UE e no Reino Unido, e aqui ninguém pediu que você "
                           "abrisse mão dele: ele continua valendo. Peça dentro de "
-                          "catorze dias e o dinheiro volta.",
+                          "quatorze dias e o dinheiro volta.",
         cancel="Cancelar são dois toques nos Ajustes, no mesmo app em que você comprou, "
                "e para a próxima cobrança. O que já foi pago vai até o fim do período.",
         refund="O reembolso é pedido à {merchant}, que está com o dinheiro — o link "
                "está no recibo deles. Ou escreva para a gente e pedimos por você; como "
                "funciona está inteiro na página de reembolsos.",
         refunds_page="Reembolsos",
-        action="Abrir o Alma",
+        action="Abrir a Alma",
         action_plan="Gerenciar meu plano",
         reason="Isto sai uma vez a cada pagamento. Não é marketing e não há nada para "
                "cancelar aqui: ter por escrito o que você aceitou e o que pagou é um "

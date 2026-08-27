@@ -261,7 +261,7 @@ class LIt extends L {
 
   @override
   String cabFactorNoElement(Object element) {
-    return 'niente $element nel tema';
+    return 'elemento mancante — $element';
   }
 
   @override
@@ -793,7 +793,7 @@ class LIt extends L {
 
   @override
   String get journeyCeremony1Line =>
-      'Il tuo tema colloca pianeti e punti principali nelle dodici case usando dati astronomici delle effemeridi.';
+      'Il tuo tema colloca pianeti e punti principali nelle dodici case, a partire da dati astronomici reali.';
 
   @override
   String get journeyCeremony2Label => 'leggo il sistema 2 di 8 · numerologia';
@@ -1025,7 +1025,7 @@ class LIt extends L {
 
   @override
   String get paywallMonthlyNote =>
-      'Transiti, Rivoluzione solare e compatibilità finché si muovono, più 30 domande al mese. Si rinnova finché non disdici.';
+      'Transiti, Rivoluzione solare e compatibilità, riscritti man mano che si muovono, più 30 domande al mese. Si rinnova finché non disdici.';
 
   @override
   String get paywallMonthlyTitle => 'Tutto ciò che si muove, ogni mese';
@@ -1285,7 +1285,7 @@ class LIt extends L {
   String get scrSignInLinkSent => 'Inviato — controlla la tua email.';
 
   @override
-  String get scrSignInOrWith => 'oppure entra con';
+  String get scrSignInOrWith => 'oppure accedi con';
 
   @override
   String get scrSignInPrivacy =>
@@ -1841,7 +1841,7 @@ class LIt extends L {
 
   @override
   String get pairMyPairsNote =>
-      'Ogni lettura resta tua, con o senza abbonamento.';
+      'Ogni analisi resta tua, con o senza abbonamento.';
 
   @override
   String get pairRowChapters => 'quattro capitoli';

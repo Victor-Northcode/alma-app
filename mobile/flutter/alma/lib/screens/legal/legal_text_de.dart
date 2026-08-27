@@ -50,7 +50,7 @@ class LegalTextDe {
       LegalSection('Wer sie nutzen darf', [
         LegalBlock.para('Alle ab 16 Jahren. Du kannst dein Horoskop lesen und sogar kaufen, ohne uns eine Adresse zu geben: Auch ohne Anmeldung bist du bereits ein Konto mit einer ID, und was die Anmeldung hinzufügt, ist Beständigkeit, nicht Erlaubnis.'),
         LegalBlock.para('Aber ein Konto ohne Identität ist ein Konto, in das niemand zurückkommt. Auf diesem Telefon lebt dein Konto im Schlüsselbund und überlebt so das Schließen der App — nicht aber das Löschen der App oder den Wechsel des Telefons. Melde dich mit Apple an oder mit einem Link an ein Postfach, und das Konto folgt dir.'),
-        LegalBlock.para('Am wichtigsten ist das für etwas, das du bezahlt hast. Ein Kauf gehört dem Alma-Konto, das ihn zuerst beansprucht hat — dass du dich vor einer Neuinstallation anmeldest, ist es also, was „Käufe wiederherstellen“ sie finden lässt.'),
+        LegalBlock.para('Am wichtigsten ist das für etwas, das du bezahlt hast. Ein Kauf gehört dem Alma-Konto, das ihn zuerst beansprucht hat — erst wenn du dich vor einer Neuinstallation anmeldest, kann „Käufe wiederherstellen“ ihn also finden.'),
       ]),
       LegalSection('Was wir von dir erbitten', [
         LegalBlock.points([
@@ -170,7 +170,7 @@ class LegalTextDe {
         LegalBlock.para('Nach den vierzehn Tagen ist die Liste oben die Regel: unsere Fehler, ohne Diskussion — und ansonsten ein Antrag, über den Apple entscheidet.'),
       ]),
       LegalSection('Ein Jahr ist am ersten Tag nicht geliefert', [
-        LegalBlock.para('Das Jahresabo ist rechtlich und tatsächlich ein anderer Fall. Es ist nichts, das auf einmal übergeben wird — es sind zwölf Monate Zugang zu allem, einschließlich der Systeme, die neu geschrieben werden, während der Himmel sich bewegt, und an Tag zehn ist bei Weitem nicht das Ganze erbracht. Keine Zustimmung an einer Kasse beendet dein Recht, von einer Dienstleistung zurückzutreten, die kaum begonnen hat.'),
+        LegalBlock.para('Das Jahresabo ist rechtlich und tatsächlich ein anderer Fall. Es ist nichts, was auf einmal übergeben wird — es sind zwölf Monate Zugang zu allem, einschließlich der Systeme, die neu geschrieben werden, während der Himmel sich bewegt, und an Tag zehn ist bei Weitem nicht das Ganze erbracht. Keine Zustimmung an einer Kasse beendet dein Recht, von einer Dienstleistung zurückzutreten, die kaum begonnen hat.'),
         LegalBlock.para('Also: Widerrufst du ein Abo innerhalb von vierzehn Tagen, soll der Teil des Zeitraums zurückkommen, den du nicht genutzt hast, berechnet nach den vergangenen Tagen — und das Abo endet dort, statt weiterzulaufen. Genau das beantragen wir bei Apple, und den Zugang schließen wir auf unserer Seite, ob Apple zustimmt oder nicht, denn die zweite Hälfte liegt bei uns.'),
       ]),
       LegalSection('Das Muster-Widerrufsformular', [
@@ -185,7 +185,7 @@ class LegalTextDe {
     lead: 'Was sich verlängert, was es kostet und wie du es stoppst — was bei einem in dieser App gekauften Abo auf Apples eigener Abo-Seite geschieht, nicht auf unserer. Wo etwas weniger aufgeräumt ist als das, steht es hier, statt wegzubleiben.',
     sections: [
       LegalSection('Was sich verlängert', [
-        LegalBlock.para('Die Preisliste führt zwei laufende Abos. Das Jahresabo öffnet alles, was Alma für dich geschrieben hat — jedes System, jedes Kapitel — für ein Jahr. Das Monatsabo öffnet nur die drei Systeme, die sich mit dem Datum bewegen: die Transite, das Solar und die Partnerschaft. Ein Geburtshoroskop zu vermieten wäre Miete auf Zahlen, die sich seit deiner Geburt nicht geändert haben — deshalb gehört das Archiv nicht dazu.'),
+        LegalBlock.para('Die Preisliste führt zwei laufende Abos. Das Jahresabo öffnet alles, was Alma für dich geschrieben hat — jedes System, jedes Kapitel — für ein Jahr. Das Monatsabo öffnet nur die drei Systeme, die sich mit dem Datum bewegen: die Transite, das Solarhoroskop und die Partnerschaft. Ein Geburtshoroskop zu vermieten wäre Miete auf Zahlen, die sich seit deiner Geburt nicht geändert haben — deshalb gehört das Archiv nicht dazu.'),
         LegalBlock.para('Jedes der beiden Abos verlängert sich automatisch in seinem eigenen Zyklus, bis du es stoppst. Die Zahlung wird deinem Apple Account bei Bestätigung des Kaufs belastet. Das Abo verlängert sich, sofern die automatische Verlängerung nicht mindestens 24 Stunden vor Ende des laufenden Zeitraums abgeschaltet wird, und dein Account wird innerhalb von 24 Stunden vor Ende dieses Zeitraums für die Verlängerung belastet.'),
         LegalBlock.para('Eine Zahlung öffnet etwas mehr als den Zeitraum, für den sie ist — einunddreißig Tage für einen Monat, dreihundertfünfundsechzig für ein Jahr, gezählt ab dem späteren von beiden: dem Tag, an dem du zahlst, oder dem Tag, an dem dein laufender Zugang endet. Die Extratage stapeln sich nicht; es gibt sie, damit eine ein paar Stunden zu spät belastete Verlängerung dich nie aus einem Zeitraum aussperren kann, den du schon bezahlt hast.'),
         LegalBlock.para('Der Preis ist der, der auf dem Kaufdialog steht. Er ist absichtlich nicht auf diese Seite gedruckt: Apple setzt und berechnet den Preis für deinen Storefront, in deiner Währung, mit deiner Steuer — und Apples Zahl ist die, die stimmt.'),
@@ -204,7 +204,7 @@ class LegalTextDe {
       LegalSection('Kündigen', [
         LegalBlock.para('Ein in dieser App gekauftes Abo wird auf Apples Abo-Seite gekündigt: Einstellungen → Abo → „Dieses Abo im App Store verwalten“ — das öffnet sie direkt. Oder außerhalb von Alma: die Einstellungen-App → dein Name → Abonnements.'),
         LegalBlock.para('Wir können es nicht für dich kündigen, und wir tun nicht so, als könnten wir. Apple hält das Zahlungsmittel; ein Vermerk „gekündigt“ auf unserer Seite hält keine Kartenabbuchung auf, und wer ihm geglaubt hätte, erführe es auf dem Kontoauszug. Bittest du uns zu kündigen, sagt die App genau das und schickt dich auf die richtige Seite, statt irgendetwas zu schreiben.'),
-        LegalBlock.para('Ein auf unserer Website mit Karte gekauftes Abo ist anders — dort sind die zwei Tipper echt: Einstellungen → Abo → Abo kündigen → Bestätigen. Keine E-Mail zu schreiben, kein Grund zu nennen, kein Anruf, und kein Angebot, das zwischen dir und dem zweiten Tipper steht.'),
+        LegalBlock.para('Ein auf unserer Website mit Karte gekauftes Abo ist anders — dort sind die zwei Fingertipps echt: Einstellungen → Abo → Abo kündigen → Bestätigen. Keine E-Mail zu schreiben, kein Grund zu nennen, kein Anruf, und kein Angebot, das zwischen dir und dem zweiten Fingertipp steht.'),
         LegalBlock.para('Kündigen ist keine Erstattung des Zeitraums, in dem du bist, und im Moment der Kündigung wird dir nichts weggenommen. Was erstattet wird und was nicht — einschließlich der vierzehn Tage, in denen du ein Abo ganz widerrufen kannst — steht auf der Erstattungsseite.'),
       ]),
       LegalSection('Was dir danach bleibt', [
@@ -246,7 +246,7 @@ class LegalTextDe {
       ]),
       LegalSection('Umsatzsteuer', [
         LegalBlock.factBlank('Umsatzsteuer-Identifikationsnummer', 'VAT ID'),
-        LegalBlock.para('Alma wird über Apple verkauft; Apple führt Mehrwertsteuer und GST ab, wo sie anfallen. Eine eigene Umsatzsteuer-Identifikationsnummer ist in Beantragung.'),
+        LegalBlock.para('Alma wird über Apple verkauft; Apple führt Mehrwertsteuer und GST ab, wo sie anfallen. Eine eigene Umsatzsteuer-Identifikationsnummer wird gerade beantragt.'),
       ]),
       LegalSection('Online-Streitbeilegung', [
         LegalBlock.para('Die ODR-Plattform der Europäischen Kommission wurde im Juli 2025 geschlossen und ist hier nicht verlinkt, denn ein Link auf eine Plattform, die nicht mehr existiert, ist schlimmer als kein Link. Zur Teilnahme an einem Verfahren vor einer Verbraucherschlichtungsstelle sind wir nicht verpflichtet und verpflichten uns auch nicht. Schreib an hello@pazl.ai, und ein Mensch antwortet.'),

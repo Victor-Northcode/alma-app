@@ -806,7 +806,7 @@ class LPt extends L {
 
   @override
   String get journeyCeremony3Line =>
-      'Um dos vinte e dois arcanos, calculado só pela data.';
+      'Um dos vinte e dois arcanos maiores, calculado só pela data.';
 
   @override
   String get journeyCeremony4Label => 'lendo o sistema 4 de 8 · trânsitos';
@@ -1054,7 +1054,7 @@ class LPt extends L {
 
   @override
   String get paywallPitchPlan2 =>
-      'Trânsitos, revolução solar e compatibilidade são reescritos conforme o céu se move.';
+      'Trânsitos e revolução solar se atualizam com o céu; a compatibilidade, quando você compara outra pessoa.';
 
   @override
   String get paywallPitchPlan3 => '30 perguntas por mês para a Alma.';
@@ -1659,7 +1659,7 @@ class LPt extends L {
   String get paywallV3PlansOverline => 'todos os planos';
 
   @override
-  String get paywallV3PlansTitle => 'Seu para sempre, ou tudo que está vivo';
+  String get paywallV3PlansTitle => 'Seu para sempre, ou tudo o que está vivo';
 
   @override
   String get paywallV3PlansOneReading => 'Uma leitura';
@@ -1798,7 +1798,7 @@ class LPt extends L {
 
   @override
   String get chapterLivingNote =>
-      'Este capítulo é reescrito todo dia — ele vive na assinatura, não em uma compra';
+      'Este capítulo é reescrito todo dia — ele vive na assinatura, não em uma compra única';
 
   @override
   String chapterWhatFollows(int n, String system) {
@@ -1885,7 +1885,7 @@ class LPt extends L {
   }
 
   @override
-  String get pairReportMeta => 'quatro capítulos · seu para sempre';
+  String get pairReportMeta => 'quatro capítulos · seus para sempre';
 
   @override
   String get pairChapterRead => 'lido';

@@ -54,7 +54,7 @@ class LegalTextIt {
       ]),
       LegalSection('Chi può usarla', [
         LegalBlock.para(
-            'Chiunque abbia almeno 16 anni. Puoi leggere il tuo tema, e persino comprare, senza darci un indirizzo: un visitatore che non ha effettuato l\'accesso è già un account con un id, e ciò che l\'accesso aggiunge è la durata, non il permesso.'),
+            'Chiunque abbia almeno 16 anni. Puoi leggere il tuo tema, e persino comprare, senza darci un indirizzo: un visitatore che non ha effettuato l\'accesso è già un account con un id, e ciò che l\'accesso aggiunge è la permanenza, non il permesso.'),
         LegalBlock.para(
             'Ma un account senza identità è un account in cui nessuno può rientrare. Su questo telefono il tuo account vive nel portachiavi, quindi sopravvive alla chiusura dell\'app — non sopravvive alla cancellazione dell\'app, né alla sostituzione del telefono. Accedi con Apple, o con un link a una casella di posta, e l\'account ti segue.'),
         LegalBlock.para(
@@ -111,7 +111,7 @@ class LegalTextIt {
     sections: [
       LegalSection('Che cosa viene raccolto', [
         LegalBlock.points([
-          'La tua data, ora e luogo di nascita, e il nome che hai indicato. Questo è il tema. Senza non c\'è prodotto; con esso, tutto il resto che Alma fa è aritmetica su questi cinque numeri.',
+          'La tua data, ora e luogo di nascita, e il nome che hai indicato. Questo è il tema. Senza di esso non c\'è prodotto; con esso, tutto il resto che Alma fa è aritmetica su questi cinque numeri.',
           'Il tuo indirizzo email, se hai effettuato l\'accesso. Senza password — la casella di posta è l\'account. Accedendo con Apple potremmo ricevere un indirizzo di inoltro al posto del tuo, e va benissimo: non abbiamo mai bisogno di conoscere quello vero.',
           'Le letture scritte per te, perché un capitolo che hai pagato dica domani la stessa cosa, e perché non venga scritto due volte a nostre spese.',
           'Le tue domande ad Alma e le sue risposte, perché una conversazione abbia una memoria.',
@@ -177,7 +177,7 @@ class LegalTextIt {
       ]),
       LegalSection('Come chiedere', [
         LegalBlock.points([
-          'reportaproblem.apple.com, con l\'accesso fatto con l\'Apple Account con cui hai comprato. È la via più rapida e va dritta a chi tiene i soldi. Lo stesso modulo è raggiungibile dalla ricevuta che Apple ti ha inviato per email.',
+          'reportaproblem.apple.com, accedendo con l\'Apple Account con cui hai comprato. È la via più rapida e va dritta a chi tiene i soldi. Lo stesso modulo è raggiungibile dalla ricevuta che Apple ti ha inviato per email.',
           'Oppure scrivi a hello@pazl.ai indicando l\'Apple Account con cui hai comprato. Non possiamo emettere il rimborso, ma possiamo confermare ad Apple che cosa è successo dalla nostra parte, e ti diremo che cosa hanno risposto anche quando la risposta è no.',
         ]),
       ]),

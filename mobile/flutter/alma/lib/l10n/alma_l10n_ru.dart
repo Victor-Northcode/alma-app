@@ -727,7 +727,7 @@ class LRu extends L {
 
   @override
   String get dailySettingOnlyMattersDetail =>
-      'Несколько раз в год — только большие перемены, которые разворачиваются месяцами.';
+      'Несколько раз в год — только большие перемены, которые развора­чиваются месяцами.';
 
   @override
   String get dailySettingOnlyWhatMatters => 'Только важное';
@@ -1049,7 +1049,7 @@ class LRu extends L {
 
   @override
   String get paywallPitchPlan2 =>
-      'Транзиты, соляр и совместимость обновляются, пока действует подписка.';
+      'Транзиты и соляр обновляются вместе с небом; совместимость — когда ты сравниваешь нового человека.';
 
   @override
   String get paywallPitchPlan3 => 'Двадцать пять вопросов к Alma в месяц.';
@@ -2005,7 +2005,7 @@ class LRu extends L {
 
   @override
   String get scrSignInApplePrivate =>
-      'Выбери «Показать почту» в окне Apple — скрытый адрес не удержит твои покупки.';
+      'Выбери «Поделиться адресом эл. почты» в окне Apple — скрытый адрес не удержит твои покупки.';
 
   @override
   String get scrSignInCodeSent => 'Код уже в твоей почте — введи его здесь.';

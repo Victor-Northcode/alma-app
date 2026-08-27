@@ -434,7 +434,7 @@ def test_the_title_arrives_in_the_language_of_the_device(db):
             return vendor.sent[0]
 
     push = run_async(work)
-    assert push.title == "Marcus: Луна в вашем седьмом доме"
+    assert push.title == "Marcus: Луна в твоём седьмом доме"
     assert push.body == pair.BODIES["ru"]
 
 

@@ -223,7 +223,7 @@ LIMIT_ONCE: dict[str, str] = {
 PARTNER_LIMIT: dict[str, str] = {
     "en": "A free account saves one person to compare with. A one-time compatibility purchase saves two, and the plan saves as many as your life has.",
     "es": "Una cuenta gratuita guarda una persona para comparar. La compra única de compatibilidad guarda dos, y el plan, tantas personas como haya en tu vida.",
-    "de": "Ein kostenloses Konto speichert eine Person zum Vergleichen. Ein einmaliger Partnerschafts-Kauf speichert zwei, das Abo so viele, wie in deinem Leben vorkommen.",
+    "de": "Ein kostenloses Konto speichert eine Person zum Vergleichen. Ein einmaliger Partnerschaftskauf speichert zwei, das Abo so viele, wie in deinem Leben vorkommen.",
     "it": "Un account gratuito conserva una persona con cui confrontarti. Un acquisto una tantum dell'affinità ne tiene due, il piano tutte quelle che ci sono nella tua vita.",
     "fr": "Un compte gratuit enregistre une personne à comparer. Un achat unique de compatibilité en garde deux, et l’abonnement autant de personnes qu’il y en a dans ta vie.",
     "pt-BR": "Uma conta grátis salva uma pessoa para comparar. A compra avulsa de compatibilidade guarda duas, e o plano guarda quantas pessoas a sua vida tiver.",
@@ -241,7 +241,7 @@ PARTNER_LIMIT: dict[str, str] = {
 PARTNER_REQUIRED: dict[str, str] = {
     "en": "A compatibility reading is about two people. Add someone, and I will read you together.",
     "es": "La compatibilidad trata de dos personas. Añade a alguien y leeré a los dos juntos.",
-    "de": "Eine Partnerschafts-Deutung braucht zwei. Füge jemanden hinzu, und ich lese euch zusammen.",
+    "de": "Eine Partnerschaftsdeutung braucht zwei. Füge jemanden hinzu, und ich lese euch zusammen.",
     "it": "L'affinità riguarda due persone. Aggiungi qualcuno e vi leggerò insieme.",
     "fr": "La compatibilité parle de deux personnes. Ajoute quelqu’un, et je vous lirai ensemble.",
     "pt-BR": "A compatibilidade é sobre duas pessoas. Adicione alguém e vou ler vocês juntos.",
@@ -352,8 +352,8 @@ WITHHELD: dict[str, str] = {
           "te la leo.",
     "de": "Ich habe diese Antwort begonnen und wieder abgebrochen. Sie ging "
           "dorthin, wo ein Horoskop nichts zu suchen hat — zu einer Entscheidung, "
-          "die dir und einer Fachperson gehört, nicht mir. Frag mich nach "
-          "dem Muster, diesen Teil lese ich dir vor.",
+          "die dir und einer Fachperson gehört, nicht mir. Frag mich, wie das "
+          "Muster aussieht — diesen Teil lese ich für dich.",
     "it": "Ho cominciato questa risposta e l'ho fermata. Andava dove un tema "
           "non deve andare: verso una decisione che è tua e di chi se ne "
           "intende, non mia. Chiedimi che schema c'è, e quella parte te la "
@@ -400,7 +400,7 @@ BIRTH_LOCKED: dict[str, str] = {
           "persona nuova: la sua analisi, la sua lettura.",
     "pt-BR": "Os dados de nascimento desta pessoa fazem parte de uma leitura "
              "que você já pagou e ficam como estão. Para outra pessoa, adicione "
-             "alguém novo: a análise dela, a leitura dela.",
+             "uma pessoa nova: a análise dela, a leitura dela.",
 }
 
 BY_ERROR: dict[str, dict[str, str]] = {

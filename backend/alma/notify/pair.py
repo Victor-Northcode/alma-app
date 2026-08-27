@@ -129,8 +129,11 @@ PRIORITY_BODIES: tuple[str, ...] = (
 # («{p1} и {p2}: соединение…»): притяжательное от произвольного имени сервер
 # просклонять не может ни в русском, ни в немецком. Французский несёт узкий
 # неразрывный U+202F перед двоеточием — правило всей локали разом
-# (`tests/test_french_spacing.py`). Русский на «вы» — как запасной текст,
-# заданный владельцем задачи, и как весь платёжный словарь `mail.py`.
+# (`tests/test_french_spacing.py`). Русский в заголовке дома — на «ты», как
+# весь продукт (закон владельца: ноль «вы» к одному читателю); «ваш» остаётся
+# только в запасных заголовках, где это множественное «вы двое» — как «eure»
+# и «vocês» в соседних строках. Правка 27.08.2026: «в вашем доме» читалось
+# вежливым «вы» к одному человеку, чего русская Alma не делает нигде.
 
 #: Заголовок с фактором: {name} — имя партнёра как введено в профиле,
 #: {body} — имя тела из `placements` в той же локали.
@@ -142,7 +145,7 @@ HOUSE_TITLES: dict[int, dict[str, str]] = {
         "it": "{name}: {body} nella tua settima casa",
         "fr": "{name} : {body} dans ta septième maison",
         "pt-BR": "{name}: {body} na sua sétima casa",
-        "ru": "{name}: {body} в вашем седьмом доме",
+        "ru": "{name}: {body} в твоём седьмом доме",
     },
     5: {
         "en": "{name}'s {body} sits in your fifth house",
@@ -151,7 +154,7 @@ HOUSE_TITLES: dict[int, dict[str, str]] = {
         "it": "{name}: {body} nella tua quinta casa",
         "fr": "{name} : {body} dans ta cinquième maison",
         "pt-BR": "{name}: {body} na sua quinta casa",
-        "ru": "{name}: {body} в вашем пятом доме",
+        "ru": "{name}: {body} в твоём пятом доме",
     },
     8: {
         "en": "{name}'s {body} sits in your eighth house",
@@ -160,7 +163,7 @@ HOUSE_TITLES: dict[int, dict[str, str]] = {
         "it": "{name}: {body} nella tua ottava casa",
         "fr": "{name} : {body} dans ta huitième maison",
         "pt-BR": "{name}: {body} na sua oitava casa",
-        "ru": "{name}: {body} в вашем восьмом доме",
+        "ru": "{name}: {body} в твоём восьмом доме",
     },
     1: {
         "en": "{name}'s {body} sits in your first house",
@@ -169,7 +172,7 @@ HOUSE_TITLES: dict[int, dict[str, str]] = {
         "it": "{name}: {body} nella tua prima casa",
         "fr": "{name} : {body} dans ta première maison",
         "pt-BR": "{name}: {body} na sua primeira casa",
-        "ru": "{name}: {body} в вашем первом доме",
+        "ru": "{name}: {body} в твоём первом доме",
     },
 }
 

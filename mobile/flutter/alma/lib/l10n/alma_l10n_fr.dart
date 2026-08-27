@@ -382,7 +382,7 @@ class LFr extends L {
 
   @override
   String cabMerchantLine(String p1) {
-    return 'Paiements traités par $p1 en tant que vendeur légal · TVA incluse le cas échéant';
+    return 'Paiements traités par $p1 en tant que vendeur officiel · TVA incluse le cas échéant';
   }
 
   @override
@@ -805,7 +805,7 @@ class LFr extends L {
 
   @override
   String get journeyCeremony3Label =>
-      'lecture du système 3 sur 8 · arcane de naissance';
+      'lecture du système 3 sur 8 · carte de naissance';
 
   @override
   String get journeyCeremony3Line =>
@@ -844,7 +844,7 @@ class LFr extends L {
 
   @override
   String get journeyCeremony8Label =>
-      'lecture du système 8 sur 8 · synthèse des systèmes';
+      'lecture du système 8 sur 8 · synthèse croisée';
 
   @override
   String get journeyCeremony8Line =>
@@ -1679,7 +1679,7 @@ class LFr extends L {
 
   @override
   String get paywallV3PlansPairNote =>
-      'Quatre chapitres, par personne, autant que tu veux';
+      'Quatre chapitres par personne · autant de personnes que tu veux';
 
   @override
   String get paywallV3SubTitleShort => 'Toute Alma';
@@ -2001,7 +2001,7 @@ class LFr extends L {
 
   @override
   String get scrSignInApplePrivate =>
-      'Choisis « Partager mon adresse » dans la fenêtre Apple — une adresse masquée ne peut pas porter tes achats.';
+      'Choisis « Partager mon adresse e-mail » dans la fenêtre Apple — une adresse masquée ne peut pas porter tes achats.';
 
   @override
   String get scrSignInCodeSent =>

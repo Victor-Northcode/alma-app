@@ -292,7 +292,7 @@ ES = DailyWords(
 DE = DailyWords(
     locale="de",
     title="Heute",
-    question="Was passiert heute wirklich in meinem Chart?",
+    question="Was passiert heute wirklich in meinem Horoskop?",
     # Bare nominatives, because `transiting` below is a *prefix*:
     # "Transit-Sonne", "Transit-Mond", exactly as "Transit-Saturn" already
     # was. They used to carry articles — "die Sonne", "der Mond" — which
@@ -340,7 +340,7 @@ DE = DailyWords(
         "daily.setting.off.detail":
             "Keine Mitteilungen. Heute ist trotzdem da, wann immer du die App öffnest.",
         "daily.setting.occasionally.detail":
-            "Etwa einmal pro Woche, wenn in deinem Chart wirklich etwas exakt wird.",
+            "Etwa einmal pro Woche, wenn in deinem Horoskop wirklich etwas exakt wird.",
         "daily.setting.only_matters.detail":
             "Ein paar Mal im Jahr. Nur die langsamen — die Transite, die Monate dauern.",
         "daily.setting.hour": "Kommt um",

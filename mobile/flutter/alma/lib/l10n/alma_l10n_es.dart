@@ -368,7 +368,7 @@ class LEs extends L {
   String get cabLocked => 'Desbloquear para leer';
 
   @override
-  String get cabManageInStore => 'Gestionar esta suscripción en la App Store';
+  String get cabManageInStore => 'Gestionar esta suscripción en el App Store';
 
   @override
   String get cabManageInStorePlay =>
@@ -376,7 +376,7 @@ class LEs extends L {
 
   @override
   String get cabManagedByApple =>
-      'Este plan se compró en la App Store, así que Apple guarda el método de pago y la cancelación se hace allí.';
+      'Este plan se compró en el App Store, así que Apple guarda el método de pago y la cancelación se hace allí.';
 
   @override
   String get cabManagedByGooglePlay =>
@@ -1072,21 +1072,21 @@ class LEs extends L {
 
   @override
   String get paywallRestoredNone =>
-      'La App Store no tiene nada que restaurar para este Apple ID.';
+      'El App Store no tiene nada que restaurar para este Apple ID.';
 
   @override
   String get paywallRestoredNonePlay =>
       'Google Play no tiene nada que restaurar para esta cuenta.';
 
   @override
-  String get paywallRestoring => 'Preguntando a la App Store…';
+  String get paywallRestoring => 'Preguntando al App Store…';
 
   @override
   String get paywallRestoringPlay => 'Preguntando a Google Play…';
 
   @override
   String get paywallStoreUnavailable =>
-      'La App Store no responde. Aquí no se puede comprar nada hasta que responda — y nada de lo que ya tienes ha cambiado.';
+      'El App Store no responde. Aquí no se puede comprar nada hasta que responda — y nada de lo que ya tienes ha cambiado.';
 
   @override
   String get paywallStoreUnavailablePlay =>
@@ -1397,7 +1397,7 @@ class LEs extends L {
 
   @override
   String get cabCompatBulletComposite =>
-      'La carta propia de la relación — el cielo de ustedes dos como uno solo';
+      'La carta propia de la relación — el cielo de los dos como uno solo';
 
   @override
   String get todayReadWholeSky => 'Leer todo el cielo';
@@ -1799,7 +1799,7 @@ class LEs extends L {
 
   @override
   String get chapterLivingNote =>
-      'Este capítulo se reescribe cada día — vive en la suscripción, no en una compra';
+      'Este capítulo se reescribe cada día — vive en la suscripción, no en una compra única';
 
   @override
   String chapterWhatFollows(int n, String system) {
@@ -1832,7 +1832,7 @@ class LEs extends L {
 
   @override
   String get pairInputFreeNote =>
-      'Su carta se calcula gratis, como la tuya. Pagas solo por los capítulos escritos sobre ustedes dos.';
+      'Su carta se calcula gratis, como la tuya. Pagas solo por los capítulos escritos sobre los dos.';
 
   @override
   String get pairInputCta => 'Leer qué los une';

@@ -667,7 +667,7 @@ class LDe extends L {
 
   @override
   String get dailyAskBody =>
-      'Eine Mitteilung, zu deiner Stunde, an den Tagen, an denen etwas in deiner Karte exakt wird. Etwa einmal pro Woche — und abschalten kannst du sie direkt aus der Mitteilung.';
+      'Eine Mitteilung, zu deiner Stunde, an den Tagen, an denen etwas in deinem Horoskop exakt wird. Etwa einmal pro Woche — und abschalten kannst du sie direkt aus der Mitteilung.';
 
   @override
   String get dailyAskTitle =>
@@ -686,7 +686,7 @@ class LDe extends L {
   String get dailyAspectOpposition => 'Opposition';
 
   @override
-  String get dailyAspectQuincunx => 'Quincunx';
+  String get dailyAspectQuincunx => 'Quinkunx';
 
   @override
   String get dailyAspectQuintile => 'Quintil';
@@ -725,7 +725,7 @@ class LDe extends L {
 
   @override
   String get dailySettingOccasionallyDetail =>
-      'Etwa einmal pro Woche — wenn der Himmel deine Karte direkt berührt.';
+      'Etwa einmal pro Woche — wenn der Himmel dein Horoskop direkt berührt.';
 
   @override
   String get dailySettingOff => 'Aus';
@@ -1692,7 +1692,7 @@ class LDe extends L {
 
   @override
   String get paywallV3PlansLegal =>
-      'Bei der Bestätigung wird deine Apple ID belastet · das Abo verlängert sich monatlich, wenn es nicht 24 h vor Ende des Zeitraums gekündigt wird · Einmalkäufe verlängern sich nie';
+      'Bei der Bestätigung wird deine Apple-ID belastet · das Abo verlängert sich monatlich, wenn es nicht 24 h vor Ende des Zeitraums gekündigt wird · Einmalkäufe verlängern sich nie';
 
   @override
   String get paywallV3CancelHeader => 'Abo verwalten';
@@ -2004,7 +2004,7 @@ class LDe extends L {
 
   @override
   String get scrSignInApplePrivate =>
-      'Wähle im Apple-Fenster „E-Mail teilen“ — eine verborgene Adresse kann deine Käufe nicht tragen.';
+      'Wähle im Apple-Fenster „Meine E-Mail teilen“ — eine verborgene Adresse kann deine Käufe nicht tragen.';
 
   @override
   String get scrSignInCodeSent =>

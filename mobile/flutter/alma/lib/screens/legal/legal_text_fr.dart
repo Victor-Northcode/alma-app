@@ -100,7 +100,7 @@ class LegalTextFr {
       ]),
       LegalSection('Droit applicable', [
         LegalBlock.para(
-            'Ces conditions sont régies par le droit du Wyoming, United States — l’État où Pazl LLC est constituée — et les litiges sont portés devant les tribunaux du Wyoming.'),
+            'Ces conditions sont régies par le droit du Wyoming, aux États-Unis — l’État où Pazl LLC est constituée — et les litiges sont portés devant les tribunaux du Wyoming.'),
         LegalBlock.para(
             'Rien dans cette phrase ne retire un droit que ton propre pays te donne : là où une loi de protection des consommateurs de ton pays et cette clause se contredisent, ton pays gagne, comme la section plus haut le dit déjà.'),
       ]),
@@ -264,11 +264,11 @@ class LegalTextFr {
       ]),
       LegalSection('Annuler', [
         LegalBlock.para(
-            'Un abonnement acheté dans cette app s’annule sur l’écran d’abonnements d’Apple : Réglages → Forfait → Gérer cet abonnement dans l’App Store, qui l’ouvre directement. Ou, hors d’Alma : l’app Réglages → ton nom → Abonnements.'),
+            'Un abonnement acheté dans cette app s’annule sur l’écran d’abonnements d’Apple : Réglages → Formule → Gérer cet abonnement dans l’App Store, qui l’ouvre directement. Ou, hors d’Alma : l’app Réglages → ton nom → Abonnements.'),
         LegalBlock.para(
             'Nous ne pouvons pas l’annuler pour toi, et nous ne ferons pas semblant de le pouvoir. Apple détient le moyen de paiement ; un drapeau de notre côté disant « annulé » n’empêche pas une carte d’être débitée, et la personne qui y aurait cru l’apprendrait sur un relevé. Si tu nous demandes d’annuler, l’app dit exactement cela et t’envoie vers le bon écran au lieu d’écrire quoi que ce soit.'),
         LegalBlock.para(
-            'Un forfait acheté sur notre site avec une carte est différent, et là les deux touches sont réelles : Réglages → Forfait → Annuler l’abonnement → Confirmer. Aucun e-mail à écrire, aucune raison à donner, aucun appel, et aucune offre entre toi et la seconde touche.'),
+            'Un forfait acheté sur notre site avec une carte est différent, et là les deux touches sont réelles : Réglages → Formule → Résilier l’abonnement → Confirmer. Aucun e-mail à écrire, aucune raison à donner, aucun appel, et aucune offre entre toi et la seconde touche.'),
         LegalBlock.para(
             'Annuler n’est pas un remboursement de la période en cours, et rien ne t’est retiré au moment où tu annules. Ce qui est remboursable et ce qui ne l’est pas — y compris les quatorze jours pendant lesquels tu peux te rétracter d’un forfait purement et simplement — est sur la page des remboursements.'),
       ]),

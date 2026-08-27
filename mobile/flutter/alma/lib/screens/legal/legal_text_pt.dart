@@ -65,7 +65,7 @@ class LegalTextPt {
         LegalBlock.points([
           'Informe os seus próprios dados de nascimento com honestidade. Uma hora de nascimento chutada produz um mapa inteiramente plausível e completamente errado, e a Alma não consegue perceber a diferença.',
           'Se você informar os dados de nascimento de outra pessoa para uma leitura de compatibilidade, pergunte a ela antes. São os dados de nascimento dela, não os seus.',
-          'Não raspe a Alma, não revenda as leituras dela e não as apresente como um produto seu. O que a Alma escreve para você é seu para guardar, imprimir, citar e compartilhar.',
+          'Não faça raspagem da Alma, não revenda as leituras dela e não as apresente como um produto seu. O que a Alma escreve para você é seu para guardar, imprimir, citar e compartilhar.',
           'Não ataque o serviço nem tente alcançar os mapas de outras pessoas.',
         ]),
       ]),
@@ -100,15 +100,15 @@ class LegalTextPt {
         LegalBlock.points([
           'A sua data, hora e local de nascimento, e o nome que você deu. Isso é o mapa. Sem ele não há produto; com ele, tudo o mais que a Alma faz é aritmética sobre esses cinco números.',
           'O seu endereço de e-mail, se você entrou na conta. Sem senha — a caixa de entrada é a conta. Entrar com a Apple pode nos dar um endereço de retransmissão no lugar do seu, e tudo bem: nunca precisamos saber o real.',
-          'As leituras escritas para você, para que um capítulo que você pagou diga a mesma coisa amanhã, e para que não seja escrito duas vezes ao nosso custo.',
+          'As leituras escritas para você, para que um capítulo que você pagou diga a mesma coisa amanhã, e para que não seja escrito duas vezes à nossa custa.',
           'As suas perguntas à Alma e as respostas dela, para que uma conversa tenha memória.',
           'O que você comprou, como uma lista de concessões — qual sistema, quando, por quanto tempo. Não um número de cartão: nunca tivemos um e não poderíamos armazená-lo nem se quiséssemos.',
           'Um punhado de eventos de funil — que um quiz foi iniciado, que um retrato foi visto — sem nenhum conteúdo dentro. Eles são contados, nunca lidos.',
         ]),
       ]),
       LegalSection('O que não é coletado', [
-        LegalBlock.para('Nenhum dado de pagamento. A Apple recebe o pagamento neste aplicativo e guarda o cartão; a única coisa que chega até nós é uma declaração assinada de que uma compra aconteceu, que verificamos contra o próprio certificado da Apple antes de agir com base nela.'),
-        LegalBlock.para('Nenhum identificador de publicidade, nenhuma análise de terceiros, nenhum rastreamento por outros aplicativos ou sites, nenhuma localização além do local de nascimento que você digitou. Não há do que se descadastrar porque não há nada rodando.'),
+        LegalBlock.para('Nenhum dado de pagamento. A Apple recebe o pagamento neste aplicativo e guarda o cartão; a única coisa que chega até nós é uma declaração assinada de que uma compra aconteceu, que conferimos com o próprio certificado da Apple antes de agir com base nela.'),
+        LegalBlock.para('Nenhum identificador de publicidade, nenhuma ferramenta de análise de terceiros, nenhum rastreamento por outros aplicativos ou sites, nenhuma localização além do local de nascimento que você digitou. Não há do que se descadastrar porque não há nada rodando.'),
         LegalBlock.para('Não vendemos nem compartilhamos informações pessoais, em nenhum dos sentidos que essas palavras têm sob a California Consumer Privacy Act ou qualquer outra lei. Não existe acordo com ninguém que nos permitisse isso.'),
       ]),
       LegalSection('Quem mais vê', [
