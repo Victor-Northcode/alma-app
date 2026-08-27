@@ -1,11 +1,13 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
+import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
 import 'package:flutter/gestures.dart' show DeviceGestureSettings;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 
 import 'billing/alma_store.dart';
+import 'billing/store_words.dart' show storeWordsPlatformOverride;
 import 'design/invitation_pill.dart';
 import 'design/metrics.dart';
 import 'design/palette.dart';
@@ -38,6 +40,14 @@ void main() {
   // диске и поднимается до первого кадра: решение «показывать ли» синхронно,
   // и сторож, спрошенный раньше диска, разрешил бы то, что вчера отклонили.
   WidgetsFlutterBinding.ensureInitialized();
+  // Веб-просмотр вне релиза: `?store=apple` показывает яблочные строки
+  // магазина. На этой машине экраны смотрят веб-сборкой (симулятора нет), а
+  // `defaultTargetPlatform` веба — хостовая ОС, и кадры для App Store Connect
+  // выходили со словами про Google Play (съёмка витрин, 27.08.2026). В
+  // релизе ветка вырезана компилятором вместе с ручкой.
+  if (kIsWeb && !kReleaseMode && Uri.base.queryParameters['store'] == 'apple') {
+    storeWordsPlatformOverride = TargetPlatform.iOS;
+  }
   PaywallGuard.restore();
   // Выбранный человеком язык — тем же приёмом, что память сторожа: старт не
   // ждёт диска, первый кадр может мигнуть языком телефона и перестроиться.

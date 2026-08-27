@@ -154,6 +154,11 @@ class AlmaStore extends ChangeNotifier {
     // скриншотов, 20 авг 2026). В браузере магазина не бывает, так что просто
     // не подписываемся; натив идёт прежним путём.
     if (kIsWeb) return;
+    // Задвижка тестов держит не только полку: подписка на поток покупок в
+    // пробирке зовёт SK2-каналы, которых нет, и PlatformException валил
+    // тест мимо его тела (съёмка витрин, 27.08.2026). Полка на замке —
+    // значит и магазина нет целиком.
+    if (loadGate != null) return;
     _feed ??= _iap.purchaseStream.listen(
       _heard,
       onDone: () => _feed = null,
@@ -176,6 +181,28 @@ class AlmaStore extends ChangeNotifier {
     _state = StoreState.loading;
     notifyListeners();
     if (loadGate case final gate?) await gate.future;
+
+    // **Веб вне релиза — сразу витринные цены, не спрашивая плагин.** У
+    // `in_app_purchase` нет веб-реализации: `isAvailable()` бросает
+    // MissingPluginException раньше, чем нижняя ветка успела бы подставить
+    // витрину, бросок глотался `catchError` вызывающего — и веб-сборка, на
+    // которой смотрят экраны с этой машины (симулятора здесь нет), вечно
+    // показывала «Секунду» вместо цены (найдено при съёмке кадров для
+    // App Store Connect, 27.08.2026). Продавать на вебе нечего и некому;
+    // релизный веб цен не показывает вовсе — как и было.
+    if (kIsWeb) {
+      if (!kReleaseMode) {
+        _products
+          ..clear()
+          ..addAll(_pretendPrices());
+        _pretending = true;
+        _state = StoreState.ready;
+      } else {
+        _state = StoreState.silent;
+      }
+      notifyListeners();
+      return;
+    }
 
     if (!await _iap.isAvailable()) {
       // Магазина нет вовсе — и в отладке это тот же случай, что «есть, но

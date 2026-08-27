@@ -1,12 +1,16 @@
 import 'package:flutter/foundation.dart'
-    show TargetPlatform, defaultTargetPlatform, visibleForTesting;
+    show TargetPlatform, defaultTargetPlatform;
 
 import '../l10n/alma_l10n.dart';
 
-/// Задвижка для тестов: экраны про App Store закрепляют платформу здесь, а не
-/// через `debugDefaultTargetPlatformOverride` — тот сторожится проверкой
-/// инвариантов flutter_test между тестами и не переживает `setUpAll`.
-@visibleForTesting
+/// Задвижка платформы магазина — для тестов и веб-просмотра.
+///
+/// Тесты про App Store закрепляют платформу здесь, а не через
+/// `debugDefaultTargetPlatformOverride`: тот сторожится проверкой инвариантов
+/// flutter_test между тестами и не переживает `setUpAll`. Веб-просмотр вне
+/// релиза ставит её по `?store=apple` (`main.dart`): экраны с этой машины
+/// смотрят веб-сборкой, и без ручки кадры витрин для App Store Connect
+/// выходили со словами про Google Play (27.08.2026).
 TargetPlatform? storeWordsPlatformOverride;
 
 /// Слова о магазине — того магазина, в котором приложение живёт.

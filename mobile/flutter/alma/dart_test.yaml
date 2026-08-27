@@ -1,0 +1,3 @@
+tags:
+  shots:
+    skip: "Съёмка витрин для App Store: гонять руками — flutter test --tags shots --update-goldens test/iap_pair_shot_test.dart"
