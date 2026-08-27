@@ -58,6 +58,9 @@ class AlmaPalette {
   static const parchmentB = Color(0xFF0B0E1D);
   static const ink = Color(0xFFEDE7DA);
 
+  /// Кант ночной карточки — числа листа покупки (`NightSheet`): золото на 0.30.
+  static final nightCardEdge = gold.withValues(alpha: 0.30);
+
   // ── согласие и спор между системами ─────────────────────────────────────
   static const agree = Color(0xFF8FBF9A);
   static const disagree = Color(0xFFE0917F);
@@ -123,6 +126,23 @@ class AlmaGradient {
     stops: [0.0, 0.6, 1.0],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
+  );
+
+  /// Продающая карточка на ночной странице — оффер в конце главы, карточки
+  /// «Что дальше». Числа листа покупки (`NightSheet`, холст v3): ночь на 0.88
+  /// в глубокую ночь на 0.97, то есть **темнее страницы**, а не светлее.
+  ///
+  /// Карточка до 26.08.2026 была кремовой на 75 % — числа холста V1 для
+  /// пергамента, — и на ночной странице (с 25.08) стала серо-голубой плитой со
+  /// светлыми чернилами на светлом; владелец: «синие элементы (оплата)
+  /// выбиваются визуально». Не `night700`: тот синеет на ночи ровно так же.
+  static final nightCard = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [
+      AlmaPalette.night.withValues(alpha: 0.88),
+      AlmaPalette.night900.withValues(alpha: 0.97),
+    ],
   );
 
   /// Волосяная линия, гаснущая с обоих концов, — линейка между разделами.

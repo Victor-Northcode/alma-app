@@ -113,9 +113,12 @@ class GiltBack extends StatelessWidget {
               // Страница тёмная с 25.08.2026 — кружок слоновой кости на ней
               // светил фонарём. Теперь это ночная фишка с золотым кантом, той
               // же семьи, что единый крестик (AlmaClose): одна логика закрытия
-              // — один вид ручки.
+              // — один вид ручки. Заливка — та же вуаль, что у крестика, а не
+              // `night700`: индиго на ночной странице стоял синим пятном — из
+              // тех «синих элементов», что владелец назвал выбивающимися
+              // (26.08.2026).
               decoration: BoxDecoration(
-                color: AlmaPalette.night700.withValues(alpha: 0.85),
+                color: AlmaPalette.veilStrong,
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: AlmaPalette.goldDeep.withValues(alpha: 0.5),

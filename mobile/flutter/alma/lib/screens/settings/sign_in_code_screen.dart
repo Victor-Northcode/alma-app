@@ -3,7 +3,8 @@ import 'package:flutter/services.dart'
     show
         FilteringTextInputFormatter,
         HapticFeedback,
-        LengthLimitingTextInputFormatter;
+        LengthLimitingTextInputFormatter,
+        TextInput;
 
 import '../../design/close_button.dart';
 import '../../design/emblem.dart';
@@ -64,6 +65,15 @@ class _SignInCodeScreenState extends State<SignInCodeScreen> {
     final l = L.of(context);
     final session = SessionScope.of(context);
     final navigator = Navigator.of(context);
+    // Клавиатура снимается ДО того, как поле отключится и экран уйдёт, и
+    // контекст автозаполнения кода из письма закрывается вслух. Владелец:
+    // «после входа зависает клавиатура» (26.08.2026). Поле отключалось
+    // (`enabled: false`) с открытой связью посреди автоподстановки, экраны
+    // уходили с фокусом внутри — и системная клавиатура оставалась висеть над
+    // «Сегодня» без хозяина. Тот же приём, что в AlmaClose (24 авг):
+    // единственный, который на устройстве клавиатуру убирал.
+    _focus.unfocus();
+    TextInput.finishAutofillContext();
     setState(() {
       _working = true;
       _notice = null;

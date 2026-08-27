@@ -25,7 +25,6 @@ import '../../net/alma_client.dart';
 import '../../notify/push_devices.dart';
 import '../../net/models.dart'
     show BirthInput, FunnelStage, Place, Profile, SystemSlug;
-import '../../state/locale_override.dart';
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
 import '../cabinet_words.dart';
@@ -1176,8 +1175,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   /// Выбор языка. Эндонимы — имена собственные, им перевод не нужен; галочка
-  /// стоит на текущем. Выбор пишется в LocaleOverride (интерфейс) и на сервер
-  /// (язык, на котором Alma пишет) — одним касанием.
+  /// стоит на текущем. Выбор — один на интерфейс и на то, что пишет Alma:
+  /// `AlmaSession.chooseLanguage` пишет его в LocaleOverride и на сервер.
   void _pickLanguage(AlmaSession session) {
     const codes = ['en', 'es', 'de', 'it', 'fr', 'pt-BR', 'ru'];
     _nightDialog<void>(
@@ -1191,11 +1190,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () {
                 Navigator.of(context).pop();
                 HapticFeedback.selectionClick();
-                // Код интерфейса: у сервера pt-BR, у ARB — просто pt.
-                LocaleOverride.set(code == 'pt-BR'
-                    ? const Locale('pt')
-                    : Locale(code));
-                session.setLocale(code);
+                session.chooseLanguage(code);
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 13),

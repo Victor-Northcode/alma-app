@@ -308,7 +308,11 @@ class _WhatNextScreenState extends State<WhatNextScreen> {
   }
 }
 
-/// Карточка на пергаменте: с кантом — продающая, без — тихая (числа V3).
+/// Карточка на странице чтения: с кантом — продающая, без — тихая (числа V3).
+///
+/// Продающая — ночная, числами листа покупки (`AlmaGradient.nightCard`):
+/// кремовая карточка V3 на ночной странице читалась серо-голубой плитой
+/// (владелец, 26.08.2026) — та же история, что у оффера в конце главы.
 class _Card extends StatelessWidget {
   const _Card({required this.bordered, required this.child});
 
@@ -320,17 +324,9 @@ class _Card extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 17),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: bordered
-              ? Border.all(
-                  color: AlmaPalette.goldDeep.withValues(alpha: 0.5))
-              : null,
-          gradient: bordered
-              ? const LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xCCFFFCF4), Color(0x99E9DDC1)],
-                )
-              : null,
+          border:
+              bordered ? Border.all(color: AlmaPalette.nightCardEdge) : null,
+          gradient: bordered ? AlmaGradient.nightCard : null,
           color:
               bordered ? null : AlmaPalette.ink.withValues(alpha: 0.05),
         ),

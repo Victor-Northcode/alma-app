@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:alma/billing/alma_store.dart';
 import 'package:alma/billing/ladder.dart';
 import 'package:alma/design/art.dart';
+import 'package:alma/design/palette.dart';
 import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/net/alma_client.dart';
 import 'package:alma/net/models.dart';
@@ -257,6 +258,45 @@ void main() {
     expect(find.text(_paidTitles[5]), findsNothing);
     expect(find.text('+2 more'), findsOneWidget,
         reason: 'шестой чип говорит, что список не кончился');
+  });
+
+  testWidgets('карточка оффера — ночная, той же семьи, что лист покупки',
+      (tester) async {
+    // Страница главы ночная с 25.08, а карточка оставалась кремовой на 75 %
+    // — поверх ночи это серо-голубая плита со светлым текстом на светлом, и
+    // владелец увидел её первым: «синие элементы (оплата) выбиваются
+    // визуально, нужно пересмотреть цветовую схему» (26.08.2026).
+    await _open(tester);
+    await _readToEnd(tester);
+
+    // Карточка — ближайший к тексту контейнер с заливкой; контейнеры без
+    // неё (поля, обёртки) пропускаются.
+    final card = tester.widget<Container>(find
+        .ancestor(
+            of: find.text('7 more chapters'),
+            matching: find.byWidgetPredicate((w) =>
+                w is Container &&
+                w.decoration is BoxDecoration &&
+                (w.decoration! as BoxDecoration).gradient != null))
+        .first);
+    final decoration = card.decoration! as BoxDecoration;
+    expect(decoration.gradient, AlmaGradient.nightCard,
+        reason: 'заливка карточки — ночная, числа листа покупки');
+    expect(decoration.border, Border.all(color: AlmaPalette.nightCardEdge));
+
+    // Кнопка в карточке светится ореолом ночи, а не отбрасывает охристую
+    // тень «на пергамент»: тень в тёплую охру на ночи читалась грязью.
+    final glow = tester.widget<DecoratedBox>(find
+        .ancestor(
+            of: find.textContaining(r'$4.99'),
+            matching: find.byWidgetPredicate((w) =>
+                w is DecoratedBox &&
+                w.decoration is BoxDecoration &&
+                (w.decoration as BoxDecoration).boxShadow != null))
+        .first);
+    final shadows = (glow.decoration as BoxDecoration).boxShadow!;
+    expect(shadows.single.color, AlmaPalette.goldGlow);
+    expect(shadows.single.blurRadius, AlmaPalette.goldGlowRadius);
   });
 
   testWidgets('ни слова о подписке, тихая ссылка одна и ведёт на набор',

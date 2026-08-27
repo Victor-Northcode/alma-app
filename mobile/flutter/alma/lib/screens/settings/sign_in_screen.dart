@@ -214,12 +214,21 @@ class _SignInScreenState extends State<SignInScreen> {
         // Письмо ушло — человека красиво уводит на экран шести ячеек
         // (владелец, 25.08.2026). Вернулся с «true» — вход случился, и этот
         // экран закрывает себя сам.
+        //
+        // Поле почты отпускает фокус до ухода — в обе стороны. Экран под
+        // экраном кода помнит, кто был в фокусе, и вернул бы клавиатуру полю
+        // ровно в ту секунду, когда сам закрывается; клавиатура без поля и
+        // есть «после входа зависает клавиатура» (владелец, 26.08.2026).
+        FocusManager.instance.primaryFocus?.unfocus();
         final entered = await navigator.push<bool>(
           MaterialPageRoute(
             builder: (_) => SignInCodeScreen(email: _email.text.trim()),
           ),
         );
-        if (entered == true && mounted) navigator.maybePop();
+        if (entered == true && mounted) {
+          FocusManager.instance.primaryFocus?.unfocus();
+          navigator.maybePop();
+        }
       },
       done: l.scrSignInCodeSent,
     );

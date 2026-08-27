@@ -2436,14 +2436,11 @@ class _ChapterEndOfferState extends State<_ChapterEndOffer> {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-                color: AlmaPalette.goldDeep.withValues(alpha: 0.5)),
-            // Числа холста V1: тёплая светлая карточка, чуть плотнее бумаги.
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xBFFFFCF4), Color(0x8CE9DDC1)],
-            ),
+            border: Border.all(color: AlmaPalette.nightCardEdge),
+            // Ночная карточка, числа листа покупки. Кремовая карточка холста
+            // V1 (`#FFFCF4` на 75 %) пережила ночную страницу на день и на
+            // ней стала серо-голубой плитой — см. `AlmaGradient.nightCard`.
+            gradient: AlmaGradient.nightCard,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2493,22 +2490,21 @@ class _ChapterEndOfferState extends State<_ChapterEndOffer> {
               ),
               const SizedBox(height: 16),
               DecoratedBox(
-                // **Единственная тень в тёплую охру на весь холст.** Все прочие
-                // золотые кнопки продукта стоят на ночи и светятся ореолом
-                // ([PaywallHalo]); эта лежит на пергаменте, где ореол не виден
-                // вовсе, и её от бумаги отделяет падающая тень — `0 6px 15px
-                // rgba(120,96,40,.3)`. Погашенная кнопка тени не отбрасывает:
-                // приподнятой выглядит вещь, которую можно нажать.
+                // Кнопка на ночи светится золотым ореолом, как все золотые
+                // кнопки продукта. Охристая падающая тень `0 6px 15px
+                // rgba(120,96,40,.3)` была нужна на пергаменте, где ореол не
+                // виден; на ночной странице она читалась грязным пятном под
+                // кнопкой (26.08.2026). Погашенная кнопка не светится:
+                // живой выглядит вещь, которую можно нажать.
                 decoration: BoxDecoration(
                   borderRadius:
                       BorderRadius.circular(AlmaPalette.buttonRadius),
                   boxShadow: price == null
                       ? null
-                      : const [
+                      : [
                           BoxShadow(
-                            color: Color(0x4D786028),
-                            blurRadius: 15,
-                            offset: Offset(0, 6),
+                            color: AlmaPalette.goldGlow,
+                            blurRadius: AlmaPalette.goldGlowRadius,
                           ),
                         ],
                 ),
@@ -2768,9 +2764,11 @@ class _PairMedallionsState extends State<_PairMedallions>
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFFFFFCF4).withValues(alpha: 0.5),
+          // Вуаль ночи, а не слоновая кость на 0.5: кремовый круг пережил
+          // ночную страницу и светил на ней фонарём (26.08.2026).
+          color: AlmaPalette.veilStrong,
           border: Border.all(
-              color: const Color(0xFFA8873C).withValues(alpha: 0.5)),
+              color: AlmaPalette.goldDeep.withValues(alpha: 0.5)),
         ),
         // Глифа нет в словаре — печатается имя как есть: незнакомое слово
         // сервера честнее пустого круга.

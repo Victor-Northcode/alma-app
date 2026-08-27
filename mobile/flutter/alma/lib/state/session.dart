@@ -1,8 +1,9 @@
-import 'dart:ui' show PlatformDispatcher;
+import 'dart:async' show unawaited;
 
 import 'package:flutter/widgets.dart';
 import '../design/plates.dart';
 
+import '../l10n/alma_l10n.dart';
 import '../net/alma_client.dart';
 import '../net/models.dart';
 import 'locale_override.dart';
@@ -54,13 +55,16 @@ class AlmaSession extends ChangeNotifier {
 
   bool get hasBirthData => _profile != null;
 
-  /// Язык, на котором сервер пишет. Не язык интерфейса.
+  /// Язык приложения — один на интерфейс и на всё, что пишет Alma.
   ///
-  /// Это разные настройки, и стоит сказать почему: интерфейс говорит на языке
-  /// телефона, а этот — на языке, который человек выбрал для **чтения**. На iOS
-  /// они сведены вместе: устройство побеждает, и расхождение отправляется на
-  /// сервер при первом запуске, который его заметил.
-  String get locale => _account?.locale ?? 'en';
+  /// Выбранный в настройках (`LocaleOverride`), иначе язык телефона. **Не
+  /// `account.locale`**: серверная запись — это копия, которую сессия
+  /// поддерживает ([_adoptLocale]), а не источник. Пока источником был
+  /// аккаунт, вход подменял его серверным с языком по умолчанию `en`, и
+  /// владелец получил русский интерфейс с английскими главами (26.08.2026).
+  /// Запросы несут этот язык явно, так что даже неудавшийся PATCH не
+  /// переведёт главы на чужой язык.
+  String get locale => LocaleOverride.serverCode ?? deviceLocale();
 
   /// Ждёт, пока сессия узнает, кто перед ней.
   ///
@@ -85,7 +89,12 @@ class AlmaSession extends ChangeNotifier {
       // не было аккаунта, после — есть, и он ничего для этого не делал.
       if (!await client.hasAccount) await client.refresh();
       _account = await client.account();
-      _adoptLocaleFromDevice();
+      // Диск с выбранным языком читается один раз и обычно давно прочитан —
+      // но старт, обогнавший его, записал бы на сервер язык телефона поверх
+      // выбранного человеком.
+      await LocaleOverride.restore();
+      // Старт сервера не ждёт: язык уже принят.
+      unawaited(_adoptLocale());
       final all = await client.profiles();
       _profile = all.where((p) => p.isSelf).firstOrNull;
       _people = all.where((p) => !p.isSelf).toList();
@@ -119,56 +128,58 @@ class AlmaSession extends ChangeNotifier {
     }
   }
 
-  /// **Устройство побеждает.** Порт `adoptLocaleFromDevice` с iOS: язык — это
-  /// язык телефона, и никакой второй ручки в приложении нет. Гостя сервер
-  /// заводит по заголовку первого запроса, и тот бывает чужим — живой гость в
-  /// браузере получил итальянский; человек, сменивший язык телефона после
-  /// установки, писался бы по-старому вечно. Расхождение выталкивается на том
-  /// запуске, который его заметил, и запись — предпочтение, не факт: не
-  /// ушла сейчас — уйдёт при следующем запуске.
-  void _adoptLocaleFromDevice() {
-    // Человек выбрал язык сам — телефон больше не побеждает: иначе каждый
-    // запуск затирал бы выбор из настроек языком устройства (ручка появилась
-    // 22 авг, см. LocaleOverride).
-    if (LocaleOverride.value.value != null) return;
-    final device = _deviceLocale();
+  /// **Приложение побеждает, сервер догоняет.** Порт `adoptLocaleFromDevice`
+  /// с iOS, где язык — это язык телефона. Гостя сервер заводит по заголовку
+  /// первого запроса, и тот бывает чужим — живой гость в браузере получил
+  /// итальянский; человек, сменивший язык телефона после установки, писался бы
+  /// по-старому вечно. А вход выдаёт аккаунт, заведённый сервером с его
+  /// умолчанием `en`, — так главы и уехали на английский при русском
+  /// интерфейсе (26.08.2026). Расхождение выталкивается на том запуске, который
+  /// его заметил; запись — предпочтение, не факт: не ушла сейчас — уйдёт при
+  /// следующем запуске. Серверная копия нужна не экрану, а утренней записи:
+  /// её язык сервер берёт из аккаунта.
+  Future<void> _adoptLocale() async {
     final current = _account;
     if (current == null) return;
-    if (current.locale != device) {
-      _account = current.copyWith(locale: device);
-      // Не await: язык уже принят, сервер догонит.
-      client.setLocale(device).catchError((Object _) {});
-    }
-  }
-
-  /// Язык устройства, сведённый к семи, которые продукт умеет. pt любого
-  /// региона становится pt-BR — это код сервера; незнакомый язык падает в en.
-  static String _deviceLocale() {
-    final tag = PlatformDispatcher.instance.locale;
-    final code = tag.languageCode.toLowerCase();
-    const shipped = ['en', 'es', 'de', 'it', 'fr', 'ru'];
-    if (shipped.contains(code)) return code;
-    if (code == 'pt') return 'pt-BR';
-    return 'en';
-  }
-
-  /// Оптимистично: человек выбрал язык, и интерфейс обязан подчиниться сразу.
-  ///
-  /// Серверная запись — это предпочтение, которое уйдёт при следующем удачном
-  /// вызове. **На Android этого не было**, и переключатель молча не показывал,
-  /// что сработал: PATCH проходил, аккаунт менялся, а золотое кольцо оставалось
-  /// на прежней кнопке. Здесь порядок такой же, как на iOS.
-  Future<void> setLocale(String value) async {
-    final current = _account;
-    if (current != null) {
-      _account = current.copyWith(locale: value);
-      notifyListeners();
-    }
+    final wanted = locale;
+    if (current.locale == wanted) return;
+    _account = current.copyWith(locale: wanted);
     try {
-      await client.setLocale(value);
+      await client.setLocale(wanted);
     } on AlmaError {
-      // Молча: язык уже переключён, а сервер узнает при следующем вызове.
+      // Молча: язык уже принят, сервер догонит на следующем старте.
     }
+  }
+
+  /// Язык телефона, сведённый к семи, которые продукт умеет, — **тем же
+  /// правилом, каким его выбирает `MaterialApp`** для интерфейса: по всему
+  /// списку предпочтений, а не по первому языку. Телефон на украинском с
+  /// русским вторым получал русский интерфейс и английские главы — первый
+  /// язык списка незнаком, и старый код падал в `en`. Незнакомый целиком
+  /// список — английский, как и у интерфейса.
+  static String deviceLocale() {
+    final picked = basicLocaleListResolution(
+      WidgetsBinding.instance.platformDispatcher.locales,
+      L.supportedLocales,
+    );
+    return LocaleOverride.serverCodeOf(picked);
+  }
+
+  /// Человек выбрал язык в настройках: интерфейс подчиняется сразу, сервер
+  /// узнаёт следом.
+  ///
+  /// **Язык телефона снимает переопределение.** Отдельной строки «как в
+  /// телефоне» в списке нет, и не нужно: совпадение с телефоном и есть «как в
+  /// телефоне». Иначе человек, однажды тронувший список, не вернул бы
+  /// интерфейс за телефоном никогда — а владелец ждёт именно этого: «нужно
+  /// подтягивать язык из системных настроек устройства» (26.08.2026).
+  Future<void> chooseLanguage(String code) async {
+    final own = code == deviceLocale() ? null : LocaleOverride.localeOf(code);
+    await LocaleOverride.set(own);
+    await _adoptLocale();
+    // Экраны, читающие `locale`, обязаны перечитать: главы, «Сегодня»,
+    // галочка в списке.
+    notifyListeners();
   }
 }
 
