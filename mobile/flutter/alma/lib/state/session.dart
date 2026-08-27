@@ -3,8 +3,8 @@ import 'dart:async' show unawaited;
 import 'package:flutter/widgets.dart';
 import '../design/plates.dart';
 
-import '../l10n/alma_l10n.dart';
 import '../net/alma_client.dart';
+import '../notify/push_devices.dart';
 import '../net/models.dart';
 import 'locale_override.dart';
 
@@ -64,7 +64,7 @@ class AlmaSession extends ChangeNotifier {
   /// владелец получил русский интерфейс с английскими главами (26.08.2026).
   /// Запросы несут этот язык явно, так что даже неудавшийся PATCH не
   /// переведёт главы на чужой язык.
-  String get locale => LocaleOverride.serverCode ?? deviceLocale();
+  String get locale => LocaleOverride.appLanguage();
 
   /// Ждёт, пока сессия узнает, кто перед ней.
   ///
@@ -108,6 +108,15 @@ class AlmaSession extends ChangeNotifier {
     } on AlmaError catch (error) {
       _failure = error;
       _ready = true;
+    } catch (error) {
+      // Не только AlmaError: PlatformException из хранилища токенов или
+      // ошибка разбора модели вышли бы мимо ветки выше — `_ready` не
+      // выставлен, `notifyListeners` не позван, и приложение стояло бы на
+      // заставке вечно, без ошибки и без кнопки повтора (ревью 27.08.2026).
+      // Экрану отдаётся тот же типизированный отказ, что и сети: у него уже
+      // есть и текст, и «попробовать ещё раз».
+      _failure = NetworkDown(error.toString());
+      _ready = true;
     }
     notifyListeners();
   }
@@ -146,23 +155,29 @@ class AlmaSession extends ChangeNotifier {
     _account = current.copyWith(locale: wanted);
     try {
       await client.setLocale(wanted);
-    } on AlmaError {
-      // Молча: язык уже принят, сервер догонит на следующем старте.
+    } catch (_) {
+      // Молча — и не только AlmaError: вызов живёт в `unawaited(...)`, и
+      // обрыв сети посреди чтения тела (`ClientException`) улетел бы
+      // необработанной ошибкой зоны. Язык уже принят, сервер догонит на
+      // следующем старте.
     }
   }
 
-  /// Язык телефона, сведённый к семи, которые продукт умеет, — **тем же
-  /// правилом, каким его выбирает `MaterialApp`** для интерфейса: по всему
-  /// списку предпочтений, а не по первому языку. Телефон на украинском с
-  /// русским вторым получал русский интерфейс и английские главы — первый
-  /// язык списка незнаком, и старый код падал в `en`. Незнакомый целиком
-  /// список — английский, как и у интерфейса.
-  static String deviceLocale() {
-    final picked = basicLocaleListResolution(
-      WidgetsBinding.instance.platformDispatcher.locales,
-      L.supportedLocales,
-    );
-    return LocaleOverride.serverCodeOf(picked);
+  /// Язык телефона — правило целиком в [LocaleOverride.deviceLanguage]:
+  /// по всему списку предпочтений, незнакомый целиком список — английский.
+  static String deviceLocale() => LocaleOverride.deviceLanguage();
+
+  /// Телефон сменил язык на живом приложении — сервер узнаёт сразу.
+  ///
+  /// Интерфейсу ничего не нужно: `MaterialApp` без переопределения следует за
+  /// системой сам, а `locale` читает телефон на каждом обращении. Отставала
+  /// только серверная копия — до следующего запуска, то есть утренняя запись
+  /// на Android приходила бы на прежнем языке (на iOS смена языка системы
+  /// перезапускает приложение, и там это закрывал старт).
+  void deviceLocaleChanged() {
+    unawaited(_adoptLocale());
+    // Экраны, читающие `locale`, обязаны перечитать содержимое.
+    notifyListeners();
   }
 
   /// Человек выбрал язык в настройках: интерфейс подчиняется сразу, сервер
@@ -177,6 +192,11 @@ class AlmaSession extends ChangeNotifier {
     final own = code == deviceLocale() ? null : LocaleOverride.localeOf(code);
     await LocaleOverride.set(own);
     await _adoptLocale();
+    // Пуш-регистрация несёт язык приложения — строка устройства на сервере
+    // бьёт язык аккаунта при выборе языка пуша (`notify/daily.py`,
+    // `notify/pair.py`), и без пересинхронизации пуши приходили бы на
+    // прежнем языке до следующего запуска (ревью 27.08.2026).
+    unawaited(AlmaPush.instance.sync(client));
     // Экраны, читающие `locale`, обязаны перечитать: главы, «Сегодня»,
     // галочка в списке.
     notifyListeners();

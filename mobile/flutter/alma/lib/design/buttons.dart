@@ -173,8 +173,8 @@ class _AlmaButtonState extends State<AlmaButton> {
                       final fit = AlmaShrink.fitLabel(
                         label: widget.label,
                         short: widget.shortLabel,
-                        // Стилем, которым рисуется, — см. `AlmaShrink.drawn`.
-                        style: AlmaShrink.drawn(context, _style),
+                        context: context,
+                        style: _style,
                         maxWidth: box.maxWidth,
                         scaler: MediaQuery.textScalerOf(context),
                       );

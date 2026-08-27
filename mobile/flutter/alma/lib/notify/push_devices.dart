@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/foundation.dart'
     show ValueNotifier, kIsWeb, kReleaseMode;
@@ -13,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../net/alma_client.dart';
+import '../state/locale_override.dart';
 
 /// Чем закончился разговор про уведомления.
 ///
@@ -375,10 +375,15 @@ class AlmaPush {
           apple ? (kReleaseMode ? 'production' : 'sandbox') : 'production',
       // `null` — законный ответ и он значит «не знаем»; см. [PushDevice.timezone].
       timezone: AlmaClient.deviceTimezone(),
-      // Язык **телефона**, а не аккаунта: iOS подставляет `loc-args` в строку
-      // из бандла на языке устройства, и сервер должен переводить аргументы в
-      // тот же язык (`PUSH.md §1.6`).
-      locale: PlatformDispatcher.instance.locale.toLanguageTag(),
+      // Язык **приложения**, а не сырой тег телефона. Сервер выбирает язык
+      // пуша как «строка устройства, иначе аккаунт» (`notify/daily.py`,
+      // `notify/pair.py`) — и пока здесь ехал сырой `en-US`, человек с русским
+      // интерфейсом получал английские пуши: строка устройства била язык
+      // аккаунта (ревью 27.08.2026). Прежний довод про `loc-args` в бандле
+      // устройства не работал для пуша пары и утреннего текста: они целиком
+      // серверная проза без ключей. Смена языка в настройках
+      // пересинхронизирует регистрацию (`AlmaSession.chooseLanguage`).
+      locale: LocaleOverride.appLanguage(),
       appVersion: answer?['app_version'] as String?,
       osVersion: answer?['os_version'] as String?,
     );

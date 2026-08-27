@@ -10,6 +10,7 @@ import 'package:alma/screens/paywall/quota_screen.dart';
 import 'package:alma/screens/paywall/subscription_screen.dart';
 import 'package:alma/state/paywall_guard.dart';
 import 'package:alma/state/session.dart';
+import 'package:alma/billing/store_words.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -45,6 +46,12 @@ void main() {
     AlmaStore.shared;
     debugDefaultTargetPlatformOverride = null;
   });
+
+  // Строки магазина выбираются по целевой платформе (`StoreWords`), и эти
+  // экраны написаны про App Store: платформа закрепляется, а не наследуется
+  // от хоста тестов (на Windows без этого печатались Play-строки).
+  setUpAll(() => storeWordsPlatformOverride = TargetPlatform.iOS);
+  tearDownAll(() => storeWordsPlatformOverride = null);
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});

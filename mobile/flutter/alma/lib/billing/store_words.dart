@@ -1,6 +1,13 @@
-import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, visibleForTesting;
 
 import '../l10n/alma_l10n.dart';
+
+/// Задвижка для тестов: экраны про App Store закрепляют платформу здесь, а не
+/// через `debugDefaultTargetPlatformOverride` — тот сторожится проверкой
+/// инвариантов flutter_test между тестами и не переживает `setUpAll`.
+@visibleForTesting
+TargetPlatform? storeWordsPlatformOverride;
 
 /// Слова о магазине — того магазина, в котором приложение живёт.
 ///
@@ -10,7 +17,16 @@ import '../l10n/alma_l10n.dart';
 /// каталога существуют парами (яблочная и Play-вариант с суффиксом Play);
 /// выбор платформы стоит здесь один раз, а не восемью условиями по экранам.
 extension StoreWords on L {
-  bool get _apple => Platform.isIOS || Platform.isMacOS;
+  // `defaultTargetPlatform`, а не `dart:io Platform`: тот отвечает про ОС
+  // машины, на которой идёт код, — на устройствах это одно и то же, а в
+  // тестах `Platform` непереопределяем и отвечал про хост. Прогон на Windows
+  // печатал Play-строки в тех же тестах, что на Маке видели App Store, — два
+  // «виндовых» красных, которые были не виндовыми (ревью 27.08.2026).
+  bool get _apple =>
+      switch (storeWordsPlatformOverride ?? defaultTargetPlatform) {
+        TargetPlatform.iOS || TargetPlatform.macOS => true,
+        _ => false,
+      };
 
   String get storeManageInStore =>
       _apple ? cabManageInStore : cabManageInStorePlay;

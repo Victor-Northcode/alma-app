@@ -1,6 +1,8 @@
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/alma_l10n.dart';
+
 /// Язык, который человек выбрал сам, — поверх языка телефона.
 ///
 /// До 22 августа второй ручки не было принципиально: язык — это язык телефона,
@@ -40,26 +42,64 @@ class LocaleOverride {
   /// (27.08.2026). Выбор, уже стоящий в памяти, диск не перебивает: память
   /// новее диска ровно в ту секунду, когда [set] ещё пишет.
   static Future<void> restore() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (value.value != null) return;
-    final tag = prefs.getString(_key);
-    if (tag == null || tag.isEmpty) return;
-    final parts = tag.split('-');
-    value.value = parts.length > 1
-        ? Locale(parts.first, parts.last)
-        : Locale(parts.first);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (value.value != null) return;
+      final tag = prefs.getString(_key);
+      if (tag == null || tag.isEmpty) return;
+      final parts = tag.split('-');
+      value.value = parts.length > 1
+          ? Locale(parts.first, parts.last)
+          : Locale(parts.first);
+    } catch (_) {
+      // Диск не ответил (битые prefs, ранний канал платформы) — выбора нет,
+      // интерфейс за телефоном. `restore` ждут внутри `AlmaSession.start`,
+      // где единственный catch — `on AlmaError`: PlatformException отсюда
+      // оставил бы приложение стоять на заставке вечно, без ошибки и без
+      // повтора (ревью 27.08.2026).
+      return;
+    }
   }
 
   /// Записать выбор. `null` возвращает интерфейс за телефоном.
   static Future<void> set(Locale? locale) async {
     value.value = locale;
-    final prefs = await SharedPreferences.getInstance();
-    if (locale == null) {
-      await prefs.remove(_key);
-    } else {
-      await prefs.setString(_key, locale.toLanguageTag());
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (locale == null) {
+        await prefs.remove(_key);
+      } else {
+        await prefs.setString(_key, locale.toLanguageTag());
+      }
+    } catch (_) {
+      // Язык уже переключён в памяти; не записавшийся диск — это выбор,
+      // забытый перезапуском, а не сломанный экран.
     }
   }
+
+  /// Языки продукта в порядке решения — **английский первым**.
+  ///
+  /// `basicLocaleListResolution`, не найдя ни одного пересечения со списком
+  /// телефона, возвращает первый элемент списка поддерживаемых. Сгенерированный
+  /// `L.supportedLocales` алфавитный и начинается с немецкого — телефон
+  /// целиком на японском получал немецкий, а не английский (ревью 27.08.2026).
+  /// Порядок влияет только на этот последний фолбэк: по одному языку на
+  /// запись, совпадения находятся тем же словарём.
+  static final List<Locale> resolutionOrder = [
+    const Locale('en'),
+    ...L.supportedLocales.where((l) => l.languageCode != 'en'),
+  ];
+
+  /// Язык телефона, сведённый к семи, которые продукт умеет, — тем же
+  /// правилом, каким интерфейсу выбирает язык `MaterialApp`: по всему списку
+  /// предпочтений. Незнакомый целиком список — английский ([resolutionOrder]).
+  static String deviceLanguage() => serverCodeOf(basicLocaleListResolution(
+        WidgetsBinding.instance.platformDispatcher.locales,
+        resolutionOrder,
+      ));
+
+  /// Язык приложения: выбранный человеком, иначе язык телефона.
+  static String appLanguage() => serverCode ?? deviceLanguage();
 
   /// Выбранный язык кодом каталога сервера, или `null`, когда выбора нет.
   static String? get serverCode {

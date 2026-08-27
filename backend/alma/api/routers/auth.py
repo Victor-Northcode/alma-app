@@ -118,7 +118,8 @@ async def apple(payload: AppleSignIn, user: CurrentUser, session: SessionDep) ->
     # раскалывает человека на два аккаунта ровно в момент, когда он попробует
     # вторую дверь, и покупки останутся в первой (владелец, 25.08.2026:
     # «нельзя указать анонимный адрес»). Клиент по коду отказа просит выбрать
-    # «Показать почту» в системном листе и повторить.
+    # «Поделиться адресом эл. почты» в системном листе и повторить (та же
+    # формулировка, что в scrSignInApplePrivate клиента).
     if identity.email.endswith("@privaterelay.appleid.com"):
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,

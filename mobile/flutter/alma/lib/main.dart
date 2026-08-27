@@ -81,12 +81,26 @@ class AlmaApp extends StatefulWidget {
   State<AlmaApp> createState() => _AlmaAppState();
 }
 
-class _AlmaAppState extends State<AlmaApp> {
+class _AlmaAppState extends State<AlmaApp> with WidgetsBindingObserver {
   late final AlmaSession _session = AlmaSession(widget.client);
+
+  // Смена языка телефона на живом приложении: интерфейс перестраивает сам
+  // `MaterialApp`, а сессия доталкивает язык до сервера — иначе утренняя
+  // запись на Android приходила бы на прежнем языке до следующего запуска.
+  @override
+  void didChangeLocales(List<Locale>? locales) =>
+      _session.deviceLocaleChanged();
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _session.start();
     // **Слушать магазин всю жизнь приложения.**
     //
@@ -151,6 +165,13 @@ class _AlmaAppState extends State<AlmaApp> {
         title: 'Alma',
         debugShowCheckedModeBanner: false,
         locale: chosen,
+        // Незнакомый целиком список языков телефона падает в английский, а не
+        // в первый по алфавиту: сгенерированный список начинается с немецкого,
+        // и японский телефон получал немецкий интерфейс (ревью 27.08.2026).
+        // Тот же порядок использует `LocaleOverride.deviceLanguage` — язык
+        // текста обязан совпасть с языком интерфейса.
+        localeListResolutionCallback: (locales, supported) =>
+            basicLocaleListResolution(locales, LocaleOverride.resolutionOrder),
         localizationsDelegates: L.localizationsDelegates,
         supportedLocales: L.supportedLocales,
         theme: ThemeData(

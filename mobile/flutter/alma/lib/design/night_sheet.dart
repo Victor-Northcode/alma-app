@@ -66,10 +66,12 @@ class AlmaSheet extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
+                // Токены ночной продающей поверхности — общие с карточкой
+                // оффера (`AlmaGradient.nightCard`): одна семья одними числами.
                 colors: [
-                  AlmaPalette.night.withValues(alpha: 0.88),
-                  AlmaPalette.night900.withValues(alpha: 0.97),
-                  AlmaPalette.night900.withValues(alpha: 0.97),
+                  AlmaPalette.nightCardTop,
+                  AlmaPalette.nightCardBottom,
+                  AlmaPalette.nightCardBottom,
                 ],
                 stops: const [0, 0.6, 1],
               ),
@@ -91,7 +93,7 @@ class AlmaSheet extends StatelessWidget {
                       width: 36,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: AlmaPalette.gold.withValues(alpha: 0.30),
+                        color: AlmaPalette.nightCardEdge,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -138,7 +140,7 @@ class _SheetBrow extends CustomPainter {
       Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1
-        ..color = AlmaPalette.gold.withValues(alpha: 0.30),
+        ..color = AlmaPalette.nightCardEdge,
     );
   }
 

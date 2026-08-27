@@ -174,6 +174,7 @@ class AlmaShrink {
     required String label,
     required TextStyle style,
     required double maxWidth,
+    BuildContext? context,
     String? short,
     List<double> steps = buttonSteps,
     TextScaler scaler = TextScaler.noScaling,
@@ -182,6 +183,10 @@ class AlmaShrink {
     if (!maxWidth.isFinite || maxWidth <= 0) {
       return (text: label, size: steps.first);
     }
+    // Слияние со стилем рендера — внутри, а не у вызывающего: пока это была
+    // конвенция четырёх вызовов, пятый промерил бы голым стилем, и баг
+    // «многоточие съело дом» вернулся бы молча (ревью 27.08.2026).
+    if (context != null) style = drawn(context, style);
     double width(String text, double size) {
       final painter = TextPainter(
         text: TextSpan(text: text, style: style.copyWith(fontSize: size)),
@@ -215,10 +220,13 @@ class AlmaShrink {
   /// Замер голым стилем этого не знает и на двадцати знаках ошибается на пять
   /// точек: вариант, «влезавший» по замеру, на экране получал многоточие —
   /// «Луна 12°39′ ♍ · 2…», то есть съеденный дом вместо отрезанного
-  /// (владелец, 27.08.2026). Всё, что меряет перед тем как рисовать, обязано
-  /// мерить этим стилем.
+  /// (владелец, 27.08.2026). [fitLabel] и [fitMetaLine] делают это сами,
+  /// когда им дают `context`; наружу отдан для замеров, идущих мимо них
+  /// (промер строк голоса в `chat_turn`).
   static TextStyle drawn(BuildContext context, TextStyle style) =>
-      DefaultTextStyle.of(context).style.merge(style);
+      style.inherit
+          ? DefaultTextStyle.of(context).style.merge(style)
+          : style;
 
   /// Мета-строка «read from», ужатая по правилу 4 спеки.
   ///
@@ -248,9 +256,12 @@ class AlmaShrink {
     required String line,
     required TextStyle style,
     required double maxWidth,
+    BuildContext? context,
     TextScaler scaler = TextScaler.noScaling,
   }) {
     if (!maxWidth.isFinite || maxWidth <= 0) return line;
+    // Стилем рендера — внутри, по той же причине, что в [fitLabel].
+    if (context != null) style = drawn(context, style);
 
     double width(String text) => (TextPainter(
           text: TextSpan(text: text, style: style),

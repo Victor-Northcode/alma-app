@@ -415,8 +415,8 @@ class CitationState extends State<Citation> {
               builder: (context, box) => Text(
                 AlmaShrink.fitMetaLine(
                   line: CabinetWordsMore.factor(l, widget.factors.first),
-                  // Стилем, которым рисуется, — см. `AlmaShrink.drawn`.
-                  style: AlmaShrink.drawn(context, style),
+                  context: context,
+                  style: style,
                   maxWidth: box.maxWidth,
                   scaler: MediaQuery.textScalerOf(context),
                 ),
@@ -660,9 +660,7 @@ class _SettlingParagraph extends StatelessWidget {
         // шире промера. Мерил голым стилем — и вымеренная строка на экране
         // переносилась: «…still pull four / ways at once». Слитый стиль
         // отдаётся и рисовальщику, и `Text`.
-        final effective = style.inherit
-            ? DefaultTextStyle.of(context).style.merge(style)
-            : style;
+        final effective = AlmaShrink.drawn(context, style);
         final painter = TextPainter(
           text: TextSpan(text: text, style: effective),
           textDirection: Directionality.of(context),

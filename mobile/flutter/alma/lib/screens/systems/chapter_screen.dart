@@ -362,6 +362,11 @@ class _ChapterScreenState extends State<ChapterScreen> {
         partnerProfileId: _partnerId(session),
       );
       if (!mounted) return;
+      // Ответ пришёл — бюджет тихих повторов полон снова. Без сброса «два
+      // повтора» были бюджетом на жизнь экрана, а не «три отказа подряд»:
+      // читатель, переживший два чиха сети на первой главе, на второй
+      // получал экран ошибки с первого же (ревью 27.08.2026).
+      _autoRetries = 0;
       if (response.locked) {
         // Слово сервера сильнее памяти клиента: право могло истечь между
         // оглавлением и запросом, и тогда паттерн встаёт здесь, а не по
@@ -398,14 +403,24 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // сервера (нет права, нет времени рождения) повтором не лечится.
       if (error is! ServerRefused && _autoRetries < 2 && mounted) {
         _autoRetries += 1;
-        _retryWait = true;
+        // Через setState: `openingPending` закрытой главы читает `_retryWait`
+        // в build, и золотой спиннер на месте абзаца держится этим кадром.
+        setState(() => _retryWait = true);
         Future<void>.delayed(Duration(seconds: 2 * _autoRetries), () {
-          _retryWait = false;
-          if (mounted && _reading == null) _load();
+          if (!mounted) return;
+          setState(() => _retryWait = false);
+          if (_reading == null) _load();
         });
         return;
       }
       if (mounted) setState(() => _failure = error);
+    } catch (error) {
+      // Не только AlmaError: сетевой слой заворачивает в него всё своё, но
+      // разбор полей ответа (`fromJson`) живёт снаружи, и 200 с полем не
+      // того типа (прокси, captive portal) выходил TypeError мимо ветки
+      // выше — пустая страница без единой кнопки (ревью 27.08.2026). Форма
+      // ответа не та — это и есть BadPayload, с тем же экраном повтора.
+      if (mounted) setState(() => _failure = BadPayload(error.toString()));
     } finally {
       if (mounted) {
         setState(() {
@@ -719,6 +734,9 @@ class _ChapterScreenState extends State<ChapterScreen> {
       _advancing = true;
       _showing = next.slug;
       _reading = null;
+      // Новая глава — новый бюджет тихих повторов: отказы прошлой главы не
+      // должны встречать эту экраном ошибки с первого чиха сети.
+      _autoRetries = 0;
     });
     HapticFeedback.heavyImpact();
     _load();
@@ -1474,14 +1492,13 @@ class _CitedLineState extends State<_CitedLine> {
           const SizedBox(width: 12),
           Expanded(
             // Режется только хвост дома — см. `AlmaShrink.fitMetaLine`.
-            // Многоточие здесь съедало знак, то есть саму позицию. Меряется
-            // стилем, которым рисуется (`AlmaShrink.drawn`), — голый замер
-            // не знал разрядки темы и отдавал многоточию хвост дома.
+            // Многоточие здесь съедало знак, то есть саму позицию.
             child: LayoutBuilder(
               builder: (context, box) => Text(
                 AlmaShrink.fitMetaLine(
                   line: CabinetWordsMore.factor(l, widget.factors.first),
-                  style: AlmaShrink.drawn(context, style),
+                  context: context,
+                  style: style,
                   maxWidth: box.maxWidth,
                   scaler: MediaQuery.textScalerOf(context),
                 ),

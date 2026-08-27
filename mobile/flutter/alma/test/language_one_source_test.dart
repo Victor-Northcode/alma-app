@@ -101,6 +101,26 @@ void main() {
     tester.platformDispatcher.clearLocalesTestValue();
   });
 
+  testWidgets('телефон целиком на незнакомом языке падает в английский',
+      (tester) async {
+    // Список поддерживаемого — алфавитный и начинается с немецкого, а
+    // последний фолбэк basicLocaleListResolution — первый элемент списка:
+    // японский телефон получал немецкий (ревью 27.08.2026).
+    tester.platformDispatcher.localesTestValue = const [
+      Locale('ja', 'JP'),
+      Locale('pl', 'PL'),
+    ];
+    SharedPreferences.setMockInitialValues({});
+    final wire = _Wire(server: 'de');
+    final session = AlmaSession(wire.client);
+
+    await session.start();
+    expect(session.locale, 'en', reason: 'незнакомый список — английский');
+    expect(wire.patched, ['en']);
+
+    tester.platformDispatcher.clearLocalesTestValue();
+  });
+
   testWidgets('язык телефона — тот из списка предпочтений, который продукт умеет',
       (tester) async {
     // Телефон на украинском, второй язык — русский. Интерфейс Flutter решает

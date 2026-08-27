@@ -58,7 +58,15 @@ class AlmaPalette {
   static const parchmentB = Color(0xFF0B0E1D);
   static const ink = Color(0xFFEDE7DA);
 
-  /// Кант ночной карточки — числа листа покупки (`NightSheet`): золото на 0.30.
+  /// Тона ночной продающей поверхности — **одни на карточку и на лист**.
+  ///
+  /// Карточка оффера (`AlmaGradient.nightCard`) и лист покупки (`AlmaSheet`)
+  /// обязаны быть одной семьёй не на словах: пока числа жили в двух местах,
+  /// они уже успели разъехаться незамеченными (ревью 27.08.2026). Кто правит
+  /// поверхность — правит эти три токена, и обе вещи меняются вместе;
+  /// `design_tokens_test.dart` стережёт сами числа.
+  static final nightCardTop = night.withValues(alpha: 0.88);
+  static final nightCardBottom = night900.withValues(alpha: 0.97);
   static final nightCardEdge = gold.withValues(alpha: 0.30);
 
   // ── согласие и спор между системами ─────────────────────────────────────
@@ -139,10 +147,7 @@ class AlmaGradient {
   static final nightCard = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [
-      AlmaPalette.night.withValues(alpha: 0.88),
-      AlmaPalette.night900.withValues(alpha: 0.97),
-    ],
+    colors: [AlmaPalette.nightCardTop, AlmaPalette.nightCardBottom],
   );
 
   /// Волосяная линия, гаснущая с обоих концов, — линейка между разделами.

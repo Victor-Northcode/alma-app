@@ -13,8 +13,12 @@ import 'package:alma/net/models.dart' show SystemSlug;
 /// где должна быть картина, и никто не заметит, пока не купит эту главу.
 /// Опечатка в имени — 404 и та же арка, то есть та же тишина.
 void main() {
+  // Разделитель — любой: на Windows `Directory.current.path` отдаёт обратные
+  // слэши, и регексп с прямыми не совпадал — «бэкенд» оказывался самим
+  // каталогом приложения, существовал, и проверка искала картины не там
+  // (два ложных красных в виндовой базе, ревью 27.08.2026).
   final backend = Directory.current.path.replaceFirst(
-    RegExp(r'/mobile/flutter/alma$'),
+    RegExp(r'[/\\]mobile[/\\]flutter[/\\]alma$'),
     '/backend/static/plates',
   );
 

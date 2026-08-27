@@ -50,6 +50,11 @@ class _SignInCodeScreenState extends State<SignInCodeScreen> {
 
   @override
   void dispose() {
+    // Контекст автозаполнения закрывается и при уходе без входа — крестиком
+    // или свайпом посреди автоподстановки кода: открытый контекст держал
+    // системную панель кода живой над следующим экраном. Путь успеха
+    // закрывает его сам в `_signIn`; двойное закрытие безвредно.
+    TextInput.finishAutofillContext();
     _code.removeListener(_changed);
     _code.dispose();
     _focus.dispose();
@@ -86,22 +91,33 @@ class _SignInCodeScreenState extends State<SignInCodeScreen> {
       // Возврат с ответом «вошли»: экран входа под нами закрывает и себя.
       navigator.pop(true);
     } on AlmaError catch (error) {
-      if (!mounted) return;
-      setState(() {
-        _working = false;
-        _noticeBad = true;
-        _code.clear();
-        _notice = switch (error) {
-          ServerRefused(code: 'link_invalid') => l.scrSignInCodeInvalid,
-          ServerRefused(code: 'link_used') => l.scrSignInCodeUsed,
-          ServerRefused(code: 'link_expired') => l.scrSignInCodeExpired,
-          ServerRefused(code: 'magic_link_rate_limit') => l.scrSignInTooMany,
-          ServerRefused(:final message) when message.isNotEmpty => message,
-          _ => l.scrSignInFailed,
-        };
+      _failed(switch (error) {
+        ServerRefused(code: 'link_invalid') => l.scrSignInCodeInvalid,
+        ServerRefused(code: 'link_used') => l.scrSignInCodeUsed,
+        ServerRefused(code: 'link_expired') => l.scrSignInCodeExpired,
+        ServerRefused(code: 'magic_link_rate_limit') => l.scrSignInTooMany,
+        ServerRefused(:final message) when message.isNotEmpty => message,
+        _ => l.scrSignInFailed,
       });
-      _focus.requestFocus();
+    } catch (_) {
+      // Не только AlmaError: сетевой слой заворачивает в него всё своё, но
+      // разбор ответа (`fromJson`) живёт снаружи, и неожиданная форма 200
+      // вышла бы мимо ветки выше — с поднятым навсегда `_working`, то есть
+      // вечным спиннером на выключенном поле. Любой конец попытки обязан
+      // вернуть экрану руки.
+      _failed(l.scrSignInFailed);
     }
+  }
+
+  void _failed(String notice) {
+    if (!mounted) return;
+    setState(() {
+      _working = false;
+      _noticeBad = true;
+      _code.clear();
+      _notice = notice;
+    });
+    _focus.requestFocus();
   }
 
   Future<void> _resend() async {

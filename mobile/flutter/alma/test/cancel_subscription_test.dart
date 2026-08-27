@@ -4,6 +4,7 @@ import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/net/alma_client.dart';
 import 'package:alma/screens/settings/settings_screen.dart';
 import 'package:alma/state/session.dart';
+import 'package:alma/billing/store_words.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -167,6 +168,12 @@ String readable(String instant) =>
     DateFormat.yMMMMd('en').format(DateTime.parse(instant).toLocal());
 
 void main() {
+  // Строки магазина выбираются по целевой платформе (`StoreWords`), и эти
+  // экраны написаны про App Store: платформа закрепляется, а не наследуется
+  // от хоста тестов (на Windows без этого печатались Play-строки).
+  setUpAll(() => storeWordsPlatformOverride = TargetPlatform.iOS);
+  tearDownAll(() => storeWordsPlatformOverride = null);
+
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     FlutterSecureStorage.setMockInitialValues({});
