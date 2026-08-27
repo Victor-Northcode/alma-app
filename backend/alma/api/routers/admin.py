@@ -326,62 +326,142 @@ PAGE = """<!doctype html>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Alma · Админка</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Golos+Text:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --night:#0A0D1C; --night2:#101636; --gold:#C9AE6B; --goldhi:#E4D3A2;
-          --body:#EDE7DA; --muted:#8b8578; --line:#2a2b3d; --bad:#c96b6b; }
+  :root { --night:#0A0D1C; --night2:#101636; --gold:#C9AE6B; --golddeep:#A8873C;
+          --goldhi:#E4D3A2; --star:#F6E7BC; --body:#EDE7DA; --ink:#F6F1E4;
+          --muted:rgba(237,231,218,.62); --line:rgba(237,231,218,.10);
+          --linegold:rgba(201,174,107,.30); --bad:#E0917F; --ok:#8FBF9A;
+          --card:rgba(10,13,28,.55); }
   * { box-sizing:border-box; margin:0; }
-  body { background:var(--night); color:var(--body);
-         font-family:Georgia, 'Times New Roman', serif; min-height:100vh; }
-  .wrap { max-width:760px; margin:0 auto; padding:40px 20px 80px; }
-  h1 { font-size:26px; letter-spacing:.16em; color:var(--gold); font-weight:normal; }
-  h2 { font-size:13px; letter-spacing:.14em; text-transform:uppercase;
-       color:var(--muted); margin:34px 0 12px; font-weight:normal; }
+  html { color-scheme:dark; }
+  body { min-height:100vh; color:var(--body);
+         font:15px/1.55 'Golos Text', system-ui, sans-serif;
+         background:
+           radial-gradient(1.4px 1.4px at 22% 12%, rgba(246,231,188,.7), transparent 50%),
+           radial-gradient(1.1px 1.1px at 74% 20%, rgba(246,231,188,.5), transparent 50%),
+           radial-gradient(1px 1px at 44% 40%, rgba(246,231,188,.32), transparent 50%),
+           radial-gradient(1.2px 1.2px at 84% 66%, rgba(246,231,188,.3), transparent 50%),
+           radial-gradient(1px 1px at 12% 78%, rgba(246,231,188,.28), transparent 50%),
+           radial-gradient(120% 60% at 50% -8%, rgba(58,52,132,.55), rgba(30,58,150,.12) 45%, transparent 65%),
+           linear-gradient(180deg, #0A0D1C 0%, #090C1A 55%, #0d1430 130%);
+         background-attachment:fixed; }
+  .wrap { max-width:820px; margin:0 auto; padding:34px 20px 90px; }
+
+  .mark { display:flex; align-items:center; gap:12px; justify-content:space-between; }
+  .mark .word { font:26px 'Playfair Display', Georgia, serif; letter-spacing:.34em;
+                color:var(--goldhi); }
+  .mark .word i { font-style:normal; color:var(--gold); margin-right:10px; }
+  .sub { font-size:11px; letter-spacing:.28em; color:var(--muted); text-transform:uppercase;
+         margin-top:4px; }
+
+  h2 { font-size:11.5px; letter-spacing:.22em; text-transform:uppercase;
+       color:var(--golddeep); margin:34px 0 0; font-weight:600; }
+  .rule { height:1px; margin:8px 0 0;
+          background:linear-gradient(90deg, transparent, rgba(201,174,107,.34), transparent); }
+
   input, button { font:inherit; }
-  input { width:100%; background:rgba(16,22,54,.55); border:1px solid var(--line);
-          border-radius:14px; color:var(--body); padding:13px 16px; outline:none; }
-  input:focus { border-color:var(--gold); }
-  button { background:none; border:1px solid var(--gold); color:var(--goldhi);
-           border-radius:22px; padding:11px 22px; cursor:pointer; letter-spacing:.04em; }
-  button:hover { background:rgba(201,174,107,.12); }
+  input { width:100%; background:rgba(13,16,28,.85); border:1px solid var(--line);
+          border-radius:24px; color:var(--ink); padding:13px 20px; outline:none;
+          transition:border-color .18s, background .18s; }
+  input::placeholder { color:rgba(237,231,218,.4); }
+  input:focus { border-color:rgba(201,174,107,.8); background:rgba(13,16,28,.4); }
+
+  button { background:none; border:1px solid rgba(201,174,107,.55); color:var(--goldhi);
+           border-radius:24px; padding:12px 24px; cursor:pointer; letter-spacing:.05em;
+           transition:background .18s, border-color .18s, opacity .18s; }
+  button:hover { background:rgba(201,174,107,.13); border-color:var(--gold); }
   button:disabled { opacity:.4; cursor:default; }
+  button.primary { background:linear-gradient(180deg, #1A1626, #0C0A14);
+                   border-color:var(--golddeep);
+                   box-shadow:0 0 20px rgba(201,174,107,.16); }
   button.ghost { border-color:var(--line); color:var(--muted); }
-  button.bad { border-color:var(--bad); color:var(--bad); }
+  button.bad { border-color:rgba(224,145,127,.55); color:var(--bad); }
+  button.bad:hover { background:rgba(224,145,127,.1); border-color:var(--bad); }
+  button.small { padding:8px 16px; font-size:13.5px; }
+
   .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px; }
-  .card { border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
-  .card b { display:block; font-size:24px; color:var(--goldhi); font-weight:normal; }
-  .card span { font-size:12px; color:var(--muted); letter-spacing:.06em; }
-  table { width:100%; border-collapse:collapse; margin-top:8px; font-size:14.5px; }
-  td { padding:9px 6px; border-top:1px solid var(--line); vertical-align:top; }
-  .muted { color:var(--muted); } .ok { color:var(--goldhi); } .off { color:var(--muted); }
+
+  .panel { border:1px solid var(--linegold); border-radius:18px; padding:22px 24px;
+           background:linear-gradient(180deg, rgba(10,13,28,.88), rgba(7,10,22,.97));
+           box-shadow:0 18px 50px rgba(4,6,14,.5); }
+
+  /* Вход — церемония по центру экрана. */
+  #login { min-height:86vh; display:flex; align-items:center; justify-content:center; }
+  #login .panel { width:min(400px, 92vw); text-align:center; padding:40px 32px 30px; }
+  #login .star { font-size:30px; color:var(--gold);
+                 text-shadow:0 0 22px rgba(246,231,188,.55); }
+  #login .word { font:24px 'Playfair Display', Georgia, serif; letter-spacing:.4em;
+                 color:var(--goldhi); margin:12px 0 2px; text-indent:.4em; }
+  #login input { text-align:center; margin:22px 0 12px; }
+  #login button { width:100%; }
+
+  .cards { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr));
+           gap:10px; margin-top:12px; }
+  .card { border:1px solid var(--line); border-radius:16px; padding:15px 17px 13px;
+          background:var(--card); }
+  .card b { display:block; font:24px 'Playfair Display', Georgia, serif;
+            color:var(--goldhi); font-weight:400; }
+  .card span { font-size:11.5px; color:var(--muted); letter-spacing:.05em; }
+
+  .facts { display:grid; grid-template-columns:auto 1fr; gap:7px 18px;
+           font-size:14.5px; margin-top:4px; }
+  .facts .k { color:var(--muted); }
+  .chip { display:inline-block; border:1px solid var(--linegold); border-radius:12px;
+          padding:2px 11px; font-size:12.5px; color:var(--goldhi); margin:0 6px 4px 0; }
+
+  .ent { display:flex; gap:14px; align-items:center; justify-content:space-between;
+         flex-wrap:wrap; border:1px solid var(--line); border-radius:16px;
+         padding:13px 17px; margin-top:10px; background:var(--card); }
+  .ent .what b { font-weight:600; color:var(--ink); }
+  .ent .what span { display:block; font-size:12.5px; color:var(--muted); }
+  .pill { border-radius:12px; padding:3px 12px; font-size:12.5px; white-space:nowrap; }
+  .pill.on  { color:var(--ok);   border:1px solid rgba(143,191,154,.4); }
+  .pill.off { color:var(--muted); border:1px solid var(--line); }
+  .pill.rev { color:var(--bad);  border:1px solid rgba(224,145,127,.4); }
+
   .note { margin-top:14px; min-height:22px; font-size:14.5px; }
   .note.bad { color:var(--bad); }
-  #app { display:none; }
+  .breath { display:inline-block; animation:breath 1.1s ease-in-out infinite; color:var(--gold); }
+  @keyframes breath { 50% { opacity:.25; } }
+  #app { display:none; animation:rise .35s ease; }
+  @keyframes rise { from { opacity:0; transform:translateY(6px); } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>ALMA · АДМИНКА</h1>
 
   <div id="login">
-    <h2>Вход</h2>
-    <div class="row">
-      <input id="pw" type="password" placeholder="Пароль" style="max-width:320px"
-             onkeydown="if(event.key==='Enter')signIn()">
-      <button onclick="signIn()">Войти</button>
+    <div class="panel">
+      <div class="star">✦</div>
+      <div class="word">ALMA</div>
+      <div class="sub">АДМИНКА ВЛАДЕЛЬЦА</div>
+      <input id="pw" type="password" placeholder="Пароль" autocomplete="current-password"
+             onkeydown="if(event.key==='Enter')signIn()" autofocus>
+      <button class="primary" onclick="signIn()">Войти</button>
+      <div class="note" id="loginNote"></div>
     </div>
-    <div class="note" id="loginNote"></div>
   </div>
 
   <div id="app">
-    <h2>Сегодня</h2>
+    <div class="mark">
+      <div>
+        <div class="word"><i>✦</i>ALMA</div>
+        <div class="sub">АДМИНКА ВЛАДЕЛЬЦА</div>
+      </div>
+      <button class="ghost small" onclick="signOut()">Выйти</button>
+    </div>
+
+    <h2>Сегодня</h2><div class="rule"></div>
     <div class="cards" id="stats"></div>
 
-    <h2>Человек</h2>
-    <div class="row">
+    <h2>Человек</h2><div class="rule"></div>
+    <div class="row" style="margin-top:12px">
       <input id="email" type="email" placeholder="почта@пример.com" style="max-width:340px"
              onkeydown="if(event.key==='Enter')lookup()">
-      <button onclick="lookup()">Найти</button>
+      <button class="primary" onclick="lookup()">Найти</button>
     </div>
     <div id="person"></div>
     <div class="note" id="note"></div>
@@ -398,19 +478,28 @@ const api = (path, options = {}) => fetch('/admin/api/' + path, {
 }).then(async r => {
   if (r.status === 401) { sessionStorage.removeItem('almaAdmin'); show(false); }
   const body = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(body.detail || ('HTTP ' + r.status));
+  if (!r.ok) throw new Error(typeof body.detail === 'string' ? body.detail : ('HTTP ' + r.status));
   return body;
 });
 
+const wait = '<span class="breath">✦</span>';
+
 const show = inside => {
-  document.getElementById('login').style.display = inside ? 'none' : 'block';
+  document.getElementById('login').style.display = inside ? 'none' : 'flex';
   document.getElementById('app').style.display = inside ? 'block' : 'none';
-  if (inside) refreshStats();
+  if (inside) refreshStats(); else setTimeout(() => document.getElementById('pw').focus(), 50);
 };
+
+function signOut() {
+  sessionStorage.removeItem('almaAdmin');
+  document.getElementById('person').innerHTML = '';
+  document.getElementById('email').value = '';
+  show(false);
+}
 
 async function signIn() {
   const note = document.getElementById('loginNote');
-  note.className = 'note'; note.textContent = '…';
+  note.className = 'note'; note.innerHTML = wait;
   try {
     const out = await api('login', { method: 'POST',
       body: JSON.stringify({ password: document.getElementById('pw').value }) });
@@ -445,7 +534,7 @@ let current = null;
 async function lookup() {
   const email = document.getElementById('email').value.trim();
   if (!email) return;
-  say('…');
+  say(wait);
   try {
     const u = await api('user?email=' + encodeURIComponent(email));
     render(u); say('');
@@ -457,47 +546,57 @@ function render(u) {
   const box = document.getElementById('person');
   if (!u.found) {
     box.innerHTML = `
-      <p style="margin-top:14px">Аккаунта с почтой <b class="ok">${u.email}</b> ещё нет.
-      Подарок создаст его — подписка будет ждать первого входа этой почтой.</p>
+      <p style="margin-top:16px">Аккаунта с почтой <b style="color:var(--goldhi)">${u.email}</b>
+      ещё нет. Подарок создаст его — подписка будет ждать первого входа этой почтой.</p>
       ${grantButtons()}`;
     return;
   }
-  const rows = u.entitlements.map(e => `
-    <tr>
-      <td>${e.system === '*' ? 'вся Alma' : e.system}<br>
-          <span class="muted">${e.kind} · ${e.source}</span></td>
-      <td>${e.amount_cents ? (e.amount_cents / 100).toFixed(2) + ' ' + e.currency : 'подарок'}</td>
-      <td>${e.revoked_at ? '<span class="off">отозвано</span>'
-            : e.active ? '<span class="ok">до ' + (e.expires_at || '∞').slice(0, 10) + '</span>'
-            : '<span class="off">истекло ' + (e.expires_at || '').slice(0, 10) + '</span>'}</td>
-      <td>${e.revocable ? `<button class="bad" onclick="revoke('${e.id}')">Отозвать</button>` : ''}</td>
-    </tr>`).join('');
+  const ents = u.entitlements.map(e => `
+    <div class="ent">
+      <div class="what">
+        <b>${e.system === '*' ? 'Вся Alma' : e.system}</b>
+        <span>${e.kind} · ${e.source} · ${e.amount_cents
+          ? (e.amount_cents / 100).toFixed(2) + ' ' + e.currency : 'подарок'}</span>
+      </div>
+      <div class="row" style="gap:8px">
+        ${e.revoked_at ? '<span class="pill rev">отозвано</span>'
+          : e.active ? '<span class="pill on">до ' + (e.expires_at || '∞').slice(0, 10) + '</span>'
+          : '<span class="pill off">истекло ' + (e.expires_at || '').slice(0, 10) + '</span>'}
+        ${e.revocable ? `<button class="bad small" onclick="revoke('${e.id}', this)">Отозвать</button>` : ''}
+      </div>
+    </div>`).join('');
   box.innerHTML = `
-    <table>
-      <tr><td class="muted">Почта</td><td colspan="3">${u.email ?? '—'}</td></tr>
-      <tr><td class="muted">Аккаунт</td><td colspan="3">${u.user_id} · ${u.provider}
-          · язык ${u.locale}${u.display_name ? ' · ' + u.display_name : ''}</td></tr>
-      <tr><td class="muted">Появился</td><td colspan="3">${u.created_at.slice(0, 10)}
-          · был ${u.last_seen_at.slice(0, 10)} · устройств: ${u.devices}</td></tr>
-    </table>
-    <h2>Права</h2>
-    ${u.entitlements.length ? '<table>' + rows + '</table>'
-      : '<p class="muted">Пока ничего не открыто.</p>'}
+    <div class="panel" style="margin-top:16px">
+      <div class="facts">
+        <span class="k">Почта</span><span>${u.email ?? '—'}</span>
+        <span class="k">Аккаунт</span><span>${u.user_id}</span>
+        <span class="k">Появился</span><span>${u.created_at.slice(0, 10)}
+          · был ${u.last_seen_at.slice(0, 10)}</span>
+      </div>
+      <div style="margin-top:12px">
+        <span class="chip">${u.provider}</span><span class="chip">язык · ${u.locale}</span
+        ><span class="chip">устройств · ${u.devices}</span>${u.display_name
+          ? '<span class="chip">' + u.display_name + '</span>' : ''}
+      </div>
+    </div>
+    <h2>Права</h2><div class="rule"></div>
+    ${u.entitlements.length ? ents
+      : '<p style="color:var(--muted);margin-top:12px">Пока ничего не открыто.</p>'}
     ${grantButtons()}`;
 }
 
 const grantButtons = () => `
-  <h2>Подарить подписку</h2>
-  <div class="row">
+  <h2>Подарить подписку</h2><div class="rule"></div>
+  <div class="row" style="margin-top:12px">
     <button onclick="grant(1)">Месяц</button>
     <button onclick="grant(3)">3 месяца</button>
     <button onclick="grant(12)">Год</button>
-    <button onclick="grant(null)">Навсегда</button>
+    <button class="primary" onclick="grant(null)">Навсегда</button>
   </div>`;
 
 async function grant(months) {
   const email = (current && current.email) || document.getElementById('email').value.trim();
-  say('…');
+  say(wait);
   try {
     const u = await api('grant', { method: 'POST',
       body: JSON.stringify({ email, months }) });
@@ -509,8 +608,15 @@ async function grant(months) {
   } catch (e) { say(e.message, true); }
 }
 
-async function revoke(id) {
-  say('…');
+// Отзыв — в два нажатия: первое переспрашивает, второе действует. Подарок,
+// отозванный промахом пальца, — это звонок владельцу от обиженного друга.
+async function revoke(id, btn) {
+  if (btn && btn.dataset.armed !== '1') {
+    btn.dataset.armed = '1'; btn.textContent = 'Точно отозвать?';
+    setTimeout(() => { btn.dataset.armed = ''; btn.textContent = 'Отозвать'; }, 3500);
+    return;
+  }
+  say(wait);
   try {
     const u = await api('revoke', { method: 'POST',
       body: JSON.stringify({ entitlement_id: id }) });
@@ -523,7 +629,7 @@ async function revoke(id) {
 const say = (text, bad) => {
   const note = document.getElementById('note');
   note.className = bad ? 'note bad' : 'note';
-  note.textContent = text;
+  note.innerHTML = text;
 };
 
 show(Boolean(sessionStorage.almaAdmin));
