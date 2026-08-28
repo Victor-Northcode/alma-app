@@ -923,8 +923,12 @@ class AlmaClient {
   /// Беседы этого человека, свежая первой. Форма снята с сервера, а не
   /// придумана: `{"threads": [{id, title, updated_at}]}` —
   /// `readings.py:/chat/threads`.
-  Future<List<ChatThreadRef>> threads() async {
-    final body = await _get('/v1/chat/threads');
+  ///
+  /// [locale] — язык приложения: с ним сервер отдаёт заголовки переведёнными
+  /// (дешёвой моделью, с вечным кешем). Без него — как записаны.
+  Future<List<ChatThreadRef>> threads({String? locale}) async {
+    final query = locale == null ? '' : '?locale=${Uri.encodeComponent(locale)}';
+    final body = await _get('/v1/chat/threads$query');
     final rows = (body['threads'] as List?) ?? const [];
     return rows
         .map((row) => ChatThreadRef.fromJson((row as Map).cast<String, dynamic>()))
@@ -932,8 +936,14 @@ class AlmaClient {
   }
 
   /// Одна беседа целиком, реплика за репликой.
-  Future<List<ChatTurn>> thread(String id) async {
-    final body = await _get('/v1/chat/threads/$id');
+  ///
+  /// [locale] — язык приложения: сервер переводит реплики, написанные на
+  /// другом языке, и кеширует перевод навсегда. Правило владельца от
+  /// 28.08.2026: после смены языка на экране не остаётся ни строки на старом,
+  /// включая архив беседы.
+  Future<List<ChatTurn>> thread(String id, {String? locale}) async {
+    final query = locale == null ? '' : '?locale=${Uri.encodeComponent(locale)}';
+    final body = await _get('/v1/chat/threads/$id$query');
     final rows = (body['messages'] as List?) ?? const [];
     return rows
         .map((row) => ChatTurn.fromJson((row as Map).cast<String, dynamic>()))

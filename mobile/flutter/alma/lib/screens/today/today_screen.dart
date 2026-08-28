@@ -73,6 +73,15 @@ class _TodayScreenState extends State<TodayScreen> {
   /// каждый кадр уходил бы в сеть.
   bool? _loadedForSubscriber;
 
+  /// И с каким языком. Третья причина перечитать себя — той же природы, что
+  /// две выше: смена языка в настройках приходила в сессию мгновенно
+  /// (`InheritedNotifier`), каркас перестраивался на новом, а внутри панели
+  /// оставался текст дня на старом до перезапуска. Владелец, 28.08.2026:
+  /// после смены языка на экране не остаётся ни строки на старом — сервер
+  /// уже написанное переводит дешёвой моделью, так что перечитать не значит
+  /// заплатить за генерацию заново.
+  String? _loadedForLocale;
+
   /// Модель со своей подпиской — **и подписка ставится только здесь**.
   ///
   /// Она висела внутри ветки перезагрузки, то есть слушатель добавлялся заново
@@ -105,9 +114,11 @@ class _TodayScreenState extends State<TodayScreen> {
     final subscriber = session.isSubscriber;
     if (profileId != null &&
         (profileId != _loadedForProfile ||
-            subscriber != _loadedForSubscriber)) {
+            subscriber != _loadedForSubscriber ||
+            session.locale != _loadedForLocale)) {
       _loadedForProfile = profileId;
       _loadedForSubscriber = subscriber;
+      _loadedForLocale = session.locale;
       (_model ??= _watchedModel(session.client))
           .load(locale: session.locale, subscriber: subscriber);
     }

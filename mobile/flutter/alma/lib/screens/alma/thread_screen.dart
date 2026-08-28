@@ -52,7 +52,12 @@ class _ThreadScreenState extends State<ThreadScreen> {
   Future<void> _load() async {
     setState(() => _failure = null);
     try {
-      final turns = await SessionScope.of(context).client.thread(widget.id);
+      final session = SessionScope.of(context);
+      // Язык приложения едет с запросом: архив отдаётся переведённым тем же
+      // серверным кешем, что и живая лента, — правило владельца от 28.08.2026
+      // «после смены языка ни строки на старом» распространяется и сюда.
+      final turns =
+          await session.client.thread(widget.id, locale: session.locale);
       if (mounted) setState(() => _turns = turns);
     } on AlmaError catch (error) {
       if (mounted) setState(() => _failure = error);

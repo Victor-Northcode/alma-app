@@ -141,6 +141,10 @@ class _AlmaScreenState extends State<AlmaScreen>
   bool _openersLoaded = false;
   bool _threadLoaded = false;
 
+  /// Язык, на котором лента себя загрузила, — чтобы отличить смену языка от
+  /// обычной перестройки. Довод у ветки в [didChangeDependencies].
+  String? _loadedLocale;
+
   /// **Наклон света на отправку.** §1 спеки: «На отправку вопроса свет
   /// „наклоняется“: яркость +15 % за 240 мс»; §4 повторяет длительность в
   /// словаре движения. Это единственная реакция света на действие человека —
@@ -210,11 +214,11 @@ class _AlmaScreenState extends State<AlmaScreen>
       // сервере, а id приезжает только с ответом, которого мы не дождались.
       var id = _threadId;
       if (id == null) {
-        final threads = await session.client.threads();
+        final threads = await session.client.threads(locale: session.locale);
         if (threads.isEmpty) return;
         id = threads.first.id;
       }
-      final turns = await session.client.thread(id);
+      final turns = await session.client.thread(id, locale: session.locale);
       if (!mounted || turns.isEmpty) return;
       // Ответ считается доехавшим, только когда последняя реплика — не наша:
       // сервер мог ещё писать, и тогда стрим, возможно, жив — не мешаем ему.
@@ -258,6 +262,17 @@ class _AlmaScreenState extends State<AlmaScreen>
     }
     if (!_threadLoaded && session.hasBirthData) {
       _threadLoaded = true;
+      _loadedLocale = session.locale;
+      _loadLastThread();
+    }
+    if (_threadLoaded && _loadedLocale != session.locale && !_sending) {
+      // Смена языка приложения: лента перечитывается с сервера, который отдаёт
+      // реплики переведёнными (дешёвой моделью, с вечным кешем) — владелец,
+      // 28.08.2026: после смены языка на экране не остаётся ни строки на
+      // старом, включая архив беседы. Пока идёт отправка — не трогаем: подмена
+      // ленты под живым стримом потеряла бы ответ; язык доедет со следующим
+      // `didChangeDependencies`, их у `InheritedNotifier` достаточно.
+      _loadedLocale = session.locale;
       _loadLastThread();
     }
   }
@@ -274,10 +289,11 @@ class _AlmaScreenState extends State<AlmaScreen>
     final session = SessionScope.of(context);
     if (!session.hasBirthData) return;
     try {
-      final threads = await session.client.threads();
+      final threads = await session.client.threads(locale: session.locale);
       if (mounted) setState(() => _past = threads);
       if (threads.isEmpty) return;
-      final turns = await session.client.thread(threads.first.id);
+      final turns =
+          await session.client.thread(threads.first.id, locale: session.locale);
       if (!mounted || turns.isEmpty) return;
       setState(() {
         _threadId = threads.first.id;

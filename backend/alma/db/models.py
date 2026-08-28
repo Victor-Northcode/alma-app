@@ -747,6 +747,14 @@ class ChatThread(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("user.id", ondelete="CASCADE"), index=True)
     profile_id: Mapped[str | None] = mapped_column(ForeignKey("profile.id", ondelete="SET NULL"))
     title: Mapped[str | None] = mapped_column(String(160))
+    #: Заголовок на других языках: `{"en": "...", "ru": "..."}`. Кеш переводов
+    #: дешёвой моделью — список бесед обязан читаться на языке приложения
+    #: (владелец, 28.08.2026: на английском не должно остаться ничего
+    #: русского), а заголовок — первые слова первого вопроса, то есть язык у
+    #: него тот, на котором вопрос был задан. Nullable: null — «не переводили
+    #: ещё», и это честнее пустого словаря, который выглядит как «переводили,
+    #: переводов ноль».
+    title_translations: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
@@ -815,9 +823,46 @@ class ChatMessage(Base):
     input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     attempts: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    #: Язык, на котором эта реплика написана, — язык запроса того хода.
+    #: Заведён 28.08.2026 вместе с переводом бесед: чтобы перевести тред на
+    #: язык приложения, надо знать, какие реплики уже на нём. Nullable, и null
+    #: — честное значение для всякой строки до колонки: язык старой реплики
+    #: задним числом не восстановить, а «en» читался бы как знание, которого
+    #: нет. Null переводится наравне с чужой локалью — модель, которой велено
+    #: вернуть текст на целевом языке без изменений, если он уже на нём,
+    #: делает ровно это.
+    locale: Mapped[str | None] = mapped_column(String(8), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     thread: Mapped[ChatThread] = relationship(back_populates="messages")
+
+
+class ChatTranslation(Base):
+    """Одна реплика беседы на одном другом языке — написано раз, живёт вечно.
+
+    Правило `source_chapter` («беседа — запись разговора, а не витрина»)
+    отменено владельцем 28.08.2026: при смене языка приложения на экране не
+    должно остаться ни строки на старом, включая архив беседы. Но исходные
+    реплики не перезаписываются — перевод лежит рядом, ключуясь репликой и
+    языком, поэтому возврат на прежний язык бесплатен, а запись разговора
+    остаётся записью.
+    """
+
+    __tablename__ = "chat_translation"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=new_id)
+    message_id: Mapped[str] = mapped_column(
+        ForeignKey("chat_message.id", ondelete="CASCADE"), index=True
+    )
+    locale: Mapped[str] = mapped_column(String(8))
+    body: Mapped[str] = mapped_column(Text)
+    model: Mapped[str | None] = mapped_column(String(64))
+    cost_cents: Mapped[float] = mapped_column(Float, default=0.0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+    __table_args__ = (
+        UniqueConstraint("message_id", "locale", name="chat_translation_once"),
+    )
 
 
 class Memory(Base):

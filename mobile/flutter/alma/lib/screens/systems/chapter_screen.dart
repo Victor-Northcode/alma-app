@@ -211,6 +211,14 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   bool _started = false;
 
+  /// Язык, на котором эта глава себя загрузила. Смена языка в настройках
+  /// раньше упиралась в защёлку [_started]: `SessionScope` присылал
+  /// `didChangeDependencies`, но экран не перечитывал ничего и держал текст
+  /// на прежнем языке — владелец, 28.08.2026: после смены языка на экране не
+  /// остаётся ни строки на старом. Сервер при этом не пишет главу заново, а
+  /// переводит уже написанную дешёвой моделью — перечитать её не страшно.
+  String? _loadedLocale;
+
   /// Конец главы уже засчитан — порог [_readDone] пересекается один раз за
   /// показ. Не поле «дочитано ли», а защёлка: у дна резинка ходит через порог
   /// туда-обратно каждым подрагиванием пальца, и без защёлки событие воронки
@@ -240,8 +248,10 @@ class _ChapterScreenState extends State<ChapterScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final session = SessionScope.of(context);
     if (!_started) {
       _started = true;
+      _loadedLocale = session.locale;
       // **Право спрашивается до первого кадра, а не после первого ответа.**
       //
       // В главу заходят с экрана системы, который только что показал
@@ -250,7 +260,6 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // её на s26: заголовок, объяснение, одна кнопка. Раньше здесь начинался
       // запрос, экран показывал «Пишу эту главу…», и дверь появлялась только
       // после ответа сервера.
-      final session = SessionScope.of(context);
       final known =
           session.client.knownChapters(widget.system, locale: session.locale);
       // Заодно шапка «4 / 16» встаёт правильной с первого кадра.
@@ -264,6 +273,16 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // обещание, ради снятия которого всё это и делалось.
       _writing = right == true;
       _load();
+      return;
+    }
+    if (_loadedLocale != session.locale) {
+      // Смена языка приложения. Старый текст уходит с этим же кадром — абзац
+      // на прежнем языке под интерфейсом на новом запрещён владельцем, — а
+      // страница ждёт перевода под лоадером. Оглавление тоже перечитывается:
+      // заголовки глав ключуются локалью.
+      _loadedLocale = session.locale;
+      setState(() => _reading = null);
+      _load(relist: true);
     }
   }
 
@@ -1099,7 +1118,27 @@ class _ChapterScreenState extends State<ChapterScreen> {
       );
     }
     final reading = _reading;
-    if (reading == null) return const SizedBox.shrink();
+    if (reading == null) {
+      // **Пустого экрана в главе не бывает.** Сюда попадает всё, у чего ещё
+      // нет ни текста, ни стены, ни ошибки: вход мимо прогретого оглавления
+      // (пуш, глубокая ссылка), кадр между сменой языка и ответом перевода,
+      // короткая загрузка уже написанной главы. Здесь стоял
+      // `SizedBox.shrink()` — человек видел голое небо и решал, что
+      // приложение зависло. Владелец, 28.08.2026: пока глава грузится — ни
+      // одного незаблюренного слова текста и лоадер по центру. Дышащая
+      // золотая точка — тот же знак ожидания, что на «Сегодня» и в оглавлении
+      // системы; строка под ней — из общего словаря состояний.
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const WaitingDot(size: 28),
+            const SizedBox(height: 16),
+            Text(l.stateLoadingShort, style: AlmaType.meta),
+          ],
+        ),
+      );
+    }
 
     // **Чья это страница и куда с неё ведёт хвост — снимается здесь, одним
     // снимком на кадр.**
