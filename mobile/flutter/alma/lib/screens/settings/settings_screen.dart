@@ -1728,64 +1728,71 @@ class _Row extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AlmaPalette.hairline)),
       ),
-      // **Почему spaceBetween и разный вес.** У Expanded и Flexible по
-      // умолчанию один и тот же flex, и Row делит свободное место поровну:
-      // значение оказывалось заперто в своей половине, не доходило до правого
-      // края, а «11:26 · Europe/Moscow» переносилось на две строки, хотя на
-      // нативе стоит одной. Натив пишет HStack { подпись; Spacer; значение } —
-      // подпись слева, значение прижато вправо, и обоим достаётся столько,
-      // сколько нужно. spaceBetween делает то же самое, а вес 4/6 отдаёт
-      // значению больше, потому что подписи здесь короче.
-      child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-        Flexible(
-          flex: 4,
-          child: Text(
-            label,
-            style: danger
-                ? AlmaType.body
-                    .copyWith(color: AlmaPalette.disagree, fontSize: 17)
-                : checked || onTap != null && value.isEmpty
-                    ? AlmaType.body
-                        .copyWith(color: AlmaPalette.inkLight, fontSize: 17)
-                    : AlmaType.meta.copyWith(fontSize: 15),
-          ),
-        ),
-        const SizedBox(width: 16),
-        if (value.isNotEmpty)
-          Flexible(
-            flex: 6,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                // Значение — светлым текстовым, а не золотым засечным.
-                // Засечное золото на этом экране принадлежит числам карты
-                // (градусы, римские цифры), а дата рождения и город — обычные
-                // факты, и натив набирает их так же, как подписи.
-                Text(value,
-                    style: arrow
-                        ? AlmaType.meta.copyWith(color: AlmaPalette.gold, fontSize: 15)
-                        : AlmaType.body
-                            .copyWith(color: AlmaPalette.inkLight, fontSize: 17),
-                    textAlign: TextAlign.end),
-                if (caption != null)
-                  Text(caption!,
-                      style: AlmaType.meta.copyWith(fontSize: 12),
-                      textAlign: TextAlign.end),
-              ],
+      // **Один flex-ребёнок на строку, и это вся вёрстка.** Здесь стояли два
+      // Flexible (4/6) под spaceBetween, и у обоих слоты были шире их текста:
+      // неиспользованное место spaceBetween раздавал во **все** промежутки —
+      // в том числе между значением и стрелкой «↗», и «11:26 · Europe/Moscow»
+      // висело с дырой до правого канта. Владелец, 29.08.2026: «данные
+      // показываются с каким-то большим отступом справа». Теперь свободное
+      // место целиком съедает единственный Expanded под значением: текст в нём
+      // прижат вправо, галка и стрелка стоят вплотную к нему у самого канта.
+      // Подпись — natural width с потолком в 55 % строки: немецкие подписи
+      // длинные, и без потолка самая длинная выдавила бы значение в ноль.
+      child: LayoutBuilder(
+        builder: (context, box) => Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: box.maxWidth * 0.55),
+            child: Text(
+              label,
+              style: danger
+                  ? AlmaType.body
+                      .copyWith(color: AlmaPalette.disagree, fontSize: 17)
+                  : checked || onTap != null && value.isEmpty
+                      ? AlmaType.body
+                          .copyWith(color: AlmaPalette.inkLight, fontSize: 17)
+                      : AlmaType.meta.copyWith(fontSize: 15),
             ),
           ),
-        if (checked) ...[
-          const SizedBox(width: 10),
-          const Text('✓', style: TextStyle(color: AlmaPalette.gold, fontSize: 17)),
-        ],
-        if (arrow) ...[
-          const SizedBox(width: 8),
-          const Text('↗', style: TextStyle(color: AlmaPalette.gold, fontSize: 15)),
-        ],
-      ]),
+          const SizedBox(width: 16),
+          Expanded(
+            child: value.isEmpty
+                ? const SizedBox.shrink()
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      // Значение — светлым текстовым, а не золотым засечным.
+                      // Засечное золото на этом экране принадлежит числам
+                      // карты (градусы, римские цифры), а дата рождения и
+                      // город — обычные факты, и натив набирает их так же,
+                      // как подписи.
+                      Text(value,
+                          style: arrow
+                              ? AlmaType.meta
+                                  .copyWith(color: AlmaPalette.gold, fontSize: 15)
+                              : AlmaType.body.copyWith(
+                                  color: AlmaPalette.inkLight, fontSize: 17),
+                          textAlign: TextAlign.end),
+                      if (caption != null)
+                        Text(caption!,
+                            style: AlmaType.meta.copyWith(fontSize: 12),
+                            textAlign: TextAlign.end),
+                    ],
+                  ),
+          ),
+          if (checked) ...[
+            const SizedBox(width: 10),
+            const Text('✓',
+                style: TextStyle(color: AlmaPalette.gold, fontSize: 17)),
+          ],
+          if (arrow) ...[
+            const SizedBox(width: 8),
+            const Text('↗',
+                style: TextStyle(color: AlmaPalette.gold, fontSize: 15)),
+          ],
+        ]),
+      ),
     );
     if (onTap == null) return row;
     return InkWell(onTap: onTap, child: row);
