@@ -832,6 +832,70 @@ def test_a_known_reader_gender_rides_in_the_prompt_and_is_allowed():
     )
 
 
+def test_every_target_language_names_its_register_in_the_prompt():
+    """Продукт целиком на «ты», и перевод — тоже продукт.
+
+    Без явного регистра модель выбирает вежливую форму: первый живой
+    французский перевод на проде пришёл на «vous» при 102 строках «tu» в
+    интерфейсе. Русский и испанский едут из `voice.LOCALE_NAMES`; четыре
+    остальных закреплены здесь.
+    """
+    import asyncio
+
+    expectations = {
+        "fr": "never « vous »",
+        "de": "never «Sie»",
+        "it": "never «Lei»",
+        "pt-BR": "«você»",
+        "ru": "never Вы",
+        "es": "never vos",
+    }
+    for target, marker in expectations.items():
+        provider = ScriptedProvider()
+        provider.responses.append(json.dumps({"segments": ["x"]}))
+        asyncio.run(
+            translator.translate(
+                ["One."],
+                provider=provider,
+                model="claude-haiku-4-5",
+                source_locale="en",
+                target_locale=target,
+                paid=False,
+            )
+        )
+        assert marker in provider.calls[0]["system"], (
+            f"{target}: регистр обязан быть назван в промпте"
+        )
+
+
+def test_a_banned_word_introduced_by_translation_is_sent_back():
+    """«Core» первым живым французским переводом стал «Essence» — словом из
+    запретного списка, которое писателю не сошло бы с рук. Перевод держит тот
+    же словарь, что и генерация."""
+    import asyncio
+
+    provider = ScriptedProvider()
+    provider.responses += [
+        json.dumps({"segments": ["Твоё ядро сияет ровно."]}, ensure_ascii=False),
+        json.dumps({"segments": ["Твоя основа держит ровно."]}, ensure_ascii=False),
+    ]
+
+    done = asyncio.run(
+        translator.translate(
+            ["Your core holds steady."],
+            provider=provider,
+            model="claude-haiku-4-5",
+            source_locale="en",
+            target_locale="ru",
+            paid=False,
+            prose=True,
+        )
+    )
+    assert done.segments == ("Твоя основа держит ровно.",)
+    assert len(provider.calls) == 2
+    assert "banned" in provider.calls[1]["prompt"]
+
+
 def test_conversation_is_not_judged_by_the_rules_of_prose():
     """Беседа — собственные слова человека: «я родилась», «мой iPhone».
 

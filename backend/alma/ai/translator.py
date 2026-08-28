@@ -69,12 +69,24 @@ SEGMENTS_SCHEMA = {
 #: Правила письма, которые у целевого языка есть сверх «переведи хорошо».
 #: Русский и испанский регистры уже названы в `voice.LOCALE_NAMES` — они
 #: приезжают оттуда, чтобы перевод и генерация не разошлись в тот день, когда
-#: правят одно из двух. Французский пробел назван здесь, потому что для
-#: генерации его стерегут статические каталоги, а перевод пишет прозу сам.
+#: правят одно из двух. Четыре регистра ниже названы здесь, потому что в
+#: `LOCALE_NAMES` их нет, а модель без указания выбирает вежливую форму:
+#: первый живой французский перевод на проде (28.08.2026) пришёл на «vous» —
+#: при том что все 102 строки французского интерфейса тутуайируют. Продукт
+#: целиком на «ты» (закон CLAUDE.md), и перевод — тоже продукт.
 _EXTRA_RULES = {
     "fr": (
-        "French typography: put a narrow no-break space (U+202F) before "
-        "? ! ; : and inside guillemets — « like this »."
+        "Address the reader as « tu », never « vous » — every French string "
+        "in this product tutoies. French typography: put a narrow no-break "
+        "space (U+202F) before ? ! ; : and inside guillemets — « like this »."
+    ),
+    "de": (
+        "Address the reader as «du», never «Sie» — the whole product speaks "
+        "du."
+    ),
+    "it": "Address the reader as «tu», never «Lei».",
+    "pt-BR": (
+        "Address the reader as «você», the product's Brazilian register."
     ),
 }
 
@@ -337,6 +349,21 @@ def _mismatch(
     empty = [i for i, text in enumerate(out) if not text.strip()]
     if empty:
         return f"segments {empty} came back empty."
+    if prose:
+        # Запретный словарь продукта — по языку цели. Исходник его уже прошёл
+        # у писателя, но перевод вводит слова сам: «Core» первым же живым
+        # французским переводом стал «Essence» — словом из запретного списка
+        # fr, которое писателю не сошло бы с рук. Ритм и длину предложений
+        # перевод не судит нарочно — их держит исходник.
+        ornate = validator.plain_language(
+            "\n\n".join(out), i18n.resolve(target_locale)
+        )
+        if ornate:
+            return (
+                "These words are banned in this product's voice: "
+                + ", ".join(sorted(set(ornate))[:5])
+                + ". Rephrase without them, keeping the meaning."
+            )
     if prose and i18n.resolve(target_locale) == "ru":
         joined = "\n\n".join(out)
         # Та же проверка, что у писателя, и с тем же списком разрешённых:
