@@ -648,6 +648,12 @@ def astrocartography_result(
     *,
     house_system: str = "placidus",
     include_parans: bool = True,
+    #: Где человек живёт сейчас (29.08.2026): глава «Где ты сейчас» читалась
+    #: только от места рождения. Оба или ни одного; приходит из
+    #: `Profile.current_*` через опции запроса — и через них же попадает в
+    #: ключ кэша, так что рождённые без места расчёты остаются валидны.
+    current_latitude: float | None = None,
+    current_longitude: float | None = None,
 ) -> CalcResult:
     chart = chart_for(birth, house_system=house_system)
     if not chart.time_known:
@@ -657,6 +663,15 @@ def astrocartography_result(
         )
 
     result = astrocartography.compute(chart, include_parans=include_parans)
+    factors = list(result.factors())
+    here = None
+    if current_latitude is not None and current_longitude is not None:
+        here = result.read_place(current_latitude, current_longitude)
+        # Тем же словарём, что «at the birthplace: …», и в самом списке
+        # факторов: глава цитирует настоящий город посимвольно, как любое
+        # другое положение. Имени города в факторе нет намеренно — латиница
+        # в русской прозе разрешена только романизированному имени.
+        factors.append(f"at your current place: {here.describe()}")
     data = {
         "lines": [
             {
@@ -689,12 +704,22 @@ def astrocartography_result(
             "text": result.birthplace.describe(),
         },
     }
+    if here is not None:
+        data["current_place"] = {
+            "latitude": here.latitude,
+            "longitude": here.longitude,
+            "influences": [
+                {"body": b, "angle": a, "degrees": d}
+                for b, a, d in here.influences
+            ],
+            "text": here.describe(),
+        }
 
     return build(
         system="astrocartography",
         birth=birth,
         data=data,
-        factors=result.factors(),
+        factors=factors,
         unavailable=result.unavailable,
         notes=chart.notes,
         provenance=_provenance(chart, influence_orb=astrocartography.INFLUENCE_ORB),

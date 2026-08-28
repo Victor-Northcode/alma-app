@@ -583,7 +583,10 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // Товар — слово сервера, пока оно не приехало — свой вывод. Так цена
       // стоит на первом кадре и при этом не спорит с каталогом.
       sku: _product ?? chapterSku(widget.system),
-      overline: '${entry?.numeral ?? ''} · ${_systemName(l)}'.toLowerCase(),
+      // Строчными — только имя системы. `.toLowerCase()` на всей строке
+      // съедал римскую цифру: «I · натальная карта» печаталось «i · …», и
+      // владелец читал это как символ «i», а не номер главы (29.08.2026).
+      overline: '${entry?.numeral ?? ''} · ${_systemName(l).toLowerCase()}',
       // Титул из оглавления, а не из абзаца: он известен до сети, и заголовок,
       // подставляющийся через десять секунд, читался бы подменой страницы.
       title: entry?.title ?? opening?.title ?? '',
@@ -1280,7 +1283,8 @@ class _ChapterScreenState extends State<ChapterScreen> {
           // держат ту же ось — иначе картина висит по центру, а подпись к ней
           // уезжает влево (`s51`).
           Text(
-            '${_entry?.numeral ?? ''} · ${_systemName(l)}'.toLowerCase(),
+            // Та же поправка, что у закрытой главы: цифра остаётся римской.
+            '${_entry?.numeral ?? ''} · ${_systemName(l).toLowerCase()}',
             textAlign: TextAlign.center,
             style: AlmaType.overline.copyWith(color: AlmaPalette.goldDeep),
           ),

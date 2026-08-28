@@ -51,7 +51,6 @@ class _TodayReadingScreenState extends State<TodayReadingScreen> {
   /// Поле колонки: одна мера строки, `§3`.
   static const _column = 22.0;
 
-  static const _sizeKey = 'alma.reading.size';
   static String _placeKey(DateTime day) =>
       'alma.reading.at.${DateFormat('yyyy-MM-dd').format(day)}';
 
@@ -64,8 +63,6 @@ class _TodayReadingScreenState extends State<TodayReadingScreen> {
   /// кадр перестраивал бы всю колонку текста ради двухточечной полоски.
   final ValueNotifier<double> _read = ValueNotifier(0);
 
-  /// Ступень «Aa»: 0 мельче, 1 обычно, 2 крупнее.
-  int _step = 1;
   bool _restored = false;
 
   @override
@@ -95,12 +92,8 @@ class _TodayReadingScreenState extends State<TodayReadingScreen> {
 
   Future<void> _restore() async {
     final prefs = await SharedPreferences.getInstance();
-    final step = prefs.getInt(_sizeKey);
     final at = prefs.getDouble(_placeKey(widget.day));
     if (!mounted) return;
-    if (step != null && step >= 0 && step < AlmaType.readingSteps.length) {
-      setState(() => _step = step);
-    }
     // Возврат на «Сегодня» не сбрасывает место (`§3`). Прыгаем после кадра:
     // до первой раскладки у прокрутки нет ни размеров, ни предела.
     if (at != null && at > 0) {
@@ -117,13 +110,6 @@ class _TodayReadingScreenState extends State<TodayReadingScreen> {
     final at = _scroll.offset;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble(_placeKey(widget.day), at);
-  }
-
-  Future<void> _cycleSize() async {
-    final next = (_step + 1) % AlmaType.readingSteps.length;
-    setState(() => _step = next);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_sizeKey, next);
   }
 
   /// О чём предлагаем спросить: первая позиция, из которой прочитан текст.
@@ -145,7 +131,11 @@ class _TodayReadingScreenState extends State<TodayReadingScreen> {
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
-    final size = AlmaType.readingSteps[_step];
+    // Кегль один — самый крупный из ступеней, и переключателя больше нет:
+    // владелец, 29.08.2026 — «убрать возможность изменять шрифт, оставить
+    // только самый толстый». Ключ `alma.reading.size` в prefs остаётся у
+    // старых установок мёртвым и никому не мешает.
+    final size = AlmaType.readingSteps.last;
     final head = DateFormat.MMMMd(
       Localizations.localeOf(context).toString(),
     ).format(widget.day);
@@ -167,8 +157,6 @@ class _TodayReadingScreenState extends State<TodayReadingScreen> {
                 title: l.readerHeader(head).toUpperCase(),
                 read: _read,
                 onBack: () => Navigator.of(context).maybePop(),
-                onSize: _cycleSize,
-                sizeLabel: l.readerTextSize,
               ),
               Expanded(
                 child: Stack(
@@ -256,21 +244,18 @@ class _TodayReadingScreenState extends State<TodayReadingScreen> {
   }
 }
 
-/// Верхняя панель 100: «←», середина, «Aa». Под ней — полоса прочитанного.
+/// Верхняя панель 100: заголовок по центру, крестик справа. Под ней — полоса
+/// прочитанного.
 class _Panel extends StatelessWidget {
   const _Panel({
     required this.title,
     required this.read,
     required this.onBack,
-    required this.onSize,
-    required this.sizeLabel,
   });
 
   final String title;
   final ValueListenable<double> read;
   final VoidCallback onBack;
-  final VoidCallback onSize;
-  final String sizeLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -284,31 +269,21 @@ class _Panel extends StatelessWidget {
             padding: EdgeInsets.only(top: safeTop, left: 8, right: 8),
             child: Row(
               children: [
-                // «Aa» переехал влево, закрытие — вправо: единое правило 24 авг
-                // (см. AlmaClose) — всё, что открыто поверх, закрывается
-                // крестиком справа, и крестик крупный, а не мелкая стрелка.
-                Semantics(
-                  label: sizeLabel,
-                  button: true,
-                  child: IconButton(
-                    onPressed: onSize,
-                    constraints: const BoxConstraints.tightFor(
-                      width: AlmaClose.hit,
-                      height: AlmaClose.hit,
-                    ),
-                    icon: Text(
-                      'Aa',
-                      style: AlmaType.meta.copyWith(color: AlmaPalette.gold),
-                    ),
-                  ),
-                ),
+                // Слева стоял «Aa» — снят вместе с переключателем кегля
+                // (владелец, 29.08.2026); пустышка той же ширины держит
+                // заголовок по центру против крестика справа.
+                const SizedBox(width: AlmaClose.hit),
                 Expanded(
                   child: Text(
                     title,
                     textAlign: TextAlign.center,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AlmaType.readerHead,
+                    // Крупнее общего `readerHead` (12) по слову владельца:
+                    // «ЗАГОЛОВОК СДЕЛАТЬ КРУПНЕЕ». Локальным copyWith, а не
+                    // правкой токена: тот же стиль носят семь других шапок.
+                    style: AlmaType.readerHead
+                        .copyWith(fontSize: 15, letterSpacing: 1.8),
                   ),
                 ),
                 AlmaClose(onTap: onBack),

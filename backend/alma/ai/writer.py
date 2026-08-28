@@ -326,6 +326,19 @@ def build_prompt(
         "PLAIN LANGUAGE: the reader knows nothing about astrology or "
         "numerology. Any technical term you use, explain in everyday words "
         "the first time — or don't use it. Short sentences beat ornate ones.",
+        # Числа — только из данных. Живой скрин 29.08.2026: глава пары
+        # объявила «накал страстей N», сняв N с сырой внутренней суммы из
+        # блока остальной карты, — шкалы, которой продукт никому не обещал и
+        # которую некому объяснить. Правило общее, а не только паре: любое
+        # выдуманное число читается как измерение, которого не было. Строка
+        # коротка не случайно: промпт бесплатной главы стоит впритык к своему
+        # потолку, и лишняя сотня знаков здесь — это BudgetExceeded там.
+        "NUMBERS: only numbers present in the data; never invent scores, "
+        "scales or percentages.",
+        # Особые правила этой главы — из её собственного определения
+        # (`Chapter.guidance`): цикл 1–9 у личного года, выкладка у чисел
+        # имени, честность про место у астрокартографии.
+        *([f"THIS CHAPTER: {chapter.guidance}"] if chapter.guidance else []),
         # The Russian rules ride in the first prompt rather than arriving as a
         # rejection: the owner watched three attempts burn on «ты был» because
         # the model only learned the rule from the complaint. Stated up front,

@@ -100,6 +100,13 @@ class ProfileInput(BirthInput):
     #: every reading keyed to it. A default that can delete data has to be the
     #: safe one.
     is_self: bool | None = None
+    #: Где человек живёт сейчас — для главы астрокартографии «Где ты сейчас»
+    #: (29.08.2026; довод у колонок в `db/models.py`). `None` — «не менять»:
+    #: PATCH профиля шлёт форму целиком, и клиент, правящий имя, не обязан
+    #: помнить про город — иначе каждая правка имени стирала бы его.
+    current_latitude: float | None = Field(default=None, ge=-90, le=90)
+    current_longitude: float | None = Field(default=None, ge=-180, le=180)
+    current_place_label: str | None = Field(default=None, max_length=200)
 
 
 class ProfileOut(BaseModel):
@@ -115,6 +122,9 @@ class ProfileOut(BaseModel):
     longitude: float
     timezone: str
     place_label: str | None
+    current_latitude: float | None = None
+    current_longitude: float | None = None
+    current_place_label: str | None = None
     on_ambiguous: str | None = None
     #: Солнечный знак по дате рождения — для глифа в строке списка людей.
     #: `None` в двух случаях, и оба честные: день перехода Солнца из знака в

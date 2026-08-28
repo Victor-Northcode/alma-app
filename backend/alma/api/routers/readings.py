@@ -402,6 +402,38 @@ async def _stored_reading(
     ).scalar_one_or_none()
 
 
+async def _place_options(session, user, payload) -> dict:
+    """Текущее место человека — в опции расчёта астрокартографии.
+
+    Заведено 29.08.2026: глава «Где ты сейчас» читалась от места рождения и
+    называла его «сейчас». Место берётся из профиля, чьё рождение читается
+    (названного в запросе, иначе своего); не названо — опций нет, и расчёт
+    вместе с ключом кэша остаётся прежним: старые главы не переписываются.
+    Опции входят и в `_reading_key`, и в ключ кэша расчёта, так что смена
+    города честно даёт новую главу — факты изменились.
+    """
+    if payload.system != "astrocartography":
+        return {}
+    from ...db.models import Profile
+
+    query = select(Profile).where(Profile.user_id == user.id)
+    if getattr(payload, "profile_id", None):
+        query = query.where(Profile.id == payload.profile_id)
+    else:
+        query = query.where(Profile.is_self.is_(True))
+    profile = (await session.execute(query)).scalars().first()
+    if (
+        profile is None
+        or profile.current_latitude is None
+        or profile.current_longitude is None
+    ):
+        return {}
+    return {
+        "current_latitude": profile.current_latitude,
+        "current_longitude": profile.current_longitude,
+    }
+
+
 async def _translation_source(
     session,
     *,
@@ -777,6 +809,7 @@ async def read(
         options = _options_for(payload.system, payload.house_system)
         if payload.system == "compatibility":
             options["other"] = await _partner(session, user, payload)
+        options |= await _place_options(session, user, payload)
 
     # Расчёт — арифметика с кэшем в памяти, к базе не ходит. Держать ради него
     # соединение незачем, и держать было дорого: скан транзитов измерен в
@@ -941,6 +974,7 @@ async def _locked_chapter(
             options = _options_for(payload.system, payload.house_system)
             if payload.system == "compatibility":
                 options["other"] = await _partner(session, user, payload)
+            options |= await _place_options(session, user, payload)
         except HTTPException as exc:
             # Нет анкеты, нет времени рождения, партнёр не назван — всё это
             # законные 4xx для *открытой* главы, где человек действительно должен
@@ -989,7 +1023,14 @@ async def _locked_chapter(
                 # Заметно и то, чего эта ветка **не** делает: расчёта карты нет
                 # вовсе — переводу факты не нужны, а скан года у транзитов
                 # стоит 1.35 секунды на каждое открытие.
-                source = await _translation_source(
+                #
+                # Дневной абзац — исключение, как и его глава: лицо экрана
+                # «Сегодня» пишется заново на языке запроса, не переводится
+                # (довод — в `_read_or_write`, у той же развилки).
+                daily_opening = (
+                    payload.system == "transits" and chapter.slug == "active"
+                )
+                source = None if daily_opening else await _translation_source(
                     session, user_id=user.id, system=payload.system,
                     chapter=stored_chapter, calc_key=calc_key,
                     exclude_locale=language,
@@ -1349,6 +1390,14 @@ def _opening_key(
     }
     if "other" in stable and hasattr(stable["other"], "fingerprint"):
         stable["other"] = stable["other"].fingerprint()
+    # Бриф — часть идентичности и здесь: абзац пишется тем же промптом с тем
+    # же `Chapter.guidance` (см. довод в `_reading_key`), и починка брифа
+    # обязана долетать и до витрины.
+    if chapter.guidance:
+        import hashlib
+        stable["brief"] = hashlib.sha256(
+            chapter.guidance.encode("utf-8")
+        ).hexdigest()[:12]
     return cache_key(
         system, birth, chapter=opening_chapter_id(chapter.slug), **stable
     )
@@ -1478,7 +1527,17 @@ async def _read_or_write(
 
         # Та же глава на другом языке — исходник: она переводится дёшево, а не
         # пишется заново. Довод и цена — у `_translation_source`.
-        source = await _translation_source(
+        #
+        # **Кроме дневной.** Текст экрана «Сегодня» (`transits/active`) живёт
+        # сутки — в его ключе сегодняшние факторы, — так что перевод экономит
+        # копейки, а дешёвая модель переводила его «рандомом непонятных слов»
+        # (владелец, 29.08.2026, о русском «Сегодня»: «в главах всё ок» — главы
+        # пишутся заново или переведены с одной попытки длинной прозой, а
+        # короткий дневной текст перевод читал калькой: «даёт чувствам мотор»,
+        # «отклонение три угловые минуты»). Лицо главного экрана пишется
+        # заново на языке запроса.
+        daily_piece = payload.system == "transits" and chapter.slug == "active"
+        source = None if daily_piece else await _translation_source(
             session, user_id=user.id, system=payload.system,
             chapter=chapter.slug, calc_key=calc_key, exclude_locale=language,
         )
@@ -1749,6 +1808,17 @@ def _reading_key(
     }
     if "other" in stable and hasattr(stable["other"], "fingerprint"):
         stable["other"] = stable["other"].fingerprint()
+    # Бриф главы — часть её идентичности. `Chapter.guidance` появился
+    # 29.08.2026, чтобы чинить фактические ошибки уже написанных глав («в
+    # году четырнадцать месяцев»), и без этой строки починка не долетала бы
+    # никогда: промпт в ключ не входит, кеш вечен, и кривая глава пережила бы
+    # правку у каждого, кто её уже открыл. Хэш, а не текст: ключу нужна
+    # стабильность, а не читаемость.
+    if chapter.guidance:
+        import hashlib
+        stable["brief"] = hashlib.sha256(
+            chapter.guidance.encode("utf-8")
+        ).hexdigest()[:12]
     return cache_key(
         system,
         birth,

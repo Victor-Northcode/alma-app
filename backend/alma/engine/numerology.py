@@ -380,19 +380,32 @@ def _workings(day: int, month: int, year: int, name: NameNumbers | None) -> tupl
     if name is not None and name.romanised:
         vowels = [c for c in name.romanised if c in _VOWELS]
         consonants = [c for c in name.romanised if c not in _VOWELS]
+        # Буква за буквой, а не только итог. Живой скрин владельца
+        # (29.08.2026): глава имени назвала числа выражения и желания, и
+        # читателю не из чего было проверить — «непонятно как посчиталось».
+        # Чек прикладывается тем же правилом, что у жизненного пути выше:
+        # «A1 N5 …» — это таблица Пифагора, разложенная по имени, и глава
+        # цитирует её как факт, посимвольно.
+        spelled = " ".join(f"{c}{_LETTER_VALUES[c]}" for c in name.romanised)
         out.append(
-            f"expression working: every letter of {name.romanised} adds to "
+            f"expression working: {spelled} — every letter of "
+            f"{name.romanised} adds to "
             f"{sum(_LETTER_VALUES[c] for c in name.romanised)} → {name.expression}"
         )
         if vowels:
+            spelled_vowels = " ".join(f"{c}{_LETTER_VALUES[c]}" for c in vowels)
             out.append(
-                f"soul urge working: the vowels {' '.join(vowels)} add to "
+                f"soul urge working: the vowels {spelled_vowels} add to "
                 f"{sum(_LETTER_VALUES[c] for c in vowels)} → {name.soul_urge}"
             )
         if consonants:
+            spelled_consonants = " ".join(
+                f"{c}{_LETTER_VALUES[c]}" for c in consonants
+            )
             out.append(
-                f"personality working: the consonants add to "
-                f"{sum(_LETTER_VALUES[c] for c in consonants)} → {name.personality}"
+                f"personality working: the consonants {spelled_consonants} "
+                f"add to {sum(_LETTER_VALUES[c] for c in consonants)} "
+                f"→ {name.personality}"
             )
     return tuple(out)
 

@@ -430,7 +430,7 @@ class _GlassPanel extends StatelessWidget {
 /// там, где в эталоне одна. Запас в 28 точек оставлен линии: он и есть то
 /// «сжимайся, но не исчезай», которое в вёрстке делает `flex`.
 class _PanelLabel extends StatelessWidget {
-  const _PanelLabel(this.text, {this.badge, this.trailing});
+  const _PanelLabel(this.text, {this.badge});
 
   final String text;
 
@@ -438,11 +438,6 @@ class _PanelLabel extends StatelessWidget {
   /// строки: у правого канта стоит время чтения, и две метки рядом читались
   /// бы одной.
   final Widget? badge;
-
-  /// Что стоит у правого канта вместо конца линии — время чтения на карточке
-  /// гороскопа (`today-reading-spec §2`). Линия отдаёт ему место, а не
-  /// упирается в него.
-  final String? trailing;
 
   /// Во сколько раз подпись важнее линии при дележе свободного места.
   ///
@@ -465,7 +460,6 @@ class _PanelLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tail = trailing;
     return LayoutBuilder(
       builder: (context, box) => Row(
         children: [
@@ -496,11 +490,9 @@ class _PanelLabel extends StatelessWidget {
               ),
             ),
           ),
-          if (tail != null) ...[
-            const SizedBox(width: 10),
-            Text(tail,
-                style: AlmaType.meta.copyWith(color: AlmaPalette.muted3)),
-          ],
+          // «3 мин» у правого канта снято владельцем (29.08.2026): время
+          // чтения на карточке — «какая-то бессмысленная тема». Линия теперь
+          // доходит до правого канта сама.
         ],
       ),
     );
@@ -548,7 +540,6 @@ class _HoroscopePanelState extends State<_HoroscopePanel> {
             // Тихая метка W5: подписчику всё открыто, и бейдж отвечает на
             // «почему» — не продаёт. Не золотая кнопка, а подпись.
             badge: subscriber ? const _SubscribedBadge() : null,
-            trailing: _minutes(l),
           ),
           if (subscriber) ..._voice(l) else ..._free(context, l),
         ],
@@ -662,29 +653,6 @@ class _HoroscopePanelState extends State<_HoroscopePanel> {
           onTap: () => openSubscription(context),
         ),
       ];
-
-  /// «3 мин» у правого канта подписи — сколько читать целиком.
-  ///
-  /// **Считается по словам, а не приходит с сервера.** Это измерение готового
-  /// текста, а не его разрезание: клиенту запрещено делить текст на части
-  /// (`§3` — «движок помечает части, клиент не разрезает текст сам»), но
-  /// сосчитать, сколько в нём слов, он вправе.
-  ///
-  /// 140 слов в минуту — темп внимательного чтения, не просмотра: этот текст
-  /// про самого читающего, и его перечитывают, а не проглядывают. Округление
-  /// вверх и пол в одну минуту: «0 мин» на карточке выглядело бы поломкой.
-  String? _minutes(L l) {
-    if (!subscriber) return null;
-    if (model.line case LoadDone<ReadingResponse>(value: final answer)) {
-      final words = (answer.reading?.body ?? const <String>[])
-          .expand((p) => p.split(RegExp(r'\s+')))
-          .where((w) => w.isNotEmpty)
-          .length;
-      if (words == 0) return null;
-      return l.todayReadMinutes('${math.max(1, (words / 140).ceil())}');
-    }
-    return null;
-  }
 
   List<Widget> _voice(L l) {
     switch (model.line) {
@@ -912,10 +880,11 @@ class _LivingLayer extends StatelessWidget {
         ),
         const SizedBox(height: 11),
         // «День целиком» — не система, а глубина дня; у него нет своей карты
-        // в колоде, и картинкой стоит небо живого слоя — та же вклейка, что
-        // на V6, куда блок и ведёт.
+        // в колоде. Стояла вклейка V6 (`plate-sky`) — на ней лицо, и с
+        // 29.08.2026 лица убраны отовсюду, кроме совместимости; до новых
+        // картин блок держит ту же туманность, что и соседние два.
         _LiveBlock(
-          image: AlmaArt.skyPlate,
+          image: AlmaArt.sky,
           title: l.liveDayTitle,
           note: l.liveDayNote,
         ),
@@ -1193,69 +1162,34 @@ class _AreaRow extends StatelessWidget {
   /// Ближайший контакт или `null` — «здесь сегодня тихо».
   final Map<String, dynamic>? hit;
 
-  /// Дальше этого экран дат не обещает.
-  ///
-  /// **«Jun 13» в августе — обещание не про сегодня.** Движок отдаёт `upcoming`
-  /// на месяцы вперёд, и на живом аккаунте четыре области показали «Jun 13 /
-  /// Sep 14 / May 8 / Jun 9» — колонку дат, к сегодняшнему дню не относящихся
-  /// ни одной. На s1 дата рядом с областью читается как «это случится скоро»,
-  /// и растягивать «скоро» на полгода значит врать оформлением.
-  ///
-  /// Правило владельца: ближе тридцати дней — с датой, дальше — та же строка
-  /// области и та же фраза, но без даты справа. Точные далёкие аспекты живут в
-  /// «Транзитах» (`ahead`/`long`), где у них есть и место, и контекст.
-  static const _horizon = Duration(days: 30);
-
-  /// Дата, если она в пределах горизонта. Прошедшую не трогаем: контакт,
-  /// перешедший точность, всё ещё про эти дни — режется только даль.
-  static DateTime? _dated(DateTime? day) {
-    if (day == null) return null;
-    return day.toLocal().difference(DateTime.now()) <= _horizon ? day : null;
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final quiet = hit == null;
-    final exact = hit?['exact'] as String?;
-    final day = _dated(exact == null ? null : DateTime.tryParse(exact));
+    // Колонка дат справа снята владельцем (29.08.2026): «есть дата … в
+    // нижнем блоке — эта дата не нужна». Экран называется «Сегодня», и любое
+    // число справа читалось обещанием события на дату — сначала его резали
+    // тридцатидневным горизонтом (правило 22.08, «Jun 13 в августе — не про
+    // сегодня»), теперь дата снята целиком. Фраза области осталась той же;
+    // точные даты живут в «Транзитах», где им место.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.baseline,
-          textBaseline: TextBaseline.alphabetic,
-          children: [
-            Expanded(
-              child: Text(
-                CabinetWords.area(l, area),
-                style: AlmaType.meta.copyWith(
-                  // Тихая область не золотится: у неё нечего подсвечивать, и
-                  // ряд золотых меток над «здесь сегодня тихо» обещал бы
-                  // четыре события там, где их два.
-                  color: quiet
-                      ? AlmaPalette.body.withValues(alpha: 0.6)
-                      : AlmaPalette.goldBright,
-                  fontWeight: FontWeight.w500,
-                  // Вес вариативному шрифту задаётся осью: один `fontWeight`
-                  // выбирает ближайший **объявленный** инстанс, а объявлен один,
-                  // и метка молча оставалась тонкой. См. `typography.dart`.
-                  fontVariations: const [FontVariation('wght', 500)],
-                ),
-              ),
-            ),
-            // Дата — только когда она у движка есть: контакту, уже прошедшему
-            // точность, выдумывать «сегодня» нельзя именно на этом экране.
-            if (day != null) ...[
-              const SizedBox(width: 12),
-              Text(
-                // «Aug 18», а не «August 18»: в колонке справа полное имя
-                // месяца съедало бы половину строки области.
-                DateFormat.MMMd(l.localeName).format(day.toLocal()),
-                style: AlmaType.numeral.copyWith(fontSize: 13),
-              ),
-            ],
-          ],
+        Text(
+          CabinetWords.area(l, area),
+          style: AlmaType.meta.copyWith(
+            // Тихая область не золотится: у неё нечего подсвечивать, и
+            // ряд золотых меток над «здесь сегодня тихо» обещал бы
+            // четыре события там, где их два.
+            color: quiet
+                ? AlmaPalette.body.withValues(alpha: 0.6)
+                : AlmaPalette.goldBright,
+            fontWeight: FontWeight.w500,
+            // Вес вариативному шрифту задаётся осью: один `fontWeight`
+            // выбирает ближайший **объявленный** инстанс, а объявлен один,
+            // и метка молча оставалась тонкой. См. `typography.dart`.
+            fontVariations: const [FontVariation('wght', 500)],
+          ),
         ),
         const SizedBox(height: 4),
         Text(

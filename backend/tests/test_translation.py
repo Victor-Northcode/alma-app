@@ -414,6 +414,90 @@ def test_messages_without_a_locale_still_translate(api, auth_headers, scripted):
     ]
 
 
+def test_the_daily_piece_is_rewritten_in_the_new_language_not_translated(
+    api, auth_headers, scripted, owns
+):
+    """Текст экрана «Сегодня» при смене языка пишется заново, не переводится.
+
+    Он живёт сутки — экономия перевода копеечная, — а дешёвый перевод
+    короткого дневного текста владелец прочитал «рандомом непонятных слов»
+    (29.08.2026). Обычные главы переводятся; дневная — лицо главного экрана
+    и пишется на языке запроса.
+    """
+    from datetime import date as date_type
+
+    from alma.ai import chapters as chapter_defs
+    from alma.api.routers.readings import _options_for
+    from alma.calc import BirthData, compute
+
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    # Факторы — теми же опциями, что считает сервер (`_options_for`: дневная
+    # точность), и только срезом главы (`relevant_factors`): транзитный орб,
+    # посчитанный без опций, отличается в сотых долях градуса, и цитата с
+    # «неправильным» орбом — отказ валидатора и вторая попытка, которой
+    # сценарий не обещал.
+    birth = BirthData(
+        date=date_type.fromisoformat(SOFIA["birth_date"]),
+        time=SOFIA["birth_time"],
+        latitude=SOFIA["latitude"],
+        longitude=SOFIA["longitude"],
+        timezone=SOFIA["timezone"],
+        place_label=SOFIA["place_label"],
+        name=SOFIA["name"],
+    )
+    factors = chapter_defs.relevant_factors(
+        chapter_defs.find("transits", "active"),
+        list(compute("transits", birth, **_options_for("transits", None)).factors),
+    )
+
+    def active_reply(title, teaser, first, second, advice):
+        return json.dumps(
+            {
+                "title": title,
+                "teaser": teaser,
+                "advice": advice,
+                "paragraphs": [
+                    {"text": first, "factors": factors[:1]},
+                    {"text": second, "factors": factors[:1]},
+                ],
+            },
+            ensure_ascii=False,
+        )
+
+    scripted.responses += [
+        active_reply(
+            "The sky now", "One line.",
+            "The nearest contact is read from the chart.",
+            "The second line, from the same place.",
+            "Say the thing sooner.",
+        ),
+        active_reply(
+            "Небо сейчас", "Одна строка.",
+            "Ближайший контакт прочитан из карты.",
+            "Вторая строка, из того же места.",
+            "Скажи это раньше.",
+        ),
+    ]
+    request = {"system": "transits", "chapter": "active"}
+
+    english = api.post("/v1/readings", json=request, headers=auth_headers)
+    assert english.status_code == 200, english.text
+    response = api.post(
+        "/v1/readings", json={**request, "locale": "ru"}, headers=auth_headers
+    )
+    assert response.status_code == 200, response.text
+    russian = response.json()
+
+    assert russian["reading"]["title"] == "Небо сейчас"
+    assert "translated_from" not in russian["reading"], (
+        "дневной текст обязан быть написан, а не переведён"
+    )
+    assert len(scripted.calls) == 2
+    assert scripted.calls[1]["model"] != settings().model_cheap, (
+        "дневной текст не ходит на дешёвую модель — ни письмом, ни переводом"
+    )
+
+
 def test_the_source_is_the_original_not_an_earlier_translation(
     api, auth_headers, scripted, owns
 ):

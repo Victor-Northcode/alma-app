@@ -97,7 +97,14 @@ class AlmaPlates {
   static const today = 'plate-moon';
 
   static String? name(SystemSlug system, String chapter) =>
-      _map[system]?[chapter];
+      // Вклейки временно ходят только у совместимости: владелец, 29.08.2026 —
+      // «поменять картинки у систем, убрать лица (я сделаю новые картинки),
+      // кроме раздела совместимости». `null` включает штатный запасной вид —
+      // римскую цифру на пергаменте (`_Numeral`), — а не дыру. Карта `_map`
+      // остаётся целой нарочно: её слаги держат `chapterGrain` в рисунке
+      // ожидания и тест `plates_test`; когда приедут новые картины, достаточно
+      // убрать это условие.
+      system == SystemSlug.compatibility ? (_map[system]?[chapter]) : null;
 
   /// Для теста: вся карта, включая дыры.
   static Map<SystemSlug, Map<String, String?>> get all => _map;

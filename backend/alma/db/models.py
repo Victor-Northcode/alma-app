@@ -262,6 +262,17 @@ class Profile(Base):
     place_label: Mapped[str | None] = mapped_column(String(200))
     place_id: Mapped[int | None] = mapped_column(Integer)
 
+    #: Где человек живёт сейчас — не где родился. Заведено 29.08.2026 для
+    #: главы астрокартографии «Где ты сейчас», которая до этого читалась от
+    #: места рождения и называла его «сейчас» (владелец: «где находится
+    #: человек может же быть совсем другим местом»). NULL — «не говорил», и
+    #: глава тогда честно читает рождение, называя его рождением
+    #: (`chapters.py`, guidance главы `here`). Часовой пояс не дублируется:
+    #: пояс телефона и так едет заголовком `X-Alma-Timezone`.
+    current_latitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    current_longitude: Mapped[float | None] = mapped_column(Float, nullable=True)
+    current_place_label: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow

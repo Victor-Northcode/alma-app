@@ -38,6 +38,9 @@ def _out(profile: Profile) -> ProfileOut:
         longitude=profile.longitude,
         timezone=profile.timezone,
         place_label=profile.place_label,
+        current_latitude=profile.current_latitude,
+        current_longitude=profile.current_longitude,
+        current_place_label=profile.current_place_label,
         on_ambiguous=profile.on_ambiguous,
         sun_sign=_sun_sign(profile),
     )
@@ -152,6 +155,9 @@ async def create_profile(
         timezone=payload.timezone,
         place_label=payload.place_label,
         place_id=payload.place_id,
+        current_latitude=payload.current_latitude,
+        current_longitude=payload.current_longitude,
+        current_place_label=payload.current_place_label,
         on_ambiguous=_fold(payload.on_ambiguous),
     )
     session.add(profile)
@@ -235,6 +241,13 @@ async def update_profile(
     profile.timezone = payload.timezone
     profile.place_label = payload.place_label
     profile.place_id = payload.place_id
+    # Текущее место — только когда названо: PATCH шлёт форму целиком, и
+    # клиент, правящий имя, не знает про город; None здесь значит «не менять»,
+    # а не «стереть» (довод у поля в `schemas.ProfileInput`).
+    if payload.current_latitude is not None and payload.current_longitude is not None:
+        profile.current_latitude = payload.current_latitude
+        profile.current_longitude = payload.current_longitude
+        profile.current_place_label = payload.current_place_label
     # **Ответ не стирается пустым запросом.** Клиент, правящий имя, шлёт форму
     # целиком и не обязан помнить про развилку; сохранённый выбор пережил бы
     # такую правку, а «raise» по умолчанию затёр бы его и спросил заново.

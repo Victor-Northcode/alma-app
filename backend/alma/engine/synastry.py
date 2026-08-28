@@ -106,8 +106,14 @@ class Compatibility:
             items.append(
                 f"davison ascendant {zodiac.format_position(self.davison.angles.ascendant)}"
             )
-        for key, value in self.scores.items():
-            items.append(f"{key} score {value}")
+        # Скоры в факторы больше не ездят. Это сырые внутренние суммы
+        # (`_scores`: веса пар × качество аспекта × затухание орба — числа
+        # вроде 3.417 без шкалы и потолка), и модель, увидев их, объявляла
+        # читателю «у вас накал страстей 3.4» — измерение, которого продукт
+        # не обещал и которое некому объяснить (живой скрин владельца,
+        # 29.08.2026). В `data["scores"]` они остаются: это кухня расчёта,
+        # а не текст; глава напряжения вместо скора читает сами квадраты и
+        # оппозиции — по глифам в своём списке (`chapters.py`, friction).
         items += list(self.highlights)
         return items
 

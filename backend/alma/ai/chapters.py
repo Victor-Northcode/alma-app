@@ -122,6 +122,16 @@ class Chapter:
     #: nothing renders.
     areas: bool = False
 
+    #: Указание писателю, которое есть только у этой главы, — одной строкой в
+    #: промпт (`writer.build_prompt`, «THIS CHAPTER»). Появилось 29.08.2026 из
+    #: двух живых скринов владельца: глава личного года объяснила читателю,
+    #: что «месяцев четырнадцать» (в соседних факторах лежали «day 14» и
+    #: «karmic debt 14», и модель склеила), а глава имени назвала числа
+    #: выражения и желания без единого слова о том, как они посчитаны, — при
+    #: том что выкладки (`workings`) ей выданы. По-английски, как весь промпт;
+    #: пустая строка — глава без особых правил.
+    guidance: str = ""
+
 
 def _c(index, numeral, slug, title, question, reads, **kwargs) -> Chapter:
     # Бесплатная глава пишется средней моделью в кириллический потолок $0.10,
@@ -179,11 +189,31 @@ NUMEROLOGY: tuple[Chapter, ...] = (
     _c(2, "II", "birthday-number", "Birthday number", "What comes easily that I overlook?",
        ("birthday number", "karmic debt")),
     _c(3, "III", "personal-year", "Personal year", "What season am I actually in?",
-       ("personal year", "personal month", "personal day")),
+       ("personal year", "personal month", "personal day"),
+       # Живой скрин 29.08.2026: глава объяснила читателю, что «месяцев
+       # четырнадцать» — движок отдаёт цикл строго 1–9 (numerology.py,
+       # reduce_number), а «14» модель подобрала из соседних факторов
+       # («day 14», «karmic debt 14») в блоке остальной карты.
+       guidance=(
+           "The personal year, month and day each run 1 through 9 — there "
+           "is no personal month above 9, and a personal month is not a "
+           "calendar month. Never state a cycle length other than 9."
+       )),
     _c(4, "IV", "pinnacles", "Pinnacles and challenges", "What is being asked of me right now?",
        ("pinnacle", "challenge", "master number")),
     _c(5, "V", "name", "Name numbers", "What does the name I answer to carry?",
-       ("expression", "soul urge", "personality", "maturity", "karmic lesson")),
+       ("expression", "soul urge", "personality", "maturity", "karmic lesson"),
+       # Живой скрин 29.08.2026: числа выражения и желания стояли в главе
+       # голыми итогами, и владелец спросил, откуда они взялись. Выкладки
+       # движок выдаёт (`workings`: буква за буквой, сумма, свёртка) — глава
+       # обязана провести читателя по ним, а не объявить результат.
+       guidance=(
+           "Show the arithmetic in plain words: name the spelling the "
+           "letters were counted from (copy it exactly as given) and walk "
+           "through the workings you were handed — which letters add to "
+           "which sum, and how the sum reduces. Use only the letter values "
+           "and sums present in the data; never invent or re-derive them."
+       )),
 )
 
 BIRTH_CARD: tuple[Chapter, ...] = (
@@ -238,8 +268,14 @@ COMPATIBILITY: tuple[Chapter, ...] = (
     # совместимости, который и так ничего не стоит.
     _c(1, "I", "attraction", "What pulls", "Why this person and not another?",
        ("venus", "mars", "sun", "moon")),
+    # Глифы в списке — не украшение: аспекты пары печатаются «□»/«☍», а не
+    # словами, и до 29.08.2026 глава напряжения видела из своих факторов
+    # только сатурн и числовой «friction score». Скор из факторов снят (сырая
+    # внутренняя сумма читалась моделью как шкала — «у вас накал страстей
+    # 3.4», — которую не объяснить читателю), и квадраты с оппозициями отданы
+    # главе напрямую, знаками, какими они напечатаны.
     _c(2, "II", "friction", "Where it catches", "What will we keep arguing about?",
-       ("square", "opposition", "saturn", "friction", "tension")),
+       ("□", "☍", "square", "opposition", "saturn", "friction", "tension")),
     _c(3, "III", "overlays", "Where we land in each other", "What part of my life does this person occupy?",
        ("falls in", "house"), time_dependent=True),
     _c(4, "IV", "together", "The two of you as one thing", "What is the relationship itself like?",
@@ -249,8 +285,22 @@ COMPATIBILITY: tuple[Chapter, ...] = (
 ASTROCARTOGRAPHY: tuple[Chapter, ...] = (
     _c(1, "I", "lines", "Your lines", "Which places bring out which part of me?",
        ("line",), time_dependent=True),
+    # «current place» в списке — фактор настоящего города (`at your current
+    # place: …`), который движок отдаёт, когда человек назвал, где живёт
+    # (29.08.2026: глава звалась «Где ты сейчас», а считалась только от места
+    # рождения). Без названного города фактора нет, и глава честно читает
+    # рождение — но обязана говорить о нём как о месте рождения, не как о
+    # «сейчас»: см. guidance.
     _c(2, "II", "here", "Where you are now", "How does where I live affect me?",
-       ("at the birthplace", "line"), time_dependent=True),
+       ("at the birthplace", "at your current place", "line"),
+       time_dependent=True,
+       guidance=(
+           "If the data carries an 'at your current place' reading, that is "
+           "where the person lives now — read the chapter from it, and use "
+           "the birthplace only as contrast. If it does not, say plainly "
+           "that this is read from the birthplace, and never present the "
+           "birthplace as where they are now."
+       )),
     _c(3, "III", "crossings", "Crossings", "Where do two things happen at once?",
        ("crosses",), time_dependent=True),
 )

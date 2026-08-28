@@ -34,10 +34,25 @@ void main() {
     expect(missing, isEmpty, reason: 'нет масштабов: $missing');
   });
 
-  test('у всех восьми систем своя карта, и они разные', () {
-    final cards = {for (final s in SystemSlug.values) AlmaArt.card(s)};
-    expect(cards.length, SystemSlug.values.length,
-        reason: 'две системы делят одну картинку');
+  test('карты систем временно ходят под небом — кроме совместимости', () {
+    // Правило владельца от 29.08.2026: «поменять картинки у систем, убрать
+    // лица (я сделаю новые картинки), кроме раздела совместимости». До новых
+    // файлов семь систем делят `plate-sky`, совместимость держит свою карту.
+    // Когда художник привезёт новые, вернуть прежний тест: «у всех восьми
+    // своя карта, и они разные».
+    for (final s in SystemSlug.values) {
+      if (s == SystemSlug.compatibility) {
+        expect(AlmaArt.card(s), contains('card-compat'),
+            reason: 'пара остаётся со своей картой');
+      } else {
+        // Именно туманность `sky`: на `plate-sky` тоже лицо.
+        expect(AlmaArt.card(s), AlmaArt.sky,
+            reason: 'лица уходят под небо до новых картинок');
+      }
+    }
+    // Файлы художника при этом остаются в бандле — подмена про показ.
+    expect(AlmaArt.bundled.where((p) => p.contains('card-')).length,
+        SystemSlug.values.length);
   });
 
   test('манифест объявляет папки с картинками', () {
