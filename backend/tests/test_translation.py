@@ -844,9 +844,9 @@ def test_every_target_language_names_its_register_in_the_prompt():
 
     expectations = {
         "fr": "never « vous »",
-        "de": "never «Sie»",
-        "it": "never «Lei»",
-        "pt-BR": "«você»",
+        "de": "never Sie",
+        "it": "never Lei",
+        "pt-BR": "você",
         "ru": "never Вы",
         "es": "never vos",
     }

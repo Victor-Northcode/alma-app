@@ -294,10 +294,21 @@ LOCALE_NAMES = {
     # so the list of languages she offers still reads as a list of languages.
     "es": "Spanish (neutral, for both Spain and Latin America; address the "
           "reader as tú — never vos, and no voseo verb forms)",
-    "de": "German",
-    "it": "Italian",
-    "fr": "French",
-    "pt-BR": "Brazilian Portuguese",
+    # Той же болезнью, что испанский, переболели ещё три языка — только
+    # нашлась она не на экране, а на проде 28.08.2026, первым живым
+    # французским переводом: он пришёл на «vous», при том что все 102
+    # французские строки интерфейса тутуайируют. Без названного регистра
+    # модель выбирает вежливую форму, а вежливая форма посреди интимного
+    # текста — голос незнакомца (довод целиком у русского ниже). Немецкий и
+    # итальянский интерфейсы тоже целиком на «du»/«tu» (125 и 105 строк, ни
+    # одного «Sie»/«Lei»), бразильский — на «você». Регистр назван здесь,
+    # а не в переводчике, потому что отсюда его читают **оба** — писатель и
+    # переводчик — и разойтись им негде.
+    "de": "German (address the reader as du, never Sie)",
+    "it": "Italian (address the reader as tu, never Lei)",
+    "fr": "French (address the reader as « tu », never « vous » — every "
+          "French string in this product tutoies)",
+    "pt-BR": "Brazilian Portuguese (address the reader as você)",
     # The informal singular, matching every other language here: the whole
     # product says «ты», and «Вы» from Alma mid-conversation would be a
     # stranger's voice in the one place she is being intimate about a life.
