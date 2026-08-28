@@ -266,7 +266,10 @@ async def translate(
             translated = list(segments)
             for (index, _), text in zip(filled, out):
                 translated[index] = text.strip()
-            return Translated(tuple(translated), completion.model or model, spent)
+            # Запрошенное имя, не эхо API: строки `reading` во всём проекте
+            # несут алиас («claude-sonnet-5»), и запросы замера в `cost.py`
+            # ищут по нему же.
+            return Translated(tuple(translated), model, spent)
 
         log.warning(
             "translation attempt %d %s→%s rejected: %s",
@@ -281,15 +284,22 @@ async def translate(
 
 
 def _plus(spent: cost.Spend, completion, model: str) -> cost.Spend:
+    # Цена считается по **запрошенному** имени модели, не по эху API: ответ
+    # приходит версионным («claude-haiku-4-5-20251001»), которого в `PRICES`
+    # нет, и счёт уезжал на запасную цену — вдесятеро дороже настоящей.
+    # Первый же живой перевод записался в леджер как 4.8¢ вместо ~0.5¢
+    # (прод, 28.08.2026): переводы съедали бы месячные потолки за чтение,
+    # которого не было. Писатель и беседа всегда считали по запрошенному —
+    # здесь то же правило.
     theirs = cost.cost(
-        completion.model or model,
+        model,
         completion.input_tokens,
         completion.output_tokens,
         cache_read_tokens=completion.cache_read_tokens,
         cache_write_tokens=completion.cache_write_tokens,
     )
     return cost.Spend(
-        model=theirs.model,
+        model=model,
         input_tokens=spent.input_tokens + theirs.input_tokens,
         output_tokens=spent.output_tokens + theirs.output_tokens,
         dollars=spent.dollars + theirs.dollars,

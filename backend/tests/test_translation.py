@@ -594,6 +594,47 @@ def test_the_segments_schema_forbids_extra_properties():
     assert translator.SEGMENTS_SCHEMA["additionalProperties"] is False
 
 
+def test_the_bill_is_priced_by_the_requested_model_not_the_api_echo():
+    """Счёт — по запрошенному имени модели, не по эху API.
+
+    API отвечает версионным «claude-haiku-4-5-20251001», которого нет в
+    `PRICES`, и цена уезжала на запасную — вдесятеро дороже. Первый живой
+    перевод на проде (28.08.2026) записался 4.8¢ вместо ~0.5¢: переводы
+    съедали бы месячные потолки за чтение, которого не было.
+    """
+    import asyncio
+
+    from alma.ai.provider import Completion
+
+    class Echoing:
+        async def complete(self, **kwargs):
+            return Completion(
+                text=json.dumps({"segments": ["Один."]}, ensure_ascii=False),
+                model="claude-haiku-4-5-20251001",
+                input_tokens=1000,
+                output_tokens=1000,
+            )
+
+    done = asyncio.run(
+        translator.translate(
+            ["One."],
+            provider=Echoing(),
+            model="claude-haiku-4-5",
+            source_locale="en",
+            target_locale="ru",
+            paid=False,
+            prose=True,
+        )
+    )
+    assert done.model == "claude-haiku-4-5", (
+        "строка reading несёт алиас, по нему же ищут запросы замера"
+    )
+    # Тысяча токенов входа и выхода по прайсу haiku: (1.00 + 5.00)/1000 = $0.006.
+    assert abs(done.spend.dollars - 0.006) < 1e-9, (
+        f"счёт ушёл не по haiku-прайсу: ${done.spend.dollars:.4f}"
+    )
+
+
 def test_reading_pieces_rebuilds_everything_but_the_prose():
     """Разборка-сборка не трогает поля, которые по контракту не переводятся."""
     body = {
