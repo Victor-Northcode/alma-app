@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 
+import '../../design/buttons.dart';
 import '../../design/palette.dart';
 import '../../design/close_button.dart';
 import '../../design/screen_scaffold.dart';
@@ -82,7 +83,16 @@ class _ThreadScreenState extends State<ThreadScreen> {
           if (_failure != null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Text(l.stateUnavailable, style: AlmaType.meta),
+              // Тупик стал предложением попробовать снова — как у главы.
+              // Сюда попадает и таймаут первого перевода длинного архива:
+              // сервер при этом уже прогрел кеш, и второй заход отвечает из
+              // него, — экран без кнопки заставлял закрывать и открывать
+              // беседу руками (ревизия 28.08.2026).
+              child: Column(children: [
+                Text(l.stateUnavailable, style: AlmaType.meta),
+                const SizedBox(height: 16),
+                AlmaButton(label: l.stateRetry, onTap: _load),
+              ]),
             )
           else if (turns == null)
             Padding(

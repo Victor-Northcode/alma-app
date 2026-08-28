@@ -127,7 +127,7 @@ read from; `model`, `input_tokens`, `output_tokens`, `cost_cents` are our own ac
   export (`accounts.py:291–300`).
 - **Identity**: yes, `user_id` + `profile_id`. **Tracking**: no.
 
-### 1.4 Conversations — `chat_thread`, `chat_message`
+### 1.4 Conversations — `chat_thread`, `chat_message`, `chat_translation`
 
 `models.py:457–488`. `ChatMessage.body` is `Text` and holds **whatever the person typed**,
 up to 2000 characters per turn (`api/schemas.py:172`). `ChatThread.title` is the first 80
@@ -137,14 +137,25 @@ This is the highest-risk field in the product. It is free text a person may put 
 into: a health worry, a relationship, a name, a job. Nothing filters it and nothing should
 pretend to.
 
+Since 28.08.2026 the same content exists in more languages than it was typed in:
+`chat_translation` holds a per-language copy of a message body, made by the cheap model
+when the app language changes, keyed `(message_id, locale)`; `chat_thread.title_translations`
+holds the same for titles, and `chat_message.locale` records which language Alma's reply
+was written in (null for the person's own messages — their language is not assumed). No new
+*category* of data: a translation of a chat message is that chat message.
+
 - **Stored**: our database.
 - **Sent to**: **Anthropic**. The prompt for one turn carries the last twelve messages of
   the thread verbatim, both sides (`ai/conversation.py:128–133`, `MAX_HISTORY = 12`), plus
-  the current question (`:143–145`).
+  the current question (`:143–145`). Translation sends the message bodies once per new
+  app language (`ai/translator.py`, called from `routers/readings.py`).
 - **Why**: the conversation is the product; the history is what makes turn six coherent
-  with turn one.
+  with turn one; the translations keep the archive readable after a language switch
+  without regenerating anything.
 - **Kept**: until account deletion; hard-deleted (`ChatThread` cascade-deletes its
-  messages, `models.py:469–471`). Included in the export.
+  messages, `models.py:469–471`; `chat_translation` cascade-deletes with its message).
+  Included in the export (translations are copies of exported content, not listed
+  separately).
 - **Identity**: yes. **Tracking**: no.
 
 ### 1.5 Memory — `memory`

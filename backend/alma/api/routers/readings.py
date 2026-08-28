@@ -54,6 +54,7 @@ import asyncio
 import json
 import logging
 import re
+import time
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
@@ -419,9 +420,14 @@ async def _translation_source(
     28.08.2026: переводить дёшево, не перегенерировать.
 
     `calc_key` нарочно не содержит локали (см. `_reading_key`), поэтому «та же
-    глава» здесь — буквально те же факты. Предпочитается английский исходник:
-    у дешёвой модели это самый надёжный язык-источник; иначе — самая свежая
-    строка, какая есть.
+    глава» здесь — буквально те же факты.
+
+    Порядок выбора: оригинал прежде перевода, английский прежде остальных,
+    свежий прежде старого. «Оригинал прежде перевода» — не вкус: строка с
+    `translated_from` сама писана дешёвой моделью, и перевод с неё — перевод
+    с перевода, дрейф накапливается, а оплаченный сильной моделью исходник
+    лежит строкой ниже. Перевод берётся источником только когда оригинала нет
+    вовсе — чего у живых данных не бывает: оригинал не удаляется.
     """
     rows = (
         await session.execute(
@@ -436,10 +442,14 @@ async def _translation_source(
             .order_by(Reading.created_at.desc())
         )
     ).scalars().all()
-    for row in rows:
+    originals = [
+        row for row in rows if "translated_from" not in (row.body or {})
+    ]
+    pool = originals or rows
+    for row in pool:
         if row.locale == "en":
             return row
-    return rows[0] if rows else None
+    return pool[0] if pool else None
 
 
 def _translation_projection(body: dict, *, locale: str) -> float:
@@ -465,6 +475,8 @@ async def _translated_body(
     source_locale: str,
     target_locale: str,
     paid: bool,
+    factors: list | tuple = (),
+    reader_gender: str | None = None,
     ledger: str = cost.SPEND_METRIC,
 ) -> tuple[dict, cost.Spend, str] | None:
     """Переведённое тело — или `None`, и тогда вызывающий генерирует заново.
@@ -472,6 +484,12 @@ async def _translated_body(
     Любой сбой перевода — не ошибка наружу, а откат в путь, который и так
     умеет всё: обычную генерацию. Дороже, но человек получает главу, а не 503
     из-за экономии, которую он не заказывал.
+
+    [factors] и [reader_gender] — те же разрешения и обязательства, что у
+    писателя: латиница из процитированных факторов законна (глава имени
+    цитирует романизированное написание), а род читателя либо уезжает в
+    промпт, либо перевод сверяется на безродовой регистр. Доводы — в
+    `translator.translate`.
     """
     cheap, _mid, _strong = models()
     segments, rebuild = pieces(body)
@@ -483,6 +501,9 @@ async def _translated_body(
             source_locale=source_locale,
             target_locale=target_locale,
             paid=paid,
+            factors=tuple(factors),
+            reader_gender=reader_gender,
+            prose=True,
         )
     except translator.TranslationRefused as exc:
         # Обе попытки — настоящие вызовы; счёт двигается, как у любой другой
@@ -982,11 +1003,17 @@ async def _locked_chapter(
                     if source is not None
                     else None
                 )
+                opening_gender = (
+                    await _reader_gender(session, user, payload)
+                    if opening_source is not None
+                    else None
+                )
             if opening_source is not None:
                 translated = await _translated_opening(
                     payload, user, provider,
                     source=opening_source, language=language,
                     calc_key=calc_key, stored_chapter=stored_chapter,
+                    reader_gender=opening_gender,
                 )
                 if translated is not None:
                     body, cached, created_at = translated
@@ -1025,6 +1052,7 @@ async def _translated_opening(
     language: str,
     calc_key: str,
     stored_chapter: str,
+    reader_gender: str | None = None,
 ) -> tuple[dict, bool, str] | None:
     """Уже написанный абзац на новом языке — переводом, без модели-писателя.
 
@@ -1043,6 +1071,8 @@ async def _translated_opening(
         source_locale=src_locale,
         target_locale=language,
         paid=False,
+        factors=src_cited,
+        reader_gender=reader_gender,
         ledger=cost.SHOWCASE_METRIC,
     )
     if translated is None:
@@ -1507,6 +1537,8 @@ async def _read_or_write(
             source_locale=src_locale,
             target_locale=language,
             paid=not chapter.free,
+            factors=src_cited,
+            reader_gender=reader_gender,
         )
         if translated is not None:
             t_body, t_spend, t_model = translated
@@ -2377,6 +2409,7 @@ async def natal_spheres(
                     source_locale=src_locale,
                     target_locale=language,
                     paid=False,
+                    factors=src_cited,
                 )
                 if translated is not None:
                     t_body, t_spend, t_model = translated
@@ -2514,49 +2547,149 @@ async def _translated_titles(
 
     cheap, _mid, _strong = models()
     chars = sum(len(t) for _, t in need)
-    try:
-        async with session_scope() as session:
-            await _guard_month(
-                session, user,
-                tier=await entitlements.tier_of(session, user),
-                locale=language,
-                projected=cost.at_measured_rate(
-                    cost.estimate(
-                        cheap, prompt_chars=chars + 900,
-                        max_output_tokens=translator.allowance(
-                            chars, target_locale=language
-                        ),
-                    ),
-                    "translation",
-                ),
-            )
-        done = await translator.translate(
-            [title for _, title in need],
-            provider=provider(), model=cheap,
-            source_locale=None, target_locale=language, paid=False,
-        )
-    except translator.TranslationRefused as exc:
-        if exc.spend.cents:
-            await _charge_anyway(user, cents=exc.spend.cents)
-        log.warning("thread titles stay untranslated: %s", exc)
-        return out
-    except (cost.BudgetExceeded, ModelUnavailable, HTTPException) as exc:
-        # Потолок месяца или молчащий провайдер — причина не перевести
-        # заголовок, а не причина не показать список бесед.
-        log.warning("thread titles stay untranslated: %s", getattr(exc, "detail", exc))
+    projected = cost.at_measured_rate(
+        cost.estimate(
+            cheap, prompt_chars=chars + 900,
+            max_output_tokens=translator.allowance(chars, target_locale=language),
+        ),
+        "translation",
+    )
+    # Из статьи показа, как и реплики, — довод у `_showcase_room`. Отказ тих:
+    # заголовки уезжают как записаны, список бесед показывается.
+    if not await _showcase_room(user, projected):
         return out
 
-    async with session_scope() as session:
-        await _spend(session, user, done.spend.cents)
-        await _count(session, user, "chat_titles_translated", len(need))
-        for (tid, _), text in zip(need, done.segments):
-            row = await session.get(ChatThread, tid)
-            if row is not None and row.user_id == user.id:
-                stamped = dict(row.title_translations or {})
-                stamped[language] = text
-                row.title_translations = stamped
-            out[tid] = text
+    # Теми же пачками, что и реплики: у аккаунта с сотнями бесед один вызов
+    # на всё упёрся бы в потолок вызова, и не перевёлся бы ни один заголовок.
+    for piece in _batched(need, cap=CHAT_BATCH_CHARS):
+        try:
+            done = await translator.translate(
+                [title for _, title in piece],
+                provider=provider(), model=cheap,
+                source_locale=None, target_locale=language, paid=False,
+            )
+        except translator.TranslationRefused as exc:
+            if exc.spend.cents:
+                await _charge_anyway(
+                    user, cents=exc.spend.cents, ledger=cost.SHOWCASE_METRIC
+                )
+            log.warning("a batch of thread titles stays untranslated: %s", exc)
+            continue
+        except (cost.BudgetExceeded, ModelUnavailable) as exc:
+            log.warning("a batch of thread titles stays untranslated: %s", exc)
+            continue
+
+        async with session_scope() as session:
+            await _spend(
+                session, user, done.spend.cents, ledger=cost.SHOWCASE_METRIC
+            )
+            await _count(session, user, "chat_titles_translated", len(piece))
+            for (tid, _), text in zip(piece, done.segments):
+                row = await session.get(ChatThread, tid)
+                if row is not None and row.user_id == user.id:
+                    stamped = dict(row.title_translations or {})
+                    stamped[language] = text
+                    row.title_translations = stamped
+                out[tid] = text
     return out
+
+
+def _batched(
+    pairs: list[tuple[str, str]], cap: int = translator.MAX_SEGMENT_CHARS
+) -> list[list[tuple[str, str]]]:
+    """Пары `(id, текст)` пачками, влезающими в один вызов перевода.
+
+    Тред в сотню реплик одним промптом упёрся бы в потолок вызова, и перевод,
+    отвергнутый целиком из-за длины, не перевёл бы ничего.
+    """
+    batches: list[list[tuple[str, str]]] = []
+    batch: list[tuple[str, str]] = []
+    size = 0
+    for key, text in pairs:
+        if batch and size + len(text) > cap:
+            batches.append(batch)
+            batch, size = [], 0
+        batch.append((key, text))
+        size += len(text)
+    if batch:
+        batches.append(batch)
+    return batches
+
+
+#: Пачка перевода беседы — втрое меньше общей. Ответ ручки треда ждётся
+#: клиентом 30 секунд (`normalTimeout`), а пачка в 8 000 знаков — это до
+#: ~6 000 токенов кириллицы на выходе: **одна** такая пачка на медленной
+#: минуте съедает весь таймаут. Три тысячи знаков держат вызов в считанных
+#: секундах и позволяют бюджету ниже остановиться между пачками вовремя.
+CHAT_BATCH_CHARS = 3_000
+
+#: Стенной бюджет одного запроса на перевод беседы, в секундах. Клиент ждёт
+#: 30; ответ обязан выехать раньше, каким бы длинным ни был архив.
+#: Непереведённый остаток уезжает как записан и доводится кешем на следующих
+#: открытиях — пачки идут от свежих реплик к старым, так что первым
+#: переводится то, к чему экран прокручен.
+CHAT_TRANSLATION_BUDGET_SECONDS = 18.0
+
+
+async def _showcase_room(user, projected: float) -> bool:
+    """Есть ли у статьи показа месяц на этот перевод беседы.
+
+    Переводы архива платят из витринной статьи (`SHOWCASE_METRIC`), а не из
+    той, что читает `guard_month`, — по той же причине, по которой туда
+    переехал открывающий абзац: чтение собственного архива не должно съедать
+    бюджет, из которого отвечают на настоящие вопросы (витрина в $1.28 уже
+    съедала месяц бесплатного тира в $1.10 целиком — замер у
+    `SHOWCASE_METRIC`). Потолок статьи общий — `SHOWCASE_MONTH_CEILING`.
+    Отказ тих: реплики уезжают как записаны, беседа читается.
+    """
+    async with session_scope() as session:
+        shown = await cost.month_showcase_spend(session, user)
+    if shown + projected > SHOWCASE_MONTH_CEILING:
+        log.warning(
+            "chat translation refused by the showcase ceiling for %s "
+            "(%.2f + %.4f > %.2f)", user.id, shown, projected,
+            SHOWCASE_MONTH_CEILING,
+        )
+        return False
+    return True
+
+
+async def _cache_chat_batch(
+    user,
+    language: str,
+    entries: list[tuple[str, str]],
+    *,
+    model: str | None,
+    total_cents: float,
+    counter: str,
+) -> None:
+    """Строки кеша переводов + счёт, savepoint на строку.
+
+    Savepoint, а не общий flush: гонка двух воркеров над одним тредом —
+    законный случай, и общий rollback выбрасывал бы вместе с проигравшей
+    строкой все соседние переводы пачки — оплаченные и уже отданные, но не
+    легшие в кеш; следующий заход платил бы за них второй раз.
+    """
+    async with session_scope() as session:
+        if total_cents:
+            await _spend(session, user, total_cents, ledger=cost.SHOWCASE_METRIC)
+        await _count(session, user, counter, len(entries))
+        for mid, text in entries:
+            try:
+                async with session.begin_nested():
+                    session.add(
+                        ChatTranslation(
+                            message_id=mid,
+                            locale=language,
+                            body=text,
+                            model=model,
+                            cost_cents=total_cents / len(entries),
+                        )
+                    )
+                    await session.flush()
+            except IntegrityError:
+                # Другой воркер успел первым — его строка уже в кеше.
+                pass
 
 
 async def _translated_chat_bodies(
@@ -2580,16 +2713,20 @@ async def _translated_chat_bodies(
     if not ids:
         return out
 
+    ready: dict[str, str] = {}
     async with session_scope() as session:
-        cached = (
-            await session.execute(
-                select(ChatTranslation).where(
-                    ChatTranslation.message_id.in_(ids),
-                    ChatTranslation.locale == language,
+        # Пачками по 500: у живого треда идентификаторов сотни, а у SQLite —
+        # потолок в 999 параметров на один запрос.
+        for start in range(0, len(ids), 500):
+            cached = (
+                await session.execute(
+                    select(ChatTranslation).where(
+                        ChatTranslation.message_id.in_(ids[start:start + 500]),
+                        ChatTranslation.locale == language,
+                    )
                 )
-            )
-        ).scalars().all()
-        ready = {c.message_id: c.body for c in cached}
+            ).scalars().all()
+            ready.update({c.message_id: c.body for c in cached})
 
     for mid, body, loc in rows:
         if loc is not None and i18n.resolve(loc) == language:
@@ -2606,47 +2743,37 @@ async def _translated_chat_bodies(
             out[mid] = body
     if not need:
         return out
+    # Свежие раньше старых: бюджет времени ниже может не дать перевести всё,
+    # и перевестись первым обязано то, что человек видит первым, — хвост
+    # беседы, к которому экран прокручен.
+    need.reverse()
 
     cheap, _mid, _strong = models()
     chars = sum(len(b) for _, b in need)
-    try:
-        async with session_scope() as session:
-            await _guard_month(
-                session, user,
-                tier=await entitlements.tier_of(session, user),
-                locale=language,
-                projected=cost.at_measured_rate(
-                    cost.estimate(
-                        cheap, prompt_chars=chars + 900,
-                        max_output_tokens=translator.allowance(
-                            chars, target_locale=language
-                        ),
-                    ),
-                    "translation",
-                ),
-            )
-    except HTTPException as exc:
-        log.warning(
-            "chat translation refused by the month ceiling: %s",
-            getattr(exc, "detail", exc),
-        )
+    projected = cost.at_measured_rate(
+        cost.estimate(
+            cheap, prompt_chars=chars + 900,
+            max_output_tokens=translator.allowance(chars, target_locale=language),
+        ),
+        "translation",
+    )
+    if not await _showcase_room(user, projected):
         return out
 
-    # Чанки: тред в сотню реплик одним промптом упёрся бы в потолок вызова, а
-    # перевод, отвергнутый целиком из-за длины, не перевёл бы ничего.
-    batches: list[list[tuple[str, str]]] = []
-    batch: list[tuple[str, str]] = []
-    size = 0
-    for mid, body in need:
-        if batch and size + len(body) > translator.MAX_SEGMENT_CHARS:
-            batches.append(batch)
-            batch, size = [], 0
-        batch.append((mid, body))
-        size += len(body)
-    if batch:
-        batches.append(batch)
-
-    for piece in batches:
+    batches = _batched(need, cap=CHAT_BATCH_CHARS)
+    started = time.monotonic()
+    for index, piece in enumerate(batches):
+        if time.monotonic() - started > CHAT_TRANSLATION_BUDGET_SECONDS:
+            # Бюджет времени истрачен — остаток уезжает как записан. Клиент
+            # ждёт ответа 30 секунд, и архив, переведённый целиком, но после
+            # таймаута, — это экран ошибки, а не перевод. Кеш прогревается с
+            # каждым открытием: следующий заход начнёт с остатка.
+            log.info(
+                "chat translation budget spent — %d messages wait for the "
+                "next open",
+                sum(len(rest) for rest in batches[index:]),
+            )
+            break
         try:
             done = await translator.translate(
                 [body for _, body in piece],
@@ -2655,35 +2782,36 @@ async def _translated_chat_bodies(
             )
         except translator.TranslationRefused as exc:
             if exc.spend.cents:
-                await _charge_anyway(user, cents=exc.spend.cents)
-            log.warning("a chat batch stays untranslated: %s", exc)
+                await _charge_anyway(
+                    user, cents=exc.spend.cents, ledger=cost.SHOWCASE_METRIC
+                )
+            # Отказ **кешируется** — исходным текстом. Отказ детерминирован
+            # (та же пачка — тот же ответ), и без записи каждый показ треда
+            # платил бы за те же две неудачные попытки вечно; с записью
+            # реплика честно остаётся как была, бесплатно. Появится лучший
+            # переводчик — строки с `chat_translation_given_up` в счётчике
+            # видно, и кеш чистится миграцией.
+            await _cache_chat_batch(
+                user, language, list(piece),
+                model=None, total_cents=0.0,
+                counter="chat_translation_given_up",
+            )
+            log.warning("a chat batch stays untranslated for good: %s", exc)
             continue
         except (cost.BudgetExceeded, ModelUnavailable) as exc:
+            # Преходящие причины: молчащий провайдер вернётся, потолок вызова
+            # у другой пачки другой. Без кеша — попробуем в следующий раз.
             log.warning("a chat batch stays untranslated: %s", exc)
             continue
 
-        async with session_scope() as session:
-            await _spend(session, user, done.spend.cents)
-            await _count(session, user, "chat_translated", len(piece))
-            for (mid, _), text in zip(piece, done.segments):
-                session.add(
-                    ChatTranslation(
-                        message_id=mid,
-                        locale=language,
-                        body=text,
-                        model=done.model,
-                        cost_cents=done.spend.cents / len(piece),
-                    )
-                )
-                out[mid] = text
-            try:
-                await session.flush()
-            except IntegrityError:
-                # Другой воркер перевёл тот же тред первым — его слова уже в
-                # кеше, а наш вызов всё равно состоялся и записан.
-                await session.rollback()
-                await _spend(session, user, done.spend.cents)
-                await session.flush()
+        translated = list(zip((mid for mid, _ in piece), done.segments))
+        for mid, text in translated:
+            out[mid] = text
+        await _cache_chat_batch(
+            user, language, translated,
+            model=done.model, total_cents=done.spend.cents,
+            counter="chat_translated",
+        )
     return out
 
 
@@ -3327,17 +3455,7 @@ async def _answer_one_turn(
                     "thread %s vanished mid-turn for %s — the answer goes to a "
                     "fresh thread rather than into the bin", thread_id, user_id,
                 )
-            thread_row = ChatThread(
-                user_id=user_id,
-                title=payload.message[:80],
-                # Свой язык тред знает с рождения: заголовок — первые слова
-                # первого вопроса, и класть их в кеш переводов сразу дешевле,
-                # чем спрашивать модель «переведи на язык, на котором это уже
-                # написано» при первом же открытии списка бесед.
-                title_translations={
-                    i18n.resolve(payload.locale): payload.message[:80]
-                },
-            )
+            thread_row = ChatThread(user_id=user_id, title=payload.message[:80])
             session.add(thread_row)
             await session.flush()
 
@@ -3348,9 +3466,15 @@ async def _answer_one_turn(
                 thread_id=thread_row.id,
                 role="user",
                 body=payload.message,
-                # Язык хода — у обеих реплик: без него перевод треда не знает,
-                # что уже на языке приложения. Довод у колонки в `db/models.py`.
-                locale=i18n.resolve(payload.locale),
+                # Язык хода — только у ответа Alma, и это различие, а не
+                # экономия. Её реплику язык запроса описывает честно —
+                # `conversation._wrong_script` не даст ей ответить на другом.
+                # А человек пишет на чём хочет: русский вопрос при английском
+                # интерфейсе — обычное дело, и штамп «en» на нём **вечно**
+                # закрывал бы ему перевод (кеш пропускает реплики, чей язык
+                # совпал с запрошенным). Null здесь честен так же, как у
+                # строк до колонки: не знаем — переводчик посмотрит сам.
+                locale=None,
             )
         )
 

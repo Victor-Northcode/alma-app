@@ -94,6 +94,17 @@ class _SystemScreenState extends State<SystemScreen> {
 
   bool _started = false;
 
+  /// Язык, на котором экран себя загрузил. Заголовки оглавления ключуются
+  /// локалью на сервере, и без этой метки смена языка (28.08.2026: «после
+  /// смены языка ни строки на старом») оставляла список глав на прежнем
+  /// языке до переоткрытия экрана — защёлка [_started] глотала перестройку.
+  String? _loadedLocale;
+
+  /// Номер живой загрузки: ответ устаревшего захода (оглавление на прежнем
+  /// языке, пришедшее после смены) обязан молча умереть, а не перекрывать
+  /// новый. Побеждает последний заход, а не быстрейший.
+  int _loadEpoch = 0;
+
   // Не initState: `SessionScope.of` зависит от наследуемого виджета, а
   // зависеть от него в initState нельзя — исключение уходит в невозвращённое
   // будущее, и экран молча стоит на «Секунду» вечно. Найдено в браузере:
@@ -101,8 +112,18 @@ class _SystemScreenState extends State<SystemScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final session = SessionScope.of(context);
     if (!_started) {
       _started = true;
+      _loadedLocale = session.locale;
+      _load();
+      return;
+    }
+    if (_loadedLocale != session.locale) {
+      _loadedLocale = session.locale;
+      // Старые заголовки уходят сразу: оглавление на прежнем языке под
+      // интерфейсом на новом — ровно то, что запрещено.
+      setState(() => _chapters = null);
       _load();
     }
   }
@@ -176,6 +197,7 @@ class _SystemScreenState extends State<SystemScreen> {
 
   Future<void> _load() async {
     final session = SessionScope.of(context);
+    final epoch = ++_loadEpoch;
     setState(() {
       _loading = true;
       _failure = null;
@@ -238,7 +260,7 @@ class _SystemScreenState extends State<SystemScreen> {
         ? ReadingTally.readChapters(SystemSlug.compatibility, partner.id)
         : Future.value(const <String>{});
     final both = await Future.wait([chapters, computed, mine, theirs, read]);
-    if (!mounted) return;
+    if (!mounted || epoch != _loadEpoch) return;
     setState(() {
       if (both[0] case final ChapterList list) _chapters = list;
       if (both[1] case final CalcResult result) _result = result;

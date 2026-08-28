@@ -219,6 +219,15 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// переводит уже написанную дешёвой моделью — перечитать её не страшно.
   String? _loadedLocale;
 
+  /// Номер живой загрузки. Ответ, приехавший после того, как экран начал
+  /// следующую, обязан молча умереть: письмо главы идёт до трёх минут, и
+  /// смена языка посреди него оставляла окно, в котором старый ответ
+  /// довозил главу на прежнем языке **поверх** уже начатого перечитывания —
+  /// текст на старом языке под интерфейсом на новом, ровно то, что запрещено.
+  /// Тот же номер закрывает и старую гонку перелистывания: две быстрые
+  /// протяжки — два `_load`, и побеждать обязан последний, а не быстрейший.
+  int _loadEpoch = 0;
+
   /// Конец главы уже засчитан — порог [_readDone] пересекается один раз за
   /// показ. Не поле «дочитано ли», а защёлка: у дна резинка ходит через порог
   /// туда-обратно каждым подрагиванием пальца, и без защёлки событие воронки
@@ -278,10 +287,15 @@ class _ChapterScreenState extends State<ChapterScreen> {
     if (_loadedLocale != session.locale) {
       // Смена языка приложения. Старый текст уходит с этим же кадром — абзац
       // на прежнем языке под интерфейсом на новом запрещён владельцем, — а
-      // страница ждёт перевода под лоадером. Оглавление тоже перечитывается:
-      // заголовки глав ключуются локалью.
+      // страница ждёт перевода под лоадером. Оглавление обнуляется, а не
+      // просто перечитывается: его заголовки ключуются локалью, и титул
+      // закрытой главы из старого списка стоял бы на прежнем языке всё окно
+      // перевода.
       _loadedLocale = session.locale;
-      setState(() => _reading = null);
+      setState(() {
+        _reading = null;
+        _list = null;
+      });
       _load(relist: true);
     }
   }
@@ -315,6 +329,8 @@ class _ChapterScreenState extends State<ChapterScreen> {
   /// «закрыто» тому, кто только что заплатил.
   Future<void> _load({bool relist = false}) async {
     final session = SessionScope.of(context);
+    // Каждый заход хоронит предыдущий: см. довод у [_loadEpoch].
+    final epoch = ++_loadEpoch;
     // Нить возвращается в начало вместе со страницей: следующая глава
     // прочитана на ноль, чем бы ни кончилась предыдущая.
     _read.value = 0;
@@ -346,7 +362,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
       final list = (relist || _list == null)
           ? await session.client.chapters(widget.system, locale: session.locale)
           : _list!;
-      if (!mounted) return;
+      if (!mounted || epoch != _loadEpoch) return;
       setState(() {
         _list = list;
         _locked = _right(session, from: list) == false;
@@ -380,7 +396,7 @@ class _ChapterScreenState extends State<ChapterScreen> {
         locale: session.locale,
         partnerProfileId: _partnerId(session),
       );
-      if (!mounted) return;
+      if (!mounted || epoch != _loadEpoch) return;
       // Ответ пришёл — бюджет тихих повторов полон снова. Без сброса «два
       // повтора» были бюджетом на жизнь экрана, а не «три отказа подряд»:
       // читатель, переживший два чиха сети на первой главе, на второй
@@ -420,28 +436,35 @@ class _ChapterScreenState extends State<ChapterScreen> {
       // с нарастающей паузой: три отказа подряд — уже правда, и её честнее
       // показать. `ServerRefused` не повторяется никогда: типизированный отказ
       // сервера (нет права, нет времени рождения) повтором не лечится.
-      if (error is! ServerRefused && _autoRetries < 2 && mounted) {
+      if (!mounted || epoch != _loadEpoch) return;
+      if (error is! ServerRefused && _autoRetries < 2) {
         _autoRetries += 1;
         // Через setState: `openingPending` закрытой главы читает `_retryWait`
         // в build, и золотой спиннер на месте абзаца держится этим кадром.
         setState(() => _retryWait = true);
         Future<void>.delayed(Duration(seconds: 2 * _autoRetries), () {
-          if (!mounted) return;
+          // Повтор принадлежит своей загрузке: после смены языка или
+          // перелистывания он гасил бы `_retryWait` чужого захода.
+          if (!mounted || epoch != _loadEpoch) return;
           setState(() => _retryWait = false);
           if (_reading == null) _load();
         });
         return;
       }
-      if (mounted) setState(() => _failure = error);
+      setState(() => _failure = error);
     } catch (error) {
       // Не только AlmaError: сетевой слой заворачивает в него всё своё, но
       // разбор полей ответа (`fromJson`) живёт снаружи, и 200 с полем не
       // того типа (прокси, captive portal) выходил TypeError мимо ветки
       // выше — пустая страница без единой кнопки (ревью 27.08.2026). Форма
       // ответа не та — это и есть BadPayload, с тем же экраном повтора.
-      if (mounted) setState(() => _failure = BadPayload(error.toString()));
+      if (mounted && epoch == _loadEpoch) {
+        setState(() => _failure = BadPayload(error.toString()));
+      }
     } finally {
-      if (mounted) {
+      // Флаги принадлежат живой загрузке: finally устаревшего захода гасил
+      // бы «Пишу эту главу…» у того, который ещё пишет.
+      if (mounted && epoch == _loadEpoch) {
         setState(() {
           _loading = false;
           _writing = false;

@@ -5,6 +5,7 @@ import 'package:alma/l10n/alma_l10n.dart';
 import 'package:alma/net/alma_client.dart';
 import 'package:alma/net/models.dart';
 import 'package:alma/screens/systems/chapter_screen.dart';
+import 'package:alma/screens/systems/system_screen.dart';
 import 'package:alma/screens/systems/writing_art.dart';
 import 'package:alma/screens/today/today_screen.dart';
 import 'package:alma/state/locale_override.dart';
@@ -41,9 +42,12 @@ late List<Map<String, dynamic>> readingPosts;
 /// следующие держит, пока тест не отпустит: окно, в котором видно, что экран
 /// показывает во время перечитывания. [holdChapters] — оглавление молчит:
 /// состояние «право неизвестно», в котором глава раньше рисовала пустоту.
+/// [holdEnglishReading] — держится только английский запрос главы: сценарий
+/// «письмо шло, язык сменили», где старый ответ обязан умереть молча.
 AlmaClient testClient({
   Completer<void>? holdLaterReadings,
   Completer<void>? holdChapters,
+  Completer<void>? holdEnglishReading,
 }) {
   paths = [];
   readingPosts = [];
@@ -111,6 +115,7 @@ AlmaClient testClient({
         await holdLaterReadings.future;
       }
       final ru = (payload['locale'] as String? ?? 'en').startsWith('ru');
+      if (holdEnglishReading != null && !ru) await holdEnglishReading.future;
       body = {
         'reading': {
           'system': payload['system'],
@@ -234,6 +239,61 @@ void main() {
     // наравне со сменой профиля и прав, и просит она новый язык.
     expect(readingPosts, hasLength(2));
     expect(readingPosts.last['locale'], 'ru');
+  });
+
+  testWidgets('ответ, писавшийся на старом языке, не перекрывает новый',
+      (tester) async {
+    // Письмо главы идёт до трёх минут, и смена языка посреди него — обычное
+    // дело. Старый ответ, доехавший после начала перечитывания, ставил бы
+    // главу на прежнем языке под интерфейс на новом; побеждать обязан
+    // последний заход, а не быстрейший (см. `_loadEpoch`).
+    final hold = Completer<void>();
+    final session = AlmaSession(testClient(holdEnglishReading: hold));
+    await session.start();
+    await tester.pumpWidget(
+        _host(session, const ChapterScreen(system: SystemSlug.natal, chapter: 'core')));
+    await _settle(tester);
+    expect(find.text(_english), findsNothing, reason: 'английский ещё пишется');
+
+    await session.chooseLanguage('ru');
+    await _settle(tester);
+    expect(find.text(_russian), findsOneWidget,
+        reason: 'русский заход обогнал застрявший английский');
+
+    hold.complete();
+    await _settle(tester);
+    expect(find.text(_russian), findsOneWidget);
+    expect(find.text(_english), findsNothing,
+        reason: 'устаревший ответ обязан умереть молча, а не сесть на экран');
+  });
+
+  testWidgets('оглавление системы перечитывает заголовки на новом языке',
+      (tester) async {
+    final session = AlmaSession(testClient());
+    await session.start();
+    await tester.pumpWidget(_host(
+      session,
+      Scaffold(
+        body: SystemScreen(
+          system: SystemSlug.natal,
+          onOpenChapter: (_, _, {partner}) {},
+        ),
+      ),
+    ));
+    await _settle(tester);
+    expect(find.text('Core'), findsOneWidget);
+
+    await session.chooseLanguage('ru');
+    await _settle(tester);
+
+    expect(
+      paths.where((p) => p == 'GET /v1/readings/natal/chapters?locale=ru'),
+      isNotEmpty,
+      reason: 'заголовки оглавления ключуются локалью и обязаны перечитаться',
+    );
+    expect(find.text('Ядро'), findsOneWidget);
+    expect(find.text('Core'), findsNothing,
+        reason: 'заголовок на прежнем языке под новым интерфейсом запрещён');
   });
 
   test('архив беседы и список бесед просят язык приложения', () async {

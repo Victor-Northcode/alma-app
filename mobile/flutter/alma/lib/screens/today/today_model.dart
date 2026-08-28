@@ -156,7 +156,15 @@ class TodayModel extends ChangeNotifier {
   /// [subscriber] больше не решает, лететь ли запросу, — но остаётся в
   /// подписи: экран им решает, что рисовать, и параметр держит обе половины
   /// решения в одном вызове.
+  /// Номер живой загрузки. Причин перечитать экран стало три (профиль, права,
+  /// язык — 28.08.2026), и две загрузки подряд перестали быть теорией: письмо
+  /// дня едет секунды, и ответ прежнего языка, пришедший после нового, ставил
+  /// бы текст на старом языке поверх уже начатого перечитывания. Побеждает
+  /// последний заход, а не быстрейший.
+  int _epoch = 0;
+
   Future<void> load({required String locale, required bool subscriber}) async {
+    final epoch = ++_epoch;
     sky = const LoadRunning();
     line = const LoadRunning();
     notifyListeners();
@@ -164,30 +172,34 @@ class TodayModel extends ChangeNotifier {
     // Одновременно, как на iOS: гороскоп — это транзиты плюс письмо дня, и
     // ждать их по очереди значит удвоить время до первого слова на экране.
     await Future.wait([
-      _loadSky(),
-      _loadLine(locale),
+      _loadSky(epoch),
+      _loadLine(locale, epoch),
     ]);
   }
 
-  Future<void> _loadSky() async {
+  Future<void> _loadSky(int epoch) async {
     try {
       final result = await client.compute(SystemSlug.transits);
+      if (epoch != _epoch) return;
       sky = LoadDone(result);
     } on AlmaError catch (error) {
+      if (epoch != _epoch) return;
       sky = LoadFailed(error);
     }
     notifyListeners();
   }
 
-  Future<void> _loadLine(String locale) async {
+  Future<void> _loadLine(String locale, int epoch) async {
     try {
       final result = await client.reading(
         system: SystemSlug.transits,
         chapter: 'active',
         locale: locale,
       );
+      if (epoch != _epoch) return;
       line = LoadDone(result);
     } on AlmaError catch (error) {
+      if (epoch != _epoch) return;
       line = LoadFailed(error);
     }
     notifyListeners();

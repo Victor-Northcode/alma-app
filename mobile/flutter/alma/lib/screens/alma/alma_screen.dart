@@ -145,6 +145,11 @@ class _AlmaScreenState extends State<AlmaScreen>
   /// обычной перестройки. Довод у ветки в [didChangeDependencies].
   String? _loadedLocale;
 
+  /// Номер живой загрузки треда. Смена языка зовёт [_loadLastThread] заново,
+  /// и ответ прежнего захода, пришедший позже, ставил бы ленту на старом
+  /// языке поверх новой. Побеждает последний заход, а не быстрейший.
+  int _threadEpoch = 0;
+
   /// **Наклон света на отправку.** §1 спеки: «На отправку вопроса свет
   /// „наклоняется“: яркость +15 % за 240 мс»; §4 повторяет длительность в
   /// словаре движения. Это единственная реакция света на действие человека —
@@ -223,6 +228,9 @@ class _AlmaScreenState extends State<AlmaScreen>
       // Ответ считается доехавшим, только когда последняя реплика — не наша:
       // сервер мог ещё писать, и тогда стрим, возможно, жив — не мешаем ему.
       if (turns.last.mine) return;
+      // Лента поднята на текущем языке — метка обязана это отразить, иначе
+      // следующая перестройка перечитала бы тред второй раз впустую.
+      _loadedLocale = session.locale;
       setState(() {
         _threadId = id;
         _sending = false;
@@ -274,6 +282,16 @@ class _AlmaScreenState extends State<AlmaScreen>
       // `didChangeDependencies`, их у `InheritedNotifier` достаточно.
       _loadedLocale = session.locale;
       _loadLastThread();
+      // Вступительные вопросы и позиции строки думания собраны из слов
+      // каталога **на языке сборки** и хранятся готовыми строками — без
+      // пересборки «Луна у меня — Дева…» стояла бы по-русски под английским
+      // интерфейсом. Кадром позже, а не сейчас: `_loadOpeners` читает
+      // `L.of(context)` до первого await, а словарь интерфейса в момент
+      // этого уведомления мог ещё не перещёлкнуться — вопросы пересобрались
+      // бы на старом языке. Расчёт кеширован сервером, вызов бесплатен.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _loadOpeners();
+      });
     }
   }
 
@@ -288,13 +306,15 @@ class _AlmaScreenState extends State<AlmaScreen>
   Future<void> _loadLastThread() async {
     final session = SessionScope.of(context);
     if (!session.hasBirthData) return;
+    final epoch = ++_threadEpoch;
     try {
       final threads = await session.client.threads(locale: session.locale);
-      if (mounted) setState(() => _past = threads);
+      if (!mounted || epoch != _threadEpoch) return;
+      setState(() => _past = threads);
       if (threads.isEmpty) return;
       final turns =
           await session.client.thread(threads.first.id, locale: session.locale);
-      if (!mounted || turns.isEmpty) return;
+      if (!mounted || epoch != _threadEpoch || turns.isEmpty) return;
       setState(() {
         _threadId = threads.first.id;
         _turns
@@ -489,6 +509,20 @@ class _AlmaScreenState extends State<AlmaScreen>
         // Она ответила — свет отпускает наклон и возвращается к своему
         // дыханию.
         _tilt.reverse();
+        // Смена языка, пришедшая посреди отправки, была отложена, а не
+        // потеряна: ветка в `didChangeDependencies` пропускает её при
+        // `_sending`, и обещание «язык доедет со следующим уведомлением»
+        // держалось бы только случайным событием сессии — `setState` сам по
+        // себе `didChangeDependencies` не зовёт. Долг забирается здесь,
+        // единственным местом, где отправка кончается.
+        final spoken = SessionScope.of(context).locale;
+        if (_threadLoaded && _loadedLocale != spoken) {
+          _loadedLocale = spoken;
+          _loadLastThread();
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) _loadOpeners();
+          });
+        }
       }
       _scrollDown();
     }

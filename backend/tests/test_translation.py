@@ -325,8 +325,10 @@ def test_a_thread_is_served_in_the_language_of_the_app(api, auth_headers, script
     """
     thread_id = _seed_thread(api, auth_headers)
     scripted.responses += [
+        # Свежие реплики переводятся первыми (бюджет времени может не дать
+        # перевести всё), поэтому в пачке ответ Alma стоит раньше вопроса.
         json.dumps(
-            {"segments": ["What awaits me in spring?", "Spring brings clarity."]}
+            {"segments": ["Spring brings clarity.", "What awaits me in spring?"]}
         ),
         json.dumps({"segments": ["What awaits me in spring"]}),
     ]
@@ -398,7 +400,7 @@ def test_messages_without_a_locale_still_translate(api, auth_headers, scripted):
     read_async(strip)
     scripted.responses += [
         json.dumps(
-            {"segments": ["What awaits me in spring?", "Spring brings clarity."]}
+            {"segments": ["Spring brings clarity.", "What awaits me in spring?"]}
         ),
         json.dumps({"segments": ["What awaits me in spring"]}),
     ]
@@ -409,6 +411,172 @@ def test_messages_without_a_locale_still_translate(api, auth_headers, scripted):
     assert [m["body"] for m in english["messages"]] == [
         "What awaits me in spring?",
         "Spring brings clarity.",
+    ]
+
+
+def test_the_source_is_the_original_not_an_earlier_translation(
+    api, auth_headers, scripted, owns
+):
+    """Перевод с перевода запрещён, пока жив оригинал.
+
+    Свежая строка той же главы может сама быть haiku-переводом; брать её
+    исходником значило бы копить дрейф, пока оплаченный сильной моделью
+    оригинал лежит строкой ниже.
+    """
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    factors = _factors_for(api, auth_headers)
+    scripted.responses += [
+        _chapter_reply(factors),
+        _RU_CHAPTER,
+        json.dumps({"segments": ["T", "Z", "E", "Zw", "D", "S"]}),
+    ]
+    request = {"system": "numerology", "chapter": "life-path"}
+
+    api.post("/v1/readings", json=request, headers=auth_headers)
+    api.post(
+        "/v1/readings", json={**request, "locale": "ru"}, headers=auth_headers
+    )
+    api.post(
+        "/v1/readings", json={**request, "locale": "de"}, headers=auth_headers
+    )
+
+    assert len(scripted.calls) == 3
+    german = scripted.calls[2]["prompt"]
+    assert "The first paragraph, read from the chart." in german, (
+        "немецкий обязан переводиться с английского оригинала"
+    )
+    assert "Первый абзац" not in german, (
+        "русская строка — сама перевод, исходником быть не может"
+    )
+
+
+def test_chat_translation_pays_the_showcase_ledger_not_the_reading_one(
+    api, auth_headers, scripted
+):
+    """Чтение собственного архива не съедает бюджет настоящих вопросов.
+
+    Тот же довод, которым открывающий абзац переехал в `SHOWCASE_METRIC`:
+    витрина в $1.28 съедала месяц бесплатного тира в $1.10 целиком.
+    """
+    thread_id = _seed_thread(api, auth_headers)
+    scripted.responses += [
+        json.dumps(
+            {"segments": ["Spring brings clarity.", "What awaits me in spring?"]}
+        ),
+        json.dumps({"segments": ["What awaits me in spring"]}),
+    ]
+
+    api.get(f"/v1/chat/threads/{thread_id}?locale=en", headers=auth_headers)
+
+    async def ledgers():
+        from sqlalchemy import select
+
+        from alma.ai import cost
+        from alma.db.models import User
+        from alma.db.session import session_scope
+
+        async with session_scope() as session:
+            user = (await session.execute(select(User))).scalars().one()
+            return (
+                await cost.month_spend(session, user),
+                await cost.month_showcase_spend(session, user),
+            )
+
+    reading_spend, showcase_spend = read_async(ledgers)
+    assert showcase_spend > 0, "перевод беседы обязан быть записан в показ"
+    assert reading_spend == 0, (
+        "статья чтения — для глав и вопросов, архив её не трогает"
+    )
+
+
+def test_a_spent_time_budget_serves_the_rest_as_written(
+    api, auth_headers, scripted, monkeypatch
+):
+    """Клиент ждёт ответа 30 секунд — бюджет обязан вернуть его раньше.
+
+    С нулевым бюджетом не переводится ничего, но беседа читается: реплики
+    уезжают как записаны, заголовок (вне бюджета, он короткий) — переводом.
+    """
+    from alma.api.routers import readings as route
+
+    thread_id = _seed_thread(api, auth_headers)
+    monkeypatch.setattr(route, "CHAT_TRANSLATION_BUDGET_SECONDS", -1.0)
+    scripted.responses.append(json.dumps({"segments": ["What awaits me in spring"]}))
+
+    english = api.get(
+        f"/v1/chat/threads/{thread_id}?locale=en", headers=auth_headers
+    ).json()
+
+    assert [m["body"] for m in english["messages"]] == [
+        "Что меня ждёт весной?",
+        "Весна принесёт ясность.",
+    ], "бюджет истрачен — реплики уезжают как записаны, а не 503"
+    assert len(scripted.calls) == 1, "в бюджет не влезла ни одна пачка реплик"
+
+
+def test_the_newest_messages_translate_first(
+    api, auth_headers, scripted, monkeypatch
+):
+    """Когда на всё не хватает, переводится то, к чему экран прокручен.
+
+    Пачки по одной реплике (потолок в один знак), провайдер отвечает один раз
+    и замолкает: перевод достаётся свежему ответу Alma, старый вопрос ждёт
+    следующего открытия.
+    """
+    from alma.ai import translator
+    from alma.ai.provider import ModelUnavailable
+
+    thread_id = _seed_thread(api, auth_headers)
+    monkeypatch.setattr(
+        "alma.api.routers.readings.CHAT_BATCH_CHARS", 1
+    )
+    scripted.responses += [
+        json.dumps({"segments": ["Spring brings clarity."]}),
+        ModelUnavailable("the stand went quiet"),
+        json.dumps({"segments": ["What awaits me in spring"]}),
+    ]
+
+    english = api.get(
+        f"/v1/chat/threads/{thread_id}?locale=en", headers=auth_headers
+    ).json()
+
+    assert [m["body"] for m in english["messages"]] == [
+        "Что меня ждёт весной?",
+        "Spring brings clarity.",
+    ], "свежая реплика переведена, старая честно ждёт"
+
+
+def test_a_deterministic_refusal_is_paid_for_exactly_once(
+    api, auth_headers, scripted
+):
+    """Отказ перевода кешируется исходником, а не оплачивается на каждом
+    открытии: та же пачка даёт тот же отказ, и без записи каждый показ треда
+    жёг бы две настоящие попытки вечно."""
+    thread_id = _seed_thread(api, auth_headers)
+    broken = json.dumps({"segments": ["одна строка вместо двух"]}, ensure_ascii=False)
+    scripted.responses += [
+        broken, broken,
+        json.dumps({"segments": ["What awaits me in spring"]}),
+    ]
+
+    first = api.get(
+        f"/v1/chat/threads/{thread_id}?locale=en", headers=auth_headers
+    ).json()
+    assert [m["body"] for m in first["messages"]] == [
+        "Что меня ждёт весной?",
+        "Весна принесёт ясность.",
+    ], "отказ — реплики как записаны"
+    spent = len(scripted.calls)
+
+    second = api.get(
+        f"/v1/chat/threads/{thread_id}?locale=en", headers=auth_headers
+    ).json()
+    assert len(scripted.calls) == spent, (
+        "второе открытие не платит за тот же отказ"
+    )
+    assert [m["body"] for m in second["messages"]] == [
+        "Что меня ждёт весной?",
+        "Весна принесёт ясность.",
     ]
 
 
@@ -509,10 +677,137 @@ def test_russian_output_with_latin_words_is_sent_back():
             source_locale="en",
             target_locale="ru",
             paid=False,
+            prose=True,
         )
     )
     assert done.segments == ("Твой натальный Уран говорит о многом.",)
     assert len(provider.calls) == 2
+
+
+def test_the_romanised_name_from_the_factors_is_lawful_latin():
+    """Глава имени цитирует «ANATOLIY MIKHAYLOV» — и обязана продолжать.
+
+    Тот же список разрешённых, что у писателя (`russian_latin_leak` + факторы):
+    без него верный перевод главы имени отвергался бы детерминированно, и
+    либо имя транслитерировалось (читателю нечем проверить сумму), либо
+    перевод падал в дорогую перегенерацию — на каждом, у кого эта глава есть.
+    """
+    import asyncio
+
+    provider = ScriptedProvider()
+    provider.responses.append(
+        json.dumps(
+            {"segments": ["Твоё имя посчитано как ANATOLIY MIKHAYLOV."]},
+            ensure_ascii=False,
+        )
+    )
+
+    done = asyncio.run(
+        translator.translate(
+            ["Your name counted as ANATOLIY MIKHAYLOV."],
+            provider=provider,
+            model="claude-haiku-4-5",
+            source_locale="en",
+            target_locale="ru",
+            paid=False,
+            factors=("name counted as ANATOLIY MIKHAYLOV",),
+            prose=True,
+        )
+    )
+    assert done.segments == ("Твоё имя посчитано как ANATOLIY MIKHAYLOV.",)
+    assert len(provider.calls) == 1, "цитата из фактора — не протечка"
+
+
+def test_gendered_russian_for_an_unknown_reader_is_sent_back():
+    """Английский исходник безродовой — перевод обязан таким и остаться.
+
+    «Ты родился» женщине — первая строка самого личного текста продукта,
+    сообщающая, что Alma решила за неё; у писателя это ловит
+    `russian_gendered`, и переводчик держит ту же сетку.
+    """
+    import asyncio
+
+    provider = ScriptedProvider()
+    provider.responses += [
+        json.dumps({"segments": ["Ты родился под ясным небом."]}, ensure_ascii=False),
+        json.dumps({"segments": ["Ты приходишь в мир под ясным небом."]}, ensure_ascii=False),
+    ]
+
+    done = asyncio.run(
+        translator.translate(
+            ["You were born under a clear sky."],
+            provider=provider,
+            model="claude-haiku-4-5",
+            source_locale="en",
+            target_locale="ru",
+            paid=False,
+            prose=True,
+        )
+    )
+    assert done.segments == ("Ты приходишь в мир под ясным небом.",)
+    assert len(provider.calls) == 2
+    assert "gender" in provider.calls[1]["prompt"], (
+        "жалоба обязана назвать род, а не пересказать общее недовольство"
+    )
+
+
+def test_a_known_reader_gender_rides_in_the_prompt_and_is_allowed():
+    """Род известен — грамматика идёт за ним, сетка безродовости молчит."""
+    import asyncio
+
+    provider = ScriptedProvider()
+    provider.responses.append(
+        json.dumps({"segments": ["Ты родилась под ясным небом."]}, ensure_ascii=False)
+    )
+
+    done = asyncio.run(
+        translator.translate(
+            ["You were born under a clear sky."],
+            provider=provider,
+            model="claude-haiku-4-5",
+            source_locale="en",
+            target_locale="ru",
+            paid=False,
+            reader_gender="female",
+            prose=True,
+        )
+    )
+    assert done.segments == ("Ты родилась под ясным небом.",)
+    assert len(provider.calls) == 1
+    assert "woman" in provider.calls[0]["system"], (
+        "род читателя обязан уехать подсказкой в промпт"
+    )
+
+
+def test_conversation_is_not_judged_by_the_rules_of_prose():
+    """Беседа — собственные слова человека: «я родилась», «мой iPhone».
+
+    Сетки прозы (латиница, род) к ней не применяются — иначе верный перевод
+    отвергался бы за то, что человек написал о себе в своём роде и назвал
+    телефон телефоном.
+    """
+    import asyncio
+
+    provider = ScriptedProvider()
+    provider.responses.append(
+        json.dumps(
+            {"segments": ["Я родилась в мае, и мой iPhone это знает."]},
+            ensure_ascii=False,
+        )
+    )
+
+    done = asyncio.run(
+        translator.translate(
+            ["I was born in May and my iPhone knows it."],
+            provider=provider,
+            model="claude-haiku-4-5",
+            source_locale=None,
+            target_locale="ru",
+            paid=False,
+        )
+    )
+    assert done.segments == ("Я родилась в мае, и мой iPhone это знает.",)
+    assert len(provider.calls) == 1
 
 
 def test_empty_segments_do_not_travel_to_the_model():

@@ -91,7 +91,12 @@ class Translated:
     spend: cost.Spend
 
 
-def _system_prompt(source_locale: str | None, target_locale: str) -> str:
+def _system_prompt(
+    source_locale: str | None,
+    target_locale: str,
+    *,
+    reader_gender: str | None = None,
+) -> str:
     target = voice.LOCALE_NAMES.get(target_locale, target_locale)
     if source_locale is None:
         # Беседа — смешанный исходник: вопросы на одном языке, ответы на
@@ -111,11 +116,28 @@ def _system_prompt(source_locale: str | None, target_locale: str) -> str:
         "- Keep the intimate second-person voice of the original.",
         "- Astrological terms (planets, signs, houses, aspects) get their "
         "standard names in the target language.",
+        "- Names of people, quoted verbatim spellings, and product names "
+        "stay exactly as written — a spelling the text asks the reader to "
+        "check must survive translation letter for letter.",
         "- Return exactly one translated segment per input segment, in the "
         "same order. Never merge or split segments.",
         "- A segment that is already in the target language is returned "
         "unchanged.",
     ]
+    # Род читателя известен — грамматика цели обязана идти за ним. Английский
+    # исходник рода не несёт («you were born»), и без этой строки дешёвая
+    # модель выбирала бы род статистикой — то самое «ты родился» женщине,
+    # которое у писателя ловит отдельное правило.
+    if reader_gender == "female":
+        lines.append(
+            "- The reader is a woman: gendered forms in the target language "
+            "must address her as female."
+        )
+    elif reader_gender == "male":
+        lines.append(
+            "- The reader is a man: gendered forms in the target language "
+            "must address him as male."
+        )
     extra = _EXTRA_RULES.get(target_locale)
     if extra:
         lines.append("- " + extra)
@@ -146,11 +168,35 @@ async def translate(
     source_locale: str | None,
     target_locale: str,
     paid: bool,
+    factors: Sequence[str] = (),
+    reader_gender: str | None = None,
+    prose: bool = False,
 ) -> Translated:
     """Перевести сегменты, сохранив их число и порядок.
 
     Пустые сегменты не ездят к модели вовсе: их не из чего переводить, а
     модель, которой прислали пустую строку, любит заполнять её от себя.
+
+    [prose] — «это письмо Alma одному читателю»: главы, абзацы витрины,
+    сферы. Только к прозе применяются русские сетки писателя — протечка
+    латиницы и род читателя; беседа сюда не ходит нарочно: там собственные
+    слова человека («я родилась», «мой iPhone»), и судить их правилами прозы
+    значило бы отвергать верные переводы.
+
+    [factors] — процитированные факторы исходника, и это не украшение: у
+    писателя тот же список — законное разрешение на латиницу в русской прозе
+    (`validator.russian_latin_leak`). Глава имени в нумерологии **обязана**
+    назвать романизированное написание («name counted as ANATOLIY…»), иначе
+    читателю нечем проверить сумму; переводчик без этого списка отвергал
+    верный перевод ровно той главы — и либо требовал транслитерировать имя,
+    либо падал в дорогую перегенерацию, оба исхода хуже бага, который эта
+    проверка ловит.
+
+    [reader_gender] — род читателя, когда он известен: уезжает подсказкой в
+    промпт (английский исходник рода не несёт, и «ты родился» женщине —
+    ровно та ошибка, что у писателя записана отдельным правилом). Когда род
+    неизвестен, русская проза сверяется `validator.russian_gendered`: перевод
+    обязан держать безродовой регистр исходника.
 
     Бросает `TranslationRefused`, когда перевод дважды не совпал с исходником
     по числу сегментов; `cost.BudgetExceeded` — когда вызов не влезает в
@@ -161,7 +207,9 @@ async def translate(
     if not filled:
         return Translated(tuple(segments), model, cost.cost(model, 0, 0))
 
-    system = _system_prompt(source_locale, target_locale)
+    system = _system_prompt(
+        source_locale, target_locale, reader_gender=reader_gender
+    )
     prompt = json.dumps(
         {"segments": [text for _, text in filled]}, ensure_ascii=False
     )
@@ -200,7 +248,13 @@ async def translate(
         spent = _plus(spent, completion, model)
 
         out = _parsed(completion.text)
-        problem = _mismatch(out, filled, target_locale)
+        problem = _mismatch(
+            out, filled,
+            target_locale=target_locale,
+            factors=factors,
+            reader_gender=reader_gender,
+            prose=prose,
+        )
         if problem is None:
             translated = list(segments)
             for (index, _), text in zip(filled, out):
@@ -249,7 +303,11 @@ def _parsed(text: str) -> list[str] | None:
 def _mismatch(
     out: list[str] | None,
     filled: list[tuple[int, str]],
+    *,
     target_locale: str,
+    factors: Sequence[str],
+    reader_gender: str | None,
+    prose: bool,
 ) -> str | None:
     """Чем перевод не совпал с исходником — или `None`, если совпал."""
     if out is None:
@@ -262,18 +320,33 @@ def _mismatch(
     empty = [i for i, text in enumerate(out) if not text.strip()]
     if empty:
         return f"segments {empty} came back empty."
-    if i18n.resolve(target_locale) == "ru":
-        # Та же проверка, что у писателя: латинское слово посреди русской
-        # фразы — «твой natal Уран» — видели живьём. Имена факторов сюда не
-        # ездят (они не переводятся и остаются в своих полях), поэтому
-        # список разрешённых пуст.
-        leaked = validator.russian_latin_leak("\n\n".join(out))
+    if prose and i18n.resolve(target_locale) == "ru":
+        joined = "\n\n".join(out)
+        # Та же проверка, что у писателя, и с тем же списком разрешённых:
+        # латинское слово посреди русской фразы — «твой natal Уран» — видели
+        # живьём, но глава имени в нумерологии **обязана** цитировать
+        # романизированное написание из фактора, и без [factors] верный
+        # перевод отвергался бы ровно на ней (см. докстринг `translate`).
+        leaked = validator.russian_latin_leak(joined, tuple(factors))
         if leaked:
             return (
                 "Latin words are stranded in the Russian text: "
                 + ", ".join(leaked[:5])
                 + ". Translate them."
             )
+        if reader_gender not in ("female", "male"):
+            # Английский исходник безродовой, и перевод обязан таким и
+            # остаться: «ты родился» женщине — первая строка самого личного
+            # текста продукта, сообщающая, что Alma решила за неё. То же
+            # правило, тем же валидатором, что у писателя.
+            gendered = validator.russian_gendered(joined)
+            if gendered:
+                return (
+                    "These Russian forms assume the reader's gender: "
+                    + ", ".join(gendered[:5])
+                    + ". Use present tense or impersonal constructions "
+                    "instead."
+                )
     return None
 
 
