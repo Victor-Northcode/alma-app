@@ -57,6 +57,13 @@ SEGMENTS_SCHEMA = {
         "segments": {"type": "array", "items": {"type": "string"}},
     },
     "required": ["segments"],
+    # Не украшение: без него API отвечает 400 «'additionalProperties' must be
+    # explicitly set to false» — на **каждый** вызов перевода, и весь модуль
+    # тихо падал в дорогую генерацию. Тесты этого не видят (ScriptedProvider
+    # схему не читает); поймано на проде 28.08.2026, первым же живым вызовом.
+    # У всех схем структурного вывода в проекте это поле стоит — см.
+    # `writer.CHAPTER_SCHEMA`, `conversation`, `spheres`.
+    "additionalProperties": False,
 }
 
 #: Правила письма, которые у целевого языка есть сверх «переведи хорошо».

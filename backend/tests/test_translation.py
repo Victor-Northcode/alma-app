@@ -582,6 +582,18 @@ def test_a_deterministic_refusal_is_paid_for_exactly_once(
 
 # ── сам переводчик ─────────────────────────────────────────────────────────
 
+def test_the_segments_schema_forbids_extra_properties():
+    """Контракт API структурного вывода, поймано на проде 28.08.2026.
+
+    Без `additionalProperties: false` каждый вызов перевода отвечал 400
+    «'additionalProperties' must be explicitly set to false» и весь модуль
+    тихо падал в дорогую генерацию — деградация скрывала поломку. Скриптовый
+    провайдер схему не читает, поэтому число закреплено буквально, как у
+    прочих схем проекта (`writer.CHAPTER_SCHEMA`, `spheres`, `conversation`).
+    """
+    assert translator.SEGMENTS_SCHEMA["additionalProperties"] is False
+
+
 def test_reading_pieces_rebuilds_everything_but_the_prose():
     """Разборка-сборка не трогает поля, которые по контракту не переводятся."""
     body = {
