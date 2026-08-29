@@ -1,0 +1,5 @@
+BUG-002 — credits.spend read-modify-write
+credits.py:232  if row is None or (row.used or 0) >= (row.granted or 0): return None
+credits.py:...  row.used = (row.used or 0) + 1   # lost update, без атомарности и per-user замка
+readings.py:823 _write_lock ключ = chapter+calc_key (различается по партнёрам) — не защищает.
+BUG-006 — billing.py:1994 row.count = (row.count or 0) + 1 — тот же класс, /billing/declined.

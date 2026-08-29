@@ -375,6 +375,52 @@ def test_a_grant_records_which_processor_paid_for_it(other_processor, auth_heade
     assert sources == ["not-paddle"]
 
 
+def test_a_product_already_owned_does_not_open_a_second_checkout(
+    other_processor, auth_headers
+):
+    """Второй чекаут на уже купленную дверь отказывается 409 (BUG-007).
+
+    Иначе владелец `door.natal` открыл бы второй чекаут на неё, вебхук вписал бы
+    второй разовый грант, а покупатель заплатил бы дважды за одну вечную дверь.
+    Расходуемая проверка пары так не блокируется — она покупается на каждого
+    нового партнёра, — и незанятая дверь по-прежнему открывается. На старом коде
+    (проверки владения не было) первый ассерт был бы 200.
+    """
+    user_id = _session(other_processor, auth_headers)
+    granted = _post_webhook(
+        other_processor,
+        {
+            "event_id": "evt_own",
+            "event_type": "payment.succeeded",
+            "data": {"user_id": user_id, "product": "door.natal", "payment_id": "pay_own"},
+        },
+        headers={name: "x" for name in THREE_HEADERS},
+    )
+    assert granted.json()["status"] == "granted natal"
+
+    again = other_processor.post(
+        "/v1/billing/checkout",
+        json={"product": "door.natal", "email": "sofia@example.com"},
+        headers=auth_headers,
+    )
+    assert again.status_code == 409, again.text
+    assert again.json()["detail"]["error"] == "already_owned"
+
+    # Незанятая дверь всё ещё продаётся, и расходуемая проверка пары — тоже.
+    other = other_processor.post(
+        "/v1/billing/checkout",
+        json={"product": "door.numerology", "email": "sofia@example.com"},
+        headers=auth_headers,
+    )
+    assert other.status_code == 200, other.text
+    pair = other_processor.post(
+        "/v1/billing/checkout",
+        json={"product": "pair.check", "email": "sofia@example.com"},
+        headers=auth_headers,
+    )
+    assert pair.status_code == 200, pair.text
+
+
 def test_a_processor_that_needs_an_email_says_so_before_the_button(
     other_processor, auth_headers
 ):

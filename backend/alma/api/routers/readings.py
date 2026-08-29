@@ -238,8 +238,17 @@ _STREAM_TURNS = STREAM_TURNS
 #:
 #: Одного процесса это не переживает — как и `_WRITE_LOCKS` выше; на нескольких
 #: воркерах щель сужается до окна коммита, но не закрывается. Настоящее
-#: лекарство там — уникальность в базе, и его стоит завести в тот день, когда
-#: воркеров станет больше одного.
+#: лекарство там — уникальность в базе.
+#:
+#: **Для порции вопросов это лекарство теперь есть (BUG-001, 29.08.2026):**
+#: `_answer_one_turn` резервирует слот атомарным `counters.spend_and_check`
+#: **до** генерации и возвращает его при приветствии или сбое (см. там). Резерв
+#: одинаков на всех воркерах — то есть межпроцессную гонку порции он закрывает
+#: сам, без замка. Замок остаётся: он всё ещё сериализует ходы одного аккаунта
+#: (порядок сообщений в треде, брошенные стрим-ходы — по одному), и это его
+#: работа, а не защита счётчика. Месячный потолок так и читается до записи —
+#: его гонка признана владельцем допустимой (`db/counters`, про
+#: `charge_and_check_month`).
 _CHAT_LOCKS: dict[str, asyncio.Lock] = {}
 #: Сколько ходов этого аккаунта держат замок или стоят за ним. Считается, чтобы
 #: строку можно было убрать безопасно: удалять «когда не заперто» нельзя —
@@ -3418,6 +3427,72 @@ async def _answer_one_turn(
                 ),
             )
 
+    # ── 3.5. резерв вопроса до генерации: гонка между воркерами (BUG-001) ──
+    #
+    # Порция вопросов читалась воротами (`_chat_gate` → `_asked`), а
+    # записывалась после ответа (`_count`) — между ними лежит вся генерация, и
+    # на нескольких воркерах два параллельных хода проходили ворота с одним и
+    # тем же числом в руках: N платных ответов там, где оплачена порция.
+    # `_chat_slot` сериализовал только внутри процесса и сам это признавал —
+    # «настоящее лекарство: уникальность в базе, в тот день, когда воркеров
+    # станет больше одного». Лекарство — атомарный резерв слота до генерации
+    # (`counters.spend_and_check`: прибавить и проверить одним запросом), а не
+    # попроцессный замок. Резерв возвращается, если ход оказался не вопросом
+    # (приветствие) или не состоялся вовсе — ровно тот случай, под который
+    # написан `counters.refund` («ход беседы, отменённый после списания»).
+    #
+    # Кризисный ход не резервирует, как и не считает и не платит: он отвечает
+    # строкой из каталога, генерации нет. Месячный потолок остаётся прежним
+    # чтением-сравнением — его гонка признана владельцем допустимой (центы
+    # против долларового потолка, `db/counters` в разделе про `charge_and_check_month`).
+    reserved = False
+    if not validator.crisis(payload.message):
+        async with session_scope() as session:
+            try:
+                await counters.spend_and_check(
+                    session,
+                    user_id=user_id,
+                    day=_period_start(allowance.period),
+                    metric=allowance.metric,
+                    limit=allowance.limit,
+                )
+            except counters.QuotaExceeded as exc:
+                # Пока шёл этот ход, порцию добрал другой — тот же отказ, что
+                # дают ворота, и тем же телом.
+                raise HTTPException(
+                    status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail={
+                        "error": "question_limit",
+                        "message": i18n_replies.reply(
+                            f"question_limit.{allowance.period}",
+                            payload.locale,
+                            limit=allowance.limit,
+                        ),
+                        "asked": allowance.limit,
+                        "allowance": allowance.limit,
+                        "period": allowance.period,
+                    },
+                ) from exc
+        reserved = True
+
+    async def _give_back_reserved() -> None:
+        """Вернуть зарезервированный вопрос: приветствие или несостоявшийся ход.
+
+        Своей короткой транзакцией — она обязана закоммититься независимо от
+        того, что случилось с ходом (у которого своя, уже откатившаяся). Тот же
+        приём «деньги/счёт отдельно от обломков», что у `_charge_anyway`.
+        """
+        if not reserved:
+            return
+        async with session_scope() as refund_session:
+            await counters.refund(
+                refund_session,
+                user_id=user_id,
+                day=_period_start(allowance.period),
+                metric=allowance.metric,
+                count=1,
+            )
+
     # ── 4. сама генерация, без соединения: 10–40 секунд ───────────────────
     try:
         reply = await conversation.answer(
@@ -3434,6 +3509,8 @@ async def _answer_one_turn(
         )
     except cost.BudgetExceeded as exc:
         log.error("budget exceeded in chat for %s: %s", user.id, exc)
+        # Ход не состоялся — зарезервированный вопрос возвращается (BUG-001).
+        await _give_back_reserved()
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
@@ -3450,6 +3527,9 @@ async def _answer_one_turn(
         # правило «вопрос платится за ответ» ошибке не уступает.
         log.error("every attempt at a chat turn for %s was truncated: %s", user.id, exc)
         await _charge_anyway(user, cents=_truncated_cents(exc))
+        # Деньги за оплаченные попытки записаны, а вопрос — нет: резерв возвращается
+        # (BUG-001), потому что правило «вопрос платится за ответ» ошибке не уступает.
+        await _give_back_reserved()
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
@@ -3465,6 +3545,8 @@ async def _answer_one_turn(
         # and an internal identifier are not a sentence for a reader. Logged
         # where an engineer will find it; the body is one of ours.
         log.error("model provider refused a chat turn for %s: %s", user.id, exc)
+        # Ответа нет — зарезервированный вопрос возвращается (BUG-001).
+        await _give_back_reserved()
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
             detail={
@@ -3486,6 +3568,10 @@ async def _answer_one_turn(
         # and the monthly ceiling, which both run on this exact path.
         log.warning("chat turn refused for %s: %s", user.id, exc)
         await _charge_anyway(user, cents=exc.spend.cents)
+        # Деньги записаны, вопрос — нет: резерв возвращается (BUG-001). Ровно то
+        # «the *question* is not [recorded]», что описано выше, но теперь слот
+        # был занят до генерации, поэтому его надо явно отдать.
+        await _give_back_reserved()
         raise HTTPException(
             422,
             detail={
@@ -3495,8 +3581,9 @@ async def _answer_one_turn(
         ) from exc
     except ValueError as exc:
         # The chart had no facts to answer from. Nothing was generated, so
-        # nothing is charged.
+        # nothing is charged — including the reserved question (BUG-001).
         log.warning("nothing to answer a chat turn from for %s: %s", user.id, exc)
+        await _give_back_reserved()
         raise HTTPException(
             422,
             detail={
@@ -3587,11 +3674,31 @@ async def _answer_one_turn(
         # generation happened, and `_spend` below records it — so what this decides
         # is the promise, not the ledger: you pay a question for an answer about
         # yourself, and greeting her is free.
+        #
+        # **Слот уже занят резервом до генерации (BUG-001).** Поэтому вопрос
+        # здесь не считается заново — иначе он списался бы дважды, — а только
+        # читается; а приветствие возвращает занятый слот. Без резерва
+        # (кризисный ход) — прежний путь: посчитать вопрос, приветствие оставить
+        # как есть.
         if reply.spends_a_question:
-            asked = await _count(
-                session, user, allowance.metric, day=_period_start(allowance.period)
-            )
+            if reserved:
+                asked = await _asked(session, user, allowance)
+            else:
+                asked = await _count(
+                    session, user, allowance.metric, day=_period_start(allowance.period)
+                )
         else:
+            if reserved:
+                # Приветствие: слот возвращается **в этой же** транзакции, атомарно
+                # с записью ответа — не своей сессией, чтобы не открывать вторую
+                # запись поверх незакрытой (на SQLite это «database is locked»).
+                await counters.refund(
+                    session,
+                    user_id=user_id,
+                    day=_period_start(allowance.period),
+                    metric=allowance.metric,
+                    count=1,
+                )
             asked = await _asked(session, user, allowance)
         await _spend(session, user, reply.spend.cents)
         await session.flush()

@@ -6,10 +6,12 @@ ssh — так был выдан и его собственный (`source='owne
 тот процесс, который ломается в день, когда владелец захочет подарить месяц
 другу с телефона.
 
-**Пароль в конфиге не живёт — только его SHA-256.** `.env` читают глаза,
-которым пароль не нужен: деплой, бэкап, тикет. Хэш пускает внутрь ровно так
-же, а его утечка паролем не является. Сравнение — `hmac.compare_digest`:
-обычное `==` отвечает быстрее на почти верный пароль, и это измеримо.
+**Пароль в конфиге не живёт — только его солёный scrypt-хэш** (`auth/admin_password`).
+`.env` читают глаза, которым пароль не нужен: деплой, бэкап, тикет. Хэш пускает
+внутрь ровно так же, а его утечка паролем не является — но лишь пока хэш дорого
+обратить: голый SHA-256 (как было до 29.08.2026) перебирается по словарю за
+минуты, поэтому теперь это солёный медленный KDF. Сравнение — `hmac.compare_digest`
+внутри `verify`: обычное `==` отвечает быстрее на почти верный хэш, и это измеримо.
 
 **Сессия — тот же JWT, что у приложения, с меткой `adm`.** Своя криптография
 для одной страницы — это вторая копия того, что уже проверено; метка же
@@ -25,8 +27,6 @@ Apple продолжит списывать. Кнопка отзыва у так
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -35,7 +35,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
-from ...auth import tokens
+from ...auth import admin_password, tokens
 from ...config import settings
 from ...db.models import DeviceToken, Entitlement, User, as_utc, utcnow
 from ..deps import SessionDep, request_source, window
@@ -102,8 +102,17 @@ async def login(payload: LoginIn, request: Request, session: SessionDep) -> dict
     # бесплатным (см. email-code/consume, где это поймал тест).
     await session.commit()
 
-    typed = hashlib.sha256(payload.password.encode()).hexdigest()
-    if not hmac.compare_digest(typed, digest):
+    # Солёный медленный scrypt, а не голый SHA-256 (BUG-005). Старый формат
+    # (64 hex-символа без `scrypt$`) — не крэш, а «этот деплой надо
+    # перенастроить»: `verify` вернёт `False`, а мы один раз скажем, чем именно.
+    if not admin_password.looks_like_scrypt(digest):
+        log.error(
+            "ALMA_ADMIN_PASSWORD_HASH is in the legacy unsalted-SHA-256 format; "
+            "admin login is disabled until it is regenerated with "
+            "`python -m tools.admin_password`"
+        )
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="wrong password")
+    if not admin_password.verify(payload.password, digest):
         log.warning("admin login refused from %s", request_source(request))
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="wrong password")
 

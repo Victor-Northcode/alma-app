@@ -79,15 +79,35 @@ def test_the_guest_ceiling_never_touches_somebody_who_already_has_an_account(api
     assert mine.json()["token"]
 
 
-def test_each_source_carries_its_own_budget(api, monkeypatch):
-    """Один исчерпавший потолок адрес не закрывает дверь всему миру."""
+def test_each_source_carries_its_own_budget(trusted_edge, monkeypatch):
+    """Один исчерпавший потолок адрес не закрывает дверь всему миру.
+
+    За доверенным краем (`ALMA_TRUSTED_EDGE`): `CF-Connecting-IP` край
+    перезаписывает, и потолок ключуется по нему. Без флага заголовок клиента не
+    источник — см. `test_the_edge_source_header_is_ignored…`.
+    """
     monkeypatch.setattr(deps, "GUEST_MINTS_PER_HOUR", 1)
     busy = {"CF-Connecting-IP": "203.0.113.1"}
     other = {"CF-Connecting-IP": "203.0.113.2"}
 
-    assert api.get("/v1/auth/session", headers=busy).status_code == 200
-    assert api.get("/v1/auth/session", headers=busy).status_code == 429
-    assert api.get("/v1/auth/session", headers=other).status_code == 200
+    assert trusted_edge.get("/v1/auth/session", headers=busy).status_code == 200
+    assert trusted_edge.get("/v1/auth/session", headers=busy).status_code == 429
+    assert trusted_edge.get("/v1/auth/session", headers=other).status_code == 200
+
+
+def test_the_edge_source_header_is_ignored_when_not_behind_a_trusted_edge(api, monkeypatch):
+    """Без `ALMA_TRUSTED_EDGE` ротация `CF-Connecting-IP` не снимает потолок.
+
+    На прямом инстансе эти заголовки шлёт клиент, и если бы потолок считался по
+    ним, смена одного заголовка на запрос обнуляла бы его — брутфорс `/admin`,
+    безлимитная ротация гостей мимо месячных бюджетов, перебор кодов из письма
+    (BUG-003). По умолчанию источник — адрес сокета: подделанные адреса ложатся
+    в один ключ и упираются в тот же потолок. На старом коде тест падает: второй
+    подделанный адрес проходил бы 200.
+    """
+    monkeypatch.setattr(deps, "GUEST_MINTS_PER_HOUR", 1)
+    assert api.get("/v1/auth/session", headers={"CF-Connecting-IP": "203.0.113.1"}).status_code == 200
+    assert api.get("/v1/auth/session", headers={"CF-Connecting-IP": "203.0.113.2"}).status_code == 429
 
 
 def test_forwarded_for_is_not_taken_as_the_source(api, monkeypatch):
@@ -267,23 +287,28 @@ def test_liveness_stays_public_and_uninformative(api, monkeypatch):
 
 # ── 5. дневной потолок анонима нельзя снять сменой заголовка ───────────────
 
-def test_a_fresh_anonymous_id_does_not_reset_the_daily_event_ceiling(api, monkeypatch):
-    """`X-Alma-Anon` клиент генерирует сам — потолок по нему был подсказкой."""
+def test_a_fresh_anonymous_id_does_not_reset_the_daily_event_ceiling(trusted_edge, monkeypatch):
+    """`X-Alma-Anon` клиент генерирует сам — потолок по нему был подсказкой.
+
+    За доверенным краем: разные источники разводит `CF-Connecting-IP`, который
+    край перезаписывает. Первые запросы без него идут с одного сокета — тот же
+    источник, и смена `X-Alma-Anon` его не меняет.
+    """
     monkeypatch.setattr(events_router, "ANON_EVENTS_PER_SOURCE_PER_DAY", 2)
     beacon = {"stage": "landing_view"}
 
     for _ in range(2):
-        assert api.post(
+        assert trusted_edge.post(
             "/v1/events", json=beacon, headers={"X-Alma-Anon": "aaaaaaaa-1111"}
         ).status_code == 200
 
-    refused = api.post("/v1/events", json=beacon, headers={"X-Alma-Anon": "bbbbbbbb-2222"})
+    refused = trusted_edge.post("/v1/events", json=beacon, headers={"X-Alma-Anon": "bbbbbbbb-2222"})
     assert refused.status_code == 429
     assert refused.json()["detail"]["error"] == "event_rate_limit"
 
     # Другой источник считается отдельно: потолок стоит против скрипта, а не
     # против второго человека в том же продукте.
-    elsewhere = api.post(
+    elsewhere = trusted_edge.post(
         "/v1/events",
         json=beacon,
         headers={"X-Alma-Anon": "cccccccc-3333", "CF-Connecting-IP": "203.0.113.4"},

@@ -160,8 +160,10 @@ def test_a_market_gets_the_shelf_priced_in_its_own_currency():
 
 # ── over HTTP, which is where it has to be true ────────────────────────────
 
-def test_the_catalogue_prices_the_country_the_edge_reports(api):
-    response = api.get("/v1/billing/catalogue", headers={"CF-IPCountry": "DE"})
+def test_the_catalogue_prices_the_country_the_edge_reports(trusted_edge):
+    # За доверенным краем (`ALMA_TRUSTED_EDGE`): без него заголовок клиента не
+    # читается и подделать валюту нельзя — см. `test_the_edge_header_is_ignored…`.
+    response = trusted_edge.get("/v1/billing/catalogue", headers={"CF-IPCountry": "DE"})
     assert response.status_code == 200
     assert response.json()["currency"] == "EUR"
 
@@ -173,11 +175,11 @@ def test_a_visitor_with_no_edge_in_front_is_quoted_dollars(api):
     assert api.get("/v1/billing/catalogue").json()["currency"] == "USD"
 
 
-def test_the_query_string_cannot_undercut_the_network(api):
+def test_the_query_string_cannot_undercut_the_network(trusted_edge):
     """The one that is worth an HTTP test rather than a unit test: the
     precedence has to survive FastAPI's parameter binding, because a route that
     reads `country` instead of the resolved value looks identical in review."""
-    response = api.get(
+    response = trusted_edge.get(
         "/v1/billing/catalogue?country=IN", headers={"CF-IPCountry": "GB"}
     )
     assert response.json()["currency"] == "GBP"
@@ -207,7 +209,7 @@ def test_reading_a_price_still_creates_nobody(api):
 
 # ── saying so when nothing is in front of us ───────────────────────────────
 
-def test_a_deployment_with_no_edge_can_be_told_apart_from_one_in_america(api):
+def test_a_deployment_with_no_edge_can_be_told_apart_from_one_in_america(trusted_edge):
     """The fallback and the bug produce byte-identical responses.
 
     With no CDN in front — or with one whose country header is switched off —
@@ -226,14 +228,14 @@ def test_a_deployment_with_no_edge_can_be_told_apart_from_one_in_america(api):
     """
     region.forget_observations()
 
-    api.get("/v1/billing/catalogue")
-    blind = api.get("/ready").json()["edge_country"]
+    trusted_edge.get("/v1/billing/catalogue")
+    blind = trusted_edge.get("/ready").json()["edge_country"]
     assert blind["asked"] >= 1
     assert blind["answered"] == 0
     assert blind["seen"] is False
 
-    api.get("/v1/billing/catalogue", headers={"CF-IPCountry": "DE"})
-    sighted = api.get("/ready").json()["edge_country"]
+    trusted_edge.get("/v1/billing/catalogue", headers={"CF-IPCountry": "DE"})
+    sighted = trusted_edge.get("/ready").json()["edge_country"]
     assert sighted["answered"] == 1
     assert sighted["seen"] is True
 
@@ -256,8 +258,22 @@ def test_the_first_blind_request_says_so_in_the_log(api, caplog):
     assert "CF-IPCountry".lower() in warnings[0].getMessage().lower()
 
 
-def test_an_edge_that_speaks_is_never_warned_about(api, caplog):
+def test_an_edge_that_speaks_is_never_warned_about(trusted_edge, caplog):
     region.forget_observations()
     with caplog.at_level("WARNING", logger="alma.region"):
-        api.get("/v1/billing/catalogue", headers={"CF-IPCountry": "BR"})
+        trusted_edge.get("/v1/billing/catalogue", headers={"CF-IPCountry": "BR"})
     assert [r for r in caplog.records if r.name == "alma.region"] == []
+
+
+def test_the_edge_header_is_ignored_when_the_deployment_is_not_behind_one(api):
+    """Без `ALMA_TRUSTED_EDGE` страну из `CF-IPCountry` не читаем.
+
+    Прямой инстанс (или CDN, не чистящий заголовок) получает `CF-IPCountry` от
+    клиента, а страна выбирает валюту и локальную цену — то есть подделка страны
+    даёт валидную недоплату (BUG-004). По умолчанию заголовок игнорируется:
+    подделанная `IN` не превращает каталог в рупии, ответ остаётся долларовым.
+    На старом коде (заголовок читался всегда) тест падает: `INR` вместо `USD`.
+    """
+    response = api.get("/v1/billing/catalogue", headers={"CF-IPCountry": "IN"})
+    assert response.status_code == 200
+    assert response.json()["currency"] == "USD"

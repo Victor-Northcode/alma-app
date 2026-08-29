@@ -11,12 +11,28 @@ import hashlib
 
 import pytest
 
+from alma.auth import admin_password
+
 PASSWORD = "correct horse"
 
 
 @pytest.fixture()
 def admin_on(monkeypatch):
-    """Включённая админка: в конфиге — хэш тестового пароля."""
+    """Включённая админка: в конфиге — солёный scrypt-хэш тестового пароля."""
+    from alma import config
+
+    monkeypatch.setenv(
+        "ALMA_ADMIN_PASSWORD_HASH",
+        admin_password.hash_password(PASSWORD),
+    )
+    config.settings.cache_clear()
+    yield
+    config.settings.cache_clear()
+
+
+@pytest.fixture()
+def admin_on_legacy_sha256(monkeypatch):
+    """Админка со старым голым SHA-256 в конфиге — деплой, который надо перенастроить."""
     from alma import config
 
     monkeypatch.setenv(
@@ -53,6 +69,35 @@ def test_a_wrong_password_is_refused_and_attempts_hit_a_ceiling(api, admin_on):
         "шестая попытка обязана упереться в потолок — даже с верным паролем: "
         "иначе перебор бесплатен"
     )
+
+
+def test_the_stored_hash_is_salted_and_slow_not_bare_sha256(api, admin_on):
+    """Пароль хранится солёным scrypt, а не голым SHA-256 (BUG-005).
+
+    Голый несолёный SHA-256 перебирается по словарю за минуты, стоит хэшу
+    утечь. Проверяем свойства, а не строку: два хэша одного пароля различны
+    (соль), формат — `scrypt$…`, и верный пароль всё же пускает внутрь.
+    """
+    one = admin_password.hash_password(PASSWORD)
+    two = admin_password.hash_password(PASSWORD)
+    assert one != two, "две одинаковые пароли дали одинаковый хэш — соли нет"
+    assert one.startswith("scrypt$")
+    assert admin_password.hash_password(PASSWORD) != hashlib.sha256(PASSWORD.encode()).hexdigest()
+    assert admin_password.verify(PASSWORD, one) is True
+    assert admin_password.verify("wrong", one) is False
+    # И через HTTP: верный пароль за scrypt-хэшем действительно открывает вход.
+    assert api.post("/admin/api/login", json={"password": PASSWORD}).status_code == 200
+
+
+def test_a_legacy_sha256_hash_is_refused_not_accepted(api, admin_on_legacy_sha256):
+    """Старый голый SHA-256 в конфиге больше не пускает — деплой перенастраивают.
+
+    Принять его по-тихому значило бы оставить дыру, ради которой всё написано.
+    На старом коде (сравнение с `sha256(password)`) верный пароль тут открывал
+    бы вход — теперь отвечает 401, а лог просит перегенерировать хэш.
+    """
+    refused = api.post("/admin/api/login", json={"password": PASSWORD})
+    assert refused.status_code == 401
 
 
 def test_an_app_token_does_not_open_the_admin(api, admin_on):

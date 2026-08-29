@@ -648,6 +648,42 @@ def test_a_greeting_does_not_spend_the_one_welcome_question(api, auth_headers, s
     assert asked["message"]["kind"] == "reading"
 
 
+def test_a_refused_chat_turn_gives_the_reserved_question_back(
+    api, auth_headers, scripted, monkeypatch
+):
+    """Отказанный ход не тратит вопрос — резерв возвращается (BUG-001).
+
+    Порция теперь резервируется атомарно **до** генерации (чтобы два хода на
+    разных воркерах не прошли ворота с одним числом); если ход отказан
+    валидатором, слот обязан вернуться, иначе «вопрос платится за ответ»
+    нарушится задом наперёд — за ответ, которого не было. Ловит регресс, если в
+    одной из веток отказа забыт `_give_back_reserved`: тогда отказанный ход
+    съел бы вопрос, и `questions_left` после следующего был бы на один меньше.
+    """
+    from alma.ai import conversation
+
+    monkeypatch.setattr(settings(), "free_welcome_bundle", 2)
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    factors = _factors_for(api, auth_headers)
+    # Первый ход: модель только выдумывает — все попытки отказаны, ход в 422.
+    scripted.responses.extend(
+        _chat_reply(["a placement this chart does not have"])
+        for _ in range(conversation.MAX_ATTEMPTS)
+    )
+    # Второй ход: настоящий ответ.
+    scripted.responses.append(_chat_reply(factors[:1]))
+
+    refused = api.post("/v1/chat", json={"message": "work?"}, headers=auth_headers)
+    assert refused.status_code == 422
+    assert refused.json()["detail"]["error"] == "answer_refused"
+
+    answered = api.post(
+        "/v1/chat", json={"message": "what about work?"}, headers=auth_headers
+    ).json()
+    # Отказанный ход вопрос не тратил: списан ровно один — этот.
+    assert answered["questions_left"] == settings().free_welcome_bundle - 1
+
+
 #: The four values the two shipped clients decode, copied from them rather than
 #: from us: `ChatTurnKind` in `mobile/flutter/alma/lib/screens/alma/chat_turn.dart`.
 #: Раньше здесь стояли два натива; они сняты 17 августа 2026 — продукт

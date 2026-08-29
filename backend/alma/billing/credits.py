@@ -32,7 +32,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db.models import (
@@ -230,10 +230,34 @@ async def spend(
     from ..auth import entitlements
 
     row = await ensure_period(session, user, at=at)
-    if row is None or (row.used or 0) >= (row.granted or 0):
+    if row is None:
         return None
 
-    row.used = (row.used or 0) + 1
+    # **Списание — один запрос, а не «прочитал used, сравнил, записал».**
+    #
+    # Здесь стояло `if row.used >= row.granted: return None; row.used += 1`, и
+    # между чтением и записью лежала выдача гранта: две параллельные проверки
+    # (один включённый кредит, два разных партнёра) обе видели `used=0 < 1`, обе
+    # выписывали вечный грант `pair:{id}` и оставляли `used=1` — два включённых
+    # отчёта за один кредит. Найдено аудитом 29.08.2026 (BUG-002). Тот же приём,
+    # что во всём `db/counters`: увеличить и узнать результат одним
+    # `UPDATE … SET used = used + 1 WHERE used < granted RETURNING`. Строку
+    # меняет ровно один гонщик — второй ждёт блокировку строки, перечитывает
+    # `used < granted` уже ложным и получает пустой RETURNING, то есть `None`.
+    updated = (
+        await session.execute(
+            update(PairCredit)
+            .where(PairCredit.id == row.id, PairCredit.used < PairCredit.granted)
+            .values(used=PairCredit.used + 1)
+            .returning(PairCredit.used)
+        )
+    ).scalar_one_or_none()
+    if updated is None:
+        return None
+    # ORM-объект `row` держит прежний `used` в identity map; сам он больше не
+    # читается, но лог ниже обязан назвать новое значение, а не устаревший нуль.
+    row.used = updated
+
     grant = await entitlements.grant(
         session,
         user,

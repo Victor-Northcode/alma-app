@@ -1,0 +1,5 @@
+BUG-005 — admin/api/login хэш
+typed = hashlib.sha256(payload.password.encode()).hexdigest()  # admin.py:105 — несолёный SHA-256
+hmac.compare_digest(typed, digest)  # тайминг закрыт, но хэш быстрый и без соли
+Троттл: window("admin_login", 5/час).hit(request_source(request)) — ключ на spoofable источнике (см. BUG-003).
+На стенде login -> HTTP 503 x7 (хэш пароля в dev .env не задан) — троттл динамически не прогнан.

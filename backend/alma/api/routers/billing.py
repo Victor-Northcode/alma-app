@@ -79,6 +79,7 @@ from ...billing.provider import (
     entitlement_for,
 )
 from ...config import billing_adapter, settings
+from ...db import counters
 from ...db.models import (
     Consent,
     Entitlement,
@@ -253,12 +254,26 @@ async def checkout(
     # (ТЗ §7) заводит вторую цену на один и тот же грант.
     async with session_scope() as session:
         offered = await entitlements.may_be_offered(session, user, product)
+        # Уже куплено — второй чекаут не открываем (BUG-007). Считается в той же
+        # короткой транзакции, что и проверка полки: ещё один SELECT, соединения
+        # на процессор ещё нет. Расходуемую проверку пары `already_owned` пропустит
+        # намеренно — она покупается на каждого нового партнёра.
+        owned = offered and await entitlements.already_owned(session, user, product)
     if not offered:
         raise HTTPException(
             status.HTTP_404_NOT_FOUND,
             detail={
                 "error": "not_offered",
                 "message": f"{product!r} is not on offer to this account",
+                "product": product,
+            },
+        )
+    if owned:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            detail={
+                "error": "already_owned",
+                "message": f"{product!r} is already yours — no need to buy it again",
                 "product": product,
             },
         )
@@ -1986,14 +2001,19 @@ async def declined(
         # does not burn the one offer this person will ever get.
         return {"offer": None, "reason": "nothing smaller is sold in this market"}
 
-    if row is None:
-        row = UsageCounter(
-            id=key, user_id=user.id, day=utcnow().date(),
-            metric=DOWNSELL_KEY, count=0, amount=0.0,
-        )
-        session.add(row)
-    row.count = (row.count or 0) + 1
-    await session.flush()
+    # **Один оффер застолблён атомарно, а не «прочитал count==0, позже записал».**
+    #
+    # Здесь стояло `row.count = (row.count or 0) + 1` после чтения выше: два
+    # одновременных «закрыл чекаут» оба видели `count==0`, оба отдавали скидку, а
+    # lost update оставлял `count==1` — «ровно один раз, навсегда» нарушалось
+    # (BUG-006, аудит 29.08.2026). Теперь прибавляет и проверяет один запрос:
+    # оффер отдаётся ровно тому вызову, чей результат равен единице; проигравший
+    # заезд видит `>1` и получает тот же ответ, что и любой опоздавший.
+    count = await counters.bump_flag(
+        session, row_id=key, user_id=user.id, metric=DOWNSELL_KEY
+    )
+    if count > 1:
+        return {"offer": None, "reason": "already offered once"}
 
     return {"offer": offer, "reason": "one smaller thing, once"}
 

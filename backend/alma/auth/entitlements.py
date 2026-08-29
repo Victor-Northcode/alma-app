@@ -463,6 +463,56 @@ async def may_be_offered(
     return item is not None and item.on_the_shelf
 
 
+async def already_owned(
+    session: AsyncSession, user: User, key: str, *, at: datetime | None = None
+) -> bool:
+    """Держит ли человек уже то, что открыл бы этот товар — второй чекаут не нужен.
+
+    Чекаут принимал любой ключ с полки, не спрашивая, куплено ли уже (BUG-007,
+    аудит 29.08.2026): владелец вечной двери или живой подписки мог открыть
+    второй чекаут на тот же продукт, и вебхук вписывал второй разовый грант или
+    **вторую параллельную подписку**. Вред — покупателю и потоку возвратов.
+
+    Три осторожных правила, чтобы не сломать законное:
+
+    * **Расходуемое (проверка пары) — никогда не дубль.** Она покупается на
+      каждого нового партнёра, `False` всегда.
+    * **Разовое (дверь/бандл) — только против *вечного* держания, не подписки.**
+      Подписка (`scope="all"`) истекает, а «купленное навсегда остаётся твоим» —
+      то есть купить дверь про запас, будучи подписчиком, законно. Поэтому дубль
+      двери — это ещё одна дверь той же системы или бандл, её накрывающий, а не
+      живая подписка.
+    * **Подписка — только против той же повторяющейся модели уже в силе.** Дубль
+      — вторая такая же подписка; апгрейд на другой план (когда он появится)
+      остаётся открытым.
+    """
+    from ..billing.catalogue import PRODUCTS
+
+    item = PRODUCTS.get(key)
+    if item is None or item.kind == "consumable":
+        return False
+
+    moment = at or utcnow()
+    for entitlement in await for_user(session, user):
+        if not is_in_force(entitlement, moment):
+            continue
+        if item.interval:
+            if entitlement.kind == item.kind and entitlement.scope in (
+                SCOPE_ALL,
+                SCOPE_LIVE,
+            ):
+                return True
+            continue
+        if item.scope == SCOPE_STATIC and entitlement.scope == SCOPE_STATIC:
+            return True
+        if item.scope == SCOPE_SYSTEM:
+            if entitlement.scope == SCOPE_SYSTEM and entitlement.system == item.slug:
+                return True
+            if entitlement.scope == SCOPE_STATIC and item.slug in STATIC_SYSTEMS:
+                return True
+    return False
+
+
 async def grant(
     session: AsyncSession,
     user: User,

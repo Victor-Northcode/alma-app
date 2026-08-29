@@ -1,0 +1,6 @@
+BUG-004 — CF-IPCountry управляет валютой/ценой каталога
+(нет заголовка) -> USD  $4.99
+CF-IPCountry: IN -> INR  ₹109
+CF-IPCountry: BR -> BRL  R$ 12,90
+CF-IPCountry: GB -> GBP  £4.99
+checkout (guest) -> HTTP 503 billing_unavailable (PADDLE_API_KEY не задан) — денежный путь не прогнан.

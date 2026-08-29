@@ -1,0 +1,13 @@
+=== BUG-004: CF-IPCountry controls currency ===
+  default (no trusted edge)  CF-IPCountry:IN -> currency=USD  (expect USD)
+  ALMA_TRUSTED_EDGE=true      CF-IPCountry:IN -> currency=INR  (expect INR)
+=== BUG-003: per-source ceiling vs CF-Connecting-IP rotation ===
+  default: spoofed IP #1 -> 200, rotated IP #2 -> 429  (expect 200 then 429)
+  trusted: edge IP #1 -> 200, edge IP #2 -> 200  (expect 200,200)
+=== BUG-005: admin password KDF ===
+  scrypt hash: right pw -> 200, wrong pw -> 401  (expect 200, 401)
+  legacy bare SHA-256 in config: right pw -> 401  (expect 401, refused)
+=== BUG-009: favicon on live Next dev (port 3013) ===
+  GET /favicon.ico -> HTTP 200  image/x-icon  4277 bytes  (was 404)
+  GET /icon.svg    -> HTTP 200  image/svg+xml
+  homepage /       -> HTTP 200, 0 console errors (Playwright)

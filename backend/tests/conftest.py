@@ -259,6 +259,24 @@ def api(tmp_path, monkeypatch) -> Iterator:
 
 
 @pytest.fixture
+def trusted_edge(api, monkeypatch) -> Iterator:
+    """Приложение за доверенным краем: `CF-*` заголовки читаются как правда.
+
+    По умолчанию `ALMA_TRUSTED_EDGE` выключен — на прямом инстансе эти заголовки
+    шлёт клиент, и верить им нельзя (BUG-003/004). Тесты, которые проверяют
+    *поведение за краем* (страна из `CF-IPCountry`, потолок по `CF-Connecting-IP`),
+    включают флаг явно: это прод-поза за Cloudflare, а не дефолт. Зависит от
+    `api`, чтобы встать после него и переустановить настройки на его же кэше.
+    """
+    from alma import config as config_module
+
+    monkeypatch.setenv("ALMA_TRUSTED_EDGE", "true")
+    config_module.settings.cache_clear()
+    yield api
+    config_module.settings.cache_clear()
+
+
+@pytest.fixture
 def token(api) -> str:
     """A guest session token — every request needs one, or mints one."""
     response = api.get("/v1/auth/session")

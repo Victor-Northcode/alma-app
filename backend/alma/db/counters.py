@@ -114,6 +114,42 @@ def counter_id(user_id: str, day: date, metric: str) -> str:
     return f"{user_id}:{day.isoformat()}:{metric}"
 
 
+async def bump_flag(
+    session: AsyncSession,
+    *,
+    row_id: str,
+    user_id: str,
+    metric: str,
+    day: date | None = None,
+) -> int:
+    """Прибавить единицу к строке-флагу с заданным `id` и вернуть новый счёт.
+
+    Для счётчиков «раз и навсегда», чей ключ **не зависит от календарного дня**:
+    единственный даунселл-оффер за всю жизнь аккаунта (`billing.declined`).
+    `id` задаётся целиком вызывающим (там он `{user_id}:downsell`), а `day` в
+    строке — только отметка времени, не часть ключа, поэтому «раз и навсегда» не
+    превращается в «раз в день».
+
+    Отдельно от `add`, который собирает `id` из `counter_id` (то есть *с* днём):
+    смешать их значило бы читать одну строку, а писать в другую. Приём тот же —
+    `INSERT … ON CONFLICT DO UPDATE SET count = count + 1 RETURNING count`, без
+    окна между чтением и записью: два одновременных «закрыл чекаут» больше не
+    видят оба нуль и не отдают оба оффер (BUG-006, аудит 29.08.2026).
+    """
+    insert = _insert(session)
+    when = day or date.today()
+    statement = (
+        insert(UsageCounter)
+        .values(id=row_id, user_id=user_id, day=when, metric=metric, count=1, amount=0.0)
+        .on_conflict_do_update(
+            index_elements=[UsageCounter.id],
+            set_={"count": UsageCounter.count + 1},
+        )
+        .returning(UsageCounter.count)
+    )
+    return int((await session.execute(statement)).scalar_one() or 0)
+
+
 async def spend_and_check(
     session: AsyncSession,
     *,
@@ -253,6 +289,7 @@ async def sweep_windows(session: AsyncSession, *, now: datetime) -> int:
 __all__ = [
     "QuotaExceeded",
     "add",
+    "bump_flag",
     "counter_id",
     "hit_window",
     "refund",

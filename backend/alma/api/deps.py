@@ -121,10 +121,19 @@ def request_source(request: Request) -> str:
     """
     global _warned_about_source
 
-    for name in CLIENT_IP_HEADERS:
-        value = (request.headers.get(name) or "").split(",")[0].strip()
-        if value:
-            return value
+    # **Заголовкам края верим только когда владелец деплоя это подтвердил.**
+    # `ALMA_TRUSTED_EDGE` по умолчанию `False`: без края эти заголовки шлёт сам
+    # клиент, и потолок по источнику снимается одной строкой заголовка —
+    # брутфорс `/admin`, ротация гостей мимо месячных бюджетов, перебор кодов из
+    # письма (BUG-003, аудит 29.08.2026). Выключенный флаг оставляет один
+    # неподделываемый источник — адрес сокета. Довод целиком — у настройки.
+    from ..config import settings
+
+    if settings().trusted_edge:
+        for name in CLIENT_IP_HEADERS:
+            value = (request.headers.get(name) or "").split(",")[0].strip()
+            if value:
+                return value
 
     peer = request.client.host if request.client else ""
     if not peer:
@@ -554,7 +563,16 @@ async def edge_country(request: Request, response: Response) -> str | None:
     """
     for name in region.EDGE_COUNTRY_HEADERS:
         response.headers.append("Vary", name)
-    country = region.from_headers(request.headers)
+    # **Стране из заголовка верим только за доверенным краем.** `CF-IPCountry` и
+    # соседи достоверны, лишь когда край их перезаписывает; на прямом инстансе их
+    # шлёт клиент, а страна выбирает валюту и локальную цену — то есть цену
+    # выбирал бы отправитель запроса (BUG-004, аудит 29.08.2026). Без
+    # `ALMA_TRUSTED_EDGE` страну из заголовка не читаем: `region.resolve` тогда
+    # опирается на `?country=` (оценка для витрины) или отвечает USD — заявленный
+    # фолбэк. Тот же флаг, что у `request_source`.
+    from ..config import settings
+
+    country = region.from_headers(request.headers) if settings().trusted_edge else None
     # Counted, and warned about once, so that a deployment with no edge in front
     # of it can be told apart from one where everybody genuinely is in the
     # United States. See `region.observe` — the two answers look identical on
