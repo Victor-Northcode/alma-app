@@ -1937,7 +1937,7 @@ class LEs extends L {
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'Si algún día cancelas: los capítulos comprados para siempre se pueden seguir leyendo. Los capítulos abiertos solo por la suscripción se cierran con ella — el cálculo sigue gratis en cualquier caso.';
+      'Si algún día cancelas: los capítulos comprados para siempre se quedan. Los abiertos solo por la suscripción se cierran. El cálculo sigue gratis.';
 
   @override
   String get paywallV3StateProcessingNote =>

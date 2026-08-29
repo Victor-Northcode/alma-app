@@ -1943,7 +1943,7 @@ class LFr extends L {
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'Si un jour tu résilies : les chapitres achetés pour toujours restent lisibles. Les chapitres ouverts seulement par l’abonnement se referment avec lui — le calcul reste gratuit dans tous les cas.';
+      'Si un jour tu résilies : les chapitres achetés pour toujours restent. Ceux ouverts par l’abonnement seul se referment. Le calcul reste gratuit.';
 
   @override
   String get paywallV3StateProcessingNote =>

@@ -538,7 +538,7 @@
   "liveDayTitle": "La journée en entier",
   "liveDayNote": "La longue lecture, les domaines, ce qui vient",
   "paywallV3SubBadge": "abonnement actif",
-  "paywallV3SubCancelHonesty": "Si un jour tu résilies : les chapitres achetés pour toujours restent lisibles. Les chapitres ouverts seulement par l’abonnement se referment avec lui — le calcul reste gratuit dans tous les cas.",
+  "paywallV3SubCancelHonesty": "Si un jour tu résilies : les chapitres achetés pour toujours restent. Ceux ouverts par l’abonnement seul se referment. Le calcul reste gratuit.",
   "paywallV3StateProcessingNote": "Apple a pris le paiement ; nous l’enregistrons. Cela se termine tout seul, même si tu fermes l’app.",
   "onbSystemsTitle": "Tes huit systèmes",
   "onbSystemsBody": "Les huit sont calculés à partir de ta naissance, et le calcul reste gratuit — toujours. Seuls les chapitres écrits sont payants : le premier chapitre de ton thème natal est déjà ouvert.",

@@ -1933,7 +1933,7 @@ class LIt extends L {
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'Se un giorno disdici: i capitoli comprati per sempre restano leggibili. I capitoli aperti solo dall\'abbonamento si chiudono quando finisce — il calcolo resta gratuito in ogni caso.';
+      'Se un giorno disdici: i capitoli comprati per sempre restano. Quelli aperti solo dall\'abbonamento si chiudono. Il calcolo resta gratuito.';
 
   @override
   String get paywallV3StateProcessingNote =>

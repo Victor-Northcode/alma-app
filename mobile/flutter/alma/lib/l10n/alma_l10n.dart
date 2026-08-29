@@ -3320,7 +3320,7 @@ abstract class L {
   /// monetization v3 · sub.cancel_honesty · W5 — зачин до двоеточия красится goldBright; сокращать и разбивать нельзя (§7 ТЗ)
   ///
   /// In en, this message translates to:
-  /// **'If you ever cancel: chapters you bought once stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.'**
+  /// **'If you ever cancel: chapters bought outright stay. Subscription-only chapters close with it. The calculation stays free.'**
   String get paywallV3SubCancelHonesty;
 
   /// monetization v3 · state.processing_note · W6

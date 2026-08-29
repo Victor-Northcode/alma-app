@@ -2576,7 +2576,7 @@
   "@paywallV3SubBadge": {
     "description": "monetization v3 · sub.badge · W5 — тихая метка в шапке панели гороскопа подписчика"
   },
-  "paywallV3SubCancelHonesty": "If you ever cancel: chapters you bought once stay readable. Chapters open only through the subscription close with it — the calculation stays free either way.",
+  "paywallV3SubCancelHonesty": "If you ever cancel: chapters bought outright stay. Subscription-only chapters close with it. The calculation stays free.",
   "@paywallV3SubCancelHonesty": {
     "description": "monetization v3 · sub.cancel_honesty · W5 — зачин до двоеточия красится goldBright; сокращать и разбивать нельзя (§7 ТЗ)"
   },

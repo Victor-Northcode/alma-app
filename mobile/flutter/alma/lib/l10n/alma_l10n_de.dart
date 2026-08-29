@@ -1946,7 +1946,7 @@ class LDe extends L {
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'Falls du je kündigst: Kapitel, die du für immer gekauft hast, bleiben lesbar. Kapitel, die nur das Abo öffnet, schließen sich mit ihm — die Berechnung bleibt so oder so kostenlos.';
+      'Falls du je kündigst: für immer gekaufte Kapitel bleiben. Nur-Abo-Kapitel schließen sich. Die Berechnung bleibt kostenlos.';
 
   @override
   String get paywallV3StateProcessingNote =>

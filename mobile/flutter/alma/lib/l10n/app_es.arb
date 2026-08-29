@@ -535,7 +535,7 @@
   "liveDayTitle": "El día completo",
   "liveDayNote": "La lectura larga, tus áreas, lo que viene",
   "paywallV3SubBadge": "suscripción activa",
-  "paywallV3SubCancelHonesty": "Si algún día cancelas: los capítulos comprados para siempre se pueden seguir leyendo. Los capítulos abiertos solo por la suscripción se cierran con ella — el cálculo sigue gratis en cualquier caso.",
+  "paywallV3SubCancelHonesty": "Si algún día cancelas: los capítulos comprados para siempre se quedan. Los abiertos solo por la suscripción se cierran. El cálculo sigue gratis.",
   "paywallV3StateProcessingNote": "Apple ya cobró el pago y lo estamos registrando. Esto termina solo, aunque cierres la app.",
   "onbSystemsTitle": "Tus ocho sistemas",
   "onbSystemsBody": "Los ocho se calculan a partir de tus datos de nacimiento, y el cálculo sigue siendo gratis, siempre. Solo se pagan los capítulos escritos, y el primer capítulo de tu carta natal ya está abierto.",

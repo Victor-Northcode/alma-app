@@ -1,7 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
-import 'package:flutter/foundation.dart' show kIsWeb, kReleaseMode;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart' show DeviceGestureSettings;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
@@ -40,13 +40,16 @@ void main() {
   // диске и поднимается до первого кадра: решение «показывать ли» синхронно,
   // и сторож, спрошенный раньше диска, разрешил бы то, что вчера отклонили.
   WidgetsFlutterBinding.ensureInitialized();
-  // Веб-просмотр вне релиза: `?store=apple` показывает яблочные строки
-  // магазина. На этой машине экраны смотрят веб-сборкой (симулятора нет), а
-  // `defaultTargetPlatform` веба — хостовая ОС, и кадры для App Store Connect
-  // выходили со словами про Google Play (съёмка витрин, 27.08.2026). В
-  // релизе ветка вырезана компилятором вместе с ручкой.
-  if (kIsWeb && !kReleaseMode && Uri.base.queryParameters['store'] == 'apple') {
-    storeWordsPlatformOverride = TargetPlatform.iOS;
+  // Веб-просмотр: слова магазина — яблочные по умолчанию, `?store=play`
+  // возвращает Play-вариант. Продукт живёт в App Store первым, а
+  // `defaultTargetPlatform` веба — хостовая ОС: на Windows стенд печатал
+  // «Google Play» в секции плана, и владелец прочитал это как «управление
+  // только через гугл» (29.08.2026; та же ловушка съела кадры витрин
+  // 27.08.2026, когда ручка была ещё opt-in `?store=apple`). На телефонах
+  // ветка не работает вовсе — там платформа настоящая.
+  if (kIsWeb) {
+    storeWordsPlatformOverride =
+        Uri.base.queryParameters['store'] == 'play' ? null : TargetPlatform.iOS;
   }
   PaywallGuard.restore();
   // Выбранный человеком язык — тем же приёмом, что память сторожа: старт не

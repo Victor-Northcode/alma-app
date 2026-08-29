@@ -1936,7 +1936,7 @@ class LPt extends L {
 
   @override
   String get paywallV3SubCancelHonesty =>
-      'Se um dia você cancelar: os capítulos comprados para sempre continuam legíveis. Os capítulos abertos só pela assinatura se fecham com ela — o cálculo continua grátis de qualquer forma.';
+      'Se um dia você cancelar: capítulos comprados para sempre ficam. Os abertos só pela assinatura se fecham. O cálculo continua grátis.';
 
   @override
   String get paywallV3StateProcessingNote =>
