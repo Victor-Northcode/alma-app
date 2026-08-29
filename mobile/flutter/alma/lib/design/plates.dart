@@ -96,30 +96,12 @@ class AlmaPlates {
   /// Вклейка ежедневника. Главой не является — стоит на «Сегодня».
   static const today = 'plate-moon';
 
-  /// Вклейки, на которых художник написал читаемое лицо, — до новых картин
-  /// показываются цифрой на пергаменте (владелец, 29.08.2026: «убрать лица,
-  /// кроме раздела совместимости»). Список — результат осмотра всех сорока
-  /// одного файла глазами, а не догадка по имени: первая версия правки
-  /// спрятала все вклейки разом, и владелец справедливо спросил, куда делись
-  /// картинки, — лица только на этих тринадцати, остальные — предметные
-  /// гравюры (маяк, весы, ключ, глобус, корона), и они остаются.
-  static const _faces = {
-    'plate-face', 'plate-faith', 'plate-freedom', 'plate-friends',
-    'plate-love', 'plate-saturn', 'plate-shape', 'plate-solar',
-    'plate-soulcard', 'plate-soulurge', 'plate-speech', 'plate-whereto',
-    'plate-year',
-  };
-
-  static String? name(SystemSlug system, String chapter) {
-    final plate = _map[system]?[chapter];
-    if (plate == null) return null;
-    // `null` включает штатный запасной вид — римскую цифру на пергаменте
-    // (`_Numeral`), — а не дыру. Карта `_map` остаётся целой нарочно: её
-    // слаги держат `chapterGrain` в рисунке ожидания и тест `plates_test`;
-    // когда приедут новые картины, достаточно вычеркнуть имя из `_faces`.
-    if (system == SystemSlug.compatibility) return plate;
-    return _faces.contains(plate) ? null : plate;
-  }
+  static String? name(SystemSlug system, String chapter) =>
+      // Здесь один день жил фильтр «лица — под пергамент» (29.08.2026 утром
+      // владелец велел убрать лица до новых картин) и был снят его же словом
+      // тем же вечером: «картинки должны быть как раньше, красивые». Вклейки
+      // художника показываются все; замена — новыми файлами, не фильтром.
+      _map[system]?[chapter];
 
   /// Для теста: вся карта, включая дыры.
   static Map<SystemSlug, Map<String, String?>> get all => _map;

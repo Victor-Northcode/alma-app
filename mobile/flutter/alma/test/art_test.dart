@@ -34,28 +34,13 @@ void main() {
     expect(missing, isEmpty, reason: 'нет масштабов: $missing');
   });
 
-  test('под небом только карты с лицами; предметные — на месте', () {
-    // Правило владельца от 29.08.2026: «убрать лица (я сделаю новые
-    // картинки), кроме раздела совместимости». Каждый файл просмотрен
-    // глазами: лица — на пяти; нумерология (диск с числами), транзиты
-    // (армиллярная сфера) и пара остаются со своими картами. Когда художник
-    // привезёт новые, вернуть прежний тест: «у всех восьми своя карта».
-    const withFaces = {
-      SystemSlug.natal, SystemSlug.birthCard, SystemSlug.solarReturn,
-      SystemSlug.astrocartography, SystemSlug.synthesis,
-    };
-    for (final s in SystemSlug.values) {
-      if (withFaces.contains(s)) {
-        expect(AlmaArt.card(s), AlmaArt.sky,
-            reason: 'лицо уходит под небо до новой картинки');
-      } else {
-        expect(AlmaArt.card(s), contains('card-'),
-            reason: 'предметная карта обязана остаться на месте');
-      }
-    }
-    // Файлы художника при этом остаются в бандле — подмена про показ.
-    expect(AlmaArt.bundled.where((p) => p.contains('card-')).length,
-        SystemSlug.values.length);
+  test('у всех восьми систем своя карта, и они разные', () {
+    // Прежнее правило вернулось словом владельца 29.08.2026 вечером: «там 8
+    // картинок должно быть как раньше, красивые» — после дня, когда лица
+    // прятались под небо и колода стала «5 почти одинаковых».
+    final cards = {for (final s in SystemSlug.values) AlmaArt.card(s)};
+    expect(cards.length, SystemSlug.values.length,
+        reason: 'две системы делят одну картинку');
   });
 
   test('манифест объявляет папки с картинками', () {

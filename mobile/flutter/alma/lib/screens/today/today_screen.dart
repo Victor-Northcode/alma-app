@@ -880,11 +880,10 @@ class _LivingLayer extends StatelessWidget {
         ),
         const SizedBox(height: 11),
         // «День целиком» — не система, а глубина дня; у него нет своей карты
-        // в колоде. Стояла вклейка V6 (`plate-sky`) — на ней лицо, и с
-        // 29.08.2026 лица убраны отовсюду, кроме совместимости; до новых
-        // картин блок держит ту же туманность, что и соседние два.
+        // в колоде, и картинкой стоит небо живого слоя — та же вклейка, что
+        // на V6, куда блок и ведёт.
         _LiveBlock(
-          image: AlmaArt.sky,
+          image: AlmaArt.skyPlate,
           title: l.liveDayTitle,
           note: l.liveDayNote,
         ),

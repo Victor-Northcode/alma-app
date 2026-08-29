@@ -105,22 +105,13 @@ void main() {
     expect(synthesis, {'plate-synthesis'});
   });
 
-  test('вклейки с лицами спрятаны до новых картин; предметные — показываются',
-      () {
-    // Правило владельца от 29.08.2026: «убрать лица, кроме раздела
-    // совместимости». Список `_faces` собран осмотром всех 41 файла глазами;
-    // здесь закреплено поведение `name()`: лицо → null (цифра на пергаменте),
-    // гравюра → своя картина, совместимость — целиком как была.
-    expect(AlmaPlates.name(SystemSlug.natal, 'portrait'), isNull,
-        reason: 'plate-face — буквально лицо');
-    expect(AlmaPlates.name(SystemSlug.solarReturn, 'year-shape'), isNull,
-        reason: 'plate-year — человек с книгой');
-    expect(AlmaPlates.name(SystemSlug.transits, 'ahead'), 'plate-ahead',
-        reason: 'фазы луны над дворцом — лиц нет, картина остаётся');
-    expect(AlmaPlates.name(SystemSlug.astrocartography, 'lines'),
-        'plate-lines', reason: 'глобус — предметная гравюра');
-    expect(AlmaPlates.name(SystemSlug.compatibility, 'attraction'),
-        'plate-pull', reason: 'пара остаётся со своими картинами целиком');
+  test('каждая глава показывает свою вклейку — фильтра лиц больше нет', () {
+    // Фильтр жил один день (29.08.2026) и снят словом владельца тем же
+    // вечером: «картинки должны быть как раньше, красивые». Пины держат обе
+    // прежние жертвы фильтра и одну гравюру, которой он не касался.
+    expect(AlmaPlates.name(SystemSlug.natal, 'portrait'), 'plate-face');
+    expect(AlmaPlates.name(SystemSlug.solarReturn, 'year-shape'), 'plate-solar');
+    expect(AlmaPlates.name(SystemSlug.transits, 'ahead'), 'plate-ahead');
   });
 
   testWidgets('без store арка сразу показывает римскую цифру, а не пустоту',
