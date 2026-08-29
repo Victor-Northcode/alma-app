@@ -432,6 +432,13 @@ class AlmaClient {
     String? relation,
     String? gender,
     String? interest,
+    // Текущий город (29.08.2026): пересохранение самого себя ЗАМЕЩАЕТ строку
+    // профиля, и клиент, не прокинувший сохранённый город при правке имени,
+    // молча стёр бы его — поэтому настройки всегда шлют либо новый, либо
+    // прежний из профиля (см. `_saveBirth`).
+    double? currentLatitude,
+    double? currentLongitude,
+    String? currentPlaceLabel,
   }) async {
     final body = await _post('/v1/profiles', {
       ...birth.toJson(),
@@ -442,6 +449,9 @@ class AlmaClient {
       // Ответ квиза V0 «что сейчас важнее всего» — сигнал NBO. Сервер пишет
       // его только владельцу аккаунта и отвергает слова вне закрытого списка.
       'interest': ?interest,
+      'current_latitude': ?currentLatitude,
+      'current_longitude': ?currentLongitude,
+      'current_place_label': ?currentPlaceLabel,
     });
     return Profile.fromJson(body);
   }

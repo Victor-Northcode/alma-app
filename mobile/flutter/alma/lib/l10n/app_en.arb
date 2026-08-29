@@ -749,6 +749,10 @@
     "description": "from Cabinet/cab.settings.language"
   },
   "cabSettingsPlace": "Place",
+  "cabSettingsCurrentPlace": "Current city",
+  "@cabSettingsCurrentPlace": {
+    "description": "settings row: where the person lives now — feeds the astrocartography here-chapter; strings drafted 29.08.2026, owner to approve"
+  },
   "@cabSettingsPlace": {
     "description": "from Cabinet/cab.settings.place"
   },
@@ -1903,6 +1907,11 @@
     }
   },
   "readerAskAboutIt": "Ask Alma about {aspect}",
+  "readerAskDraft": "What does {aspect} mean for me?",
+  "@readerAskDraft": {
+    "description": "what lands in the composer when the ask-card is tapped: a first-person question, not the button label; strings drafted 29.08.2026, owner to approve",
+    "placeholders": {"aspect": {"type": "String"}}
+  },
   "@readerAskAboutIt": {
     "description": "today-reading-spec §6 · readerAskAboutIt",
     "placeholders": {

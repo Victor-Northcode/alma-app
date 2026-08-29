@@ -572,6 +572,9 @@ class LRu extends L {
   String get cabSettingsPlace => 'Место';
 
   @override
+  String get cabSettingsCurrentPlace => 'Текущий город';
+
+  @override
   String get cabSettingsPlan => 'План';
 
   @override
@@ -1408,6 +1411,11 @@ class LRu extends L {
   @override
   String readerAskAboutIt(String aspect) {
     return 'Спросить Alma про $aspect';
+  }
+
+  @override
+  String readerAskDraft(String aspect) {
+    return 'Что для меня значит $aspect?';
   }
 
   @override

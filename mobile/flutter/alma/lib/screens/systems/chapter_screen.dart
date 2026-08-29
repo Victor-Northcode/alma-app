@@ -90,7 +90,8 @@ class ChapterScreen extends StatefulWidget {
   State<ChapterScreen> createState() => _ChapterScreenState();
 }
 
-class _ChapterScreenState extends State<ChapterScreen> {
+class _ChapterScreenState extends State<ChapterScreen>
+    with WidgetsBindingObserver {
   static const _nearMark = 56.0;
   static const _commitMark = 130.0;
 
@@ -245,13 +246,42 @@ class _ChapterScreenState extends State<ChapterScreen> {
 
   // См. SystemScreen: SessionScope в initState недоступен.
   @override
+  void initState() {
+    super.initState();
+    // Экран обязан узнать о возврате из свёрнутого состояния — см.
+    // [didChangeAppLifecycleState].
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     // Признак снимается вместе с экраном: бар возвращается к ночному, даже
     // если ушли жестом назад, а не кнопкой.
     readingNow.value = false;
     _read.dispose();
     _pull.dispose();
     super.dispose();
+  }
+
+  /// **Глава, потерянная в сворачивании, забирается заново при возврате.**
+  ///
+  /// Письмо идёт до трёх минут, а iOS замораживает сеть свёрнутого
+  /// приложения: запрос, ждавший ответа, мёртв, и человек возвращался к
+  /// вечному «Пишу эту главу…» — при том что сервер дописал главу и положил
+  /// в кеш (владелец, 29.08.2026: «когда приложение сворачиваешь — главы не
+  /// пишутся»). Тот же приём, что у беседы (`AlmaScreen._recoverPending`):
+  /// на resume, если текста ещё нет, запрос уходит заново — дописанная глава
+  /// возвращается из кеша мгновенно, недописанную сервер довезёт под своим
+  /// замком, не начиная второй генерации. Эпоха загрузки хоронит мёртвый
+  /// запрос, чтобы его поздний труп не сел поверх свежего ответа.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (!_started || !mounted) return;
+    final unwritten = _reading == null && !_locked;
+    final openingLost = _locked && _opening == null;
+    if (unwritten || openingLost) _load();
   }
 
   @override

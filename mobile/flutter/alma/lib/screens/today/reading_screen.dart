@@ -218,7 +218,12 @@ class _TodayReadingScreenState extends State<TodayReadingScreen> {
                                 // вопрос. Оболочка под нами переключит вкладку,
                                 // а экран Alma подставит текст и погасит признак.
                                 Navigator.of(context).pop();
-                                almaDraft.value = l.readerAskAboutIt(aspect);
+                                // В поле ложится вопрос от первого лица, а не
+                                // подпись кнопки: «Спросить Alma про X» в
+                                // композере читалось командой самому себе —
+                                // владелец, 29.08.2026: «в Альму вставляется
+                                // сообщение прям „спроси Альму..“».
+                                almaDraft.value = l.readerAskDraft(aspect);
                               },
                             ),
                           ],

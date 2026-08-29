@@ -572,6 +572,9 @@ class LFr extends L {
   String get cabSettingsPlace => 'Lieu';
 
   @override
+  String get cabSettingsCurrentPlace => 'Ville actuelle';
+
+  @override
   String get cabSettingsPlan => 'Formule';
 
   @override
@@ -1419,6 +1422,11 @@ class LFr extends L {
   @override
   String readerAskAboutIt(String aspect) {
     return 'Demande à Alma : $aspect';
+  }
+
+  @override
+  String readerAskDraft(String aspect) {
+    return 'Qu’est-ce que $aspect veut dire pour moi ?';
   }
 
   @override

@@ -576,6 +576,9 @@ class LDe extends L {
   String get cabSettingsPlace => 'Ort';
 
   @override
+  String get cabSettingsCurrentPlace => 'Aktuelle Stadt';
+
+  @override
   String get cabSettingsPlan => 'Plan';
 
   @override
@@ -1422,6 +1425,11 @@ class LDe extends L {
   @override
   String readerAskAboutIt(String aspect) {
     return 'Frag Alma zu $aspect';
+  }
+
+  @override
+  String readerAskDraft(String aspect) {
+    return 'Was bedeutet $aspect für mich?';
   }
 
   @override

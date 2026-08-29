@@ -1127,6 +1127,12 @@ abstract class L {
   /// **'Place'**
   String get cabSettingsPlace;
 
+  /// settings row: where the person lives now — feeds the astrocartography here-chapter; strings drafted 29.08.2026, owner to approve
+  ///
+  /// In en, this message translates to:
+  /// **'Current city'**
+  String get cabSettingsCurrentPlace;
+
   /// from Cabinet/cab.settings.plan
   ///
   /// In en, this message translates to:
@@ -2584,6 +2590,12 @@ abstract class L {
   /// In en, this message translates to:
   /// **'Ask Alma about {aspect}'**
   String readerAskAboutIt(String aspect);
+
+  /// what lands in the composer when the ask-card is tapped: a first-person question, not the button label; strings drafted 29.08.2026, owner to approve
+  ///
+  /// In en, this message translates to:
+  /// **'What does {aspect} mean for me?'**
+  String readerAskDraft(String aspect);
 
   /// today-reading-spec §6 · readerTextSize
   ///

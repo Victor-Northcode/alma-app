@@ -407,6 +407,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               arrow: true,
               onTap: () => _editBirthPlace(l, profile),
             ),
+            // Где человек живёт сейчас — кормит главу астрокартографии «Где
+            // ты сейчас» (29.08.2026: она читалась от места рождения, «а я не
+            // живу в городе рождения, как и многие люди»). Прочерк — законное
+            // состояние: не сказано, и глава честно читает рождение.
+            _Row(
+              label: l.cabSettingsCurrentPlace,
+              value: profile.currentPlaceLabel ?? '—',
+              arrow: true,
+              onTap: () => _editCurrentPlace(l, profile),
+            ),
             _Row(
               label: l.cabSettingsFullName,
               value: profile.name ?? '—',
@@ -876,6 +886,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     bool clearTime = false,
     Place? place,
     String? name,
+    Place? currentPlace,
   }) async {
     try {
       await session.client.saveProfile(
@@ -890,6 +901,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         locale: session.locale,
         isSelf: true,
+        // Текущий город едет всегда — новый или прежний: пересохранение себя
+        // замещает строку профиля, и правка имени без этой прокидки молча
+        // стирала бы сохранённый город.
+        currentLatitude: currentPlace?.latitude ?? base.currentLatitude,
+        currentLongitude: currentPlace?.longitude ?? base.currentLongitude,
+        currentPlaceLabel: currentPlace?.label ?? base.currentPlaceLabel,
       );
       await session.start(force: true);
       HapticFeedback.selectionClick();
@@ -1113,6 +1130,75 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               refresh(() => saving = true);
                               final ok = await _saveBirth(session, profile,
                                   place: place);
+                              if (!context.mounted) return;
+                              if (ok) {
+                                Navigator.of(context).pop();
+                              } else {
+                                refresh(() => saving = false);
+                              }
+                            },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        child: Text(place.label, style: AlmaType.body),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Текущий город — тем же поиском, что место рождения: справочник один, и
+  /// человек уже умеет этим попапом пользоваться. Сохраняется только город;
+  /// рождение не трогается.
+  void _editCurrentPlace(L l, Profile profile) {
+    final session = SessionScope.of(context);
+    final query = TextEditingController();
+    var found = <Place>[];
+    var saving = false;
+    Timer? debounce;
+    _nightDialog<void>(
+      builder: (context) => StatefulBuilder(
+        builder: (context, refresh) => Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l.cabSettingsCurrentPlace, style: AlmaType.headingM),
+            const SizedBox(height: 12),
+            CeremonialField(
+              controller: query,
+              hint: l.journeyCaptureSearchPlace,
+              autofocus: true,
+              onChanged: (text) {
+                debounce?.cancel();
+                debounce = Timer(const Duration(milliseconds: 250), () async {
+                  if (text.trim().length < 2) return;
+                  try {
+                    final places = await session.client
+                        .searchPlaces(text.trim(), locale: session.locale);
+                    if (context.mounted) refresh(() => found = places);
+                  } catch (_) {}
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 260),
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final place in found)
+                    InkWell(
+                      borderRadius: BorderRadius.circular(10),
+                      onTap: saving
+                          ? null
+                          : () async {
+                              refresh(() => saving = true);
+                              final ok = await _saveBirth(session, profile,
+                                  currentPlace: place);
                               if (!context.mounted) return;
                               if (ok) {
                                 Navigator.of(context).pop();

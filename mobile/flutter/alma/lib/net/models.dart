@@ -231,6 +231,9 @@ class Profile {
     this.relation,
     this.birthTime,
     this.placeLabel,
+    this.currentLatitude,
+    this.currentLongitude,
+    this.currentPlaceLabel,
     this.interest,
     this.sunSign,
   });
@@ -252,6 +255,13 @@ class Profile {
 
   final String? birthTime;
   final String? placeLabel;
+
+  /// Где человек живёт сейчас — не где родился. Кормит главу астрокартографии
+  /// «Где ты сейчас» (29.08.2026); `null` — не говорил, и глава честно
+  /// читается от места рождения, называя его рождением.
+  final double? currentLatitude;
+  final double? currentLongitude;
+  final String? currentPlaceLabel;
 
   /// Ответ квиза V0: "love" | "money" | "self" | "future" | null. Сигнал NBO,
   /// живёт только у владельца аккаунта; null — квиз пройден до появления
@@ -278,6 +288,9 @@ class Profile {
         relation: json['relation'] as String?,
         birthTime: json['birth_time'] as String?,
         placeLabel: json['place_label'] as String?,
+        currentLatitude: (json['current_latitude'] as num?)?.toDouble(),
+        currentLongitude: (json['current_longitude'] as num?)?.toDouble(),
+        currentPlaceLabel: json['current_place_label'] as String?,
         interest: json['interest'] as String?,
         sunSign: json['sun_sign'] as String?,
       );

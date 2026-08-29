@@ -573,6 +573,9 @@ class LEs extends L {
   String get cabSettingsPlace => 'Lugar';
 
   @override
+  String get cabSettingsCurrentPlace => 'Ciudad actual';
+
+  @override
   String get cabSettingsPlan => 'Plan';
 
   @override
@@ -1415,6 +1418,11 @@ class LEs extends L {
   @override
   String readerAskAboutIt(String aspect) {
     return 'Pregúntale a Alma sobre $aspect';
+  }
+
+  @override
+  String readerAskDraft(String aspect) {
+    return '¿Qué significa $aspect para mí?';
   }
 
   @override

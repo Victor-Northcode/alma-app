@@ -240,9 +240,24 @@ TRANSITS: tuple[Chapter, ...] = (
     # Длина осталась своей (90–150), хотя глава стала платной и получила бы
     # 300–480 по умолчанию: причина той длины — не тир, а то, что это дневная
     # заметка. Подписчик, читающий её стоя в метро, не просил разворот.
+    # Guidance — из живого чтения владельцем 29.08.2026 («гороскоп даунский…
+    # тут какой-то бред написан, это же будут читать обычные люди»): в одном
+    # утреннем тексте сошлись «0°94′» (модель пересчитала орб 0.94° в
+    # несуществующие минуты), «во вторник» (в пятницу: день недели выдуман) и
+    # сцена-виньетка, в которой читатель себя не узнаёт. Каждое правило ниже —
+    # против одной из этих трёх ошибок.
     _c(1, "I", "active", "What is active now", "What is actually happening to me?",
        ("transiting",), time_dependent=True,
-       words=(90, 150), paragraphs=(1, 2), areas=True),
+       words=(90, 150), paragraphs=(1, 2), areas=True,
+       guidance=(
+           "This is read by an ordinary person over morning coffee: every "
+           "sentence must be something they can recognise in their own day, "
+           "in plain words. Copy orb figures exactly as written in the data "
+           "(0.94°) — never convert degrees into minutes. Never name a "
+           "weekday or a date: the screen prints today's date itself, and a "
+           "wrong weekday reads as a broken product. No invented little "
+           "scenes about specific moments; describe the tendency of the day."
+       )),
     _c(2, "II", "ahead", "The months ahead", "What is coming and when?",
        ("transiting",), time_dependent=True),
     _c(3, "III", "long", "The long transits", "What is this whole chapter of my life about?",

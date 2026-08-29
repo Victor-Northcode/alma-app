@@ -113,7 +113,23 @@ def test_the_numbers_rule_rides_in_every_prompt():
         result, chapter,
         offered=chapters.relevant_factors(chapter, list(result.factors)),
     )
-    assert "never invent scores" in prompt
+    assert "never invent or convert numbers" in prompt
+
+
+def test_the_day_text_brief_forbids_weekdays_and_unit_conversion():
+    """Живое чтение 29.08.2026: «0°94′», «во вторник» (в пятницу) и виньетка,
+    в которой читатель себя не узнаёт. Бриф дневной главы запрещает все три —
+    и обязан доезжать до промпта."""
+    active = chapters.find("transits", "active")
+    assert "Never name a weekday" in active.guidance
+    assert "never convert degrees into minutes" in active.guidance
+    result = compute("transits", _birth())
+    prompt = writer.build_prompt(
+        result, active,
+        offered=chapters.relevant_factors(active, list(result.factors)),
+    )
+    assert "THIS CHAPTER:" in prompt
+    assert "Never name a weekday" in prompt
 
 
 def test_the_brief_is_part_of_the_chapter_identity():

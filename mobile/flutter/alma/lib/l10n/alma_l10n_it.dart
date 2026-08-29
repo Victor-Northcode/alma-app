@@ -574,6 +574,9 @@ class LIt extends L {
   String get cabSettingsPlace => 'Luogo';
 
   @override
+  String get cabSettingsCurrentPlace => 'Città attuale';
+
+  @override
   String get cabSettingsPlan => 'Piano';
 
   @override
@@ -1416,6 +1419,11 @@ class LIt extends L {
   @override
   String readerAskAboutIt(String aspect) {
     return 'Chiedi ad Alma di $aspect';
+  }
+
+  @override
+  String readerAskDraft(String aspect) {
+    return 'Che cosa significa $aspect per me?';
   }
 
   @override

@@ -572,6 +572,9 @@ class LPt extends L {
   String get cabSettingsPlace => 'Lugar';
 
   @override
+  String get cabSettingsCurrentPlace => 'Cidade atual';
+
+  @override
   String get cabSettingsPlan => 'Plano';
 
   @override
@@ -1414,6 +1417,11 @@ class LPt extends L {
   @override
   String readerAskAboutIt(String aspect) {
     return 'Pergunte à Alma sobre $aspect';
+  }
+
+  @override
+  String readerAskDraft(String aspect) {
+    return 'O que $aspect significa para mim?';
   }
 
   @override
