@@ -312,8 +312,8 @@ export const ptBR: Dictionary = {
     notYet: "Ainda não estamos em nenhuma das duas lojas. É aqui que os botões vão ficar no dia em que estivermos.",
     continues: {
       chaptersLabel: "Os capítulos",
-      chapters: (all: number, free: number) =>
-        `${all} no total, escritos a partir dos números que você acabou de ver. ${free} são gratuitos — um em cada sistema — e o resto se compra um sistema por vez, ou os oito de uma vez.`,
+      chapters: (all: number) =>
+        `${all} no total, escritos a partir dos números que você acabou de ver. O primeiro capítulo natal é gratuito, e o resto se compra um sistema por vez, ou os oito de uma vez.`,
       secondLabel: "Os que precisam de mais do que uma data",
       second:
         "A compatibilidade abre quando você adiciona uma segunda pessoa. A astrocartografia desenha suas linhas no mapa, para você perguntar sobre uma cidade antes de se mudar para ela.",

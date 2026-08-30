@@ -441,6 +441,12 @@ export interface CalcResult {
  * search the place index while somebody types, save the birth the journey
  * collected, calculate a system for the portrait, and read the price list the
  * landing quotes.
+ *
+ * Плюс три, вернувшиеся вместе со страницей «/pay» (Т-Банк, 30.08.2026):
+ * вход по коду из письма, список открытого и открытие оплаты. Веб снова
+ * продаёт — но только русскому покупателю, которому магазин Apple продать
+ * не может; правило «цену печатает сервер» держится и здесь, страница не
+ * знает ни одного числа.
  */
 export const api = {
   /**
@@ -458,10 +464,30 @@ export const api = {
    */
   session: () => request<Session>("/v1/auth/session"),
 
-  requestMagicLink: (email: string, locale: Locale) =>
-    request<{ sent: boolean; debug_token?: string }>("/v1/auth/magic-link", {
+  // `Locale | "ru"`: у сайта нет русской локали, а у письма — есть (его шлёт
+  // бекенд, который умеет все семь языков приложения). Страница «/pay» просит
+  // русское письмо, не заводя русскую локаль на весь сайт.
+  requestMagicLink: (email: string, locale: Locale | "ru") =>
+    request<{ sent: boolean; debug_token?: string; debug_code?: string }>(
+      "/v1/auth/magic-link",
+      {
+        method: "POST",
+        body: { email, locale },
+      },
+    ),
+
+  /**
+   * Вход по коду из того же письма — путь страницы «/pay».
+   *
+   * Ссылка из письма ведёт в приложение, а человеку на веб-странице нужен
+   * вход *здесь*: шесть цифр он перепечатает, ссылку — нет. Код хэширован
+   * вместе с адресом (см. `EmailCodeConsume` на бекенде), поэтому оба поля
+   * обязательны.
+   */
+  consumeEmailCode: (email: string, code: string) =>
+    request<Session>("/v1/auth/email-code/consume", {
       method: "POST",
-      body: { email, locale },
+      body: { email, code },
     }),
 
   consumeMagicLink: (token: string) =>
@@ -516,4 +542,24 @@ export const api = {
    */
   catalogue: (country?: string) =>
     request<Record<string, unknown>>("/v1/billing/catalogue", { query: { country } }),
+
+  /**
+   * Что открыто на этом аккаунте. Страница «/pay» зовёт это кнопкой
+   * «Уже оплатили? Обновить доступ» — ответ сервера, а не память браузера:
+   * доступ выдаёт вебхук Т-Банка, и браузер о нём узнаёт только спросив.
+   */
+  entitlements: () =>
+    request<{ unlocked?: string[] }>("/v1/billing/entitlements"),
+
+  /**
+   * Открыть оплату. Ответ несёт `checkout_url` — форму Т-Банка (карта и СБП),
+   * куда браузер просто уходит. Страна названа строкой «RU» самой страницей:
+   * рублёвая витрина обязана открывать рублёвый платёж, из какой бы сети её
+   * ни открыли, — то же правило «цену решает одна страна», что и в каталоге.
+   */
+  checkout: (product: string, opts: { country?: string; email?: string } = {}) =>
+    request<{ checkout_url?: string }>("/v1/billing/checkout", {
+      method: "POST",
+      body: { product, country: opts.country, email: opts.email },
+    }),
 };

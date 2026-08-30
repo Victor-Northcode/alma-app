@@ -559,7 +559,7 @@ export function Synthesis() {
   );
 }
 
-/* ══ VI/V · ALMA'S VOICE ═════════════════════════════════════════ */
+/* ══ VI/IV · ALMA'S VOICE ════════════════════════════════════════ */
 
 export function Voice() {
   const t = useT();
@@ -594,8 +594,9 @@ export function Voice() {
           <div className="parchment-sweep" aria-hidden />
           <div className="parch-grid">
             <div>
-              {/* The desktop half of the same section, numbered V there. This
-                  one was already right; it goes through `Label` so that the two
+              {/* The desktop half of the same section, numbered IV there (the
+                  dash on the insight section keeps no number, so the count is
+                  I, —, II, III, IV). It goes through `Label` so that the two
                   variants cannot drift apart the next time either is edited. */}
               <Label m="IV" d="IV" tone="ink">
                 {t.voice.label}
@@ -614,7 +615,7 @@ export function Voice() {
   );
 }
 
-/* ══ VII/VI · PRICING ════════════════════════════════════════════ */
+/* ══ VII/V · PRICING ═════════════════════════════════════════════ */
 
 /**
  * The value model, stated rather than priced.
@@ -632,7 +633,13 @@ export function Pricing() {
   return (
     <section id="pricing" className="sec sec-pricing">
       <div className="sec-inner">
-        <Label m="V" d="IV">
+        {/* VII/V, не V/IV: на телефоне выше стоят восемь секций подряд, и
+            прайс — седьмая; на широком экране «инсайт» идёт тире, и прайс —
+            пятая по счёту цифра. Прошлая правка перенумеровала только этот
+            ярлык и забыла обе соседние последовательности — хребет читал
+            «…V, VI, V, VIII» на телефоне и «…IV, IV, VI» на десктопе; ловит
+            spine.test.ts, он и нашёл. */}
+        <Label m="VII" d="V">
           {t.pricing.label}
         </Label>
         <h2 className="sec-title price-title">

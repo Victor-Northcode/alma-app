@@ -254,7 +254,7 @@ describe("how long the funnel keeps a browser id", () => {
     expect(page).toContain("FUNNEL_RETENTION_DAYS");
   });
 
-  it("is the number the two apps expire their own id on", () => {
+  it("is the number the app expires its own id on", () => {
     // The server purging its rows is only half of the promise. The other half
     // is the identifier itself: a string that sits in somebody's storage tying
     // their visits together, and that is eventually joined to an account.
@@ -263,27 +263,26 @@ describe("how long the funnel keeps a browser id", () => {
     // *different* account — an identifier with no end, which is the one thing
     // the privacy page exists to promise we do not keep.
     //
-    // So each of the three clients re-mints past the retention, and each holds
-    // its own copy of the number because none of them can import the others'.
-    // Four copies of one fact is three chances to disagree, and the one that
-    // drifts silently is a mobile constant nobody re-reads. Hence this.
+    // So every client re-mints past the retention, and each holds its own copy
+    // of the number because none of them can import the others'. Three copies
+    // of one fact is two chances to disagree, and the one that drifts silently
+    // is a mobile constant nobody re-reads. Hence this.
+    //
+    // Читалось из двух нативов (`InstallationId.swift`, `Measurement.kt`) —
+    // они сняты вместе с самими нативами («продукт собирается только из
+    // порта»), и этот тест месяц падал на ENOENT. Падал он по делу: порт
+    // constant-у не унаследовал, id жил вечно, и обещание страницы
+    // приватности держал только сервер. Срок вернулся во Flutter-клиент
+    // 30.08.2026, и читается теперь оттуда.
     const enforced = Number(
       read(join(ROOT, "backend", "alma", "funnel.py")).match(/^PURGE_AFTER_DAYS = (\d+)/m)![1],
     );
 
-    const ios = read(
-      join(ROOT, "mobile", "ios", "Alma", "Networking", "InstallationId.swift"),
-    ).match(/static let retentionDays = (\d+)/);
-    const android = read(
-      join(
-        ROOT, "mobile", "android", "app", "src", "main", "kotlin", "ai", "pazl", "alma",
-        "data", "Measurement.kt",
-      ),
-    ).match(/const val RETENTION_DAYS = (\d+)/);
+    const flutter = read(
+      join(ROOT, "mobile", "flutter", "alma", "lib", "net", "alma_client.dart"),
+    ).match(/static const anonRetentionDays = (\d+)/);
 
-    expect(ios, "InstallationId.swift no longer declares retentionDays").toBeTruthy();
-    expect(android, "Measurement.kt no longer declares RETENTION_DAYS").toBeTruthy();
-    expect(Number(ios![1]), "iOS disagrees with PURGE_AFTER_DAYS").toBe(enforced);
-    expect(Number(android![1]), "Android disagrees with PURGE_AFTER_DAYS").toBe(enforced);
+    expect(flutter, "alma_client.dart no longer declares anonRetentionDays").toBeTruthy();
+    expect(Number(flutter![1]), "the app disagrees with PURGE_AFTER_DAYS").toBe(enforced);
   });
 });

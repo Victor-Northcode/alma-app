@@ -7,7 +7,7 @@ import { SignInPanel } from "@/components/auth/SignInPanel";
 import { GetTheApp } from "@/components/handoff/GetTheApp";
 import { LanguagePicker } from "@/components/landing/LanguagePicker";
 import { Button, Select, Toggle } from "@/components/ui";
-import { CHAPTERS, FREE_CHAPTERS } from "@/lib/data";
+import { CHAPTERS } from "@/lib/data";
 import type { Dictionary } from "@/lib/i18n";
 import { useT } from "@/lib/i18n/provider";
 import { useJourney } from "@/lib/journey-store";
@@ -1023,7 +1023,7 @@ function StepHandoff({ linkSentTo }: { linkSentTo: string | null }) {
   const system = t.eight.names[wanted.system as keyof typeof t.eight.names];
 
   const continues = [
-    [t.app.continues.chaptersLabel, t.app.continues.chapters(CHAPTERS, FREE_CHAPTERS)],
+    [t.app.continues.chaptersLabel, t.app.continues.chapters(CHAPTERS)],
     [t.app.continues.secondLabel, t.app.continues.second],
     [t.app.continues.almaLabel, t.app.continues.alma],
   ] as const;

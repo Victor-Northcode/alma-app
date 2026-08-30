@@ -42,7 +42,12 @@ export const systems: SystemSummary[] = [
  * sentence it says it in is a number: *this many chapters, this many of them
  * free*. A number in copy is a claim, and this one is a claim about a Python
  * file six directories away — `backend/alma/ai/chapters.py`, which defines
- * every chapter of every system and marks exactly one per system `free=True`.
+ * every chapter of every system and marks exactly one in the whole product
+ * `free=True`: natal I, «Core» (решение владельца 17.08.2026 — «восемь
+ * бесплатных первых глав — это восемь разных обещаний на восьми экранах»).
+ * The handoff sentence advertised the old rule — eight free, "one in every
+ * system" — for two weeks after that decision, in six languages; this is the
+ * drift `data.test.ts` exists to catch, and it caught it on 30.08.2026.
  * Written here rather than fetched because there is no endpoint that answers
  * "how many chapters exist" and inventing one to render a sentence is a round
  * trip for a constant; `data.test.ts` reads that file and fails if either
@@ -52,7 +57,7 @@ export const systems: SystemSummary[] = [
  * section for what a system costs, which only the catalogue may say.
  */
 export const CHAPTERS = 41;
-export const FREE_CHAPTERS = 8;
+export const FREE_CHAPTERS = 1;
 
 /**
  * The footer's legal wall — every entry with somewhere to go.

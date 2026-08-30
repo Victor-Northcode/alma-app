@@ -310,8 +310,8 @@ export const es: Dictionary = {
     notYet: "Todavía no estamos en ninguna de las dos tiendas. Aquí estarán los botones el día que lo estemos.",
     continues: {
       chaptersLabel: "Los capítulos",
-      chapters: (all: number, free: number) =>
-        `${all} en total, escritos a partir de los números que acabas de ver. ${free} se abren gratis —uno en cada sistema— y el resto se compran de sistema en sistema, o los ocho de una vez.`,
+      chapters: (all: number) =>
+        `${all} en total, escritos a partir de los números que acabas de ver. El primer capítulo natal se abre gratis, y el resto se compran de sistema en sistema, o los ocho de una vez.`,
       secondLabel: "Los que necesitan algo más que una fecha",
       second:
         "La compatibilidad se abre cuando añades a una segunda persona. La astrocartografía traza tus líneas sobre el mapa, para que puedas preguntar por una ciudad antes de mudarte a ella.",

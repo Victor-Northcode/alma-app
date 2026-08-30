@@ -1,0 +1,20 @@
+# Продление подписок Т-Банка. У Т-Банка нет сущности «подписка» — есть
+# рекуррентный платёж по RebillId, и «продлевается автоматически» с витрины
+# «/pay» — обещание, которое держит ровно этот джоб (alma/billing/tbank_charges.py)
+# и никто больше. Не запущен таймер — подписки молча кончаются через expires_at,
+# хотя человек их не отменял.
+
+[Unit]
+Description=Alma — списание продлений подписок Т-Банка
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/alma/backend
+ExecStart=/usr/bin/docker compose run --rm --no-deps app python -m alma.billing.tbank_charges
+# ExecStartPost=/usr/bin/curl -fsS -m 10 --retry 3 https://hc-ping.com/ВАШ-UUID
+TimeoutStartSec=1800
+
+[Install]
+WantedBy=multi-user.target

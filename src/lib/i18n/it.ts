@@ -311,8 +311,8 @@ export const it: Dictionary = {
     notYet: "Non siamo ancora in nessuno dei due store. Qui ci saranno i pulsanti il giorno in cui ci saremo.",
     continues: {
       chaptersLabel: "I capitoli",
-      chapters: (all: number, free: number) =>
-        `${all} in tutto, scritti dai numeri che hai appena visto. ${free} sono gratuiti — uno in ogni sistema — e gli altri si comprano un sistema alla volta, o tutti e otto insieme.`,
+      chapters: (all: number) =>
+        `${all} in tutto, scritti dai numeri che hai appena visto. Il primo capitolo natale è gratuito, e gli altri si comprano un sistema alla volta, o tutti e otto insieme.`,
       secondLabel: "Quelli a cui una data non basta",
       second:
         "La compatibilità si apre quando aggiungi una seconda persona. L'astrocartografia traccia le tue linee sulla mappa, così puoi chiedere di una città prima di andarci a vivere.",

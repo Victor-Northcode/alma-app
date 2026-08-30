@@ -49,7 +49,11 @@ const contentSecurityPolicy = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  // The API origin by name, not only `https:`: the pay page (`/pay`) draws
+  // the systems' plates straight off the backend (`/static/plates/…`), and a
+  // deployment whose API speaks plain http — every local stand — rendered
+  // eight blank rectangles with no error anywhere but the CSP report.
+  `img-src 'self' data: blob: https: ${apiOrigin}`,
   "font-src 'self' data:",
   `connect-src 'self' ${apiOrigin}`,
   "frame-src https://accounts.google.com",

@@ -104,6 +104,33 @@ class _AlmaAppState extends State<AlmaApp> with WidgetsBindingObserver {
   void didChangeLocales(List<Locale>? locales) =>
       _session.deviceLocaleChanged();
 
+  // Когда права последний раз перечитывались из-за возврата в приложение.
+  // Возвраты случаются на каждом переключении окон, а права меняются
+  // покупкой или отменой — не чаще; минута между запросами это не «кэш»,
+  // а отказ долбить `/entitlements` тому, кто листает уведомления. Null —
+  // ещё ни разу: первый возврат перечитывает всегда (в него и попадает
+  // «заплатил на сайте, вернулся в приложение»).
+  DateTime? _rightsChecked;
+
+  // **Возврат в приложение перечитывает права.** Оплата теперь бывает и вне
+  // магазина приложения: страница `/pay` на сайте (Т-Банк, СБП) выдаёт право
+  // вебхуком, пока приложение свёрнуто за браузером. Без этой строки человек,
+  // заплативший на сайте, возвращался в приложение к закрытым главам и должен
+  // был бы догадаться перезапустить его — ТЗ владельца 29.08.2026 называет
+  // это прямо: «при запуске приложения автоматически проверять права».
+  // Запуск уже проверяет (`_session.start`); это — вторая половина, возврат.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    final now = DateTime.now();
+    final last = _rightsChecked;
+    if (last != null && now.difference(last) < const Duration(minutes: 1)) {
+      return;
+    }
+    _rightsChecked = now;
+    unawaited(_session.refreshRights());
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);

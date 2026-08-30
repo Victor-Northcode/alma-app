@@ -2513,6 +2513,88 @@
   margin-top: 2px;
 }
 
+/* ══ PAY (Т-Банк) ═════════════════════════════════════════════════
+   Русская страница «/pay» — витрина поверх скелета sign-in. Шире,
+   чем 380: карточка несёт вклейку, цену и кнопку в один ряд, и в
+   380px этот ряд ломается на три этажа.                             */
+
+.pay-inner {
+  max-width: 560px;
+}
+.pay-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 380px;
+  margin-top: 6px;
+}
+.pay-shop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 6px;
+}
+.pay-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--panel);
+  text-align: left;
+}
+.pay-plate {
+  flex: none;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.pay-card-words {
+  flex: 1;
+  min-width: 0;
+  color: var(--ink-light);
+}
+.pay-blurb {
+  margin-top: 3px;
+}
+.pay-card-side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.pay-price {
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.pay-legal {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 22px;
+}
+.pay-legal a {
+  color: var(--muted-2);
+  text-decoration: underline;
+}
+/* Телефон: ряд карточки складывается сам, кнопка уходит на всю ширину. */
+@media (max-width: 480px) {
+  .pay-card {
+    flex-wrap: wrap;
+  }
+  .pay-card-side {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
 /* ══ LEGAL ════════════════════════════════════════════════════════
    The five documents. Parchment, like the chapter reader — a document
    is the one place this design allows ink on paper, and these pages

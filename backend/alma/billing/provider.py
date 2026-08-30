@@ -1073,6 +1073,10 @@ def provider_for(name: str | None = None) -> BillingProvider:
         from .googleplay import GooglePlayProvider
 
         return GooglePlayProvider()
+    if chosen == "tbank":
+        from .tbank import TBankProvider
+
+        return TBankProvider()
 
     raise BillingUnavailable(
         f"{chosen!r} is not a payment processor this build knows how to talk to"

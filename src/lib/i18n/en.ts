@@ -457,8 +457,11 @@ export const en = {
      */
     continues: {
       chaptersLabel: "The chapters",
-      chapters: (all: number, free: number) =>
-        `${all} of them, written from the numbers you have just been shown. ${free} open free — one in every system — and the rest are bought a system at a time, or all eight at once.`,
+      // «One in every system» was the pre-17.08.2026 rule; since the owner's
+      // decision exactly one chapter in the product is free (natal I, "Core"),
+      // and a sentence advertising eight was a false claim in six languages.
+      chapters: (all: number) =>
+        `${all} of them, written from the numbers you have just been shown. The first natal chapter opens free, and the rest are bought a system at a time, or all eight at once.`,
       secondLabel: "The ones that need more than a date",
       second:
         "Compatibility opens when you add a second person. Astrocartography draws your lines across the map, so you can ask about a city before you move to it.",

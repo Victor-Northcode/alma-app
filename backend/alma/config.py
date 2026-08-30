@@ -54,7 +54,9 @@ BASE_DIR = Path(__file__).resolve().parents[1]
 #: time: the iOS binary is configured `appstore`, the Android binary
 #: `googleplay`, and the web landing keeps a card processor for as long as it
 #: sells anything at all.
-BILLING_PROVIDERS: tuple[str, ...] = ("paddle", "dodo", "appstore", "googleplay")
+BILLING_PROVIDERS: tuple[str, ...] = (
+    "paddle", "dodo", "appstore", "googleplay", "tbank",
+)
 
 
 class Settings(BaseSettings):
@@ -335,6 +337,25 @@ class Settings(BaseSettings):
     #: reading our documentation and their dashboard sees two different words
     #: for the same switch.
     dodo_environment: str = Field(default="test_mode", alias="DODO_PAYMENTS_ENVIRONMENT")
+
+    #: Т-Банк: российский эквайринг (карта + СБП) для страницы «Как оплатить»
+    #: (ТЗ владельца от 29.08.2026). Два секрета терминала; пароль подписывает
+    #: и наши запросы, и их нотификации — отдельного вебхук-ключа у Т-Банка
+    #: нет, `Token` в теле считается тем же паролем.
+    tbank_terminal_key: str = Field(default="", alias="TBANK_TERMINAL_KEY")
+    tbank_password: str = Field(default="", alias="TBANK_PASSWORD")
+    #: Продавец для витрины и юрстраниц — ИП, чьи реквизиты вводит владелец.
+    #: Пусто по умолчанию нарочно: выдуманное имя продавца на странице
+    #: возвратов хуже пустого — эту страницу читает банк при споре.
+    tbank_merchant_name: str = Field(default="", alias="TBANK_MERCHANT_NAME")
+    #: Чек 54-ФЗ: система налогообложения ИП («usn_income» и т.п.). Пусто —
+    #: чек не собирается вовсе (терминал без онлайн-кассы его и не ждёт).
+    tbank_taxation: str = Field(default="", alias="TBANK_TAXATION")
+    #: Ставка НДС для строки чека; у ИП на УСН — «none».
+    tbank_vat: str = Field(default="none", alias="TBANK_VAT")
+    #: Куда слать нотификации, если не задано на терминале. Обычно задаётся
+    #: в кабинете терминала и здесь остаётся пустым.
+    tbank_notification_url: str = Field(default="", alias="TBANK_NOTIFICATION_URL")
 
     #: **Apple's only credential, and it is not a secret.** There is no shared
     #: key with the App Store: a StoreKit transaction is a JWS signed by a
@@ -676,6 +697,10 @@ class Settings(BaseSettings):
             # half-configured check below is written against the length rather
             # than against a count of two.
             "appstore": {"APPLE_BUNDLE_ID": self.apple_bundle_id},
+            "tbank": {
+                "TBANK_TERMINAL_KEY": self.tbank_terminal_key,
+                "TBANK_PASSWORD": self.tbank_password,
+            },
             "googleplay": {
                 "GOOGLE_PLAY_PACKAGE_NAME": self.google_play_package,
                 "GOOGLE_PLAY_SERVICE_ACCOUNT_JSON": self.google_play_service_account,

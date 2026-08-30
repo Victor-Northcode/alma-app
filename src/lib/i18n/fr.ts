@@ -314,8 +314,8 @@ export const fr: Dictionary = {
     notYet: "Nous ne sommes encore sur aucun des deux stores. Les boutons seront ici le jour où nous y serons.",
     continues: {
       chaptersLabel: "Les chapitres",
-      chapters: (all: number, free: number) =>
-        `${all} en tout, écrits à partir des nombres que tu viens de voir. ${free} sont gratuits — un dans chaque système — et les autres s'achètent système par système, ou les huit d'un coup.`,
+      chapters: (all: number) =>
+        `${all} en tout, écrits à partir des nombres que tu viens de voir. Le premier chapitre natal est gratuit, et les autres s'achètent système par système, ou les huit d'un coup.`,
       secondLabel: "Ceux à qui une date ne suffit pas",
       second:
         "La compatibilité s'ouvre dès que tu ajoutes une deuxième personne. L'astrocartographie trace tes lignes sur la carte, pour que tu puisses interroger une ville avant d'y partir.",

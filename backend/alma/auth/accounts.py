@@ -503,9 +503,14 @@ async def erase(session: AsyncSession, user: User) -> None:
     # профиль — id человека, которого пользователь проверял, — так что её
     # сохранение после Article 17 было бы хранением связи между двумя людьми,
     # один из которых попросил себя стереть.
+    # `WebOrder` — здесь же и по тому же правилу: строка несёт `user_id`
+    # (мост веб-платежа Т-Банка к владельцу), и таблица с `user_id`, которой
+    # нет в этой функции, — «обещание, нарушенное молча» (шапка `models.py`).
+    from ..db.models import WebOrder
+
     for table in (
         Reading, ChatThread, Memory, Entitlement, Profile, UsageCounter,
-        PairIntent, PairCredit,
+        PairIntent, PairCredit, WebOrder,
     ):
         await session.execute(delete(table).where(table.user_id == user.id))
     await session.execute(delete(Consent).where(Consent.user_id == user.id))

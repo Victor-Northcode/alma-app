@@ -60,18 +60,29 @@ describe("what the handoff claims is in the app", () => {
     join(__dirname, "..", "..", "backend", "alma", "ai", "chapters.py"),
     "utf8",
   );
+  // Только строки кода: история решения «свободна одна глава» (17.08.2026)
+  // живёт в комментариях chapters.py и поминает `free=True` четырежды —
+  // счёт по сырому файлу выдал 5 «бесплатных глав» при одной настоящей.
+  const code = source
+    .split("\n")
+    .filter((line) => !line.trimStart().startsWith("#"))
+    .join("\n");
   // The definition of the helper is itself a `_c(` occurrence, and it is not a
   // chapter.
-  const declared = source.split("_c(").length - 1 - 1;
-  const free = source.split("free=True").length - 1;
+  const declared = code.split("_c(").length - 1 - 1;
+  const free = code.split("free=True").length - 1;
 
   it("counts every chapter the writing layer defines", () => {
     expect(CHAPTERS).toBe(declared);
   });
 
-  it("counts the free ones — one in every system, which is the sentence", () => {
+  it("counts the free ones — exactly one in the product, which is the sentence", () => {
+    // Восемь стало одной 17.08.2026 (решение владельца: свободен натал I
+    // «Core», всё остальное закрыто) — а хэндофф ещё две недели обещал
+    // «one in every system» на шести языках. Этот тест и был написан,
+    // чтобы то предложение не пережило то решение.
     expect(FREE_CHAPTERS).toBe(free);
-    expect(FREE_CHAPTERS).toBe(8);
+    expect(FREE_CHAPTERS).toBe(1);
   });
 });
 

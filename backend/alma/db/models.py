@@ -853,6 +853,29 @@ class ChatMessage(Base):
     thread: Mapped[ChatThread] = relationship(back_populates="messages")
 
 
+class WebOrder(Base):
+    """Один веб-заказ Т-Банка: мост от нотификации к владельцу платежа.
+
+    У Paddle и Dodo владелец едет в подписанных метаданных и возвращается в
+    вебхуке; Т-Банк в нотификацию `DATA` не кладёт — приходит только
+    `OrderId`. Строка пишется сервером при `Init` и читается `enrich`-ем
+    адаптера; браузер её не видит и подменить не может — это и есть
+    эквивалент печати `stamp()` для процессора, который метаданных не носит.
+
+    Держит `user_id`, поэтому обязана стоять в `accounts.erase` — правило из
+    шапки этого файла.
+    """
+
+    __tablename__ = "web_order"
+
+    order_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    user_id: Mapped[str] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"), index=True
+    )
+    product: Mapped[str] = mapped_column(String(32))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class ChatTranslation(Base):
     """Одна реплика беседы на одном другом языке — написано раз, живёт вечно.
 

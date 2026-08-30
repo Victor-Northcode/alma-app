@@ -136,6 +136,10 @@ class BirthTimeOption {
 class TokenStore {
   static const _key = 'alma.token';
   static const _anonKey = 'alma.anon';
+  //: Когда id отчеканен, epoch ms — рядом, а не внутри строки: id остаётся
+  //: непрозрачным для сервера, а факт возраста читается отдельно (тот же
+  //: расклад, что `alma.anon.minted` в вебе).
+  static const _anonMintedKey = 'alma.anon.minted';
 
   /// **Связка ключей, а не настройки.**
   ///
@@ -216,18 +220,39 @@ class TokenStore {
     await prefs.remove(_key);
   }
 
-  /// Постоянный признак установки.
+  /// Сколько дней живёт признак установки, прежде чем чеканится заново.
   ///
-  /// Отправляется на каждом запросе и нужен ровно для одного: связать гостя,
-  /// переустановившего приложение, с его же покупками. Это не идентификатор
-  /// человека и он никуда, кроме нашего сервера, не уходит.
+  /// То же число, что `PURGE_AFTER_DAYS` в `alma/funnel.py` и
+  /// `FUNNEL_RETENTION_DAYS` на сайте: страница приватности обещает, что и
+  /// строки воронки, и сам идентификатор умирают через этот срок. Нативные
+  /// клиенты это держали (`InstallationId.swift`, `Measurement.kt`); порт
+  /// уронил — id жил вечно, и обещание держала только половина продукта.
+  /// Стережёт `legal-truth.test.ts` на сайте: он читает этот файл.
+  static const anonRetentionDays = 180;
+
+  /// Признак установки — не постоянный, а со сроком жизни.
+  ///
+  /// Отправляется на каждом запросе и нужен ровно для одного: склеить шаги
+  /// воронки до аккаунта с аккаунтом, когда тот появится (`funnel.claim` на
+  /// сервере). Покупки он не связывает — их держит токен в связке ключей;
+  /// комментарий, обещавший здесь «покупки после переустановки», был неправдой
+  /// уже потому, что `shared_preferences` переустановку не переживают. Это не
+  /// идентификатор человека и он никуда, кроме нашего сервера, не уходит.
   Future<String> anonId() async {
     if (_anonCached != null) return _anonCached!;
     final prefs = await SharedPreferences.getInstance();
     var value = prefs.getString(_anonKey);
-    if (value == null) {
+    // Возраст без штампа — любой, и такой id считается истёкшим: перечеканка
+    // стоит одного склеенного визита, вечный id стоит обещания на странице
+    // приватности. Ровно то же правило, что `anonExpired` в вебе.
+    final minted = prefs.getInt(_anonMintedKey);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final expired = minted == null ||
+        now - minted >= anonRetentionDays * 24 * 60 * 60 * 1000;
+    if (value == null || expired) {
       value = _randomId();
       await prefs.setString(_anonKey, value);
+      await prefs.setInt(_anonMintedKey, now);
     }
     return _anonCached = value;
   }
