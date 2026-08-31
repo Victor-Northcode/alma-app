@@ -28,6 +28,7 @@ import { Star } from "@/components/brand/Star";
 import { Starfield } from "@/components/sky/Sky";
 import { API_BASE, api, isOk, readToken, writeToken } from "@/lib/api";
 import { looksLikeEmail } from "@/lib/email";
+import { MERCHANT_RU, MERCHANT_RU_LINE } from "@/lib/merchant-ru";
 
 /** Вклейки — те же файлы, что видит приложение, с того же сервера. */
 const PLATES = `${API_BASE}/static/plates`;
@@ -365,15 +366,15 @@ export default function PayPage() {
             его и войди той же почтой: доступ подтянется сам.
           </p>
           <p className="signin-note">
-            {/* Имя продавца — только когда витриной правит сам Т-Банк: пока
-                глобальный процессор другой (Paddle до включения ключей),
-                каталог называет ЕГО merchant, и строка «Продавец:
+            {/* Реквизиты — из lib/merchant-ru.ts, не из каталога: каталог
+                называет merchant глобального процессора, и до включения
+                ключей Т-Банка это был Paddle — строка «Продавец:
                 Paddle.com Market Ltd» рядом с «оплату принимает Т-Банк»
-                была неправдой — поймано на проде 30.08.2026. */}
-            {shelf?.provider === "tbank" && shelf.merchant
-              ? `Продавец: ${shelf.merchant}. `
-              : ""}
-            Оплату принимает Т-Банк. Цена и период списания видны до оплаты.
+                жила на проде и противоречила сама себе (поймано
+                30.08.2026). Продавец этой витрины известен и без env —
+                его продиктовал владелец. */}
+            {MERCHANT_RU_LINE} Адрес: {MERCHANT_RU.address}. Оплату
+            принимает Т-Банк. Цена и период списания видны до оплаты.
             Подписка продлевается автоматически, пока не отменишь; после
             отмены доступ сохраняется до конца оплаченного периода, разовые
             покупки остаются навсегда.
