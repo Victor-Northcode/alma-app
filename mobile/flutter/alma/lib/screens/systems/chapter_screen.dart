@@ -1047,6 +1047,20 @@ class _ChapterScreenState extends State<ChapterScreen>
     );
   }
 
+  /// Ожидание и отказ стоят по центру **экрана**, а не остатка под шапкой.
+  ///
+  /// `Expanded` со страницей начинается под кнопкой возврата, и голый
+  /// `Center` вешал лоадер на полшапки ниже видимого центра — владелец снял
+  /// это на устройстве 31.08.2026: «лоадер слишком низко». Поправка — высота
+  /// шапки целиком (поле 10 + ряд 44): нижний отступ поднимает центр
+  /// содержимого ровно на её половину, туда, где стоит центр экрана.
+  Widget _screenCentered(Widget child) => Center(
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 54),
+          child: child,
+        ),
+      );
+
   Widget _page(L l) {
     // Паттерн — раньше всего остального, включая ожидание: на закрытой главе
     // ждать нечего, а абзац и кнопка нужны сразу. Сюда же сведены все три
@@ -1079,8 +1093,8 @@ class _ChapterScreenState extends State<ChapterScreen>
       //
       // Порядок и отбивки — из макета: фраза курсивом 26/1.2, 36 точек,
       // рисунок 260, 24 точки, подпись состояния.
-      return Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
+      return _screenCentered(
+        Column(mainAxisSize: MainAxisSize.min, children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AlmaMetrics.pad),
             child: Text(
@@ -1145,8 +1159,8 @@ class _ChapterScreenState extends State<ChapterScreen>
       // половиной главы и одной кнопкой подписки, — и сюда попадает только то,
       // что покупкой не лечится: мёртвая сеть, отказ письма и тот же потолок у
       // подписчика, которому продавать уже нечего.
-      return Center(
-        child: Padding(
+      return _screenCentered(
+        Padding(
           padding: const EdgeInsets.all(AlmaMetrics.pad),
           // **Тупик стал предложением попробовать снова.** Здесь была одна серая
           // строка 13pt на ночи без выхода: сеть моргнула — человек застрял на
@@ -1184,8 +1198,8 @@ class _ChapterScreenState extends State<ChapterScreen>
       // одного незаблюренного слова текста и лоадер по центру. Дышащая
       // золотая точка — тот же знак ожидания, что на «Сегодня» и в оглавлении
       // системы; строка под ней — из общего словаря состояний.
-      return Center(
-        child: Column(
+      return _screenCentered(
+        Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const WaitingDot(size: 28),

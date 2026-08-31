@@ -1146,8 +1146,12 @@ async def _translated_opening(
             cost_cents=t_spend.cents,
         )
         session.add(record)
-        await _count(session, user, "openings_translated")
-        await _spend(session, user, t_spend.cents, ledger=cost.SHOWCASE_METRIC)
+        # Флаш — раньше счётчиков, и это не косметика: SELECT внутри
+        # `_count`/`_spend` делает autoflush, вставка происходила в чужом
+        # запросе, и `IntegrityError` гонки вылетал мимо ловушки ниже
+        # 500-кой. Пойман владельцем на живой главе 31.08.2026 («что-то
+        # пошло не так на нашей стороне»); то же исправление стоит во всех
+        # шести местах вставки Reading этого файла.
         try:
             await session.flush()
         except IntegrityError:
@@ -1165,6 +1169,8 @@ async def _translated_opening(
             if theirs is None:
                 return None
             return theirs.body, True, theirs.created_at.isoformat()
+        await _count(session, user, "openings_translated")
+        await _spend(session, user, t_spend.cents, ledger=cost.SHOWCASE_METRIC)
 
     return t_body, False, utcnow().isoformat()
 
@@ -1331,10 +1337,8 @@ async def _write_opening(
             cost_cents=written.spend.cents,
         )
         session.add(record)
-        await _count(session, user, "openings_written")
-        await _spend(
-            session, user, written.spend.cents, ledger=cost.SHOWCASE_METRIC
-        )
+        # Флаш до счётчиков — autoflush в их SELECT-ах вставлял строку мимо
+        # этой ловушки (довод у перевода абзаца выше).
         try:
             await session.flush()
         except IntegrityError:
@@ -1362,6 +1366,10 @@ async def _write_opening(
             if theirs is None:
                 return None
             return theirs.body, True, theirs.created_at.isoformat()
+        await _count(session, user, "openings_written")
+        await _spend(
+            session, user, written.spend.cents, ledger=cost.SHOWCASE_METRIC
+        )
 
     return written.as_dict(), False, utcnow().isoformat()
 
@@ -1627,8 +1635,8 @@ async def _read_or_write(
                     cost_cents=t_spend.cents,
                 )
                 session.add(record)
-                await _count(session, user, "readings_translated")
-                await _spend(session, user, t_spend.cents)
+                # Флаш до счётчиков — autoflush в их SELECT-ах вставлял
+                # строку мимо этой ловушки (довод у перевода абзаца выше).
                 try:
                     await session.flush()
                 except IntegrityError:
@@ -1652,6 +1660,8 @@ async def _read_or_write(
                             "created_at": theirs.created_at.isoformat(),
                         }
                     raise
+                await _count(session, user, "readings_translated")
+                await _spend(session, user, t_spend.cents)
             return {
                 "reading": t_body,
                 "cached": False,
@@ -1741,8 +1751,8 @@ async def _read_or_write(
             cost_cents=written.spend.cents,
         )
         session.add(record)
-        await _count(session, user, "readings_written")
-        await _spend(session, user, written.spend.cents)
+        # Флаш до счётчиков — autoflush в их SELECT-ах вставлял строку мимо
+        # этой ловушки (довод у перевода абзаца выше).
         try:
             await session.flush()
         except IntegrityError:
@@ -1769,6 +1779,8 @@ async def _read_or_write(
                     "created_at": theirs.created_at.isoformat(),
                 }
             raise
+        await _count(session, user, "readings_written")
+        await _spend(session, user, written.spend.cents)
 
     return {
         "reading": written.as_dict(),
@@ -2509,8 +2521,9 @@ async def natal_spheres(
                             cost_cents=t_spend.cents,
                         )
                         session.add(record)
-                        await _count(session, user, "spheres_translated")
-                        await _spend(session, user, t_spend.cents)
+                        # Флаш до счётчиков — autoflush в их SELECT-ах
+                        # вставлял строку мимо этой ловушки (довод у
+                        # перевода абзаца выше).
                         try:
                             await session.flush()
                         except IntegrityError:
@@ -2533,6 +2546,8 @@ async def natal_spheres(
                                     "locale": language,
                                 }
                             raise
+                        await _count(session, user, "spheres_translated")
+                        await _spend(session, user, t_spend.cents)
                     return {
                         "spheres": _titled(t_body.get("spheres", [])),
                         "cached": False,
@@ -2577,7 +2592,8 @@ async def natal_spheres(
                     cost_cents=spend.cents,
                 )
                 session.add(record)
-                await _spend(session, user, spend.cents)
+                # Флаш до счётчика — autoflush в его SELECT-е вставлял
+                # строку мимо этой ловушки (довод у перевода абзаца выше).
                 try:
                     await session.flush()
                 except IntegrityError:
@@ -2596,6 +2612,7 @@ async def natal_spheres(
                             "locale": language,
                         }
                     raise
+                await _spend(session, user, spend.cents)
 
             return {"spheres": _titled(blocks), "cached": False, "locale": language}
     finally:

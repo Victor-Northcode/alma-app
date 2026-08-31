@@ -1193,3 +1193,86 @@ def test_sphere_chapters_exist(api, auth_headers):
     slugs = {c.slug for c in chapters.BY_SYSTEM["natal"]}
     for _key, chapter in spheres.SPHERES:
         assert chapter in slugs
+
+
+def test_losing_the_insert_race_returns_the_rivals_words_not_a_500(
+    api, auth_headers, scripted, owns, monkeypatch
+):
+    """Гонка вставки отвечает чужой главой, а не 500-кой.
+
+    31.08.2026 владелец увидел на живой главе «что-то пошло не так»: два
+    запроса писали одну главу, и `IntegrityError` по `reading_once` вылетал
+    **из SELECT-а счётчиков** — autoflush вставлял строку внутри чужого
+    запроса, мимо ловушки у явного flush. Тест воспроизводит гонку честно:
+    соперник кладёт свою строку, пока «мы» ждём модель. На коде до правки
+    (счётчики между `add` и `flush`) он падает 500-кой — проверено откатом.
+    """
+    from sqlalchemy import select
+
+    from alma.api.routers import readings as readings_module
+    from alma.db.models import Profile, Reading, User
+    from alma.db.session import session_scope
+    from tests.conftest import read_async
+
+    api.post("/v1/profiles", json=SOFIA, headers=auth_headers)
+    factors = _factors_for(api, auth_headers)
+    scripted.responses.append(_chapter_reply(factors, title="Ours"))
+
+    captured: dict = {}
+    orig_key = readings_module._reading_key
+
+    def spy_key(*args, **kwargs):
+        captured["calc_key"] = orig_key(*args, **kwargs)
+        return captured["calc_key"]
+
+    monkeypatch.setattr(readings_module, "_reading_key", spy_key)
+
+    orig_write = readings_module.writer.write
+
+    async def rival_wins(*args, **kwargs):
+        written = await orig_write(*args, **kwargs)
+
+        async def plant():
+            async with session_scope() as session:
+                user = (await session.execute(select(User))).scalars().one()
+                profile = (
+                    await session.execute(select(Profile))
+                ).scalars().first()
+                session.add(Reading(
+                    user_id=user.id,
+                    profile_id=profile.id,
+                    system="numerology",
+                    chapter="life-path",
+                    locale="en",
+                    calc_key=captured["calc_key"],
+                    engine_version="rival",
+                    model="rival",
+                    body={"title": "Theirs", "paragraphs": []},
+                    cited_factors=[],
+                ))
+
+        await plant()
+        return written
+
+    monkeypatch.setattr(readings_module.writer, "write", rival_wins)
+
+    response = api.post(
+        "/v1/readings",
+        json={"system": "numerology", "chapter": "life-path"},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["cached"] is True, "гонка обязана отвечать сохранённой копией"
+    # Ветка гонки отдаёт `theirs.body` как есть — то, что соперник записал.
+    assert body["reading"]["title"] == "Theirs", (
+        "чьи слова легли первыми, те и остаются"
+    )
+
+    async def rows():
+        async with session_scope() as session:
+            return len(
+                (await session.execute(select(Reading))).scalars().all()
+            )
+
+    assert read_async(rows) == 1, "в базе одна глава, не две"
