@@ -393,11 +393,13 @@ export const en = {
      * configuration, and a string is a thing `check-locales.mjs` can see. It
      * could not see inside the template literal this used to be.
      */
-    // «Nothing is sold on this website» перестало быть правдой 30.08.2026:
-    // страница «/pay» продаёт русскому покупателю через Т-Банк. Строка,
-    // которую читает эмитент карты при споре, обязана знать про оба пути.
+    // «Nothing is sold on this website» перестало быть правдой 30.08.2026 —
+    // страница «/pay» продаёт русскому покупателю, — поэтому та фраза снята.
+    // Но сам Т-Банк здесь НЕ называется (владелец, 31.08.2026: «у других не
+    // было упоминания тбанка»): рублёвый путь — забота русской локали, и
+    // только её строка ведёт к нему.
     payments:
-      "Everything is bought inside the app, from Apple or Google as merchant of record · tax included where it applies. Buyers in Russia pay on this site through T-Bank",
+      "Everything is bought inside the app, from Apple or Google as merchant of record · tax included where it applies",
     disclaimer:
       "For self-knowledge only. Not medical, psychological, legal or financial advice, and not a prediction of events.",
     /**

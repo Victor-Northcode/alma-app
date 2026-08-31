@@ -279,7 +279,7 @@ export const es: Dictionary = {
     groupMoney: "Dinero",
     groupCompany: "Empresa",
     payments:
-      "Todo se compra dentro de la app, a Apple o a Google como vendedor legal · impuestos incluidos cuando corresponde. Quien compra desde Rusia paga en esta web a través de T-Bank",
+      "Todo se compra dentro de la app, a Apple o a Google como vendedor legal · impuestos incluidos cuando corresponde",
     disclaimer:
       "Solo para autoconocimiento. No es consejo médico, psicológico, legal ni financiero, y no predice acontecimientos.",
     performance:

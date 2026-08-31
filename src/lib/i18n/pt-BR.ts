@@ -281,7 +281,7 @@ export const ptBR: Dictionary = {
     groupMoney: "Dinheiro",
     groupCompany: "Empresa",
     payments:
-      "Tudo é comprado dentro do app, da Apple ou do Google como vendedor legal · impostos incluídos quando se aplicam. Quem compra da Rússia paga neste site pelo T-Bank",
+      "Tudo é comprado dentro do app, da Apple ou do Google como vendedor legal · impostos incluídos quando se aplicam",
     disclaimer:
       "Só para autoconhecimento. Não é orientação médica, psicológica, jurídica ou financeira, e não prevê acontecimentos.",
     performance:

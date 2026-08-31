@@ -283,7 +283,7 @@ export const fr: Dictionary = {
     groupMoney: "Argent",
     groupCompany: "Société",
     payments:
-      "Tout s'achète dans l'application, auprès d'Apple ou de Google en tant que vendeur légal · taxe incluse le cas échéant. Depuis la Russie, l'achat se règle sur ce site via T-Bank",
+      "Tout s'achète dans l'application, auprès d'Apple ou de Google en tant que vendeur légal · taxe incluse le cas échéant",
     disclaimer:
       "Pour se connaître, rien de plus. Ce n'est pas un avis médical, psychologique, juridique ou financier, et ce n'est pas une prédiction.",
     performance:

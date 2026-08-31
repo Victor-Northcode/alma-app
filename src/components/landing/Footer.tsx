@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Star } from "@/components/brand/Star";
 import { complianceBadges } from "@/lib/data";
-import { useT } from "@/lib/i18n/provider";
+import { useLocale, useT } from "@/lib/i18n/provider";
 import { LanguagePicker } from "./LanguagePicker";
 
 /**
@@ -19,6 +19,7 @@ import { LanguagePicker } from "./LanguagePicker";
  */
 export function Footer() {
   const t = useT();
+  const { locale } = useLocale();
 
   const columns: Array<[string, Array<{ label: string; href: string }>]> = [
     [
@@ -33,6 +34,15 @@ export function Footer() {
     [
       t.footer.groupMoney,
       [
+        // Строка одной локали, поэтому литерал с условием, а не ключ
+        // словаря: ключ пришлось бы завести на всех семи языках, и шесть
+        // из них рекламировали бы путь, которого для их читателя нет
+        // (владелец, 31.08.2026: «оплата тбанк была ток у русской версии
+        // сайта, у англ и других был эпл»). Рублёвый путь — «/pay»,
+        // остальные платят в приложении магазину.
+        ...(locale === "ru"
+          ? [{ label: "Оплатить картой или СБП", href: "/pay" }]
+          : []),
         { label: t.footer.refunds, href: "/refunds" },
         { label: t.footer.subscriptionTerms, href: "/subscription-terms" },
         { label: t.footer.withdrawal, href: "/refunds#withdrawal" },
