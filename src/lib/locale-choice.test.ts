@@ -31,6 +31,7 @@ const ENDONYM: Record<Locale, string> = {
   it: "Italiano",
   fr: "Français",
   "pt-BR": "Português (Brasil)",
+  ru: "Русский",
 };
 
 /** The BCP-47 tag a screen reader needs to pronounce that name. */
@@ -41,6 +42,7 @@ const TAG: Record<Locale, string> = {
   it: "it",
   fr: "fr",
   "pt-BR": "pt-BR",
+  ru: "ru",
 };
 
 describe("what the picker offers", () => {

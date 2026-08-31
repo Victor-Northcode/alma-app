@@ -92,6 +92,15 @@ const COPY: Record<Locale, Record<string, string>> = {
     title: "Entrar",
     lead: "Nunca uma senha. Um link no seu e-mail e pronto.",
   },
+  ru: {
+    working: "Впускаю…",
+    welcome: "Вход выполнен.",
+    used: "Эта ссылка уже использована. Запроси новую.",
+    expired: "Эта ссылка истекла. Запроси новую.",
+    invalid: "Эта ссылка не работает. Запроси новую.",
+    title: "Войти",
+    lead: "Пароля нет и не будет. Ссылка в почте — и всё.",
+  },
 };
 
 function SignIn() {

@@ -39,6 +39,7 @@ const OFFERS_AN_ACCOUNT: Record<Locale, readonly RegExp[]> = {
   it: [/\bregistr/i, /\baccount\b/i, /\bconto\b/i],
   fr: [/\bs['’]inscrire\b/i, /\binscription\b/i, /\bcompte\b/i],
   "pt-BR": [/\bcriar?\s+(uma\s+)?conta\b/i, /\bcadastr/i, /\bconta\b/i],
+  ru: [/\bзарегистрир/i, /\bрегистраци/i, /\bаккаунт\b/i, /\bсоздать\s+аккаунт\b/i],
 };
 
 /**
@@ -56,6 +57,9 @@ const SAYS_FREE: Record<Locale, RegExp> = {
   it: /\bgratis\b/i,
   fr: /\bgratuit/i,
   "pt-BR": /\b(de\s+graça|grátis)\b/i,
+  // Без \b: граница слова в JS-регэкспе — ASCII, и «\b» перед кириллицей
+  // не совпадает никогда. Само слово достаточно редкое.
+  ru: /бесплатн/i,
 };
 
 describe("the door out of the landing page", () => {

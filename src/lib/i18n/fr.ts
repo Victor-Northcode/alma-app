@@ -66,7 +66,7 @@ export const fr: Dictionary = {
     impossibleDate: "Cette date n'existe pas. Vérifie le jour.",
     pickYear: "Encore un — choisis l'année.",
     unknownTime: "Je ne connais pas mon heure de naissance",
-    searchPlace: "Où es-tu né ?",
+    searchPlace: "Où es-tu né ?",
     noPlaces: "Aucun lieu de ce nom. Essaie la ville la plus proche.",
   },
 
@@ -100,7 +100,7 @@ export const fr: Dictionary = {
     rules: [
       ["Le moment", "Un chapitre à la fois, pas seize."],
       ["Le désaccord", "Quand deux systèmes se disputent, ne choisis pas de gagnant."],
-      ["La question", "Demande avec tes mots ; elle nomme la position."],
+      ["La question", "Demande avec tes mots ; elle nomme la position."],
       ["Le retour", "Reviens dans un mois — le texte est réécrit."],
     ],
     disclaimer: "*Rien de tout cela ne remplace une thérapie ou un médecin.",
@@ -205,7 +205,7 @@ export const fr: Dictionary = {
     showAll: "Toutes les questions →",
     items: [
       {
-        q: "C'est de la vraie astrologie ?",
+        q: "C'est de la vraie astrologie ?",
         a: "Éphémérides NASA JPL, vérifiées sur des thèmes de référence au centième de degré.",
         aLong:
           "Éphémérides NASA JPL, maisons Placidus, zodiaque tropical — vérifiées sur des thèmes de référence au centième de degré, changements d'heure et latitudes polaires compris.",
@@ -214,43 +214,43 @@ export const fr: Dictionary = {
         q: "Je ne connais pas mon heure de naissance",
         a: "Tout ce qui n'en a pas besoin marche quand même. Ce qui en a besoin reste marqué indisponible.",
         aLong:
-          "Tout ce qui n'a pas besoin d'une heure marche quand même : soleil, planètes par signe, numérologie, ta Carte de naissance, la plupart des transits. Les maisons, la révolution solaire et la carte restent marquées indisponibles — on ne les invente pas.",
+          "Tout ce qui n'a pas besoin d'une heure marche quand même : soleil, planètes par signe, numérologie, ta Carte de naissance, la plupart des transits. Les maisons, la révolution solaire et la carte restent marquées indisponibles — on ne les invente pas.",
       },
       {
-        q: "Vous allez me prélever automatiquement ?",
+        q: "Vous allez me prélever automatiquement ?",
         a: "Un paiement unique reste unique. Un abonnement t'écrit trois jours avant chaque renouvellement et se résilie en deux taps.",
         aLong:
-          "Les achats uniques sont uniques — il n'y a pas d'essai qui se transforme en prélèvement. Un abonnement t'écrit trois jours avant chaque renouvellement avec la date et le montant, à l'adresse de ton compte ou, si tu n'en as pas, à celle avec laquelle tu as payé. Le prix complet est imprimé sur le bouton avant de payer, et résilier, c'est deux taps dans les Réglages : ensuite l'abonnement court jusqu'à la fin de la période déjà payée.",
+          "Les achats uniques sont uniques — il n'y a pas d'essai qui se transforme en prélèvement. Un abonnement t'écrit trois jours avant chaque renouvellement avec la date et le montant, à l'adresse de ton compte ou, si tu n'en as pas, à celle avec laquelle tu as payé. Le prix complet est imprimé sur le bouton avant de payer, et résilier, c'est deux taps dans les Réglages : ensuite l'abonnement court jusqu'à la fin de la période déjà payée.",
       },
       {
-        q: "C'est de la voyance ?",
+        q: "C'est de la voyance ?",
         a: "Non. Aucune prédiction d'événements, aucun langage du destin, aucun conseil médical ou financier.",
         aLong:
           "Non. Alma décrit de quoi ton thème est fait, pas ce qui va arriver. Il n'y a aucune prédiction d'événements, aucun langage du destin, et aucun conseil médical, psychologique ou financier nulle part.",
       },
       {
-        q: "Pourquoi huit systèmes ?",
+        q: "Pourquoi huit systèmes ?",
         a: "Parce qu'une seule tradition ne peut pas se vérifier elle-même. Huit, si.",
         aLong:
           "Parce qu'une seule tradition ne peut pas se vérifier elle-même. Quand trois systèmes indépendants disent la même chose de toi, c'est ce qui ressemble le plus à une preuve dans ce domaine — et là où deux se contredisent, tu as trouvé un vrai conflit intérieur plutôt qu'une mauvaise lecture.",
       },
       {
-        q: "Que deviennent mes données ?",
+        q: "Que deviennent mes données ?",
         a: "À toi de les exporter, à toi de les supprimer, depuis les Réglages, quand tu veux.",
         aLong:
           "Tes données de naissance servent à calculer et à écrire, rien d'autre. Connecté, tu peux tout exporter ou supprimer ton compte toi-même, à tout moment, sans écrire au support. Le RGPD, le RGPD britannique et la CCPA s'appliquent.",
       },
       {
-        q: "Quels systèmes Alma lit-elle ?",
-        a: "Huit : astrologie, numérologie, ta carte de naissance, astrocartographie, transits, révolution solaire, compatibilité et une synthèse croisée de tous.",
+        q: "Quels systèmes Alma lit-elle ?",
+        a: "Huit : astrologie, numérologie, ta carte de naissance, astrocartographie, transits, révolution solaire, compatibilité et une synthèse croisée de tous.",
         aLong:
           "Huit en tout — astrologie occidentale, numérologie, ta carte de naissance, astrocartographie, transits, révolution solaire et compatibilité — plus une synthèse croisée qui les lit les uns par rapport aux autres et montre où ils s'accordent et où non.",
       },
       {
-        q: "Faut-il un compte ?",
+        q: "Faut-il un compte ?",
         a: "Non. Tout se calcule à partir de tes données de naissance. Le compte ne fait que porter ton thème sur un autre téléphone.",
         aLong:
-          "Aucun compte n'est nécessaire pour te lire : chaque calcul part de tes données de naissance sur le téléphone. La connexion ne sert qu'à sauvegarder ton thème et tes achats pour qu'ils te suivent sur un nouvel appareil, et c'est entièrement facultatif.",
+          "Aucun compte n'est nécessaire pour te lire : chaque calcul part de tes données de naissance sur le téléphone. La connexion ne sert qu'à sauvegarder ton thème et tes achats pour qu'ils te suivent sur un nouvel appareil, et c'est entièrement facultatif.",
       },
     ] as ReadonlyArray<{ q: string; a: string; aLong: string }>,
   },
@@ -283,7 +283,7 @@ export const fr: Dictionary = {
     groupMoney: "Argent",
     groupCompany: "Société",
     payments:
-      "Rien n'est vendu sur ce site. Tout s'achète dans l'application, auprès d'Apple ou de Google en tant que vendeur légal · taxe incluse le cas échéant",
+      "Tout s'achète dans l'application, auprès d'Apple ou de Google en tant que vendeur légal · taxe incluse le cas échéant. Depuis la Russie, l'achat se règle sur ce site via T-Bank",
     disclaimer:
       "Pour se connaître, rien de plus. Ce n'est pas un avis médical, psychologique, juridique ou financier, et ce n'est pas une prédiction.",
     performance:
@@ -324,11 +324,11 @@ export const fr: Dictionary = {
         "Pose-lui tes questions sur ce thème avec tes mots. Chaque réponse nomme la position d'où elle vient, pour que tu puisses la vérifier.",
     },
     carryNamed: (email: string) =>
-      `Ce ciel est sur ${email}. Connecte-toi avec cette adresse dans l'application et il y est déjà : rien à saisir deux fois.`,
+      `Ce ciel est sur ${email}. Connecte-toi avec cette adresse dans l'application et il y est déjà : rien à saisir deux fois.`,
     carryAccount:
-      "Ce ciel est sur ton compte. Connecte-toi de la même façon dans l'application et il y est déjà : rien à saisir deux fois.",
+      "Ce ciel est sur ton compte. Connecte-toi de la même façon dans l'application et il y est déjà : rien à saisir deux fois.",
     carrySent: (email: string) =>
-      `Ouvre le lien que nous venons d'envoyer à ${email} : c'est lui qui pose ce ciel sur un compte. Connecte-toi ensuite avec la même adresse dans l'application, il t'y attend.`,
+      `Ouvre le lien que nous venons d'envoyer à ${email} : c'est lui qui pose ce ciel sur un compte. Connecte-toi ensuite avec la même adresse dans l'application, il t'y attend.`,
     carryGuest:
       "Personne n'est connecté ici, donc ce ciel reste dans ce navigateur. L'application redemandera ta date de naissance une fois — une minute — et tous les nombres ci-dessus reviennent identiques.",
     carryUnknown:
@@ -341,9 +341,9 @@ export const fr: Dictionary = {
 
     writeTitle: "Écris-nous",
     write1:
-      "Tout arrive dans la même boîte. Écris dans ta langue : Alma est écrite en six langues et répond dans les six.",
+      "Tout arrive dans la même boîte. Écris dans ta langue : Alma est écrite en sept langues et répond dans les sept.",
     write2:
-      "C'est une personne qui répond, en général le jour même et jamais au-delà de trois jours ouvrés. Si c'est plus long, quelque chose a échoué de notre côté : réécris-nous, et dis que c'est la deuxième fois.",
+      "C'est une personne qui répond, en général le jour même et jamais au-delà de trois jours ouvrés. Si c'est plus long, quelque chose a échoué de notre côté : réécris-nous, et dis que c'est la deuxième fois.",
 
     includeTitle: "Ce qu'il faut mettre dans le message",
     include1: "Dans quel store tu as acheté — l'App Store ou Google Play.",
@@ -352,13 +352,13 @@ export const fr: Dictionary = {
       "L'adresse e-mail de ton compte Alma. Si tu ne t'es jamais connecté, l'identifiant de compte affiché dans les Réglages.",
     include4: "Ce qui s'est passé, avec tes mots. Une capture d'écran aide et n'est jamais obligatoire.",
     includeNote:
-      "Une chose dont nous ne pouvons rien faire : un numéro de carte. Ta carte n'arrive jamais jusqu'à Alma, nous ne pouvons retrouver aucun achat avec, et aucun message de notre part ne t'en demandera jamais.",
+      "Une chose dont nous ne pouvons rien faire : un numéro de carte. Ta carte n'arrive jamais jusqu'à Alma, nous ne pouvons retrouver aucun achat avec, et aucun message de notre part ne t'en demandera jamais.",
 
     moneyTitle: "L'argent est chez le store",
     money1:
-      "Alma n'est pas le vendeur. Sur iPhone et iPad, c'est Apple qui vend ; sur Android, c'est Google. Ce sont eux qui encaissent, qui émettent le reçu, qui s'occupent de la taxe et qui détiennent l'argent.",
+      "Alma n'est pas le vendeur. Sur iPhone et iPad, c'est Apple qui vend ; sur Android, c'est Google. Ce sont eux qui encaissent, qui émettent le reçu, qui s'occupent de la taxe et qui détiennent l'argent.",
     money2:
-      "Ce qui veut dire que nous ne pouvons pas te rembourser nous-mêmes. Il n'y a aucun bouton de notre côté, et une page d'aide qui laisserait croire le contraire te coûterait un après-midi. Demande-le au store qui a vendu :",
+      "Ce qui veut dire que nous ne pouvons pas te rembourser nous-mêmes. Il n'y a aucun bouton de notre côté, et une page d'aide qui laisserait croire le contraire te coûterait un après-midi. Demande-le au store qui a vendu :",
     refundApple: "Apple — reportaproblem.apple.com, connecté avec l'Apple Account qui a acheté.",
     refundGoogle: "Google Play — ouvre ton historique de commandes et demande le remboursement sur cet achat.",
     money3:
@@ -366,9 +366,9 @@ export const fr: Dictionary = {
 
     cancelTitle: "Résilier un abonnement",
     cancel1:
-      "Cela appartient aussi au store, pour la même raison. Deux taps : ouvre tes abonnements sur le store où tu as acheté, puis résilie. Les Réglages d'Alma ont une ligne qui ouvre exactement cet écran.",
+      "Cela appartient aussi au store, pour la même raison. Deux taps : ouvre tes abonnements sur le store où tu as acheté, puis résilie. Les Réglages d'Alma ont une ligne qui ouvre exactement cet écran.",
     cancel2:
-      "Résilier arrête le prochain prélèvement. Ce n'est pas un remboursement de la période en cours : elle est payée et reste ouverte jusqu'à son dernier jour.",
+      "Résilier arrête le prochain prélèvement. Ce n'est pas un remboursement de la période en cours : elle est payée et reste ouverte jusqu'à son dernier jour.",
 
     dataTitle: "Ton compte et tes données",
     data1:
@@ -382,15 +382,15 @@ export const fr: Dictionary = {
 
     whoTitle: "À qui tu écris",
     who1:
-      "Pazl LLC, dans le Wyoming, aux États-Unis : la société qui exploite Alma. Personne ne se tient entre toi et les gens qui l'ont faite.",
+      "Pazl LLC, dans le Wyoming, aux États-Unis : la société qui exploite Alma. Personne ne se tient entre toi et les gens qui l'ont faite.",
 
     moreTitle: "Le reste, par écrit",
     moreNote:
-      "Ces documents sont en anglais seulement, et c'est délibéré : chacun doit être vérifié contre le droit du pays où il est lu avant qu'on puisse s'y fier, et six traductions sûres d'elles d'un document non vérifié seraient pires qu'un seul original honnête.",
+      "Ces documents sont en anglais seulement, et c'est délibéré : chacun doit être vérifié contre le droit du pays où il est lu avant qu'on puisse s'y fier, et six traductions sûres d'elles d'un document non vérifié seraient pires qu'un seul original honnête.",
   },
 
   journey: {
-    intentTitle: "Qu'est-ce qui résonne le plus fort en toi maintenant ?",
+    intentTitle: "Qu'est-ce qui résonne le plus fort en toi maintenant ?",
     intentSkip: "Passer — je sais ce que je veux",
     intents: {
       self: "Qui je suis, vraiment",
@@ -410,20 +410,20 @@ export const fr: Dictionary = {
     continueCta: "Continuer",
     orFaster: "ou plus vite",
     withGoogle: "Continuer avec Google",
-    nameTitle: "Comment je t'appelle ?",
+    nameTitle: "Comment je t'appelle ?",
     nameSub: "Un prénom n'est pas un compte. Rien n'est encore enregistré.",
     namePlaceholder: "Camille",
     nameAria: "Ton prénom",
-    dateTitle: "Quand es-tu né ?",
+    dateTitle: "Quand es-tu né ?",
     dateSub: "La date seule donne déjà trois systèmes.",
-    timeTitle: "À quelle heure es-tu né ?",
+    timeTitle: "À quelle heure es-tu né ?",
     timeSub:
       "L'heure donne les maisons, la révolution solaire et ta carte. Sans elle, elles restent fermées — on ne les inventera pas.",
     hourLabel: "Heure",
     minuteLabel: "Min",
     meridiemLabel: "AM ou PM",
     lockedWithoutTime: "Maisons, révolution solaire et carte restent fermées",
-    placeTitle: "Où es-tu né ?",
+    placeTitle: "Où es-tu né ?",
     placeSub: "La ville suffit. Le fuseau horaire historique, on le résout nous-mêmes.",
     placePlaceholder: "Paris",
     buildMySky: "Construire mon ciel",

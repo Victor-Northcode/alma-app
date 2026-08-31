@@ -280,7 +280,7 @@ export const de: Dictionary = {
     groupMoney: "Geld",
     groupCompany: "Unternehmen",
     payments:
-      "Auf dieser Website wird nichts verkauft. Gekauft wird alles in der App, bei Apple oder Google als rechtlichem Verkäufer · Steuer enthalten, wo sie anfällt",
+      "Gekauft wird alles in der App, bei Apple oder Google als rechtlichem Verkäufer · Steuer enthalten, wo sie anfällt. Wer aus Russland kauft, zahlt auf dieser Website über T-Bank",
     disclaimer:
       "Nur zur Selbsterkenntnis. Keine medizinische, psychologische, rechtliche oder finanzielle Beratung und keine Vorhersage von Ereignissen.",
     performance:
@@ -338,7 +338,7 @@ export const de: Dictionary = {
 
     writeTitle: "Schreib uns",
     write1:
-      "Alles landet in einem Postfach. Schreib in deiner Sprache — Alma ist in sechs geschrieben und wird in allen sechs beantwortet.",
+      "Alles landet in einem Postfach. Schreib in deiner Sprache — Alma ist in sieben geschrieben und wird in allen sieben beantwortet.",
     write2:
       "Es antwortet ein Mensch, meistens am selben Tag und nie später als drei Werktage. Wenn es länger gedauert hat, ist bei uns etwas schiefgelaufen: schreib noch einmal und sag dazu, dass es das zweite Mal ist.",
 

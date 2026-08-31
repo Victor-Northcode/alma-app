@@ -279,7 +279,7 @@ export const es: Dictionary = {
     groupMoney: "Dinero",
     groupCompany: "Empresa",
     payments:
-      "En esta web no se vende nada. Todo se compra dentro de la app, a Apple o a Google como vendedor legal · impuestos incluidos cuando corresponde",
+      "Todo se compra dentro de la app, a Apple o a Google como vendedor legal · impuestos incluidos cuando corresponde. Quien compra desde Rusia paga en esta web a través de T-Bank",
     disclaimer:
       "Solo para autoconocimiento. No es consejo médico, psicológico, legal ni financiero, y no predice acontecimientos.",
     performance:
@@ -337,7 +337,7 @@ export const es: Dictionary = {
 
     writeTitle: "Escríbenos",
     write1:
-      "Todo llega al mismo buzón. Escribe en tu idioma: Alma está escrita en seis y se responde en los seis.",
+      "Todo llega al mismo buzón. Escribe en tu idioma: Alma está escrita en siete y se responde en los siete.",
     write2:
       "Contesta una persona, normalmente el mismo día y nunca más tarde de tres días laborables. Si ha pasado más tiempo, algo ha fallado de nuestro lado: vuelve a escribir y dinos que es la segunda vez.",
 

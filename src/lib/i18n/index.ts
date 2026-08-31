@@ -35,10 +35,14 @@ import { es } from "./es";
 import { fr } from "./fr";
 import { it } from "./it";
 import { ptBR } from "./pt-BR";
+import { ru } from "./ru";
 
 export type { Dictionary } from "./en";
 
-export const LOCALES = ["en", "es", "de", "it", "fr", "pt-BR"] as const;
+// Русский — седьмой, добавлен вместе с рублёвой витриной «/pay»
+// (владелец, 31.08.2026): покупатель, которого страница оплаты встречает
+// по-русски, не должен попадать с неё на английский лендинг.
+export const LOCALES = ["en", "es", "de", "it", "fr", "pt-BR", "ru"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "en";
@@ -50,6 +54,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
   it,
   fr,
   "pt-BR": ptBR,
+  ru,
 };
 
 /**
@@ -167,6 +172,12 @@ export const COUNTRY_LANGUAGE: Readonly<Record<string, Locale>> = {
   // Portuguese — Brazil's, everywhere, because it is the one we have
   BR: "pt-BR", PT: "pt-BR", AO: "pt-BR", MZ: "pt-BR", CV: "pt-BR",
   GW: "pt-BR", ST: "pt-BR",
+  // Russian — Russia and Belarus, where it is the majority home language.
+  // Deliberately NOT the rest of the CIS: Kazakhstan, Ukraine and the
+  // Baltics each have their own first language, and a Russian page there
+  // is a guess about politics as much as about words; the browser header
+  // outranks this table for anyone who actually asked for Russian.
+  RU: "ru", BY: "ru",
 };
 
 /** What being in this country is worth as a guess, or `null`. */

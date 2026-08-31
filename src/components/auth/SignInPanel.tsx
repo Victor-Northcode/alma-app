@@ -118,6 +118,17 @@ const COPY: Record<Locale, Record<string, string>> = {
     failed: "Não foi possível enviar o link. Tente de novo daqui a pouco.",
     keeps: "Seu mapa, suas leituras e suas perguntas ficam exatamente como estão.",
   },
+  ru: {
+    email: "Твоя почта",
+    send: "Пришли мне ссылку",
+    sending: "Отправляю…",
+    sent: "Проверь почту — ссылка работает один раз и живёт 20 минут.",
+    google: "Продолжить с Google",
+    or: "или",
+    bad: "Это не похоже на адрес почты.",
+    failed: "Ссылка не отправилась. Попробуй через минуту.",
+    keeps: "Твоя карта, твои чтения и твои вопросы останутся ровно такими, как есть.",
+  },
 };
 
 declare global {

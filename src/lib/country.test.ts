@@ -239,10 +239,12 @@ describe("precedence, in every order", () => {
     expect(resolveLocale({ explicit: "de", account: "fr" })).toBe("de");
   });
 
-  it("ignores a stored value that is not one of the six", () => {
+  it("ignores a stored value that is not one of the seven", () => {
     // A cookie is user-writable and survives a deploy that removed a language.
-    expect(resolveLocale({ explicit: "ru", browser: "de-DE" })).toBe("de");
-    expect(resolveLocale({ explicit: "ru", country: "ES" })).toBe("es");
+    // «ru» стоял здесь примером несуществующей локали, пока 31.08.2026 не
+    // стал седьмой настоящей, — тест честно упал и пример сменился.
+    expect(resolveLocale({ explicit: "xx", browser: "de-DE" })).toBe("de");
+    expect(resolveLocale({ explicit: "xx", country: "ES" })).toBe("es");
   });
 
   it("falls to English when nothing knows anything", () => {

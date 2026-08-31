@@ -281,7 +281,7 @@ export const ptBR: Dictionary = {
     groupMoney: "Dinheiro",
     groupCompany: "Empresa",
     payments:
-      "Neste site não se vende nada. Tudo é comprado dentro do app, da Apple ou do Google como vendedor legal · impostos incluídos quando se aplicam",
+      "Tudo é comprado dentro do app, da Apple ou do Google como vendedor legal · impostos incluídos quando se aplicam. Quem compra da Rússia paga neste site pelo T-Bank",
     disclaimer:
       "Só para autoconhecimento. Não é orientação médica, psicológica, jurídica ou financeira, e não prevê acontecimentos.",
     performance:
@@ -339,7 +339,7 @@ export const ptBR: Dictionary = {
 
     writeTitle: "Escreva para a gente",
     write1:
-      "Tudo chega na mesma caixa. Escreva no seu idioma: a Alma é escrita em seis e responde nos seis.",
+      "Tudo chega na mesma caixa. Escreva no seu idioma: a Alma é escrita em sete e responde nos sete.",
     write2:
       "Quem responde é uma pessoa, normalmente no mesmo dia e nunca depois de três dias úteis. Se passou disso, alguma coisa falhou do nosso lado: escreva de novo e diga que é a segunda vez.",
 

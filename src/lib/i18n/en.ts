@@ -393,8 +393,11 @@ export const en = {
      * configuration, and a string is a thing `check-locales.mjs` can see. It
      * could not see inside the template literal this used to be.
      */
+    // «Nothing is sold on this website» перестало быть правдой 30.08.2026:
+    // страница «/pay» продаёт русскому покупателю через Т-Банк. Строка,
+    // которую читает эмитент карты при споре, обязана знать про оба пути.
     payments:
-      "Nothing is sold on this website. Everything is bought inside the app, from Apple or Google as merchant of record · tax included where it applies",
+      "Everything is bought inside the app, from Apple or Google as merchant of record · tax included where it applies. Buyers in Russia pay on this site through T-Bank",
     disclaimer:
       "For self-knowledge only. Not medical, psychological, legal or financial advice, and not a prediction of events.",
     /**
@@ -519,7 +522,7 @@ export const en = {
 
     writeTitle: "Write to us",
     write1:
-      "Everything comes to one mailbox. Write in your own language — Alma is written in six and answered in all of them.",
+      "Everything comes to one mailbox. Write in your own language — Alma is written in seven and answered in all of them.",
     write2:
       "A person answers, usually the same day and never later than three working days. If it has been longer than that, something has gone wrong on our side: write again, and say that you are writing again.",
 
