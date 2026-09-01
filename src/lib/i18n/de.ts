@@ -467,4 +467,21 @@ export const de: Dictionary = {
       "waning crescent": "abnehmende Sichel",
     },
   },
+
+  invite: {
+    title: (name: string) =>
+      name ? `${name} will eure beiden Himmel zusammen lesen` : "Zwei Himmel, zusammen gelesen",
+    lead:
+      "Gib ein Datum, und der Vergleich wird kostenlos berechnet, über acht Systeme — für diesen Schritt musst du nichts installieren.",
+    submit: "Unsere Kompatibilität berechnen",
+    working: "Wird berechnet…",
+    doneTitle: (name: string) =>
+      name ? `Fertig. Eure Kompatibilität wartet bei ${name}` : "Fertig. Eure Kompatibilität ist bereit",
+    doneLead:
+      "Sie lebt in der App: hol sie dir, dein eigenes Horoskop ist dort schon — kostenlos. Jede Berechnung bleibt kostenlos.",
+    claimed: "Diese Einladung wurde schon benutzt. Bitte um einen neuen Link.",
+    unknown: "Diese Einladung gibt es nicht. Prüf den Link.",
+    own: "Das ist deine eigene Einladung — schick den Link jemand anderem.",
+    failed: "Konnte nicht berechnet werden. Versuch es gleich noch einmal.",
+  },
 };

@@ -466,4 +466,21 @@ export const it: Dictionary = {
       "waning crescent": "luna calante",
     },
   },
+
+  invite: {
+    title: (name: string) =>
+      name ? `${name} vuole leggere i vostri due cieli insieme` : "Due cieli, letti insieme",
+    lead:
+      "Dai una data e il confronto si calcola gratis, su otto sistemi — per questo passo non serve installare nulla.",
+    submit: "Crea la nostra compatibilità",
+    working: "Creo…",
+    doneTitle: (name: string) =>
+      name ? `Fatto. La vostra compatibilità aspetta da ${name}` : "Fatto. La vostra compatibilità è pronta",
+    doneLead:
+      "Vive nell'app: scaricala e il tuo tema è già lì, gratis. Ogni calcolo resta gratuito.",
+    claimed: "Questo invito è già stato usato. Chiedi un link nuovo.",
+    unknown: "Questo invito non esiste. Controlla il link.",
+    own: "Questo è il tuo invito — manda il link a qualcun altro.",
+    failed: "Non è stato possibile crearla. Riprova fra un momento.",
+  },
 };

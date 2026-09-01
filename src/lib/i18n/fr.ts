@@ -469,4 +469,21 @@ export const fr: Dictionary = {
       "waning crescent": "dernier croissant",
     },
   },
+
+  invite: {
+    title: (name: string) =>
+      name ? `${name} veut lire vos deux ciels ensemble` : "Deux ciels, lus ensemble",
+    lead:
+      "Donne une date et la comparaison se calcule gratuitement, sur huit systèmes — rien à installer pour cette étape.",
+    submit: "Créer notre compatibilité",
+    working: "Création…",
+    doneTitle: (name: string) =>
+      name ? `C'est fait. Votre compatibilité attend chez ${name}` : "C'est fait. Votre compatibilité est prête",
+    doneLead:
+      "Elle vit dans l'application : télécharge-la, ton propre thème y est déjà, gratuitement. Chaque calcul reste gratuit.",
+    claimed: "Cette invitation a déjà été utilisée. Demande un nouveau lien.",
+    unknown: "Cette invitation n'existe pas. Vérifie le lien.",
+    own: "C'est ta propre invitation — envoie le lien à quelqu'un d'autre.",
+    failed: "Impossible de la créer. Réessaie dans un instant.",
+  },
 };

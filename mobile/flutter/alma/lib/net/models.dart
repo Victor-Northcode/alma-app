@@ -1057,6 +1057,28 @@ class PairReportRef {
       );
 }
 
+/// Живая связь «друзья»: человек, пришедший по ссылке-приглашению (или
+/// позвавший), — не мёртвая запись с датой, а второй аккаунт продукта.
+///
+/// `profileId` — id профиля-копии этого человека В МОЁМ аккаунте: по нему
+/// работает вся существующая машинерия — совместимость, «как у него сегодня»
+/// (обычный расчёт транзитов), — без единой новой ручки.
+class FriendLink {
+  const FriendLink({required this.profileId, required this.since, this.name});
+
+  final String profileId;
+  final String? name;
+
+  /// Когда приглашение принято, ISO.
+  final String since;
+
+  factory FriendLink.fromJson(Map<String, dynamic> json) => FriendLink(
+        profileId: json['profile_id'] as String? ?? '',
+        name: json['name'] as String?,
+        since: json['since'] as String? ?? '',
+      );
+}
+
 /// Кредит проверок пары в текущем расчётном периоде подписки.
 ///
 /// Считает сервер (`GET /billing/credits`), и это не лень клиента: границы

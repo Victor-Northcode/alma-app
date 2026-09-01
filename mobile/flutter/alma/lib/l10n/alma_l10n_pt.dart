@@ -1253,6 +1253,21 @@ class LPt extends L {
   String get scrPeopleUnnamed => 'Sem nome';
 
   @override
+  String get scrPeopleInvite => 'Convidar para o Alma';
+
+  @override
+  String scrPeopleInviteShare(Object url) {
+    return 'Leia nossos dois céus juntos — $url';
+  }
+
+  @override
+  String get scrPeopleLive => 'no Alma';
+
+  @override
+  String get scrPeopleInviteNeedsBirth =>
+      'Primeiro salve a sua própria data — o convite promete uma comparação a dois.';
+
+  @override
   String get scrSaveAccountBody =>
       'Entre uma vez: seu mapa e suas compras vão com você para um celular novo.';
 

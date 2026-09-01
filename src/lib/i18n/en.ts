@@ -658,6 +658,31 @@ export const en = {
     },
   },
 
+  /**
+   * The invitation page `/p/{token}` — one friend calls another in.
+   *
+   * The growth loop (owner, 31.08.2026): a link is shared person-to-person,
+   * the invited one gives a birth date on the web, and compatibility appears
+   * for both. The form labels reuse `capture` and `journey` keys — same
+   * questions, same words; only what is new to this page lives here.
+   */
+  invite: {
+    title: (name: string) =>
+      name ? `${name} wants to read your two skies together` : "Two skies, read together",
+    lead:
+      "Give one date and the comparison is computed free, across eight systems — nothing to install for this step.",
+    submit: "Build our compatibility",
+    working: "Building…",
+    doneTitle: (name: string) =>
+      name ? `Done. Your compatibility is waiting with ${name}` : "Done. Your compatibility is ready",
+    doneLead:
+      "It lives in the app — get it, and your own chart is already there, free. Every calculation stays free.",
+    claimed: "This invitation has already been used. Ask for a fresh link.",
+    unknown: "This invitation does not exist. Check the link.",
+    own: "This is your own invitation — send the link to someone else.",
+    failed: "Could not build it. Try again in a moment.",
+  },
+
 };
 
 /**

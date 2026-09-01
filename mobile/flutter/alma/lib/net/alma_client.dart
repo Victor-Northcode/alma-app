@@ -624,6 +624,26 @@ class AlmaClient {
         .toList();
   }
 
+  /// Ссылка «проверь нас»: сервер выдаёт URL страницы приглашения.
+  ///
+  /// 422 `no_self_birth` — у зовущего ещё нет своей даты; экран отвечает
+  /// словами, а не ошибкой: приглашение обещает совместимость, и без первой
+  /// половины обещать нечего.
+  Future<String> createFriendInvite() async {
+    final body = await _post('/v1/friends/invites', const {});
+    return body['url'] as String? ?? '';
+  }
+
+  /// Живые связи: кто пришёл по ссылке (или позвал), с id профиля-копии
+  /// В ЭТОМ аккаунте. «Как у него сегодня» считается обычным расчётом
+  /// транзитов по этому `profileId` — отдельной ручки нет и не нужно.
+  Future<List<FriendLink>> friends() async {
+    final body = await _get('/v1/friends');
+    return _list(body, 'friends')
+        .map((e) => FriendLink.fromJson((e as Map).cast<String, dynamic>()))
+        .toList();
+  }
+
   /// Кредит проверок пары в текущем периоде подписки.
   ///
   /// Форма ответа — `{"pair": {...}}` (`billing.py:/credits`): сервер оставил

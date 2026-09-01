@@ -1259,6 +1259,21 @@ class LDe extends L {
   String get scrPeopleUnnamed => 'Ohne Namen';
 
   @override
+  String get scrPeopleInvite => 'Zu Alma einladen';
+
+  @override
+  String scrPeopleInviteShare(Object url) {
+    return 'Lies unsere beiden Himmel zusammen — $url';
+  }
+
+  @override
+  String get scrPeopleLive => 'in Alma';
+
+  @override
+  String get scrPeopleInviteNeedsBirth =>
+      'Speichere zuerst dein eigenes Datum — die Einladung verspricht einen Vergleich zu zweit.';
+
+  @override
   String get scrSaveAccountBody =>
       'Einmal anmelden — dein Horoskop und deine Käufe überleben ein neues Handy.';
 

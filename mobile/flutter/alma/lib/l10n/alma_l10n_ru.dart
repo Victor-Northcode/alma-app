@@ -1247,6 +1247,21 @@ class LRu extends L {
   String get scrPeopleUnnamed => 'Без имени';
 
   @override
+  String get scrPeopleInvite => 'Позвать в Alma';
+
+  @override
+  String scrPeopleInviteShare(Object url) {
+    return 'Прочитай наши два неба вместе — $url';
+  }
+
+  @override
+  String get scrPeopleLive => 'в Alma';
+
+  @override
+  String get scrPeopleInviteNeedsBirth =>
+      'Сначала сохрани свою дату — приглашение обещает сравнение двоих.';
+
+  @override
   String get scrSaveAccountBody =>
       'Войди, чтобы сохранить карту и покупки при смене телефона.';
 

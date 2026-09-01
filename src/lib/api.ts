@@ -562,4 +562,26 @@ export const api = {
       method: "POST",
       body: { product, country: opts.country, email: opts.email },
     }),
+
+  /**
+   * Приглашение «проверь нас» — страница `/p/{token}` (друзья, 31.08.2026).
+   *
+   * Просмотр не минтит аккаунт (`Visitor` на сервере); минтит его приём —
+   * тот самый акт, которым в продукте появляются люди. Тело приёма — та же
+   * форма рождения, что сохраняет обычный профиль.
+   */
+  inviteInfo: (token: string) =>
+    request<{ inviter_name: string | null; claimed: boolean }>(
+      `/v1/friends/invites/${encodeURIComponent(token)}`,
+    ),
+
+  claimInvite: (token: string, birth: BirthInput & { name?: string | null }) =>
+    request<{
+      inviter_name: string | null;
+      friend_profile: Profile | null;
+      already: boolean;
+    }>(`/v1/friends/invites/${encodeURIComponent(token)}/claim`, {
+      method: "POST",
+      body: birth,
+    }),
 };

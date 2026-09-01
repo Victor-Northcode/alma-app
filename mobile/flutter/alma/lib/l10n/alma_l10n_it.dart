@@ -1255,6 +1255,21 @@ class LIt extends L {
   String get scrPeopleUnnamed => 'Senza nome';
 
   @override
+  String get scrPeopleInvite => 'Invita su Alma';
+
+  @override
+  String scrPeopleInviteShare(Object url) {
+    return 'Leggi i nostri due cieli insieme — $url';
+  }
+
+  @override
+  String get scrPeopleLive => 'su Alma';
+
+  @override
+  String get scrPeopleInviteNeedsBirth =>
+      'Prima salva la tua data: l\'invito promette un confronto in due.';
+
+  @override
   String get scrSaveAccountBody =>
       'Accedi per conservare il tuo tema e ripristinare gli acquisti su un nuovo telefono.';
 

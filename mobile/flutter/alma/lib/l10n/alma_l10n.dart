@@ -2321,6 +2321,30 @@ abstract class L {
   /// **'Unnamed'**
   String get scrPeopleUnnamed;
 
+  /// No description provided for @scrPeopleInvite.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite to Alma'**
+  String get scrPeopleInvite;
+
+  /// share-sheet text for a friend invite link, 31.08.2026
+  ///
+  /// In en, this message translates to:
+  /// **'Read our two skies together — {url}'**
+  String scrPeopleInviteShare(Object url);
+
+  /// No description provided for @scrPeopleLive.
+  ///
+  /// In en, this message translates to:
+  /// **'in Alma'**
+  String get scrPeopleLive;
+
+  /// No description provided for @scrPeopleInviteNeedsBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'First save your own birth — the invitation promises a comparison of two.'**
+  String get scrPeopleInviteNeedsBirth;
+
   /// from Screens/scr.saveAccount.body
   ///
   /// In en, this message translates to:

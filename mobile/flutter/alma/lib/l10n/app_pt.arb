@@ -369,6 +369,15 @@
   "scrPeopleRemoveTitle": "Remover esta pessoa?",
   "scrPeopleRemoveWhat": "Os dados de nascimento dessa pessoa somem, e com eles toda leitura de compatibilidade escrita a partir deles. Leituras pagas não podem ser reescritas palavra por palavra.",
   "scrPeopleUnnamed": "Sem nome",
+  "scrPeopleInvite": "Convidar para o Alma",
+  "scrPeopleInviteShare": "Leia nossos dois céus juntos — {url}",
+  "@scrPeopleInviteShare": {
+    "placeholders": {
+      "url": {}
+    }
+  },
+  "scrPeopleLive": "no Alma",
+  "scrPeopleInviteNeedsBirth": "Primeiro salve a sua própria data — o convite promete uma comparação a dois.",
   "scrSaveAccountBody": "Entre uma vez: seu mapa e suas compras vão com você para um celular novo.",
   "scrSaveAccountCta": "Entrar",
   "scrSaveAccountLater": "Agora não",

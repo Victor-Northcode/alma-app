@@ -1247,6 +1247,21 @@ class LEn extends L {
   String get scrPeopleUnnamed => 'Unnamed';
 
   @override
+  String get scrPeopleInvite => 'Invite to Alma';
+
+  @override
+  String scrPeopleInviteShare(Object url) {
+    return 'Read our two skies together — $url';
+  }
+
+  @override
+  String get scrPeopleLive => 'in Alma';
+
+  @override
+  String get scrPeopleInviteNeedsBirth =>
+      'First save your own birth — the invitation promises a comparison of two.';
+
+  @override
   String get scrSaveAccountBody =>
       'Sign in to keep your chart and restore your purchases on a new phone.';
 

@@ -1671,6 +1671,16 @@
     "description": "from Screens/scr.people.removeWhat"
   },
   "scrPeopleUnnamed": "Unnamed",
+  "scrPeopleInvite": "Invite to Alma",
+  "scrPeopleInviteShare": "Read our two skies together — {url}",
+  "@scrPeopleInviteShare": {
+    "description": "share-sheet text for a friend invite link, 31.08.2026",
+    "placeholders": {
+      "url": {}
+    }
+  },
+  "scrPeopleLive": "in Alma",
+  "scrPeopleInviteNeedsBirth": "First save your own birth — the invitation promises a comparison of two.",
   "@scrPeopleUnnamed": {
     "description": "from Screens/scr.people.unnamed"
   },

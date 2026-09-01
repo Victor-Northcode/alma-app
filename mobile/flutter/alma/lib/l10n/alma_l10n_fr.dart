@@ -1257,6 +1257,21 @@ class LFr extends L {
   String get scrPeopleUnnamed => 'Sans nom';
 
   @override
+  String get scrPeopleInvite => 'Inviter sur Alma';
+
+  @override
+  String scrPeopleInviteShare(Object url) {
+    return 'Lis nos deux ciels ensemble — $url';
+  }
+
+  @override
+  String get scrPeopleLive => 'sur Alma';
+
+  @override
+  String get scrPeopleInviteNeedsBirth =>
+      'Enregistre d’abord ta propre date — l’invitation promet une comparaison à deux.';
+
+  @override
   String get scrSaveAccountBody =>
       'Connecte-toi une fois : ton thème et tes achats resteront accessibles même sur un nouveau téléphone.';
 

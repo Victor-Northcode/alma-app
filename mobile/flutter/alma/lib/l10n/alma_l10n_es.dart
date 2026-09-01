@@ -1253,6 +1253,21 @@ class LEs extends L {
   String get scrPeopleUnnamed => 'Sin nombre';
 
   @override
+  String get scrPeopleInvite => 'Invitar a Alma';
+
+  @override
+  String scrPeopleInviteShare(Object url) {
+    return 'Lee nuestros dos cielos juntos — $url';
+  }
+
+  @override
+  String get scrPeopleLive => 'en Alma';
+
+  @override
+  String get scrPeopleInviteNeedsBirth =>
+      'Primero guarda tu propia fecha: la invitación promete una comparación de dos.';
+
+  @override
   String get scrSaveAccountBody =>
       'Inicia sesión una vez y podrás recuperar tu carta y tus compras aunque cambies de teléfono.';
 

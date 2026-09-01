@@ -369,6 +369,15 @@
   "scrPeopleRemoveTitle": "Diese Person entfernen?",
   "scrPeopleRemoveWhat": "Die Geburtsdaten dieser Person werden gelöscht — und mit ihnen jede Deutung, die daraus geschrieben wurde. Bezahlte Deutungen lassen sich nicht Wort für Wort neu schreiben.",
   "scrPeopleUnnamed": "Ohne Namen",
+  "scrPeopleInvite": "Zu Alma einladen",
+  "scrPeopleInviteShare": "Lies unsere beiden Himmel zusammen — {url}",
+  "@scrPeopleInviteShare": {
+    "placeholders": {
+      "url": {}
+    }
+  },
+  "scrPeopleLive": "in Alma",
+  "scrPeopleInviteNeedsBirth": "Speichere zuerst dein eigenes Datum — die Einladung verspricht einen Vergleich zu zweit.",
   "scrSaveAccountBody": "Einmal anmelden — dein Horoskop und deine Käufe überleben ein neues Handy.",
   "scrSaveAccountCta": "Anmelden",
   "scrSaveAccountLater": "Nicht jetzt",

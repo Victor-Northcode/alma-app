@@ -467,4 +467,21 @@ export const ptBR: Dictionary = {
       "waning crescent": "lua minguante",
     },
   },
+
+  invite: {
+    title: (name: string) =>
+      name ? `${name} quer ler seus dois céus juntos` : "Dois céus, lidos juntos",
+    lead:
+      "Dê uma data e a comparação é calculada de graça, em oito sistemas — nada para instalar neste passo.",
+    submit: "Criar nossa compatibilidade",
+    working: "Criando…",
+    doneTitle: (name: string) =>
+      name ? `Pronto. Sua compatibilidade espera com ${name}` : "Pronto. Sua compatibilidade está pronta",
+    doneLead:
+      "Ela vive no app: baixe, e o seu mapa já está lá, de graça. Todo cálculo continua gratuito.",
+    claimed: "Este convite já foi usado. Peça um link novo.",
+    unknown: "Este convite não existe. Confira o link.",
+    own: "Este convite é seu — mande o link para outra pessoa.",
+    failed: "Não deu para criar. Tente de novo daqui a pouco.",
+  },
 };

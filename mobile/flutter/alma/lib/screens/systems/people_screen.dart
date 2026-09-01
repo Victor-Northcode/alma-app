@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../design/buttons.dart';
 import '../../design/emblem.dart';
@@ -57,6 +58,70 @@ class _PeopleScreenState extends State<PeopleScreen> {
   List<Place> _found = const [];
   bool _saving = false;
   String? _failure;
+
+  /// Живые связи по id профиля: кто из списка — не запись с датой, а человек
+  /// с аккаунтом, пришедший по ссылке-приглашению. Пусто до ответа сервера и
+  /// при отказе сети — бейдж «в Alma» тогда просто не рисуется: список людей
+  /// не имеет права ждать сеть или падать из-за неё.
+  Map<String, FriendLink> _live = const {};
+  bool _inviting = false;
+
+  /// Отказ приглашения — своей строкой под своей кнопкой, а не в `_failure`
+  /// формы внизу: ошибка, всплывшая в другом конце экрана, читается как чужая.
+  String? _inviteFailure;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadFriends());
+  }
+
+  Future<void> _loadFriends() async {
+    if (!mounted) return;
+    try {
+      final links = await SessionScope.of(context).client.friends();
+      if (mounted) {
+        setState(() =>
+            _live = {for (final link in links) link.profileId: link});
+      }
+    } on AlmaError {
+      // Молча: связи — украшение списка, не его условие.
+    }
+  }
+
+  /// **Позвать в Alma** — ссылка «проверь нас» в системный шэр.
+  ///
+  /// Цикл роста (владелец, 31.08.2026): ссылка уходит человеку, тот вводит
+  /// свою дату на веб-странице, и совместимость появляется у обоих — второй
+  /// приходит живым аккаунтом, а не записью. 422 `no_self_birth` отвечает
+  /// словами о причине: без своей даты приглашение обещает сравнение,
+  /// половины которого нет.
+  Future<void> _invite() async {
+    if (_inviting) return;
+    final l = L.of(context);
+    final session = SessionScope.of(context);
+    setState(() {
+      _inviting = true;
+      _inviteFailure = null;
+    });
+    try {
+      final url = await session.client.createFriendInvite();
+      if (!mounted) return;
+      setState(() => _inviting = false);
+      await Share.share(l.scrPeopleInviteShare(url));
+    } on AlmaError catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _inviting = false;
+        _inviteFailure =
+            error is ServerRefused && error.code == 'no_self_birth'
+                ? l.scrPeopleInviteNeedsBirth
+                : (error is ServerRefused && error.message.isNotEmpty
+                    ? error.message
+                    : null);
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -267,6 +332,20 @@ class _PeopleScreenState extends State<PeopleScreen> {
         seed: 0x50454F50,
         title: l.cabPeopleTitle,
         children: [
+          // **«Позвать в Alma» — над списком.** Рост важнее менеджмента
+          // записей: ссылка «проверь нас» — то, ради чего фича друзей
+          // заведена (31.08.2026), и прятать её под форму значило бы
+          // спрятать самый ценный жест экрана.
+          AlmaButton(
+            label: l.scrPeopleInvite,
+            onTap: _inviting ? null : _invite,
+          ),
+          if (_inviteFailure != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(_inviteFailure!, style: AlmaType.meta),
+            ),
+          const SizedBox(height: AlmaMetrics.gapLarge),
           if (session.people.isNotEmpty) ...[
             SectionLabel(l.cabPeopleTitle, trailing: '${session.people.length}'),
             const SizedBox(height: 8),
@@ -296,12 +375,27 @@ class _PeopleScreenState extends State<PeopleScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            person.name?.isNotEmpty == true
-                                ? person.name!
-                                : l.scrPeopleUnnamed,
-                            style: AlmaType.headingM,
-                          ),
+                          Row(children: [
+                            Flexible(
+                              child: Text(
+                                person.name?.isNotEmpty == true
+                                    ? person.name!
+                                    : l.scrPeopleUnnamed,
+                                style: AlmaType.headingM,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            // «В ALMA» — живой аккаунт, пришедший по
+                            // приглашению, а не запись с датой. Золотом:
+                            // это событие списка, ради которого фича и
+                            // заведена, — не мебель.
+                            if (_live.containsKey(person.id)) ...[
+                              const SizedBox(width: 8),
+                              Text(l.scrPeopleLive.toUpperCase(),
+                                  style: AlmaType.tag
+                                      .copyWith(color: AlmaPalette.gold)),
+                            ],
+                          ]),
                           const SizedBox(height: 4),
                           Text(_facts(l, person), style: AlmaType.meta),
                           if (person.relation?.isNotEmpty == true) ...[

@@ -369,6 +369,15 @@
   "scrPeopleRemoveTitle": "Убрать этого человека?",
   "scrPeopleRemoveWhat": "Уйдут данные рождения этого человека — и каждый разбор совместимости, написанный по ним. Оплаченные разборы нельзя написать заново слово в слово.",
   "scrPeopleUnnamed": "Без имени",
+  "scrPeopleInvite": "Позвать в Alma",
+  "scrPeopleInviteShare": "Прочитай наши два неба вместе — {url}",
+  "@scrPeopleInviteShare": {
+    "placeholders": {
+      "url": {}
+    }
+  },
+  "scrPeopleLive": "в Alma",
+  "scrPeopleInviteNeedsBirth": "Сначала сохрани свою дату — приглашение обещает сравнение двоих.",
   "scrSaveAccountBody": "Войди, чтобы сохранить карту и покупки при смене телефона.",
   "scrSaveAccountCta": "Войти",
   "scrSaveAccountLater": "Не сейчас",

@@ -506,8 +506,20 @@ async def erase(session: AsyncSession, user: User) -> None:
     # `WebOrder` — здесь же и по тому же правилу: строка несёт `user_id`
     # (мост веб-платежа Т-Банка к владельцу), и таблица с `user_id`, которой
     # нет в этой функции, — «обещание, нарушенное молча» (шапка `models.py`).
-    from ..db.models import WebOrder
+    from ..db.models import FriendInvite, WebOrder
 
+    # `FriendInvite` держит имя пригласившего и связь двух людей — по тому же
+    # правилу шапки `models.py`. Уходят обе стороны: выданные (inviter) — с
+    # каскадом строки user; принятые (claimed_by, без FK) — руками ниже.
+    # Профиль-друг у ВТОРОГО человека при этом законно остаётся: это его
+    # обычный сохранённый профиль, как если бы он ввёл дату руками, — стирание
+    # аккаунта не тянется в чужие записные книжки.
+    await session.execute(
+        delete(FriendInvite).where(
+            (FriendInvite.claimed_by_user_id == user.id)
+            | (FriendInvite.inviter_user_id == user.id)
+        )
+    )
     for table in (
         Reading, ChatThread, Memory, Entitlement, Profile, UsageCounter,
         PairIntent, PairCredit, WebOrder,

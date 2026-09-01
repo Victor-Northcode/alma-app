@@ -465,4 +465,21 @@ export const es: Dictionary = {
       "waning crescent": "luna menguante",
     },
   },
+
+  invite: {
+    title: (name: string) =>
+      name ? `${name} quiere leer vuestros dos cielos juntos` : "Dos cielos, leídos juntos",
+    lead:
+      "Da una fecha y la comparación se calcula gratis, en ocho sistemas — para este paso no hay que instalar nada.",
+    submit: "Crear nuestra compatibilidad",
+    working: "Creando…",
+    doneTitle: (name: string) =>
+      name ? `Listo. Vuestra compatibilidad espera con ${name}` : "Listo. Vuestra compatibilidad está lista",
+    doneLead:
+      "Vive en la app: descárgala y tu propia carta ya está allí, gratis. Todos los cálculos siguen siendo gratuitos.",
+    claimed: "Esta invitación ya se ha usado. Pide un enlace nuevo.",
+    unknown: "Esta invitación no existe. Revisa el enlace.",
+    own: "Esta invitación es tuya — envía el enlace a otra persona.",
+    failed: "No se ha podido crear. Inténtalo en un momento.",
+  },
 };

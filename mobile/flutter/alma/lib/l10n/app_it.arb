@@ -369,6 +369,15 @@
   "scrPeopleRemoveTitle": "Rimuovere questa persona?",
   "scrPeopleRemoveWhat": "Spariscono i suoi dati di nascita, e con loro ogni lettura di coppia scritta da lì. Le letture che hai pagato non possono essere riscritte parola per parola.",
   "scrPeopleUnnamed": "Senza nome",
+  "scrPeopleInvite": "Invita su Alma",
+  "scrPeopleInviteShare": "Leggi i nostri due cieli insieme — {url}",
+  "@scrPeopleInviteShare": {
+    "placeholders": {
+      "url": {}
+    }
+  },
+  "scrPeopleLive": "su Alma",
+  "scrPeopleInviteNeedsBirth": "Prima salva la tua data: l'invito promette un confronto in due.",
   "scrSaveAccountBody": "Accedi per conservare il tuo tema e ripristinare gli acquisti su un nuovo telefono.",
   "scrSaveAccountCta": "Accedi",
   "scrSaveAccountLater": "Non ora",

@@ -369,6 +369,15 @@
   "scrPeopleRemoveTitle": "Retirer cette personne ?",
   "scrPeopleRemoveWhat": "Ses données de naissance sont supprimées — ainsi que toutes les lectures de compatibilité écrites à partir d’elles. Les lectures que tu as payées ne peuvent pas être réécrites mot pour mot.",
   "scrPeopleUnnamed": "Sans nom",
+  "scrPeopleInvite": "Inviter sur Alma",
+  "scrPeopleInviteShare": "Lis nos deux ciels ensemble — {url}",
+  "@scrPeopleInviteShare": {
+    "placeholders": {
+      "url": {}
+    }
+  },
+  "scrPeopleLive": "sur Alma",
+  "scrPeopleInviteNeedsBirth": "Enregistre d’abord ta propre date — l’invitation promet une comparaison à deux.",
   "scrSaveAccountBody": "Connecte-toi une fois : ton thème et tes achats resteront accessibles même sur un nouveau téléphone.",
   "scrSaveAccountCta": "Se connecter",
   "scrSaveAccountLater": "Pas maintenant",
