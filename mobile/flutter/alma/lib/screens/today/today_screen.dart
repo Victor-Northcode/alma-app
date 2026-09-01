@@ -1161,10 +1161,20 @@ class _AreaRow extends StatelessWidget {
   /// Ближайший контакт или `null` — «здесь сегодня тихо».
   final Map<String, dynamic>? hit;
 
+  /// Тон дня в области — по типу аспекта того же контакта, что назван
+  /// строкой ниже. Ничего не выдумано: трин и секстиль — классически
+  /// «поток», квадрат и оппозиция — «трение», всё остальное (соединение,
+  /// минорные) — нейтрально. Один источник с фразой — [hit]; второго мнения
+  /// о дне у глифа быть не может.
+  static const _flow = {'trine', 'sextile'};
+  static const _friction = {'square', 'opposition'};
+
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
     final quiet = hit == null;
+    final aspect = hit?['aspect'] as String? ?? '';
+    final glyph = hit?['glyph'] as String? ?? '';
     // Колонка дат справа снята владельцем (29.08.2026): «есть дата … в
     // нижнем блоке — эта дата не нужна». Экран называется «Сегодня», и любое
     // число справа читалось обещанием события на дату — сначала его резали
@@ -1174,22 +1184,44 @@ class _AreaRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          CabinetWords.area(l, area),
-          style: AlmaType.meta.copyWith(
-            // Тихая область не золотится: у неё нечего подсвечивать, и
-            // ряд золотых меток над «здесь сегодня тихо» обещал бы
-            // четыре события там, где их два.
-            color: quiet
-                ? AlmaPalette.body.withValues(alpha: 0.6)
-                : AlmaPalette.goldBright,
-            fontWeight: FontWeight.w500,
-            // Вес вариативному шрифту задаётся осью: один `fontWeight`
-            // выбирает ближайший **объявленный** инстанс, а объявлен один,
-            // и метка молча оставалась тонкой. См. `typography.dart`.
-            fontVariations: const [FontVariation('wght', 500)],
+        Row(children: [
+          Text(
+            CabinetWords.area(l, area),
+            style: AlmaType.meta.copyWith(
+              // Тихая область не золотится: у неё нечего подсвечивать, и
+              // ряд золотых меток над «здесь сегодня тихо» обещал бы
+              // четыре события там, где их два.
+              color: quiet
+                  ? AlmaPalette.body.withValues(alpha: 0.6)
+                  : AlmaPalette.goldBright,
+              fontWeight: FontWeight.w500,
+              // Вес вариативному шрифту задаётся осью: один `fontWeight`
+              // выбирает ближайший **объявленный** инстанс, а объявлен один,
+              // и метка молча оставалась тонкой. См. `typography.dart`.
+              fontVariations: const [FontVariation('wght', 500)],
+            ),
           ),
-        ),
+          // **День одним взглядом** (31.08.2026, по образцу Co-Star): глиф
+          // аспекта справа от метки, тоном дня — поток золотом, трение
+          // приглушённым красным несогласия, нейтральное цветом текста.
+          // Язык глифу не нужен, и он учит читать тот же знак, что стоит в
+          // «Транзитах»; тихая область не носит ничего — пустое место не
+          // обещает события.
+          if (!quiet && glyph.isNotEmpty) ...[
+            const Spacer(),
+            Text(
+              glyph,
+              style: AlmaType.meta.copyWith(
+                fontSize: 15,
+                color: _flow.contains(aspect)
+                    ? AlmaPalette.goldBright
+                    : _friction.contains(aspect)
+                        ? AlmaPalette.disagree.withValues(alpha: 0.9)
+                        : AlmaPalette.body.withValues(alpha: 0.7),
+              ),
+            ),
+          ],
+        ]),
         const SizedBox(height: 4),
         Text(
           quiet ? l.cabAreaQuiet : (written ?? '${_phrase(l, hit!)}.'),

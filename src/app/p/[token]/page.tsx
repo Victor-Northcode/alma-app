@@ -92,7 +92,9 @@ export default function InvitePage() {
     const r = await api.claimInvite(token, {
       name: name.trim() || null,
       birth_date: iso,
-      birth_time: hour && minute ? `${hour}:${minute}` : null,
+      // Час без минут — это «в семь», а не «времени не знаю»: пустые минуты
+      // складываются в :00, а не роняют время целиком.
+      birth_time: hour ? `${hour}:${minute || "00"}` : null,
       latitude: place.latitude,
       longitude: place.longitude,
       timezone: place.timezone,
