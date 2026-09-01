@@ -596,8 +596,17 @@ ul {
 .btn-outline:hover {
   background: rgba(201, 174, 107, 0.14);
 }
+/*
+ * A block button gives up the nowrap that `.btn` carries. Nowrap is right for
+ * a control that can be as wide as its label; `width: 100%` says this one
+ * cannot. Keeping both let the Russian /pay refresh button ("Уже оплатили?
+ * Обновить доступ", min-content 317 px) prop the whole `.pay-inner` grid open
+ * at 320 vw, and `overflow-x: clip` on the page then cut the right edge off
+ * the title and every card with no scroll to reach it (audit 01.09.2026).
+ */
 .btn-block {
   width: 100%;
+  white-space: normal;
 }
 .pill {
   display: inline-flex;

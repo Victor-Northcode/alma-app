@@ -1,0 +1,21 @@
+INFO:     127.0.0.1:63391 - "GET /v1/billing/catalogue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63396 - "GET /v1/billing/catalogue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63397 - "GET /v1/billing/catalogue HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63398 - "POST /admin/api/login HTTP/1.1" 503 Service Unavailable
+INFO:     127.0.0.1:63409 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63410 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63411 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63412 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63413 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63414 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63415 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63416 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63417 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63418 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63419 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63420 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63421 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63422 - "POST /v1/auth/magic-link HTTP/1.1" 429 Too Many Requests
+INFO:     127.0.0.1:63435 - "GET /v1/places/search?… HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63436 - "GET /v1/auth/providers HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63437 - "GET /v1/billing/catalogue HTTP/1.1" 200 OK

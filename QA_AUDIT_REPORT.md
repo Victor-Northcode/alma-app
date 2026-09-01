@@ -436,4 +436,30 @@ Anthropic-бюджет / требует прод-конфигурации бил
   `places/search` и `auth/providers` → 200. Сайт :3001: `/favicon.ico` → 200
   `image/x-icon` (BUG-009).
 
+### Повторная верификация (01.09.2026, третий проход)
+
+Все фиксы перепроверены заново на свежеподнятом стенде (в рабочем дереве —
+незакоммиченные правки по отчёту 269866, Т-Банк/CSS; они не задевались):
+
+- Код каждого фикса на месте (атомарный `UPDATE … WHERE used < granted
+  RETURNING` в `credits.spend`, `ALMA_TRUSTED_EDGE` в `config.py:104` /
+  `deps.py:132,575`, `auth/admin_password.py` scrypt, `counters.bump_flag` /
+  `spend_and_check` / `refund`, `entitlements.already_owned:466`,
+  `src/app/favicon.ico` — валидный ICO, 3 размера).
+- Поимённые регресс-тесты багов: 6/6 pass; целевые файлы (`test_pair_credits`,
+  `test_admin`, `test_region`, `test_hardening`, `test_billing_router`):
+  124 pass.
+- Живьём на свежем uvicorn :8018: `CF-IPCountry: IN` → каталог USD $4.99
+  (BUG-004); 14 magic-link с ротацией `x-real-ip`+`cf-connecting-ip` и разными
+  email → 10×202, затем 429 429 429 429 — ротация потолок источника не снимает
+  (BUG-003); админ-логин без хэша → 503 (BUG-005, dev-ожидание); смоук
+  `places/search`, `auth/providers`, `billing/catalogue` → 200. Сайт Next
+  (dev :3011 из `Desktop\Alma`): `/` → 200, `/favicon.ico` → 200
+  `image/x-icon` (BUG-009).
+- Регрессии: сайт vitest — 272 pass (17 файлов); backend — полный прогон, итог
+  в `qa_evidence/full_suite_reverify_0109.txt`.
+
+BUG-001 (месячный бюджет) и BUG-008 остаются закрыты как намеренные решения
+владельца — статус не менялся.
+
 ID отчёта: 550775

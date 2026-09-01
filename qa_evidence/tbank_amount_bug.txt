@@ -1,0 +1,29 @@
+BUG: T-Bank open_session не фиксирует RUB — Amount = cents_in(resolved_currency), копейки.
+Терминал T-Bank всегда списывает переданный Amount в РУБЛЯХ (копейках).
+
+Живой расчёт (backend .venv, alma.billing.catalogue):
+  door.natal cents_in(RUB)=44900 -> Amount 44900 коп = 449.00 ₽  (верно)
+  door.natal cents_in(USD)=  499 -> Amount   499 коп =   4.99 ₽  (СПИСАНО 4.99₽ вместо 449₽)
+  door.natal cents_in(INR)=10900 -> Amount 10900 коп = 109.00 ₽
+  door.natal cents_in(EUR)=  549 -> Amount   549 коп =   5.49 ₽
+  bundle.static USD=1999 -> 19.99 ₽ вместо 1799 ₽
+
+Код: backend/alma/billing/tbank.py:459-463
+  item = prices.product(product)
+  cents, display = item.cents_in(currency), item.display(currency)
+  ...
+  fields = {"Amount": cents, ...}   # копейки, всегда трактуются T-Bank как рубли
+
+Валюта приходит из billing.py checkout:317  where=region.resolve(stated=country, edge=edge)
+region.resolve (region.py:147): return clean_country(edge) or clean_country(stated)
+=> edge (заголовок) ПЕРЕБИВАЕТ stated="RU" с /pay.
+=> Любой crafted POST /v1/billing/checkout {product, country:"US"} на T-Bank-деплое
+   => currency=USD => списание 4.99₽; вебхук потом отвергает грант (amount<449₽ RUB)
+   => покупатель заплатил, доступа НЕ получил.
+=> При ALMA_TRUSTED_EDGE=true и edge!=RU (VPN/прокси/мисдетект) — то же самое для
+   легитимного пользователя, плюс /pay покажет цены в $ на русской странице.
+
+Динамика каталога (curl):
+  /v1/billing/catalogue?country=RU -> RUB 449/449/1799/849 ₽ (верно)
+  /v1/billing/catalogue?country=US -> USD $4.99  (клиент управляет валютой)
+  /v1/billing/catalogue?country=IN -> INR ₹109

@@ -286,6 +286,45 @@ def test_an_unsigned_notification_is_refused(tbank_api):
     assert _post(tbank_api, body).status_code == 401
 
 
+# ── Init: валюта ───────────────────────────────────────────────────────────
+
+class _RecordingClient:
+    """Запоминает поля `Init` вместо похода в сеть."""
+
+    def __init__(self) -> None:
+        self.fields: dict | None = None
+
+    async def init_payment(self, fields: dict) -> dict:
+        self.fields = dict(fields)
+        return {"PaymentURL": "https://securepay.example/x", "PaymentId": 700100}
+
+
+def test_the_amount_is_kopecks_of_the_shelf_ruble_price_no_matter_the_currency(
+    tbank_api, auth_headers
+):
+    """`Amount` — копейки рубля с полки, что бы ни разрешила страна запроса.
+
+    Аудит 01.09.2026: `open_session` брал `cents_in(currency)`, и запрос без
+    `country` (USD) уходил в `Init` как `Amount=499` — списание 4.99 ₽ за
+    товар в 449 ₽, чек 54-ФЗ на мелочь и отказ вебхука в гранте.
+    """
+    owner = _user_id(tbank_api, auth_headers)
+    client = _RecordingClient()
+    provider = tbank.TBankProvider(client=client)
+
+    async def opened():
+        return await provider.open_session(
+            product="door.natal", user_id=owner, currency="USD"
+        )
+
+    handle = read_async(opened)
+    assert client.fields is not None
+    assert client.fields["Amount"] == 44900, (
+        "Amount — копейки рубля с полки (449 ₽), а не цена в валюте запроса"
+    )
+    assert handle.currency == "RUB" and handle.cents == 44900
+
+
 # ── продления ──────────────────────────────────────────────────────────────
 
 def test_cancel_subscription_is_a_local_decision():

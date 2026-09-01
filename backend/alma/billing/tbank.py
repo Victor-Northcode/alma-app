@@ -456,6 +456,15 @@ class TBankProvider:
         from . import catalogue as prices
 
         config = settings()
+        # Терминал Т-Банка знает одну валюту: `Amount` — всегда копейки рубля.
+        # Аргумент `currency` приходит из `region.resolve` и зависит от края
+        # и присланной страны — аудит 01.09.2026 поймал, как отсутствие
+        # `country` (или edge-заголовок за VPN) давало USD: `Amount=499`,
+        # касса пробивала 4.99 ₽, а вебхук честно сверял против 449 ₽ и
+        # НЕ выдавал грант — покупатель платил и оставался ни с чем.
+        # `cents_in("RUB")` без рублёвой полосы бросит `NotSold` → роутер
+        # ответит 404 `not_sold_here`, что и требуется.
+        currency = "RUB"
         item = prices.product(product)
         cents, display = item.cents_in(currency), item.display(currency)
 
