@@ -27,6 +27,7 @@ import '../../net/models.dart'
     show BirthInput, FunnelStage, Place, Profile, SystemSlug;
 import '../../state/session.dart';
 import '../../billing/alma_store.dart';
+import '../../billing/ladder.dart';
 import '../cabinet_words.dart';
 import '../onboarding/coach_anchors.dart';
 import '../today/today_screen.dart' show openSubscription;
@@ -1372,13 +1373,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final renews = _instantDate(l.localeName, row['renews_at'] as String?);
     final expires = _instantDate(l.localeName, row['expires_at'] as String?);
     final store = _boughtInStore(row);
+    // **Цена — в той же строке, что имя плана** (01.09.2026, разбор
+    // подписок Co-Star: «цена и дата видны без нажатий»). Источник честный:
+    // магазинную подписку списывает магазин — печатается цена StoreKit;
+    // веб-подписку (Т-Банк) списываем мы — сервер прислал `paid_display`
+    // ровно тем числом, что снял. Ни одна цена здесь не набрана руками.
+    // Магазинная цена — только у месячного плана: подставлять цену
+    // subMonthly к любой исторической подписке иного вида значило бы
+    // напечатать чужое число (QA-ревью 01.09.2026).
+    final price = store
+        ? (row['kind'] == 'monthly'
+            ? AlmaStore.shared.price(LadderKey.subMonthly)
+            : null)
+        : row['paid_display'] as String?;
     return [
       Padding(
         padding: const EdgeInsets.only(top: 15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(_planName(l, row['kind'] as String?), style: AlmaType.meta),
+            Text(
+              price == null
+                  ? _planName(l, row['kind'] as String?)
+                  : '${_planName(l, row['kind'] as String?)} · $price',
+              style: AlmaType.meta,
+            ),
             const SizedBox(height: 5),
             Text(
               // **«Продлевается» — только пока продлевается.**

@@ -95,11 +95,17 @@ export function JourneyOverlay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // **Дата — раньше знакомства** (владелец, 01.09.2026, разбор реги
+  // Co-Star: «дата раньше имени; имя, интерес — потом, когда зацепился»).
+  // Прогулка открывалась двумя личными вопросами — «что громче» и имя — до
+  // того, как продукт хоть что-то дал. Теперь рождение идёт первым блоком,
+  // интерес и имя — после места, перед церемонией: человеку, отдавшему
+  // дату, есть что терять.
   const steps = useMemo(
     () =>
       needsDate
-        ? (["intent", "name", "date", "time", "place", "ceremony", "portrait", "auth", "handoff"] as const)
-        : (["intent", "name", "time", "place", "ceremony", "portrait", "auth", "handoff"] as const),
+        ? (["date", "time", "place", "intent", "name", "ceremony", "portrait", "auth", "handoff"] as const)
+        : (["time", "place", "intent", "name", "ceremony", "portrait", "auth", "handoff"] as const),
     [needsDate],
   );
 
@@ -365,7 +371,8 @@ function StepName({ onNext }: { onNext: () => void }) {
             autoFocus
           />
           <Button block onClick={onNext}>
-            {t.journey.continueCta}
+            {/* Имя — последний шаг перед церемонией: отсюда небо и строится. */}
+            {t.journey.buildMySky}
           </Button>
           <div className="journey-or">
             <span />
@@ -622,7 +629,10 @@ function StepPlace({ onNext }: { onNext: () => void }) {
             disabled={!state.placeDetail}
             onClick={onNext}
           >
-            {t.journey.buildMySky}
+            {/* «Дальше», не «Построить»: после перестановки (дата первой,
+                01.09.2026) место стоит в середине прогулки, и кнопка,
+                обещающая постройку за три шага до неё, врала бы. */}
+            {t.journey.continueCta}
           </Button>
         </>
       }

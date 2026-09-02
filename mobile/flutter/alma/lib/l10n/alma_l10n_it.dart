@@ -1306,6 +1306,12 @@ class LIt extends L {
   String get scrSignInOrWith => 'oppure accedi con';
 
   @override
+  String get scrTodayShare => 'Condividi la mia giornata';
+
+  @override
+  String get scrSignInOrEmail => 'oppure via e-mail';
+
+  @override
   String get scrSignInPrivacy =>
       'Usiamo il tuo indirizzo per il link di accesso e nient\'altro. Niente newsletter.';
 

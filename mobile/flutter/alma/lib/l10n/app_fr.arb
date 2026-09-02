@@ -389,6 +389,8 @@
   "scrSignInLead": "Ton thème te suit sur n’importe quel téléphone.",
   "scrSignInLinkSent": "Envoyé — regarde ta boîte mail.",
   "scrSignInOrWith": "ou connecte-toi avec",
+  "scrTodayShare": "Partager ma journée",
+  "scrSignInOrEmail": "ou par e-mail",
   "scrSignInPrivacy": "Nous utilisons ton adresse pour le lien de connexion et rien d’autre. Il n’y a pas de newsletter.",
   "scrSignInSendLink": "M’envoyer un code",
   "scrSignInSendLinkShort": "Envoyer le code",

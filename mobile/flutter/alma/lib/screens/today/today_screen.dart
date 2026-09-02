@@ -5,6 +5,7 @@ import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/arrival.dart';
@@ -14,6 +15,7 @@ import '../../design/metrics.dart';
 import '../../design/buttons.dart';
 import '../../design/palette.dart';
 import '../../design/screen_scaffold.dart';
+import '../../design/share_card.dart';
 import '../../design/typography.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
@@ -158,6 +160,33 @@ class _TodayScreenState extends State<TodayScreen> {
             // гороскоп целиком, а не его первый абзац.
             const SizedBox(height: 14),
             _AreasPanel(model: model),
+            // **Поделиться днём** — карточка в сторис (01.09.2026, лучший
+            // трюк Co-Star: «каждый шэр — бесплатная реклама с нашим именем»).
+            // Тихой строкой, не кнопкой: жест доступен, но не выпрашивается.
+            // Только когда небо ПРИШЛО: карточка без фазы рисовала бы
+            // новолуние и четыре «тихо», которых экран не показывал, — а на
+            // ней «ни одного выдуманного слова» (QA-ревью 01.09.2026).
+            if (model.moonPhase != null) ...[
+            const SizedBox(height: 12),
+            Center(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _shareDay(l, model),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    const Icon(Icons.ios_share,
+                        size: 15, color: AlmaPalette.gold),
+                    const SizedBox(width: 7),
+                    Text(l.scrTodayShare,
+                        style: AlmaType.meta
+                            .copyWith(color: AlmaPalette.gold)),
+                  ]),
+                ),
+              ),
+            ),
+            ],
           ],
         ] else
           // Бесплатному — те же секции, но их порядок решает NBO (§4).
@@ -243,6 +272,43 @@ class _TodayScreenState extends State<TodayScreen> {
   /// заслуживающими доверия.
   String _deviceDate(String locale) =>
       DateFormat.MMMMd(locale).format(DateTime.now());
+
+  /// Сложить день в карточку и отдать в системный шэр.
+  ///
+  /// На карточке — ровно то, что на экране: дата, фаза, четыре области с
+  /// глифами их аспектов тем же тоном. Ни одного слова, которого человек не
+  /// видел; снимок дня, а не открытка с пожеланием.
+  Future<void> _shareDay(L l, TodayModel model) async {
+    final moon = model.moonPhase;
+    final rows = <ShareDayRow>[
+      for (final area in const ['work', 'love', 'money', 'body'])
+        ShareDayRow(
+          CabinetWords.area(l, area),
+          model.nearest(area)?['glyph'] as String? ?? '',
+          aspectTone(model.nearest(area)?['aspect'] as String? ?? ''),
+        ),
+    ];
+    final illum = ((moon?['illumination'] as num?)?.toDouble() ?? 0);
+    final waxing = moon?['waxing'] == true;
+    final glyph = illum >= 0.97
+        ? '○'
+        : illum <= 0.03
+            ? '●'
+            : waxing
+                ? '☽'
+                : '☾';
+    final card = ShareDayCard(
+      dateLine: _deviceDate(l.localeName),
+      moonGlyph: glyph,
+      moonLine: _moonLine(l, model) ?? '',
+      rows: rows,
+    );
+    final bytes = await captureCard(context, card);
+    if (bytes == null) return;
+    await Share.shareXFiles([
+      XFile.fromData(bytes, mimeType: 'image/png', name: 'alma-day.png'),
+    ]);
+  }
 
   /// Строка фазы для заголовочного блока, или `null`, когда фазы ещё нет.
   Widget? _moonHeaderLine(L l, TodayModel? model) {
@@ -1064,6 +1130,16 @@ class _LiveBlock extends StatelessWidget {
 /// августа», — и четыре такие строки читались одним слипшимся абзацем. На s45
 /// строка отвечает «что», а колонка справа — «когда», и глаз берёт даты
 /// столбцом, не перечитывая фразы.
+/// Тон дня по типу аспекта — один и тот же для строки области и для
+/// share-карточки: трин и секстиль — классически «поток» (золото), квадрат
+/// и оппозиция — «трение» (красный несогласия), остальное — нейтрально.
+/// Ничего не выдумано: глиф всегда принадлежит контакту, названному словами.
+Color aspectTone(String aspect) => const {'trine', 'sextile'}.contains(aspect)
+    ? AlmaPalette.goldBright
+    : const {'square', 'opposition'}.contains(aspect)
+        ? AlmaPalette.disagree.withValues(alpha: 0.9)
+        : AlmaPalette.body.withValues(alpha: 0.7);
+
 class _AreasPanel extends StatelessWidget {
   const _AreasPanel({required this.model});
 
@@ -1161,14 +1237,6 @@ class _AreaRow extends StatelessWidget {
   /// Ближайший контакт или `null` — «здесь сегодня тихо».
   final Map<String, dynamic>? hit;
 
-  /// Тон дня в области — по типу аспекта того же контакта, что назван
-  /// строкой ниже. Ничего не выдумано: трин и секстиль — классически
-  /// «поток», квадрат и оппозиция — «трение», всё остальное (соединение,
-  /// минорные) — нейтрально. Один источник с фразой — [hit]; второго мнения
-  /// о дне у глифа быть не может.
-  static const _flow = {'trine', 'sextile'};
-  static const _friction = {'square', 'opposition'};
-
   @override
   Widget build(BuildContext context) {
     final l = L.of(context);
@@ -1213,11 +1281,7 @@ class _AreaRow extends StatelessWidget {
               glyph,
               style: AlmaType.meta.copyWith(
                 fontSize: 15,
-                color: _flow.contains(aspect)
-                    ? AlmaPalette.goldBright
-                    : _friction.contains(aspect)
-                        ? AlmaPalette.disagree.withValues(alpha: 0.9)
-                        : AlmaPalette.body.withValues(alpha: 0.7),
+                color: aspectTone(aspect),
               ),
             ),
           ],

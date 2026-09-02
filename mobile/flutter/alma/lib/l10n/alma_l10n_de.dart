@@ -1310,6 +1310,12 @@ class LDe extends L {
   String get scrSignInOrWith => 'oder anmelden mit';
 
   @override
+  String get scrTodayShare => 'Meinen Tag teilen';
+
+  @override
+  String get scrSignInOrEmail => 'oder per E-Mail';
+
+  @override
   String get scrSignInPrivacy =>
       'Wir nutzen deine Adresse für den Anmeldelink und für nichts anderes. Es gibt keinen Newsletter.';
 

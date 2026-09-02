@@ -97,6 +97,27 @@ const SHOWCASE: Record<string, { name: string; blurb: string; plate: string }> =
     blurb: "Один разбор совместимости для вас двоих.",
     plate: "plate-love",
   },
+  "report.year": {
+    name: "Год вперёд",
+    blurb:
+      "Полный соляр: твой год, прочитанный с минуты возвращения Солнца. Действует до следующего дня рождения.",
+    plate: "plate-solar",
+  },
+  "questions.5": {
+    name: "5 вопросов к Alma",
+    blurb: "Пять ходов сильным голосом — тем же, что пишет платные главы.",
+    plate: "plate-speech",
+  },
+  "questions.10": {
+    name: "10 вопросов к Alma",
+    blurb: "Десять ходов сильным голосом. Пачки складываются.",
+    plate: "plate-speech",
+  },
+  "questions.25": {
+    name: "25 вопросов к Alma",
+    blurb: "Двадцать пять ходов сильным голосом — на долгий разговор.",
+    plate: "plate-speech",
+  },
 };
 
 const ORDER = Object.keys(SHOWCASE);
@@ -145,10 +166,17 @@ export default function PayPage() {
     if (r.data.debug_code) setCode(r.data.debug_code);
   }, [email]);
 
-  const consume = useCallback(async () => {
+  const consume = useCallback(async (typed?: string) => {
+    // Замок ВНУТРИ: автосабмит шестой цифры и рефлекторный Enter приходят
+    // в один тик, и без замка два POST-а рвали одноразовый код — второй
+    // возвращал «уже использован» поверх успешного входа (QA 01.09.2026).
+    if (busy !== null) return;
+    // `typed` — код прямо из onChange: setState ещё не долетел, а шестая
+    // цифра уже введена. Автосабмит без него отправлял бы пять цифр.
+    const six = (typed ?? code).trim();
     setBusy("code");
     setNotice(null);
-    const r = await api.consumeEmailCode(email.trim().toLowerCase(), code.trim());
+    const r = await api.consumeEmailCode(email.trim().toLowerCase(), six);
     setBusy(null);
     if (isOk(r)) {
       writeToken(r.data.token);
@@ -162,7 +190,7 @@ export default function PayPage() {
     } else {
       setNotice("Код не подошёл. Проверь цифры из письма.");
     }
-  }, [email, code]);
+  }, [email, code, busy]);
 
   const buy = useCallback(async (product: string) => {
     setBusy(product);
@@ -263,7 +291,14 @@ export default function PayPage() {
               aria-label="Код из письма"
               value={code}
               maxLength={6}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, "");
+                setCode(digits);
+                // Шестая цифра отправляет сама: кнопка «Войти» после неё —
+                // второе нажатие ради того, что форма уже знает (тот же
+                // закон, что у шести ячеек в приложении).
+                if (digits.length === 6 && busy === null) void consume(digits);
+              }}
               onKeyDown={(e) => e.key === "Enter" && code.length === 6 && void consume()}
             />
             <button

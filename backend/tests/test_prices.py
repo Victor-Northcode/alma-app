@@ -28,25 +28,28 @@ from alma.calc import SYSTEMS
 
 #: Every published amount, written out by hand. If a change to the mechanism
 #: moves any of these, that is the test failing on purpose.
+#: Полосы q5/q10/q25/year (01.09.2026) — ВЫВЕДЕННЫЕ из точек Co-Star,
+#: владелец не подтверждал ни одной: прибиты, чтобы не поплыли молча,
+#: и обязаны быть подтверждены до сохранения в консолях магазинов.
 GOLDEN: dict[str, dict[str, int]] = {
-    "USD": {"door": 499, "pair": 499, "bundle": 1999, "monthly": 999},
-    "EUR": {"door": 549, "pair": 549, "bundle": 2099, "monthly": 1049},
-    "GBP": {"door": 499, "pair": 499, "bundle": 1999, "monthly": 999},
-    "CHF": {"door": 590, "pair": 590, "bundle": 2390, "monthly": 1190},
-    "AUD": {"door": 799, "pair": 799, "bundle": 3199, "monthly": 1599},
-    "CAD": {"door": 749, "pair": 749, "bundle": 2799, "monthly": 1399},
-    "NOK": {"door": 5900, "pair": 5900, "bundle": 21900, "monthly": 10900},
-    "DKK": {"door": 3900, "pair": 3900, "bundle": 15900, "monthly": 7900},
-    "BRL": {"door": 1290, "pair": 1290, "bundle": 5190, "monthly": 2590},
-    "MXN": {"door": 5900, "pair": 5900, "bundle": 21900, "monthly": 10900},
-    "PLN": {"door": 1099, "pair": 1099, "bundle": 4399, "monthly": 2199},
-    "TRY": {"door": 6900, "pair": 6900, "bundle": 25900, "monthly": 12900},
-    "INR": {"door": 10900, "pair": 10900, "bundle": 43900, "monthly": 21900},
+    "USD": {"door": 499, "pair": 499, "bundle": 1999, "monthly": 999, "q5": 299, "q10": 599, "q25": 799, "year": 1299},
+    "EUR": {"door": 549, "pair": 549, "bundle": 2099, "monthly": 1049, "q5": 349, "q10": 649, "q25": 849, "year": 1399},
+    "GBP": {"door": 499, "pair": 499, "bundle": 1999, "monthly": 999, "q5": 299, "q10": 599, "q25": 799, "year": 1299},
+    "CHF": {"door": 590, "pair": 590, "bundle": 2390, "monthly": 1190, "q5": 390, "q10": 690, "q25": 990, "year": 1590},
+    "AUD": {"door": 799, "pair": 799, "bundle": 3199, "monthly": 1599, "q5": 499, "q10": 949, "q25": 1299, "year": 1999},
+    "CAD": {"door": 749, "pair": 749, "bundle": 2799, "monthly": 1399, "q5": 449, "q10": 849, "q25": 1149, "year": 1899},
+    "NOK": {"door": 5900, "pair": 5900, "bundle": 21900, "monthly": 10900, "q5": 3900, "q10": 6900, "q25": 9900, "year": 15900},
+    "DKK": {"door": 3900, "pair": 3900, "bundle": 15900, "monthly": 7900, "q5": 2500, "q10": 4900, "q25": 6900, "year": 10900},
+    "BRL": {"door": 1290, "pair": 1290, "bundle": 5190, "monthly": 2590, "q5": 790, "q10": 1490, "q25": 1990, "year": 3290},
+    "MXN": {"door": 5900, "pair": 5900, "bundle": 21900, "monthly": 10900, "q5": 2900, "q10": 6900, "q25": 8900, "year": 13900},
+    "PLN": {"door": 1099, "pair": 1099, "bundle": 4399, "monthly": 2199, "q5": 699, "q10": 1299, "q25": 1799, "year": 2899},
+    "TRY": {"door": 6900, "pair": 6900, "bundle": 25900, "monthly": 12900, "q5": 3900, "q10": 7500, "q25": 9900, "year": 16900},
+    "INR": {"door": 10900, "pair": 10900, "bundle": 43900, "monthly": 21900, "q5": 6500, "q10": 12500, "q25": 16900, "year": 27500},
     # Рублёвая полоса — витрина «/pay» (Т-Банк). Названы владельцем
     # 31.08.2026: «цены делай 449 449 1799 и 849» (дверь, пара, бандл,
     # месяц). Править — только новым словом владельца, вместе с
     # REGIONAL_CENTS в catalogue.py.
-    "RUB": {"door": 44900, "pair": 44900, "bundle": 179900, "monthly": 84900},
+    "RUB": {"door": 44900, "pair": 44900, "bundle": 179900, "monthly": 84900, "q5": 24900, "q10": 44900, "q25": 69900, "year": 109900},
 }
 
 #: Пять систем, которые продаются дверьми. Написаны руками по той же причине,
@@ -66,7 +69,11 @@ def _cents(currency: str, band: str) -> int:
 
 # ── the shelf, pinned ──────────────────────────────────────────────────────
 
-def test_the_shelf_is_the_eight_rows_v3_decided_on():
+def test_the_shelf_is_the_twelve_rows_after_the_costar_wave():
+    # Восемь строк v3 плюс четыре от 01.09.2026 («сделай всё это» — разбор
+    # витрины Co-Star): три пачки вопросов и «Год вперёд». Порядок — часть
+    # утверждения: пачки и год стоят ПОСЛЕ подписки, чтобы ни одна витрина,
+    # печатающая список как есть, не поставила мелкий товар перед планом.
     assert list(prices.PRODUCTS) == [
         "door.natal",
         "door.numerology",
@@ -76,6 +83,10 @@ def test_the_shelf_is_the_eight_rows_v3_decided_on():
         "pair.check",
         "bundle.static",
         "sub.monthly",
+        "questions.5",
+        "questions.10",
+        "questions.25",
+        "report.year",
     ]
 
 
@@ -318,7 +329,7 @@ def test_the_catalogue_carries_the_scope_each_row_grants():
 def test_a_brazilian_is_shown_the_whole_shelf_in_reais():
     listing = prices.catalogue(country="BR")
     assert listing["currency"] == "BRL"
-    assert len(listing["items"]) == 8
+    assert len(listing["items"]) == 12
     plan = next(item for item in listing["items"] if item["slug"] == "sub.monthly")
     assert plan["display"] == "R$ 25,90"
 

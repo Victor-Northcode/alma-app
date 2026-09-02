@@ -1725,6 +1725,8 @@
     "description": "from Screens/scr.signIn.linkSent"
   },
   "scrSignInOrWith": "or sign in with",
+  "scrTodayShare": "Share my day",
+  "scrSignInOrEmail": "or by email",
   "@scrSignInOrWith": {
     "description": "from Screens/scr.signIn.orWith"
   },

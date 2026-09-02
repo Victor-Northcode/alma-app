@@ -635,6 +635,11 @@ def test_every_recurring_product_is_granted_with_an_expiry():
         if item.interval:
             assert grant.duration is not None, key
             assert grant.kind == item.kind, key
+        elif item.lifetime_days:
+            # «Год вперёд» (01.09.2026): не подписка, но со сроком — товар
+            # сам знает, сколько живёт его доступ, и грант обязан истечь.
+            from datetime import timedelta as _td
+            assert grant.duration == _td(days=item.lifetime_days), key
         else:
             assert grant.duration is None, key
 

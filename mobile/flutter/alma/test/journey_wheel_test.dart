@@ -52,17 +52,15 @@ void main() {
   bool forwardEnabled(WidgetTester tester) =>
       tester.widget<AlmaButton>(find.byType(AlmaButton).last).onTap != null;
 
-  /// Довести анкету до шага даты: имя, «что важнее» (V0) и «о себе» кнопку
-  /// не запирают — интерес пропускается законно (А7 №15).
+  /// Шаг даты — теперь ПЕРВЫЙ экран анкеты (01.09.2026, разбор реги
+  /// Co-Star: «дата раньше имени»): доводить больше некуда, анкета
+  /// открывается прямо на нём. Если этот expect упал тремя нулями —
+  /// кто-то вернул знакомство перед датой.
   Future<void> toDateStep(WidgetTester tester) async {
     await tester.pumpWidget(host());
     await settle(tester);
-    for (var i = 0; i < 3; i++) {
-      await tester.tap(find.byType(AlmaButton).last);
-      await settle(tester);
-    }
     expect(find.byType(ListWheelScrollView), findsNWidgets(3),
-        reason: 'шаг даты: день, месяц, год');
+        reason: 'анкета обязана открываться шагом даты: день, месяц, год');
   }
 
   testWidgets('нетронутые колёса не пускают дальше', (tester) async {
@@ -134,18 +132,15 @@ void main() {
     expect(forwardEnabled(tester), isTrue);
   });
 
-  testWidgets('нетронутые колёса остаются нетронутыми и после возврата',
-      (tester) async {
+  testWidgets('с первого шага некуда уйти, не назвав дату', (tester) async {
+    // Раньше тест проверял «ушёл назад и вернулся — колёса нетронуты».
+    // С датой первым шагом (01.09.2026) сценарий стал недостижим по
+    // построению: назад с первого шага стрелки нет, вперёд без даты не
+    // пускают — и ровно это здесь прибито.
     await toDateStep(tester);
     expect(forwardEnabled(tester), isFalse);
-    // Уйти можно только назад: вперёд без даты не пускают — в этом и смысл.
-    await tester.tap(find.byIcon(Icons.arrow_back));
-    await settle(tester);
-    await tester.tap(find.byType(AlmaButton).last);
-    await settle(tester);
-    expect(find.byType(ListWheelScrollView), findsNWidgets(3));
-    expect(forwardEnabled(tester), isFalse,
-        reason: 'барабан, доехавший сам, — это не выбор человека');
+    expect(find.byIcon(Icons.arrow_back), findsNothing,
+        reason: 'первый шаг не носит «назад»: уйти, не назвав дату, некуда');
   });
 }
 

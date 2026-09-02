@@ -1303,6 +1303,12 @@ class LPt extends L {
   String get scrSignInOrWith => 'ou entre com';
 
   @override
+  String get scrTodayShare => 'Compartilhar meu dia';
+
+  @override
+  String get scrSignInOrEmail => 'ou por e-mail';
+
+  @override
   String get scrSignInPrivacy =>
       'Usamos seu endereço só para o link de acesso, nada mais. Nada de newsletter.';
 

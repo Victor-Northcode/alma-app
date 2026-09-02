@@ -95,15 +95,9 @@ class SubscriptionScreen extends StatelessWidget {
             //    полужирная и светлее соседей.
             PaywallSpark(text: l.paywallV3SubForeverStays),
             const SizedBox(height: 10),
-            // 2. Абзац продления. TODO(stores): фраза называет Apple ID, а
-            //    продукт кроссплатформенный; варианта для Play на холсте нет
-            //    (спека, дыра №7) — решение владельца.
-            Text(
-              l.storeRenewalDisclosure,
-              style: AlmaType.meta.copyWith(fontSize: 12, height: 1.45),
-            ),
-            const SizedBox(height: 10),
-            // 3. И только теперь цена.
+            // 2. Цена — сразу за искрой: между решением и кнопкой не должно
+            //    стоять юридического абзаца (01.09.2026, разбор подписок
+            //    Co-Star: «прямо под кнопкой — отменяется в любой момент»).
             if (deal.loading)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 17),
@@ -120,6 +114,19 @@ class SubscriptionScreen extends StatelessWidget {
                   if (key != null) deal.buy(key);
                 },
               ),
+            const SizedBox(height: 10),
+            // 3. Абзац продления — ПОД кнопкой: рука уже на цене, а глаз
+            //    ещё успевает прочитать «отменить можно в любой момент» до
+            //    нажатия. Текст магазинно-честный: продаёт Apple или Play,
+            //    предупреждает и отменяет их аккаунт, не мы.
+            //    TODO(stores): фраза называет Apple ID, а продукт
+            //    кроссплатформенный; варианта для Play на холсте нет
+            //    (спека, дыра №7) — решение владельца.
+            Text(
+              l.storeRenewalDisclosure,
+              textAlign: TextAlign.center,
+              style: AlmaType.meta.copyWith(fontSize: 12, height: 1.45),
+            ),
             PaywallNotice(store: deal.store),
             const SizedBox(height: 11),
             // 4. Подвал. `Restore` требуют оба магазина — он не продаёт, а

@@ -288,6 +288,28 @@ class _SignInScreenState extends State<SignInScreen> {
                       .copyWith(color: AlmaPalette.body.withValues(alpha: 0.6)),
                 ),
                 const SizedBox(height: 30),
+                // **Apple и Google — первыми и крупными** (владелец,
+                // 01.09.2026, разбор реги Co-Star: «одно касание вместо
+                // похода за кодом в почту»). Макет держал почту сверху, и
+                // это было заменено его же свежим словом: провайдер — один
+                // тап, почта — три экрана; порядок обязан продавать
+                // короткий путь. Почта осталась полноценным запасным —
+                // ниже, под «или по почте».
+                if (_apple || _google) ...[
+                  _Providers(
+                    apple: _apple,
+                    google: _google,
+                    busy: _provider,
+                    onTap: _viaProvider,
+                  ),
+                  const SizedBox(height: 22),
+                  Text(l.scrSignInOrEmail,
+                      textAlign: TextAlign.center,
+                      style: AlmaType.meta.copyWith(
+                          fontSize: 12,
+                          color: AlmaPalette.body.withValues(alpha: 0.5))),
+                  const SizedBox(height: 14),
+                ],
                 CeremonialField(
                   controller: _email,
                   hint: l.scrSignInEmailPlaceholder,
@@ -300,21 +322,6 @@ class _SignInScreenState extends State<SignInScreen> {
                   shortLabel: l.scrSignInSendLinkShort,
                   onTap: _emailLooksReal && !_working ? _sendLink : null,
                 ),
-                if (_apple || _google) ...[
-                  const SizedBox(height: 26),
-                  Text(l.scrSignInOrWith,
-                      textAlign: TextAlign.center,
-                      style: AlmaType.meta.copyWith(
-                          fontSize: 12,
-                          color: AlmaPalette.body.withValues(alpha: 0.5))),
-                  const SizedBox(height: 14),
-                  _Providers(
-                    apple: _apple,
-                    google: _google,
-                    busy: _provider,
-                    onTap: _viaProvider,
-                  ),
-                ],
                 if (_debugToken != null) ...[
                   const SizedBox(height: 26),
                   _DebugConsume(

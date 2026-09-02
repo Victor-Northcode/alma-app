@@ -1298,6 +1298,12 @@ class LRu extends L {
   String get scrSignInOrWith => 'или войди через';
 
   @override
+  String get scrTodayShare => 'Поделиться днём';
+
+  @override
+  String get scrSignInOrEmail => 'или по почте';
+
+  @override
   String get scrSignInPrivacy =>
       'Почта нужна только для входа. Никаких рассылок.';
 

@@ -251,7 +251,9 @@ def test_every_shelf_price_is_offered_to_anybody(db):
         }
 
     answers = db(work)
-    assert len(answers) == 8
+    # Двенадцать после волны Co-Star (01.09.2026): восемь v3 плюс три пачки
+    # вопросов и «Год вперёд».
+    assert len(answers) == 12
     assert all(answers.values()), answers
 
 
@@ -330,7 +332,13 @@ def test_the_static_systems_are_exactly_the_doors_on_the_shelf(db):
     doors = {
         item.slug
         for item in PRODUCTS.values()
+        # Дверь — это «система навсегда»: разовый вид БЕЗ срока. «Год
+        # вперёд» (report.year) тоже scope=system, но у него есть
+        # lifetime_days — это аренда соляра на год, не дверь, и в обещание
+        # бандла «все пять разборов» он не входит (01.09.2026).
         if item.scope == entitlements.SCOPE_SYSTEM
+        and item.kind == "one_time"
+        and not item.lifetime_days
     }
     assert doors == entitlements.STATIC_SYSTEMS
     assert entitlements.STATIC_SYSTEMS <= set(SYSTEMS)

@@ -169,6 +169,11 @@ def test_every_recurring_product_is_granted_with_an_expiry():
         if item.interval:
             assert grant.duration is not None, key
             assert grant.kind == item.kind, key
+        elif item.lifetime_days:
+            # «Год вперёд» (01.09.2026): не подписка, но со сроком — товар
+            # сам знает, сколько живёт его доступ, и грант обязан истечь.
+            from datetime import timedelta as _td
+            assert grant.duration == _td(days=item.lifetime_days), key
         else:
             assert grant.duration is None, key
 
@@ -289,10 +294,12 @@ def test_the_catalogue_is_public(api, auth_headers):
     # разовым платежом.
     shelf = [key for key, item in prices.PRODUCTS.items() if item.on_the_shelf]
     assert [item["slug"] for item in body["items"]] == shelf
+    # Плюс четыре строки волны Co-Star (01.09.2026): пачки вопросов и год.
     assert {item["slug"] for item in body["items"]} == {
         "door.natal", "door.numerology", "door.birth-card",
         "door.astrocartography", "door.synthesis",
         "pair.check", "bundle.static", "sub.monthly",
+        "questions.5", "questions.10", "questions.25", "report.year",
     }
     plan = next(item for item in body["items"] if item["slug"] == "sub.monthly")
     assert plan["display"] == "$9.99"

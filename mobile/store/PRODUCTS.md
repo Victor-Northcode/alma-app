@@ -63,9 +63,14 @@ certain taxes"* и тоже являются суммой для покупат�
 | `pair.check` | **Consumable** | `ai.pazl.alma.pair.check` | `ai.pazl.alma.pair.check` | yes |
 | `bundle.static` | Non-consumable | `ai.pazl.alma.bundle.static` | `ai.pazl.alma.bundle.static` | yes |
 | `sub.monthly` | Auto-renewable, 1 month | `ai.pazl.alma.sub.monthly` | `ai.pazl.alma.sub.monthly` | yes |
+| `questions.5` | **Consumable** | `ai.pazl.alma.questions.5` | `ai.pazl.alma.questions.5` | yes |
+| `questions.10` | **Consumable** | `ai.pazl.alma.questions.10` | `ai.pazl.alma.questions.10` | yes |
+| `questions.25` | **Consumable** | `ai.pazl.alma.questions.25` | `ai.pazl.alma.questions.25` | yes |
+| `report.year` | **Consumable** | `ai.pazl.alma.report.year` | `ai.pazl.alma.report.year` | yes |
 
-**Восемь товаров у Apple** — шесть разовых (пять дверей и бандл), один расходуемый и одна
-автопродляемая подписка. **Восемь у Play**, те же. Потолок карточки у Apple — 20 позиций на обе
+**Двенадцать товаров у Apple** — шесть разовых (пять дверей и бандл), пять расходуемых
+(пара, три пачки вопросов и «Год вперёд» — волна Co-Star, 01.09.2026) и одна
+автопродляемая подписка. **Двенадцать у Play**, те же. Потолок карточки у Apple — 20 позиций на обе
 секции, запас есть.
 
 ### Что снято с продажи и почему это не «offered=False»

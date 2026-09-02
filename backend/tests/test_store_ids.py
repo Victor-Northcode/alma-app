@@ -67,15 +67,15 @@ def catalogue_keys() -> set[str]:
 
 def flutter_keys() -> set[str]:
     """The values of Flutter's `LadderKey`, which is the third copy of the enum."""
-    source = FLUTTER_LADDER.read_text()
+    source = FLUTTER_LADDER.read_text(encoding='utf-8')
     body = source.split("enum LadderKey {", 1)[1].split("\n}", 1)[0]
-    return set(re.findall(r"^\s*\w+\('([a-z.\-]+)'", body, re.M))
+    return set(re.findall(r"^\s*\w+\('([a-z0-9.\-]+)'", body, re.M))
 
 
 
 
 def storekit_ids() -> set[str]:
-    d = json.loads(STOREKIT.read_text())
+    d = json.loads(STOREKIT.read_text(encoding='utf-8'))
     ids = {p["productID"] for p in d.get("products", [])}
     for group in d.get("subscriptionGroups", []):
         ids |= {s["productID"] for s in group.get("subscriptions", [])}
@@ -86,7 +86,7 @@ def storekit_ids() -> set[str]:
 def storekit_types() -> dict[str, str]:
     """Product id → StoreKit type, which is the half that cannot be changed
     after a product is saved in App Store Connect."""
-    d = json.loads(STOREKIT.read_text())
+    d = json.loads(STOREKIT.read_text(encoding='utf-8'))
     types = {p["productID"]: p["type"] for p in d.get("products", [])}
     for group in d.get("subscriptionGroups", []):
         for sub in group.get("subscriptions", []):
@@ -96,7 +96,7 @@ def storekit_types() -> dict[str, str]:
 
 def products_md_keys() -> set[str]:
     """The first column of the table in §1, which is the catalogue key."""
-    rows = re.findall(r"^\|\s*`([a-z.\-]+)`\s*\|", PRODUCTS_MD.read_text(), re.M)
+    rows = re.findall(r"^\|\s*`([a-z0-9.\-]+)`\s*\|", PRODUCTS_MD.read_text(encoding='utf-8'), re.M)
     return set(rows)
 
 
@@ -133,9 +133,13 @@ def test_the_pair_is_the_one_consumable_and_everything_else_is_not() -> None:
     types = storekit_types()
     assert types[id_for("pair.check", prefix)] == "Consumable"
     for key, item in PRODUCTS.items():
-        if key == "pair.check":
-            continue
-        expected = "RecurringSubscription" if item.interval else "NonConsumable"
+        expected = (
+            "RecurringSubscription" if item.interval
+            # Расходуемые: пара, пачки вопросов, «Год вперёд» — оба магазина
+            # обязаны позволить купить их снова (волна Co-Star, 01.09.2026).
+            else "Consumable" if item.kind == "consumable"
+            else "NonConsumable"
+        )
         assert types[id_for(key, prefix)] == expected, key
 
 
@@ -144,7 +148,7 @@ def test_the_subscription_lives_in_the_group_it_has_to_live_in() -> None:
     """Одна группа `alma_access`: будущие weekly/annual (ТЗ §8, A/B после данных
     по удержанию) обязаны быть взаимозаменяемы с месячной, а товар, заведённый
     вне группы, переехать в группу потом не может."""
-    d = json.loads(STOREKIT.read_text())
+    d = json.loads(STOREKIT.read_text(encoding='utf-8'))
     groups = d.get("subscriptionGroups", [])
     assert len(groups) == 1
     assert groups[0]["name"] == "alma_access"
@@ -168,5 +172,5 @@ def test_the_prefix_has_one_value_in_two_places() -> None:
     сторожить совпадение с кодом, который никто не запускает.
     """
     prefix = settings().store_product_prefix
-    assert f"static const prefix = '{prefix}'" in FLUTTER_LADDER.read_text()
-    assert prefix in PRODUCTS_MD.read_text()
+    assert f"static const prefix = '{prefix}'" in FLUTTER_LADDER.read_text(encoding='utf-8')
+    assert prefix in PRODUCTS_MD.read_text(encoding='utf-8')

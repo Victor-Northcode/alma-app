@@ -72,10 +72,14 @@ void main() {
     final renewal = tester.getBottomLeft(find.textContaining('Renews monthly'));
     final button = tester.getTopLeft(find.textContaining(r'All of Alma'));
 
-    expect(forever.dy, lessThan(renewal.dy),
-        reason: 'строка о вечном читается первой из трёх');
-    expect(renewal.dy, lessThan(button.dy),
-        reason: 'абзац продления обязан стоять над ценой, а не под ней');
+    expect(forever.dy, lessThan(button.dy),
+        reason: 'строка о вечном читается до цены');
+    // Порядок перевёрнут 01.09.2026 (разбор подписок Co-Star): между
+    // решением и кнопкой не должно стоять юридического абзаца — продление
+    // теперь ПОД кнопкой, где глаз успевает прочитать «отменить в любой
+    // момент» до нажатия. Прежний тест прибивал обратное.
+    expect(button.dy, lessThan(renewal.dy),
+        reason: 'абзац продления стоит под кнопкой, не между решением и ценой');
 
     // Правило 1: цен на экране одна — своя. Ни двери, ни бандла.
     expect(find.textContaining(r'$4.99'), findsNothing);
@@ -160,6 +164,10 @@ const _price = <LadderKey, String>{
   LadderKey.pairCheck: r'$4.99',
   LadderKey.bundleStatic: r'$19.99',
   LadderKey.subMonthly: r'$9.99',
+  LadderKey.questions5: r'$2.99',
+  LadderKey.questions10: r'$5.99',
+  LadderKey.questions25: r'$7.99',
+  LadderKey.reportYear: r'$12.99',
 };
 
 const _raw = <LadderKey, double>{
@@ -171,6 +179,10 @@ const _raw = <LadderKey, double>{
   LadderKey.pairCheck: 4.99,
   LadderKey.bundleStatic: 19.99,
   LadderKey.subMonthly: 9.99,
+  LadderKey.questions5: 2.99,
+  LadderKey.questions10: 5.99,
+  LadderKey.questions25: 7.99,
+  LadderKey.reportYear: 12.99,
 };
 
 Map<String, dynamic> _plan(String slug, String kind, String display) => {

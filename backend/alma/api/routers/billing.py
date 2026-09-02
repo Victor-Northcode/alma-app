@@ -2042,6 +2042,13 @@ def _downsell(system: str | None, currency: str) -> dict | None:
         and item.sold_in(currency)
         and not item.interval
         and item.scope != entitlements.SCOPE_PAIR
+        # Даунселл придуман и одобрен владельцем для ДВЕРЕЙ. Пачки вопросов
+        # (scope="questions") и «Год вперёд» (lifetime_days) сюда не ходят:
+        # questions.5 за $2.99 стал бы вечно-самым-дешёвым, единственный
+        # пожизненный оффер сгорал бы на «system: questions:5», и клиент
+        # рисовал бы дверь с несуществующей системой (QA-ревью 01.09.2026).
+        and item.scope != "questions"
+        and not item.lifetime_days
     ]
     if not candidates:
         return None
@@ -2107,6 +2114,17 @@ async def held(
                 # address was told "we email you 3 days before", which we
                 # neither do nor can.
                 "source": e.source,
+                # Что за это списывается, словами покупателя — «849 ₽».
+                # Только там, где деньги проходили через нас: у магазинных
+                # грантов сумма — знание магазина, и приложение печатает цену
+                # StoreKit, а не нашу. Нужна экрану плана (01.09.2026,
+                # разбор подписок Co-Star: «цена и дата видны без нажатий»).
+                "paid_display": (
+                    prices.format_price(e.amount_cents, e.currency)
+                    if e.amount_cents and e.currency
+                    and e.source not in ("appstore", "googleplay")
+                    else None
+                ),
             }
             for e in rows
         ],

@@ -38,7 +38,19 @@ enum LadderKey {
   bundleStatic('bundle.static', null),
 
   /// Всё, пока подписка жива.
-  subMonthly('sub.monthly', null);
+  subMonthly('sub.monthly', null),
+
+  /// Пачки вопросов (01.09.2026, витрина Co-Star «дешёвый первый платёж»):
+  /// кучка ходов сильной модели, тратится после включённых порций.
+  /// Расходуемые — покупаются сколько угодно раз, размеры складываются.
+  questions5('questions.5', null),
+  questions10('questions.10', null),
+  questions25('questions.25', null),
+
+  /// «Год вперёд»: полный соляр до следующего дня рождения. Расходуемый —
+  /// следующий год покупается снова; `system` намеренно null: это аренда
+  /// на год, не дверь, и рисовать её дверью соляра нельзя.
+  reportYear('report.year', null);
 
   /// Расходуемая ли ступень — то есть покупается ли она многократно.
   ///
@@ -46,7 +58,15 @@ enum LadderKey {
   /// (`buyConsumable` против `buyNonConsumable`), и ошибка здесь не косметика:
   /// consumable, купленный как non-consumable, Play продаёт один раз за жизнь
   /// аккаунта — вторая пара не купилась бы никогда.
-  bool get consumable => this == LadderKey.pairCheck;
+  bool get consumable => const {
+        LadderKey.pairCheck,
+        // Пачки и год (01.09.2026): non-consumable в Play продавался бы
+        // один раз за жизнь аккаунта — вторая пачка не купилась бы никогда.
+        LadderKey.questions5,
+        LadderKey.questions10,
+        LadderKey.questions25,
+        LadderKey.reportYear,
+      }.contains(this);
 
   const LadderKey(this.slug, this.system);
 

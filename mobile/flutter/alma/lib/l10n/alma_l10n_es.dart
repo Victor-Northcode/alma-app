@@ -1304,6 +1304,12 @@ class LEs extends L {
   String get scrSignInOrWith => 'o entra con';
 
   @override
+  String get scrTodayShare => 'Compartir mi día';
+
+  @override
+  String get scrSignInOrEmail => 'o por correo';
+
+  @override
   String get scrSignInPrivacy =>
       'Tu correo se usa para el enlace de acceso y nada más. No enviamos boletines.';
 

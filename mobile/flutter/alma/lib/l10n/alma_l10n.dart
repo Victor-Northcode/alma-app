@@ -2411,6 +2411,18 @@ abstract class L {
   /// **'or sign in with'**
   String get scrSignInOrWith;
 
+  /// No description provided for @scrTodayShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my day'**
+  String get scrTodayShare;
+
+  /// No description provided for @scrSignInOrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'or by email'**
+  String get scrSignInOrEmail;
+
   /// from Screens/scr.signIn.privacy
   ///
   /// In en, this message translates to:

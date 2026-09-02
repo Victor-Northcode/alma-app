@@ -290,6 +290,10 @@ BUNDLE_QUESTIONS_METRIC = "questions_bundle"
 #: The welcome bundle's own counter, so it is not confused with either the
 #: daily allowance or a purchase's bundle.
 WELCOME_QUESTIONS_METRIC = "welcome_questions"
+#: Купленные пачки вопросов (01.09.2026, витрина Co-Star): счётчик на жизнь
+#: аккаунта, как у включённой в покупку порции, — потолок для него считается
+#: из грантов (`_pack_credits`), а не из конфига, и растёт с каждой покупкой.
+PACK_QUESTIONS_METRIC = "questions_pack"
 
 
 @dataclass(frozen=True, slots=True)
@@ -365,6 +369,24 @@ def _bundle(*, strong: str) -> Allowance:
     return Allowance(
         "owner", strong, settings().owner_question_bundle, "once", BUNDLE_QUESTIONS_METRIC
     )
+
+
+async def _pack_credits(session, user) -> int:
+    """Сколько вопросов человек купил пачками — за всю жизнь аккаунта.
+
+    Размер живёт в самой строке гранта (`system="questions:5"`), а не в
+    каталоге на момент чтения: сколько купили, столько и останется, как бы
+    полка ни менялась. Отозванные гранты (возврат денег) не считаются —
+    возврат забирает и вопросы, которые он оплачивал.
+    """
+    total = 0
+    for row in await entitlements.for_user(session, user):
+        if row.scope != "questions" or row.revoked_at is not None:
+            continue
+        _, _, count = row.system.partition(":")
+        if count.isdigit():
+            total += int(count)
+    return total
 
 
 def _welcome(*, mid: str) -> Allowance:
@@ -3100,6 +3122,21 @@ async def _chat_gate(session, user, *, locale: str, message: str = "") -> tuple[
             allowance = welcome
 
     asked = await _asked(session, user, allowance)
+    if asked >= allowance.limit:
+        # **Купленная пачка — после включённых порций** (01.09.2026, витрина
+        # Co-Star). Порядок — доброта к деньгам покупателя: подписчик сперва
+        # тратит месячную порцию, бесплатный — приветственную, и только у
+        # стены открывается купленная кучка. Отвечает она сильной моделью —
+        # тем же голосом, что платные главы: за пачку заплачено. Потолок
+        # считан из грантов, а не из конфига, и растёт с каждой покупкой.
+        credits = await _pack_credits(session, user)
+        if credits:
+            pack = Allowance(
+                "pack", strong, credits, "once", PACK_QUESTIONS_METRIC
+            )
+            if await _asked(session, user, pack) < pack.limit:
+                allowance = pack
+                asked = await _asked(session, user, pack)
     if asked >= allowance.limit and not validator.crisis(message):
         # Localised, first person, and it ends on what the reader can still
         # have. The English fragment this replaces — "that is 3 questions
@@ -3152,6 +3189,15 @@ async def _chat_gate(session, user, *, locale: str, message: str = "") -> tuple[
                 "period": allowance.period,
             },
         )
+    # **Пачка отвечает по платному потолку месяца.** `tier_of` для
+    # расходуемых грантов нарочно остаётся "free", и без этой строки
+    # `_guard_month` резал бы КУПЛЕННЫЕ вопросы бесплатным бюджетом:
+    # 25 ходов сильной моделью стоят ~$1.92 против $1.10 free-потолка —
+    # человек заплатил $7.99 и упёрся бы в 429 на середине пачки (QA-ревью
+    # 01.09.2026). Владельческий потолок безопасен: трата и так ограничена
+    # счётом купленных вопросов.
+    if allowance.tier == "pack":
+        return allowance, "owner"
     return allowance, tier
 
 

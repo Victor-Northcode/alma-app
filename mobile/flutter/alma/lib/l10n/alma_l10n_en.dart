@@ -1298,6 +1298,12 @@ class LEn extends L {
   String get scrSignInOrWith => 'or sign in with';
 
   @override
+  String get scrTodayShare => 'Share my day';
+
+  @override
+  String get scrSignInOrEmail => 'or by email';
+
+  @override
   String get scrSignInPrivacy =>
       'We use your address for the sign-in link and nothing else. There is no newsletter.';
 

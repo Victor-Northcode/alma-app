@@ -389,6 +389,8 @@
   "scrSignInLead": "Войди — и карта с покупками будут с тобой на любом телефоне.",
   "scrSignInLinkSent": "Письмо отправлено — проверь почту.",
   "scrSignInOrWith": "или войди через",
+  "scrTodayShare": "Поделиться днём",
+  "scrSignInOrEmail": "или по почте",
   "scrSignInPrivacy": "Почта нужна только для входа. Никаких рассылок.",
   "scrSignInSendLink": "Отправить код на почту",
   "scrSignInSendLinkShort": "Отправить код",

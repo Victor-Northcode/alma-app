@@ -61,11 +61,15 @@ class JourneyScreen extends StatefulWidget {
 /// Шесть шагов, как на нативе. Церемония — не украшение и не заставка: это
 /// единственный экран, где системы действительно считаются, и человек видит,
 /// что за него взялись, вместо белого поля с крутилкой.
-// Интерес стоит вторым — «шаг II» холста V0. Шагов стало семь, и счётчик
-// печатает семь: холст обещал VI, но сам же держал это открытым вопросом
-// (сводка №10 — счётчик обещает шесть, нарисовано два). Считать по-настоящему
-// честнее, чем подгонять число под рисунок.
-enum _Step { name, interest, about, date, time, place, ceremony }
+///
+/// **Дата — первой** (владелец, 01.09.2026, разбор реги Co-Star: «дата
+/// раньше имени; имя, пол, интерес — потом, когда зацепился»). Анкета
+/// открывалась знакомством — имя, «что важнее», «о себе», — то есть тремя
+/// личными вопросами до того, как продукт хоть что-то пообещал. Теперь
+/// сначала рождение — дата, время, место, — а личное после: человеку,
+/// который уже отдал дату, есть что терять, и он отвечает охотнее. Порядок
+/// enum — это и есть порядок шагов: навигация ходит по индексам.
+enum _Step { date, time, place, name, interest, about, ceremony }
 
 class _JourneyScreenState extends State<JourneyScreen> {
   /// С какого шага открыться. **Вход для проверки, как на нативе**
@@ -74,7 +78,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
   /// кадром иначе нечем. В обычной сборке константа пуста и шаг первый.
   _Step _step = _Step.values.firstWhere(
     (step) => step.name == const String.fromEnvironment('ALMA_JOURNEY_STEP'),
-    orElse: () => _Step.name,
+    orElse: () => _Step.date,
   );
 
   final _name = TextEditingController();
@@ -318,7 +322,7 @@ class _JourneyScreenState extends State<JourneyScreen> {
                   style: AlmaType.numeral.copyWith(color: AlmaPalette.gold),
                 ),
                 const Spacer(),
-                if (_step != _Step.name)
+                if (_step != _Step.date)
                   IconButton(
                     onPressed: () =>
                         setState(() => _step = _Step.values[_step.index - 1]),
@@ -631,9 +635,16 @@ class _JourneyScreenState extends State<JourneyScreen> {
       };
 
   Widget _cta(L l) {
-    final isLast = _step == _Step.place;
+    // Последний шаг перед церемонией — «о себе»: рождение собрано первым
+    // блоком, личное — вторым, и кнопка «Построить» стоит в конце второго.
+    final isLast = _step == _Step.about;
     final enabled = !_saving &&
-        (!isLast || _place != null) &&
+        // Место запирает СВОЙ шаг, а не последний: раньше место и было
+        // последним, и `isLast || _place` совпадали; после перестановки
+        // (дата первой, 01.09.2026) человек уходил с шага места без города
+        // и утыкался в немую погасшую кнопку тремя шагами позже — на экране
+        // про пол, где о городе ни слова. Поймано QA-ревью той же волны.
+        !(_step == _Step.place && _place == null) &&
         !(_step == _Step.date && !_dateComplete) &&
         !(_step == _Step.date && _dateImpossible) &&
         !(_step == _Step.time && _timeHalfGiven);

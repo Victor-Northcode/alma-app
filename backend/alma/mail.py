@@ -484,6 +484,10 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "pair.check": "Compatibility report",
         "bundle.static": "All five readings",
         "sub.monthly": "Everything, monthly",
+        "questions.5": "5 questions to Alma",
+        "questions.10": "10 questions to Alma",
+        "questions.25": "25 questions to Alma",
+        "report.year": "Your year ahead",
     },
     "es": {
         "door.natal": "Carta natal", "door.numerology": "Numerología",
@@ -493,6 +497,10 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "pair.check": "Informe de compatibilidad",
         "bundle.static": "Las cinco lecturas",
         "sub.monthly": "Todo, cada mes",
+        "questions.5": "5 preguntas a Alma",
+        "questions.10": "10 preguntas a Alma",
+        "questions.25": "25 preguntas a Alma",
+        "report.year": "Tu año por delante",
     },
     "de": {
         "door.natal": "Geburtshoroskop", "door.numerology": "Numerologie",
@@ -502,6 +510,10 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "pair.check": "Partnerschaftsanalyse",
         "bundle.static": "Alle fünf Deutungen",
         "sub.monthly": "Alles, monatlich",
+        "questions.5": "5 Fragen an Alma",
+        "questions.10": "10 Fragen an Alma",
+        "questions.25": "25 Fragen an Alma",
+        "report.year": "Dein Jahr voraus",
     },
     "it": {
         "door.natal": "Tema natale", "door.numerology": "Numerologia",
@@ -511,6 +523,10 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "pair.check": "Analisi di coppia",
         "bundle.static": "Tutte e cinque le letture",
         "sub.monthly": "Tutto, ogni mese",
+        "questions.5": "5 domande ad Alma",
+        "questions.10": "10 domande ad Alma",
+        "questions.25": "25 domande ad Alma",
+        "report.year": "Il tuo anno davanti",
     },
     "fr": {
         "door.natal": "Thème natal", "door.numerology": "Numérologie",
@@ -520,6 +536,10 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "pair.check": "Analyse de compatibilité",
         "bundle.static": "Les cinq lectures",
         "sub.monthly": "Tout, chaque mois",
+        "questions.5": "5 questions à Alma",
+        "questions.10": "10 questions à Alma",
+        "questions.25": "25 questions à Alma",
+        "report.year": "Ton année à venir",
     },
     "pt-BR": {
         "door.natal": "Mapa natal", "door.numerology": "Numerologia",
@@ -529,6 +549,10 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "pair.check": "Análise do casal",
         "bundle.static": "As cinco leituras",
         "sub.monthly": "Tudo, todo mês",
+        "questions.5": "5 perguntas à Alma",
+        "questions.10": "10 perguntas à Alma",
+        "questions.25": "25 perguntas à Alma",
+        "report.year": "Seu ano pela frente",
     },
     "ru": {
         "door.natal": "Натальная карта", "door.numerology": "Нумерология",
@@ -538,6 +562,10 @@ RECEIPT_PRODUCTS: dict[str, dict[str, str]] = {
         "pair.check": "Разбор совместимости",
         "bundle.static": "Все пять разборов",
         "sub.monthly": "Вся Alma — на месяц",
+        "questions.5": "5 вопросов к Alma",
+        "questions.10": "10 вопросов к Alma",
+        "questions.25": "25 вопросов к Alma",
+        "report.year": "Год вперёд",
     },
 }
 

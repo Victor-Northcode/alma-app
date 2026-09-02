@@ -1308,6 +1308,12 @@ class LFr extends L {
   String get scrSignInOrWith => 'ou connecte-toi avec';
 
   @override
+  String get scrTodayShare => 'Partager ma journée';
+
+  @override
+  String get scrSignInOrEmail => 'ou par e-mail';
+
+  @override
   String get scrSignInPrivacy =>
       'Nous utilisons ton adresse pour le lien de connexion et rien d’autre. Il n’y a pas de newsletter.';
 

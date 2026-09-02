@@ -153,7 +153,11 @@ def test_a_recurring_plan_is_recognised_by_its_interval_not_by_its_name():
             assert granted is None, key
             continue
         assert granted is not None, key
-        assert (granted.duration is not None) == bool(item.interval), key
+        # Срок теперь несут двое: подписка (interval) и «Год вперёд»
+        # (lifetime_days, 01.09.2026) — аренда соляра на год, не план.
+        assert (granted.duration is not None) == bool(
+            item.interval or item.lifetime_days
+        ), key
 
 
 def test_an_event_that_does_not_grant_grants_nothing():

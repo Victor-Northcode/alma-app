@@ -992,7 +992,17 @@ def entitlement_for(event: NormalisedEvent) -> Grant | None:
             subscription_id=event.subscription_id,
         )
     return Grant(
-        system=product.slug, kind=product.kind, duration=None, scope=product.scope
+        system=product.slug,
+        kind=product.kind,
+        # «Год вперёд» и всё будущее с собственным сроком: товар сам знает,
+        # сколько живёт его доступ (`lifetime_days`), — ноль остаётся
+        # бессрочным, как у дверей и пачек вопросов.
+        duration=(
+            timedelta(days=product.lifetime_days)
+            if product.lifetime_days
+            else None
+        ),
+        scope=product.scope,
     )
 
 
