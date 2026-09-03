@@ -29,7 +29,7 @@ import { Starfield } from "@/components/sky/Sky";
 import { GetTheApp } from "@/components/handoff/GetTheApp";
 import { API_BASE, api, isOk, readToken, writeToken } from "@/lib/api";
 import { looksLikeEmail } from "@/lib/email";
-import { MERCHANT_RU, MERCHANT_RU_LINE } from "@/lib/merchant-ru";
+import { MERCHANT_RU_LINE } from "@/lib/merchant-ru";
 import { RU_PAYMENTS } from "@/lib/ru-payments";
 
 /** Вклейки — те же файлы, что видит приложение, с того же сервера. */
@@ -150,11 +150,11 @@ function PayComingPage() {
         <GetTheApp carry={false} />
         <div className="pay-legal">
           <p className="signin-note">
-            {MERCHANT_RU_LINE} Alma носит ознакомительный и развлекательный
-            характер и не является медицинской, психологической, юридической
-            или финансовой консультацией. <a href="/terms">Условия</a> ·{" "}
+            {MERCHANT_RU_LINE} Сервис ознакомительный — не медицинская и не
+            финансовая консультация. <a href="/terms">Условия</a> ·{" "}
             <a href="/privacy">Конфиденциальность</a> ·{" "}
-            <a href="/refunds">Возвраты</a>
+            <a href="/refunds">Возвраты</a> ·{" "}
+            <a href="/imprint#ru-seller">Реквизиты</a>
           </p>
         </div>
       </div>
@@ -436,30 +436,27 @@ function PayShopPage() {
         )}
 
         <div className="pay-legal">
+          {/* Три короткие строки, не простыня (владелец, 02.09.2026: «зачем
+              так много текста… без адреса тут»). Адрес и банковские
+              реквизиты живут на странице «Реквизиты» (/imprint#ru-seller);
+              здесь — минимум оферты: кто продаёт и как устроена подписка.
+              Имя продавца — из lib/merchant-ru.ts, не из каталога: каталог
+              называет merchant глобального процессора (ловилось на проде
+              30.08.2026 строкой про Paddle). */}
           <p className="signin-note">
-            Приложение Alma — в App Store и Google Play. После оплаты открой
-            его и войди той же почтой: доступ подтянется сам.
+            После оплаты открой приложение и войди той же почтой — доступ
+            подтянется сам.
           </p>
           <p className="signin-note">
-            {/* Реквизиты — из lib/merchant-ru.ts, не из каталога: каталог
-                называет merchant глобального процессора, и до включения
-                ключей Т-Банка это был Paddle — строка «Продавец:
-                Paddle.com Market Ltd» рядом с «оплату принимает Т-Банк»
-                жила на проде и противоречила сама себе (поймано
-                30.08.2026). Продавец этой витрины известен и без env —
-                его продиктовал владелец. */}
-            {MERCHANT_RU_LINE} Адрес: {MERCHANT_RU.address}. Оплату
-            принимает Т-Банк. Цена и период списания видны до оплаты.
-            Подписка продлевается автоматически, пока не отменишь; после
-            отмены доступ сохраняется до конца оплаченного периода, разовые
-            покупки остаются навсегда.
+            {MERCHANT_RU_LINE} Оплату принимает Т-Банк. Подписка
+            продлевается, пока не отменишь; разовые покупки — навсегда.
           </p>
           <p className="signin-note">
-            Alma носит ознакомительный и развлекательный характер и не
-            является медицинской, психологической, юридической или финансовой
-            консультацией. <a href="/terms">Условия</a> ·{" "}
+            Сервис ознакомительный — не медицинская и не финансовая
+            консультация. <a href="/terms">Условия</a> ·{" "}
             <a href="/privacy">Конфиденциальность</a> ·{" "}
-            <a href="/refunds">Возвраты</a>
+            <a href="/refunds">Возвраты</a> ·{" "}
+            <a href="/imprint#ru-seller">Реквизиты</a>
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Blank, DocFoot, DocHead, Fact, Para, Sec } from "@/components/legal/Doc";
 import { CONTACT, MERCHANT, MIN_AGE, OPERATOR, STORE_MERCHANTS } from "@/lib/legal";
+import { MERCHANT_RU } from "@/lib/merchant-ru";
 
 export const metadata: Metadata = {
   title: "Imprint · Alma",
@@ -95,7 +96,7 @@ export default function ImprintPage() {
           {STORE_MERCHANTS[1].merchant} on {STORE_MERCHANTS[1].platform},{" "}
           {STORE_MERCHANTS[0].merchant} on {STORE_MERCHANTS[0].platform}. They are the seller, the
           invoice issuer and the party that handles tax, and their own company details are on every
-          receipt they send. Nothing is sold on this website.
+          receipt they send.
         </Para>
         <Para>
           A payment made outside a store — the card processor Alma is configured with is{" "}
@@ -103,6 +104,27 @@ export default function ImprintPage() {
           case means in practice is set out in <Link href="/refunds">refunds</Link> and{" "}
           <Link href="/subscription-terms">subscription terms</Link>.
         </Para>
+        {/* Полные реквизиты продавца рублёвой витрины живут ЗДЕСЬ, а не на
+            странице оплаты, — слово владельца от 02.09.2026 («без адреса
+            там, адрес в документе»): витрине — короткая строка, документу —
+            всё, что требует закон об оферте. Источник — lib/merchant-ru.ts,
+            вторых копий этих строк быть не должно. */}
+        <div id="ru-seller">
+          <Para>
+            Покупателям из России веб-оплату (когда она включена) продаёт
+            индивидуальный предприниматель — реквизиты продавца:
+          </Para>
+          <div className="legal-facts" lang="ru">
+            <Fact label="Продавец">{MERCHANT_RU.name}</Fact>
+            <Fact label="ИНН">{MERCHANT_RU.inn}</Fact>
+            <Fact label="ОГРНИП">{MERCHANT_RU.ogrnip}</Fact>
+            <Fact label="Адрес">{MERCHANT_RU.address}</Fact>
+            <Fact label="Банк">{MERCHANT_RU.bank}</Fact>
+            <Fact label="Р/с">{MERCHANT_RU.account}</Fact>
+            <Fact label="БИК">{MERCHANT_RU.bik}</Fact>
+            <Fact label="К/с">{MERCHANT_RU.corrAccount}</Fact>
+          </div>
+        </div>
       </Sec>
 
       <Sec title="The product">
