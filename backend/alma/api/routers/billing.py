@@ -475,11 +475,37 @@ def _usable_address(email: str) -> bool:
     return "@" in email and not email.startswith("@") and not email.endswith("@")
 
 
+# Магазины, у которых есть собственная дверь `/webhook/<имя>`.
+#
+# **Только те двое, чьи уведомления удостоверяют сами себя**: документ Apple —
+# JWS с цепочкой до корня Apple, толчок Google — OIDC-токен с проверяемой
+# аудиторией. Ни тому ни другому не нужен наш общий секрет, поэтому их можно
+# принимать, каким бы ни был сконфигурированный веб-процессор. Карточные
+# процессоры (Paddle, Dodo, Т-Банк) подписывают ЧУЖИМ ключом, живущим в
+# конфигурации, — их дверь одна, общая, и выбирается переменной окружения.
+_STORE_NOTIFICATION_DOORS = {"appstore", "googleplay"}
+
+
 @router.post("/webhook", include_in_schema=False)
+@router.post("/webhook/{door}", include_in_schema=False)
 async def webhook(
-    request: Request, session: SessionDep, background: BackgroundTasks
+    request: Request,
+    session: SessionDep,
+    background: BackgroundTasks,
+    door: str | None = None,
 ) -> dict:
     """The configured processor calls this. Nobody else may.
+
+    **У магазинов — свои двери: `/webhook/appstore` и `/webhook/googleplay`.**
+    Голый `/webhook` проверяет подпись сконфигурированного процессора — и
+    только его. Пока продавался веб (Paddle, потом Т-Банк), в консоли App
+    Store Connect и в подписке Pub/Sub стоял именно голый адрес: первое же
+    уведомление Apple разбилось бы об проверку Paddle с 401, Apple пометил бы
+    endpoint неработающим, а возвраты и продления так и не доехали бы —
+    покупка через `iap/verify` открылась бы, но отобрать её возврат уже не
+    смог бы. Найдено 04.09.2026 при проверке «/ready отдаёт false»: маршрут
+    один, а источников уведомлений в проде три одновременно (два магазина и
+    веб-касса), и одна переменная окружения не может назвать всех троих.
 
     Verified before it is parsed, recorded before it is processed, and a
     second delivery of the same event id does nothing — providers retry, and
@@ -513,7 +539,13 @@ async def webhook(
     processor gives up and retries, because that retry is how one payment
     becomes two grants.
     """
-    adapter = billing_adapter()
+    if door is not None and door not in _STORE_NOTIFICATION_DOORS:
+        # Именованная дверь — только магазинам. `/webhook/paddle` отвечал бы
+        # проверкой без секрета, то есть превращал бы опечатку в конфигурации
+        # консоли в тихий отказ всех уведомлений; 404 говорит об опечатке
+        # сразу.
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="no such webhook")
+    adapter = billing_adapter(door)
     raw = await request.body()
     try:
         adapter.verify(raw, request.headers)

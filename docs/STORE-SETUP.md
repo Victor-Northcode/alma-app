@@ -31,7 +31,10 @@
    («или вся Alma за три доллара сверху»), год = 1.3 месяца. Все точки US
    есть в сетке Apple. Локальные цены — `backend/alma/billing/catalogue.py`.
 2. **App Store Server Notifications V2** → URL
-   `https://api-alma.pazl.ai/v1/billing/webhook` (продакшен и сандбокс).
+   `https://api-alma.pazl.ai/v1/billing/webhook/appstore` (продакшен и
+   сандбокс). Именно с `/appstore` на конце: голый `/webhook` проверяет подпись
+   того процессора, что выбран переменной окружения (веб-касса), и уведомления
+   Apple он отвергал бы с 401.
 3. **Sign in with Apple** — уже включён; ничего не трогать.
 4. **Разрешение на внешнюю ссылку оплаты** (для кнопки Т-Банка в RU-сторе) —
    отдельная заявка Apple; до одобрения кнопки в iOS нет и не будет.
@@ -46,7 +49,8 @@
    приложение, Subscription (месяц) для `sub.monthly`.
 2. **Сервисный аккаунт** с правами Android Publisher → JSON-ключ.
 3. **Real-time developer notifications**: Pub/Sub-топик → push-подписка на
-   `https://api-alma.pazl.ai/v1/billing/webhook` с OIDC-токеном.
+   `https://api-alma.pazl.ai/v1/billing/webhook/googleplay` с OIDC-токеном
+   (с `/googleplay` на конце — та же причина, что у Apple выше).
 4. В `.env`: `GOOGLE_PLAY_PACKAGE_NAME=`,
    `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON=` (строка или путь), audience/сервисный
    аккаунт подписки — переменные ниже по `.env.example`.

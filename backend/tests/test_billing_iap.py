@@ -722,3 +722,64 @@ def test_a_refund_takes_back_a_purchase_the_store_told_us_about_first(
     assert "natal" not in _held(notified_api, auth_headers)["unlocked"], (
         f"деньги вернулись по транзакции {transaction_id}, доступ обязан закрыться"
     )
+
+
+# ══════════════════════════════════════════════════════════════════════════
+#  Named doors: store notifications while a WEB processor is configured
+# ══════════════════════════════════════════════════════════════════════════
+
+def test_apple_notification_lands_through_its_named_door(
+    store_api, auth_headers, apple
+):
+    """Возврат Apple доезжает через `/webhook/appstore` при чужом процессоре.
+
+    В проде сконфигурирован веб-процессор (Paddle, позже Т-Банк), а App Store
+    Connect и Pub/Sub шлют уведомления параллельно с ним. До именованных
+    дверей оба магазина были направлены на голый `/webhook`, и подпись Apple
+    разбивалась о проверку Paddle: покупка открывалась через `iap/verify`, а
+    возврат не закрывал её никогда (найдено 04.09.2026). Здесь провайдер
+    нарочно НЕ appstore — `store_api`, не `notified_api`.
+    """
+    import json
+
+    transaction = _transaction(product="door.natal")
+    _verify(
+        store_api,
+        auth_headers,
+        transaction=_sign(transaction, apple["key"], apple["chain"]),
+        product="door.natal",
+    )
+    assert _held(store_api, auth_headers)["unlocked"] == ["natal"]
+
+    response = store_api.post(
+        "/v1/billing/webhook/appstore",
+        content=json.dumps(
+            _notification(
+                apple,
+                kind="REFUND",
+                transaction=transaction,
+                uuid="8ad5a2f0-0000-4000-8000-0000000ddddd",
+            )
+        ).encode(),
+    )
+    assert response.status_code == 200, (
+        "уведомление магазина обязано приниматься его собственной дверью, "
+        "каким бы ни был сконфигурированный процессор"
+    )
+    assert _held(store_api, auth_headers)["unlocked"] == []
+
+
+def test_named_webhook_doors_exist_only_for_stores(store_api):
+    """`/webhook/paddle` — 404: карточный процессор ходит в общую дверь.
+
+    Именованная дверь без секрета превращала бы опечатку в консоли в тихий
+    отказ всех уведомлений; 404 говорит об опечатке сразу.
+    """
+    assert (
+        store_api.post("/v1/billing/webhook/paddle", content=b"{}").status_code
+        == 404
+    )
+    assert (
+        store_api.post("/v1/billing/webhook/nonsense", content=b"{}").status_code
+        == 404
+    )
