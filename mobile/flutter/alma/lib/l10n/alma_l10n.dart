@@ -2789,6 +2789,54 @@ abstract class L {
   /// **'Renews monthly · cancel any time in Google Play'**
   String get paywallV3SubRenewalDisclosurePlay;
 
+  /// No description provided for @paywallNotVerifiedPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'That purchase could not be verified, so nothing has been opened. If Google Play charged you, write to us and we will sort it out.'**
+  String get paywallNotVerifiedPlay;
+
+  /// No description provided for @paywallVerifyLaterPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play has taken the payment. We could not confirm it just now — it will open by itself shortly, and nothing is lost.'**
+  String get paywallVerifyLaterPlay;
+
+  /// No description provided for @paywallWithdrawnPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play has taken that purchase back — refunded or revoked — so anything it opened is closed again.'**
+  String get paywallWithdrawnPlay;
+
+  /// No description provided for @paywallV3PlansLegalPlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Charged through Google Play on confirm · the subscription renews monthly unless cancelled before the period ends · one-time purchases never renew'**
+  String get paywallV3PlansLegalPlay;
+
+  /// No description provided for @paywallV3CancelNotePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling opens your Google Play subscriptions · your subscription runs until {date}'**
+  String paywallV3CancelNotePlay(Object date);
+
+  /// No description provided for @paywallV3CancelNoteNoDatePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelling opens your Google Play subscriptions'**
+  String get paywallV3CancelNoteNoDatePlay;
+
+  /// No description provided for @paywallV3StateProcessingNotePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play has taken the payment and we are recording it. This finishes by itself, even if you close the app.'**
+  String get paywallV3StateProcessingNotePlay;
+
+  /// No description provided for @cabPlanRenewsAtStorePlay.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews {p1} · Google Play charges it and warns you before it does'**
+  String cabPlanRenewsAtStorePlay(Object p1);
+
   /// monetization v3 · А11 sub.includes_transits · V6/V8
   ///
   /// In en, this message translates to:

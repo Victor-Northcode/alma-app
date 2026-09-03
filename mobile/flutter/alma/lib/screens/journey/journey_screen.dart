@@ -16,13 +16,15 @@ import '../../state/session.dart';
 import '../systems/writing_art.dart';
 import 'push_ask_screen.dart';
 
-/// Путешествие: шесть шагов от имени до церемонии и трёхшаговый хвост за ней.
+/// Путешествие: семь шагов от даты рождения до церемонии и трёхшаговый хвост.
 ///
-/// Порт `mobile/ios/Alma/Screens/Journey/*`. Порядок шагов тот же — имя, о
-/// себе, дата, время, место, церемония, — и обещание под первым вопросом то
-/// же: «Пока ничего не сохраняется». Это правда буквально: профиль не
-/// создаётся до нажатия «Построить моё небо», и человек, закрывший путешествие
-/// на четвёртом шаге, не оставил на сервере ничего.
+/// Порт `mobile/ios/Alma/Screens/Journey/*`, но порядок шагов не нативный:
+/// дата, время, место, имя, интерес, о себе, церемония. Дата встала первой
+/// 01.09.2026 по слову владельца — рега Co-Star открывается тем же вопросом,
+/// и человек, которому продукт обещал небо, должен сперва назвать небо, а не
+/// представиться. Обещание «Пока ничего не сохраняется» осталось правдой
+/// буквально: профиль не создаётся до нажатия «Построить моё небо», и человек,
+/// закрывший путешествие на четвёртом шаге, не оставил на сервере ничего.
 ///
 /// ## Хвост: `s37` → `s39` → `s44`
 ///
@@ -731,9 +733,8 @@ class _JourneyScreenState extends State<JourneyScreen> {
                         : const Color(0xFFF6F1E4).withValues(alpha: 0.85))),
           ),
           if (selected)
-            Text('✓',
-                style: AlmaType.meta
-                    .copyWith(fontSize: 13, color: AlmaPalette.gold)),
+            const Icon(Icons.check_rounded,
+                size: 15, color: AlmaPalette.gold),
         ]),
       ),
     );
@@ -829,9 +830,8 @@ class _PlaceRow extends StatelessWidget {
               ),
             ),
             if (selected)
-              Text('✓',
-                  style: AlmaType.meta
-                      .copyWith(fontSize: 13, color: AlmaPalette.gold)),
+              const Icon(Icons.check_rounded,
+                  size: 15, color: AlmaPalette.gold),
           ],
         ),
       ),

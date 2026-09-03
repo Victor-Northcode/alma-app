@@ -49,4 +49,26 @@ extension StoreWords on L {
   String get storeRenewalDisclosure => _apple
       ? paywallV3SubRenewalDisclosure
       : paywallV3SubRenewalDisclosurePlay;
+
+  // Восемь строк ниже ходили в обход этого файла и на живом Android
+  // печатали «Apple принял платёж» и «настройки Apple ID» (владелец,
+  // 02.09.2026: «на андроиде написано что оплату принимает эпл — зачем»).
+  // Теперь пары полные, и НИ ОДНА строка, называющая магазин, не имеет
+  // права зваться с экрана напрямую — только отсюда.
+  String get storeNotVerified =>
+      _apple ? paywallNotVerified : paywallNotVerifiedPlay;
+  String get storeVerifyLater =>
+      _apple ? paywallVerifyLater : paywallVerifyLaterPlay;
+  String get storeWithdrawn =>
+      _apple ? paywallWithdrawn : paywallWithdrawnPlay;
+  String get storePlansLegal =>
+      _apple ? paywallV3PlansLegal : paywallV3PlansLegalPlay;
+  String storeCancelNote(String date) =>
+      _apple ? paywallV3CancelNote(date) : paywallV3CancelNotePlay(date);
+  String get storeCancelNoteNoDate =>
+      _apple ? paywallV3CancelNoteNoDate : paywallV3CancelNoteNoDatePlay;
+  String get storeProcessingNote =>
+      _apple ? paywallV3StateProcessingNote : paywallV3StateProcessingNotePlay;
+  String storePlanRenewsAt(String date) =>
+      _apple ? cabPlanRenewsAtStore(date) : cabPlanRenewsAtStorePlay(date);
 }

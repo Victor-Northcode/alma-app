@@ -452,6 +452,24 @@
   "paywallV3SubPrice": "{price} / месяц",
   "paywallV3SubRenewalDisclosure": "Продлевается ежемесячно · отменить можно в любой момент в настройках Apple ID",
   "paywallV3SubRenewalDisclosurePlay": "Продлевается каждый месяц · отмена в любой момент в Google Play",
+  "paywallNotVerifiedPlay": "Эту покупку не удалось проверить, поэтому ничего не открылось. Если Google Play списал деньги — напиши нам, разберёмся.",
+  "paywallVerifyLaterPlay": "Google Play принял платёж. В эту секунду мы не смогли его подтвердить — скоро всё откроется само, ничего не потеряно.",
+  "paywallWithdrawnPlay": "Google Play отозвал эту покупку — возврат или отмена, — поэтому всё, что она открывала, снова закрыто.",
+  "paywallV3PlansLegalPlay": "Списывается через Google Play при подтверждении · подписка продлевается ежемесячно, если не отменить до конца периода · разовые покупки не продлеваются",
+  "paywallV3CancelNotePlay": "Отмена откроет подписки Google Play · подписка действует до {date}",
+  "@paywallV3CancelNotePlay": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "paywallV3CancelNoteNoDatePlay": "Отмена откроет подписки Google Play",
+  "paywallV3StateProcessingNotePlay": "Google Play принял платёж, мы его записываем. Всё завершится само, даже если закрыть приложение.",
+  "cabPlanRenewsAtStorePlay": "Продлевается {p1} · Google Play спишет и предупредит перед списанием",
+  "@cabPlanRenewsAtStorePlay": {
+    "placeholders": {
+      "p1": {}
+    }
+  },
   "paywallV3SubIncludesTransits": "Транзиты и утренний гороскоп, написанные по твоей карте",
   "paywallV3SubIncludesSolar": "Твой соляр, переписанный к каждому дню рождения",
   "paywallV3SubIncludesPair": "Одна полная проверка совместимости в месяц",

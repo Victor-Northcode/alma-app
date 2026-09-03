@@ -71,9 +71,10 @@ void main() {
     for (var i = 0; i < 10; i++) {
       await tester.pump(const Duration(milliseconds: 80));
     }
-    // Первый шаг путешествия — вопрос имени — и обещание, что ничего не
-    // сохраняется. Кабинет без рождения не рисуется вовсе.
-    expect(find.text('What should I call you?'), findsOneWidget);
+    // Первый шаг путешествия — дата рождения (владелец, 01.09.2026: дата
+    // первой, как у Co-Star; раньше первым стояло имя). Кабинет без
+    // рождения не рисуется вовсе.
+    expect(find.text('When were you born?'), findsOneWidget);
     expect(find.text('Today'), findsNothing);
   });
 

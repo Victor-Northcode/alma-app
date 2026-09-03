@@ -4,7 +4,12 @@ import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart' show DeviceGestureSettings;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show HapticFeedback;
+import 'package:flutter/services.dart'
+    show
+        HapticFeedback,
+        SystemChrome,
+        SystemUiMode,
+        SystemUiOverlayStyle;
 
 import 'billing/alma_store.dart';
 import 'billing/store_words.dart' show storeWordsPlatformOverride;
@@ -40,6 +45,30 @@ void main() {
   // диске и поднимается до первого кадра: решение «показывать ли» синхронно,
   // и сторож, спрошенный раньше диска, разрешил бы то, что вчера отклонили.
   WidgetsFlutterBinding.ensureInitialized();
+  // **Android рисует под системными кнопками, а не над чёрной полосой.**
+  //
+  // Владелец, 02.09.2026: «за тремя кнопками не просто чёрная полоска —
+  // фон продолжается, а меню над кнопками». Без edge-to-edge системная
+  // навигация Android — непрозрачная полоса ВНЕ приложения: ночь
+  // обрывалась о чёрный прямоугольник, и `MediaQuery.padding.bottom` был
+  // нулём — бар вкладок садился прямо на кромку. С edge-to-edge ночь и
+  // градиент бара продолжаются под кнопками (заливка бара уже покрывает
+  // отступ — Padding стоит ВНУТРИ DecoratedBox в tab_bar.dart), а сам ряд
+  // вкладок поднимается на высоту системного отступа. Прозрачность
+  // навигации и снятый contrast-скрим — обязательная пара: Android иначе
+  // сам подкладывает полупрозрачную плашку. На iOS вызов ничего не меняет
+  // — там края и так наши («с айфона пойдёт как щас»).
+  if (!kIsWeb) {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Color(0x00000000),
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Color(0x00000000),
+      systemNavigationBarDividerColor: Color(0x00000000),
+      systemNavigationBarContrastEnforced: false,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ));
+  }
   // Веб-просмотр: слова магазина — яблочные по умолчанию, `?store=play`
   // возвращает Play-вариант. Продукт живёт в App Store первым, а
   // `defaultTargetPlatform` веба — хостовая ОС: на Windows стенд печатал

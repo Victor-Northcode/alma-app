@@ -77,7 +77,7 @@ export default function SubscriptionTermsPage() {
           {STORE_MERCHANTS[1].merchant}; on {STORE_MERCHANTS[0].platform} it is{" "}
           {STORE_MERCHANTS[0].merchant}. They hold the payment method, they take the money on each
           renewal, and the price you were shown was theirs — charged in your own currency with your
-          own tax, which is the number that is true. Nothing is sold on this website.
+          own tax, which is the number that is true.
         </Para>
         <Para>
           We are told that a payment happened, not how. That is why the sections below say &ldquo;we

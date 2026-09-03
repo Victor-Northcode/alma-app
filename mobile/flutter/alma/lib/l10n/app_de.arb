@@ -452,6 +452,24 @@
   "paywallV3SubPrice": "{price} / Monat",
   "paywallV3SubRenewalDisclosure": "Verlängert sich monatlich · jederzeit in deinen Apple-ID-Einstellungen kündbar",
   "paywallV3SubRenewalDisclosurePlay": "Verlängert sich monatlich · jederzeit kündbar in Google Play",
+  "paywallNotVerifiedPlay": "Dieser Kauf ließ sich nicht bestätigen, darum wurde nichts geöffnet. Falls Google Play abgebucht hat, schreib uns — wir klären das.",
+  "paywallVerifyLaterPlay": "Google Play hat die Zahlung angenommen. Wir konnten sie gerade nicht bestätigen — es öffnet sich gleich von selbst, nichts geht verloren.",
+  "paywallWithdrawnPlay": "Google Play hat diesen Kauf zurückgenommen — Erstattung oder Widerruf —, darum ist alles, was er öffnete, wieder zu.",
+  "paywallV3PlansLegalPlay": "Abbuchung über Google Play beim Bestätigen · das Abo verlängert sich monatlich, wenn es nicht vor Periodenende gekündigt wird · Einmalkäufe verlängern sich nie",
+  "paywallV3CancelNotePlay": "Kündigen öffnet deine Google-Play-Abos · dein Abo läuft bis {date}",
+  "@paywallV3CancelNotePlay": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "paywallV3CancelNoteNoDatePlay": "Kündigen öffnet deine Google-Play-Abos",
+  "paywallV3StateProcessingNotePlay": "Google Play hat die Zahlung angenommen, wir tragen sie ein. Das endet von selbst, auch wenn du die App schließt.",
+  "cabPlanRenewsAtStorePlay": "Verlängert sich {p1} · Google Play bucht ab und warnt dich vorher",
+  "@cabPlanRenewsAtStorePlay": {
+    "placeholders": {
+      "p1": {}
+    }
+  },
   "paywallV3SubIncludesTransits": "Transite und das Morgenhoroskop, aus deinem Horoskop geschrieben",
   "paywallV3SubIncludesSolar": "Dein Solarhoroskop, zu jedem Geburtstag neu geschrieben",
   "paywallV3SubIncludesPair": "Ein voller Partner­schafts­vergleich im Monat",

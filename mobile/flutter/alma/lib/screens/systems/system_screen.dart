@@ -869,8 +869,8 @@ class _SystemScreenState extends State<SystemScreen> {
           Text(l.scrPeopleChange,
               style: AlmaType.meta.copyWith(color: AlmaPalette.goldBright)),
           const SizedBox(width: 6),
-          Text('→',
-              style: AlmaType.meta.copyWith(color: AlmaPalette.goldBright)),
+          const Icon(Icons.arrow_forward_rounded,
+              size: 15, color: AlmaPalette.goldBright),
         ]),
       ),
     );

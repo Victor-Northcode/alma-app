@@ -455,6 +455,24 @@
   "paywallV3SubPrice": "{price} / mois",
   "paywallV3SubRenewalDisclosure": "Se renouvelle chaque mois · résiliable à tout moment dans les réglages de ton identifiant Apple",
   "paywallV3SubRenewalDisclosurePlay": "Se renouvelle chaque mois · annulable à tout moment dans Google Play",
+  "paywallNotVerifiedPlay": "Impossible de vérifier cet achat, rien n'a donc été ouvert. Si Google Play t'a débité, écris-nous et on règle ça.",
+  "paywallVerifyLaterPlay": "Google Play a pris le paiement. On n'a pas pu le confirmer à l'instant — ça s'ouvrira tout seul très vite, rien n'est perdu.",
+  "paywallWithdrawnPlay": "Google Play a repris cet achat — remboursement ou retrait —, donc ce qu'il ouvrait est refermé.",
+  "paywallV3PlansLegalPlay": "Débité via Google Play à la confirmation · l'abonnement se renouvelle chaque mois sauf annulation avant la fin de la période · les achats uniques ne se renouvellent jamais",
+  "paywallV3CancelNotePlay": "Annuler ouvre tes abonnements Google Play · ton abonnement court jusqu'au {date}",
+  "@paywallV3CancelNotePlay": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "paywallV3CancelNoteNoDatePlay": "Annuler ouvre tes abonnements Google Play",
+  "paywallV3StateProcessingNotePlay": "Google Play a pris le paiement et on l'enregistre. Ça se termine tout seul, même si tu fermes l'app.",
+  "cabPlanRenewsAtStorePlay": "Se renouvelle {p1} · Google Play débite et te prévient avant",
+  "@cabPlanRenewsAtStorePlay": {
+    "placeholders": {
+      "p1": {}
+    }
+  },
   "paywallV3SubIncludesTransits": "Les transits et l’horoscope du matin, écrits à partir de ton thème",
   "paywallV3SubIncludesSolar": "Ta révolution solaire, réécrite à chaque anniversaire",
   "paywallV3SubIncludesPair": "Une analyse de compatibilité complète par mois",

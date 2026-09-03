@@ -302,9 +302,9 @@ class _MyPairsScreenState extends State<MyPairsScreen> {
           ),
           if (onTap != null) ...[
             const SizedBox(width: 12),
-            Text('→',
-                style: AlmaType.numeral.copyWith(
-                    color: AlmaPalette.gold.withValues(alpha: 0.75))),
+            Icon(Icons.arrow_forward_rounded,
+                size: 16,
+                color: AlmaPalette.gold.withValues(alpha: 0.75)),
           ],
         ]),
       ),

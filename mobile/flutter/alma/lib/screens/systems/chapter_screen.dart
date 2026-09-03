@@ -18,6 +18,7 @@ import '../../design/palette.dart';
 import '../../design/plates.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
+import '../../billing/store_words.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
@@ -2255,7 +2256,7 @@ class _LockedChapterState extends State<_LockedChapter> {
           // совпасть со списанным. Вместо цены — правда и попытка спросить ещё
           // раз, той же единственной кнопкой экрана.
           Column(children: [
-            Text(l.paywallStoreUnavailable,
+            Text(l.storeUnavailable,
                 textAlign: TextAlign.center,
                 style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted)),
             const SizedBox(height: 14),
@@ -2286,7 +2287,7 @@ class _LockedChapterState extends State<_LockedChapter> {
         // «навсегда», продление подписки, отчёт «за человека».
         Text(
           switch (_sku) {
-            LadderKey.subMonthly => l.paywallV3SubRenewalDisclosure,
+            LadderKey.subMonthly => l.storeRenewalDisclosure,
             LadderKey.pairCheck => l.pairPerPersonNote,
             _ => l.chapterForeverNote,
           },
@@ -2727,7 +2728,7 @@ class _ChapterEndOfferState extends State<_ChapterEndOffer> {
                 // известно и без App Store, а «$4.99» из головы — это число,
                 // которое не совпадёт со списанным.
                 Text(
-                  l.paywallStoreUnavailable,
+                  l.storeUnavailable,
                   textAlign: TextAlign.center,
                   style: AlmaType.meta.copyWith(color: AlmaPalette.inkMuted),
                 ),

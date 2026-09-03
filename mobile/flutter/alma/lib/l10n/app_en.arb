@@ -2086,6 +2086,24 @@
     "description": "monetization v3 · А11 sub.renewal_disclosure · V6/V7/V8"
   },
   "paywallV3SubRenewalDisclosurePlay": "Renews monthly · cancel any time in Google Play",
+  "paywallNotVerifiedPlay": "That purchase could not be verified, so nothing has been opened. If Google Play charged you, write to us and we will sort it out.",
+  "paywallVerifyLaterPlay": "Google Play has taken the payment. We could not confirm it just now — it will open by itself shortly, and nothing is lost.",
+  "paywallWithdrawnPlay": "Google Play has taken that purchase back — refunded or revoked — so anything it opened is closed again.",
+  "paywallV3PlansLegalPlay": "Charged through Google Play on confirm · the subscription renews monthly unless cancelled before the period ends · one-time purchases never renew",
+  "paywallV3CancelNotePlay": "Cancelling opens your Google Play subscriptions · your subscription runs until {date}",
+  "@paywallV3CancelNotePlay": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "paywallV3CancelNoteNoDatePlay": "Cancelling opens your Google Play subscriptions",
+  "paywallV3StateProcessingNotePlay": "Google Play has taken the payment and we are recording it. This finishes by itself, even if you close the app.",
+  "cabPlanRenewsAtStorePlay": "Renews {p1} · Google Play charges it and warns you before it does",
+  "@cabPlanRenewsAtStorePlay": {
+    "placeholders": {
+      "p1": {}
+    }
+  },
   "@paywallV3SubRenewalDisclosurePlay": {
     "description": "Play-вариант ключа paywallV3SubRenewalDisclosure: Android обязан называть свой магазин своими словами"
   },

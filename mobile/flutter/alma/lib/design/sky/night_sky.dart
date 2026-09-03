@@ -425,9 +425,19 @@ class _Aura extends StatelessWidget {
     // CSS размывает на 34 пикселя поверх и без того мягкого градиента. Один
     // градиент заметно полосил на OLED при этих прозрачностях; убирает кольца
     // именно размытие.
-    final blurred = ImageFiltered(
-      imageFilter: ImageFilter.blur(sigmaX: 34, sigmaY: 34),
-      child: blob,
+    //
+    // **Граница перерисовки — чтобы размытие посчиталось один раз.** Дрейф —
+    // это `Transform.translate` над пятном, и без собственного слоя сдвиг на
+    // каждом тике заставлял растеризатор заново размывать тысячу точек
+    // диаметра — самая дорогая операция кадра ради движения на три сотых.
+    // Со слоем пятно размывается однажды, а дальше по экрану ездит готовая
+    // картинка. Половина «неоптимизированности» Android (владелец,
+    // 02.09.2026) сидела здесь: аура есть на каждом экране продукта.
+    final blurred = RepaintBoundary(
+      child: ImageFiltered(
+        imageFilter: ImageFilter.blur(sigmaX: 34, sigmaY: 34),
+        child: blob,
+      ),
     );
 
     if (drift == AuraDrift.none) return IgnorePointer(child: blurred);

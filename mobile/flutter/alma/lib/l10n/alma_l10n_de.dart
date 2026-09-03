@@ -1571,6 +1571,40 @@ class LDe extends L {
       'Verlängert sich monatlich · jederzeit kündbar in Google Play';
 
   @override
+  String get paywallNotVerifiedPlay =>
+      'Dieser Kauf ließ sich nicht bestätigen, darum wurde nichts geöffnet. Falls Google Play abgebucht hat, schreib uns — wir klären das.';
+
+  @override
+  String get paywallVerifyLaterPlay =>
+      'Google Play hat die Zahlung angenommen. Wir konnten sie gerade nicht bestätigen — es öffnet sich gleich von selbst, nichts geht verloren.';
+
+  @override
+  String get paywallWithdrawnPlay =>
+      'Google Play hat diesen Kauf zurückgenommen — Erstattung oder Widerruf —, darum ist alles, was er öffnete, wieder zu.';
+
+  @override
+  String get paywallV3PlansLegalPlay =>
+      'Abbuchung über Google Play beim Bestätigen · das Abo verlängert sich monatlich, wenn es nicht vor Periodenende gekündigt wird · Einmalkäufe verlängern sich nie';
+
+  @override
+  String paywallV3CancelNotePlay(Object date) {
+    return 'Kündigen öffnet deine Google-Play-Abos · dein Abo läuft bis $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDatePlay =>
+      'Kündigen öffnet deine Google-Play-Abos';
+
+  @override
+  String get paywallV3StateProcessingNotePlay =>
+      'Google Play hat die Zahlung angenommen, wir tragen sie ein. Das endet von selbst, auch wenn du die App schließt.';
+
+  @override
+  String cabPlanRenewsAtStorePlay(Object p1) {
+    return 'Verlängert sich $p1 · Google Play bucht ab und warnt dich vorher';
+  }
+
+  @override
   String get paywallV3SubIncludesTransits =>
       'Transite und das Morgenhoroskop, aus deinem Horoskop geschrieben';
 

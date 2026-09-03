@@ -608,7 +608,7 @@ class PaywallProcessingCard extends StatelessWidget {
             Text(
               message == StoreMessage.pending
                   ? l.paywallPending
-                  : l.paywallV3StateProcessingNote,
+                  : l.storeProcessingNote,
               style: AlmaType.meta.copyWith(fontSize: 12.5, height: 1.5),
             ),
             const SizedBox(height: 12),
@@ -741,9 +741,9 @@ String paywallNoticeText(L l, StoreMessage message) => switch (message) {
       StoreMessage.storeSilent => l.storeUnavailable,
       StoreMessage.pending => l.paywallPending,
       StoreMessage.offline => l.paywallOffline,
-      StoreMessage.notVerified => l.paywallNotVerified,
-      StoreMessage.verifyLater => l.paywallVerifyLater,
-      StoreMessage.withdrawn => l.paywallWithdrawn,
+      StoreMessage.notVerified => l.storeNotVerified,
+      StoreMessage.verifyLater => l.storeVerifyLater,
+      StoreMessage.withdrawn => l.storeWithdrawn,
       StoreMessage.unlocked => l.paywallRestored,
       StoreMessage.restoring => l.storeRestoring,
       StoreMessage.restored => l.paywallV3StateRestoreDone,

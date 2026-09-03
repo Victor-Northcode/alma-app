@@ -149,10 +149,9 @@ class _PersonRow extends StatelessWidget {
                     fontSize: 16, color: AlmaPalette.body),
               ),
             ),
-            Text('→',
-                style: AlmaType.body.copyWith(
-                    fontSize: 15,
-                    color: AlmaPalette.gold.withValues(alpha: 0.8))),
+            Icon(Icons.arrow_forward_rounded,
+                size: 16,
+                color: AlmaPalette.gold.withValues(alpha: 0.8)),
           ]),
         ),
       ),

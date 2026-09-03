@@ -195,7 +195,7 @@ class PlansScreen extends StatelessWidget {
             // TODO(stores): Apple ID вшит и здесь — варианта для Play на
             // холсте нет (спека, дыра №7).
             Text(
-              l.paywallV3PlansLegal,
+              l.storePlansLegal,
               style: AlmaType.meta.copyWith(
                 fontSize: 11.5,
                 height: 1.45,

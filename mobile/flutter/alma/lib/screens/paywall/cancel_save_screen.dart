@@ -9,6 +9,7 @@ import '../../design/metrics.dart';
 import '../../design/palette.dart';
 import '../../design/sky/night_sky.dart';
 import '../../design/typography.dart';
+import '../../billing/store_words.dart';
 import '../../l10n/alma_l10n.dart';
 import '../../net/alma_client.dart';
 import '../../net/models.dart';
@@ -322,8 +323,8 @@ class _CancelSaveScreenState extends State<CancelSaveScreen> {
                   // TODO(stores): и здесь Apple ID вшит — на холсте варианта
                   // для Play нет (спека, дыра №7).
                   until == null
-                      ? l.paywallV3CancelNoteNoDate
-                      : l.paywallV3CancelNote(until),
+                      ? l.storeCancelNoteNoDate
+                      : l.storeCancelNote(until),
                   textAlign: TextAlign.center,
                   style: AlmaType.meta.copyWith(
                     fontSize: 11.5,

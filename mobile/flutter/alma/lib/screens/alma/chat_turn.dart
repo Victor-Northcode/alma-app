@@ -346,9 +346,8 @@ class _ChatTurnViewState extends State<ChatTurnView>
                 const SizedBox(width: 10),
                 // Та же стрелка, каким жестом зовут всё остальное на этой
                 // вкладке: вступительные вопросы, отправку.
-                Text('→',
-                    style: AlmaType.body
-                        .copyWith(fontSize: 15, color: AlmaPalette.gold)),
+                const Icon(Icons.arrow_forward_rounded,
+                    size: 16, color: AlmaPalette.gold),
               ]),
             ),
           ),

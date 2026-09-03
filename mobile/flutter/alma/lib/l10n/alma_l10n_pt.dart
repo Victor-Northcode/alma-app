@@ -1563,6 +1563,40 @@ class LPt extends L {
       'Renova todo mês · cancele quando quiser no Google Play';
 
   @override
+  String get paywallNotVerifiedPlay =>
+      'Não deu para verificar essa compra, então nada foi aberto. Se o Google Play cobrou, escreva pra gente que a gente resolve.';
+
+  @override
+  String get paywallVerifyLaterPlay =>
+      'O Google Play recebeu o pagamento. Não conseguimos confirmar agora — vai abrir sozinho em instantes, nada se perde.';
+
+  @override
+  String get paywallWithdrawnPlay =>
+      'O Google Play retirou essa compra — reembolso ou revogação —, então o que ela abria está fechado de novo.';
+
+  @override
+  String get paywallV3PlansLegalPlay =>
+      'Cobrado pelo Google Play na confirmação · a assinatura renova todo mês se não for cancelada antes do fim do período · compras únicas nunca renovam';
+
+  @override
+  String paywallV3CancelNotePlay(Object date) {
+    return 'Cancelar abre suas assinaturas do Google Play · sua assinatura vale até $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDatePlay =>
+      'Cancelar abre suas assinaturas do Google Play';
+
+  @override
+  String get paywallV3StateProcessingNotePlay =>
+      'O Google Play recebeu o pagamento e estamos registrando. Termina sozinho, mesmo se você fechar o app.';
+
+  @override
+  String cabPlanRenewsAtStorePlay(Object p1) {
+    return 'Renova $p1 · o Google Play cobra e avisa antes';
+  }
+
+  @override
   String get paywallV3SubIncludesTransits =>
       'Trânsitos e o horóscopo da manhã, escritos a partir do seu mapa';
 

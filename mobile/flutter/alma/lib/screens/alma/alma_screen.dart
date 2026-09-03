@@ -847,9 +847,9 @@ class _AlmaScreenState extends State<AlmaScreen>
                   // Стрелка — тем же текстовым шрифтом, что и вопрос, 15
                   // пунктов и **полное** золото: `font:15px 'Golos Text';
                   // color:#C9AE6B`. Без семейства она бралась системным.
-                  Text('→',
-                      style: AlmaType.body.copyWith(
-                          fontSize: 15, color: AlmaPalette.gold)),
+                  // Иконка, не '→': символ на Android эмодзится.
+                  const Icon(Icons.arrow_forward_rounded,
+                      size: 16, color: AlmaPalette.gold),
                 ]),
               ),
             ),
@@ -1114,11 +1114,9 @@ class _AlmaScreenState extends State<AlmaScreen>
               // `font:19px 'Golos Text';color:rgba(237,231,218,.85)` — то же
               // семейство, что у остального текста композера; без него стрелка
               // рисовалась системным шрифтом и была другой формы.
-              child: Text('→',
-                  style: AlmaType.body.copyWith(
-                      fontSize: 19,
-                      height: 1.0,
-                      color: AlmaPalette.body.withValues(alpha: 0.85))),
+              child: Icon(Icons.arrow_forward_rounded,
+                  size: 20,
+                  color: AlmaPalette.body.withValues(alpha: 0.85)),
             ),
           ),
         ),

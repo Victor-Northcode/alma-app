@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -118,7 +120,22 @@ class CabinetTabBar extends StatelessWidget {
             // больше: глубже начинается зона домашнего индикатора, и подписи
             // спорили бы с полосой жеста. На телефонах без выреза (inset 0)
             // ничего не вычитается — ниже некуда.
-            padding: EdgeInsets.only(bottom: math.max(0, bottomInset - 6)),
+            //
+            // **Нырок — только под домашний индикатор iPhone.** Индикатор —
+            // рисованная полоска, под неё можно поднырнуть на шесть точек и
+            // ничего не потерять. На Android с включённым edge-to-edge отступ
+            // снизу — это три настоящие системные кнопки (48 тчк) или полоса
+            // жеста, и те же шесть точек сажали подписи вкладок в зону кнопок:
+            // владелец назвал это «неудобное меню внизу» (02.09.2026). Кнопкам
+            // Android бар уступает весь отступ целиком.
+            padding: EdgeInsets.only(
+              bottom: switch (defaultTargetPlatform) {
+                TargetPlatform.iOS ||
+                TargetPlatform.macOS =>
+                  math.max(0, bottomInset - 6),
+                _ => bottomInset,
+              },
+            ),
             child: SizedBox(
               height: AlmaMetrics.tabBarHeight,
               child: Row(

@@ -1413,7 +1413,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               // предупреждает Apple, чей бы адрес мы ни держали.
               renews != null
                   ? (store
-                      ? l.cabPlanRenewsAtStore(renews)
+                      ? l.storePlanRenewsAt(renews)
                       : (session.account?.email?.isNotEmpty == true
                           ? l.cabPlanRenews(renews)
                           : l.cabPlanRenewsNoEmail(renews)))
@@ -1893,13 +1893,15 @@ class _Row extends StatelessWidget {
           ),
           if (checked) ...[
             const SizedBox(width: 10),
-            const Text('✓',
-                style: TextStyle(color: AlmaPalette.gold, fontSize: 17)),
+            // Иконка, не символ: '✓' без семейства падал в системный
+            // шрифт и на Android рисовался эмодзи (02.09.2026).
+            const Icon(Icons.check_rounded,
+                color: AlmaPalette.gold, size: 18),
           ],
           if (arrow) ...[
             const SizedBox(width: 8),
-            const Text('↗',
-                style: TextStyle(color: AlmaPalette.gold, fontSize: 15)),
+            const Icon(Icons.arrow_outward_rounded,
+                color: AlmaPalette.gold, size: 16),
           ],
         ]),
       ),
@@ -2162,9 +2164,9 @@ class _RestoreRowState extends State<_RestoreRow> {
                 StoreMessage.storeSilent => l.storeUnavailable,
                 StoreMessage.pending => l.paywallPending,
                 StoreMessage.offline => l.paywallOffline,
-                StoreMessage.notVerified => l.paywallNotVerified,
-                StoreMessage.verifyLater => l.paywallVerifyLater,
-                StoreMessage.withdrawn => l.paywallWithdrawn,
+                StoreMessage.notVerified => l.storeNotVerified,
+                StoreMessage.verifyLater => l.storeVerifyLater,
+                StoreMessage.withdrawn => l.storeWithdrawn,
                 StoreMessage.unlocked => l.paywallRestored,
                 StoreMessage.restoring => l.storeRestoring,
                 StoreMessage.restored => l.paywallRestored,

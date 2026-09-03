@@ -452,6 +452,24 @@
   "paywallV3SubPrice": "{price} / mês",
   "paywallV3SubRenewalDisclosure": "Renova todo mês · cancele quando quiser nos ajustes do seu Apple ID",
   "paywallV3SubRenewalDisclosurePlay": "Renova todo mês · cancele quando quiser no Google Play",
+  "paywallNotVerifiedPlay": "Não deu para verificar essa compra, então nada foi aberto. Se o Google Play cobrou, escreva pra gente que a gente resolve.",
+  "paywallVerifyLaterPlay": "O Google Play recebeu o pagamento. Não conseguimos confirmar agora — vai abrir sozinho em instantes, nada se perde.",
+  "paywallWithdrawnPlay": "O Google Play retirou essa compra — reembolso ou revogação —, então o que ela abria está fechado de novo.",
+  "paywallV3PlansLegalPlay": "Cobrado pelo Google Play na confirmação · a assinatura renova todo mês se não for cancelada antes do fim do período · compras únicas nunca renovam",
+  "paywallV3CancelNotePlay": "Cancelar abre suas assinaturas do Google Play · sua assinatura vale até {date}",
+  "@paywallV3CancelNotePlay": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "paywallV3CancelNoteNoDatePlay": "Cancelar abre suas assinaturas do Google Play",
+  "paywallV3StateProcessingNotePlay": "O Google Play recebeu o pagamento e estamos registrando. Termina sozinho, mesmo se você fechar o app.",
+  "cabPlanRenewsAtStorePlay": "Renova {p1} · o Google Play cobra e avisa antes",
+  "@cabPlanRenewsAtStorePlay": {
+    "placeholders": {
+      "p1": {}
+    }
+  },
   "paywallV3SubIncludesTransits": "Trânsitos e o horóscopo da manhã, escritos a partir do seu mapa",
   "paywallV3SubIncludesSolar": "Sua revolução solar, reescrita a cada aniversário",
   "paywallV3SubIncludesPair": "Uma análise completa de compatibilidade por mês",

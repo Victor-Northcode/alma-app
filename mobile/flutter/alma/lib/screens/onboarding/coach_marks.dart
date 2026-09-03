@@ -31,7 +31,7 @@ enum CoachStop { systems, firstChapter, today, alma, morning }
 /// уверены?», стоит дороже той пользы, ради которой её показали.
 Future<void> showCoachMarks(
   BuildContext context, {
-  required void Function(CoachStop) goTo,
+  required Future<void> Function(CoachStop) goTo,
 }) {
   return Navigator.of(context, rootNavigator: true).push(
     PageRouteBuilder<void>(
@@ -55,9 +55,11 @@ Future<void> showCoachMarks(
 class CoachMarks extends StatefulWidget {
   const CoachMarks({super.key, required this.goTo});
 
-  /// Довезти кабинет до вкладки, о которой пойдёт речь. Ответ на «как» —
-  /// у оболочки: она одна знает про `PageView` и его контроллер.
-  final void Function(CoachStop) goTo;
+  /// Довезти кабинет до вкладки, о которой пойдёт речь, и не отпускать,
+  /// пока не довёз. Ответ на «как» — у оболочки: она одна знает про
+  /// `PageView` и его контроллер; обучалке от неё нужен только момент,
+  /// когда переезд кончился и мерить уже можно.
+  final Future<void> Function(CoachStop) goTo;
 
   @override
   State<CoachMarks> createState() => _CoachMarksState();
@@ -72,20 +74,24 @@ class _CoachMarksState extends State<CoachMarks> {
     CoachStop.morning,
   ];
 
-  /// Сколько ждать, пока страница вкладки доедет. Оболочка везёт её за 320 мс
-  /// (`_CabinetShellState._goTo`), и мерить положение карты посреди этого
-  /// движения значило бы вырезать дыру там, где элемента уже нет.
+  /// Шаг опроса места: мерить чаще бессмысленно, реже — заметно на глаз.
   ///
-  /// Полтораста миллисекунд запаса сверх переезда — не осторожность на глаз:
-  /// движение начинается на **следующем** кадре после `goTo`, и мерка,
-  /// назначенная впритык, застаёт страницу в десятке точек от места. Поймано в
-  /// пробирке: вырез на «Сегодня» выходил сдвинутым на 9,6 точки влево.
-  static const _settle = Duration(milliseconds: 520);
+  /// **Место не назначается по таймеру — оно выжидается до неподвижности.**
+  /// Здесь стояла глухая пауза в 520 мс на каждый шаг: сперва она ловила
+  /// страницу посреди переезда (вырез на «Сегодня» выходил сдвинутым на
+  /// 9,6 точки влево), потом её растянули с запасом — и человек на каждом
+  /// шаге смотрел полсекунды в пустое затемнение, а каскад прихода свежей
+  /// вкладки (`RiseIn`, до ~600 мс на нижних блоках) всё равно успевал
+  /// приехать позже неё: владелец увидел это как «обучение кривое»
+  /// (02.09.2026). Два одинаковых замера подряд — единственное честное
+  /// «элемент встал»: неподвижному элементу это стоит 180 мс, летящему —
+  /// ровно столько, сколько он летит.
+  static const _poll = Duration(milliseconds: 90);
 
-  /// Второй заход, если с первого мерить было нечего. Панель дня строится по
-  /// ответу сервера, а колода — по хабу: у человека, у которого сеть медленнее
-  /// анкеты, к первому кадру кабинета может не быть ни того, ни другого.
-  static const _retry = Duration(milliseconds: 420);
+  /// Потолок ожидания. Панель дня строится по ответу сервера, а колода — по
+  /// хабу: у человека, у которого сеть медленнее анкеты, элемента может не
+  /// быть вовсе — тогда карточка честно встаёт по центру без выреза.
+  static const _pollCap = 24;
 
   /// Воздух вокруг подсвеченного места и между вырезом и карточкой.
   static const _halo = 8.0;
@@ -114,6 +120,18 @@ class _CoachMarksState extends State<CoachMarks> {
   int _step = 0;
   Rect? _hole;
 
+  /// Откуда вырез перетекает в новое место. Между шагами дыра не схлопывается
+  /// в темноту и не выскакивает из неё: она **едет** от старого элемента к
+  /// новому — так глаз ведут, а не дёргают. Смена [_holeEpoch] перезапускает
+  /// перелёт.
+  Rect? _holeFrom;
+  int _holeEpoch = 0;
+
+  /// Номер живого захода. Быстрые тапы по «Далее» запускают `_enter` поверх
+  /// не довёзшего предыдущего, и отставший заход, доехав, назначал бы вырез
+  /// прошлого шага поверх нынешнего. Кто не последний — молчит.
+  int _entering = 0;
+
   /// Страница доехала и место измерено — карточку можно показывать. До этого на
   /// экране одно затемнение: карточка, приехавшая раньше вкладки, о которой
   /// говорит, читается как подпись не к той картинке.
@@ -130,49 +148,97 @@ class _CoachMarksState extends State<CoachMarks> {
   }
 
   Future<void> _enter(int step) async {
+    final ticket = ++_entering;
     setState(() {
       _step = step;
-      _hole = null;
       _settled = false;
     });
-    widget.goTo(_stops[step]);
-    await Future<void>.delayed(_settle);
-    if (!mounted) return;
-    var hole = _measure(_stops[step]);
-    if (hole == null) {
-      await Future<void>.delayed(_retry);
-      if (!mounted) return;
-      hole = _measure(_stops[step]);
+    // Ждём сам переезд, а не таймер о нём: `animateToPage` внутри знает свои
+    // 320 мс лучше любой константы здесь.
+    await widget.goTo(_stops[step]);
+    if (!mounted || ticket != _entering) return;
+    var found = await _settle(_stops[step], ticket);
+    if (!mounted || ticket != _entering) return;
+    // Элемент есть, но стоит за кромкой или под баром вкладок — довезти его
+    // прокруткой и померить заново. Тумблер «каждое утро» — третья секция
+    // настроек: на телефоне обычного роста он строится (запас пре-рендера у
+    // каркаса — полтора экрана), но стоит ниже видимого, и вырез по его
+    // честным координатам обрезался в щель у нижней кромки — главное «криво»
+    // этой обучалки на живом устройстве.
+    if (found != null && !_inView(found)) {
+      final anchor = _anchor(_stops[step]).currentContext;
+      if (anchor != null && anchor.mounted) {
+        await Scrollable.ensureVisible(
+          anchor,
+          alignment: 0.3,
+          duration: const Duration(milliseconds: 260),
+          curve: Curves.easeOutCubic,
+        );
+        if (!mounted || ticket != _entering) return;
+        found = await _settle(_stops[step], ticket) ?? found;
+      }
     }
-    if (!mounted) return;
+    if (!mounted || ticket != _entering) return;
     setState(() {
-      _hole = hole;
+      _holeFrom = _hole;
+      _hole = found == null ? null : _dress(found);
+      _holeEpoch++;
       _settled = true;
     });
   }
 
-  Rect? _measure(CoachStop stop) {
-    final found = switch (stop) {
-      // Счётчик вместе с заголовком экрана: вырез на верхушку «Моих систем» —
-      // там, где сказано «восемь». Первый ряд теперь у собственного шага.
-      CoachStop.systems => CoachAnchors.rect(CoachAnchors.systemsTally),
-      CoachStop.firstChapter =>
-        CoachAnchors.rect(CoachAnchors.systemsFirstRow),
-      CoachStop.today => CoachAnchors.rect(CoachAnchors.todayPanel),
-      CoachStop.alma => CoachAnchors.rect(CoachAnchors.almaComposer),
-      CoachStop.morning => CoachAnchors.rect(CoachAnchors.settingsMorning),
-    };
-    if (found == null) return null;
-    // Ореол вокруг элемента и обрезка по экрану: вырез, уехавший за кромку,
-    // рисует затемнение с прорехой у края.
+  GlobalKey _anchor(CoachStop stop) => switch (stop) {
+        // Счётчик вместе с заголовком экрана: вырез на верхушку «Моих
+        // систем» — там, где сказано «восемь». Первый ряд у собственного шага.
+        CoachStop.systems => CoachAnchors.systemsTally,
+        CoachStop.firstChapter => CoachAnchors.systemsFirstRow,
+        CoachStop.today => CoachAnchors.todayPanel,
+        CoachStop.alma => CoachAnchors.almaComposer,
+        CoachStop.morning => CoachAnchors.settingsMorning,
+      };
+
+  /// Мерить, пока элемент не встанет: два одинаковых замера подряд.
+  Future<Rect?> _settle(CoachStop stop, int ticket) async {
+    Rect? last;
+    for (var i = 0; i < _pollCap; i++) {
+      await Future<void>.delayed(_poll);
+      if (!mounted || ticket != _entering) return null;
+      final now = CoachAnchors.rect(_anchor(stop));
+      if (now != null && now == last) return now;
+      last = now;
+    }
+    return last;
+  }
+
+  /// Целиком ли элемент в поле зрения — между верхней безопасной кромкой и
+  /// верхом бара вкладок. Потолок выреза [_holeShare] в счёт не идёт: панель
+  /// дня выше него по устройству, её не «довозят», а обрезают.
+  bool _inView(Rect found) {
     final size = MediaQuery.sizeOf(context);
+    final safe = MediaQuery.paddingOf(context);
+    final top = safe.top;
+    final bottom = size.height - AlmaMetrics.tabBarHeight - safe.bottom;
+    if (found.height > (bottom - top) * _holeShare) {
+      return found.top >= top && found.top < bottom;
+    }
+    return found.top >= top && found.bottom <= bottom;
+  }
+
+  /// Ореол вокруг элемента и обрезка по экрану: вырез, уехавший за кромку,
+  /// рисует затемнение с прорехой у края. Снизу кромка — верх бара вкладок,
+  /// а не край стекла: бар лежит **над** содержимым, и дыра, дотянувшаяся под
+  /// него, подсвечивала бы сам бар вместо элемента.
+  Rect _dress(Rect found) {
+    final size = MediaQuery.sizeOf(context);
+    final safe = MediaQuery.paddingOf(context);
+    final floor = size.height - AlmaMetrics.tabBarHeight - safe.bottom;
     final top = (found.top - _halo).clamp(0.0, size.height);
     return Rect.fromLTRB(
       (found.left - _halo).clamp(0.0, size.width),
       top,
       (found.right + _halo).clamp(0.0, size.width),
       (found.bottom + _halo)
-          .clamp(0.0, size.height)
+          .clamp(0.0, floor)
           .clamp(top, top + size.height * _holeShare),
     );
   }
@@ -221,7 +287,27 @@ class _CoachMarksState extends State<CoachMarks> {
                 curve: AlmaMotion.sheetCurve,
                 builder: (context, shown, child) =>
                     Opacity(opacity: shown, child: child),
-                child: CustomPaint(painter: _Scrim(hole: _hole)),
+                // Вырез перетекает: со старого места на новое, а первый —
+                // раскрывается из собственной середины. Дыра, выскакивающая
+                // кадром, читается как мигание затемнения; едущая — как рука,
+                // которая ведёт взгляд. При «Сокращённом движении» — сразу
+                // на месте, как и всё остальное появление.
+                child: TweenAnimationBuilder<double>(
+                  key: ValueKey(_holeEpoch),
+                  tween: Tween<double>(begin: 0, end: 1),
+                  duration: still || _hole == null
+                      ? Duration.zero
+                      : AlmaMotion.ui,
+                  curve: AlmaMotion.uiCurve,
+                  builder: (context, t, _) => CustomPaint(
+                    painter: _Scrim(
+                      hole: _hole == null
+                          ? null
+                          : Rect.lerp(
+                              _holeFrom ?? _hole!.deflate(12), _hole, t),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

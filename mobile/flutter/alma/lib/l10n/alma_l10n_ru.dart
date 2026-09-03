@@ -1561,6 +1561,40 @@ class LRu extends L {
       'Продлевается каждый месяц · отмена в любой момент в Google Play';
 
   @override
+  String get paywallNotVerifiedPlay =>
+      'Эту покупку не удалось проверить, поэтому ничего не открылось. Если Google Play списал деньги — напиши нам, разберёмся.';
+
+  @override
+  String get paywallVerifyLaterPlay =>
+      'Google Play принял платёж. В эту секунду мы не смогли его подтвердить — скоро всё откроется само, ничего не потеряно.';
+
+  @override
+  String get paywallWithdrawnPlay =>
+      'Google Play отозвал эту покупку — возврат или отмена, — поэтому всё, что она открывала, снова закрыто.';
+
+  @override
+  String get paywallV3PlansLegalPlay =>
+      'Списывается через Google Play при подтверждении · подписка продлевается ежемесячно, если не отменить до конца периода · разовые покупки не продлеваются';
+
+  @override
+  String paywallV3CancelNotePlay(Object date) {
+    return 'Отмена откроет подписки Google Play · подписка действует до $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDatePlay =>
+      'Отмена откроет подписки Google Play';
+
+  @override
+  String get paywallV3StateProcessingNotePlay =>
+      'Google Play принял платёж, мы его записываем. Всё завершится само, даже если закрыть приложение.';
+
+  @override
+  String cabPlanRenewsAtStorePlay(Object p1) {
+    return 'Продлевается $p1 · Google Play спишет и предупредит перед списанием';
+  }
+
+  @override
   String get paywallV3SubIncludesTransits =>
       'Транзиты и утренний гороскоп, написанные по твоей карте';
 

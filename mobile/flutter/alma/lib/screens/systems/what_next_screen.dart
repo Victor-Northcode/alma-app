@@ -291,11 +291,8 @@ class _WhatNextScreenState extends State<WhatNextScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        '→',
-                        style: AlmaType.numeral.copyWith(
-                            fontSize: 15, color: AlmaPalette.goldDeep),
-                      ),
+                      const Icon(Icons.arrow_forward_rounded,
+                          size: 16, color: AlmaPalette.goldDeep),
                     ]),
                   ),
                 ),

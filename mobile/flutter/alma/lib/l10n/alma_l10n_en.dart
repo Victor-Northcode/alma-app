@@ -1557,6 +1557,40 @@ class LEn extends L {
       'Renews monthly · cancel any time in Google Play';
 
   @override
+  String get paywallNotVerifiedPlay =>
+      'That purchase could not be verified, so nothing has been opened. If Google Play charged you, write to us and we will sort it out.';
+
+  @override
+  String get paywallVerifyLaterPlay =>
+      'Google Play has taken the payment. We could not confirm it just now — it will open by itself shortly, and nothing is lost.';
+
+  @override
+  String get paywallWithdrawnPlay =>
+      'Google Play has taken that purchase back — refunded or revoked — so anything it opened is closed again.';
+
+  @override
+  String get paywallV3PlansLegalPlay =>
+      'Charged through Google Play on confirm · the subscription renews monthly unless cancelled before the period ends · one-time purchases never renew';
+
+  @override
+  String paywallV3CancelNotePlay(Object date) {
+    return 'Cancelling opens your Google Play subscriptions · your subscription runs until $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDatePlay =>
+      'Cancelling opens your Google Play subscriptions';
+
+  @override
+  String get paywallV3StateProcessingNotePlay =>
+      'Google Play has taken the payment and we are recording it. This finishes by itself, even if you close the app.';
+
+  @override
+  String cabPlanRenewsAtStorePlay(Object p1) {
+    return 'Renews $p1 · Google Play charges it and warns you before it does';
+  }
+
+  @override
   String get paywallV3SubIncludesTransits =>
       'Transits and the morning horoscope, written from your chart';
 

@@ -26,7 +26,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Star } from "@/components/brand/Star";
 import { Starfield } from "@/components/sky/Sky";
-import { GetTheApp } from "@/components/handoff/GetTheApp";
 import { API_BASE, api, isOk, readToken, writeToken } from "@/lib/api";
 import { looksLikeEmail } from "@/lib/email";
 import { MERCHANT_RU_LINE } from "@/lib/merchant-ru";
@@ -134,7 +133,17 @@ export default function PayPage() {
   return <PayShopPage />;
 }
 
-/** Заглушка кассы: рублёвая оплата готовится, всё покупается в приложении. */
+/**
+ * Заглушка кассы: рублёвая оплата готовится, всё покупается в приложении.
+ *
+ * Нарочно почти пустая. Первая версия несла сюда `GetTheApp` и абзац про
+ * магазины — и русская страница обрастала английскими плашками «Coming to
+ * the App Store» и четырьмя строками, которые ничего не давали человеку,
+ * пришедшему заплатить (владелец, 03.09.2026: «очень длинные тексты много
+ * где… чтоб не было пустых ненужных длинных текстов»). Продавать заглушке
+ * нечего — поэтому ни реквизитов, ни дисклеймера: только что происходит и
+ * куда идти, ссылки на документы одной строкой.
+ */
 function PayComingPage() {
   return (
     <main className="signin-page" lang="ru">
@@ -143,15 +152,11 @@ function PayComingPage() {
         <Star size={44} />
         <h1 className="signin-title">Оплата российской картой готовится</h1>
         <p className="signin-lead">
-          Совсем скоро здесь можно будет заплатить картой или через СБП.
-          Пока всё покупается прямо в приложении — через App Store и
-          Google Play.
+          Скоро — карта и СБП. Пока всё покупается в приложении.
         </p>
-        <GetTheApp carry={false} />
         <div className="pay-legal">
           <p className="signin-note">
-            {MERCHANT_RU_LINE} Сервис ознакомительный — не медицинская и не
-            финансовая консультация. <a href="/terms">Условия</a> ·{" "}
+            <a href="/terms">Условия</a> ·{" "}
             <a href="/privacy">Конфиденциальность</a> ·{" "}
             <a href="/refunds">Возвраты</a> ·{" "}
             <a href="/imprint#ru-seller">Реквизиты</a>

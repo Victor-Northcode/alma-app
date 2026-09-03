@@ -1565,6 +1565,40 @@ class LIt extends L {
       'Si rinnova ogni mese · disdici quando vuoi in Google Play';
 
   @override
+  String get paywallNotVerifiedPlay =>
+      'Non è stato possibile verificare l\'acquisto, quindi non si è aperto nulla. Se Google Play ti ha addebitato, scrivici e sistemiamo.';
+
+  @override
+  String get paywallVerifyLaterPlay =>
+      'Google Play ha ricevuto il pagamento. Non siamo riusciti a confermarlo adesso: si aprirà da solo a breve, non si perde nulla.';
+
+  @override
+  String get paywallWithdrawnPlay =>
+      'Google Play ha ritirato quell\'acquisto — rimborso o revoca —, quindi ciò che apriva è di nuovo chiuso.';
+
+  @override
+  String get paywallV3PlansLegalPlay =>
+      'Addebito tramite Google Play alla conferma · l\'abbonamento si rinnova ogni mese se non lo annulli prima della fine del periodo · gli acquisti una tantum non si rinnovano';
+
+  @override
+  String paywallV3CancelNotePlay(Object date) {
+    return 'Annullare apre i tuoi abbonamenti Google Play · l\'abbonamento resta attivo fino al $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDatePlay =>
+      'Annullare apre i tuoi abbonamenti Google Play';
+
+  @override
+  String get paywallV3StateProcessingNotePlay =>
+      'Google Play ha ricevuto il pagamento e lo stiamo registrando. Finirà da solo, anche se chiudi l\'app.';
+
+  @override
+  String cabPlanRenewsAtStorePlay(Object p1) {
+    return 'Si rinnova $p1 · Google Play addebita e ti avvisa prima di farlo';
+  }
+
+  @override
   String get paywallV3SubIncludesTransits =>
       'Transiti e l\'oroscopo del mattino, scritti dal tuo tema';
 

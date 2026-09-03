@@ -452,6 +452,24 @@
   "paywallV3SubPrice": "{price} / mes",
   "paywallV3SubRenewalDisclosure": "Se renueva cada mes · puedes cancelar cuando quieras en los ajustes de tu Apple ID",
   "paywallV3SubRenewalDisclosurePlay": "Se renueva cada mes · cancela cuando quieras en Google Play",
+  "paywallNotVerifiedPlay": "No se ha podido verificar esa compra, así que no se abrió nada. Si Google Play te cobró, escríbenos y lo resolvemos.",
+  "paywallVerifyLaterPlay": "Google Play ha recibido el pago. No pudimos confirmarlo ahora mismo: se abrirá solo en breve, no se pierde nada.",
+  "paywallWithdrawnPlay": "Google Play ha retirado esa compra — reembolso o anulación —, así que lo que abría vuelve a estar cerrado.",
+  "paywallV3PlansLegalPlay": "Se cobra a través de Google Play al confirmar · la suscripción se renueva cada mes salvo que la canceles antes del fin del período · las compras únicas no se renuevan",
+  "paywallV3CancelNotePlay": "Cancelar abre tus suscripciones de Google Play · tu suscripción sigue hasta el {date}",
+  "@paywallV3CancelNotePlay": {
+    "placeholders": {
+      "date": {}
+    }
+  },
+  "paywallV3CancelNoteNoDatePlay": "Cancelar abre tus suscripciones de Google Play",
+  "paywallV3StateProcessingNotePlay": "Google Play ha recibido el pago y lo estamos registrando. Terminará solo, aunque cierres la app.",
+  "cabPlanRenewsAtStorePlay": "Se renueva {p1} · Google Play cobra y te avisa antes de hacerlo",
+  "@cabPlanRenewsAtStorePlay": {
+    "placeholders": {
+      "p1": {}
+    }
+  },
   "paywallV3SubIncludesTransits": "Tránsitos y el horóscopo de la mañana, escritos a partir de tu carta",
   "paywallV3SubIncludesSolar": "Tu revolución solar, reescrita cada cumpleaños",
   "paywallV3SubIncludesPair": "Una comparación completa de compatibilidad al mes",

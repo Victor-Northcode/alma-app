@@ -1568,6 +1568,40 @@ class LFr extends L {
       'Se renouvelle chaque mois · annulable à tout moment dans Google Play';
 
   @override
+  String get paywallNotVerifiedPlay =>
+      'Impossible de vérifier cet achat, rien n\'a donc été ouvert. Si Google Play t\'a débité, écris-nous et on règle ça.';
+
+  @override
+  String get paywallVerifyLaterPlay =>
+      'Google Play a pris le paiement. On n\'a pas pu le confirmer à l\'instant — ça s\'ouvrira tout seul très vite, rien n\'est perdu.';
+
+  @override
+  String get paywallWithdrawnPlay =>
+      'Google Play a repris cet achat — remboursement ou retrait —, donc ce qu\'il ouvrait est refermé.';
+
+  @override
+  String get paywallV3PlansLegalPlay =>
+      'Débité via Google Play à la confirmation · l\'abonnement se renouvelle chaque mois sauf annulation avant la fin de la période · les achats uniques ne se renouvellent jamais';
+
+  @override
+  String paywallV3CancelNotePlay(Object date) {
+    return 'Annuler ouvre tes abonnements Google Play · ton abonnement court jusqu\'au $date';
+  }
+
+  @override
+  String get paywallV3CancelNoteNoDatePlay =>
+      'Annuler ouvre tes abonnements Google Play';
+
+  @override
+  String get paywallV3StateProcessingNotePlay =>
+      'Google Play a pris le paiement et on l\'enregistre. Ça se termine tout seul, même si tu fermes l\'app.';
+
+  @override
+  String cabPlanRenewsAtStorePlay(Object p1) {
+    return 'Se renouvelle $p1 · Google Play débite et te prévient avant';
+  }
+
+  @override
   String get paywallV3SubIncludesTransits =>
       'Les transits et l’horoscope du matin, écrits à partir de ton thème';
 
