@@ -26,17 +26,30 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<!-- Вход через Google на iPhone. Пакет google_sign_in читает оба
 	     идентификатора ОТСЮДА, не из кода (providers_sign_in.dart нарочно
-	     ничего не хардкодит). GIDServerClientID — ВЕБ-клиент проекта
-	     alma-eaec8: ровно он стоит в GOOGLE_CLIENT_ID на сервере, и без него
-	     aud внутри id_token был бы iOS-клиентом — сервер отвергал бы каждый
-	     вход 401, хотя окно Google открывалось бы честно. GIDClientID — ждёт
-	     iOS-клиента OAuth из Google Cloud Console (04.09.2026 его ещё нет);
-	     вместе с ним в CFBundleURLTypes добавится и перевёрнутая схема
-	     com.googleusercontent.apps.<номер>. До этого кнопка Google на iPhone
-	     не работает — Android живёт своим google-services.json и этого ключа
-	     не читает. -->
+	     ничего не хардкодит). GIDClientID — iOS-клиент OAuth проекта
+	     alma-eaec8 (bundle ai.pazl.alma.flutter; создан владельцем
+	     04.09.2026). GIDServerClientID — ВЕБ-клиент того же проекта: ровно он
+	     стоит в GOOGLE_CLIENT_ID на сервере, и без него aud внутри id_token
+	     был бы iOS-клиентом — сервер отвергал бы каждый вход 401, хотя окно
+	     Google открывалось бы честно. Перевёрнутая схема в CFBundleURLTypes —
+	     обратная дорога из окна Google в приложение; без неё авторизация
+	     не возвращается. Android этих ключей не читает — он живёт своим
+	     google-services.json. -->
+	<key>GIDClientID</key>
+	<string>636878220861-r5ci4ah2p3gmoe55690684drn15a73kg.apps.googleusercontent.com</string>
 	<key>GIDServerClientID</key>
 	<string>636878220861-dnvl3msm9vqujdfkqkeai0s7j2llelpv.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.636878220861-r5ci4ah2p3gmoe55690684drn15a73kg</string>
+			</array>
+		</dict>
+	</array>
 	<!-- Экспортное шифрование. Alma использует только HTTPS/TLS и Keychain —
 	     это exempt-шифрование, разрешение на экспорт не требуется. Без этого ключа
 	     App Store Connect задаёт вопрос об экспортном соответствии при КАЖДОЙ
