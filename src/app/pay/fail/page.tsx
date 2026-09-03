@@ -7,10 +7,19 @@
  * вместо карты.
  */
 
+import { redirect } from "next/navigation";
 import { Star } from "@/components/brand/Star";
 import { Starfield } from "@/components/sky/Sky";
+import { RU_PAYMENTS } from "@/lib/ru-payments";
 
 export default function PayFailPage() {
+  // Пока касса спит (RU_PAYMENTS="store") — на «готовится»: страница
+  // о неудачной оплате без кассы говорила бы о событии, которого нет.
+  if (RU_PAYMENTS !== "tbank") redirect("/pay");
+  return <PayFailBody />;
+}
+
+function PayFailBody() {
   return (
     <main className="signin-page" lang="ru">
       <Starfield />

@@ -9,11 +9,21 @@
  */
 
 import { useCallback, useState } from "react";
+import { redirect } from "next/navigation";
 import { Star } from "@/components/brand/Star";
 import { Starfield } from "@/components/sky/Sky";
 import { api, isOk } from "@/lib/api";
+import { RU_PAYMENTS } from "@/lib/ru-payments";
 
 export default function PayDonePage() {
+  // Возврат с формы существует только у живой кассы: пока RU_PAYMENTS
+  // = "store" (02.09.2026, «как будет — вернём»), прямой заход сюда
+  // уводится на «готовится» — странице не о чем говорить.
+  if (RU_PAYMENTS !== "tbank") redirect("/pay");
+  return <PayDoneBody />;
+}
+
+function PayDoneBody() {
   const [busy, setBusy] = useState(false);
   const [held, setHeld] = useState<string[] | null>(null);
   const [failed, setFailed] = useState(false);
