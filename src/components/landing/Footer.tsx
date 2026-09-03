@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Star } from "@/components/brand/Star";
 import { complianceBadges } from "@/lib/data";
 import { useLocale, useT } from "@/lib/i18n/provider";
+import { RU_PAYMENTS } from "@/lib/ru-payments";
 import { LanguagePicker } from "./LanguagePicker";
 
 /**
@@ -39,8 +40,10 @@ export function Footer() {
         // из них рекламировали бы путь, которого для их читателя нет
         // (владелец, 31.08.2026: «оплата тбанк была ток у русской версии
         // сайта, у англ и других был эпл»). Рублёвый путь — «/pay»,
-        // остальные платят в приложении магазину.
-        ...(locale === "ru"
+        // остальные платят в приложении магазину. Пока ключей Т-Банка нет,
+        // ссылка выключена флажком RU_PAYMENTS (02.09.2026, «как будет —
+        // вернём»): рекламировать кассу, которая отвечает 503, нельзя.
+        ...(locale === "ru" && RU_PAYMENTS === "tbank"
           ? [{ label: "Оплатить картой или СБП", href: "/pay" }]
           : []),
         { label: t.footer.refunds, href: "/refunds" },

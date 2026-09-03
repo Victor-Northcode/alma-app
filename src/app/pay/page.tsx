@@ -26,9 +26,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Star } from "@/components/brand/Star";
 import { Starfield } from "@/components/sky/Sky";
+import { GetTheApp } from "@/components/handoff/GetTheApp";
 import { API_BASE, api, isOk, readToken, writeToken } from "@/lib/api";
 import { looksLikeEmail } from "@/lib/email";
 import { MERCHANT_RU, MERCHANT_RU_LINE } from "@/lib/merchant-ru";
+import { RU_PAYMENTS } from "@/lib/ru-payments";
 
 /** Вклейки — те же файлы, что видит приложение, с того же сервера. */
 const PLATES = `${API_BASE}/static/plates`;
@@ -123,6 +125,44 @@ const SHOWCASE: Record<string, { name: string; blurb: string; plate: string }> =
 const ORDER = Object.keys(SHOWCASE);
 
 export default function PayPage() {
+  // Пока ключей Т-Банка нет — витрина выключена флажком RU_PAYMENTS
+  // (владелец, 02.09.2026: «замени временно на апл… как будет — вернём»):
+  // человек по старой ссылке видит честное «готовится» и кнопки магазинов,
+  // а не формы, чьи кнопки отвечают 503. Хук-правила Реакта требуют, чтобы
+  // ветка стояла ДО первого useState, — поэтому она первая.
+  if (RU_PAYMENTS !== "tbank") return <PayComingPage />;
+  return <PayShopPage />;
+}
+
+/** Заглушка кассы: рублёвая оплата готовится, всё покупается в приложении. */
+function PayComingPage() {
+  return (
+    <main className="signin-page" lang="ru">
+      <Starfield />
+      <div className="signin-inner pay-inner">
+        <Star size={44} />
+        <h1 className="signin-title">Оплата российской картой готовится</h1>
+        <p className="signin-lead">
+          Совсем скоро здесь можно будет заплатить картой или через СБП.
+          Пока всё покупается прямо в приложении — через App Store и
+          Google Play.
+        </p>
+        <GetTheApp />
+        <div className="pay-legal">
+          <p className="signin-note">
+            {MERCHANT_RU_LINE} Alma носит ознакомительный и развлекательный
+            характер и не является медицинской, психологической, юридической
+            или финансовой консультацией. <a href="/terms">Условия</a> ·{" "}
+            <a href="/privacy">Конфиденциальность</a> ·{" "}
+            <a href="/refunds">Возвраты</a>
+          </p>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function PayShopPage() {
   const [shelf, setShelf] = useState<Shelf | null>(null);
   const [stage, setStage] = useState<"email" | "code" | "shop">("email");
   const [email, setEmail] = useState("");
