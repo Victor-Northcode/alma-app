@@ -20,15 +20,16 @@
    | `ai.pazl.alma.pair.check` | **Consumable** | $4.99 |
    | `ai.pazl.alma.bundle.static` | Non-Consumable | $19.99 |
    | `ai.pazl.alma.sub.monthly` | Auto-Renewable (месяц) | $9.99 |
-   | `ai.pazl.alma.questions.5` | **Consumable** | $2.99 † |
-   | `ai.pazl.alma.questions.10` | **Consumable** | $5.99 † |
-   | `ai.pazl.alma.questions.25` | **Consumable** | $7.99 † |
-   | `ai.pazl.alma.report.year` | **Consumable** | $12.99 † |
+   | `ai.pazl.alma.questions.5` | **Consumable** | $1.99 |
+   | `ai.pazl.alma.questions.10` | **Consumable** | $3.49 |
+   | `ai.pazl.alma.questions.25` | **Consumable** | $6.99 |
+   | `ai.pazl.alma.report.year` | **Consumable** | $12.99 |
 
-   † — цены ВЫВЕДЕНЫ (точки Co-Star), тобой не подтверждены. Подтверди или
-   поменяй ДО сохранения в консоли, и тем же днём скажи мне — я поправлю
-   `REGIONAL_CENTS` и GOLDEN одним коммитом. Локальные цены остальных валют —
-   в `backend/alma/billing/catalogue.py`, сверяй с сеткой Apple.
+   Цены четырёх новых позиций продуманы по твоему поручению 02.09.2026
+   («цены продумай все»): вход $1.99 — цена кофе, штука дешевеет с
+   размером ($0.40 → $0.35 → $0.28), q25 стоит рядом с подпиской нарочно
+   («или вся Alma за три доллара сверху»), год = 1.3 месяца. Все точки US
+   есть в сетке Apple. Локальные цены — `backend/alma/billing/catalogue.py`.
 2. **App Store Server Notifications V2** → URL
    `https://api-alma.pazl.ai/v1/billing/webhook` (продакшен и сандбокс).
 3. **Sign in with Apple** — уже включён; ничего не трогать.

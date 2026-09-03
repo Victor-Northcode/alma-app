@@ -164,9 +164,9 @@ const _price = <LadderKey, String>{
   LadderKey.pairCheck: r'$4.99',
   LadderKey.bundleStatic: r'$19.99',
   LadderKey.subMonthly: r'$9.99',
-  LadderKey.questions5: r'$2.99',
-  LadderKey.questions10: r'$5.99',
-  LadderKey.questions25: r'$7.99',
+  LadderKey.questions5: r'$1.99',
+  LadderKey.questions10: r'$3.49',
+  LadderKey.questions25: r'$6.99',
   LadderKey.reportYear: r'$12.99',
 };
 
@@ -179,9 +179,9 @@ const _raw = <LadderKey, double>{
   LadderKey.pairCheck: 4.99,
   LadderKey.bundleStatic: 19.99,
   LadderKey.subMonthly: 9.99,
-  LadderKey.questions5: 2.99,
-  LadderKey.questions10: 5.99,
-  LadderKey.questions25: 7.99,
+  LadderKey.questions5: 1.99,
+  LadderKey.questions10: 3.49,
+  LadderKey.questions25: 6.99,
   LadderKey.reportYear: 12.99,
 };
 
