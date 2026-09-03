@@ -147,7 +147,7 @@ function PayComingPage() {
           Пока всё покупается прямо в приложении — через App Store и
           Google Play.
         </p>
-        <GetTheApp />
+        <GetTheApp carry={false} />
         <div className="pay-legal">
           <p className="signin-note">
             {MERCHANT_RU_LINE} Alma носит ознакомительный и развлекательный

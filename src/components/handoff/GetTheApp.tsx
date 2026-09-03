@@ -46,7 +46,22 @@ import {
 } from "@/lib/stores";
 import { useIdentity } from "@/lib/use-alma";
 
-export function GetTheApp({ linkSentTo }: { linkSentTo?: string | null }) {
+export function GetTheApp({
+  linkSentTo,
+  carry = true,
+}: {
+  linkSentTo?: string | null;
+  /**
+   * Показывать ли строку «выживет ли это небо по дороге в телефон».
+   *
+   * Она написана для хвоста квиза — человека, только что посчитавшего
+   * карту В ЭТОМ браузере. На страницах без карты («/pay» — «оплата
+   * готовится») та же строка обещала небо, которого на странице нет,
+   * и говорила про повторный ввод даты человеку, пришедшему платить
+   * (снято на проде 02.09.2026).
+   */
+  carry?: boolean;
+}) {
   const t = useT();
   const identity = useIdentity();
   const published = Boolean(APP_STORE_URL || PLAY_STORE_URL);
@@ -70,7 +85,11 @@ export function GetTheApp({ linkSentTo }: { linkSentTo?: string | null }) {
           cannot tap deserves to know why in one line, rather than tapping
           each of them twice to find out. */}
       {!published && <p className="stores-fine">{t.app.notYet}</p>}
-      <p className="stores-carry">{carrySentence(t.app, identity, linkSentTo ?? null)}</p>
+      {carry && (
+        <p className="stores-carry">
+          {carrySentence(t.app, identity, linkSentTo ?? null)}
+        </p>
+      )}
     </div>
   );
 }
